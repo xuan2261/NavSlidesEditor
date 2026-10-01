@@ -15,7 +15,7 @@ NavSlides Editor có thể phản chiếu các thư mục `server/data/` và `se
 3. Cấu hình đích đồng bộ trong **Settings → Cloud Sync**
 4. Kích hoạt đồng bộ thủ công hoặc lên lịch qua bộ lập lịch của hệ điều hành
 
-Endpoint điều khiển đồng bộ là `POST /api/sync` (xem `server/routes/sync.js`). Nó gọi ra `rclone` với remote đã cấu hình — nên bất cứ điều gì bạn làm được trên rclone CLI đều có sẵn ở đây.
+Endpoint điều khiển đồng bộ là `POST /api/rclone/sync` và `POST /api/rclone/sync-single` (xem `server/routes/sync.js`). Chúng gọi ra `rclone` với remote đã cấu hình — nên bất cứ điều gì bạn làm được trên rclone CLI đều có sẵn ở đây.
 
 ## Những gì được đồng bộ
 

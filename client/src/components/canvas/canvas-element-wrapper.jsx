@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useLayoutEffect } from 'react'
 import { EditorContent } from '@tiptap/react'
 import hljs from 'highlight.js'
 import katex from 'katex'
@@ -12,6 +12,8 @@ import PluginSandbox from '../../plugins/plugin-sandbox'
 import { isPluginElementType } from '../../plugins'
 import { buildMermaidEmbedContent } from '../../hooks/use-element-creation'
 import { getKeyboardNudgeStep } from '../../utils/keyboard-nudge'
+import { isInteractiveKeyboardTarget } from '../../utils/interactive-keyboard-target'
+import { applyMove } from './use-canvas-pointer-interaction'
 
 function getMediaFragmentSrc(src, startTime, endTime) {
   if (!src) return src
@@ -35,12 +37,6 @@ function isLinePathEvent(element, event) {
   return event.target?.tagName?.toLowerCase() === 'path'
 }
 
-function isEditableEventTarget(target) {
-  if (!target) return false
-  return Boolean(
-    target.closest?.('input, textarea, select, [contenteditable="true"], .ProseMirror')
-  )
-}
 
 function getElementAccessibleName(element) {
   const typeLabel = `${String(element.type || 'slide')} element`
@@ -169,7 +165,7 @@ export default function CanvasElement({
   onCropHandleDown,
   onCommitCrop,
   onUpdateElement,
-  onDeleteElement,
+  onDeleteElement: _onDeleteElement,
   onStartEdit,
   iconPaths,
   slideBackground,
@@ -177,6 +173,13 @@ export default function CanvasElement({
   slideHeight = 540,
 }) {
   const contentRef = useRef(null)
+  const wrapperRef = useRef(null)
+  useLayoutEffect(() => () => {
+    const wrapper = wrapperRef.current
+    if (wrapper && document.activeElement === wrapper) {
+      wrapper.closest('.slide-canvas')?.focus()
+    }
+  }, [])
   const videoRef = useRef(null)
 
   // Render KaTeX math in preview
@@ -277,6 +280,7 @@ export default function CanvasElement({
     width: '100%',
     height: '100%',
     overflow: isCropping ? 'visible' : 'hidden',
+    borderRadius: isCropping ? undefined : element.borderRadius || undefined,
     border:
       Number.isFinite(imageBorderWidth) && imageBorderWidth > 0
         ? `${imageBorderWidth}px solid ${element.borderColor || '#000000'}`
@@ -288,7 +292,7 @@ export default function CanvasElement({
       ? element._pptxImportMeta.cropData
       : null
   const handleKeyboardAction = (event) => {
-    if (isEditableEventTarget(event.target) || isCropping) return
+    if (isInteractiveKeyboardTarget(event.target) || isCropping) return
     const key = event.key
     if (
       ![
@@ -324,17 +328,6 @@ export default function CanvasElement({
       return
     }
 
-    if (
-      (key === 'Delete' || key === 'Backspace') &&
-      isSelected &&
-      !element.locked &&
-      !slideLocked
-    ) {
-      if (selectedElementCount > 1) return
-      event.preventDefault()
-      onDeleteElement?.(element.id)
-      return
-    }
 
     const nudges = {
       ArrowUp: { x: 0, y: -1 },
@@ -347,14 +340,8 @@ export default function CanvasElement({
       if (selectedElementCount > 1) return
       event.preventDefault()
       const step = getKeyboardNudgeStep(event.shiftKey)
-      const width = Math.max(0, Number(element.width) || 0)
-      const height = Math.max(0, Number(element.height) || 0)
-      const maxX = Math.max(0, Number(slideWidth) - width)
-      const maxY = Math.max(0, Number(slideHeight) - height)
-      onUpdateElement?.(element.id, {
-        x: Math.min(maxX, Math.max(0, (Number(element.x) || 0) + nudge.x * step)),
-        y: Math.min(maxY, Math.max(0, (Number(element.y) || 0) + nudge.y * step)),
-      })
+      onUpdateElement?.(element.id,
+        applyMove(element, nudge.x * step, nudge.y * step, Number(slideWidth), Number(slideHeight)))
     }
   }
   const cropDiagnostics = sourceCropData
@@ -491,6 +478,7 @@ export default function CanvasElement({
 
   return (
     <div
+      ref={wrapperRef}
       className="element-wrapper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-workspace"
       data-testid={`slide-element-${element.id}`}
       data-element-id={element.id}
@@ -704,6 +692,10 @@ export default function CanvasElement({
             return null
           })()}
       </div>
+      {/* These generated previews belong to the canvas gesture owner, not the iframe. */}
+      {['chart', 'latex'].includes(element.type) && (
+        <div aria-hidden="true" data-canvas-preview-hit-area style={{ position: 'absolute', inset: 0, zIndex: 1 }} />
+      )}
       {element.fragment && <div style={fragmentBadgeStyle}>▶ {element.fragmentIndex ?? 1}</div>}
       {element.action?.hotspot && <div style={hotspotBadgeStyle}>Hotspot</div>}
       {element.groupId && isSelected && <div style={groupBadgeStyle}>Group</div>}

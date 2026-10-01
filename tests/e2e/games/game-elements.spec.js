@@ -33,9 +33,7 @@ test.describe('Game Elements — Insert & Render', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   for (const game of GAME_TYPES) {

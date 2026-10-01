@@ -18,10 +18,10 @@ export function SvgElementRenderer({ element }) {
   const fillOverride = safeOverrideColor(element.fillOverride)
   const strokeOverride = safeOverrideColor(element.strokeOverride)
   if (fillOverride) {
-    modifiedContent = modifiedContent.replace(/fill="[^"]*"/g, `fill="${fillOverride}"`)
+    modifiedContent = modifiedContent.replace(/(\s)fill\s*=\s*(["'])(.*?)\2/g, `$1fill="${fillOverride}"`)
   }
   if (strokeOverride) {
-    modifiedContent = modifiedContent.replace(/stroke="[^"]*"/g, `stroke="${strokeOverride}"`)
+    modifiedContent = modifiedContent.replace(/(\s)stroke\s*=\s*(["'])(.*?)\2/g, `$1stroke="${strokeOverride}"`)
   }
   const svgElementStyle = {
     width: '100%',

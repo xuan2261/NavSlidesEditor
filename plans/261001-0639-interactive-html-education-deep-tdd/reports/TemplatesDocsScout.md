@@ -1,0 +1,40 @@
+## 1. Templates and quiz inventory
+
+- Canonical built-ins are in `server/data/built-in-templates.json` (JSON array). Not under `shared/data`; no evidence here that `marketplace.js` is the canonical built-in store. Server data is the checked-in source consumed for built-in templates.
+- `scripts/add-quizzes.js:4` points at `server/data/built-in-templates.json` (using `path.join(__dirname, 'server', ...)`). It defines five quiz records inline (`:6` onward), then reads the JSON, removes records whose `id` matches one of the five, appends replacements, and writes pretty JSON (`:1120-1140`). It is therefore repeatable for those IDs but rewrites the whole file.
+- `scripts/upgrade-interactive-templates.js:11` points to the same JSON via `..`. `main()` reads array, finds templates by title substring (Logic Gate, RLC Frequency, PID Controller, Bode Plot, 3-Phase Power, Gear Train), mutates slides using upgrader functions, creates timestamped `.backup-*`, and rewrites the complete JSON (`:1830-1876`). No `marketplace.js` write path was found in the reviewed scope.
+- **Exactly five templates with category `quiz` and HTML elements**, all authored by `add-quizzes.js`: `quiz-multiple-choice` — MCQ; `quiz-true-false` — true/false; `quiz-fill-blank` — fill-blank; `quiz-ordering` — ordering; `quiz-matching` — matching. Source declarations: `scripts/add-quizzes.js:8-9,187-188,329-330,432-433,563-564`; corresponding persisted records begin at `server/data/built-in-templates.json:26268,26349,26414,26479,26544`.
+- This count is verified for category=quiz using the source declarations and corresponding persisted entries. No additional matching/hotspot/multi-choice subtype inventory was inferred from raw HTML; quiz interaction classification beyond the five named categories is not backed by formal metadata. [INFERENCE] “MCQ” maps to single-choice; the template contains four options with one correct answer.
+
+## 2. Template gallery categories
+
+`client/src/components/dashboard/template-gallery-config.js:43-88` exports `CATEGORY_GROUPS`:
+- **Kỹ thuật**: `digital-electronics`, `microprocessor`, `circuit-theory`, `electronics`, `automation`, `electrical`, `measurement`, `power-electronics`, `mechanical`, `technical-drawing`, `fluid-mechanics`, `computer-science`, `physics`, `mathematics`, `signal-processing`.
+- **Mục đích sử dụng**: `academic`, `education`, `corporate`, `business`, `hr`, `marketing`, `military`, `tactical`, `quiz`.
+- **Phong cách**: `dark`, `minimal`, `creative`.
+- **Thành phần**: `interactive`, `chart-heavy`.
+
+## 3. Counts, docs, feature gates
+
+Checklist for adding game features/types (or converting quiz templates):
+- `README.md:211,216,224` — canonical element count, full-deck template count, game count; current prose says 19 element types and 10 game types. Update only counts/features that truly change; game subtype does not automatically imply a new canonical element type.
+- `README_vi.md:5,30,45,51` — versioned feature summary, 19 canonical elements, 10 games, 20+ templates; synchronize language/counts.
+- `website/features/game-mode.md` and `website/vi/features/game-mode.md` — game type table currently lists 10 types; update both for shipped types and behavior, not planned work.
+- `docs/project-changelog.md:1-10` — `## Unreleased (v1.17.0)` then pending/no release evidence, followed by version headings and concise bullet entries. Add implementation-grounded Unreleased bullet(s); do not imply release qualification.
+- `docs/codebase-summary.md:1-40,96-110,214-232` — system snapshot, runtime/game-engine boundaries, and claims of 10 game types. Keep game/export architecture and count aligned.
+- `docs/system-architecture.md:648-650` — feature matrix/gate description and editor-core-vs-extended game scope; update only if the architecture/coverage contract changes.
+- `docs/feature-coverage-matrix.md` is generated; **do not hand edit**. Pipeline: `build-inventory.mjs` combines `load-auto-sources.mjs` (registry-derived `ELEMENT_DEFAULTS`, canonical `element.game` is `scope: game`) and `load-manifest.mjs` (`feature-manifest.json` declared capabilities). `extract-tags.mjs` scans test titles for `[cap:<id>]`, and `join-run-status.mjs` requires actually-green run records. `build-matrix.mjs` writes `docs/feature-coverage-matrix.md` and JSON report. `feature-manifest.json` has `game.score` in `game` scope (`:124-126`); matrix output is editor-core filtered (`build-matrix.mjs:142-145`).
+- When introducing a capability not auto-sourced from a code registry, declare it in `scripts/feature-inventory/feature-manifest.json`; add executable test title `[cap:<id>]` (optionally `[depth:behavior]`, etc.). Existing tests to extend for gate contract: `scripts/feature-inventory/build-inventory.test.mjs` (source+scope), `extract-tags.test.mjs` (tag semantics), `check-manifest-completeness.test.mjs` (manifest drift), `build-matrix.test.mjs` (status handling), and element-control audit tests/JSON if control surface changes. `scripts/feature-inventory/element-control-expected-controls.json` already lists game subtype live policy and deferred live-poll/word-cloud/matching subtypes (`:91-127`): changing subtype behavior may need expected-control rows and audit evidence, not just a game count.
+- Commands in root `package.json`: `npm test` (Vitest runner), `npm run lint` (eslint), `npm run build` (client build + client-dist manifest), `npm run matrix:gate` (regenerate matrix + coverage gate + manifest completeness + element-control validator), `npm run test:e2e` (Playwright). Related `npm run matrix` regenerates; `npm run test:feature-inventory` builds Vitest run results; `npm run docs:build` builds website. Exact definitions at `package.json:29-52`.
+
+## 4. E2E game conventions and coverage
+
+- `playwright.config.js:1-8,25-43,108-136`: default base URL/server are 127.0.0.1:3202; `PLAYWRIGHT_USE_DEV_SERVERS=1` switches to `npm run dev` with Vite + server. Default `webServer` runs `npm start` (production Express serving built client), with isolated per-run data/uploads dirs and `reuseExistingServer:false`. Browser projects include Chromium; game specs are not excluded from default Chromium.
+- `tests/e2e/games/game-elements.spec.js`: insertion through Insert menu and canvas label for seven game types; multiple coexisting; presentation element count. Uses `apiCreatePresentation`/`apiDeletePresentation` per test and `EditorPage`.
+- `game-elements-toolbar-integration.spec.js`: Games advanced Insert surface lists ten game types (including Live Poll, Word Cloud, Matching).
+- `game-elements-stability-and-coexistence.spec.js`: inserts seven types while collecting page errors; verifies coexistence with text/shape.
+- `game-elements-canvas-rendering.spec.js`: Name Picker SVG segment/render label, Hot Potato/Jeopardy placeholders, Present action visibility.
+- `game-elements-player-join-page.spec.js`: player join form and empty-name validation/ARIA-invalid state.
+- `game-scoring-and-leaderboard.spec.js`: real `/games` Socket.IO namespace; creates game through `POST /api/games`, joins host/player sockets, advances question, checks correct/wrong scoring and REST leaderboard; deterministic no-time-limit case. Uses `request` fixture and explicitly closes sockets/deletes game.
+- `tests/e2e/pages/game-page.js`: thin `GamePage` wrapper exposing active indicator/HUD/leaderboard, delegates presentation navigation and Name Picker insertion. Existing specs mostly use `EditorPage` directly; extend helpers only for reusable behavior. `EditorPage` composes focused helpers and offers insertion/count/wait methods (`tests/e2e/pages/editor-page.js:1-60`).
+- New subtype specs should follow the existing presentation fixture lifecycle for editor flows; for actual live-player support, use separate contexts/sockets and assert observable synchronized state rather than only insertion/render placeholders. Add a `[cap:game.<capability>]` tag when the capability belongs in feature inventory; note the current capability is game-scoped and the editor-core matrix excludes that scope.

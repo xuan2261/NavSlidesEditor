@@ -42,9 +42,7 @@ test.describe('Keyboard Shortcuts', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('Ctrl+D duplicates selected element', async () => {

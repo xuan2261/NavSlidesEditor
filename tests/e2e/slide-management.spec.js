@@ -39,9 +39,7 @@ test.describe('Slide Management Advanced', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('can add a blank slide', async () => {
@@ -51,8 +49,7 @@ test.describe('Slide Management Advanced', () => {
     expect(newCount).toBe(initialCount + 1)
   })
 
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  test('can add slide from template (Two Column)', async ({ page }) => {
+  test('can add slide from template (Two Column)', async () => {
     const initialCount = await editorPage.getSlideCount()
     await editorPage.addSlideFromTemplate('Two Column')
     const newCount = await editorPage.getSlideCount()

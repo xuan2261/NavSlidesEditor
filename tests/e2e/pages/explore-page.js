@@ -6,7 +6,7 @@ export class ExplorePage {
    */
   constructor(page) {
     this.page = page
-    this.backBtn = page.locator('button').first()
+    this.backBtn = page.getByRole('button', { name: 'Back to home', exact: true })
     this.presentationCards = page.locator('.flex-1.overflow-y-auto > div[style*="grid"] > div')
   }
 

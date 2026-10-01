@@ -83,9 +83,7 @@ test.describe('Hardening regressions', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('analytics stays on the operator boundary and redacts share capabilities', async ({

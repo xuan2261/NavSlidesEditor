@@ -82,9 +82,7 @@ test.describe('Live Presentation & WebSockets', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('can create a live room via API', async ({ request }) => {

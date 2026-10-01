@@ -109,6 +109,12 @@ export function createKeyboardHandler({
     const activeElement = getActiveElement()
     const interactiveTarget = isInteractiveKeyboardTarget(activeElement)
     const presentationKeyOnButton = !ctrl && e.key === 'F5' && activeElement?.tagName === 'BUTTON'
+    const cycleTarget = !activeElement || activeElement === document.body ||
+      activeElement.matches?.('.element-wrapper[data-element-id], .slide-canvas')
+    if (e.key === 'Tab' && !ctrl && !e.altKey && !presenting && cycleTarget && callbacks.onCycleElement) {
+      callbacks.onCycleElement(e.shiftKey ? 'previous' : 'next', e)
+      return
+    }
 
     // Ctrl chords
     if (ctrl) {
@@ -161,8 +167,10 @@ export function createKeyboardHandler({
       return
     }
 
-    // Delete/Backspace
-    if ((e.key === 'Delete' || e.key === 'Backspace') && !ctrl) {
+    // Backspace is an alias only for the default Delete binding. Remapping Delete
+    // must retire both old keys; an explicit Backspace binding resolves above.
+    if (e.key === 'Backspace' && !ctrl && !e.shiftKey && !e.altKey && !presenting &&
+        scopeShortcuts.some((shortcut) => shortcut.id === 'delete' && shortcut.activeKey === shortcut.defaultKey)) {
       callbacks.onDelete?.()
       e.preventDefault()
       return

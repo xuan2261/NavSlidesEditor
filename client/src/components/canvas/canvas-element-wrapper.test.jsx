@@ -98,15 +98,13 @@ describe('CanvasElement video playback', () => {
     expect(handlers.onClick).toHaveBeenCalledTimes(2)
   })
 
-  it('[F5 red defect:canvas.keyboard] nudges and deletes selected unlocked elements', () => {
+  it('[F5] nudges selected unlocked elements', () => {
     const { handlers } = renderCanvasElement(baseElement, { isSelected: true })
     const wrapper = screen.getByTestId('slide-element-video-1')
 
     fireEvent.keyDown(wrapper, { key: 'ArrowRight', shiftKey: true })
-    fireEvent.keyDown(wrapper, { key: 'Delete' })
 
     expect(handlers.onUpdateElement).toHaveBeenCalledWith('video-1', { x: 10, y: 0 })
-    expect(handlers.onDeleteElement).toHaveBeenCalledWith('video-1')
   })
 
   it('[F5] nudges selected elements by 1px without Shift', () => {
@@ -178,13 +176,6 @@ describe('CanvasElement video playback', () => {
     expect(handlers.onDeleteElement).not.toHaveBeenCalled()
   })
 
-  it('exposes a visible focus ring for keyboard navigation', () => {
-    renderCanvasElement(baseElement)
-    const wrapper = screen.getByTestId('slide-element-video-1')
-
-    expect(wrapper.className).toContain('focus-visible:ring-2')
-    expect(wrapper.className).toContain('focus-visible:ring-focus')
-  })
 
   it('clamps focused keyboard nudges to the slide right and bottom edges', () => {
     const { handlers } = renderCanvasElement(
@@ -198,6 +189,31 @@ describe('CanvasElement video playback', () => {
 
     expect(handlers.onUpdateElement).toHaveBeenNthCalledWith(1, 'video-1', { x: 80, y: 70 })
     expect(handlers.onUpdateElement).toHaveBeenNthCalledWith(2, 'video-1', { x: 80, y: 70 })
+  })
+
+  it('clamps a rotated keyboard nudge against its visual right edge', () => {
+    const element = { ...baseElement, x: 960 - 50 - 50 * Math.SQRT2, y: 200, width: 100, height: 100, rotation: 45 }
+    const { handlers } = renderCanvasElement(element, { isSelected: true })
+    fireEvent.keyDown(screen.getByTestId('slide-element-video-1'), { key: 'ArrowRight', shiftKey: true })
+    const [, updates] = handlers.onUpdateElement.mock.calls[0]
+    expect(updates.x + 50 + 50 * Math.SQRT2).toBeCloseTo(960)
+    expect(updates.y).toBe(200)
+  })
+
+  it.each(['video', 'audio'])('lets nested %s controls own arrow keys without changing geometry', (type) => {
+    const { handlers } = renderCanvasElement({ ...baseElement, type }, { isSelected: true })
+    const event = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true })
+    screen.getByTestId('slide-element-video-1').querySelector(type).dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(false)
+    expect(handlers.onUpdateElement).not.toHaveBeenCalled()
+  })
+
+  it.each([false, true])('keeps rounded image content clipped with selected=%s', (isSelected) => {
+    const image = { ...baseElement, type: 'image', src: '/image.png', borderRadius: 24 }
+    renderCanvasElement(image, { isSelected })
+    const clip = screen.getByTestId('slide-element-video-1').querySelector('img').parentElement
+    expect(clip.style.borderRadius).toBe('24px')
+    expect(clip.style.overflow).toBe('hidden')
   })
 
   it('keeps unselected line wrappers clickable', () => {

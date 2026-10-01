@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { useState } from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import FormatTabContent from './ribbon-format-tab-element-position-size-rotation-controls'
 
@@ -75,21 +76,39 @@ describe('FormatTabContent', () => {
     expect(onUpdateElement).toHaveBeenCalledWith({ rotation: 45 })
   })
 
-  it('calls onUpdateElement for 90° rotation button', () => {
-    const onUpdateElement = vi.fn()
-    render(<FormatTabContent selectedElement={mockElement} onUpdateElement={onUpdateElement} />)
+  it('rotates each selected element relative to its own angle and leaves unselected elements unchanged', () => {
+    function Selection() {
+      const [elements, setElements] = useState([
+        { ...mockElement, id: 'a', rotation: 0 },
+        { ...mockElement, id: 'b', rotation: 315 },
+        { ...mockElement, id: 'c', rotation: 45 },
+      ])
+      return <>
+        <FormatTabContent
+          selectedElement={elements[1]}
+          selectedElementIds={['a', 'b']}
+          elements={elements}
+          onUpdateElements={(updates) => setElements((previous) => previous.map((element) => ({
+            ...element,
+            ...updates.find((update) => update.id === element.id),
+          })))}
+        />
+        <output data-testid="rotations">{elements.map((element) => `${element.id}:${element.rotation}`).join(',')}</output>
+      </>
+    }
+    render(<Selection />)
     fireEvent.mouseDown(screen.getByLabelText('Rotate 90 degrees'))
-    expect(onUpdateElement).toHaveBeenCalledWith({ rotation: 90 })
+    expect(screen.getByTestId('rotations').textContent).toBe('a:90,b:45,c:45')
+    fireEvent.keyDown(screen.getByLabelText('Rotate 90 degrees'), { key: 'Enter' })
+    expect(screen.getByTestId('rotations').textContent).toBe('a:180,b:135,c:45')
   })
 
-  it('activates rotate and lock controls with keyboard', () => {
+  it('activates the lock control with keyboard', () => {
     const onUpdateElement = vi.fn()
     render(<FormatTabContent selectedElement={mockElement} onUpdateElement={onUpdateElement} />)
 
-    fireEvent.keyDown(screen.getByLabelText('Rotate 90 degrees'), { key: 'Enter' })
     fireEvent.keyDown(screen.getByLabelText('Toggle lock'), { key: ' ' })
 
-    expect(onUpdateElement).toHaveBeenCalledWith({ rotation: 90 })
     expect(onUpdateElement).toHaveBeenCalledWith({ locked: true })
   })
 

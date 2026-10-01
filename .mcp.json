@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "navslides": {
+      "command": "node",
+      "args": ["scripts/agent/mcp.mjs"],
+      "env": {
+        "NAVSLIDES_URL": "http://127.0.0.1:3002"
+      }
+    }
+  }
+}

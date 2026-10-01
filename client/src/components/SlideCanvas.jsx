@@ -19,7 +19,6 @@ import useCanvasPointerInteraction from './canvas/use-canvas-pointer-interaction
 import useCanvasRubberBandSelection from './canvas/use-canvas-rubber-band-drag-selection'
 import CanvasElement from './canvas/canvas-element-wrapper'
 import { cn } from '../lib/utils'
-import { isInteractiveKeyboardTarget } from '../utils/interactive-keyboard-target'
 import {
   DEFAULT_TOKENS,
   mergeTokens,
@@ -99,7 +98,7 @@ export default function SlideCanvas({
   onUpdateElement,
   onUpdateElements,
   onDeleteElement,
-  onDeleteSelectedElements,
+  onDeleteSelectedElements: _onDeleteSelectedElements,
   onAddImage,
   onAddMedia,
   onOpenHtmlEditor,
@@ -272,7 +271,6 @@ export default function SlideCanvas({
         }
         return
       }
-      const shortcutTargetOwnsKeyboard = isInteractiveKeyboardTarget(document.activeElement)
       if (editingElementId) {
         if (e.key === 'Escape') {
           onStopEdit()
@@ -289,53 +287,12 @@ export default function SlideCanvas({
         return // Block other keys when editing
       }
       if (selectedElementIds.length > 0) {
-        if (
-          (e.key === 'Delete' || e.key === 'Backspace') &&
-          !shortcutTargetOwnsKeyboard &&
-          !slideRef.current?.locked
-        ) {
-          onDeleteSelectedElements()
-          e.preventDefault()
-        }
         if (e.key === 'Escape') {
           onToggleSelectElement(null, false)
           e.preventDefault()
         }
-        // ── Clipboard shortcuts — delegated to command callbacks ────────────
-        // Focused controls, contenteditable regions, dialogs/popovers, and
-        // media controls own clipboard keystrokes.
-        if ((e.ctrlKey || e.metaKey) && !shortcutTargetOwnsKeyboard) {
-          if (e.key === 'c' || e.key === 'C') {
-            onCopy?.()
-            e.preventDefault()
-          }
-          if (e.key === 'x' || e.key === 'X') {
-            onCut?.()
-            e.preventDefault()
-          }
-          if (e.key === 'v' || e.key === 'V') {
-            onPaste?.()
-            e.preventDefault()
-          }
-          if (e.key === 'd' || e.key === 'D') {
-            onDuplicate?.()
-            e.preventDefault()
-          }
-        }
       }
 
-      // Allow paste even when no element is selected (e.g. after slide change).
-      // Locked slide blocks paste-on-empty.
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        (e.key === 'v' || e.key === 'V') &&
-        selectedElementIds.length === 0 &&
-        !shortcutTargetOwnsKeyboard &&
-        !slideRef.current?.locked
-      ) {
-        onPaste?.()
-        e.preventDefault()
-      }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
@@ -345,11 +302,6 @@ export default function SlideCanvas({
     cropMode,
     onStopEdit,
     onToggleSelectElement,
-    onDeleteSelectedElements,
-    onCopy,
-    onCut,
-    onPaste,
-    onDuplicate,
   ])
 
   // Close context menu on outside click
@@ -487,6 +439,8 @@ export default function SlideCanvas({
         ref={canvasRef}
         data-testid="canvas-area"
         className={cn('slide-canvas shadow-lg')}
+        tabIndex={-1}
+        aria-label="Slide canvas"
         style={canvasStyle}
         onClick={(e) => {
           if (cropMode) return

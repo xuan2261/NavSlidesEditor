@@ -434,7 +434,7 @@ billing, and offline sandbox inlining are not part of Phase 1.
 | `fx/` | 8 canvas FX modules + registry; `buildFxRuntimeScript()` emits the inlined browser runtime |
 | `slideNotes.js` | Canonical notes normalization helpers |
 | `shapeUtils.js` | SVG shape/path helpers |
-| `shared-toolbar-text-bg-color-palette-gradient-presets-config.js` | Color palette, gradient presets, and `isLightColor()` helper |
+| `index.js` | Canonical color palettes, gradient presets, and `isLightColor()` helper |
 | `presenterTools.js` | Presenter UI controls and scripts |
 | `types/presentation.js` | JSDoc data model for presentation objects |
 
@@ -568,6 +568,12 @@ diverge:
   canonical `background.image` handling, `.navslides` manifest `1.1` media
   mapping, and import-time upload URL rewriting for local `/uploads/...`
   assets.
+- Project import is atomic and server-authoritative: `importProjectAtomically()`
+  in `client/src/utils/import-project.js` drives `server/routes/project-import.js`
+  (`/api/project-imports` preflight → media → publish, `DELETE` rolls back). The
+  route accepts only same-origin private-editor requests
+  (`project-import-origin.js`) and a per-session capability header; renderer-critical
+  field checks are shared via `shared/src/project-import-content-validation.js`.
 - `presentInWindow()` uses the server `/api/presentations/:id/present` route
   when a saved presentation ID is available.
 
@@ -604,7 +610,7 @@ diverge:
 ### CDN Dependencies
 
 - Reveal.js is never loaded from a CDN: the 6.0.1 manifest owns the published `/vendor/reveal.js/dist` assets and the strict offline closure.
-- Standard exported HTML may use CDN paths for KaTeX, Chart.js, highlight.js, and TikZJax; offline output uses its asset-collection/inlining policy for supported dependencies.
+- Generated presentation HTML loads KaTeX, Chart.js, highlight.js, and TikZJax from local `/vendor` paths. CDN URLs remain only inside authored content (for example the D3 HTML-embed default); offline export maps the known ones to `/vendor` through `CDN_TO_VENDOR` in `client/src/utils/offlineExport.js`.
 
 ## Security Model
 

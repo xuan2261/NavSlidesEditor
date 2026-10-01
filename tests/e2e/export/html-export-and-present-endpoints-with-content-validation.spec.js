@@ -21,9 +21,7 @@ test.describe('HTML export and present endpoints with content validation', () =>
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('export endpoint sets attachment headers and HTML mime', async ({ request }) => {

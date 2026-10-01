@@ -658,6 +658,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     groupElements,
     ungroupElements,
     selectedElementIds,
+    toggleElementSelection,
     stepSelectedZOrder,
     fitZoom,
     zoomIn,

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { calculateGuides } from '../../utils/smartGuides'
 import { clampAspectResizeToSlide, getRotatedAABB } from './use-canvas-resize-rotate'
+import { applyGroupResize, applyGroupRotate, getGroupBounds, scaleLineResizePoints } from './canvas-group-transform-geometry'
+import { expandSelectionIdsForGroups } from '../../utils/active-slide-selection'
 
 export function rotateDeltaToLocal(dx, dy, rotation = 0) {
   if (!rotation) return { dx, dy }
@@ -238,8 +240,9 @@ export default function useCanvasPointerInteraction({
         onBlockedAction?.('element-locked')
         return false
       }
+      const mutationIds = expandSelectionIdsForGroups(slide, selectedIds)
       const hasBlockedGroup = (slide.elements || []).some((item) => {
-        if (!selectedIds.includes(item.id) || !item.groupId) return false
+        if (!mutationIds.includes(item.id) || !item.groupId) return false
         return slide.elements.some((member) => member.groupId === item.groupId && (member.locked || member.hidden))
       })
       if (hasBlockedGroup) {
@@ -247,7 +250,7 @@ export default function useCanvasPointerInteraction({
         return false
       }
       const rect = canvas.getBoundingClientRect()
-      const startEls = slide.elements.filter((item) => selectedIds.includes(item.id) && !item.locked)
+      const startEls = slide.elements.filter((item) => mutationIds.includes(item.id) && !item.locked)
       pendingDragRef.current = {
         pointerId: event.pointerId,
         type,
@@ -257,16 +260,11 @@ export default function useCanvasPointerInteraction({
         startClientY: event.clientY,
         startMouseX: (event.clientX - rect.left) / scale,
         startMouseY: (event.clientY - rect.top) / scale,
-        startEl: {
-          x: element.x,
-          y: element.y,
-          width: element.width,
-          height: element.height,
-          rotation: element.rotation || 0,
-          snapRef: element.snapRef,
-        },
+        startEl: { ...element, rotation: element.rotation || 0 },
         startEls: startEls.map((item) => ({
           id: item.id,
+          type: item.type,
+          x1: item.x1, y1: item.y1, x2: item.x2, y2: item.y2, cx: item.cx, cy: item.cy,
           x: item.x,
           y: item.y,
           width: item.width,
@@ -368,9 +366,12 @@ export default function useCanvasPointerInteraction({
             const dragged = getVisualGuideElement(primary, raw)
             const { guides, snappedX, snappedY } = calculateGuides(
               dragged,
-              (slideRef.current?.elements || []).map((item) => getVisualGuideElement(item)),
+              (slideRef.current?.elements || [])
+                .filter((item) => !item.hidden && !drag.startEls.some((selected) => selected.id === item.id))
+                .map((item) => getVisualGuideElement(item)),
               slideW,
-              slideH
+              slideH,
+              scaleRef.current
             )
             nextDx = raw.x + snappedX - dragged.x - primary.x
             nextDy = raw.y + snappedY - dragged.y - primary.y
@@ -394,9 +395,12 @@ export default function useCanvasPointerInteraction({
           const dragged = getVisualGuideElement({ ...drag.startEl, id: drag.elementId }, raw)
           const { guides, snappedX, snappedY } = calculateGuides(
             dragged,
-            (slideRef.current?.elements || []).map((item) => getVisualGuideElement(item)),
+            (slideRef.current?.elements || [])
+              .filter((item) => !item.hidden)
+              .map((item) => getVisualGuideElement(item)),
             slideW,
-            slideH
+            slideH,
+            scaleRef.current
           )
           const clamped = applyMove(drag.startEl, raw.x + snappedX - dragged.x - drag.startEl.x, raw.y + snappedY - dragged.y - drag.startEl.y, slideW, slideH)
           x = clamped.x
@@ -415,14 +419,17 @@ export default function useCanvasPointerInteraction({
           applyResizeAspectRatio(drag.handle, drag.startEl, updates)
           aspectClamped = clampAspectResizeToSlide(drag.handle, updates, drag.startEl, slideW, slideH)
         }
-        if (!aspectClamped) clampToSlide(updates, drag.startEl, snap, slideW, slideH)
-        updateElementPreview(drag, updates)
+        if (!aspectClamped) clampToSlide(updates, drag.startEl, snap, slideW, slideH, drag.handle)
+        updateElementPreview(drag, drag.startEls.length > 1
+          ? applyGroupResize(drag.startEls, drag.startEl, updates, slideW, slideH)
+          : scaleLineResizePoints(drag.startEl, updates))
         return
       }
       if (drag.type === 'rotate') {
-        updateElementPreview(drag, {
-          rotation: getRotationAngle(drag.startEl, mouseX, mouseY, event.shiftKey),
-        })
+        const rotation = getRotationAngle(drag.startEl, mouseX, mouseY, event.shiftKey)
+        updateElementPreview(drag, drag.startEls.length > 1
+          ? applyGroupRotate(drag.startEls, getGroupBounds(drag.startEls), rotation - drag.startEl.rotation, slideW, slideH)
+          : { rotation })
       }
     }
 

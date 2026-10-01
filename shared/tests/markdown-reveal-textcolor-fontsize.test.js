@@ -41,6 +41,21 @@ describe('Phase 2 reveal: markdown honors textColor/fontSize (red-team M3)', () 
     expect(html).not.toContain('javascript:')
   })
 
+  it('formats emphasis in printed markdown rather than showing source markers', () => {
+    const html = renderElement({ ...base, content: '**Bold** and *italic*' }, {}, { forPrint: true })
+    expect(html).toContain('<p><strong>Bold</strong> and <em>italic</em></p>')
+  })
+
+  it('keeps code literal and link destinations untouched while formatting link labels', () => {
+    const html = renderElement({
+      ...base,
+      content: '`**literal** [label](https://example.com)` and [**label**](https://example.com/a*b)',
+    }, {}, { forPrint: true })
+    expect(html).toContain('<code>**literal** [label](https://example.com)</code>')
+    expect(html).toContain('href="https://example.com/a*b"')
+    expect(html).toContain('><strong>label</strong></a>')
+  })
+
   it('[red defect:renderer.contrast] uses readable dark text / 18px defaults when unset (srcdoc)', () => {
     const html = renderElement({ ...base, content: '# Hi' }, {}, {})
     expect(html).toContain('color:#141413')

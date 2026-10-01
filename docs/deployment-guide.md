@@ -268,6 +268,13 @@ editor. If `/share/:token` is made public, do not exempt `/api/analytics` or
 other editor APIs from authentication, and do not use a share-token query
 parameter as a proxy bypass rule.
 
+Project import (`/api/project-imports/*`) is stricter than the general ingress
+policy: it requires an `Origin` whose host equals the request `Host`, rejects
+cross-site `Sec-Fetch-Site`, and rejects referers from share/live/remote/speaker/game
+pages. A reverse proxy must preserve the client-facing `Host` header (as in the
+Nginx example below). The policy owner is
+[`project-import-origin.js`](../server/routes/project-import-origin.js).
+
 ## PPTX Import Policy
 
 Before package mapping, PPTX import validates ZIP structure, entry count, declared

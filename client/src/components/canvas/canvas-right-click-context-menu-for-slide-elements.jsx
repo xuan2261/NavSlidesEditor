@@ -150,6 +150,7 @@ export default function CanvasContextMenu({
   const hasLockedContext = contextElements.some((e) => e.locked)
   const hasMutableContext = contextElements.some((e) => !e.locked)
   const isReadOnly = !!slide?.locked || hasLockedContext
+  const targetReadOnly = !!slide?.locked || !!ctxEl?.locked
   const mutationDisabled = !!slide?.locked || !hasMutableContext
   const currentRef = ctxEl?.snapRef || 'ul'
   const copyableUrl = ['image', 'video'].includes(contextMenu.elementType)
@@ -231,7 +232,7 @@ export default function CanvasContextMenu({
         <>
           <Button
             variant="ghost"
-            disabled={isReadOnly}
+            disabled={targetReadOnly}
             onClick={() => {
               onStartCrop?.(contextMenu.elementId)
               onClose()
@@ -241,7 +242,7 @@ export default function CanvasContextMenu({
           </Button>
           <Button
             variant="ghost"
-            disabled={isReadOnly}
+            disabled={targetReadOnly}
             onClick={() => {
               const el = slide?.elements?.find((e) => e.id === contextMenu.elementId)
               if (el && el.imageW != null) {

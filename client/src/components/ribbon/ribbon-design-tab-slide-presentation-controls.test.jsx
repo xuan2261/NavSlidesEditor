@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import DesignTabContent from './design-tab-content'
@@ -66,6 +67,34 @@ describe('DesignTabContent', () => {
         }),
       })
     )
+  })
+  it('applies the deck theme to parents and vertical children without altering slide content', () => {
+    function Deck() {
+      const [presentation, setPresentation] = useState({
+        ...mockPresentation,
+        designTokens: { colors: { bg: '#ffffff' } },
+        slides: [{
+          id: 'parent',
+          designTokens: { colors: { bg: '#111111' } },
+          elements: [{ id: 'text', content: 'Parent content' }],
+          children: [{ id: 'child', designTokens: { colors: { bg: '#222222' } }, elements: [{ id: 'child-text', content: 'Child content' }] }],
+        }],
+      })
+      return <>
+        <DesignTabContent presentation={presentation} slide={presentation.slides[0]} onUpdatePresentation={setPresentation} />
+        <output data-testid="deck-theme">{JSON.stringify(presentation)}</output>
+      </>
+    }
+    render(<Deck />)
+    fireEvent.mouseDown(screen.getByLabelText('Change theme'))
+    fireEvent.keyDown(screen.getByLabelText('Apply theme to all slides'), { key: 'Enter' })
+    const deck = JSON.parse(screen.getByTestId('deck-theme').textContent)
+    expect(deck.designTokens.colors.bg).toBe('#ffffff')
+    expect(deck.slides).toEqual([{
+      id: 'parent',
+      elements: [{ id: 'text', content: 'Parent content' }],
+      children: [{ id: 'child', elements: [{ id: 'child-text', content: 'Child content' }] }],
+    }])
   })
 
   it('activates a theme swatch with Enter', () => {

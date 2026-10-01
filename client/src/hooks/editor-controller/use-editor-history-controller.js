@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { resolveActiveSlide } from '../../utils/active-slide-mapper'
 import { pushHistory } from '../../utils/history-stack'
 import { reconcileSelectionAfterHistory } from '../../utils/history-selection-reconciler'
@@ -21,6 +21,7 @@ export function useEditorHistoryController({
 }) {
   const historyRef = useRef([])
   const redoStackRef = useRef([])
+  const pendingSnapshotRef = useRef(null)
   const applyingUndoRef = useRef(false)
   const seededRef = useRef(false)
   const [hasChanges, setHasChanges] = useState(false)
@@ -29,15 +30,22 @@ export function useEditorHistoryController({
   const publishHistoryState = useCallback(() => {
     if (window.__E2E__) window.__NAVSLIDES_E2E_HISTORY_LENGTH = historyRef.current.length
     setAvailability({
-      canUndo: historyRef.current.length > 1,
+      canUndo: historyRef.current.length > 1 || pendingSnapshotRef.current !== null,
       canRedo: redoStackRef.current.length > 0,
     })
+  }, [])
+
+  const commitPendingSnapshot = useCallback(() => {
+    if (pendingSnapshotRef.current === null) return
+    historyRef.current = pushHistory(historyRef.current, pendingSnapshotRef.current)
+    pendingSnapshotRef.current = null
   }, [])
 
   const seedHistory = useCallback(
     (snapshot) => {
       historyRef.current = [clone(snapshot)]
       redoStackRef.current = []
+      pendingSnapshotRef.current = null
       seededRef.current = true
       setHasChanges(false)
       publishHistoryState()
@@ -45,7 +53,7 @@ export function useEditorHistoryController({
     [publishHistoryState]
   )
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!presentation) return
     if (seededRef.current) {
       seededRef.current = false
@@ -55,14 +63,16 @@ export function useEditorHistoryController({
       applyingUndoRef.current = false
       return
     }
+    pendingSnapshotRef.current = clone(presentation)
+    redoStackRef.current = []
+    setHasChanges(true)
+    publishHistoryState()
     const timer = setTimeout(() => {
-      historyRef.current = pushHistory(historyRef.current, clone(presentation))
-      redoStackRef.current = []
-      setHasChanges(historyRef.current.length > 1)
+      commitPendingSnapshot()
       publishHistoryState()
     }, 500)
     return () => clearTimeout(timer)
-  }, [presentation, publishHistoryState])
+  }, [commitPendingSnapshot, presentation, publishHistoryState])
 
   const reconcile = useCallback(
     (state) => {
@@ -110,6 +120,7 @@ export function useEditorHistoryController({
   )
 
   const handleUndo = useCallback(() => {
+    commitPendingSnapshot()
     if (historyRef.current.length < 2) return
     applyingUndoRef.current = true
     redoStackRef.current = pushHistory(
@@ -120,18 +131,18 @@ export function useEditorHistoryController({
     setHasChanges(historyRef.current.length > 1)
     publishHistoryState()
     restore(historyRef.current[historyRef.current.length - 1])
-  }, [publishHistoryState, restore])
+  }, [commitPendingSnapshot, publishHistoryState, restore])
 
   const handleRedo = useCallback(() => {
     if (!redoStackRef.current.length) return
     applyingUndoRef.current = true
     const state = redoStackRef.current[redoStackRef.current.length - 1]
     redoStackRef.current = redoStackRef.current.slice(0, -1)
-    if (presentation) historyRef.current = pushHistory(historyRef.current, clone(presentation))
+    historyRef.current = pushHistory(historyRef.current, state)
     setHasChanges(historyRef.current.length > 1)
     publishHistoryState()
     restore(state)
-  }, [presentation, publishHistoryState, restore])
+  }, [publishHistoryState, restore])
 
   return { ...availability, handleRedo, handleUndo, hasChanges, seedHistory }
 }

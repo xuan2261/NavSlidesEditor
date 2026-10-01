@@ -16,6 +16,7 @@ const { resolveChartPalette } = require('./chart-colors.js')
 const { normalizeElementAction, serializeElementAction } = require('./element-actions.js')
 const { normalizeImageAccessibility, normalizeMediaAccessibility } = require('./media-accessibility.js')
 const { resolveConnectorGeometry } = require('./connector-geometry.js')
+const { buildTicks, parseDatePos } = require('./timeline-utils.js')
 
 /**
  * Inline SVG paint that preserves the exact `name="value"` token shape for
@@ -124,15 +125,26 @@ function escapeSrcdoc(html) {
 }
 
 
+function renderMarkdownEmphasis(value) {
+  return escapeHtml(value)
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+}
+
 function renderMarkdownInline(value) {
   const text = String(value || '')
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<[^>]+>/g, '')
-  return escapeHtml(text)
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, href) => {
-      return `<a href="${escapeHtml(sanitizeHref(href))}" target="_blank" rel="noopener">${label}</a>`
-    })
+  let html = ''
+  let cursor = 0
+  for (const token of text.matchAll(/`([^`]+)`|\[([^\]]+)\]\(([^)]+)\)/g)) {
+    html += renderMarkdownEmphasis(text.slice(cursor, token.index))
+    html += token[1] !== undefined
+      ? `<code>${escapeHtml(token[1])}</code>`
+      : `<a href="${escapeHtml(sanitizeHref(token[3]))}" target="_blank" rel="noopener">${renderMarkdownEmphasis(token[2])}</a>`
+    cursor = token.index + token[0].length
+  }
+  return html + renderMarkdownEmphasis(text.slice(cursor))
 }
 
 function renderSafeMarkdownHtml(content) {
@@ -843,37 +855,8 @@ function renderTimeline(el, style, wrap, vis, _opts) {
     ['year', '10year', '100year', '1000year'].includes(spacing) ||
     (spacing === 'auto' && /^-?\d+$/.test(String(startDate)))
 
-  function datePos(d) {
-    if (yearMode) {
-      const y0 = parseInt(startDate) || 0
-      const y1 = parseInt(endDate) || 0
-      const yr = y1 - y0 || 1
-      return pad + (((parseInt(d) || 0) - y0) / yr) * (w - pad * 2)
-    }
-    const t0 = new Date(startDate).getTime()
-    const t1 = new Date(endDate).getTime()
-    const range = t1 - t0 || 1
-    return pad + ((new Date(d).getTime() - t0) / range) * (w - pad * 2)
-  }
-
-  const ticks = []
-  if (yearMode) {
-    const y0 = parseInt(startDate) || 0
-    const y1 = parseInt(endDate) || 0
-    const step =
-      spacing === '1000year'
-        ? 1000
-        : spacing === '100year'
-          ? 100
-          : spacing === '10year'
-            ? 10
-            : Math.abs(y1 - y0) > 8
-              ? 2
-              : 1
-    const sY = y0 < y1 ? Math.ceil(y0 / step) * step : Math.floor(y0 / step) * step
-    for (let y = sY; y0 < y1 ? y <= y1 : y >= y1; y += y0 < y1 ? step : -step)
-      ticks.push({ date: String(y), label: String(y) })
-  }
+  const datePos = (date) => parseDatePos(date, startDate, endDate, w, pad, yearMode)
+  const ticks = buildTicks(startDate, endDate, spacing, yearMode)
 
   let svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;overflow:visible">`
   svg += `<line x1="${pad}" y1="${lineY}" x2="${w - pad}" y2="${lineY}" ${lineStroke} stroke-width="2"/>`
@@ -1100,5 +1083,4 @@ module.exports = {
   getMediaFragmentSrc,
   getPlaybackRate,
   getAssetOrigin,
-  getBackgroundAttrs: null, // will be set from htmlGenerator
 }

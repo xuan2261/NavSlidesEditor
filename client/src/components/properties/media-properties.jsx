@@ -1,3 +1,4 @@
+import { useId, useState } from 'react'
 import { Input, Select } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
 import { resolveUrlEntry } from '../../utils/url-safety'
@@ -8,12 +9,23 @@ import { resolveVideoSrc } from '../../utils/migrate-video-src'
 
 export default function MediaProperties({ element, onUpdate }) {
   const isVideo = element.type === 'video'
+  const [trimError, setTrimError] = useState(null)
+  const trimErrorId = useId()
   const locked = element.locked === true
   const tracks = Array.isArray(element.tracks) ? element.tracks : []
   const updateTracks = (next) => onUpdate({ tracks: next })
   const updateNumber = (key, value, min = null, max = null) => {
     const next = clampNumber(value, min, max, null)
     if (next === null) return
+    if (key === 'startTime' || key === 'endTime') {
+      const start = key === 'startTime' ? next : Number(element.startTime ?? 0)
+      const end = key === 'endTime' ? next : Number(element.endTime ?? 0)
+      if (end !== 0 && end <= start) {
+        setTrimError(key)
+        return
+      }
+      setTrimError(null)
+    }
     onUpdate({ [key]: next })
   }
 
@@ -70,6 +82,8 @@ export default function MediaProperties({ element, onUpdate }) {
               <Input
                 data-testid="prop-video-start-time"
                 aria-label="Video start time"
+                aria-invalid={trimError === 'startTime' ? true : undefined}
+                aria-describedby={trimError === 'startTime' ? trimErrorId : undefined}
                 className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
                 type="number"
                 min="0"
@@ -85,6 +99,8 @@ export default function MediaProperties({ element, onUpdate }) {
               <Input
                 data-testid="prop-video-end-time"
                 aria-label="Video end time"
+                aria-invalid={trimError === 'endTime' ? true : undefined}
+                aria-describedby={trimError === 'endTime' ? trimErrorId : undefined}
                 className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
                 type="number"
                 min="0"
@@ -110,6 +126,11 @@ export default function MediaProperties({ element, onUpdate }) {
               />
             </div>
           </div>
+          {trimError && (
+            <p id={trimErrorId} role="alert" className="text-[11px] text-red-400 mb-2">
+              End Time must be greater than Start Time, or 0 for no end limit.
+            </p>
+          )}
         </>
       )}
       <div className="flex flex-col gap-1">

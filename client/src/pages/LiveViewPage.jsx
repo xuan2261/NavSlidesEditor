@@ -12,6 +12,18 @@ function getAnnotationBucketKey(slideIndex, verticalIndex = 0) {
   return verticalIndex ? `${slideIndex}:${verticalIndex}` : String(slideIndex)
 }
 
+function publishTimerStates(states) {
+  const now = Date.now()
+  window.__timerStates = Object.fromEntries(Object.entries(states).map(([id, state]) => [id, {
+    remaining: state.running && state.endedAt
+      ? Math.max(0, Math.ceil((state.endedAt - now) / 1000))
+      : (state.pausedRemaining ?? state.duration),
+    duration: state.duration,
+    running: state.running,
+    endedAt: state.endedAt,
+  }]))
+}
+
 export default function LiveViewPage() {
   const { roomCode } = useParams()
 
@@ -326,30 +338,31 @@ export default function LiveViewPage() {
     (annotation) => annotation.coordinateSpace !== 'normalized'
   )
 
+  const timerMirrorSourceRef = useRef({})
+  const timerMirrorIntervalRef = useRef(null)
+  const handleTimerStatesChanged = useCallback((states) => {
+    timerMirrorSourceRef.current = states
+    publishTimerStates(states)
+    const needsTick = Object.values(states).some((state) => state.running && state.endedAt)
+    if (needsTick && timerMirrorIntervalRef.current === null) {
+      timerMirrorIntervalRef.current = setInterval(() => publishTimerStates(timerMirrorSourceRef.current), 100)
+    } else if (!needsTick && timerMirrorIntervalRef.current !== null) {
+      clearInterval(timerMirrorIntervalRef.current)
+      timerMirrorIntervalRef.current = null
+    }
+  }, [])
+
   // Timer sync (Phase 2): subscribe to server timer events
   const timerStatesRef = useLiveTimerSync(socketRef.current, (elementId) => {
     // Optional: handle timer end (e.g., log or notify)
     console.log('[timer] ended:', elementId)
-  })
+  }, handleTimerStatesChanged)
 
-  // Expose timer states via window for iframe consumers (game renderers)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const states = {}
-      for (const [id, state] of Object.entries(timerStatesRef.current)) {
-        states[id] = {
-          remaining: state.running && state.endedAt
-            ? Math.max(0, Math.ceil((state.endedAt - Date.now()) / 1000))
-            : (state.pausedRemaining ?? state.duration),
-          duration: state.duration,
-          running: state.running,
-          endedAt: state.endedAt,
-        }
-      }
-      window.__timerStates = states
-    }, 100)
-    return () => clearInterval(interval)
-  }, [timerStatesRef])
+  useEffect(() => () => {
+    clearInterval(timerMirrorIntervalRef.current)
+    timerMirrorIntervalRef.current = null
+    window.__timerStates = {}
+  }, [])
 
   // Bridge: iframe game renderers emit timer events via postMessage
   useEffect(() => {

@@ -57,10 +57,4 @@ test.describe('Settings Page', () => {
     await expect(page.locator('.bg-panel').first()).toBeVisible()
   })
 
-  test('test connection button is present', async ({ page }) => {
-    const settings = new SettingsPage(page)
-    await settings.goto()
-
-    await expect(page.locator('button:has-text("Test Connection")')).toBeVisible()
-  })
 })

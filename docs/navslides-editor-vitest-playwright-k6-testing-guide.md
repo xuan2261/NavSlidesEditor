@@ -104,7 +104,7 @@ If parallelism causes flakes on shared state in the future, upgrade `tests/e2e/g
 
 `tests/e2e/fixtures/test-fixtures.js` validates `PLAYWRIGHT_TEST_BASE_URL` matches `^https?://(127\.0\.0\.1|localhost)(:\d+)?(/|$)` before any destructive API call (`apiCreatePresentation`, `apiUpdatePresentation`, `apiDeletePresentation`, `apiCreateShareLink`, `apiCreateSnapshot`). This blocks accidental writes against shared/prod servers when env is misconfigured.
 
-Unit-tested in `tests/unit/test-fixtures-loopback-baseurl-guard.test.js` (5 cases: 127.0.0.1 ok, localhost ok, https prod blocked, 10.x private blocked, multi-method blocked).
+Unit-tested in `tests/unit/test-fixtures-loopback.test.js` (loopback allowed; production and private-network URLs rejected across create/get/update/share/snapshot/delete).
 
 ## Page Object Model
 
@@ -112,7 +112,7 @@ E2E specs use POM helpers under `tests/e2e/pages/`:
 
 | Helper | Responsibility |
 |---|---|
-| `EditorPage.js` | Top-level page wrapper; delegates to specialised helpers |
+| `editor-page.js` | Top-level page wrapper (`EditorPage` class); delegates to specialised helpers |
 | `canvas-helper.js` | Slide canvas DOM (drag, zoom, element queries) |
 | `ribbon-insert-helper.js` | Insert tab (text/shape/image/table/chart) |
 | `properties-panel-helper.js` | Right-side properties panel |
@@ -121,7 +121,7 @@ E2E specs use POM helpers under `tests/e2e/pages/`:
 | `menu-bar-dropdown-helper.js` | File / AI / Share menu dropdowns (Radix `[role=menuitem]`) |
 | `text-editor-prosemirror-and-find-replace-helper.js` | TipTap editing + find/replace bar |
 
-Helpers are kebab-case (file-naming hook); `EditorPage.js` is preserved in PascalCase because 30+ specs already import it.
+Helper files are kebab-case (file-naming hook); the exported page-object classes stay PascalCase (`EditorPage`, `HomePage`).
 
 ## Common selectors
 

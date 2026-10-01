@@ -79,9 +79,7 @@ test.describe('Live Presentation & WebSockets', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('remote controller follows vertical slide order', async ({ context, request }) => {

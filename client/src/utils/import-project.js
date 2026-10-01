@@ -1,4 +1,5 @@
 import JSZip from 'jszip'
+import { getProjectImportContentErrors } from 'revealjs-shared'
 import {
   buildLegacyArchiveEntries,
   rewriteProjectMediaUrls,
@@ -107,6 +108,7 @@ export function validateProjectFile(parsed) {
 
   if (!parsed.presentation.title) warnings.push('Presentation missing title field')
   if (!Array.isArray(parsed.presentation.slides)) errors.push('Invalid structure: slides must be an array')
+  errors.push(...getProjectImportContentErrors(parsed.presentation))
 
   return { valid: errors.length === 0, errors, warnings }
 }

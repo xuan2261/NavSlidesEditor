@@ -55,7 +55,7 @@ docker compose down -v        # Stop + delete volumes
 ```bash
 npx vitest run server/routes/share.test.js
 npx vitest run shared/tests/
-npx playwright test tests/smoke.spec.js
+npx playwright test tests/e2e/slides.spec.js
 ```
 
 ## Architecture
@@ -72,7 +72,7 @@ NavSlidesEditor/
 │       ├── hooks/           # use-keyboard, use-clipboard, use-live-presentation, etc.
 │       └── extensions/      # TipTap: FontSize, FontFamily, MathExtension, etc.
 ├── server/           # Express REST API + WebSocket (Socket.IO)
-│   ├── index.js            # Main server (323 LOC) — imports modular routes
+│   ├── index.js            # Main server — imports modular routes
 │   ├── routes/             # presentations, templates, share, upload, github, sync, 
 │   │                       # history, settings, media, live, pptx-import, games, ai, etc.
 │   ├── services/           # storage, socket-handler, live-rooms, pptx-exporter, etc.
@@ -98,8 +98,8 @@ NavSlidesEditor/
   - `presentation-store.js` — presentation data (loaded/saved via REST)
   - `ui-store.js` — UI state (includes ribbon state)
 - **Pages** (`client/src/pages/`):
-  - `EditorPage.jsx` — main editor (~650 LOC)
-  - `HomePage.jsx` — dashboard, CRUD, templates (~2k LOC; largest page)
+  - `EditorPage.jsx` — main editor
+  - `HomePage.jsx` — dashboard, CRUD, templates
   - `LiveViewPage.jsx`, `RemoteControlPage.jsx`, `SpeakerViewPage.jsx` — live presentation
   - `SettingsPage.jsx`, `ExplorePage.jsx`, `game-player-join-page.jsx`
 - **Components** (`client/src/components/`): SlideCanvas, PropertiesPanel, SlidePanel, QuickAccessToolbar, AnimationTimeline, FindReplaceBar, ShareModal, ribbon/ (new UI), various modals (AI, media, templates, etc.).
@@ -109,19 +109,20 @@ NavSlidesEditor/
 
 ### Server Architecture (Express)
 
-Main `server/index.js` (323 LOC) imports modular routes from `server/routes/`:
+Main `server/index.js` imports modular routes from `server/routes/`:
 
 - **Routes** (`server/routes/`):
   - `presentations.js` — GET/POST/PUT/DELETE /api/presentations
   - `templates.js` — GET/POST/DELETE /api/templates
-  - `share.js` — POST /api/share/:id (generate/revoke share tokens)
+  - `share.js` — GET/POST/DELETE /api/presentations/:id/share(s) (generate/revoke share tokens)
   - `upload.js` — POST /api/upload (file upload via multer, SHA256 deduplication)
-  - `github.js` — POST /api/github/push
-  - `sync.js` — POST /api/sync (rclone cloud sync)
-  - `history.js` — GET/POST/DELETE /api/history/:id
+  - `github.js` — GET/POST /api/github/config, POST /api/github/push/:presId
+  - `sync.js` — mounted at /api/rclone: POST /sync, POST /sync-single, GET /status (rclone cloud sync)
+  - `history.js` — /api/presentations/:id/snapshot(s), POST /api/presentations/:id/restore/:snapshotId
   - `media.js` — media library endpoints
   - `live.js` — live presentation REST endpoints
   - `pptx-import.js` — PPTX import
+  - `project-import.js` — /api/project-imports: atomic `.navslides`/JSON project import (preflight → media → publish, DELETE rolls back)
   - `games-rest-api-handler.js` — game mode REST API
   - `ai.js` — AI generation endpoints
   - `analytics.js`, `settings.js`, `explore.js`, `marketplace.js`

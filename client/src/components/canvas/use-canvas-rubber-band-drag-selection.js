@@ -73,9 +73,15 @@ export default function useCanvasRubberBandSelection({
     (hitIds) => {
       if (hitIds.length === 0) return
       onToggleSelectElement(null, false)
-      hitIds.forEach((id) => onToggleSelectElement(id, true))
+      const groups = new Set()
+      for (const id of hitIds) {
+        const groupId = slide?.elements?.find((element) => element.id === id)?.groupId
+        if (groupId && groups.has(groupId)) continue
+        if (groupId) groups.add(groupId)
+        onToggleSelectElement(id, true)
+      }
     },
-    [onToggleSelectElement]
+    [onToggleSelectElement, slide]
   )
 
   return {

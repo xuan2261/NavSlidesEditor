@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { markdownToHtml } from './markdown-utils'
 
+function renderMarkdown(source) {
+  const root = document.createElement('div')
+  root.innerHTML = markdownToHtml(source)
+  return root
+}
+
 describe('markdownToHtml', () => {
   it('converts h1 heading', () => {
     const result = markdownToHtml('# Hello')
@@ -38,11 +44,9 @@ describe('markdownToHtml', () => {
     expect(result).toContain('code</code>')
   })
 
-  it('converts code blocks with language', () => {
-    const result = markdownToHtml('```js\nconsole.log("hi")\n```')
-    expect(result).toContain('<pre')
-    expect(result).toContain('<code')
-    expect(result).toContain('console.log("hi")')
+  it('renders fenced code with language as literal text', () => {
+    const root = renderMarkdown('```js\nconsole.log("hi")\n```')
+    expect(root.querySelector('pre > code').textContent.trimEnd()).toBe('console.log("hi")')
   })
 
   it('converts code blocks with escaped HTML', () => {
@@ -90,5 +94,31 @@ describe('markdownToHtml', () => {
   it('handles empty input', () => {
     const result = markdownToHtml('')
     expect(result).toBe('')
+  })
+
+  it('does not parse emphasis, links, headings, lists, or entities inside fenced code', () => {
+    const literal = 'const t = **literal**\n# heading\n- item\n[link](https://example.com)\n---\n<tag> &lt; &'
+    const root = renderMarkdown(`\`\`\`js\n${literal}\n\`\`\`\n\n**outside**`)
+    const code = root.querySelector('pre > code')
+    expect(code.textContent.trimEnd()).toBe(literal)
+    expect(code.children).toHaveLength(0)
+    expect(root.querySelector('pre p')).toBeNull()
+    expect(root.querySelector('p strong').textContent).toBe('outside')
+  })
+
+  it('preserves markdown syntax and entities inside inline code', () => {
+    const literal = '**literal** *em* [link](https://example.com) <tag> &lt; &'
+    const root = renderMarkdown(`before \`${literal}\` after **outside**`)
+    const code = root.querySelector('p > code')
+    expect(code.textContent).toBe(literal)
+    expect(code.children).toHaveLength(0)
+    expect(root.querySelector('p > strong').textContent).toBe('outside')
+  })
+
+  it('supports inline backticks and language punctuation without breaking code boundaries', () => {
+    const root = renderMarkdown('`` `inner` **literal** ``\n\n```c++\na * b\n```\n\nAfter')
+    expect(root.querySelector('p > code').textContent).toBe('`inner` **literal**')
+    expect(root.querySelector('pre > code').textContent.trimEnd()).toBe('a * b')
+    expect(root.querySelector('pre + p').textContent).toBe('After')
   })
 })

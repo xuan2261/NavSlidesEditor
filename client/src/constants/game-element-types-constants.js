@@ -43,6 +43,7 @@ export const DEFAULT_GAME_COLORS = {
 
 export const GAME_BASE_DEFAULTS = {
   type: 'game',
+  gameType: 'name-picker',
   width: 640,
   height: 480,
   zIndex: 5,

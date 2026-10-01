@@ -39,9 +39,7 @@ test.describe('Slide Management Advanced', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('multi-select delete clamps the active slide to the remaining tail', async ({ request }) => {

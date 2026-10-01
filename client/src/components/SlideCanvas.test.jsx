@@ -204,60 +204,16 @@ describe('SlideCanvas media drop', () => {
     expect(onRemoveGuide).toHaveBeenCalledWith(0)
   })
 
-  it.each(
-    ['Delete', 'Backspace'].flatMap((key) => [
-      [key, 'select', () => document.createElement('select')],
-      [key, 'button', () => document.createElement('button')],
-      [
-        key,
-        'contenteditable',
-        () => {
-          const target = document.createElement('div')
-          target.contentEditable = 'true'
-          return target
-        },
-      ],
-      [key, 'media control', () => document.createElement('video')],
-    ])
-  )('does not delete selected elements when %s is owned by %s', (key, _name, createTarget) => {
-    const onDeleteSelectedElements = vi.fn()
-    renderCanvas({ selectedElementIds: ['shape-1'], onDeleteSelectedElements })
-    const target = createTarget()
-    target.tabIndex = 0
-    document.body.appendChild(target)
-    target.focus()
-
-    fireEvent.keyDown(target, { key })
-
-    expect(onDeleteSelectedElements).not.toHaveBeenCalled()
-    target.remove()
+  it('transfers focus to the named canvas when the focused element is removed', () => {
+    const shape = { id: 'a', type: 'shape', shape: 'rect', x: 40, y: 40, width: 120, height: 80 }
+    const view = renderCanvas({ slide: { id: 's1', elements: [shape] }, selectedElementIds: ['a'] })
+    screen.getByTestId('slide-element-a').focus()
+    view.rerender(<SlideCanvas
+      editor={null} slide={{ id: 's1', elements: [] }} selectedElementIds={[]}
+      editingElementId={null} showGrid={false} onToggleSelectElement={vi.fn()}
+      onStartEdit={vi.fn()} onStopEdit={vi.fn()} onUpdateElement={vi.fn()} onUpdateElements={vi.fn()}
+    />)
+    expect(document.activeElement).toBe(screen.getByLabelText('Slide canvas'))
   })
 
-  it.each(['Delete', 'Backspace'])('deletes once when the canvas owns %s', (key) => {
-    const onDeleteSelectedElements = vi.fn()
-    renderCanvas({ selectedElementIds: ['shape-1'], onDeleteSelectedElements })
-    const canvas = screen.getByTestId('canvas-area')
-    canvas.tabIndex = 0
-    canvas.focus()
-
-    fireEvent.keyDown(canvas, { key })
-
-    expect(onDeleteSelectedElements).toHaveBeenCalledTimes(1)
-  })
-
-  it.each(['Delete', 'Backspace'])('does not delete from a locked slide with %s', (key) => {
-    const onDeleteSelectedElements = vi.fn()
-    renderCanvas({
-      slide: { id: 's1', locked: true, elements: [] },
-      selectedElementIds: ['shape-1'],
-      onDeleteSelectedElements,
-    })
-    const canvas = screen.getByTestId('canvas-area')
-    canvas.tabIndex = 0
-    canvas.focus()
-
-    fireEvent.keyDown(canvas, { key })
-
-    expect(onDeleteSelectedElements).not.toHaveBeenCalled()
-  })
 })

@@ -1,6 +1,8 @@
+import { useId } from 'react'
 import { Input, Select, ColorPicker } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
 import { computeMixedValues } from '../../utils/selection-mixed-values'
+import MixedValueNotice from './mixed-value-notice'
 /**
  * Shape and Line specific properties.
  */
@@ -19,12 +21,18 @@ function connectionPatch(connections, endpointName, change) {
 
 export default function ShapeProperties({ element, onUpdate, elements, selectedElementIds }) {
   const isLine = element.type === 'line'
+  const mixedId = useId()
   const mixed = computeMixedValues(elements || [], selectedElementIds || [], [
     'opacity',
     'fill',
     'stroke',
     'textColor',
   ])
+  const mixedDescription = (key) => mixed[key]?.isMixed ? `${mixedId}-${key}` : undefined
+  const mixedNotice = (key, label, value) => (
+    <MixedValueNotice id={`${mixedId}-${key}`} isMixed={mixed[key]?.isMixed}
+      label={label} onApply={() => onUpdate({ [key]: value })} />
+  )
 
   return (
     <>
@@ -35,11 +43,13 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
             <ColorPicker
               data-testid="prop-shape-fill"
               aria-label="Shape fill color"
+              aria-describedby={mixedDescription('fill')}
               data-mixed={mixed.fill?.isMixed ? 'true' : undefined}
               className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
               value={element.fill || '#6366f1'}
               onChange={(e) => onUpdate({ fill: e.target.value })}
             />
+            {mixedNotice('fill', 'shape fill color', element.fill || '#6366f1')}
           </div>
         )}
         <div className="flex flex-col gap-1">
@@ -47,11 +57,13 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
           <ColorPicker
             data-testid="prop-shape-stroke"
             aria-label={isLine ? 'Line color' : 'Shape stroke color'}
+            aria-describedby={mixedDescription('stroke')}
             data-mixed={mixed.stroke?.isMixed ? 'true' : undefined}
             className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
             value={element.stroke === 'none' || !element.stroke ? '#ffffff' : element.stroke}
             onChange={(e) => onUpdate({ stroke: e.target.value })}
           />
+          {mixedNotice('stroke', isLine ? 'line color' : 'shape stroke color', element.stroke || 'none')}
         </div>
       </div>
 
@@ -271,11 +283,13 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
             <ColorPicker
               data-testid="prop-shape-text-color"
               aria-label="Shape label text color"
+              aria-describedby={mixedDescription('textColor')}
               data-mixed={mixed.textColor?.isMixed ? 'true' : undefined}
               className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
               value={element.textColor || '#ffffff'}
               onChange={(e) => onUpdate({ textColor: e.target.value })}
             />
+            {mixedNotice('textColor', 'shape text color', element.textColor || '#ffffff')}
           </div>
         </div>
       )}

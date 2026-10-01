@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { useEditorStore } from '../stores/editor-store'
+import { hasBlockedGroupMutation } from '../utils/active-slide-selection'
 
 
 function copyElementWithoutId(element) {
@@ -159,7 +160,8 @@ export function createDuplicateOperation({ slideElements, selectedElementIds }) 
  * @returns {{ clipboardData: Object[]|null, idsToDelete: string[] }}
  */
 export function createCutOperation({ slideElements, selectedElementIds }) {
-  if (!slideElements || selectedElementIds.length === 0) {
+  if (!slideElements || selectedElementIds.length === 0 ||
+      hasBlockedGroupMutation({ elements: slideElements }, selectedElementIds)) {
     return { clipboardData: null, idsToDelete: [] }
   }
   // Skip locked members (parity with delete + duplicate). Mixed selection cuts free only.

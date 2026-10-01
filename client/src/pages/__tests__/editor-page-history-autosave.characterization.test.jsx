@@ -1,5 +1,5 @@
 // Characterization: undo/redo history state and dirty-save affordance.
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest'
 import { LiveSocketContext } from '../../contexts/live-socket-context-provider.jsx'
 
@@ -92,6 +92,44 @@ describe('EditorPage history characterization', () => {
       () => expect(screen.getByTitle('Save (Ctrl+S)')).toBeTruthy(),
       { timeout: 6000 }
     )
+  })
+
+  it('preserves the current snapshot after two undos and two redos', async () => {
+    renderPage()
+    const title = await screen.findByDisplayValue('Char Deck')
+    vi.useFakeTimers()
+    for (const value of ['Snapshot B', 'Snapshot C']) {
+      fireEvent.change(title, { target: { value } })
+      await act(() => vi.advanceTimersByTimeAsync(600))
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(title.value).toBe('Char Deck')
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }))
+    expect(title.value).toBe('Snapshot C')
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(title.value).toBe('Snapshot B')
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }))
+    expect(title.value).toBe('Snapshot C')
+  })
+
+  it('undoes an edit immediately and invalidates redo before the debounce expires', async () => {
+    renderPage()
+    const title = await screen.findByDisplayValue('Char Deck')
+    vi.useFakeTimers()
+    fireEvent.change(title, { target: { value: 'Pending edit' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(title.value).toBe('Char Deck')
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }))
+    expect(title.value).toBe('Pending edit')
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    fireEvent.change(title, { target: { value: 'New branch' } })
+    expect(screen.getByRole('button', { name: 'Redo' }).disabled).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(title.value).toBe('Char Deck')
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }))
+    expect(title.value).toBe('New branch')
   })
 
   it('reflects undo and redo availability in the quick-access controls', async () => {

@@ -16,6 +16,8 @@
     "website"
   ],
   "scripts": {
+    "navslides": "node scripts/agent/cli.mjs",
+    "mcp": "node scripts/agent/mcp.mjs",
     "dev": "concurrently \"npm run dev --workspace=server\" \"npm run dev --workspace=client\"",
     "vendor": "node scripts/copy-vendor.js",
     "postinstall": "npm run vendor",
@@ -93,6 +95,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
     "@eslint/js": "^9.39.4",
+    "@modelcontextprotocol/sdk": "1.31.0",
     "@playwright/test": "1.63.0",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.2",
@@ -115,7 +118,8 @@
     "prettier": "^3.9.7",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.1",
+    "zod": "4.6.5"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",

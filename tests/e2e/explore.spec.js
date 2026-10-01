@@ -15,15 +15,14 @@ test.describe('Explore Page', () => {
   })
 
   test('shows empty state when no shared presentations', async ({ page }) => {
+    await page.route('**/api/explore', (route) => route.fulfill({
+      json: { presentations: [] },
+    }))
     const explore = new ExplorePage(page)
     await explore.goto()
 
-    const cardCount = await explore.getCardCount()
-    if (cardCount === 0) {
-      await expect(page.locator('text=No public presentations yet')).toBeVisible()
-    } else {
-      await expect(explore.presentationCards).toHaveCount(cardCount)
-    }
+    await expect(page.getByText('No public presentations yet', { exact: true })).toBeVisible()
+    await expect(explore.presentationCards).toHaveCount(0)
   })
 
   test('shows shared presentations after sharing one', async ({ page, request }) => {

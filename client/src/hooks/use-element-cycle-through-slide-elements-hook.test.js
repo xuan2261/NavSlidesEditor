@@ -54,4 +54,27 @@ describe('useElementCycle', () => {
     const { result } = renderHook(() => useElementCycle(['a'], slides, 0))
     expect(result.current.cyclePrev()).toBe('c')
   })
+  it('skips hidden elements and cycles a selected group as one stop', () => {
+    const slides = makeSlides([
+      { id: 'a', groupId: 'g' },
+      { id: 'b', groupId: 'g' },
+      { id: 'hidden', hidden: true },
+      { id: 'locked', locked: true },
+      { id: 'c' },
+    ])
+    const { result, rerender } = renderHook(
+      ({ selected }) => useElementCycle(selected, slides, 0),
+      { initialProps: { selected: ['a', 'b'] } }
+    )
+    expect(result.current.cycleNext()).toBe('locked')
+    expect(result.current.cyclePrev()).toBe('c')
+    rerender({ selected: ['locked'] })
+    expect(result.current.cyclePrev()).toBe('a')
+  })
+
+  it('leaves native focus traversal available when all elements are hidden', () => {
+    const { result } = renderHook(() => useElementCycle([], makeSlides([{ id: 'a', hidden: true }]), 0))
+    expect(result.current.cycleNext()).toBeNull()
+    expect(result.current.cyclePrev()).toBeNull()
+  })
 })

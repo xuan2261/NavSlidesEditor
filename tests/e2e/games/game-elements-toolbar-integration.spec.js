@@ -23,9 +23,7 @@ test.describe('Game Element — Toolbar Integration', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('Insert menu shows all 10 game types', async ({ page }) => {

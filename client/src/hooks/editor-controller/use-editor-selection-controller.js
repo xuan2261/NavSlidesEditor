@@ -66,18 +66,19 @@ export function useEditorSelectionController(c) {
         c.clearRichTextContent()
       }
       if (!id) return c.setSelectedElementIds([])
+      const memberIds = getSelectionIdsForActiveSlideElement(
+        getSelectionSlide(),
+        c.presentation?.slides[c.currentSlideIndexRef?.current],
+        id
+      )
       if (multi) {
         c.setSelectedElementIds((ids) =>
-          ids.includes(id) ? ids.filter((selectedId) => selectedId !== id) : [...ids, id]
+          ids.includes(id)
+            ? ids.filter((selectedId) => !memberIds.includes(selectedId))
+            : [...ids.filter((selectedId) => !memberIds.includes(selectedId)), ...memberIds]
         )
       } else {
-        c.setSelectedElementIds(
-          getSelectionIdsForActiveSlideElement(
-            getSelectionSlide(),
-            c.presentation?.slides[c.currentSlideIndexRef.current],
-            id
-          )
-        )
+        c.setSelectedElementIds(memberIds)
       }
     },
     [c, getSelectionSlide, editingElementIdRef]

@@ -1,4 +1,5 @@
-import { escapePlainText } from 'revealjs-shared'
+import shared from 'revealjs-shared'
+const { escapePlainText } = shared
 
 /**
  * Build element-based slides from an AI-generated outline, client-side.

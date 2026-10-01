@@ -27,6 +27,14 @@ const SIZE_PRESETS = [
   { label: 'Wide', w: 1280, h: 720, icon: MonitorPlay },
   { label: 'Ultra', w: 1920, h: 1080, icon: MonitorSpeaker },
 ]
+function clearSlideThemeOverrides(slide) {
+  return {
+    ...slide,
+    designTokens: undefined,
+    ...(slide.children ? { children: slide.children.map(clearSlideThemeOverrides) } : {}),
+  }
+}
+
 
 function ThemeSwatch({ preset, active, onSelect }) {
   const c = preset.tokens.colors
@@ -310,9 +318,7 @@ export default function DesignTabContent({
                 onUpdatePresentation?.((prev) => ({
                   ...prev,
                   designTokens: prev?.designTokens || undefined,
-                  slides: (prev?.slides || []).map((s) =>
-                    s.designTokens ? { ...s, designTokens: undefined } : s
-                  ),
+                  slides: (prev?.slides || []).map(clearSlideThemeOverrides),
                 }))
                 setShowThemes(false)
               }}
@@ -334,7 +340,7 @@ export default function DesignTabContent({
           <Button variant="ribbon" className="h-7"
             ref={bgTriggerRef}
             title={isMaster ? 'Exit master editing to change a slide background' : 'Slide background'} aria-label="Change slide background"
-            disabled={isMaster}
+            disabled={isMaster || Boolean(slide?.locked)}
             onMouseDown={(e) => { e.preventDefault(); setShowBg((v) => !v) }}
             onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => setShowBg((v) => !v))}>
             <div
@@ -353,7 +359,7 @@ export default function DesignTabContent({
             />
             <span className="text-[11px] hidden lg:inline">Background</span>
           </Button>
-          {showBg && slide && onUpdateSlide && (
+          {showBg && slide && !slide.locked && onUpdateSlide && (
             <BackgroundControls
               open={showBg}
               anchorRef={bgTriggerRef}

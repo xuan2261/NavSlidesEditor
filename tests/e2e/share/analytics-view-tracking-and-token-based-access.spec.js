@@ -14,9 +14,7 @@ test.describe('Analytics view tracking and operator access', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('GET /api/analytics/:id returns operator analytics without a share capability', async ({

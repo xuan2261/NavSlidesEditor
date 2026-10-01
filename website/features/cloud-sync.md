@@ -15,7 +15,7 @@ NavSlides Editor can mirror your `server/data/` and `server/uploads/` directorie
 3. Configure the sync target in **Settings → Cloud Sync**
 4. Trigger sync manually or schedule it via your OS scheduler
 
-The endpoint that drives sync is `POST /api/sync` (see `server/routes/sync.js`). It shells out to `rclone` with the configured remote — so anything you can do at the rclone CLI is available here.
+The endpoints that drive sync are `POST /api/rclone/sync` and `POST /api/rclone/sync-single` (see `server/routes/sync.js`). They shell out to `rclone` with the configured remote — so anything you can do at the rclone CLI is available here.
 
 ## What gets synced
 

@@ -82,6 +82,71 @@ describe('createKeyboardHandler', () => {
     expect(copy.preventDefault).toHaveBeenCalledTimes(1)
     expect(redo.preventDefault).toHaveBeenCalledTimes(1)
   })
+  it('retires default Delete and Backspace when Delete is remapped', () => {
+    const onDelete = vi.fn()
+    const handler = createKeyboardHandler({
+      shortcuts: getShortcuts({ delete: 'Ctrl+Shift+K' }),
+      onDelete,
+      getActiveElement: () => null,
+    })
+    const oldDelete = createEvent('Delete')
+    const oldBackspace = createEvent('Backspace')
+    handler(oldDelete)
+    handler(oldBackspace)
+    expect(onDelete).not.toHaveBeenCalled()
+    expect(oldDelete.preventDefault).not.toHaveBeenCalled()
+    expect(oldBackspace.preventDefault).not.toHaveBeenCalled()
+    handler(createEvent('k', { ctrlKey: true, shiftKey: true }))
+    expect(onDelete).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps unmodified Backspace as a default Delete alias, but not modified or presentation Backspace', () => {
+    const onDelete = vi.fn()
+    const options = { shortcuts: getShortcuts(), onDelete, getActiveElement: () => null }
+    const handler = createKeyboardHandler(options)
+    handler(createEvent('Backspace'))
+    expect(onDelete).toHaveBeenCalledTimes(1)
+    handler(createEvent('Backspace', { shiftKey: true }))
+    handler(createEvent('Backspace', { altKey: true }))
+    createKeyboardHandler({ ...options, isPresenting: true })(createEvent('Backspace'))
+    expect(onDelete).toHaveBeenCalledTimes(1)
+  })
+  it.each(['SELECT', 'INPUT', 'TEXTAREA', 'BUTTON', 'VIDEO', 'AUDIO'])(
+    'does not delete from focused native %s controls', (tagName) => {
+      const onDelete = vi.fn()
+      const handler = createKeyboardHandler({
+        shortcuts: getShortcuts(),
+        onDelete,
+        getActiveElement: () => document.createElement(tagName),
+      })
+      for (const key of ['Delete', 'Backspace']) {
+        const event = createEvent(key)
+        handler(event)
+        expect(event.preventDefault).not.toHaveBeenCalled()
+      }
+      expect(onDelete).not.toHaveBeenCalled()
+    }
+  )
+
+  it.each([
+    ['copy', 'c', 'onCopy'],
+    ['cut', 'x', 'onCut'],
+    ['paste', 'v', 'onPaste'],
+    ['duplicate', 'd', 'onDuplicate'],
+  ])('retires the former %s chord when it is remapped', (id, key, callbackName) => {
+    const action = vi.fn()
+    const handler = createKeyboardHandler({
+      shortcuts: getShortcuts({ [id]: `Ctrl+Shift+${key.toUpperCase()}` }),
+      [callbackName]: action,
+      getActiveElement: () => null,
+    })
+    const oldChord = createEvent(key, { ctrlKey: true })
+    handler(oldChord)
+    expect(action).not.toHaveBeenCalled()
+    expect(oldChord.preventDefault).not.toHaveBeenCalled()
+    handler(createEvent(key, { ctrlKey: true, shiftKey: true }))
+    expect(action).toHaveBeenCalledTimes(1)
+  })
 
   it('ignores shortcuts while editing or when form controls are focused', () => {
     const shortcuts = getShortcuts({})

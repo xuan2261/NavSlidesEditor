@@ -14,9 +14,7 @@ test.describe('Media Library & Templates', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('can open Media Library and see tabs', async ({ page }) => {

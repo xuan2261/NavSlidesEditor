@@ -1,8 +1,22 @@
 import { describe, expect, it } from 'vitest'
 import { buildConnectorUpdateBatch, buildSelectionUpdates } from './element-update-fanout'
 import { createElement } from './element-factory'
+import { resolveGameConfig } from '../constants/game-element-types-constants'
 
 describe('buildSelectionUpdates', () => {
+  it('switches a persisted game subtype and retains its nested questions without changing other element types', () => {
+    const game = createElement('game')
+    const shape = createElement('shape')
+    const question = { id: 'question', question: 'Which?', options: ['A', 'B'], correctIndex: 1 }
+    const updates = buildSelectionUpdates([game, shape], [game.id, shape.id], game.id, {
+      gameType: 'hot-potato', 'hot-potato': { questions: [question] },
+    })
+    const updatedGame = JSON.parse(JSON.stringify({ ...game, ...updates.find((patch) => patch.id === game.id) }))
+    expect(updatedGame.gameType).toBe('hot-potato')
+    expect(resolveGameConfig(updatedGame).questions).toEqual([question])
+    expect(updates.some((patch) => patch.id === shape.id)).toBe(false)
+  })
+
   it('excludes locked elements from property updates', () => {
     const elements = [
       { id: 'a', type: 'shape', x: 10, y: 20, width: 100, height: 80, locked: true },
@@ -178,5 +192,21 @@ describe('connector update fanout', () => {
     )
 
     expect(batch).toEqual([{ id: 'target', x: 40 }, { id: 'line', x1: 140, y1: 40 }])
+  })
+})
+
+describe('line dimension edits', () => {
+  const line = { id: 'line', type: 'line', width: 100, height: 80, x1: 5, x2: 90, y1: 10, y2: 70, cx: 40, cy: 30 }
+
+  it('scales stored local endpoints and curve controls when numeric dimensions change', () => {
+    expect(buildConnectorUpdateBatch([line], [{ id: 'line', width: 200, height: 40 }])).toEqual([
+      { id: 'line', width: 200, height: 40, x1: 10, x2: 180, y1: 5, y2: 35, cx: 80, cy: 15 },
+    ])
+  })
+
+  it('does not scale pointer-provided explicit coordinates a second time', () => {
+    expect(buildConnectorUpdateBatch([line], [{ id: 'line', width: 200, x1: 20, x2: 170, cx: 100 }])).toEqual([
+      { id: 'line', width: 200, x1: 20, x2: 170, cx: 100 },
+    ])
   })
 })

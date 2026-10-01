@@ -65,6 +65,9 @@ function OpenGamePropertiesQuestionEditor({ onSave, onCancel, question }) {
     if (!form.question.trim()) errs.question = 'Question text is required'
     const filledOptions = form.options.filter(o => o.trim())
     if (filledOptions.length < 2) errs.options = 'At least 2 options are required'
+    else if (!form.options[form.correctIndex]?.trim()) {
+      errs.options = 'The correct answer must have option text'
+    }
     return errs
   }
 

@@ -105,7 +105,7 @@ export class EditorPage {
   async openHistoryModal() { await this.menubar.openHistoryModal() }
 
   async closeOverlayModal() {
-    await this.page.locator('.fixed.inset-0').last().click({ position: { x: 10, y: 10 } })
+    await this.page.getByRole('dialog').last().getByRole('button', { name: /^Close/ }).click()
   }
 
   async openTemplateGallery() {
