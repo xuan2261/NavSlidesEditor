@@ -40,7 +40,7 @@ afterEach(async () => { await Promise.all(roots.splice(0).map((root) => fs.rm(ro
 describe('OfficeCLI command contract', () => {
   it('passes no arbitrary argv, path, or environment across its public boundary', async () => {
     const { root, bytes, revision, qualification } = await setup()
-    const runOfficeCli = vi.fn(async () => ({ exitCode: 0, stdout: '{"valid":true}' }))
+    const runOfficeCli = vi.fn(async () => ({ exitCode: 0, stdout: '{"success":true,"data":{"count":0,"errors":[]}}' }))
     const gateway = createOfficeCliGateway({
       workspaceRoot: root,
       platform: 'win32',

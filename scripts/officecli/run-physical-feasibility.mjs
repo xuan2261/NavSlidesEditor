@@ -4,6 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
+import { requireCleanGitSubject } from '../ci/clean-git-subject.mjs'
 import {
   assertCanonicalFixturePaths,
   assertPrerequisites,
@@ -50,6 +51,17 @@ export async function runPhysicalFeasibility(options = {}, deps = NO_DEPENDENCIE
   if ((deps.platform || process.platform) !== 'win32') {
     throw failure('UNSUPPORTED_PLATFORM', 'Physical OfficeCLI feasibility requires Windows')
   }
+  if (!testOnly && !/^[a-f0-9]{40}$/.test(options.expectedSourceCommit ?? '')) {
+    throw failure('SOURCE_SUBJECT_INVALID', 'Expected source commit is required')
+  }
+  const verifySource = () => {
+    const subject = requireCleanGitSubject(ROOT)
+    if (subject.commit !== options.expectedSourceCommit) {
+      throw failure('SOURCE_SUBJECT_MISMATCH', 'Source commit does not match the expected subject')
+    }
+    return subject
+  }
+  if (!testOnly) verifySource()
   const inspectBinary = deps.inspectBinary || inspectPinnedBinary
   const candidate = await inspectBinary(options.binary, manifest)
   if (candidate.sha256 !== manifest.releaseAsset.sha256 ||
@@ -68,8 +80,10 @@ export async function runPhysicalFeasibility(options = {}, deps = NO_DEPENDENCIE
     const runBoundedProcess = deps.runBoundedProcess || bounded.runBoundedProcess
     const processes = []
     const auditedRun = async (request) => {
+      if (!testOnly) verifySource()
       const processStarted = Date.now()
       const result = await runBoundedProcess(request)
+      if (!testOnly) verifySource()
       const digest = (value) => crypto.createHash('sha256').update(value || '').digest('hex').toUpperCase()
       processes.push({
         operation: request.argv[0] === '--version' ? 'version' : 'validate',
@@ -114,10 +128,12 @@ export async function runPhysicalFeasibility(options = {}, deps = NO_DEPENDENCIE
         validateFixture(fixture, 'reject', context, snapshotRoot))),
     ]
     const receipt = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       status: testOnly ? 'test-only' : 'passed',
       authoritative: !testOnly,
+      claimScope: testOnly ? 'test-only' : 'local-physical-feasibility',
       acquiredAt: options.acquiredAt,
+      subject: testOnly ? null : verifySource(),
       upstream: { releasePage: manifest.upstream.releasePage, assetUrl: manifest.releaseAsset.sourceAssetUrl },
       legal: {
         spdx: manifest.license.spdx,
@@ -136,13 +152,20 @@ export async function runPhysicalFeasibility(options = {}, deps = NO_DEPENDENCIE
         descendantProcessLimitEnforced: false,
         limitations: ['memory-limit-unproven', 'descendant-containment-unproven'],
       },
+      executionContext: {
+        account: 'invoking-account',
+        accountIsolationClaim: false,
+        egressDenialClaim: false,
+        containmentClaim: false,
+        riskCode: 'invoking-account-file-and-network-access',
+      },
       processes,
       host: hostReceipt(deps.os || os),
       fixtures,
       durationMs: Date.now() - started,
     }
     const safeReceipt = assertSafeReceipt(receipt)
-    return testOnly ? safeReceipt : assertAuthoritativeReceipt(safeReceipt, manifest)
+    return testOnly ? safeReceipt : assertAuthoritativeReceipt(safeReceipt, manifest, options.expectedSourceCommit)
   } finally {
     if (ownedRoot) await fs.rm(ownedRoot, { recursive: true, force: true })
   }
@@ -159,9 +182,15 @@ async function main() {
   await fs.writeFile(target, `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx', mode: 0o600 })
 }
 
+function redactLocalPaths(message) {
+  return String(message)
+    .replace(/(?:[A-Za-z]:[\\/]|\\\\)[^"'<>|\r\n]*/g, '[local path]')
+    .replace(/(^|[\s'("])\/(?:[^/\s'"]+\/)*[^/\s'"]*/g, '$1[local path]')
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main().catch((error) => {
-    console.error(`${error?.code || 'PHYSICAL_FEASIBILITY_FAILED'}: ${error?.message || 'failed'}`)
+    console.error(`${error?.code || 'PHYSICAL_FEASIBILITY_FAILED'}: ${redactLocalPaths(error?.message || 'failed')}`)
     process.exitCode = 1
   })
 }

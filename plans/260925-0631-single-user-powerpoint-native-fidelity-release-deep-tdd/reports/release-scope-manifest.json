@@ -83,10 +83,30 @@
     "status": "blocked",
     "receiptPath": "plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/officecli-physical-feasibility.json",
     "blockerPath": "plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/officecli-physical-feasibility-blocker.md",
-    "observedReceipt": "absent; real pinned 1.0.135 gateway rejected the purported good-package fixture",
-    "configuredAdministratorPath": "local hash-matched 1.0.135 candidate observed; administrator acquisition provenance remains unverified",
+    "observedReceipt": "absent from canonical reports; a separately retained local physical candidate accepted the PowerPoint-generated fixture and rejected both malformed fixtures, but no clean exact-source receipt is approved",
+    "configuredAdministratorPath": "operator downloaded the official v1.0.135 asset and SHA256SUMS with gh, verified both pinned hashes and byte length; independent administrator provisioning is not claimed",
     "decision": "Stop before G0. The pinned good-package fixture fails real OPC validation; the production parser also rejects the real successful OfficeCLI JSON shape. Re-plan fixture provenance, decoder contract, and clean-account isolation before promoting this gate.",
-    "freshnessRule": "Re-evaluate only with a reviewed OfficeCLI-valid fixture, a decoder exercised on actual 1.0.135 output, proven clean-account isolation, and a separately generated authoritative redacted physical receipt."
+    "decisionRecordedAt": "2026-09-25",
+    "freshnessRule": "Re-evaluate only with a reviewed OfficeCLI-valid fixture, a decoder exercised on actual 1.0.135 output, verified acquisition/legal provenance, corrected receipt integrity/redaction checks, and a separately generated authoritative redacted physical receipt. The operator waiver removes only the clean-account/VM and deny-by-default-egress prerequisites.",
+    "historicalFreshnessRule": "Re-evaluate only with a reviewed OfficeCLI-valid fixture, a decoder exercised on actual 1.0.135 output, proven clean-account isolation, and a separately generated authoritative redacted physical receipt.",
+    "currentPolicyAnnotation": {
+      "recordedAt": "2026-09-27",
+      "scope": "direct local OfficeCLI 1.0.135 G1 lane only",
+      "waivedRequirements": [
+        "dedicated clean Windows account or disposable VM",
+        "deny-by-default outbound egress"
+      ],
+      "executionContext": "ordinary developer account; filesystem credentials and outbound network access remain available to OfficeCLI",
+      "residualRisk": "OfficeCLI runs with the ordinary developer account's filesystem credentials and outbound network access. No filesystem, credential, network, or process containment is proven or claimed.",
+      "containmentClaim": false,
+      "supersedes": "Only the clean-account/VM and deny-by-default-egress clauses in the 2026-09-25 decision and freshness rule; their original text remains historical evidence.",
+      "activeG1Decision": "Still blocked: a local physical feasibility candidate passed against the dirty integration worktree; no canonical exact-source feasibility receipt, completed G0 authority, or full G1 process/cleanup qualification exists.",
+      "remainingUnwaivedGates": [
+        "Review the real positive and malformed fixture evidence on a clean exact-source candidate and retain its canonical receipt.",
+        "Resolve administrator provisioning requirements and bind official acquisition provenance to the release subject.",
+        "Complete G0 authority and the independent G1 cache, process cleanup, path, limits, and qualification gates before any promotion."
+      ]
+    }
   },
   "baselineCommands": [
     { "command": "git status --short", "durationMs": 107, "outputLocation": "plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/baseline-characterization.md#repository-and-worktree" },

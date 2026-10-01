@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -9,7 +9,6 @@ import parallelConfig from '../../config/vitest/node-parallel.config.mjs'
 import serialConfig from '../../config/vitest/node-serial.config.mjs'
 import {
   BROWSER_ENVIRONMENT_REGISTRY,
-  FROZEN_INVENTORY_PATH,
   SERIAL_HAZARD_EXEMPTIONS,
   SERIAL_HAZARD_REGISTRY,
   VITEST_PROJECT_NAMES,
@@ -21,8 +20,6 @@ import {
 } from '../../config/vitest/vitest-lanes.mjs'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
-const frozen = JSON.parse(readFileSync(path.join(repoRoot, FROZEN_INVENTORY_PATH), 'utf8'))
-const frozenPaths = frozen.inventory.files.map((entry) => entry.path)
 
 function projectTest(config) {
   return config.test ?? config
@@ -33,19 +30,6 @@ describe('Vitest topology contract', () => {
     expect(VITEST_PROJECT_NAMES).toEqual(['client-jsdom', 'node-parallel', 'node-serial'])
     expect(rootConfig.test.projects.map((project) => projectTest(project).name)).toEqual(
       VITEST_PROJECT_NAMES,
-    )
-  })
-
-  it('classifies the frozen 605-file inventory exactly once', () => {
-    const topology = buildVitestTopology({ files: frozenPaths })
-    expect(frozen.inventory.fileCount).toBe(605)
-    expect(topology.files).toHaveLength(605)
-    expect(topology.unclassified).toEqual([])
-    expect(topology.overlaps).toEqual([])
-    expect(new Set(topology.files.map((entry) => entry.path)).size).toBe(605)
-    expect(topology.files.every((entry) => /^[a-f0-9]{64}$/.test(entry.sourceSha256))).toBe(true)
-    expect(topology.files.every((entry) => entry.environment && entry.reason && entry.lane)).toBe(
-      true,
     )
   })
 

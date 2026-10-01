@@ -7,7 +7,7 @@ const SHA256 = /^[A-F0-9]{64}$/
 const SENSITIVE_KEY = /(?:stdout|stderr|rawOutput|configuredPath|canonicalPath|command)$/i
 const WINDOWS_ABSOLUTE = /^[A-Za-z]:[\\/]/
 const FIXTURE_HASHES = new Map([
-  ['good-package.pptx', 'A870BA588E1F29D0DE0814C2F52977A2556A3041A4291FB19174E210274C17D1'],
+  ['officecli-positive-powerpoint-16.pptx', '29B2D6F12E922204C4A914D3C3BC427FF48B0915231DFF37DCF3F91A21D00FC2'],
   ['bad-crc.pptx', '9D572715870493397798E82473593F4CF373B01DDDEB8175EAB034C131274607'],
   ['malformed-xml.pptx', '4F3B3BC9E807BAF99ECD2C462BBB95D7212457AC24CA424B69903DF73425E55C'],
 ])
@@ -18,7 +18,7 @@ export function failure(code, message) {
 
 export function parseArguments(argv, env = process.env) {
   const options = { malformed: [], acquiredAt: env.OFFICECLI_ACQUIRED_AT }
-  const single = new Set(['--binary', '--valid', '--manifest', '--out', '--acquired-at'])
+  const single = new Set(['--binary', '--valid', '--manifest', '--out', '--acquired-at', '--expected-source-commit'])
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index]
     const value = argv[index + 1]
@@ -44,6 +44,7 @@ function argumentName(flag) {
     '--manifest': 'manifestPath',
     '--out': 'out',
     '--acquired-at': 'acquiredAt',
+    '--expected-source-commit': 'expectedSourceCommit',
   }[flag]
 }
 
@@ -56,7 +57,7 @@ export function assertPrerequisites(options) {
     throw failure('PHYSICAL_PREREQUISITE_MISSING', 'Exactly two malformed fixtures are required')
   }
   const malformedNames = options.malformed.map((value) => path.basename(value)).sort()
-  if (path.basename(options.valid) !== 'good-package.pptx' ||
+  if (path.basename(options.valid) !== 'officecli-positive-powerpoint-16.pptx' ||
       malformedNames.join(',') !== 'bad-crc.pptx,malformed-xml.pptx') {
     throw failure('PHYSICAL_PREREQUISITE_MISSING', 'Pinned feasibility fixtures are required')
   }
@@ -66,11 +67,11 @@ export function assertPrerequisites(options) {
 }
 
 export function assertCanonicalFixturePaths(options, projectRoot) {
-  const fixtureRoot = path.resolve(projectRoot, 'server/data/test-corpus/adversarial')
+  const corpusRoot = path.resolve(projectRoot, 'server/data/test-corpus')
   const expected = new Map([
-    ['good-package.pptx', path.join(fixtureRoot, 'good-package.pptx')],
-    ['bad-crc.pptx', path.join(fixtureRoot, 'bad-crc.pptx')],
-    ['malformed-xml.pptx', path.join(fixtureRoot, 'malformed-xml.pptx')],
+    ['officecli-positive-powerpoint-16.pptx', path.join(corpusRoot, 'officecli', 'officecli-positive-powerpoint-16.pptx')],
+    ['bad-crc.pptx', path.join(corpusRoot, 'adversarial', 'bad-crc.pptx')],
+    ['malformed-xml.pptx', path.join(corpusRoot, 'adversarial', 'malformed-xml.pptx')],
   ])
   for (const candidate of [options.valid, ...options.malformed]) {
     const name = path.basename(candidate)
@@ -107,7 +108,7 @@ export async function hashFile(filePath) {
 }
 
 export async function inspectPinnedBinary(binary, manifest) {
-  if (!path.win32.isAbsolute(binary) || /^\\\\/.test(binary)) {
+  if (!path.win32.isAbsolute(binary) || /^\\\\/.test(binary) || binary.slice(2).includes(':')) {
     throw failure('BINARY_PATH_INVALID', 'OfficeCLI binary must use an absolute local Windows path')
   }
   const link = await fsp.lstat(binary)
@@ -151,7 +152,9 @@ export async function validateFixture(filePath, expected, context, snapshotRoot)
       safetyVerdict: { rawZipSafe: true, xmlSafe: true, verifiedSha256: revisionSha256 },
     }, bytes)
     const result = await context.gateway.validatePackage(revision)
-    if (result?.ok !== true) throw failure('VALID_FIXTURE_REJECTED', `${name} was not validated`)
+    if (result?.ok !== true || (expected === 'accept' && result?.metrics?.exitCode !== 0)) {
+      throw failure('VALID_FIXTURE_REJECTED', `${name} was not validated successfully`)
+    }
     return {
       ...common, expected, actual: 'accepted', ok: true,
       exitCode: result?.metrics?.exitCode ?? null, reasonCode: null,

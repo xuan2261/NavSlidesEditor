@@ -7,6 +7,8 @@ import gatewayModule from './gateway.js'
 
 const { createOfficeCliGateway, createRevisionDescriptor } = gatewayModule
 const roots = []
+const validationSuccessStdout = '{"success":true,"data":{"count":0,"errors":[]}}'
+const validationFailureStdout = '{"success":false,"data":{"count":1,"errors":[{"code":"OPC_INVALID"}]}}'
 
 async function fixture() {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'officecli-gateway-'))
@@ -70,7 +72,7 @@ describe('contained OfficeCLI gateway', () => {
       platform: 'win32',
       qualification: async () => directQualified(sha256, bytes.length),
       readRevision: async () => bytes,
-      runOfficeCli: async () => ({ exitCode: 0, stdout: '{"valid":false}' }),
+      runOfficeCli: async () => ({ exitCode: 0, stdout: validationFailureStdout }),
     })
 
     await expect(gateway.validatePackage(revision)).rejects.toMatchObject({ code: 'OUTPUT_INVALID' })
@@ -83,7 +85,7 @@ describe('contained OfficeCLI gateway', () => {
       platform: 'win32',
       qualification: async () => directQualified(sha256, bytes.length),
       readRevision: async () => bytes,
-      runOfficeCli: async () => ({ exitCode: 0, stdout: '{"valid":true}' }),
+      runOfficeCli: async () => ({ exitCode: 0, stdout: validationSuccessStdout }),
       cleanupWorkspace: async () => { throw new Error('cleanup failed') },
     })
 
@@ -92,7 +94,7 @@ describe('contained OfficeCLI gateway', () => {
 
   it('starts only the freshly qualified canonical OfficeCLI binary with fixed direct validation arguments', async () => {
     const { root, bytes, revision, sha256 } = await fixture()
-    const runOfficeCli = vi.fn(async () => ({ exitCode: 0, stdout: '{"valid":true}' }))
+    const runOfficeCli = vi.fn(async () => ({ exitCode: 0, stdout: validationSuccessStdout }))
     const gateway = createOfficeCliGateway({
       workspaceRoot: root,
       platform: 'win32',
@@ -164,7 +166,7 @@ describe('contained OfficeCLI gateway', () => {
   it('uses only the canonical direct binary bound to the local receipt', async () => {
     const { root, bytes, revision, sha256 } = await fixture()
     const qualifiedReceipt = qualified(sha256, bytes.length)
-    const runOfficeCli = vi.fn(async () => ({ exitCode: 0, stdout: '{"valid":true}' }))
+    const runOfficeCli = vi.fn(async () => ({ exitCode: 0, stdout: validationSuccessStdout }))
     const gateway = createOfficeCliGateway({
       workspaceRoot: root,
       platform: 'win32',
@@ -187,7 +189,7 @@ describe('contained OfficeCLI gateway', () => {
       platform: 'win32',
       qualification: qualify,
       readRevision: async () => bytes,
-      runOfficeCli: async () => ({ exitCode: 0, stdout: '{"valid":true}' }),
+      runOfficeCli: async () => ({ exitCode: 0, stdout: validationSuccessStdout }),
     })
     await expect(gateway.validatePackage(revision)).resolves.toMatchObject({ ok: true })
     await expect(gateway.validatePackage(revision)).rejects.toMatchObject({ code: 'QUALIFICATION_REQUIRED' })
@@ -199,7 +201,7 @@ describe('contained OfficeCLI gateway', () => {
     let releaseAdmission
     let current = qualified(sha256, bytes.length)
     const qualify = vi.fn(async () => current)
-    const runOfficeCli = vi.fn(async () => ({ exitCode: 0, stdout: '{"valid":true}' }))
+    const runOfficeCli = vi.fn(async () => ({ exitCode: 0, stdout: validationSuccessStdout }))
     const gateway = createOfficeCliGateway({
       workspaceRoot: root,
       platform: 'win32',
@@ -259,7 +261,7 @@ describe('contained OfficeCLI gateway', () => {
     const release = vi.fn()
     const gateway = createOfficeCliGateway({
       workspaceRoot: root, platform: 'win32', qualification: async () => qualified(sha256, bytes.length), readRevision: async () => bytes,
-      runOfficeCli: async () => ({ exitCode: 0, stdout: '{"valid":true}' }),
+      runOfficeCli: async () => ({ exitCode: 0, stdout: validationSuccessStdout }),
       admission: { reserve: vi.fn(async () => release) }, cleanupWorkspace: async () => { throw new Error('cleanup failed') },
     })
     await expect(gateway.validatePackage(revision)).rejects.toMatchObject({ code: 'CLEANUP_UNCERTAIN' })

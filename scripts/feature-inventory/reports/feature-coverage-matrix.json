@@ -1,9 +1,9 @@
 {
   "meta": {
     "generated": "local run",
-    "stale": false,
+    "stale": true,
     "staleSources": {
-      "vitest": false,
+      "vitest": true,
       "playwright": false
     }
   },

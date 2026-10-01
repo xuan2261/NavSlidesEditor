@@ -1,20 +1,28 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import crypto from 'node:crypto'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import guards from '../pptx-guards.js'
 import manifest from './qualification-manifest.json'
 import harness from '../../../../scripts/officecli/run-physical-feasibility.mjs'
+const { validatePptxPackage } = guards
 
 const ROOT = path.resolve(import.meta.dirname, '../../../..')
 const FIXTURES = path.join(ROOT, 'server/data/test-corpus/adversarial')
+const POSITIVE_FIXTURE = path.join(
+  ROOT,
+  'server/data/test-corpus/officecli/officecli-positive-powerpoint-16.pptx',
+)
+const POSITIVE_SHA256 = '29B2D6F12E922204C4A914D3C3BC427FF48B0915231DFF37DCF3F91A21D00FC2'
 const roots = []
 
 function requestOptions(root) {
   return {
     binary: 'C:\\admin\\officecli.exe',
-    valid: path.join(FIXTURES, 'good-package.pptx'),
+    valid: POSITIVE_FIXTURE,
     malformed: ['bad-crc.pptx', 'malformed-xml.pptx'].map((name) => path.join(FIXTURES, name)),
-    acquiredAt: '2026-09-25T00:00:00.000Z',
+    acquiredAt: '2000-01-01T00:00:00.000Z',
     ...(root && {
       executionRoot: path.join(root, 'execution'),
       workspaceRoot: path.join(root, 'workspace'),
@@ -98,7 +106,7 @@ describe('OfficeCLI physical feasibility harness', () => {
     const staged = 'C:\\staged\\937DB176\\officecli.exe'
     const runBoundedProcess = vi.fn(async ({ argv }) => argv[0] === '--version'
       ? { exitCode: 0, stdout: `${manifest.version}\n`, stderr: '' }
-      : { exitCode: 0, stdout: '{"valid":true}', stderr: '' })
+      : { exitCode: 0, stdout: '{"success":true,"data":{"count":0,"errors":[]}}', stderr: '' })
     const result = await harness.runPhysicalFeasibility(requestOptions(root), {
       platform: 'win32',
       evidenceMode: 'test-double',
@@ -118,14 +126,14 @@ describe('OfficeCLI physical feasibility harness', () => {
     })
 
     expect(result).toMatchObject({
-      schemaVersion: 1,
+      schemaVersion: 2,
       status: 'test-only',
       authoritative: false,
       binary: { version: manifest.version, sha256: manifest.releaseAsset.sha256 },
       processPolicy: { stdoutBounded: true, stderrBounded: true, pathLookup: false },
       fixtures: [
         {
-          name: 'good-package.pptx', actual: 'accepted',
+          name: 'officecli-positive-powerpoint-16.pptx', actual: 'accepted',
           validationPath: 'production-preflight-and-gateway', ok: true,
         },
         {
@@ -172,6 +180,15 @@ describe('OfficeCLI physical feasibility harness', () => {
       .toThrow(/receipt/i)
     expect(() => harness.assertSafeReceipt({ stdout: '{"valid":true}' }))
       .toThrow(/receipt/i)
+  })
+
+  it('preflights the pinned PowerPoint-generated positive fixture', async () => {
+    const bytes = await fs.readFile(POSITIVE_FIXTURE)
+    expect(bytes).toHaveLength(31659)
+    expect(crypto.createHash('sha256').update(bytes).digest('hex').toUpperCase())
+      .toBe(POSITIVE_SHA256)
+    await expect(validatePptxPackage(POSITIVE_FIXTURE, path.basename(POSITIVE_FIXTURE)))
+      .resolves.toMatchObject({ fileSize: bytes.length })
   })
 
 })
