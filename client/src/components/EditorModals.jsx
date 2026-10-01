@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react'
 import GitHubPushModal from './GitHubPushModal'
 import SyncModal from './SyncModal'
 import HistoryModal from './HistoryModal'
@@ -15,7 +16,7 @@ import { GameHudOverlay } from './game-hud-overlay'
 import { GameLeaderboardOverlay } from './game-leaderboard-overlay'
 import EditorModalsSecondary from './editor-modals-secondary'
 import { useUIStore } from '../stores/ui-store'
-import { duplicateSlidesAtIndices } from '../hooks/slide-operation-helpers'
+import { applySorterSlideOperation, getSorterCurrentDestination } from '../utils/slide-sorter-operations'
 
 /**
  * Presentational mount point for the editor's modal/overlay JSX, lifted out of
@@ -73,6 +74,26 @@ export default function EditorModals(props) {
   const setShowShareModal = useUIStore((s) => s.setShowShareModal)
   const showAnalytics = useUIStore((s) => s.showAnalytics)
   const setShowAnalytics = useUIStore((s) => s.setShowAnalytics)
+  const previousSorterState = useRef({ slides: presentation?.slides, index: currentSlideIndex })
+  useLayoutEffect(() => {
+    const previous = previousSorterState.current
+    const slides = presentation?.slides
+    previousSorterState.current = { slides, index: currentSlideIndex }
+    if (viewMode !== 'sorter' || !slides?.length || !previous.slides || previous.slides === slides) return
+    const destination = getSorterCurrentDestination(previous.slides, previous.index, slides, verticalEdit)
+    if (destination.index !== currentSlideIndex || destination.identityChanged) {
+      navigateToSlide(destination.index, destination.child)
+    }
+  }, [presentation?.slides, currentSlideIndex, verticalEdit, viewMode, navigateToSlide])
+
+  const changeSorterSlide = (operation, index, toIndex) => {
+    const slideId = presentation.slides[index]?.id
+    if (!slideId) return
+    setPresentation((prev) => {
+      const slides = applySorterSlideOperation(prev.slides, operation, slideId, toIndex)
+      return slides === prev.slides ? prev : { ...prev, slides }
+    })
+  }
 
   return (
     <>
@@ -109,24 +130,9 @@ export default function EditorModals(props) {
             navigateToSlide(idx)
             setViewMode('normal')
           }}
-          onMove={(fromIdx, toIdx) => {
-            const newSlides = [...presentation.slides]
-            const [moved] = newSlides.splice(fromIdx, 1)
-            newSlides.splice(toIdx, 0, moved)
-            setPresentation((prev) => ({ ...prev, slides: newSlides }))
-          }}
-          onDelete={(idx) => {
-            if (presentation.slides.length <= 1) return
-            const newSlides = presentation.slides.filter((_, i) => i !== idx)
-            setPresentation((prev) => ({ ...prev, slides: newSlides }))
-            if (currentSlideIndex >= newSlides.length) {
-              setCurrentSlideIndex(Math.max(0, newSlides.length - 1))
-            }
-          }}
-          onDuplicate={(idx) => {
-            const { slides: newSlides } = duplicateSlidesAtIndices(presentation.slides, [idx])
-            setPresentation((prev) => ({ ...prev, slides: newSlides }))
-          }}
+          onMove={(fromIdx, toIdx) => changeSorterSlide('move', fromIdx, toIdx)}
+          onDelete={(idx) => changeSorterSlide('delete', idx)}
+          onDuplicate={(idx) => changeSorterSlide('duplicate', idx)}
           onClose={() => setViewMode('normal')}
         />
       )}

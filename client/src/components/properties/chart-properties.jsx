@@ -1,4 +1,5 @@
 import { Button, Input, Select, ColorPicker } from '../../components/ui'
+import ChartSeriesValuesInput from './chart-series-values-input'
 /**
  * Chart-specific properties: chart type, labels, values, series label, color.
  */
@@ -153,7 +154,7 @@ export default function ChartProperties({ element, onUpdate }) {
             onChange={(e) => updateDataset(index, { label: e.target.value })}
           />
           <div className="text-[11px] text-text-muted mb-1">Values (comma-separated)</div>
-          <Input
+          <ChartSeriesValuesInput
             data-testid={`prop-chart-values-${index}`}
             aria-label={`Chart series ${index + 1} values`}
             className="w-full bg-card border border-border text-text-primary px-1.5 py-1 rounded-sm text-[11px] transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-1.5"
@@ -162,7 +163,10 @@ export default function ChartProperties({ element, onUpdate }) {
             disabled={preserveOnly}
             onChange={(e) =>
               updateDataset(index, {
-                data: e.target.value.split(',').map((s) => Number(s.trim()) || 0),
+                data: e.target.value.split(',').map((s) => {
+                  const value = Number(s.trim())
+                  return Number.isFinite(value) ? value : 0
+                }),
               })
             }
           />

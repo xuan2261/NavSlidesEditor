@@ -129,20 +129,20 @@ Plugin element factories live in `client/src/plugins/plugin-loader.js` because
 `ELEMENT_DEFAULTS`. Plugin elements must persist `pluginId`, `pluginSlug`,
 `pluginData`, and `pluginRuntime`.
 
-| Type              | Convention                  | Example                                    |
-| ----------------- | --------------------------- | ------------------------------------------ |
-| React components  | PascalCase `.jsx`           | `SlideCanvas.jsx`, `PropertiesPanel.jsx`   |
-| Custom hooks      | kebab-case `.js`            | `use-autosave.js`, `use-clipboard.js`      |
-| Zustand stores    | kebab-case `.js`            | `editor-store.js`, `presentation-store.js` |
-| Utility modules   | kebab-case `.js`            | `element-factory.js`, `smart-guides.js`    |
-| TipTap extensions | PascalCase `.js`            | `MathExtension.js`, `FontSize.js`          |
-| Server routes     | kebab-case `.js`            | `presentations.js`, `share.js`             |
-| Server services   | kebab-case `.js`            | `socket-handler.js`, `live-rooms.js`       |
-| CSS files         | Single file                 | All CSS lives in `client/src/index.css`    |
-| Type definitions  | kebab-case `.js`            | `presentation.js` (with JSDoc)             |
-| Server entry      | lowercase `.js`             | `server/index.js`                          |
-| Electron entry    | lowercase `.js`             | `electron/main.js`                         |
-| Test files        | `*.test.js` or `*.test.jsx` | `api.test.js`, `pptx-import.test.js`       |
+| Type | Convention | Example |
+| --- | --- | --- |
+| React components | PascalCase `.jsx` | `SlideCanvas.jsx`, `PropertiesPanel.jsx` |
+| Custom hooks | kebab-case `.js` | `use-autosave.js`, `use-clipboard.js` |
+| Zustand stores | kebab-case `.js` | `editor-store.js`, `presentation-store.js` |
+| Utility modules | kebab-case `.js` | `element-factory.js`, `history-stack.js` |
+| TipTap extensions | PascalCase `.js` | `MathExtension.js`, `FontSize.js` |
+| Server routes | kebab-case `.js` | `presentations.js`, `share.js` |
+| Server services | kebab-case `.js` | `socket-handler.js`, `live-rooms.js` |
+| CSS files | Single file | All CSS lives in `client/src/index.css` |
+| Type definitions | kebab-case `.js` | `presentation.js` (with JSDoc) |
+| Server entry | lowercase `.js` | `server/index.js` |
+| Electron entry | lowercase `.js` | `electron/main.js` |
+| Test files | `*.test.js` or `*.test.jsx` | `api.test.js`, `pptx-import.test.js` |
 
 ## State Management
 
@@ -258,19 +258,12 @@ Settings UI (`SettingsPage.jsx`) provides record/conflict-warn/reset per shortcu
 
 ## Type System (JSDoc)
 
-JSDoc type definitions live in `shared/src/types/presentation.js`.
+JSDoc type definitions live in `shared/src/types/presentation.js`; `ElementType`
+there is the typed union, and `Object.keys(ELEMENT_DEFAULTS)` in
+`client/src/data/element-defaults.js` stays the canonical type list.
 
-```javascript
-/** @typedef {'text'|'image'|'shape'|...|'divider'} ElementType */
-/** @typedef {Object} BaseElement */
-/** @typedef {BaseElement & { content: string }} TextElement */
-/** @typedef {TextElement|ImageElement|...|DividerElement} SlideElement */
-/** @typedef {Object} Slide */
-/** @typedef {Object} Presentation */
-```
-
-No full TypeScript migration. JSDoc provides IntelliSense and type checking via
-`jsconfig.json`.
+No full TypeScript migration; JSDoc provides editor IntelliSense only (there is
+no `jsconfig.json` type-check gate).
 
 Annotated files include `element-factory.js`, `presentation-store.js`, and
 `element-renderers.js`.
@@ -473,16 +466,16 @@ Use `npm run matrix:element-control` to run it directly. `npm run matrix:gate` a
 
 The harness verifies all 19 canonical element types, enforces one row per `element/control/surface`, allows only `works`, `partial`, `broken`, and `export-gap`, and requires evidence, testCoverage, and security fields for content-bearing controls. The generated report lives at `plans/260617-0739-element-control-audit-matrix-tdd/reports/element-control-audit-matrix-current.md`.
 
-| File                               | Function signature                                   | Notes                                                                                           |
-| ---------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `generateHTML.js`                  | `generateRevealHTML(presentation) -> string`         | Pure, CDN-dependent re-export from shared                                                       |
-| `export-pptx-*.js` (8 files)       | async, runs in client                                | Hybrid PPTX export: native objects for stable types, Playwright raster for complex DOM elements |
-| `server/services/pptx-exporter.js` | server-side                                          | Playwright-based element rasterization endpoint                                                 |
-| `server/routes/pptx-import.js`     | `POST /api/pptx/import`                              | Parses `.pptx` via `pptxtojson`, maps to NavSlides elements                                     |
-| `offlineExport.js`                 | async, calls `generateRevealHTML()` then inlines CDN | Offline HTML export helper                                                                      |
+| File | Function signature | Notes |
+| --- | --- | --- |
+| `generateHTML.js` | `generateRevealHTML(presentation) -> string` | Re-export from shared; `downloadHTML`/`exportPDF`/`presentInWindow` wrap shared calls with error feedback |
+| `export-pptx-*.js` (8 files) | async, runs in client | Hybrid PPTX export: native objects for stable types, Playwright raster for complex DOM elements |
+| `server/services/pptx-exporter.js` | server-side | Playwright-based element rasterization endpoint |
+| `server/routes/pptx-import.js` | `POST /api/pptx/import` | Parses `.pptx` via `pptxtojson`, maps to NavSlides elements |
+| `offlineExport.js` | `generateOfflineHTML(html, options)` | Inlines `/vendor` runtime assets; maps known CDN URLs in authored content via `CDN_TO_VENDOR` |
 
-CDN URLs are hardcoded in `shared/htmlGenerator.js` for reveal.js 5.1.0,
-highlight.js 11, KaTeX, Chart.js 4, marked.js, and TikZJax.
+Runtime asset policy (local `/vendor`, no Reveal.js CDN) is owned by
+`shared/src/reveal-runtime-assets.js`; see `system-architecture.md` → CDN Dependencies.
 
 ## Error Handling
 

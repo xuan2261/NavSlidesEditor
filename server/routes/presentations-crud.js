@@ -7,7 +7,6 @@ const {
 } = require('revealjs-shared')
 const {
   readPresentations,
-  readTemplates,
   withPresentations,
   withShareTokens,
   HISTORY_DIR,

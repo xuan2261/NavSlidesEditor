@@ -50,7 +50,7 @@ export default function ExplorePage() {
     <div className="h-full flex flex-col bg-panel">
       <div className="flex items-center justify-between px-6 h-14 border-b border-border bg-secondary shrink-0">
         <div className="flex items-center gap-3">
-          <Button variant="secondary" onClick={() => navigate('/')} className="px-2.5 py-1.5">
+          <Button variant="secondary" aria-label="Back to home" onClick={() => navigate('/')} className="px-2.5 py-1.5">
             <ChevronLeft size={16} />
           </Button>
           <h1 className="text-xl">

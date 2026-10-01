@@ -9,7 +9,10 @@ import { invalidatePptxFitMetaForUpdates } from '../../utils/pptx-import-meta'
 export function useEditorElementController(c) {
   const editingElementIdRef = c.editingElementIdRef
   const updateCurrentSlide = useCallback(
-    (updates) => c.setPresentation((prev) => c.mapActive(prev, (slide) => ({ ...slide, ...updates }))),
+    (updates) => c.setPresentation((prev) => c.mapActive(prev, (slide) => {
+      if (slide.locked && !(Object.keys(updates || {}).length === 1 && updates.locked === false)) return slide
+      return { ...slide, ...updates }
+    })),
     [c]
   )
   const updateElement = useCallback(

@@ -125,7 +125,7 @@ export function useSlideOperations({
     const ids = selectedElementIdsRef.current
     if (!ids.length) return
     const activeSlide = activeSlideOf()
-    if (activeSlide?.locked) return
+    if (activeSlide?.locked || hasBlockedGroupMutation(activeSlide, ids)) return
     const lockedIds = new Set(
       (activeSlide?.elements || [])
         .filter((el) => ids.includes(el.id) && el.locked)

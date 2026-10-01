@@ -27,6 +27,7 @@ export default function EditorRibbon({ c }) {
       selectedElementIds={c.selectedElementIds}
       elements={c.authoringSlide?.elements || []}
       onUpdateElement={c.updateSelectedElements}
+      onUpdateElements={c.updateElements}
       onPaste={c.handlePaste}
       onCut={c.handleCut}
       onCopy={c.handleCopy}

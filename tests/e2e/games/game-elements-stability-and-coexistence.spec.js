@@ -33,9 +33,7 @@ test.describe('Game Element — Stability & Coexistence', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('no runtime errors when inserting and rendering game elements', async ({ page }) => {

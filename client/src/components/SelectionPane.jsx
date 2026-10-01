@@ -61,6 +61,7 @@ export default function SelectionPane({
   onRename,
   onReorder,
 }) {
+  const orderedElements = [...elements].sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0))
   const [renamingId, setRenamingId] = useState(null)
   const [renameValue, setRenameValue] = useState('')
   const dragItem = useRef(null)
@@ -116,7 +117,7 @@ export default function SelectionPane({
   }
 
   const handleDragStart = (e, idx) => {
-    if (elements[idx]?.locked) {
+    if (orderedElements[idx]?.locked) {
       e.preventDefault()
       return
     }
@@ -157,7 +158,7 @@ export default function SelectionPane({
           No elements on this slide
         </div>
       )}
-      {elements.map((el, idx) => {
+      {orderedElements.map((el, idx) => {
         const isSelected = selectedIds.includes(el.id)
         const isRenaming = renamingId === el.id
         const isHidden = el.hidden || false

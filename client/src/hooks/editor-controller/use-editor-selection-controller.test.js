@@ -122,4 +122,22 @@ describe('useEditorSelectionController update transactions', () => {
 
     expect(controller.setSelectedElementIds).toHaveBeenCalledWith(['master-a', 'master-b'])
   })
+
+  it('adds and removes all visible group members atomically without losing unrelated selection', () => {
+    const controller = createController([
+      { id: 'x', type: 'shape' },
+      { id: 'a', type: 'shape', groupId: 'g' },
+      { id: 'b', type: 'shape', groupId: 'g' },
+      { id: 'hidden', type: 'shape', groupId: 'g', hidden: true },
+    ], ['x'])
+    controller.setSelectedElementIds = (update) => {
+      controller.selectedElementIdsRef.current = typeof update === 'function'
+        ? update(controller.selectedElementIdsRef.current) : update
+    }
+    const { result } = renderHook(() => useEditorSelectionController(controller))
+    act(() => result.current.toggleElementSelection('a', true))
+    expect(controller.selectedElementIdsRef.current).toEqual(['x', 'a', 'b'])
+    act(() => result.current.toggleElementSelection('b', true))
+    expect(controller.selectedElementIdsRef.current).toEqual(['x'])
+  })
 })

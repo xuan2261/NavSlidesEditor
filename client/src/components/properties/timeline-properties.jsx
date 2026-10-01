@@ -1,8 +1,11 @@
+import { useId, useState } from 'react'
 import { Button, Input, Select, ColorPicker } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
 import { getSafeMidpointDate } from './timeline-date-utils'
 
 export default function TimelineProperties({ element, onUpdate }) {
+  const [rangeError, setRangeError] = useState(null)
+  const rangeErrorId = useId()
   const spacing = element.tickSpacing || 'auto'
   const startDate = element.timelineStart ?? element.startDate ?? '2000'
   const endDate = element.timelineEnd ?? element.endDate ?? '2025'
@@ -16,6 +19,16 @@ export default function TimelineProperties({ element, onUpdate }) {
   }))
 
   const updateRange = (changes) => {
+    const invalidKey = ['timelineStart', 'timelineEnd'].find((key) =>
+      key in changes && !yearMode && (
+        !changes[key] || !Number.isFinite(Date.parse(changes[key]))
+      )
+    )
+    if (invalidKey) {
+      setRangeError(invalidKey)
+      return
+    }
+    setRangeError(null)
     const next = { ...changes }
     if (changes.timelineStart !== undefined) next.startDate = changes.timelineStart
     if (changes.timelineEnd !== undefined) next.endDate = changes.timelineEnd
@@ -98,6 +111,9 @@ export default function TimelineProperties({ element, onUpdate }) {
             <Input
               aria-label="Timeline start date"
               type="date"
+              required
+              aria-invalid={rangeError === 'timelineStart' ? true : undefined}
+              aria-describedby={rangeError === 'timelineStart' ? rangeErrorId : undefined}
               className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs"
               value={startDate || ''}
               onChange={(e) => updateRange({ timelineStart: e.target.value })}
@@ -120,6 +136,9 @@ export default function TimelineProperties({ element, onUpdate }) {
             <Input
               aria-label="Timeline end date"
               type="date"
+              required
+              aria-invalid={rangeError === 'timelineEnd' ? true : undefined}
+              aria-describedby={rangeError === 'timelineEnd' ? rangeErrorId : undefined}
               className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs"
               value={endDate || ''}
               onChange={(e) => updateRange({ timelineEnd: e.target.value })}
@@ -127,6 +146,11 @@ export default function TimelineProperties({ element, onUpdate }) {
           )}
         </div>
       </div>
+      {rangeError && (
+        <p id={rangeErrorId} role="alert" className="text-[11px] text-red-400 mb-2">
+          Timeline start and end dates are required. Choose a valid date.
+        </p>
+      )}
 
       <div className="grid grid-cols-3 gap-2 mb-2">
         <div>

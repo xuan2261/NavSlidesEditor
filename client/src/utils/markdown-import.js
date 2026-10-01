@@ -1,4 +1,4 @@
-import { isSafeHref } from './url-safety'
+import { isSafeHref } from './url-safety.js'
 
 function escapeHtmlAttr(value) {
   return String(value)

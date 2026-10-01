@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => {
     const handlers = {}
     return {
       on: vi.fn((event, handler) => { handlers[event] = handler }),
+      off: vi.fn(),
       emit: vi.fn(),
       disconnect: vi.fn(),
       handlers,
@@ -31,9 +32,6 @@ vi.mock('socket.io-client', () => ({
 vi.mock('react-router-dom', () => ({ useParams: () => ({ roomCode: mocks.roomCode }) }))
 vi.mock('../components/black-screen-overlay.jsx', () => ({ BlackScreenOverlay: () => null }))
 vi.mock('../hooks/use-annotation-sync.js', () => ({ useAnnotationSync: vi.fn() }))
-vi.mock('../hooks/use-live-timer-sync.js', () => ({
-  useLiveTimerSync: () => mocks.timerStatesRef,
-}))
 vi.mock('../hooks/use-reveal-preview-frame', () => ({
   useRevealPreviewFrame: () => ({ iframeRef: mocks.iframeRef }),
 }))
@@ -68,6 +66,36 @@ describe('LiveViewPage presenter fallback polling', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     vi.useRealTimers()
+  })
+
+  it('publishes timer transitions immediately and polls only while a countdown runs', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ exists: true })))
+    const view = render(<LiveViewPage />)
+    await act(async () => { await Promise.resolve() })
+    act(() => mocks.socket.handlers.connect())
+    const idleSnapshot = window.__timerStates
+    await act(() => vi.advanceTimersByTimeAsync(500))
+    expect(window.__timerStates).toBe(idleSnapshot)
+
+    act(() => mocks.socket.handlers['timer:sync']({
+      elementId: 'timer', duration: 10, running: true, endedAt: Date.now() + 2500,
+    }))
+    expect(window.__timerStates.timer.remaining).toBe(3)
+    await act(() => vi.advanceTimersByTimeAsync(1000))
+    expect(window.__timerStates.timer.remaining).toBe(2)
+
+    act(() => mocks.socket.handlers['timer:sync']({
+      elementId: 'timer', duration: 10, running: false, pausedRemaining: 2,
+    }))
+    expect(window.__timerStates.timer.remaining).toBe(2)
+    const pausedSnapshot = window.__timerStates
+    await act(() => vi.advanceTimersByTimeAsync(500))
+    expect(window.__timerStates).toBe(pausedSnapshot)
+
+    act(() => mocks.socket.handlers['timer:ended']({ elementId: 'timer' }))
+    expect(window.__timerStates).toEqual({})
+    view.unmount()
+    expect(window.__timerStates).toEqual({})
   })
 
   it('does not start a later presenter poll while the previous one is pending', async () => {

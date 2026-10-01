@@ -119,4 +119,15 @@ describe('[cap:canvas.group tier:deep] group / ungroup', () => {
     act(() => ops.groupElements())
     expect(byId(els(), 'a').groupId).toBeUndefined()
   })
+
+  it.each(['hidden', 'locked'])('blocks deletion of a group with a %s sibling', (flag) => {
+    const elements = [
+      { ...THREE[0], groupId: 'g' },
+      { ...THREE[1], groupId: 'g', [flag]: true },
+      THREE[2],
+    ]
+    const { ops, els } = setupOps(elements, ['a', 'c'])
+    act(() => ops.deleteSelectedElements())
+    expect(els()).toEqual(elements)
+  })
 })

@@ -158,6 +158,7 @@ describe('Table size picker ergonomics', () => {
     fireEvent.mouseDown(screen.getByRole('button', { name: 'Add table' }))
 
     const grid = screen.getByRole('grid', { name: /Table size 3 by 3/i })
+    grid.focus()
     expect(grid.tabIndex).toBe(0)
     expect(screen.getAllByRole('gridcell')).toHaveLength(48)
     expect(screen.getAllByRole('gridcell').every((cell) => cell.tabIndex === -1)).toBe(true)
@@ -166,6 +167,8 @@ describe('Table size picker ergonomics', () => {
     fireEvent.keyDown(grid, { key: 'ArrowDown' })
     fireEvent.keyDown(grid, { key: 'Enter' })
     expect(onAddTable).toHaveBeenCalledWith(4, 4)
+    expect(screen.queryByRole('grid')).toBeNull()
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Add table' }))
   })
 })
 

@@ -26,10 +26,11 @@ function pointer(target, type, options = {}) {
   fireEvent(target, event)
 }
 
-function renderCanvas({ elements = [shape('a', 40)], selectedElementIds = ['a'] } = {}) {
+function renderCanvas({ elements = [shape('a', 40)], selectedElementIds = ['a'], smartGuidesEnabled = false } = {}) {
   const handlers = {
     onUpdateElement: vi.fn(),
     onUpdateElements: vi.fn(),
+    onToggleSelectElement: vi.fn(),
   }
   render(
     <SlideCanvas
@@ -38,9 +39,10 @@ function renderCanvas({ elements = [shape('a', 40)], selectedElementIds = ['a'] 
       selectedElementIds={selectedElementIds}
       editingElementId={null}
       showGrid={false}
+      smartGuidesEnabled={smartGuidesEnabled}
       resolution={{ width: 960, height: 540 }}
       persistentGuides={[]}
-      onToggleSelectElement={vi.fn()}
+      onToggleSelectElement={handlers.onToggleSelectElement}
       onStartEdit={vi.fn()}
       onStopEdit={vi.fn()}
       onUpdateElement={handlers.onUpdateElement}
@@ -150,5 +152,124 @@ describe('SlideCanvas pointer geometry transaction', () => {
 
     expect(handlers.onUpdateElement).not.toHaveBeenCalled()
     expect(handlers.onUpdateElements).not.toHaveBeenCalled()
+  })
+
+  it('scales a whole group from the primary east handle and persists it as one transaction', () => {
+    const handlers = renderCanvas({
+      elements: [{ ...shape('a', 40), groupId: 'g' }, { ...shape('b', 220), groupId: 'g' }],
+      selectedElementIds: ['a', 'b'],
+    })
+    const a = screen.getByTestId('slide-element-a')
+    const b = screen.getByTestId('slide-element-b')
+    pointer(a.querySelector('[data-testid="resize-handle-e"]'), 'pointerdown', { clientX: 160, clientY: 80 })
+    act(() => pointer(document, 'pointermove', { clientX: 220, clientY: 80 }))
+    expect(a.style.width).toBe('180px')
+    expect(b.style.left).toBe('310px')
+    expect(b.style.width).toBe('180px')
+    expect(handlers.onUpdateElements).not.toHaveBeenCalled()
+    act(() => pointer(document, 'pointerup', { clientX: 220, clientY: 80 }))
+    expect(handlers.onUpdateElement).not.toHaveBeenCalled()
+    expect(handlers.onUpdateElements).toHaveBeenCalledTimes(1)
+    expect(handlers.onUpdateElements).toHaveBeenCalledWith([
+      { id: 'a', x: 40, y: 40, width: 180, height: 80 },
+      { id: 'b', x: 310, y: 40, width: 180, height: 80 },
+    ])
+  })
+
+  it('rotates member centers and orientations together around the group center', () => {
+    const handlers = renderCanvas({
+      elements: [{ ...shape('a', 40), y: 200, groupId: 'g' }, { ...shape('b', 220), y: 200, groupId: 'g' }],
+      selectedElementIds: ['a', 'b'],
+    })
+    const a = screen.getByTestId('slide-element-a')
+    const b = screen.getByTestId('slide-element-b')
+    pointer(a.querySelector('[data-testid="rotation-handle"]'), 'pointerdown', { clientX: 100, clientY: 160 })
+    act(() => pointer(document, 'pointermove', { clientX: 200, clientY: 240 }))
+    expect(a.style.transform).toBe('rotate(90deg)')
+    expect(b.style.transform).toBe('rotate(90deg)')
+    expect(Number.parseFloat(a.style.top)).toBeCloseTo(110)
+    expect(Number.parseFloat(b.style.top)).toBeCloseTo(290)
+    act(() => pointer(document, 'pointerup', { clientX: 200, clientY: 240 }))
+    expect(handlers.onUpdateElement).not.toHaveBeenCalled()
+    expect(handlers.onUpdateElements).toHaveBeenCalledTimes(1)
+    const [first, second] = handlers.onUpdateElements.mock.calls[0][0]
+    expect(first).toMatchObject({ id: 'a', rotation: 90 })
+    expect(second).toMatchObject({ id: 'b', rotation: 90 })
+    expect(first.x).toBeCloseTo(130)
+    expect(second.x).toBeCloseTo(130)
+    expect(second.y - first.y).toBeCloseTo(180)
+  })
+
+  it.each(['hidden', 'locked'])('does not resize a group with a %s sibling', (flag) => {
+    const handlers = renderCanvas({
+      elements: [{ ...shape('a', 40), groupId: 'g' }, { ...shape('b', 220), groupId: 'g', [flag]: true }],
+      selectedElementIds: ['a'],
+    })
+    const a = screen.getByTestId('slide-element-a')
+    pointer(a.querySelector('[data-testid="resize-handle-e"]'), 'pointerdown', { clientX: 160, clientY: 80 })
+    act(() => pointer(document, 'pointermove', { clientX: 220, clientY: 80 }))
+    act(() => pointer(document, 'pointerup', { clientX: 220, clientY: 80 }))
+    expect(a.style.width).toBe('120px')
+    expect(handlers.onUpdateElement).not.toHaveBeenCalled()
+    expect(handlers.onUpdateElements).not.toHaveBeenCalled()
+  })
+
+  it('ignores selected peers and hidden elements when attracting a batch move', () => {
+    const handlers = renderCanvas({
+      elements: [shape('a', 100), shape('b', 300), { ...shape('hidden', 296), hidden: true }],
+      selectedElementIds: ['a', 'b'], smartGuidesEnabled: true,
+    })
+    pointer(screen.getByTestId('slide-element-a'), 'pointerdown', { clientX: 110, clientY: 60 })
+    act(() => pointer(document, 'pointermove', { clientX: 306, clientY: 67 }))
+    expect(screen.getByTestId('slide-element-a').style.left).toBe('296px')
+    expect(screen.getByTestId('slide-element-b').style.left).toBe('496px')
+    expect(screen.queryByTestId('smart-guide-x')).toBeNull()
+    expect(screen.queryByTestId('smart-guide-y')).toBeNull()
+    act(() => pointer(document, 'pointerup', { clientX: 306, clientY: 67 }))
+    expect(handlers.onUpdateElements).toHaveBeenCalledWith([
+      { id: 'a', x: 296, y: 47 }, { id: 'b', x: 496, y: 47 },
+    ])
+  })
+
+  it.each(['chart', 'latex'])('routes selected %s preview center gestures to the canvas owner', (type) => {
+    const handlers = renderCanvas({ elements: [{ ...shape('a', 40), type, content: 'x^2' }] })
+    const wrapper = screen.getByTestId('slide-element-a')
+    pointer(wrapper.querySelector('[data-canvas-preview-hit-area]'), 'pointerdown', { clientX: 100, clientY: 80 })
+    act(() => pointer(document, 'pointermove', { clientX: 140, clientY: 80 }))
+    expect(wrapper.style.left).toBe('80px')
+    act(() => pointer(document, 'pointerup', { clientX: 140, clientY: 80 }))
+    expect(handlers.onUpdateElement).toHaveBeenCalledWith('a', { x: 80, y: 40 })
+  })
+
+  it('rescales explicit line endpoints and control points with the resize preview and commit', () => {
+    const handlers = renderCanvas({ elements: [{ ...shape('a', 40), type: 'line', y: 200,
+      width: 400, height: 40, x1: 0, y1: 20, x2: 400, y2: 20, cx: 200, cy: 20 }] })
+    const wrapper = screen.getByTestId('slide-element-a')
+    pointer(wrapper.querySelector('[data-testid="resize-handle-e"]'), 'pointerdown', { clientX: 440, clientY: 220 })
+    act(() => pointer(document, 'pointermove', { clientX: 240, clientY: 220 }))
+    expect(wrapper.style.width).toBe('200px')
+    act(() => pointer(document, 'pointerup', { clientX: 240, clientY: 220 }))
+    expect(handlers.onUpdateElement).toHaveBeenCalledWith('a', {
+      x: 40, y: 200, width: 200, height: 40, x1: 0, y1: 20, x2: 200, y2: 20, cx: 100, cy: 20,
+    })
+  })
+
+  it('discards every group resize preview when its owner is cancelled', () => {
+    const handlers = renderCanvas({
+      elements: [{ ...shape('a', 40), groupId: 'g' }, { ...shape('b', 220), groupId: 'g' }],
+      selectedElementIds: ['a', 'b'],
+    })
+    const a = screen.getByTestId('slide-element-a')
+    const b = screen.getByTestId('slide-element-b')
+    pointer(a.querySelector('[data-testid="resize-handle-e"]'), 'pointerdown', { clientX: 160, clientY: 80 })
+    act(() => pointer(document, 'pointermove', { clientX: 220, clientY: 80 }))
+    expect(b.style.width).toBe('180px')
+    act(() => pointer(document, 'pointercancel', { clientX: 220, clientY: 80 }))
+    expect(a.style.width).toBe('120px')
+    expect(b.style.width).toBe('120px')
+    expect(b.style.left).toBe('220px')
+    act(() => pointer(document, 'pointerup', { clientX: 220, clientY: 80 }))
+    expect(handlers.onUpdateElements).not.toHaveBeenCalled()
+    expect(handlers.onUpdateElement).not.toHaveBeenCalled()
   })
 })

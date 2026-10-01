@@ -23,9 +23,7 @@ test.describe('Game Element — Canvas Rendering', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('Name Picker wheel renders SVG segments', async ({ page }) => {

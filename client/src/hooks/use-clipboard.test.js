@@ -303,6 +303,20 @@ describe('useClipboard performCut lock policy', () => {
     expect(useEditorStore.getState().clipboard).toEqual([{ type: 'prior' }])
     expect(useEditorStore.getState().selectedElementIds).toEqual(['a', 'b'])
   })
+
+  it.each(['hidden', 'locked'])('blocks cut before changing clipboard or selection when a group sibling is %s', (flag) => {
+    const elements = [makeEl('a', { groupId: 'g' }), makeEl('b', { groupId: 'g', [flag]: true })]
+    let deck = { slides: [{ id: 's1', elements }] }
+    const setPresentation = (update) => { deck = update(deck) }
+    const mapActiveSlide = (prev, fn) => ({ ...prev, slides: [fn(prev.slides[0])] })
+    useEditorStore.setState({ clipboard: [{ type: 'prior' }], selectedElementIds: ['a'], pasteCount: 3 })
+    const { result } = renderHook(() => useClipboard({ mapActiveSlide, setPresentation }))
+    act(() => result.current.performCut(elements, ['a']))
+    expect(deck.slides[0].elements).toEqual(elements)
+    expect(useEditorStore.getState().clipboard).toEqual([{ type: 'prior' }])
+    expect(useEditorStore.getState().selectedElementIds).toEqual(['a'])
+    expect(useEditorStore.getState().pasteCount).toBe(3)
+  })
 })
 
 describe('createDuplicateOperation', () => {

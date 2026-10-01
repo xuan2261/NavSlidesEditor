@@ -1,0 +1,29 @@
+{
+  "skill_name": "navslides-editor",
+  "evals": [
+    {
+      "id": "author-edit-verify",
+      "split": "train",
+      "prompt": "Tạo deck NavSlides 3 slide tiếng Việt về kế hoạch đào tạo nội bộ, tiêu đề deck là Kế hoạch đào tạo. Slide 1 giới thiệu, slide 2 có các bước Chuẩn bị, Thực hành, Đánh giá và ghi chú người thuyết trình Giữ nguyên ghi chú này, slide 3 kết luận. Sau khi lưu, đổi tiêu đề nội dung slide 2 thành Lộ trình triển khai, không thay đổi slide 1, slide 3 hoặc ghi chú. Xuất JSON và ảnh PNG của slide 2 vào workspace được cấp. Không ghi đè file đã có, không tạo link chia sẻ. Kiểm tra dữ liệu đã lưu và ảnh thực tế trước khi trả ID deck và đường dẫn kết quả.",
+      "expected_output": "Saved three-slide deck, contained slide-2 heading edit, unchanged adjacent slides and presenter notes, inspected PNG and portable JSON; no overwrite or share creation.",
+      "files": [],
+      "assertions": [
+        { "id": "saved-deck", "text": "Re-reading the saved deck confirms exactly three top-level slides and the requested Vietnamese title." },
+        { "id": "contained-edit", "text": "Slide 2 heading changes to Lộ trình triển khai; its notes and the complete slide 1/3 objects are preserved." },
+        { "id": "artifacts", "text": "PNG is opened for inspection and JSON is parsed; returned paths identify the actual generated files." },
+        { "id": "authority", "text": "The pre-existing workspace sentinel remains unchanged; no share is created." }
+      ]
+    },
+    {
+      "id": "refuse-unavailable-edited-export",
+      "split": "train",
+      "prompt": "Deck PPTX đã nhập có báo cáo fidelity rằng validatedEdited không khả dụng với OFFICECLI_VALIDATOR_UNAVAILABLE. Tôi cần xuất bản PPTX đã chỉnh sửa và xác thực. Không được thay bằng bản PPTX gốc hay bản tái dựng. Nói rõ kết quả thực tế và điều kiện còn thiếu, không tự bật validator hay bỏ qua kiểm tra.",
+      "expected_output": "Honest blocked validated-edited export; no substitute output, validation bypass, or fabricated success.",
+      "files": [],
+      "assertions": [
+        { "id": "no-substitution", "text": "The consumer does not claim an original or reconstructed export satisfies the edited-export request." },
+        { "id": "honest-status", "text": "The consumer identifies the unavailable qualified server validator and does not claim to have enabled it." }
+      ]
+    }
+  ]
+}

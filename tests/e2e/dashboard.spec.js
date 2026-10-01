@@ -16,15 +16,18 @@ test.describe('Dashboard & Navigation', () => {
     await expect(page.locator('button').filter({ hasText: 'Explore' })).toBeVisible()
   })
 
-  test('can switch sidebar views', async ({ page }) => {
-    const home = new HomePage(page)
-    await home.goto()
-
-    await home.switchSidebarView('Recent')
-    await expect(page.locator('button.text-primary').filter({ hasText: 'Recent' })).toBeVisible()
-
-    await home.switchSidebarView('Built-in')
-    await expect(page.locator('h2')).toContainText('Template Gallery')
+  test('can switch sidebar views', async ({ page, request }) => {
+    const pres = await apiCreatePresentation(request, 'Sidebar navigation fixture')
+    try {
+      const home = new HomePage(page)
+      await home.goto()
+      await home.switchSidebarView('Recent')
+      await expect(page.getByRole('heading', { name: 'Recent Presentations', exact: true })).toBeVisible()
+      await home.switchSidebarView('Built-in')
+      await expect(page.getByRole('heading', { name: 'Template Gallery', exact: true })).toBeVisible()
+    } finally {
+      await apiDeletePresentation(request, pres.id)
+    }
   })
 
   test('can search presentations', async ({ page, request }) => {

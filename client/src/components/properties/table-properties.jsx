@@ -1,11 +1,25 @@
 import { useState } from 'react'
+import { resolveMergedCells } from 'revealjs-shared'
 import { Button, Input, ColorPicker, Select } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
 import { clampTableCell, normalizeTableShape } from './table-properties-utils'
 export default function TableProperties({ element, onUpdate }) {
   const data = element.data || [['']]
   const [selectedCell, setSelectedCell] = useState({ row: 0, col: 0 })
-  const clampedCell = clampTableCell(selectedCell, data)
+  const { spans, covered } = resolveMergedCells(element.mergedCells)
+  const boundedCell = clampTableCell(selectedCell, data)
+  const selectedMerge = covered.has(`${boundedCell.row}:${boundedCell.col}`)
+    ? [...spans].map(([key, span]) => {
+      const [row, col] = key.split(':').map(Number)
+      return { row, col, ...span }
+    }).find((merge) =>
+      boundedCell.row >= merge.row && boundedCell.row < merge.row + merge.rowSpan &&
+      boundedCell.col >= merge.col && boundedCell.col < merge.col + merge.colSpan
+    )
+    : null
+  const clampedCell = selectedMerge
+    ? { row: selectedMerge.row, col: selectedMerge.col }
+    : boundedCell
   const cellStyles = element.cellStyles || {}
   const getCellStyle = (key, fallback) => cellStyles[key]?.[clampedCell.row]?.[clampedCell.col] ?? fallback
   const updateCellStyle = (key, value) => {
@@ -140,9 +154,12 @@ export default function TableProperties({ element, onUpdate }) {
                 aria-label={`Table cell row ${ri + 1} column ${ci + 1}`}
                 key={ci}
                 type="text"
-                value={cell || ''}
+                value={covered.has(`${ri}:${ci}`) ? '' : String(cell ?? '')}
+                disabled={covered.has(`${ri}:${ci}`)}
+                title={covered.has(`${ri}:${ci}`) ? 'Covered by a merged cell; edit the leading cell instead' : undefined}
                 onFocus={() => setSelectedCell({ row: ri, col: ci })}
                 onChange={(e) => {
+                  if (covered.has(`${ri}:${ci}`)) return
                   const d = data.map((r) => [...r])
                   d[ri][ci] = e.target.value
                   onUpdate({ data: d })

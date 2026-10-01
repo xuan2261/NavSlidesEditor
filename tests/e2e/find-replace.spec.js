@@ -54,9 +54,7 @@ test.describe('Find & Replace', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('can open Find bar with Ctrl+F', async ({ page }) => {
@@ -64,8 +62,7 @@ test.describe('Find & Replace', () => {
     await expect(page.locator('.find-replace-bar')).toBeVisible()
   })
 
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  test('can search text and show match count', async ({ page }) => {
+  test('can search text and show match count', async () => {
     await editorPage.findText('Hello')
     const count = await editorPage.getMatchCount()
     expect(count).toBe(2)
@@ -88,15 +85,11 @@ test.describe('Find & Replace', () => {
 
   test('case-sensitive toggle works', async ({ page }) => {
     await editorPage.findText('hello') // lowercase
-    const countLower = await editorPage.getMatchCount()
+    await expect.poll(async () => editorPage.getMatchCount(), { timeout: 5000 }).toBe(2)
 
     // Toggle case-sensitive
     await page.locator('.find-btn[title="Match case"]').click()
     await expect.poll(async () => editorPage.getMatchCount(), { timeout: 5000 }).toBe(0)
-    const countSensitive = await editorPage.getMatchCount()
-
-    // "Hello" should not match "hello" in case-sensitive mode
-    expect(countSensitive).toBeLessThanOrEqual(countLower)
   })
 
   test('replace all supports an empty replacement string', async ({ request }) => {

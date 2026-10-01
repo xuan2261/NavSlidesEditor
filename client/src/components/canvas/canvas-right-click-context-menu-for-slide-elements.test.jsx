@@ -93,6 +93,33 @@ describe('CanvasContextMenu copy URL action', () => {
     expect(screen.getByRole('button', { name: /Duplicate/ }).disabled).toBe(false)
   })
 
+  it('keeps image crop and reset available when only an unrelated selected peer is locked', () => {
+    const image = { id: 'image', type: 'image', x: 40, y: 40, width: 120, height: 80,
+      imageW: 240, imageH: 160, imageOffsetX: -20, imageOffsetY: -10 }
+    const onStartCrop = vi.fn()
+    const onUpdateElement = vi.fn()
+    renderMenu(image, {
+      slide: { elements: [image, { id: 'locked', type: 'shape', locked: true }] },
+      contextMenu: { elementId: 'image', elementType: 'image', contextSelectionIds: ['image', 'locked'], x: 10, y: 20 },
+      onStartCrop, onUpdateElement,
+    })
+    expect(screen.getByRole('button', { name: 'Crop' }).disabled).toBe(false)
+    expect(screen.getByRole('button', { name: 'Reset crop' }).disabled).toBe(false)
+    fireEvent.click(screen.getByRole('button', { name: 'Reset crop' }))
+    expect(onUpdateElement).toHaveBeenCalledWith('image', expect.objectContaining({
+      x: 20, y: 30, width: 240, height: 160, imageW: null, imageH: null,
+    }))
+    fireEvent.click(screen.getByRole('button', { name: 'Crop' }))
+    expect(onStartCrop).toHaveBeenCalledWith('image')
+  })
+
+  it.each(['target', 'slide'])('keeps crop disabled when the %s is locked', (lock) => {
+    const image = { id: 'image', type: 'image', locked: lock === 'target' }
+    renderMenu(image, { slide: { locked: lock === 'slide', elements: [image] } })
+    expect(screen.getByRole('button', { name: 'Crop' }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: 'Reset crop' }).disabled).toBe(true)
+  })
+
   it('copies an absolute image URL and closes the menu', () => {
     const writeText = vi.fn()
     const { onClose } = renderMenu(

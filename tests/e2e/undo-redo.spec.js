@@ -15,9 +15,7 @@ test.describe('Undo / Redo', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('can undo adding an element', async ({ page }) => {
@@ -54,14 +52,6 @@ test.describe('Undo / Redo', () => {
     await expect.poll(async () => editorPage.getElementCount(), { timeout: 5000 }).toBe(afterAdd)
   })
 
-  test('undo/redo keyboard shortcuts work', async ({ page }) => {
-    // Simply verify keyboard shortcuts don't crash
-    await page.keyboard.press('Control+z')
-    await expect(page.locator('.slide-canvas')).toBeVisible()
-    await page.keyboard.press('Control+y')
-    await expect(page.locator('.slide-canvas')).toBeVisible()
-    // If we reach here without error, shortcuts work
-  })
 
   test('bounded stress: 10 adds, 10 undo, 10 redo', async ({ page, request }) => {
     await apiUpdatePresentation(request, presId, {

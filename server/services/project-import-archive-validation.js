@@ -1,6 +1,7 @@
 const path = require('node:path').posix
 const crypto = require('node:crypto')
 const { createPresentationSchema } = require('../middleware/schemas')
+const { getProjectImportContentErrors } = require('revealjs-shared')
 
 const SAFE_MEDIA_EXTENSIONS = new Set([
   '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico',
@@ -55,6 +56,10 @@ function inspectPresentation(presentation, limits) {
   }
   if (!createPresentationSchema.safeParse(presentation).success) {
     throw importError('PROJECT_PRESENTATION_INVALID', 'Presentation schema is invalid')
+  }
+  const contentErrors = getProjectImportContentErrors(presentation)
+  if (contentErrors.length) {
+    throw importError('PROJECT_PRESENTATION_INVALID', contentErrors.join('; '))
   }
 }
 

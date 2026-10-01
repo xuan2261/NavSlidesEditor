@@ -2,6 +2,8 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { TimelineExpandedDetails } from './timeline-expanded-details'
 import { buildTicks, getTimelineItems, getTimelineRange, parseDatePos } from './timeline-element-utils'
+import TimelineElement from './timeline-element'
+import { MAX_TIMELINE_TICKS } from 'revealjs-shared'
 
 // Test the pure utility functions extracted from timeline-element.jsx
 // We import the module and test parseDatePos and buildTicks indirectly
@@ -38,6 +40,32 @@ describe('TimelineElement utilities', () => {
   })
 
   describe('buildTicks', () => {
+    it('honors explicit annual spacing on a range longer than eight years', () => {
+      expect(buildTicks('2000', '2010', 'year').map((tick) => tick.date)).toEqual(
+        Array.from({ length: 11 }, (_, index) => String(2000 + index))
+      )
+    })
+
+    it.each([['-1000000000', '1000000000'], ['1000000000', '-1000000000']])(
+      'bounds huge year ranges without losing both ends (%s to %s)', (start, end) => {
+        const ticks = buildTicks(start, end, 'year')
+        expect(ticks.length).toBeLessThanOrEqual(MAX_TIMELINE_TICKS)
+        expect(ticks[0].date).toBe(start)
+        expect(ticks.at(-1).date).toBe(end)
+        expect(new Set(ticks.map((tick) => tick.date)).size).toBe(ticks.length)
+      }
+    )
+
+    it('renders invalid legacy dates at finite coordinates rather than emitting NaN', () => {
+      const { container } = render(<TimelineElement element={{
+        timelineStart: '', timelineEnd: 'bad-date', tickSpacing: 'day',
+        events: [{ id: 'event', title: 'Legacy event', date: '' }],
+      }} />)
+      expect(screen.getByText('Legacy event')).toBeTruthy()
+      expect(container.querySelector('circle').getAttribute('cx')).toBe('30')
+      expect(buildTicks('', 'bad-date', 'day', false)).toEqual([])
+    })
+
     it('generates yearly ticks for short ranges', () => {
       const ticks = buildTicks('2020', '2025', 'year')
       expect(ticks.length).toBeGreaterThan(0)

@@ -34,7 +34,7 @@ export default [
     },
   },
   {
-    files: ['*.config.mjs', 'client/vite.config.js', 'website/.vitepress/config.mjs'],
+    files: ['*.config.mjs', 'config/**/*.mjs', 'client/vite.config.js', 'website/.vitepress/config.mjs'],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -206,6 +206,15 @@ export default [
         ...globals.vitest,
       },
       sourceType: 'module',
+    },
+  },
+  {
+    files: ['scripts/**/*.cjs'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+      sourceType: 'commonjs',
     },
   },
   // Electron

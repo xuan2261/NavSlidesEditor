@@ -256,6 +256,7 @@ function TableSizePicker({ open, anchorRef, onSelect, onClose }) {
 
   const choose = () => {
     onSelect(active.row, active.column)
+    anchorRef?.current?.focus?.()
     onClose()
   }
 
@@ -323,6 +324,7 @@ function TableSizePicker({ open, anchorRef, onSelect, onClose }) {
                   onPointerDown={(e) => {
                     e.preventDefault()
                     onSelect(r + 1, c + 1)
+                    anchorRef?.current?.focus?.()
                     onClose()
                   }}
                   aria-label={`Insert ${r + 1} by ${c + 1} table`}

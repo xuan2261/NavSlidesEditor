@@ -57,7 +57,10 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
     const next = steps.filter((_, i) => i !== index)
     onUpdate({
       walkthroughSteps: next,
-      defaultStepIndex: Math.min(defaultStepIndex, Math.max(0, next.length - 1)),
+      defaultStepIndex: Math.max(0, Math.min(
+        defaultStepIndex - (index < defaultStepIndex ? 1 : 0),
+        next.length - 1,
+      )),
     })
   }
 

@@ -1,6 +1,7 @@
 const SNAP_THRESHOLD = 6
 
-export function calculateGuides(draggedEl, allElements, canvasW = 960, canvasH = 540) {
+export function calculateGuides(draggedEl, allElements, canvasW = 960, canvasH = 540, scale = 1) {
+  const threshold = (SNAP_THRESHOLD + 1) / (Number.isFinite(scale) && scale > 0 ? scale : 1)
   const guides = []
   let snappedX = draggedEl.x
   let snappedY = draggedEl.y
@@ -38,7 +39,7 @@ export function calculateGuides(draggedEl, allElements, canvasW = 960, canvasH =
   })
 
   // Find closest X snap
-  let bestXDist = SNAP_THRESHOLD + 1
+  let bestXDist = threshold
   let bestXSnap = null
 
   for (const ref of xRefs) {
@@ -61,7 +62,7 @@ export function calculateGuides(draggedEl, allElements, canvasW = 960, canvasH =
   }
 
   // Find closest Y snap
-  let bestYDist = SNAP_THRESHOLD + 1
+  let bestYDist = threshold
   let bestYSnap = null
 
   for (const ref of yRefs) {

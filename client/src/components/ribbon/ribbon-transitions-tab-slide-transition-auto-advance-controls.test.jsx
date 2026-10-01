@@ -15,6 +15,15 @@ const mockSlide = {
 }
 
 describe('TransitionsTabContent', () => {
+  it('disables slide override controls while preserving deck-wide controls and preview on locked slides', () => {
+    render(<TransitionsTabContent presentation={mockPresentation} slide={{ ...mockSlide, locked: true }} onUpdateSlide={vi.fn()} />)
+    for (const name of ['Change transition', 'Use presentation transition default', 'Slide transition direction', 'Slide transition duration milliseconds']) {
+      expect(screen.getByLabelText(name).disabled).toBe(true)
+    }
+    expect(screen.getByLabelText('Set speed Fast').disabled).toBe(false)
+    expect(screen.getByLabelText('Preview transition').disabled).toBe(false)
+  })
+
   it('renders all four sections', () => {
     const { container } = render(<TransitionsTabContent presentation={mockPresentation} />)
     const labels = container.querySelectorAll('.text-text-muted')

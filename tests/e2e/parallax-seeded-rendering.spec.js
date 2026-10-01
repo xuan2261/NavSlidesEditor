@@ -21,9 +21,7 @@ test.describe('Parallax Features E2E', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('HTML embed element renders iframe in canvas via API seed', async ({ page }) => {

@@ -209,7 +209,7 @@ function ContextualControls({ selectedElement, onUpdateElement }) {
   }
 }
 
-export default function FormatTabContent({ selectedElement, onUpdateElement, elements, selectedElementIds, slideWidth, presentation, availability = {} }) {
+export default function FormatTabContent({ selectedElement, onUpdateElement, onUpdateElements, elements, selectedElementIds, slideWidth, presentation, availability = {} }) {
   if (!selectedElement) {
     return (
       <RibbonTabContentRow>
@@ -252,6 +252,14 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
   // path fans the value to every selected element.
   const numProps = (key, fallback) =>
     mixed[key]?.isMixed ? { value: '', placeholder: '—' } : { value: fallback }
+  const rotateSelection = () => {
+    const ids = selectedElementIds?.length ? selectedElementIds : [selectedElement.id]
+    const selected = (elements || [selectedElement]).filter((element) => ids.includes(element.id))
+    onUpdateElements?.(selected.map((element) => ({
+      id: element.id,
+      rotation: normalizeRotation((element.rotation || 0) + 90),
+    })))
+  }
 
   return (
     <RibbonTabContentRow>
@@ -314,11 +322,9 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
             title="Rotate 90°" aria-label="Rotate 90 degrees"
             onMouseDown={(e) => {
               e.preventDefault()
-              onUpdateElement?.({ rotation: ((selectedElement.rotation || 0) + 90) % 360 })
+              rotateSelection()
             }}
-            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
-              onUpdateElement?.({ rotation: ((selectedElement.rotation || 0) + 90) % 360 })
-            )}>
+            onKeyDown={(e) => handleRibbonKeyboardActivation(e, rotateSelection)}>
             <RotateCw size={14} />
           </Button>
         </div>

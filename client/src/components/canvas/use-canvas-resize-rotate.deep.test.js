@@ -95,6 +95,9 @@ describe('[cap:canvas.resize-aspect tier:deep] aspect-ratio preserving resize', 
     applyResizeAspectRatio('se', start, updates)
     expect(updates.width).toBeGreaterThanOrEqual(MIN_SIZE)
     expect(updates.height).toBeGreaterThanOrEqual(MIN_SIZE)
+    expect(updates.width).toBe(80)
+    expect(updates.height).toBe(40)
+    expect(updates.width / updates.height).toBe(2)
   })
 })
 
@@ -127,5 +130,29 @@ describe('[cap:canvas.resize-boundary tier:deep] rotated resize stays inside sli
     expect(box.top).toBeGreaterThanOrEqual(0)
     expect(box.right).toBeLessThanOrEqual(slideW)
     expect(box.bottom).toBeLessThanOrEqual(slideH)
+  })
+
+  it('limits a rotated east resize without moving its west anchor or changing height', () => {
+    const start = { x: 40, y: 80, width: 200, height: 120, rotation: 45 }
+    const anchor = (el) => ({
+      x: el.x + el.width / 2 - el.width / 2 * Math.SQRT1_2,
+      y: el.y + el.height / 2 - el.width / 2 * Math.SQRT1_2,
+    })
+    const updates = applyResize('e', start, 800, 0)
+    clampToSlide(updates, start, null, 300, 300)
+    const box = getRotatedAABB({ ...start, ...updates })
+    expect(updates.height).toBe(120)
+    expect(anchor(updates).x).toBeCloseTo(anchor(start).x, 7)
+    expect(anchor(updates).y).toBeCloseTo(anchor(start).y, 7)
+    expect(box.right).toBeLessThanOrEqual(300 + 1e-9)
+    expect(box.bottom).toBeLessThanOrEqual(300 + 1e-9)
+  })
+
+  it('snaps only the north edge while preserving the fixed bottom and horizontal geometry', () => {
+    const start = { x: 100, y: 440, width: 200, height: 100 }
+    const updates = applyResize('n', start, 0, 100)
+    clampToSlide(updates, start, (value) => Math.round(value / 40) * 40, 960, 540, 'n')
+    expect(updates).toEqual({ x: 100, y: 500, width: 200, height: 40 })
+    expect(updates.y + updates.height).toBe(540)
   })
 })

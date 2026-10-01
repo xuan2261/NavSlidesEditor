@@ -432,7 +432,7 @@ and its
 
 ## 2026-05-25 SVG Path Scaling Phase 4 Update
 
-- Diagnostic evidence in `plans/260525-1450-pptx-import-unit-conversion-and-scale-fixes/reports/svg-path-scaling-diagnostic.md`
+- Diagnostic evidence in `plans/archive/260525-1450-pptx-import-unit-conversion-and-scale-fixes/reports/svg-path-scaling-diagnostic.md`
   confirmed `pptxtojson` custom path coordinates are local to source shape
   dimensions.
 - Custom SVG path imports now keep the inner SVG `viewBox` in raw source

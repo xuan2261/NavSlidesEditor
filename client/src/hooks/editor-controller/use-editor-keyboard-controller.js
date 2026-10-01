@@ -3,8 +3,14 @@ import { getKeyboardNudgeStep } from '../../utils/keyboard-nudge'
 import { hasBlockedGroupMutation } from '../../utils/active-slide-selection'
 import { computeClampedBatchDelta } from '../../components/canvas/use-canvas-pointer-interaction'
 import { GAME_SHORTCUT_CONFIG } from '../../utils/game-shortcut-config'
+import { useElementCycle } from '../use-element-cycle-through-slide-elements-hook'
 
 export function useEditorKeyboardController(c) {
+  const { cycleNext, cyclePrev } = useElementCycle(
+    c.selectedElementIds || [],
+    [c.authoringSlide || c.activeSlideRef?.current],
+    0
+  )
   useKeyboard({
     disabled: c.disabled,
     onSave: c.handleManualSave,
@@ -17,6 +23,12 @@ export function useEditorKeyboardController(c) {
     onDelete: c.deleteSelectedElements,
     onSelectAll: c.handleSelectAll,
     onToggleFindReplace: () => c.setShowFindReplace((v) => !v),
+    onCycleElement: (direction, event) => {
+      const id = direction === 'previous' ? cyclePrev() : cycleNext()
+      if (!id) return
+      event.preventDefault()
+      c.toggleElementSelection(id)
+    },
     onEscape: () => {
       if (c.showCommandPalette) return c.setShowCommandPalette(false)
       if (c.showGameHud) return c.setShowGameHud(false)

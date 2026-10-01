@@ -140,7 +140,7 @@ export default function PropertiesPanel({
               }}
               onRename={(id, name) => onUpdateElement(id, { name })}
               onReorder={(fromIdx, toIdx) => {
-                const els = [...(slide?.elements || [])]
+                const els = [...(slide?.elements || [])].sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0))
                 const [moved] = els.splice(fromIdx, 1)
                 els.splice(toIdx, 0, moved)
                 const updates = els.map((el, i) => ({ id: el.id, zIndex: i }))

@@ -27,6 +27,7 @@ const connectorGeometry = require('./connector-geometry.js')
 const slideLayouts = require('./slide-layouts.js')
 const slideLayoutNormalization = require('./slide-layout-normalization.js')
 const mediaAccessibility = require('./media-accessibility.js')
+const projectImportContentValidation = require('./project-import-content-validation.js')
 
 const TEXT_COLORS = [
   '#ffffff',
@@ -128,6 +129,9 @@ module.exports = {
   ...slideLayouts,
   ...slideLayoutNormalization,
   ...mediaAccessibility,
+  ...projectImportContentValidation,
+  ...require('./timeline-utils.js'),
+  ...require('./project-export-value.js'),
   isSafeHref: contentSafety.isSafeHref,
   isSafeMediaSrc: contentSafety.isSafeMediaSrc,
   sanitizeMediaSrc: contentSafety.sanitizeMediaSrc,

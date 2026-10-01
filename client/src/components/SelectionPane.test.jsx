@@ -119,3 +119,19 @@ describe('SelectionPane keyboard access', () => {
     expect(props.onSelect).not.toHaveBeenCalled()
   })
 })
+
+describe('SelectionPane visual layer ordering', () => {
+  it('tracks z-order changes without mutating insertion order and preserves ties', () => {
+    const props = defaultProps()
+    const initial = elements.map((element, index) => ({ ...element, zIndex: [3, 1, 1][index] }))
+    const { rerender } = render(<SelectionPane {...props} elements={initial} />)
+    const rowNames = () => screen.getAllByRole('listitem').map((row) => row.getAttribute('aria-label'))
+    expect(rowNames()).toEqual(['Bar chart, Chart', 'Title, Text', 'Hero image, Image'])
+    const reordered = initial.map((element) => ({
+      ...element, zIndex: element.id === 'el-img' ? 0 : element.zIndex,
+    }))
+    rerender(<SelectionPane {...props} elements={reordered} />)
+    expect(rowNames()).toEqual(['Hero image, Image', 'Bar chart, Chart', 'Title, Text'])
+    expect(initial.map((element) => element.id)).toEqual(['el-img', 'el-chart', 'el-text'])
+  })
+})
