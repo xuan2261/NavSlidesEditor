@@ -25,7 +25,7 @@
     "pptxtojson": "2.0.2",
     "revealjs-shared": "*",
     "socket.io": "^4.8.3",
-    "socket.io-client": "^4.8.3",
+    "socket.io-client": "^4.8.4",
     "undici": "7.29.1",
     "zod": "^4.6.5"
   },
