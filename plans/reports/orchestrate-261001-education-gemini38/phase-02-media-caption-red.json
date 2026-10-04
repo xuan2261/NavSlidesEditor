@@ -1,0 +1,33 @@
+{
+  "expectedRed": true,
+  "surface": "real unselected canvas; inspector authored fields",
+  "deckId": "4d8d8b8a-499b-4f77-b4d4-4635284d6bdc",
+  "receipt": {
+    "summary": {
+      "rect": {
+        "left": 246.3125,
+        "top": 499.125,
+        "width": 396.5,
+        "height": 15.25
+      },
+      "reachable": false,
+      "receiver": "DIV"
+    },
+    "description": {
+      "rect": {
+        "left": 246.3125,
+        "top": 483.875,
+        "width": 396.5,
+        "height": 15.25
+      },
+      "reachable": false,
+      "receiver": "DIV"
+    },
+    "wrapperOverflow": "hidden",
+    "videoViewport": {
+      "width": 520,
+      "height": 220
+    },
+    "selected": false
+  }
+}

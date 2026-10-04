@@ -1,0 +1,4878 @@
+[
+  {
+    "slide": 1,
+    "id": "audit-text",
+    "type": "text",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "45",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "50",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 1,
+    "id": "audit-image",
+    "type": "image",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "645",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "50",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "12",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": "prop-image-object-fit",
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Image object fit",
+        "label": "",
+        "value": "contain",
+        "options": [
+          {
+            "value": "contain",
+            "text": "contain"
+          },
+          {
+            "value": "cover",
+            "text": "cover"
+          },
+          {
+            "value": "fill",
+            "text": "fill"
+          },
+          {
+            "value": "none",
+            "text": "none"
+          }
+        ]
+      },
+      {
+        "testId": "prop-image-brightness",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Image brightness",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-image-contrast",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Image contrast",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-image-grayscale",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Image grayscale",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-image-saturation",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Image saturation",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-image-border-radius",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Image corner radius",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-image-border-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Image border width",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-image-border-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Image border color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": "Decorative image",
+        "label": "Decorative image",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Image alternative text",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Image long description",
+        "label": "",
+        "value": "Diagram detail"
+      },
+      {
+        "testId": "prop-image-citation-text",
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Image citation text",
+        "label": "",
+        "value": "Source A",
+        "checked": false
+      },
+      {
+        "testId": "prop-image-citation-link",
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Image citation link",
+        "label": "",
+        "value": "https://example.com",
+        "checked": false
+      },
+      {
+        "testId": "prop-image-citation-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Image citation color",
+        "label": "",
+        "value": "#808080",
+        "checked": false
+      },
+      {
+        "testId": "prop-image-citation-align",
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Image citation alignment",
+        "label": "",
+        "value": "left",
+        "options": [
+          {
+            "value": "left",
+            "text": "left"
+          },
+          {
+            "value": "center",
+            "text": "center"
+          },
+          {
+            "value": "right",
+            "text": "right"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 1,
+    "id": "audit-shape",
+    "type": "shape",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "45",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "350",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": "prop-shape-kind",
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Shape kind",
+        "label": "Shape kindRectangleRounded RectCircleTriangleDiamondArrow RightStarHexagonPentagonCloudCylinderParallelogramTrapezoidBracket",
+        "value": "rect",
+        "options": [
+          {
+            "value": "rect",
+            "text": "Rectangle"
+          },
+          {
+            "value": "rounded-rect",
+            "text": "Rounded Rect"
+          },
+          {
+            "value": "circle",
+            "text": "Circle"
+          },
+          {
+            "value": "triangle",
+            "text": "Triangle"
+          },
+          {
+            "value": "diamond",
+            "text": "Diamond"
+          },
+          {
+            "value": "arrow-right",
+            "text": "Arrow Right"
+          },
+          {
+            "value": "star",
+            "text": "Star"
+          },
+          {
+            "value": "hexagon",
+            "text": "Hexagon"
+          },
+          {
+            "value": "pentagon",
+            "text": "Pentagon"
+          },
+          {
+            "value": "cloud",
+            "text": "Cloud"
+          },
+          {
+            "value": "cylinder",
+            "text": "Cylinder"
+          },
+          {
+            "value": "parallelogram",
+            "text": "Parallelogram"
+          },
+          {
+            "value": "trapezoid",
+            "text": "Trapezoid"
+          },
+          {
+            "value": "bracket",
+            "text": "Bracket"
+          }
+        ]
+      },
+      {
+        "testId": "prop-shape-fill",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shape fill color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": "prop-shape-stroke",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shape stroke color",
+        "label": "",
+        "value": "#ffffff",
+        "checked": false
+      },
+      {
+        "testId": "prop-shape-stroke-width",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Shape stroke width",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shape-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Shape opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-shape-border-radius",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Shape corner radius",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shape-text-size",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shape label text size",
+        "label": "",
+        "value": "16",
+        "checked": false
+      },
+      {
+        "testId": "prop-shape-text-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shape label text color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 1,
+    "id": "audit-code",
+    "type": "code",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "645",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "350",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-code-language",
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Code language",
+        "label": "",
+        "value": "javascript",
+        "options": [
+          {
+            "value": "plaintext",
+            "text": "Plain Text"
+          },
+          {
+            "value": "javascript",
+            "text": "JavaScript"
+          },
+          {
+            "value": "typescript",
+            "text": "TypeScript"
+          },
+          {
+            "value": "python",
+            "text": "Python"
+          },
+          {
+            "value": "java",
+            "text": "Java"
+          },
+          {
+            "value": "c",
+            "text": "C"
+          },
+          {
+            "value": "cpp",
+            "text": "C++"
+          },
+          {
+            "value": "csharp",
+            "text": "C#"
+          },
+          {
+            "value": "go",
+            "text": "Go"
+          },
+          {
+            "value": "rust",
+            "text": "Rust"
+          },
+          {
+            "value": "php",
+            "text": "PHP"
+          },
+          {
+            "value": "ruby",
+            "text": "Ruby"
+          },
+          {
+            "value": "swift",
+            "text": "Swift"
+          },
+          {
+            "value": "kotlin",
+            "text": "Kotlin"
+          },
+          {
+            "value": "r",
+            "text": "R"
+          },
+          {
+            "value": "scala",
+            "text": "Scala"
+          },
+          {
+            "value": "html",
+            "text": "HTML"
+          },
+          {
+            "value": "css",
+            "text": "CSS"
+          },
+          {
+            "value": "json",
+            "text": "JSON"
+          },
+          {
+            "value": "yaml",
+            "text": "YAML"
+          },
+          {
+            "value": "bash",
+            "text": "Bash/Shell"
+          },
+          {
+            "value": "sql",
+            "text": "SQL"
+          },
+          {
+            "value": "markdown",
+            "text": "Markdown"
+          },
+          {
+            "value": "latex",
+            "text": "LaTeX"
+          }
+        ]
+      },
+      {
+        "testId": "prop-code-font-size",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Code font size",
+        "label": "",
+        "value": "14",
+        "checked": false
+      },
+      {
+        "testId": "prop-code-border-radius",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Code corner radius",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 2,
+    "id": "audit-latex",
+    "type": "latex",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "45",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "50",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": "prop-latex-font-size",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "LaTeX font size",
+        "label": "",
+        "value": "16",
+        "checked": false
+      },
+      {
+        "testId": "prop-latex-text-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "LaTeX text color",
+        "label": "",
+        "value": "#ffffff",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 2,
+    "id": "audit-html",
+    "type": "html",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "645",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "50",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 2,
+    "id": "audit-markdown",
+    "type": "markdown",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "45",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "350",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": "prop-markdown-content",
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Markdown content",
+        "label": "",
+        "value": "# Heading\n\nA **strong** paragraph."
+      },
+      {
+        "testId": "prop-markdown-text-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Markdown text color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": "prop-markdown-font-size",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Markdown font size",
+        "label": "",
+        "value": "18",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 2,
+    "id": "audit-chart",
+    "type": "chart",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "645",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "350",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": "prop-chart-type",
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Chart type",
+        "label": "",
+        "value": "bar",
+        "options": [
+          {
+            "value": "bar",
+            "text": "Bar"
+          },
+          {
+            "value": "line",
+            "text": "Line"
+          },
+          {
+            "value": "pie",
+            "text": "Pie"
+          },
+          {
+            "value": "doughnut",
+            "text": "Doughnut"
+          },
+          {
+            "value": "radar",
+            "text": "Radar"
+          },
+          {
+            "value": "polarArea",
+            "text": "PolarArea"
+          }
+        ]
+      },
+      {
+        "testId": "prop-chart-stacked",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Stacked",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-chart-legend-position",
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Legend position",
+        "label": "",
+        "value": "topRight",
+        "options": [
+          {
+            "value": "right",
+            "text": "Legend: right"
+          },
+          {
+            "value": "left",
+            "text": "Legend: left"
+          },
+          {
+            "value": "top",
+            "text": "Legend: top"
+          },
+          {
+            "value": "bottom",
+            "text": "Legend: bottom"
+          },
+          {
+            "value": "topRight",
+            "text": "Legend: topRight"
+          }
+        ]
+      },
+      {
+        "testId": "prop-chart-category-axis-title",
+        "type": "text",
+        "id": "",
+        "ariaLabel": "category axis title",
+        "label": "",
+        "value": "Month",
+        "checked": false
+      },
+      {
+        "testId": "prop-chart-value-axis-title",
+        "type": "text",
+        "id": "",
+        "ariaLabel": "value axis title",
+        "label": "",
+        "value": "Revenue",
+        "checked": false
+      },
+      {
+        "testId": "prop-chart-labels",
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Chart category labels",
+        "label": "",
+        "value": "A, B, C",
+        "checked": false
+      },
+      {
+        "testId": "prop-chart-series-label-0",
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Chart series 1 label",
+        "label": "",
+        "value": "Series",
+        "checked": false
+      },
+      {
+        "testId": "prop-chart-values-0",
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Chart series 1 values",
+        "label": "",
+        "value": "0, -2, 3.5",
+        "checked": false
+      },
+      {
+        "testId": "prop-chart-color-0",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Chart series 1 color",
+        "label": "",
+        "value": "#6366f1",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 3,
+    "id": "audit-video",
+    "type": "video",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "45",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "50",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Video source URL",
+        "label": "",
+        "value": "/uploads/ac7c25df-4106-4708-8068-23c0d0763a51.webm",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Video poster image URL",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Video object fit",
+        "label": "",
+        "value": "contain",
+        "options": [
+          {
+            "value": "contain",
+            "text": "contain"
+          },
+          {
+            "value": "cover",
+            "text": "cover"
+          },
+          {
+            "value": "fill",
+            "text": "fill"
+          },
+          {
+            "value": "none",
+            "text": "none"
+          }
+        ]
+      },
+      {
+        "testId": "prop-video-start-time",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Video start time",
+        "label": "",
+        "value": "0.5",
+        "checked": false
+      },
+      {
+        "testId": "prop-video-end-time",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Video end time",
+        "label": "",
+        "value": "1.5",
+        "checked": false
+      },
+      {
+        "testId": "prop-video-playback-rate",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Video playback speed",
+        "label": "",
+        "value": "1.5",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Show controls",
+        "value": "on",
+        "checked": true
+      },
+      {
+        "testId": null,
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Autoplay",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Loop",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Muted",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Media transcript",
+        "label": "",
+        "value": "Video transcript authored through the inspector."
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Media audio description",
+        "label": "",
+        "value": "Video description authored through the inspector."
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 3,
+    "id": "audit-audio",
+    "type": "audio",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "645",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "50",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Audio source URL",
+        "label": "",
+        "value": "[long value]",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Show controls",
+        "value": "on",
+        "checked": true
+      },
+      {
+        "testId": null,
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Autoplay",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Loop",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Muted",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Media transcript",
+        "label": "",
+        "value": "Authored transcript"
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Media audio description",
+        "label": "",
+        "value": "Authored audio description"
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 3,
+    "id": "audit-table",
+    "type": "table",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "45",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "350",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": "prop-table-header-row",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Header row",
+        "value": "on",
+        "checked": true
+      },
+      {
+        "testId": "prop-table-header-bg",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Table Header BG",
+        "label": "",
+        "value": "#6366f1",
+        "checked": false
+      },
+      {
+        "testId": "prop-table-header-text-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Table Header Text",
+        "label": "",
+        "value": "#1e40af",
+        "checked": false
+      },
+      {
+        "testId": "prop-table-text-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Table Text Color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": "prop-table-border-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Table Border",
+        "label": "",
+        "value": "#ffffff",
+        "checked": false
+      },
+      {
+        "testId": "prop-table-border-style",
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Table border style",
+        "label": "",
+        "value": "solid",
+        "options": [
+          {
+            "value": "solid",
+            "text": "solid"
+          },
+          {
+            "value": "dashed",
+            "text": "dashed"
+          },
+          {
+            "value": "dotted",
+            "text": "dotted"
+          },
+          {
+            "value": "double",
+            "text": "double"
+          }
+        ]
+      },
+      {
+        "testId": "prop-table-font-size",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Table font size",
+        "label": "",
+        "value": "14",
+        "checked": false
+      },
+      {
+        "testId": "prop-table-cell-0-0",
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Table cell row 1 column 1",
+        "label": "",
+        "value": "Header",
+        "checked": false
+      },
+      {
+        "testId": "prop-table-cell-0-1",
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Table cell row 1 column 2",
+        "label": "",
+        "value": "Value",
+        "checked": false
+      },
+      {
+        "testId": "prop-table-cell-1-0",
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Table cell row 2 column 1",
+        "label": "",
+        "value": "FirstSecond",
+        "checked": false
+      },
+      {
+        "testId": "prop-table-cell-1-1",
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Table cell row 2 column 2",
+        "label": "",
+        "value": "42",
+        "checked": false
+      },
+      {
+        "testId": "prop-table-cell-bg",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Selected cell row 1 column 1 background color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": "prop-table-cell-text",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Selected cell row 1 column 1 text color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": "prop-table-cell-bold",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": "Selected cell row 1 column 1 bold",
+        "label": "Cell Bold",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-table-cell-align",
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Selected cell row 1 column 1 horizontal alignment",
+        "label": "",
+        "value": "left",
+        "options": [
+          {
+            "value": "left",
+            "text": "left"
+          },
+          {
+            "value": "center",
+            "text": "center"
+          },
+          {
+            "value": "right",
+            "text": "right"
+          },
+          {
+            "value": "justify",
+            "text": "justify"
+          }
+        ]
+      },
+      {
+        "testId": "prop-table-cell-valign",
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Selected cell row 1 column 1 vertical alignment",
+        "label": "",
+        "value": "middle",
+        "options": [
+          {
+            "value": "top",
+            "text": "top"
+          },
+          {
+            "value": "middle",
+            "text": "middle"
+          },
+          {
+            "value": "bottom",
+            "text": "bottom"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 3,
+    "id": "audit-icon",
+    "type": "icon",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "645",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "350",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Icon color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Icon stroke width",
+        "label": "",
+        "value": "2",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 4,
+    "id": "audit-callout",
+    "type": "callout",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "45",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "50",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Callout Number",
+        "label": "",
+        "value": "7",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Callout Font Size",
+        "label": "",
+        "value": "32",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Callout BG Color",
+        "label": "",
+        "value": "#ef4444",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Callout Text Color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 4,
+    "id": "audit-qrcode",
+    "type": "qrcode",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "645",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "50",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "QR code data or URL",
+        "label": "",
+        "value": "AUDIT-19",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "color",
+        "id": "",
+        "ariaLabel": "QR code Foreground color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "color",
+        "id": "",
+        "ariaLabel": "QR code Background color",
+        "label": "",
+        "value": "#ffffff",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "QR code error correction level",
+        "label": "",
+        "value": "H",
+        "options": [
+          {
+            "value": "L",
+            "text": "L - Low (7%)"
+          },
+          {
+            "value": "M",
+            "text": "M - Medium (15%)"
+          },
+          {
+            "value": "Q",
+            "text": "Q - Quartile (25%)"
+          },
+          {
+            "value": "H",
+            "text": "H - High (30%)"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 4,
+    "id": "audit-drawing",
+    "type": "drawing",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "45",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "350",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Drawing stroke color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Drawing stroke width",
+        "label": "",
+        "value": "3",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 4,
+    "id": "audit-line",
+    "type": "line",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "645",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "350",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": "prop-shape-stroke",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Line color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": "prop-shape-stroke-width",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Line width",
+        "label": "",
+        "value": "2",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Line style",
+        "label": "",
+        "value": "",
+        "options": [
+          {
+            "value": "",
+            "text": "Solid"
+          },
+          {
+            "value": "5,5",
+            "text": "Dashed"
+          },
+          {
+            "value": "10,5",
+            "text": "Long Dashed"
+          },
+          {
+            "value": "2,4",
+            "text": "Dotted"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Line start marker",
+        "label": "",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "None"
+          },
+          {
+            "value": "arrow",
+            "text": "Arrow"
+          },
+          {
+            "value": "circle",
+            "text": "Circle"
+          },
+          {
+            "value": "square",
+            "text": "Square"
+          },
+          {
+            "value": "diamond",
+            "text": "Diamond"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Line end marker",
+        "label": "",
+        "value": "arrow",
+        "options": [
+          {
+            "value": "none",
+            "text": "None"
+          },
+          {
+            "value": "arrow",
+            "text": "Arrow"
+          },
+          {
+            "value": "circle",
+            "text": "Circle"
+          },
+          {
+            "value": "square",
+            "text": "Square"
+          },
+          {
+            "value": "diamond",
+            "text": "Diamond"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Start connector target",
+        "label": "Start targetFree endpointcallout audit-calloutqrcode audit-qrcodedrawing audit-drawing",
+        "value": "",
+        "options": [
+          {
+            "value": "",
+            "text": "Free endpoint"
+          },
+          {
+            "value": "audit-callout",
+            "text": "callout audit-callout"
+          },
+          {
+            "value": "audit-qrcode",
+            "text": "qrcode audit-qrcode"
+          },
+          {
+            "value": "audit-drawing",
+            "text": "drawing audit-drawing"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Start connector anchor",
+        "label": "Start anchorCenterTopTop rightRightBottom rightBottomBottom leftLeftTop left",
+        "value": "center",
+        "options": [
+          {
+            "value": "center",
+            "text": "Center"
+          },
+          {
+            "value": "n",
+            "text": "Top"
+          },
+          {
+            "value": "ne",
+            "text": "Top right"
+          },
+          {
+            "value": "e",
+            "text": "Right"
+          },
+          {
+            "value": "se",
+            "text": "Bottom right"
+          },
+          {
+            "value": "s",
+            "text": "Bottom"
+          },
+          {
+            "value": "sw",
+            "text": "Bottom left"
+          },
+          {
+            "value": "w",
+            "text": "Left"
+          },
+          {
+            "value": "nw",
+            "text": "Top left"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "End connector target",
+        "label": "End targetFree endpointcallout audit-calloutqrcode audit-qrcodedrawing audit-drawing",
+        "value": "",
+        "options": [
+          {
+            "value": "",
+            "text": "Free endpoint"
+          },
+          {
+            "value": "audit-callout",
+            "text": "callout audit-callout"
+          },
+          {
+            "value": "audit-qrcode",
+            "text": "qrcode audit-qrcode"
+          },
+          {
+            "value": "audit-drawing",
+            "text": "drawing audit-drawing"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "End connector anchor",
+        "label": "End anchorCenterTopTop rightRightBottom rightBottomBottom leftLeftTop left",
+        "value": "center",
+        "options": [
+          {
+            "value": "center",
+            "text": "Center"
+          },
+          {
+            "value": "n",
+            "text": "Top"
+          },
+          {
+            "value": "ne",
+            "text": "Top right"
+          },
+          {
+            "value": "e",
+            "text": "Right"
+          },
+          {
+            "value": "se",
+            "text": "Bottom right"
+          },
+          {
+            "value": "s",
+            "text": "Bottom"
+          },
+          {
+            "value": "sw",
+            "text": "Bottom left"
+          },
+          {
+            "value": "w",
+            "text": "Left"
+          },
+          {
+            "value": "nw",
+            "text": "Top left"
+          }
+        ]
+      },
+      {
+        "testId": "prop-shape-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Line opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 5,
+    "id": "audit-svg",
+    "type": "svg",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "45",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "50",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "color",
+        "id": "",
+        "ariaLabel": "SVG Fill Override",
+        "label": "",
+        "value": "#22c55e",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "color",
+        "id": "",
+        "ariaLabel": "SVG Stroke Override",
+        "label": "",
+        "value": "#0000ff",
+        "checked": false
+      },
+      {
+        "testId": "prop-svg-content",
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "SVG markup",
+        "label": "",
+        "value": "[long value]"
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 5,
+    "id": "audit-timeline",
+    "type": "timeline",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "645",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "50",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Timeline tick spacing",
+        "label": "",
+        "value": "auto",
+        "options": [
+          {
+            "value": "auto",
+            "text": "Auto"
+          },
+          {
+            "value": "day",
+            "text": "1 Day"
+          },
+          {
+            "value": "month",
+            "text": "1 Month"
+          },
+          {
+            "value": "year",
+            "text": "1 Year"
+          },
+          {
+            "value": "10year",
+            "text": "10 Years"
+          },
+          {
+            "value": "100year",
+            "text": "100 Years"
+          },
+          {
+            "value": "1000year",
+            "text": "1000 Years"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Timeline start year",
+        "label": "",
+        "value": "2000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Timeline end year",
+        "label": "",
+        "value": "2025",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Timeline line color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Timeline dot color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Timeline text color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Timeline font size",
+        "label": "",
+        "value": "11",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Timeline event 1 side",
+        "label": "",
+        "value": "top",
+        "options": [
+          {
+            "value": "top",
+            "text": "Top"
+          },
+          {
+            "value": "bottom",
+            "text": "Bottom"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Timeline event 1 year",
+        "label": "",
+        "value": "2013",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Timeline event 1 title",
+        "label": "",
+        "value": "New Event",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Timeline event 1 description",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Timeline event 1 image URL",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": "prop-timeline-connector-0",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Timeline event 1 connector length",
+        "label": "",
+        "value": "64",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "slide": 5,
+    "id": "audit-game",
+    "type": "game",
+    "controls": [
+      {
+        "testId": "prop-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Horizontal position",
+        "label": "",
+        "value": "45",
+        "checked": false
+      },
+      {
+        "testId": "prop-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Vertical position",
+        "label": "",
+        "value": "350",
+        "checked": false
+      },
+      {
+        "testId": "prop-rotation",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Rotation",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-width",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Width",
+        "label": "",
+        "value": "520",
+        "checked": false
+      },
+      {
+        "testId": "prop-height",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Height",
+        "label": "",
+        "value": "220",
+        "checked": false
+      },
+      {
+        "testId": "prop-opacity",
+        "type": "range",
+        "id": "",
+        "ariaLabel": "Opacity",
+        "label": "",
+        "value": "100",
+        "checked": false
+      },
+      {
+        "testId": "prop-lock-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Lock element",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-fragment-toggle",
+        "type": "checkbox",
+        "id": "",
+        "ariaLabel": null,
+        "label": "Fragment (animate in)",
+        "value": "on",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-x",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow horizontal offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-y",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow vertical offset",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-blur",
+        "type": "number",
+        "id": "",
+        "ariaLabel": "Shadow blur",
+        "label": "",
+        "value": "0",
+        "checked": false
+      },
+      {
+        "testId": "prop-shadow-color",
+        "type": "color",
+        "id": "",
+        "ariaLabel": "Shadow color",
+        "label": "",
+        "value": "#000000",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Game type",
+        "label": "",
+        "value": "name-picker",
+        "options": [
+          {
+            "value": "name-picker",
+            "text": "name-picker"
+          },
+          {
+            "value": "hot-potato",
+            "text": "hot-potato"
+          },
+          {
+            "value": "jeopardy",
+            "text": "jeopardy"
+          },
+          {
+            "value": "four-corners",
+            "text": "four-corners"
+          },
+          {
+            "value": "relay-race",
+            "text": "relay-race"
+          },
+          {
+            "value": "trivia-champ",
+            "text": "trivia-champ"
+          },
+          {
+            "value": "scattergories",
+            "text": "scattergories"
+          },
+          {
+            "value": "poll",
+            "text": "poll"
+          },
+          {
+            "value": "word-cloud",
+            "text": "word-cloud"
+          },
+          {
+            "value": "matching",
+            "text": "matching"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Name picker items",
+        "label": "",
+        "value": "Học sinh 1, Học sinh 2, Học sinh 3, Học sinh 4, Học sinh 5, Học sinh 6, Học sinh 7, Học sinh 8"
+      },
+      {
+        "testId": null,
+        "type": "select-one",
+        "id": "",
+        "ariaLabel": "Element action",
+        "label": "No actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload file",
+        "value": "none",
+        "options": [
+          {
+            "value": "none",
+            "text": "No action"
+          },
+          {
+            "value": "url",
+            "text": "Open URL"
+          },
+          {
+            "value": "slide",
+            "text": "Go to slide"
+          },
+          {
+            "value": "next",
+            "text": "Next slide"
+          },
+          {
+            "value": "previous",
+            "text": "Previous slide"
+          },
+          {
+            "value": "first",
+            "text": "First slide"
+          },
+          {
+            "value": "last",
+            "text": "Last slide"
+          },
+          {
+            "value": "email",
+            "text": "Send email"
+          },
+          {
+            "value": "download",
+            "text": "Download file"
+          }
+        ]
+      },
+      {
+        "testId": null,
+        "type": "text",
+        "id": "",
+        "ariaLabel": "Slide footer section name",
+        "label": "",
+        "value": "",
+        "checked": false
+      },
+      {
+        "testId": null,
+        "type": "textarea",
+        "id": "",
+        "ariaLabel": "Speaker notes",
+        "label": "",
+        "value": ""
+      }
+    ]
+  }
+]

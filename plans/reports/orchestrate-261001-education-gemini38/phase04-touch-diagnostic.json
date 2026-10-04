@@ -1,0 +1,897 @@
+{
+  "logs": [
+    {
+      "type": "navigation",
+      "url": "file:///C:/Users/Z10PAD%7E1/AppData/Local/Temp/omp-downloads-145CA2939A24DD4CC9089912CE692C91/Phase04_native_runtime_acceptance_offline.html"
+    },
+    {
+      "type": "navigation",
+      "url": "file:///C:/Users/Z10PAD%7E1/AppData/Local/Temp/omp-downloads-145CA2939A24DD4CC9089912CE692C91/Phase04_native_runtime_acceptance_offline.html"
+    },
+    {
+      "type": "domcontentloaded"
+    },
+    {
+      "type": "load"
+    },
+    {
+      "width": 320,
+      "phase": "viewport",
+      "boundary": "before",
+      "snapshot": {
+        "token": "0.c7ieccqa7b8",
+        "origin": 1790939415289.7,
+        "ready": "complete",
+        "reveal": true,
+        "width": 1365,
+        "touch": 0,
+        "root": 1,
+        "reset": 2,
+        "select": 3,
+        "pick": 4,
+        "events": []
+      }
+    },
+    {
+      "type": "navigation",
+      "url": "file:///C:/Users/Z10PAD%7E1/AppData/Local/Temp/omp-downloads-145CA2939A24DD4CC9089912CE692C91/Phase04_native_runtime_acceptance_offline.html"
+    },
+    {
+      "type": "navigation",
+      "url": "file:///C:/Users/Z10PAD%7E1/AppData/Local/Temp/omp-downloads-145CA2939A24DD4CC9089912CE692C91/Phase04_native_runtime_acceptance_offline.html"
+    },
+    {
+      "type": "domcontentloaded"
+    },
+    {
+      "type": "load"
+    },
+    {
+      "width": 320,
+      "phase": "viewport",
+      "boundary": "after",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 320,
+        "touch": 1,
+        "root": 4,
+        "reset": 5,
+        "select": 6,
+        "pick": 7,
+        "events": [
+          {
+            "type": "removal",
+            "node": 1,
+            "tag": "SECTION",
+            "time": 585.1999999880791
+          },
+          {
+            "type": "removal",
+            "node": 2,
+            "tag": "SECTION",
+            "time": 585.1999999880791
+          },
+          {
+            "type": "removal",
+            "node": 3,
+            "tag": "SECTION",
+            "time": 585.1999999880791
+          }
+        ]
+      }
+    },
+    {
+      "width": 320,
+      "phase": "reduced-motion",
+      "boundary": "before",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 320,
+        "touch": 1,
+        "root": 4,
+        "reset": 5,
+        "select": 6,
+        "pick": 7,
+        "events": []
+      }
+    },
+    {
+      "width": 320,
+      "phase": "reduced-motion",
+      "boundary": "after",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 320,
+        "touch": 1,
+        "root": 4,
+        "reset": 5,
+        "select": 6,
+        "pick": 7,
+        "events": []
+      }
+    },
+    {
+      "width": 320,
+      "phase": "slide",
+      "boundary": "before",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 320,
+        "touch": 1,
+        "root": 4,
+        "reset": 5,
+        "select": 6,
+        "pick": 7,
+        "events": []
+      }
+    },
+    {
+      "width": 320,
+      "phase": "slide",
+      "boundary": "after",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 320,
+        "touch": 1,
+        "root": 4,
+        "reset": 5,
+        "select": 6,
+        "pick": 7,
+        "events": []
+      }
+    },
+    {
+      "width": 320,
+      "phase": "reset-click",
+      "boundary": "before",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 320,
+        "touch": 1,
+        "root": 4,
+        "reset": 5,
+        "select": 6,
+        "pick": 7,
+        "events": []
+      }
+    },
+    {
+      "width": 320,
+      "phase": "reset-click",
+      "boundary": "after",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 320,
+        "touch": 1,
+        "root": 4,
+        "reset": 9,
+        "select": 10,
+        "pick": 11,
+        "events": [
+          {
+            "type": "pointerdown",
+            "trusted": true,
+            "command": "reset",
+            "target": 5,
+            "connected": true,
+            "time": 640.1999999880791
+          },
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "command": "reset",
+            "target": 5,
+            "connected": true,
+            "time": 640.3000000119209
+          },
+          {
+            "type": "pointerup",
+            "trusted": true,
+            "command": "reset",
+            "target": 5,
+            "connected": true,
+            "time": 640.6999999880791
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "command": "reset",
+            "target": 5,
+            "connected": true,
+            "time": 640.6999999880791
+          },
+          {
+            "type": "click",
+            "trusted": true,
+            "command": "reset",
+            "target": 5,
+            "connected": true,
+            "time": 640.6999999880791
+          },
+          {
+            "type": "removal",
+            "node": 8,
+            "tag": "DIV",
+            "time": 643.3000000119209
+          }
+        ]
+      }
+    },
+    {
+      "width": 320,
+      "phase": "select-button",
+      "boundary": "before",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 320,
+        "touch": 1,
+        "root": 4,
+        "reset": 9,
+        "select": 10,
+        "pick": 11,
+        "events": []
+      }
+    },
+    {
+      "width": 320,
+      "phase": "select-button",
+      "boundary": "after",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 320,
+        "touch": 1,
+        "root": 4,
+        "reset": 9,
+        "select": 10,
+        "pick": 11,
+        "events": [
+          {
+            "type": "input",
+            "trusted": false,
+            "command": "SELECT",
+            "target": 10,
+            "connected": true,
+            "time": 649.3000000119209
+          },
+          {
+            "type": "change",
+            "trusted": false,
+            "command": "SELECT",
+            "target": 10,
+            "connected": true,
+            "time": 649.3000000119209
+          }
+        ]
+      }
+    },
+    {
+      "width": 320,
+      "phase": "pick-tap",
+      "boundary": "before",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 320,
+        "touch": 1,
+        "root": 4,
+        "reset": 9,
+        "select": 10,
+        "pick": 11,
+        "events": []
+      }
+    },
+    {
+      "width": 320,
+      "phase": "pick-tap",
+      "boundary": "after",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 320,
+        "touch": 1,
+        "root": 4,
+        "reset": 9,
+        "select": 10,
+        "pick": 11,
+        "events": [
+          {
+            "type": "pointerdown",
+            "trusted": true,
+            "command": "pick",
+            "target": 11,
+            "connected": true,
+            "time": 688.8999999761581
+          },
+          {
+            "type": "touchstart",
+            "trusted": true,
+            "command": "pick",
+            "target": 11,
+            "connected": true,
+            "time": 689.1999999880791
+          },
+          {
+            "type": "pointerup",
+            "trusted": true,
+            "command": "pick",
+            "target": 11,
+            "connected": true,
+            "time": 705.6000000238419
+          },
+          {
+            "type": "touchend",
+            "trusted": true,
+            "command": "pick",
+            "target": 11,
+            "connected": true,
+            "time": 705.8000000119209
+          },
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "command": "pick",
+            "target": 11,
+            "connected": true,
+            "time": 706.8000000119209
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "command": "pick",
+            "target": 11,
+            "connected": true,
+            "time": 707
+          },
+          {
+            "type": "click",
+            "trusted": true,
+            "command": "pick",
+            "target": 11,
+            "connected": true,
+            "time": 707.1000000238419
+          }
+        ]
+      }
+    },
+    {
+      "width": 320,
+      "phase": "wait-result",
+      "boundary": "before",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 320,
+        "touch": 1,
+        "root": 4,
+        "reset": 9,
+        "select": 10,
+        "pick": 11,
+        "events": []
+      }
+    },
+    {
+      "width": 320,
+      "phase": "wait-result",
+      "boundary": "after",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 320,
+        "touch": 1,
+        "root": 4,
+        "reset": 9,
+        "select": 10,
+        "pick": 11,
+        "events": []
+      }
+    },
+    {
+      "width": 768,
+      "phase": "viewport",
+      "boundary": "before",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 320,
+        "touch": 1,
+        "root": 4,
+        "reset": 9,
+        "select": 10,
+        "pick": 11,
+        "events": []
+      }
+    },
+    {
+      "width": 768,
+      "phase": "viewport",
+      "boundary": "after",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 768,
+        "touch": 1,
+        "root": 4,
+        "reset": 9,
+        "select": 10,
+        "pick": 11,
+        "events": []
+      }
+    },
+    {
+      "width": 768,
+      "phase": "reduced-motion",
+      "boundary": "before",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 768,
+        "touch": 1,
+        "root": 4,
+        "reset": 9,
+        "select": 10,
+        "pick": 11,
+        "events": []
+      }
+    },
+    {
+      "width": 768,
+      "phase": "reduced-motion",
+      "boundary": "after",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 768,
+        "touch": 1,
+        "root": 4,
+        "reset": 9,
+        "select": 10,
+        "pick": 11,
+        "events": []
+      }
+    },
+    {
+      "width": 768,
+      "phase": "slide",
+      "boundary": "before",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 768,
+        "touch": 1,
+        "root": 4,
+        "reset": 9,
+        "select": 10,
+        "pick": 11,
+        "events": []
+      }
+    },
+    {
+      "width": 768,
+      "phase": "slide",
+      "boundary": "after",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 768,
+        "touch": 1,
+        "root": 4,
+        "reset": 9,
+        "select": 10,
+        "pick": 11,
+        "events": []
+      }
+    },
+    {
+      "width": 768,
+      "phase": "reset-click",
+      "boundary": "before",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 768,
+        "touch": 1,
+        "root": 4,
+        "reset": 9,
+        "select": 10,
+        "pick": 11,
+        "events": []
+      }
+    },
+    {
+      "width": 768,
+      "phase": "reset-click",
+      "boundary": "after",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 768,
+        "touch": 1,
+        "root": 17,
+        "reset": 18,
+        "select": 19,
+        "pick": 20,
+        "events": [
+          {
+            "type": "removal",
+            "node": 12,
+            "tag": "DIV",
+            "time": 1443.800000011921
+          },
+          {
+            "type": "removal",
+            "node": 13,
+            "tag": "DIV",
+            "time": 1443.800000011921
+          },
+          {
+            "type": "removal",
+            "node": 14,
+            "tag": "DIV",
+            "time": 1443.800000011921
+          },
+          {
+            "type": "pointerdown",
+            "trusted": true,
+            "command": "reset",
+            "target": 15,
+            "connected": true,
+            "time": 1474.300000011921
+          },
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "command": "reset",
+            "target": 15,
+            "connected": true,
+            "time": 1474.300000011921
+          },
+          {
+            "type": "pointerup",
+            "trusted": true,
+            "command": "reset",
+            "target": 15,
+            "connected": true,
+            "time": 1474.6000000238419
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "command": "reset",
+            "target": 15,
+            "connected": true,
+            "time": 1474.699999988079
+          },
+          {
+            "type": "click",
+            "trusted": true,
+            "command": "reset",
+            "target": 15,
+            "connected": true,
+            "time": 1474.699999988079
+          },
+          {
+            "type": "removal",
+            "node": 16,
+            "tag": "DIV",
+            "time": 1476.6000000238419
+          }
+        ]
+      }
+    },
+    {
+      "width": 768,
+      "phase": "select-button",
+      "boundary": "before",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 768,
+        "touch": 1,
+        "root": 17,
+        "reset": 18,
+        "select": 19,
+        "pick": 20,
+        "events": []
+      }
+    },
+    {
+      "width": 768,
+      "phase": "select-button",
+      "boundary": "after",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 768,
+        "touch": 1,
+        "root": 17,
+        "reset": 18,
+        "select": 19,
+        "pick": 20,
+        "events": [
+          {
+            "type": "input",
+            "trusted": false,
+            "command": "SELECT",
+            "target": 19,
+            "connected": true,
+            "time": 1482.1000000238419
+          },
+          {
+            "type": "change",
+            "trusted": false,
+            "command": "SELECT",
+            "target": 19,
+            "connected": true,
+            "time": 1482.1000000238419
+          }
+        ]
+      }
+    },
+    {
+      "width": 768,
+      "phase": "pick-tap",
+      "boundary": "before",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 768,
+        "touch": 1,
+        "root": 17,
+        "reset": 18,
+        "select": 19,
+        "pick": 20,
+        "events": []
+      }
+    },
+    {
+      "width": 768,
+      "phase": "pick-tap",
+      "boundary": "after",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 768,
+        "touch": 1,
+        "root": 17,
+        "reset": 18,
+        "select": 19,
+        "pick": 20,
+        "events": [
+          {
+            "type": "pointerdown",
+            "trusted": true,
+            "command": "pick",
+            "target": 20,
+            "connected": true,
+            "time": 1506.3999999761581
+          },
+          {
+            "type": "touchstart",
+            "trusted": true,
+            "command": "pick",
+            "target": 20,
+            "connected": true,
+            "time": 1506.5
+          },
+          {
+            "type": "pointerup",
+            "trusted": true,
+            "command": "pick",
+            "target": 20,
+            "connected": true,
+            "time": 1523.699999988079
+          },
+          {
+            "type": "touchend",
+            "trusted": true,
+            "command": "pick",
+            "target": 20,
+            "connected": true,
+            "time": 1523.699999988079
+          },
+          {
+            "type": "mousedown",
+            "trusted": true,
+            "command": "pick",
+            "target": 20,
+            "connected": true,
+            "time": 1524.699999988079
+          },
+          {
+            "type": "mouseup",
+            "trusted": true,
+            "command": "pick",
+            "target": 20,
+            "connected": true,
+            "time": 1525
+          },
+          {
+            "type": "click",
+            "trusted": true,
+            "command": "pick",
+            "target": 20,
+            "connected": true,
+            "time": 1525
+          }
+        ]
+      }
+    },
+    {
+      "width": 768,
+      "phase": "wait-result",
+      "boundary": "before",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 768,
+        "touch": 1,
+        "root": 17,
+        "reset": 18,
+        "select": 19,
+        "pick": 20,
+        "events": []
+      }
+    },
+    {
+      "width": 768,
+      "phase": "wait-result",
+      "boundary": "after",
+      "snapshot": {
+        "token": "0.chm69fb8aul",
+        "origin": 1790939415952.6,
+        "ready": "complete",
+        "reveal": true,
+        "width": 768,
+        "touch": 1,
+        "root": 17,
+        "reset": 18,
+        "select": 19,
+        "pick": 20,
+        "events": []
+      }
+    }
+  ],
+  "receipts": [
+    {
+      "width": 320,
+      "touch": 1,
+      "reducedMotion": true,
+      "state": {
+        "mode": "button",
+        "phase": "result",
+        "picks": 1,
+        "excludedIds": [
+          "a"
+        ],
+        "lastWinner": {
+          "id": "a",
+          "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\"
+        },
+        "diceValues": [],
+        "pending": null,
+        "wheelAngle": 1777.5,
+        "runtimeMode": "local",
+        "generation": 1
+      },
+      "indices": {
+        "h": 0,
+        "v": 0
+      },
+      "buttons": [
+        {
+          "label": "Pick",
+          "width": 15.896720886230469,
+          "height": 14.519989013671875,
+          "targetable": true
+        },
+        {
+          "label": "Reset",
+          "width": 18.696563720703125,
+          "height": 14.519989013671875,
+          "targetable": true
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "touch": 1,
+      "reducedMotion": true,
+      "state": {
+        "mode": "button",
+        "phase": "result",
+        "picks": 1,
+        "excludedIds": [
+          "b"
+        ],
+        "lastWinner": {
+          "id": "b",
+          "label": "Bình"
+        },
+        "diceValues": [],
+        "pending": null,
+        "wheelAngle": 1732.5,
+        "runtimeMode": "local",
+        "generation": 1
+      },
+      "indices": {
+        "h": 0,
+        "v": 0
+      },
+      "buttons": [
+        {
+          "label": "Pick",
+          "width": 38.537506103515625,
+          "height": 35.20001220703125,
+          "targetable": true
+        },
+        {
+          "label": "Reset",
+          "width": 45.32499694824219,
+          "height": 35.20001220703125,
+          "targetable": true
+        }
+      ]
+    }
+  ]
+}

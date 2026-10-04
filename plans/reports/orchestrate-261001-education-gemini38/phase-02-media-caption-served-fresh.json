@@ -1,0 +1,9 @@
+{
+  "clientOrigin": "http://127.0.0.1:55173",
+  "apiTarget": "http://127.0.0.1:34102",
+  "moduleUrl": "http://127.0.0.1:55173/node_modules/.vite/deps/revealjs-shared.js?v=b253e53a",
+  "moduleStatus": 200,
+  "moduleHasCaptionStyle": true,
+  "moduleHasCaptionCss": true,
+  "presentHasStyledCaptions": true
+}

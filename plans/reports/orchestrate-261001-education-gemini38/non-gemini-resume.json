@@ -1,0 +1,37 @@
+{
+  "state": "running",
+  "authority": "User resumed full cook --auto --advice --tdd and temporarily excludes Gemini 3.8; no commit/push/deploy.",
+  "worktree": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001",
+  "producer": "coordinator local52186/gpt-6.1-sol",
+  "evidence": ["Fresh omp --help", "Fresh omp models local52186 --json --no-extensions", "No-tools inference returned NON_GEMINI_ROUTE_READY with provider local52186 and model gpt-6.1-sol"],
+  "controls": ["Explicit --model local52186/gpt-6.1-sol", "--no-prewalk", "--no-extensions", "read/glob/grep only for children", "nested task denied", "external finite deadlines", "separate persisted session directories"],
+  "hostLimit": "Windows: native finite CLI harness, not ak orchestrate subprocess engine; no OS sandbox claimed.",
+  "resumeRuntimeQualification": {
+    "observedVersion": "18.4.10",
+    "model": "local52186/gpt-6.1-sol",
+    "thinkingLevels": ["low", "medium", "high", "xhigh", "max"],
+    "evidence": ["Fresh omp --help returned18.4.10", "Fresh omp models local52186 --json --no-extensions includes exact selector", "Fresh no-tools inference returned NON_GEMINI_ROUTE_READY with exact provider/model"],
+    "readOnlyProfile": "read-only-permissions.yml",
+    "languageServer": "No language servers configured for this project"
+  },
+  "currentCheckpoint": {
+    "at": "2026-10-02",
+    "phase01": "qualified-go",
+    "phase02": "qualified-go",
+    "phase03": "qualified-go",
+    "phase04": "running; identity/privacy design contracts GO, implementation acceptance pending",
+    "qualification": "phase-03-completion-qualification-counsel.md",
+    "advisoryAttempt": {"handle": "proc://bg_124", "state": "failed-settled", "session": "01a0fb4b-e9ff-7000-9d31-fce8036781a4", "reason": "Deadline exceeded; no verdict; session_exit normal"},
+    "advisoryRetry": {"handle": "proc://bg_125", "state": "success-settled", "boundedRetries": 1, "internalDeadline": "20m", "externalTimeoutSeconds": 1260, "session": "01a0fb66-60c3-7000-99be-84c75592955e", "verdict": "phase-04-boundary-counsel.md", "modelFamilyIndependence": false}
+  },
+  "jobs": [
+    {"name": "Phase02All19Audit", "handle": "proc://bg_12", "task": "scout", "effect": "read-only", "maxTime": "20m", "externalTimeoutSeconds": 1260, "state": "running"},
+    {"name": "Phase02KongmingCounsel", "handle": "proc://bg_13", "task": "advisory", "effect": "read-only", "maxTime": "15m", "externalTimeoutSeconds": 960, "state": "running", "modelFamilyIndependence": false}
+  ],
+  "phase02": {
+    "state": "in-progress",
+    "testsBefore": "editor-controls-behavior.test.jsx: 4 expected RED, numeric position delta GREEN; shape kind tests after corrected named import: 2 expected RED at missing Shape kind control",
+    "browserBefore": "Real editor http://127.0.0.1:55173, isolated API port34102: left-align [100,400,250] becomes [-150,150,0], undo exercised.",
+    "complete": false
+  }
+}

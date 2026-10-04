@@ -1,0 +1,1947 @@
+{
+  "summary": {
+    "width": 768,
+    "touch": 1,
+    "reduced": true,
+    "visibility": "visible",
+    "trusted": true,
+    "configuredDuration": 700,
+    "activeFrames": 38,
+    "first": {
+      "t": 598951.1,
+      "elapsed": 14.499999976134859,
+      "phase": "picking",
+      "picks": 0,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "animation": "ns-picker-spin",
+      "duration": "0.7s",
+      "timing": "steps(1)",
+      "play": "running",
+      "confetti": null
+    },
+    "middle": {
+      "t": 599285.7,
+      "elapsed": 349.0999999761116,
+      "phase": "picking",
+      "picks": 0,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "animation": "ns-picker-spin",
+      "duration": "0.7s",
+      "timing": "steps(1)",
+      "play": "running",
+      "confetti": null
+    },
+    "last": {
+      "t": 599599.6,
+      "elapsed": 662.9999999761349,
+      "phase": "picking",
+      "picks": 0,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "animation": "ns-picker-spin",
+      "duration": "0.7s",
+      "timing": "steps(1)",
+      "play": "running",
+      "confetti": null
+    },
+    "uniqueActiveTransforms": [
+      "matrix(1, 0, 0, 1, 0, 0)"
+    ],
+    "maxFrameGap": 18.100000000093132,
+    "confettiObservationMs": 1405.5,
+    "paintedConfettiFrames": 0,
+    "state": {
+      "mode": "wheel",
+      "phase": "result",
+      "picks": 1,
+      "excludedIds": [
+        "b"
+      ],
+      "lastWinner": {
+        "id": "b",
+        "label": "Bình"
+      },
+      "diceValues": [],
+      "pending": null,
+      "wheelAngle": 1732.5,
+      "runtimeMode": "local",
+      "generation": 3
+    },
+    "winner": "Bình",
+    "usable": true,
+    "keyboard": {
+      "mode": "dice",
+      "indices": {
+        "h": 0,
+        "v": 0
+      }
+    },
+    "captures": [
+      "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/.tmp/phase04-motion-before.png",
+      "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/.tmp/phase04-motion-early.png",
+      "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/.tmp/phase04-motion-middle.png",
+      "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/.tmp/phase04-motion-after.png"
+    ]
+  },
+  "trace": {
+    "samples": [
+      {
+        "t": 598828.6,
+        "elapsed": null,
+        "phase": "ready",
+        "picks": 0,
+        "transform": "none",
+        "animation": "none",
+        "duration": "0s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 598845.9,
+        "elapsed": null,
+        "phase": "ready",
+        "picks": 0,
+        "transform": "none",
+        "animation": "none",
+        "duration": "0s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 598863.4,
+        "elapsed": null,
+        "phase": "ready",
+        "picks": 0,
+        "transform": "none",
+        "animation": "none",
+        "duration": "0s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 598880.8,
+        "elapsed": null,
+        "phase": "ready",
+        "picks": 0,
+        "transform": "none",
+        "animation": "none",
+        "duration": "0s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 598898.3,
+        "elapsed": null,
+        "phase": "ready",
+        "picks": 0,
+        "transform": "none",
+        "animation": "none",
+        "duration": "0s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 598915.7,
+        "elapsed": null,
+        "phase": "ready",
+        "picks": 0,
+        "transform": "none",
+        "animation": "none",
+        "duration": "0s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 598933.5,
+        "elapsed": null,
+        "phase": "ready",
+        "picks": 0,
+        "transform": "none",
+        "animation": "none",
+        "duration": "0s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 598951.1,
+        "elapsed": 14.499999976134859,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 598969.1,
+        "elapsed": 32.49999997613486,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 598986.5,
+        "elapsed": 49.89999997615814,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599003.9,
+        "elapsed": 67.29999997618143,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599021.7,
+        "elapsed": 85.09999997611158,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599039.1,
+        "elapsed": 102.49999997613486,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599056.8,
+        "elapsed": 120.19999997620471,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599074.3,
+        "elapsed": 137.6999999762047,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599091.9,
+        "elapsed": 155.29999997618143,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599109.6,
+        "elapsed": 172.99999997613486,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599126.7,
+        "elapsed": 190.09999997611158,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599144.6,
+        "elapsed": 207.99999997613486,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599162.1,
+        "elapsed": 225.49999997613486,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599179.7,
+        "elapsed": 243.09999997611158,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599197.4,
+        "elapsed": 260.7999999761814,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599214.7,
+        "elapsed": 278.0999999761116,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599232.7,
+        "elapsed": 296.0999999761116,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599250.8,
+        "elapsed": 314.1999999762047,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599268.1,
+        "elapsed": 331.49999997613486,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599285.7,
+        "elapsed": 349.0999999761116,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599303,
+        "elapsed": 366.39999997615814,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599320.5,
+        "elapsed": 383.89999997615814,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599337.7,
+        "elapsed": 401.0999999761116,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599355.4,
+        "elapsed": 418.7999999761814,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599372.6,
+        "elapsed": 435.99999997613486,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599390.1,
+        "elapsed": 453.49999997613486,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599407.9,
+        "elapsed": 471.2999999761814,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599425.1,
+        "elapsed": 488.49999997613486,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599442.4,
+        "elapsed": 505.7999999761814,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599460,
+        "elapsed": 523.3999999761581,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599477.7,
+        "elapsed": 541.0999999761116,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599495.3,
+        "elapsed": 558.6999999762047,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599512.6,
+        "elapsed": 575.9999999761349,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599530,
+        "elapsed": 593.3999999761581,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599547.4,
+        "elapsed": 610.7999999761814,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599564.6,
+        "elapsed": 627.9999999761349,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599582.1,
+        "elapsed": 645.4999999761349,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599599.6,
+        "elapsed": 662.9999999761349,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599617,
+        "elapsed": 680.3999999761581,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599634.3,
+        "elapsed": 697.6999999762047,
+        "phase": "picking",
+        "picks": 0,
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": null
+      },
+      {
+        "t": 599651.8,
+        "elapsed": 715.1999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599669.4,
+        "elapsed": 732.7999999761814,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599686.9,
+        "elapsed": 750.2999999761814,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599704.1,
+        "elapsed": 767.4999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599721.6,
+        "elapsed": 784.9999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599738.9,
+        "elapsed": 802.2999999761814,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599756.6,
+        "elapsed": 819.9999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599774,
+        "elapsed": 837.3999999761581,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599791.8,
+        "elapsed": 855.1999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599809.1,
+        "elapsed": 872.4999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599826.5,
+        "elapsed": 889.8999999761581,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599844.3,
+        "elapsed": 907.6999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599861.6,
+        "elapsed": 924.9999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599879.2,
+        "elapsed": 942.5999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599896.6,
+        "elapsed": 959.9999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599914.1,
+        "elapsed": 977.4999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599931.4,
+        "elapsed": 994.7999999761814,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599948.6,
+        "elapsed": 1011.9999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599966.1,
+        "elapsed": 1029.4999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 599983.2,
+        "elapsed": 1046.5999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600000.4,
+        "elapsed": 1063.7999999761814,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600018.5,
+        "elapsed": 1081.8999999761581,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600036.3,
+        "elapsed": 1099.6999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600053.4,
+        "elapsed": 1116.7999999761814,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600070.9,
+        "elapsed": 1134.2999999761814,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600088.7,
+        "elapsed": 1152.0999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600108.6,
+        "elapsed": 1171.9999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600126.6,
+        "elapsed": 1189.9999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600144.5,
+        "elapsed": 1207.8999999761581,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600161.6,
+        "elapsed": 1224.9999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600179.2,
+        "elapsed": 1242.5999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600197.3,
+        "elapsed": 1260.6999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600214.7,
+        "elapsed": 1278.0999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600231.8,
+        "elapsed": 1295.1999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600249.9,
+        "elapsed": 1313.2999999761814,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600267.1,
+        "elapsed": 1330.4999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600284.2,
+        "elapsed": 1347.5999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600302,
+        "elapsed": 1365.3999999761581,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600319.8,
+        "elapsed": 1383.1999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600336.9,
+        "elapsed": 1400.2999999761814,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600354.6,
+        "elapsed": 1417.9999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600372.5,
+        "elapsed": 1435.8999999761581,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600389.7,
+        "elapsed": 1453.0999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600407.3,
+        "elapsed": 1470.6999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600425.3,
+        "elapsed": 1488.6999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600442.8,
+        "elapsed": 1506.1999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600460.3,
+        "elapsed": 1523.6999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600477.4,
+        "elapsed": 1540.7999999761814,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600494.7,
+        "elapsed": 1558.0999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600512.2,
+        "elapsed": 1575.5999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600530,
+        "elapsed": 1593.3999999761581,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600547.3,
+        "elapsed": 1610.6999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600564.4,
+        "elapsed": 1627.7999999761814,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600582.5,
+        "elapsed": 1645.8999999761581,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600599.7,
+        "elapsed": 1663.0999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600616.8,
+        "elapsed": 1680.1999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600634.1,
+        "elapsed": 1697.4999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600651.2,
+        "elapsed": 1714.5999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600669.2,
+        "elapsed": 1732.5999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600686.3,
+        "elapsed": 1749.6999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600703.6,
+        "elapsed": 1766.9999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600721,
+        "elapsed": 1784.3999999761581,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600739,
+        "elapsed": 1802.3999999761581,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600761.1,
+        "elapsed": 1824.4999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600778.2,
+        "elapsed": 1841.5999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600796.2,
+        "elapsed": 1859.5999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600813.5,
+        "elapsed": 1876.8999999761581,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600830.6,
+        "elapsed": 1893.9999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600848.1,
+        "elapsed": 1911.4999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600865.1,
+        "elapsed": 1928.4999999761349,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600882.9,
+        "elapsed": 1946.2999999761814,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600900.7,
+        "elapsed": 1964.0999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600917.8,
+        "elapsed": 1981.1999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600934.9,
+        "elapsed": 1998.2999999761814,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600952.5,
+        "elapsed": 2015.8999999761581,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600970.2,
+        "elapsed": 2033.5999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 600987.3,
+        "elapsed": 2050.6999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 601004.5,
+        "elapsed": 2067.899999976158,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 601022.2,
+        "elapsed": 2085.5999999761116,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 601039.5,
+        "elapsed": 2102.899999976158,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      },
+      {
+        "t": 601057.3,
+        "elapsed": 2120.6999999762047,
+        "phase": "result",
+        "picks": 1,
+        "transform": "matrix(0.382683, -0.92388, 0.92388, 0.382683, 0, 0)",
+        "animation": "ns-picker-spin",
+        "duration": "0.7s",
+        "timing": "steps(1)",
+        "play": "running",
+        "confetti": {
+          "display": "none",
+          "painted": 0
+        }
+      }
+    ],
+    "clicked": 598936.6000000238,
+    "stopped": true,
+    "config": {
+      "pickerMode": "wheel",
+      "items": [
+        {
+          "id": "a",
+          "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+          "weight": 1
+        },
+        {
+          "id": "b",
+          "label": "Bình",
+          "weight": 3
+        },
+        {
+          "id": "c",
+          "label": "Chi",
+          "weight": 2
+        }
+      ],
+      "wheelSegments": 8,
+      "wheelColors": [
+        "#FF5722",
+        "#2196F3",
+        "#4CAF50",
+        "#FFC107",
+        "#9C27B0",
+        "#00BCD4",
+        "#FF9800",
+        "#795548"
+      ],
+      "diceCount": 2,
+      "weighted": true,
+      "excludeAfterPick": true,
+      "animationDuration": 700,
+      "showConfetti": true
+    },
+    "reduced": true,
+    "visibility": "visible",
+    "width": 768,
+    "touch": 1,
+    "trusted": true,
+    "state": {
+      "mode": "wheel",
+      "phase": "result",
+      "picks": 1,
+      "excludedIds": [
+        "b"
+      ],
+      "lastWinner": {
+        "id": "b",
+        "label": "Bình"
+      },
+      "diceValues": [],
+      "pending": null,
+      "wheelAngle": 1732.5,
+      "runtimeMode": "local",
+      "generation": 3
+    },
+    "winner": "Bình",
+    "usable": true,
+    "indices": {
+      "h": 0,
+      "v": 0
+    }
+  },
+  "keyboard": {
+    "mode": "dice",
+    "indices": {
+      "h": 0,
+      "v": 0
+    }
+  },
+  "captures": [
+    "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/.tmp/phase04-motion-before.png",
+    "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/.tmp/phase04-motion-early.png",
+    "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/.tmp/phase04-motion-middle.png",
+    "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/.tmp/phase04-motion-after.png"
+  ]
+}

@@ -1,10 +1,12 @@
 ---
 phase: 2
 title: "Điều khiển editor, đa lựa chọn và kiểm toán 19 loại"
-status: pending
+status: completed
 priority: P2
 dependencies: [1]
 ---
+
+Status completed chỉ ghi qualified historical checkpoint; không phải current-source acceptance hoặc implementation đã merge vào main. Xem [handoff](../handoffs/education-pause-20261004.md) khi resume.
 
 # Phase 02 — Editor controls
 
@@ -137,12 +139,12 @@ Tạo deck all19 bằng fixture sản phẩm, sửa control, đa chọn align v�
 Lặp tại 320/768/desktop, Enter/Space và touch; console không có lỗi do control mới, ghi screenshot và JSON geometry receipts sau tương tác.
 
 ## Success criteria + unchecked actionable checklist
-- [ ] Multi left/center/right có visual edges đúng bounds; single có slide-edge đúng resolution; x/y edit vẫn delta và một undo trả đúng cả selection.
-- [ ] Legacy image description fanout đúng chỉ images không locked; decorative clear và generated aria-describedby hoạt động.
-- [ ] Audio đổi src phát được sau reload; mixed apply không ghi field sai type.
-- [ ] Shape kind chỉnh được nếu thiếu path, geometry đổi nhưng labels/TipTap/style không mất; line không bị chuyển loại.
-- [ ] All19 audit có control/save/render/export receipts và không tạo canonical discriminator thứ20.
-- [ ] Focused GREEN + actual browser receipts tồn tại; docs/changelog chỉ cập nhật sau smoke thành công.
+- [x] Multi left/center/right có visual edges đúng bounds; single có slide-edge đúng resolution; x/y edit vẫn delta và một undo trả đúng cả selection.
+- [x] Legacy image description fanout đúng chỉ images không locked; decorative clear và generated aria-describedby hoạt động.
+- [x] Audio đổi src phát được sau reload; mixed apply không ghi field sai type.
+- [x] Shape kind chỉnh được nếu thiếu path, geometry đổi nhưng labels/TipTap/style không mất; line không bị chuyển loại.
+- [x] All19 audit có control/save/render/export receipts và không tạo canonical discriminator thứ20.
+- [x] Focused GREEN + actual browser receipts tồn tại; docs/changelog chỉ cập nhật sau smoke thành công.
 
 ## Security/risks and failure protocol
 High: alignment fanout hai lần (likelihood cao × impact cao); mitigation gọi geometry operation trực tiếp và assert tọa độ store, không assert callback.

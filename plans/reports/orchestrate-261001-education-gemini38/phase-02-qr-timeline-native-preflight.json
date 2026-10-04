@@ -1,0 +1,177 @@
+{
+  "timestamp": "2026-10-01T22:14:36.944Z",
+  "ci": "true",
+  "ownedProcesses": [],
+  "listeners": [
+    "  TCP    127.0.0.1:34102        0.0.0.0:0              LISTENING       38572\r",
+    "  TCP    127.0.0.1:55173        0.0.0.0:0              LISTENING       37304\r"
+  ],
+  "requests": [
+    {
+      "url": "http://127.0.0.1:34102/health/ready",
+      "status": 200,
+      "bytes": 69,
+      "elapsed": 67
+    },
+    {
+      "url": "http://127.0.0.1:34102/api/presentations",
+      "status": 200,
+      "bytes": 1023,
+      "elapsed": 25
+    },
+    {
+      "url": "http://127.0.0.1:55173/",
+      "status": 200,
+      "bytes": 697,
+      "elapsed": 25
+    },
+    {
+      "url": "http://127.0.0.1:55173/api/presentations",
+      "status": 200,
+      "bytes": 1023,
+      "elapsed": 33
+    },
+    {
+      "url": "http://127.0.0.1:55173/vendor/qrcode/qrcode.min.js",
+      "status": 200,
+      "bytes": 24438,
+      "elapsed": 30
+    },
+    {
+      "url": "http://127.0.0.1:34102/api/presentations/4d8d8b8a-499b-4f77-b4d4-4635284d6bdc",
+      "status": 200,
+      "bytes": 51781,
+      "elapsed": 24,
+      "deck": {
+        "id": "4d8d8b8a-499b-4f77-b4d4-4635284d6bdc",
+        "elements": [
+          {
+            "id": "audit-qrcode",
+            "type": "qrcode",
+            "x": 645,
+            "y": 50,
+            "width": 520,
+            "height": 220,
+            "zIndex": 2,
+            "qrData": "AUDIT-19-AUTHORED",
+            "qrColor": "#112233",
+            "qrBgColor": "#ffffff",
+            "qrErrorLevel": "H"
+          },
+          {
+            "id": "audit-timeline",
+            "type": "timeline",
+            "x": 645,
+            "y": 50,
+            "width": 520,
+            "height": 220,
+            "zIndex": 2,
+            "timelineStart": "-20",
+            "timelineEnd": "2025",
+            "startDate": "-20",
+            "endDate": "2025",
+            "tickSpacing": "auto",
+            "lineColor": "#16a34a",
+            "dotColor": "#166534",
+            "textColor": "#0f172a",
+            "fontSize": 16,
+            "events": [
+              {
+                "id": "5a8d69c6-d406-4ef0-b256-df27044ce5c0",
+                "date": "2013",
+                "title": "Authored event",
+                "description": "Authored detail",
+                "imageUrl": "",
+                "side": "top",
+                "connectorLength": 72,
+                "connectorOffset": 72
+              }
+            ],
+            "items": [
+              {
+                "id": "5a8d69c6-d406-4ef0-b256-df27044ce5c0",
+                "date": "2013",
+                "title": "Authored event",
+                "description": "Authored detail",
+                "imageUrl": "",
+                "side": "top",
+                "connectorLength": 72,
+                "connectorOffset": 72,
+                "label": "Authored event",
+                "image": ""
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "url": "http://127.0.0.1:55173/api/presentations/4d8d8b8a-499b-4f77-b4d4-4635284d6bdc",
+      "status": 200,
+      "bytes": 51781,
+      "elapsed": 32,
+      "deck": {
+        "id": "4d8d8b8a-499b-4f77-b4d4-4635284d6bdc",
+        "elements": [
+          {
+            "id": "audit-qrcode",
+            "type": "qrcode",
+            "x": 645,
+            "y": 50,
+            "width": 520,
+            "height": 220,
+            "zIndex": 2,
+            "qrData": "AUDIT-19-AUTHORED",
+            "qrColor": "#112233",
+            "qrBgColor": "#ffffff",
+            "qrErrorLevel": "H"
+          },
+          {
+            "id": "audit-timeline",
+            "type": "timeline",
+            "x": 645,
+            "y": 50,
+            "width": 520,
+            "height": 220,
+            "zIndex": 2,
+            "timelineStart": "-20",
+            "timelineEnd": "2025",
+            "startDate": "-20",
+            "endDate": "2025",
+            "tickSpacing": "auto",
+            "lineColor": "#16a34a",
+            "dotColor": "#166534",
+            "textColor": "#0f172a",
+            "fontSize": 16,
+            "events": [
+              {
+                "id": "5a8d69c6-d406-4ef0-b256-df27044ce5c0",
+                "date": "2013",
+                "title": "Authored event",
+                "description": "Authored detail",
+                "imageUrl": "",
+                "side": "top",
+                "connectorLength": 72,
+                "connectorOffset": 72
+              }
+            ],
+            "items": [
+              {
+                "id": "5a8d69c6-d406-4ef0-b256-df27044ce5c0",
+                "date": "2013",
+                "title": "Authored event",
+                "description": "Authored detail",
+                "imageUrl": "",
+                "side": "top",
+                "connectorLength": 72,
+                "connectorOffset": 72,
+                "label": "Authored event",
+                "image": ""
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

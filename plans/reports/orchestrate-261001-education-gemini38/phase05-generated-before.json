@@ -1,0 +1,78 @@
+{
+  "url": "http://127.0.0.1:55173/api/presentations/e10d985a-1d9f-4102-a561-6527e0efe674/present",
+  "roots": [
+    {
+      "type": "name-picker",
+      "elementId": "phase03-game-name-picker",
+      "effectiveSlideId": "phase03-name-picker",
+      "diagnostic": null,
+      "commands": [
+        "pick",
+        "reset"
+      ]
+    },
+    {
+      "type": "hot-potato",
+      "elementId": "phase03-game-hot-potato",
+      "effectiveSlideId": "phase03-hot-potato",
+      "diagnostic": "Local playback is not implemented for hot-potato",
+      "commands": []
+    },
+    {
+      "type": "jeopardy",
+      "elementId": "phase03-game-jeopardy",
+      "effectiveSlideId": "phase03-jeopardy",
+      "diagnostic": "Local playback is not implemented for jeopardy",
+      "commands": []
+    },
+    {
+      "type": "four-corners",
+      "elementId": "phase03-game-four-corners",
+      "effectiveSlideId": "phase03-four-corners",
+      "diagnostic": "Local playback is not implemented for four-corners",
+      "commands": []
+    },
+    {
+      "type": "relay-race",
+      "elementId": "phase03-game-relay-race",
+      "effectiveSlideId": "phase03-relay-race",
+      "diagnostic": "Local playback is not implemented for relay-race",
+      "commands": []
+    },
+    {
+      "type": "trivia-champ",
+      "elementId": "phase03-game-trivia-champ",
+      "effectiveSlideId": "phase03-trivia-champ",
+      "diagnostic": "Local playback is not implemented for trivia-champ",
+      "commands": []
+    },
+    {
+      "type": "scattergories",
+      "elementId": "phase03-game-scattergories",
+      "effectiveSlideId": "phase03-scattergories",
+      "diagnostic": "Local playback is not implemented for scattergories",
+      "commands": []
+    },
+    {
+      "type": "poll",
+      "elementId": "phase03-game-poll",
+      "effectiveSlideId": "phase03-poll",
+      "diagnostic": "Local playback is not implemented for poll",
+      "commands": []
+    },
+    {
+      "type": "word-cloud",
+      "elementId": "phase03-game-word-cloud",
+      "effectiveSlideId": "phase03-word-cloud",
+      "diagnostic": "Local playback is not implemented for word-cloud",
+      "commands": []
+    },
+    {
+      "type": "matching",
+      "elementId": "phase03-game-matching",
+      "effectiveSlideId": "phase03-matching",
+      "diagnostic": "Local playback is not implemented for matching",
+      "commands": []
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "runtime": "omp",
+  "version": "18.5.1",
+  "model": "local52186/gpt-6.1-sol",
+  "capability": "C3",
+  "capabilityEvidence": "Existing authorized coordinator and prior independently scoped judgment receipts; refreshed catalog exposes reasoning/max, and fresh noninteractive inference returned NON_GEMINI_ROUTE_READY.",
+  "risk": "R0",
+  "authenticated": true,
+  "tools": [
+    "read",
+    "glob",
+    "grep"
+  ],
+  "config": "C:/Work/NavSlidesEditor/plans/reports/orchestrate-261001-education-gemini38/read-only-permissions.yml",
+  "controls": [
+    "--no-prewalk",
+    "--no-extensions",
+    "--no-title",
+    "--thinking max",
+    "--max-time 900",
+    "external timeout 960 seconds",
+    "separate session directories",
+    "no source edits/build/lint/tests"
+  ],
+  "hostLimit": "Windows native finite CLI; tool gating, not OS sandbox",
+  "familyIndependence": false,
+  "contextIndependence": true,
+  "subjectHash": "ec4ae26c94716a4aa01245769eb9d7a9ce4c5564dcc38b139be6820bb16f3775"
+}

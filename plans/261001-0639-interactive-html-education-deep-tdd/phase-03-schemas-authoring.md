@@ -1,10 +1,12 @@
 ---
 phase: 3
 title: "Registry/schema chung và authoring đầy đủ mười game hiện có"
-status: pending
+status: completed
 priority: P1
 dependencies: [1]
 ---
+
+Status completed chỉ ghi qualified historical checkpoint; không phải current-source acceptance hoặc implementation đã merge vào main. Xem [handoff](../handoffs/education-pause-20261004.md) khi resume.
 
 # Phase 03 — Schemas and authoring
 
@@ -168,12 +170,12 @@ Mở generated Present/Preview/hosted share thật để kiểm nội dung cấu
 Xuất portable HTML kiểm question images/static content với network blocked; kiểm tại320/768/desktop và keyboard/touch, ghi rõ runtime parity chưa là acceptance03.
 
 ## Success criteria + unchecked actionable checklist
-- [ ] Catalog có đúng19 unique game subtypes, canonical defaults vẫn19; factories/Insert/schema dùng cùng nguồn và không hứa live sai.
-- [ ] Mười game có đủ controls trong table; edit/save/reload/duplicate/undo giữ cấu hình và media/correct IDs.
-- [ ] Seven canonical question kinds validate đúng; reorder không đổi answerKey; lỗi reference có hướng dẫn sửa.
-- [ ] Legacy flat/nested/string items migrate idempotent, numeric weights hoạt động, config independent và transient fields không save.
-- [ ] New/split production modules <200 LOC; duplicated tables/obsolete exports đã xóa sau migrate, không có config placeholder.
-- [ ] Focused receipts, real existing live canonical grading/reconnect and inert preview/editor smoke observed; every canonical reader cut over in03 before writable persistence, then docs/changelog.
+- [x] Catalog có đúng19 unique game subtypes, canonical defaults vẫn19; factories/Insert/schema dùng cùng nguồn và không hứa live sai.
+- [x] Mười game có đủ controls trong table; edit/save/reload/duplicate/undo giữ cấu hình và media/correct IDs.
+- [x] Seven canonical question kinds validate đúng; reorder không đổi answerKey; lỗi reference có hướng dẫn sửa.
+- [x] Legacy flat/nested/string items migrate idempotent, numeric weights hoạt động, config independent và transient fields không save.
+- [x] New/split production modules <200 LOC; duplicated tables/obsolete exports đã xóa sau migrate, không có config placeholder.
+- [x] Focused receipts, real existing live canonical grading/reconnect and inert preview/editor smoke observed; every canonical reader cut over in03 before writable persistence, then docs/changelog.
 
 ## Security/risks and failure protocol
 High (cao × cao): answerKey lệch khi reorder; mitigate stable IDs và delete-reference validation, không dựa index UI.

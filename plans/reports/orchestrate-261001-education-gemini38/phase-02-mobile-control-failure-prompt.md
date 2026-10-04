@@ -1,0 +1,12 @@
+# Mandatory Phase02 320px browser smoke failure
+Read-only counsel, no edits/checks/browser/delegation/model switching, model local52186/gpt-6.1-sol excluding Gemini. Worktree C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001. --auto --advice --tdd Phase02 requirements ACTUAL browser smoke line137 repeat320/768/desktop and keyboard/touch, controls visible/targetable. Current code latest table admission+TipTap isolation and print highlighter repairs PASS browser table7 + generated1 + unit142/11. No phase approval.
+
+Actual fresh Playwright Chromium context viewport320x900, hasTouch:true,reducedMotion:reduce, editor existing all19 fixture id4d8d8b8a-499b-4f77-b4d4-4635284d6bdc initialslide1. Attempt shape wrapper click (audit-shape) then prop-shape-kind. Actual failure:
+```
+locator.click: Timeout30000ms
+locator resolved div[data-testid=slide-element-audit-shape] data-selected=false...
+waiting visible enabled stable -> element is not visible repeatedly
+```
+This is not unsupported selector/missing fixture: DOM wrapper present, invisible. Full output artifact://298? Parent tool final proc://bg_28/kill recovered job deadline90, no successful width768/desktop or screenshots before click. Do not rely guessed artifact id; evidence verbatim above. Parent stopped re-diagnosis/source edits; fresh screenshots/DOM rectangle and responsive sidebar inspection pending counsel. Script failed before browser close, external deadline reached; need always finally b.close in subsequent smoke.
+
+Inspect actual responsive rails/workspace/root dimensions and viewport mode; prove likely cause vs alternate persisted slide state/scale. Initial route fresh context normally slide1. Existing desktop exact same fixture works earlier. Need smallest scoped route to existing mobile editor controls; do NOT add arbitrary new UI subsystem or lie about320 PASS. Prefer existing collapse toggles/selection pane and advertised mobile editing supported path. No implementation decision broad scope without evidence. Return diagnosis, needed discriminating screenshot/rect check (not repeat same failed assertion), bounded repair/design if source proves requirement gap and risks. Keep 320 acceptance rather than simply exclude lane. No phase approval.

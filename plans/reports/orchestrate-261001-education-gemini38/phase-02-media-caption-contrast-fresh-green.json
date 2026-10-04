@@ -1,0 +1,6 @@
+{
+  "command": "npx playwright test tests/e2e/education/media-metadata-visibility.spec.js --config=.playwright/phase02-manual.config.cjs --project=chromium --workers=1 --retries=0 --reporter=line",
+  "exitCode": 0,
+  "stdout": "\nRunning 2 tests using 1 worker\n\n[1/2] [chromium] › tests\\e2e\\education\\media-metadata-visibility.spec.js:106:5 › inspector-authored media metadata stays readable on light slides without resizing players or blocking dragging\n[2/2] [chromium] › tests\\e2e\\education\\media-metadata-visibility.spec.js:106:5 › inspector-authored media metadata stays readable on dark slides without resizing players or blocking dragging\n  2 passed (38.4s)\n",
+  "stderr": ""
+}

@@ -1,0 +1,10 @@
+{
+  "classification": "Expected feature RED: ready actual generated endpoint has authored picker but no interactive pick control/runtime",
+  "observed": {
+    "url": "http://127.0.0.1:55173/api/presentations/e10d985a-1d9f-4102-a561-6527e0efe674/present",
+    "revealReady": true,
+    "nativeRuntime": "undefined",
+    "game": "Name Pickername-pickerNguyễn An — kiểm chứngHọc sinh 2Học sinh 3Học sinh 4Học sinh 5Học sinh 6Học sinh 7Học sinh 8Authored game snapshot",
+    "pickControls": 0
+  }
+}

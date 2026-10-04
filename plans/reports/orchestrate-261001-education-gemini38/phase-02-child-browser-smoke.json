@@ -1,0 +1,438 @@
+{
+  "deckId": "6cf83620-b654-4e60-9a4c-ffebfd42d8c1",
+  "multi": [
+    {
+      "direction": "left",
+      "key": "Enter",
+      "positioned": [
+        100,
+        100,
+        100
+      ],
+      "restored": {
+        "positions": [
+          100,
+          400,
+          250
+        ],
+        "selection": true
+      }
+    },
+    {
+      "direction": "center-h",
+      "key": "Space",
+      "positioned": [
+        200,
+        250,
+        260
+      ],
+      "restored": {
+        "positions": [
+          100,
+          400,
+          250
+        ],
+        "selection": true
+      }
+    },
+    {
+      "direction": "right",
+      "key": "Enter",
+      "positioned": [
+        300,
+        400,
+        420
+      ],
+      "restored": {
+        "positions": [
+          100,
+          400,
+          250
+        ],
+        "selection": true
+      }
+    }
+  ],
+  "numericDelta": [
+    -150,
+    150,
+    0
+  ],
+  "nextSelection": {
+    "undo": [
+      -150,
+      150,
+      0
+    ],
+    "redo": [
+      -150,
+      175,
+      0
+    ]
+  },
+  "multiReload": [
+    {
+      "id": "child-a",
+      "x": -150,
+      "y": 50
+    },
+    {
+      "id": "child-b",
+      "x": 175,
+      "y": 0
+    },
+    {
+      "id": "child-c",
+      "x": 0,
+      "y": 200
+    }
+  ],
+  "multiPersisted": {
+    "id": "6cf83620-b654-4e60-9a4c-ffebfd42d8c1",
+    "title": "Phase02 real authoring safety smoke",
+    "theme": "black",
+    "transition": "slide",
+    "designTokens": {
+      "colors": {
+        "bg": "#0a0a0f",
+        "surface": "#1a1a22",
+        "accent": "#6366f1",
+        "accent2": "#8b5cf6",
+        "text": "#ffffff",
+        "muted": "rgba(255,255,255,0.6)"
+      },
+      "fonts": {
+        "heading": "\"Inter\", \"Helvetica Neue\", Arial, sans-serif",
+        "body": "\"Inter\", \"Helvetica Neue\", Arial, sans-serif"
+      },
+      "radius": 8,
+      "spacingScale": 1
+    },
+    "slides": [
+      {
+        "id": "parent",
+        "elements": [
+          {
+            "id": "a",
+            "type": "shape",
+            "x": 100,
+            "y": 50,
+            "width": 200,
+            "height": 100,
+            "name": "Shape A",
+            "shape": "rect",
+            "fill": "#4f46e5",
+            "stroke": "#111111",
+            "strokeWidth": 2,
+            "text": "A"
+          },
+          {
+            "id": "b",
+            "type": "shape",
+            "x": 400,
+            "y": 100,
+            "width": 100,
+            "height": 100,
+            "name": "Shape B",
+            "shape": "rect",
+            "fill": "#16a34a",
+            "stroke": "#111111",
+            "strokeWidth": 2,
+            "text": "B"
+          },
+          {
+            "id": "c",
+            "type": "shape",
+            "x": 250,
+            "y": 200,
+            "width": 80,
+            "height": 60,
+            "name": "Shape C",
+            "shape": "rect",
+            "fill": "#f59e0b",
+            "stroke": "#111111",
+            "strokeWidth": 2,
+            "text": "C"
+          }
+        ],
+        "notes": "",
+        "background": {
+          "type": "color",
+          "color": "#ffffff"
+        },
+        "children": [
+          {
+            "id": "child",
+            "elements": [
+              {
+                "id": "child-a",
+                "type": "shape",
+                "x": -150,
+                "y": 50,
+                "width": 200,
+                "height": 100,
+                "name": "Child A",
+                "shape": "rect",
+                "fill": "#4f46e5",
+                "stroke": "#111111",
+                "strokeWidth": 2,
+                "text": "A"
+              },
+              {
+                "id": "child-b",
+                "type": "shape",
+                "x": 150,
+                "y": 0,
+                "width": 100,
+                "height": 100,
+                "name": "Child B",
+                "shape": "rect",
+                "fill": "#16a34a",
+                "stroke": "#111111",
+                "strokeWidth": 2,
+                "text": "B"
+              },
+              {
+                "id": "child-c",
+                "type": "shape",
+                "x": 0,
+                "y": 200,
+                "width": 80,
+                "height": 60,
+                "name": "Child C",
+                "shape": "rect",
+                "fill": "#f59e0b",
+                "stroke": "#111111",
+                "strokeWidth": 2,
+                "text": "C"
+              }
+            ],
+            "notes": "",
+            "background": {
+              "type": "color",
+              "color": "#f8fafc"
+            }
+          },
+          {
+            "id": "sibling",
+            "elements": [
+              {
+                "id": "sibling-guard",
+                "type": "shape",
+                "x": 100,
+                "y": 50,
+                "width": 200,
+                "height": 100,
+                "name": "Sibling guard",
+                "shape": "rect",
+                "fill": "#4f46e5",
+                "stroke": "#111111",
+                "strokeWidth": 2,
+                "text": "A"
+              }
+            ],
+            "notes": "",
+            "background": {
+              "type": "color",
+              "color": "#ffffff"
+            }
+          }
+        ]
+      }
+    ],
+    "createdAt": "2026-10-01T18:45:04.358Z",
+    "updatedAt": "2026-10-01T18:57:58.048Z",
+    "presenterTools": {
+      "themeToggle": true,
+      "fontZoom": true,
+      "slideMenu": false,
+      "chalkboard": false
+    },
+    "layoutMasters": [
+      {
+        "id": "safety-master",
+        "name": "Safety master",
+        "fixedElements": [
+          {
+            "id": "master-a",
+            "type": "shape",
+            "x": 0,
+            "y": 50,
+            "width": 200,
+            "height": 100,
+            "name": "Master A",
+            "shape": "rect",
+            "fill": "#4f46e5",
+            "stroke": "#111111",
+            "strokeWidth": 2,
+            "text": "A",
+            "locked": true
+          },
+          {
+            "id": "master-b",
+            "type": "shape",
+            "x": 0,
+            "y": 100,
+            "width": 100,
+            "height": 100,
+            "name": "Master B",
+            "shape": "rect",
+            "fill": "#16a34a",
+            "stroke": "#111111",
+            "strokeWidth": 2,
+            "text": "B",
+            "locked": false
+          },
+          {
+            "id": "master-c",
+            "type": "shape",
+            "x": 250,
+            "y": 200,
+            "width": 80,
+            "height": 60,
+            "name": "Master C",
+            "shape": "rect",
+            "fill": "#f59e0b",
+            "stroke": "#111111",
+            "strokeWidth": 2,
+            "text": "C",
+            "locked": true
+          },
+          {
+            "id": "master-unset",
+            "type": "shape",
+            "x": 700,
+            "y": 50,
+            "width": 200,
+            "height": 100,
+            "name": "Master unset",
+            "shape": "rect",
+            "fill": "#4f46e5",
+            "stroke": "#111111",
+            "strokeWidth": 2,
+            "text": "A"
+          }
+        ],
+        "placeholders": []
+      },
+      {
+        "id": "other-master",
+        "name": "Other master",
+        "fixedElements": [
+          {
+            "id": "other-guard",
+            "type": "shape",
+            "x": 100,
+            "y": 50,
+            "width": 200,
+            "height": 100,
+            "name": "Shape A",
+            "shape": "rect",
+            "fill": "#4f46e5",
+            "stroke": "#111111",
+            "strokeWidth": 2,
+            "text": "A",
+            "locked": true
+          }
+        ],
+        "placeholders": []
+      }
+    ],
+    "slideWidth": 1600,
+    "slideHeight": 900
+  },
+  "fullSentinels": {
+    "parent": true,
+    "sibling": true,
+    "masters": true
+  },
+  "singleResolution": {
+    "failedFixture": {
+      "canonicalResolution": null,
+      "reportedCenter": 430
+    },
+    "correction": "Fixture only: use presentation.resolution; production unchanged",
+    "baseline": {
+      "canvas": {
+        "width": 1600,
+        "height": 900
+      },
+      "geometry": {
+        "x": 430,
+        "y": 0,
+        "width": 100,
+        "height": 100,
+        "transform": "rotate(37deg)"
+      }
+    },
+    "alignments": [
+      {
+        "direction": "left",
+        "key": "Enter",
+        "expected": 20,
+        "actual": {
+          "x": 20,
+          "y": 0,
+          "width": 100,
+          "height": 100,
+          "transform": "rotate(37deg)"
+        },
+        "visualEdge": -0.022526659967056162
+      },
+      {
+        "direction": "center-h",
+        "key": "Space",
+        "expected": 750,
+        "actual": {
+          "x": 750,
+          "y": 0,
+          "width": 100,
+          "height": 100,
+          "transform": "rotate(37deg)"
+        },
+        "visualEdge": 800
+      },
+      {
+        "direction": "right",
+        "key": "Enter",
+        "expected": 1480,
+        "actual": {
+          "x": 1480,
+          "y": 0,
+          "width": 100,
+          "height": 100,
+          "transform": "rotate(37deg)"
+        },
+        "visualEdge": 1600.022526659967
+      }
+    ],
+    "persisted": {
+      "id": "child-b",
+      "type": "shape",
+      "x": 1480,
+      "y": 0,
+      "width": 100,
+      "height": 100,
+      "name": "Child B",
+      "shape": "rect",
+      "fill": "#16a34a",
+      "stroke": "#111111",
+      "strokeWidth": 2,
+      "text": "B",
+      "rotation": 37
+    },
+    "reload": {
+      "canvas": {
+        "width": 1600,
+        "height": 900
+      },
+      "geometry": {
+        "x": 1480,
+        "y": 0,
+        "width": 100,
+        "height": 100,
+        "transform": "rotate(37deg)"
+      }
+    }
+  }
+}

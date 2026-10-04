@@ -1,0 +1,129 @@
+{
+  "headerDiagnostic": {
+    "url": "http://127.0.0.1:55173/api/presentations/3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540/present",
+    "status": 304,
+    "headers": {
+      "connection": "close",
+      "date": "Fri, 02 Oct 2026 11:07:40 GMT",
+      "etag": "W/\"52e9-MG0A7b+AXZmDOkJgvlJnQbXXnlY\"",
+      "vary": "Origin",
+      "x-powered-by": "Express",
+      "x-ratelimit-limit": "200000",
+      "x-ratelimit-remaining": "199996",
+      "x-ratelimit-reset": "1790939649"
+    },
+    "control": {
+      "result": {
+        "type": "number",
+        "value": 42,
+        "description": "42"
+      }
+    },
+    "evalProbe": {
+      "result": {
+        "type": "object",
+        "subtype": "error",
+        "className": "EvalError",
+        "description": "EvalError: Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline' blob: https:\".\n\n    at <anonymous>:1:1",
+        "objectId": "6962261817800321342.9.1"
+      },
+      "exceptionDetails": {
+        "exceptionId": 1,
+        "text": "Uncaught",
+        "lineNumber": 0,
+        "columnNumber": 0,
+        "scriptId": "47",
+        "stackTrace": {
+          "callFrames": [
+            {
+              "functionName": "",
+              "scriptId": "47",
+              "url": "",
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          ]
+        },
+        "exception": {
+          "type": "object",
+          "subtype": "error",
+          "className": "EvalError",
+          "description": "EvalError: Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline' blob: https:\".\n\n    at <anonymous>:1:1",
+          "objectId": "6962261817800321342.9.2"
+        }
+      }
+    },
+    "functionProbe": {
+      "result": {
+        "type": "object",
+        "subtype": "error",
+        "className": "EvalError",
+        "description": "EvalError: Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline' blob: https:\".\n\n    at new Function (<anonymous>)\n    at <anonymous>:1:1",
+        "objectId": "6962261817800321342.9.3"
+      },
+      "exceptionDetails": {
+        "exceptionId": 2,
+        "text": "Uncaught",
+        "lineNumber": 0,
+        "columnNumber": 0,
+        "scriptId": "48",
+        "stackTrace": {
+          "callFrames": [
+            {
+              "functionName": "",
+              "scriptId": "48",
+              "url": "",
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          ]
+        },
+        "exception": {
+          "type": "object",
+          "subtype": "error",
+          "className": "EvalError",
+          "description": "EvalError: Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline' blob: https:\".\n\n    at new Function (<anonymous>)\n    at <anonymous>:1:1",
+          "objectId": "6962261817800321342.9.4"
+        }
+      }
+    }
+  },
+  "enforcement": {
+    "url": "http://127.0.0.1:55173/api/presentations/3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540/present",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.7778.280 Electron/42.9.3 Safari/537.36",
+    "nodeIntegration": false,
+    "probe": {
+      "control": 42,
+      "ran": true,
+      "sentinels": [],
+      "errors": [
+        {
+          "kind": "eval",
+          "name": "EvalError",
+          "message": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline' blob: https:\".\n"
+        },
+        {
+          "kind": "function",
+          "name": "EvalError",
+          "message": "Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed source of script: script-src 'self' 'unsafe-inline' blob: https:\".\n"
+        }
+      ],
+      "violations": [
+        {
+          "disposition": "enforce",
+          "directive": "script-src",
+          "blocked": "eval",
+          "policy": "default-src 'self'; script-src 'self' 'unsafe-inline' blob: https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; media-src 'self' data: blob: https:; connect-src 'self' ws://127.0.0.1:3002 https: wss:; frame-src 'self' data: blob: https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'",
+          "document": "http://127.0.0.1:55173/api/presentations/3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540/present"
+        },
+        {
+          "disposition": "enforce",
+          "directive": "script-src",
+          "blocked": "eval",
+          "policy": "default-src 'self'; script-src 'self' 'unsafe-inline' blob: https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; media-src 'self' data: blob: https:; connect-src 'self' ws://127.0.0.1:3002 https: wss:; frame-src 'self' data: blob: https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'",
+          "document": "http://127.0.0.1:55173/api/presentations/3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540/present"
+        }
+      ]
+    }
+  }
+}

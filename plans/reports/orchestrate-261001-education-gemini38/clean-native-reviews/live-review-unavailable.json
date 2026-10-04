@@ -1,0 +1,11 @@
+{
+  "job": "bg_349",
+  "runtime": "omp18.5.1",
+  "model": "local52186/gpt-6.1-sol",
+  "status": "deadline-exceeded",
+  "verdict": null,
+  "output": "Working...\nDeadline exceeded",
+  "wallSeconds": 902.24,
+  "familyIndependence": false,
+  "sourceEdits": false
+}

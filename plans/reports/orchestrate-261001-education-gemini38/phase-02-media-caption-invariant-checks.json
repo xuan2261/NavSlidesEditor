@@ -1,0 +1,6 @@
+{
+  "command": "npx playwright test tests/e2e/education/media-metadata-visibility.spec.js --config=.playwright/phase02-manual.config.cjs --project=chromium --workers=1 --retries=0 --reporter=line",
+  "exitCode": 0,
+  "stdout": "\nRunning 1 test using 1 worker\n\n[1/1] [chromium] › tests\\e2e\\education\\media-metadata-visibility.spec.js:72:5 › inspector-authored media metadata remains reachable without resizing players or blocking dragging\n  1 passed (20.8s)\n",
+  "stderr": ""
+}

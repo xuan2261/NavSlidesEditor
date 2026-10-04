@@ -1,0 +1,421 @@
+{
+  "numeric": [
+    {
+      "type": "shape",
+      "label": "Shape label text size",
+      "intended": "28",
+      "first": "2",
+      "final": "28",
+      "blurred": "28"
+    },
+    {
+      "type": "code",
+      "label": "Code font size",
+      "intended": "22",
+      "first": "2",
+      "final": "22",
+      "blurred": "22"
+    },
+    {
+      "type": "latex",
+      "label": "LaTeX font size",
+      "intended": "24",
+      "first": "2",
+      "final": "24",
+      "blurred": "24"
+    },
+    {
+      "type": "markdown",
+      "label": "Markdown font size",
+      "intended": "24",
+      "first": "2",
+      "final": "24",
+      "blurred": "24"
+    },
+    {
+      "type": "table",
+      "label": "Table font size",
+      "intended": "20",
+      "first": "2",
+      "final": "20",
+      "blurred": "20"
+    },
+    {
+      "type": "callout",
+      "label": "Callout Font Size",
+      "intended": "36",
+      "first": "3",
+      "final": "36",
+      "blurred": "36"
+    },
+    {
+      "type": "timeline",
+      "label": "Timeline font size",
+      "intended": "16",
+      "first": "1",
+      "final": "16",
+      "blurred": "16"
+    }
+  ],
+  "authored": [
+    {
+      "type": "text",
+      "edit": "Native text entry appended authored inside installed TipTap schema"
+    },
+    {
+      "type": "html",
+      "fields": {
+        "content": "<button id=\"audit-action\" onclick=\"this.textContent='Audit activated'\">Audit activate</button>"
+      }
+    },
+    {
+      "type": "image",
+      "fields": {
+        "Image object fit": "cover",
+        "Image brightness": 90,
+        "Image contrast": 110,
+        "Image grayscale": 50,
+        "Image saturation": 80,
+        "Image corner radius": 24,
+        "Image border width": 2,
+        "Image border color": "#0f172a",
+        "Image alternative text": "Authored diagram",
+        "Image long description": "Authored diagram detail",
+        "Image citation text": "Authored source",
+        "Image citation color": "#334155",
+        "Image citation alignment": "right"
+      }
+    },
+    {
+      "type": "shape",
+      "fields": {
+        "Shape kind": "hexagon",
+        "Shape fill color": "#22c55e",
+        "Shape stroke color": "#0f172a",
+        "Shape stroke width": 2,
+        "Shape label text size": 28,
+        "Shape label text color": "#0f172a"
+      }
+    },
+    {
+      "type": "code",
+      "fields": {
+        "Code language": "python",
+        "Code font size": 22,
+        "Code corner radius": 12
+      }
+    },
+    {
+      "type": "latex",
+      "fields": {
+        "LaTeX font size": 24,
+        "LaTeX text color": "#166534"
+      }
+    },
+    {
+      "type": "markdown",
+      "fields": {
+        "Markdown content": "# Authored heading\n\nA **strong** paragraph with [link](https://example.com).\n\n```js\nconst value = \"&quot;\";\n```",
+        "Markdown font size": 24,
+        "Markdown text color": "#166534"
+      }
+    },
+    {
+      "type": "chart",
+      "fields": {
+        "Chart type": "line",
+        "Legend position": "topRight",
+        "category axis title": "Month authored",
+        "value axis title": "Revenue authored",
+        "Chart category labels": "One, Two, Three",
+        "Chart series 1 label": "Authored series",
+        "Chart series 1 values": "0, -2, 3.5",
+        "Chart series 1 color": "#16a34a"
+      }
+    },
+    {
+      "type": "video",
+      "fields": {
+        "Video object fit": "cover",
+        "Video start time": 0.2,
+        "Video end time": 1.8,
+        "Video playback speed": 1.25,
+        "Loop": false,
+        "Muted": true,
+        "Media transcript": "Video transcript authored through inspector.",
+        "Media audio description": "Video description authored through inspector."
+      }
+    },
+    {
+      "type": "audio",
+      "fields": {
+        "Show controls": true,
+        "Loop": false,
+        "Media transcript": "Audio transcript authored through inspector.",
+        "Media audio description": "Audio description authored through inspector."
+      }
+    },
+    {
+      "type": "table",
+      "fields": {
+        "Table Header BG": "#dbeafe",
+        "Table Header Text": "#1e40af",
+        "Table Text Color": "#0f172a",
+        "Table Border": "#64748b",
+        "Table border style": "dashed",
+        "Table font size": 20,
+        "Table cell row 1 column 1": "Authored header",
+        "Table cell row 2 column 2": "84"
+      }
+    },
+    {
+      "type": "icon",
+      "fields": {
+        "Icon color": "#16a34a",
+        "Icon stroke width": 3
+      }
+    },
+    {
+      "type": "callout",
+      "fields": {
+        "Callout Number": 9,
+        "Callout Font Size": 36,
+        "Callout BG Color": "#0ea5e9",
+        "Callout Text Color": "#ffffff"
+      }
+    },
+    {
+      "type": "qrcode",
+      "fields": {
+        "QR code data or URL": "AUDIT-19-AUTHORED",
+        "QR code Foreground color": "#112233",
+        "QR code Background color": "#ffffff",
+        "QR code error correction level": "H"
+      }
+    },
+    {
+      "type": "drawing",
+      "fields": {
+        "Drawing stroke color": "#16a34a",
+        "Drawing stroke width": 5
+      }
+    },
+    {
+      "type": "line",
+      "fields": {
+        "Line color": "#166534",
+        "Line width": 4,
+        "Line style": "10,5",
+        "Line start marker": "diamond",
+        "Line end marker": "arrow"
+      }
+    },
+    {
+      "type": "svg",
+      "fields": {
+        "SVG Fill Override": "#16a34a",
+        "SVG Stroke Override": "#0f172a"
+      }
+    },
+    {
+      "type": "timeline",
+      "fields": {
+        "Timeline start year": -20,
+        "Timeline end year": 2025,
+        "Timeline line color": "#16a34a",
+        "Timeline dot color": "#166534",
+        "Timeline text color": "#0f172a",
+        "Timeline font size": 16,
+        "Timeline event 1 title": "Authored event",
+        "Timeline event 1 description": "Authored detail",
+        "Timeline event 1 connector length": 72
+      }
+    },
+    {
+      "type": "game",
+      "fields": {
+        "Name picker items": "Ada, Grace"
+      }
+    }
+  ],
+  "reload": [
+    {
+      "type": "text",
+      "actual": {}
+    },
+    {
+      "type": "html",
+      "actual": {}
+    },
+    {
+      "type": "image",
+      "actual": {
+        "Image object fit": "cover",
+        "Image brightness": "90",
+        "Image contrast": "110",
+        "Image grayscale": "50",
+        "Image saturation": "80",
+        "Image corner radius": "24",
+        "Image border width": "2",
+        "Image border color": "#0f172a",
+        "Image alternative text": "Authored diagram",
+        "Image long description": "Authored diagram detail",
+        "Image citation text": "Authored source",
+        "Image citation color": "#334155",
+        "Image citation alignment": "right"
+      }
+    },
+    {
+      "type": "shape",
+      "actual": {
+        "Shape kind": "hexagon",
+        "Shape fill color": "#22c55e",
+        "Shape stroke color": "#0f172a",
+        "Shape stroke width": "2",
+        "Shape label text size": "28",
+        "Shape label text color": "#0f172a"
+      }
+    },
+    {
+      "type": "code",
+      "actual": {
+        "Code language": "python",
+        "Code font size": "22",
+        "Code corner radius": "12"
+      }
+    },
+    {
+      "type": "latex",
+      "actual": {
+        "LaTeX font size": "24",
+        "LaTeX text color": "#166534"
+      }
+    },
+    {
+      "type": "markdown",
+      "actual": {
+        "Markdown content": "# Authored heading\n\nA **strong** paragraph with [link](https://example.com).\n\n```js\nconst value = \"&quot;\";\n```",
+        "Markdown font size": "24",
+        "Markdown text color": "#166534"
+      }
+    },
+    {
+      "type": "chart",
+      "actual": {
+        "Chart type": "line",
+        "Legend position": "topRight",
+        "category axis title": "Month authored",
+        "value axis title": "Revenue authored",
+        "Chart category labels": "One, Two, Three",
+        "Chart series 1 label": "Authored series",
+        "Chart series 1 values": "0, -2, 3.5",
+        "Chart series 1 color": "#16a34a"
+      }
+    },
+    {
+      "type": "video",
+      "actual": {
+        "Video object fit": "cover",
+        "Video start time": "0.2",
+        "Video end time": "1.8",
+        "Video playback speed": "1.25",
+        "Loop": false,
+        "Muted": true,
+        "Media transcript": "Video transcript authored through inspector.",
+        "Media audio description": "Video description authored through inspector."
+      }
+    },
+    {
+      "type": "audio",
+      "actual": {
+        "Show controls": true,
+        "Loop": false,
+        "Media transcript": "Audio transcript authored through inspector.",
+        "Media audio description": "Audio description authored through inspector."
+      }
+    },
+    {
+      "type": "table",
+      "actual": {
+        "Table Header BG": "#dbeafe",
+        "Table Header Text": "#1e40af",
+        "Table Text Color": "#0f172a",
+        "Table Border": "#64748b",
+        "Table border style": "dashed",
+        "Table font size": "20",
+        "Table cell row 1 column 1": "Authored header",
+        "Table cell row 2 column 2": "84"
+      }
+    },
+    {
+      "type": "icon",
+      "actual": {
+        "Icon color": "#16a34a",
+        "Icon stroke width": "3"
+      }
+    },
+    {
+      "type": "callout",
+      "actual": {
+        "Callout Number": "9",
+        "Callout Font Size": "36",
+        "Callout BG Color": "#0ea5e9",
+        "Callout Text Color": "#ffffff"
+      }
+    },
+    {
+      "type": "qrcode",
+      "actual": {
+        "QR code data or URL": "AUDIT-19-AUTHORED",
+        "QR code Foreground color": "#112233",
+        "QR code Background color": "#ffffff",
+        "QR code error correction level": "H"
+      }
+    },
+    {
+      "type": "drawing",
+      "actual": {
+        "Drawing stroke color": "#16a34a",
+        "Drawing stroke width": "5"
+      }
+    },
+    {
+      "type": "line",
+      "actual": {
+        "Line color": "#166534",
+        "Line width": "4",
+        "Line style": "10,5",
+        "Line start marker": "diamond",
+        "Line end marker": "arrow"
+      }
+    },
+    {
+      "type": "svg",
+      "actual": {
+        "SVG Fill Override": "#16a34a",
+        "SVG Stroke Override": "#0f172a"
+      }
+    },
+    {
+      "type": "timeline",
+      "actual": {
+        "Timeline start year": "-20",
+        "Timeline end year": "2025",
+        "Timeline line color": "#16a34a",
+        "Timeline dot color": "#166534",
+        "Timeline text color": "#0f172a",
+        "Timeline font size": "16",
+        "Timeline event 1 title": "Authored event",
+        "Timeline event 1 description": "Authored detail",
+        "Timeline event 1 connector length": "72"
+      }
+    },
+    {
+      "type": "game",
+      "actual": {
+        "Name picker items": "Ada, Grace"
+      }
+    }
+  ],
+  "mismatches": []
+}

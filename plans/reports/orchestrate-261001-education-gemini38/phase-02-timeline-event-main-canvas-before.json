@@ -1,0 +1,59 @@
+{
+  "target": "main-canvas, excluding slide thumbnails",
+  "supersedes": "phase-02-timeline-event-editor-before.json measured a thumbnail, not the selected canvas",
+  "selected": {
+    "event": {
+      "text": "Authored event",
+      "y": "-48",
+      "bounds": {
+        "x": 789.0570068359375,
+        "y": 173.50155639648438,
+        "width": 84.97509765625,
+        "height": 14
+      }
+    },
+    "svg": {
+      "x": 488.01953125,
+      "y": 218.2890625,
+      "width": 366.03125,
+      "height": 154.859375
+    },
+    "wrapper": {
+      "overflow": "visible",
+      "bounds": {
+        "x": 488.01953125,
+        "y": 218.2890625,
+        "width": 366.03125,
+        "height": 154.859375
+      }
+    },
+    "selectedCardStyle": "position: absolute; left: 645px; top: 50px; width: 520px; height: 220px; z-index: 2; pointer-events: auto; touch-action: none; cursor: grab; user-select: none; overflow: visible; box-sizing: border-box; outline: 2px solid var(--selection);"
+  },
+  "unselected": {
+    "event": {
+      "text": "Authored event",
+      "y": "-48",
+      "bounds": {
+        "x": 789.0570068359375,
+        "y": 173.50155639648438,
+        "width": 84.97509765625,
+        "height": 14
+      }
+    },
+    "svg": {
+      "x": 488.01953125,
+      "y": 218.2890625,
+      "width": 366.03125,
+      "height": 154.859375
+    },
+    "wrapper": {
+      "overflow": "hidden",
+      "bounds": {
+        "x": 488.01953125,
+        "y": 218.2890625,
+        "width": 366.03125,
+        "height": 154.859375
+      }
+    }
+  }
+}

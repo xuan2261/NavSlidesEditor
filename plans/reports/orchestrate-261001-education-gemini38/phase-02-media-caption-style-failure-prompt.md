@@ -1,0 +1,11 @@
+# Kongming Phase02 caption contrast GREEN failure
+Continue accepted cook --auto --advice --tdd; current retained instruction excludes Gemini temporarily. Read-only counsel on local52186/gpt-6.1-sol. Do not edit source or execute commands/tests/browser/delegate. No phase completion or scope reduction. Native counsel has the same model family as the current coordinator; independent context, not independent family.
+
+Worktree: C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001.
+Prior counsel authorized opaque shared caption styles. Implemented MEDIA_CAPTION_STYLE and derived CSS plus inner text reset in shared/src/media-accessibility.js; applied canvas JSX imported via revealjs-shared and generated HTML direct require. Existing index.js spreads metadata exports. No geometry, pointer admission, player/playback, source, normalization or drag changes.
+
+Extended existing media-metadata-visibility.spec.js with white/dark cases and effective background compositing contrast measurements on audio/video descriptions, closed/open summary, expanded text, canvas/Present/normal downloaded network-blocked offline HTML. Retained saved authoring, before/after geometry, keyboard, hit tests, exact persisted 30/20 real dragging.
+Expected RED: light ratio 1.151925986026288 fails >=4.5; dark passes.
+Unexpected GREEN after source changes: identical light ratio 1.151925986026288, dark passes. Command: npx playwright test tests/e2e/education/media-metadata-visibility.spec.js --config=.playwright/phase02-manual.config.cjs --project=chromium --workers=1 --retries=0 --reporter=line.
+Exact verbatim output: C:/Work/NavSlidesEditor/plans/reports/orchestrate-261001-education-gemini38/phase-02-media-caption-contrast-green.json. RED at sibling phase-02-media-caption-contrast-red.json.
+Stopped production editing and diagnosis after failed GREEN. Need source-backed next action: determine whether imported shared package styles are unavailable due dev prebundle freshness, style ownership defect, or other cause. Read relevant Vite config and current manual environment only as necessary. No command run, no production edit, no test weakening. Supply bounded GO/no-go and diagnostic/corrective actions, preserving contract.

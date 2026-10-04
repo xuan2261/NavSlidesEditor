@@ -1,0 +1,25 @@
+{
+  "text": "\nAuthored classroom word search with a deliberately wrapped heading\n\nthat preserves every final word\n\nWords\n\nQ\n\nM\n\nP\n\nL\n\nF\n\nD\n\nY\n\nQ\n\nB\n\nP\n\nP\n\nE\n\nD\n\nY\n\nH\n\nA\n\nCAT\n\nM\n\n|\n\nZz\n\nQ\n\nM\n\nCc\n\nA\n\nQ\n\nDOG\n\nA\n\nuU\n\nZz\n\nE\n\nQ\n\nX\n\nA\n\nP\n\nP\n\n(¢]\n\nD\n\nWw\n\nT\n\nK\n\nG\n\n[6]\n\nX\n\nK\n\nY\n\nL\n\nG\n\nT\n\nQ\n\nStatic snapshot — controls, timers and live play are not interactive.\n",
+  "solutionPixels": 0,
+  "authoredBluePixels": 76224,
+  "nativeText": [
+    ""
+  ],
+  "nativePalette": [
+    "ffffff"
+  ],
+  "ocr": [
+    {
+      "media": "ppt/media/image-1-1.png",
+      "text": "Authored classroom word search with a deliberately wrapped heading\n\nthat preserves every final word\n\nWords\n\nQ\n\nM\n\nP\n\nL\n\nF\n\nD\n\nY\n\nQ\n\nB\n\nP\n\nP\n\nE\n\nD\n\nY\n\nH\n\nA\n\nCAT\n\nM\n\n|\n\nZz\n\nQ\n\nM\n\nCc\n\nA\n\nQ\n\nDOG\n\nA\n\nuU\n\nZz\n\nE\n\nQ\n\nX\n\nA\n\nP\n\nP\n\n(¢]\n\nD\n\nWw\n\nT\n\nK\n\nG\n\n[6]\n\nX\n\nK\n\nY\n\nL\n\nG\n\nT\n\nQ\n\nStatic snapshot — controls, timers and live play are not interactive.\n",
+      "confidence": 88
+    }
+  ],
+  "slideCount": 1,
+  "artifacts": [
+    "C:/Work/edu-qual-261004-clean-native/.tmp/education-final-20261004-clean-native-browser-results/education-static-exports-r-a716f-itly-reveals-teacher-answer-chromium/default.pptx",
+    "C:/Work/NavSlidesEditor/plans/reports/orchestrate-261001-education-gemini38/clean-native-reviews/current-sparse-pptx-0.png"
+  ],
+  "originalArtifact": "C:/Work/edu-qual-261004-clean-native/.tmp/education-final-20261004-clean-native-browser-results/education-static-exports-r-a716f-itly-reveals-teacher-answer-chromium/default.pptx",
+  "scope": "Actual preserved failed PPTX through current generic sparse decoder, not normal UI post-fix or frozen qualification receipt."
+}

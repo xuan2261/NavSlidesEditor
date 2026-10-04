@@ -1,0 +1,310 @@
+{
+  "sourceArtifact": [
+    {
+      "name": "runtime.js",
+      "sha256": "e3479c72f3d1e107f8cdf4545d6d9ddf50b99482748087c69b764bbbde7cd3fa"
+    },
+    {
+      "name": "runtime.css",
+      "sha256": "7522df1f599e77e922b5d142d49325e6d8cf8d5e69840bcadde5b6a7856acad7"
+    }
+  ],
+  "wrongRootAssertionCorrected": true,
+  "atomic": {
+    "before": {
+      "mode": "wheel",
+      "phase": "picking",
+      "picks": 0,
+      "excludedIds": [],
+      "lastWinner": null,
+      "diceValues": [],
+      "pending": {
+        "winner": {
+          "id": "b",
+          "label": "Bình"
+        },
+        "diceValues": []
+      },
+      "wheelAngle": 1732.5,
+      "runtimeMode": "local",
+      "generation": 1
+    },
+    "after": {
+      "mode": "wheel",
+      "phase": "picking",
+      "picks": 0,
+      "excludedIds": [],
+      "lastWinner": null,
+      "diceValues": [],
+      "pending": {
+        "winner": {
+          "id": "b",
+          "label": "Bình"
+        },
+        "diceValues": []
+      },
+      "wheelAngle": 1732.5,
+      "runtimeMode": "local",
+      "generation": 1
+    },
+    "active": "child",
+    "paused": true
+  },
+  "paused": [
+    {
+      "slide": "parent",
+      "element": "layout-fixed:lesson:inherited",
+      "state": {
+        "mode": "wheel",
+        "phase": "ready",
+        "picks": 0,
+        "excludedIds": [],
+        "lastWinner": null,
+        "diceValues": [],
+        "pending": null,
+        "wheelAngle": 0,
+        "runtimeMode": "local",
+        "generation": 0
+      }
+    },
+    {
+      "slide": "parent",
+      "element": "local",
+      "state": {
+        "mode": "wheel",
+        "phase": "picking",
+        "picks": 0,
+        "excludedIds": [],
+        "lastWinner": null,
+        "diceValues": [],
+        "pending": {
+          "winner": {
+            "id": "b",
+            "label": "Bình"
+          },
+          "diceValues": []
+        },
+        "wheelAngle": 1732.5,
+        "runtimeMode": "local",
+        "generation": 1
+      }
+    },
+    {
+      "slide": "child",
+      "element": "layout-fixed:lesson:inherited",
+      "state": {
+        "mode": "wheel",
+        "phase": "ready",
+        "picks": 0,
+        "excludedIds": [],
+        "lastWinner": null,
+        "diceValues": [],
+        "pending": null,
+        "wheelAngle": 0,
+        "runtimeMode": "local",
+        "generation": 0
+      }
+    },
+    {
+      "slide": "second",
+      "element": "layout-fixed:lesson:inherited",
+      "state": {
+        "mode": "wheel",
+        "phase": "ready",
+        "picks": 0,
+        "excludedIds": [],
+        "lastWinner": null,
+        "diceValues": [],
+        "pending": null,
+        "wheelAngle": 0,
+        "runtimeMode": "local",
+        "generation": 0
+      }
+    }
+  ],
+  "resumed": [
+    {
+      "slide": "parent",
+      "element": "layout-fixed:lesson:inherited",
+      "state": {
+        "mode": "wheel",
+        "phase": "ready",
+        "picks": 0,
+        "excludedIds": [],
+        "lastWinner": null,
+        "diceValues": [],
+        "pending": null,
+        "wheelAngle": 0,
+        "runtimeMode": "local",
+        "generation": 0
+      }
+    },
+    {
+      "slide": "parent",
+      "element": "local",
+      "state": {
+        "mode": "wheel",
+        "phase": "result",
+        "picks": 1,
+        "excludedIds": [
+          "b"
+        ],
+        "lastWinner": {
+          "id": "b",
+          "label": "Bình"
+        },
+        "diceValues": [],
+        "pending": null,
+        "wheelAngle": 1732.5,
+        "runtimeMode": "local",
+        "generation": 1
+      }
+    },
+    {
+      "slide": "child",
+      "element": "layout-fixed:lesson:inherited",
+      "state": {
+        "mode": "wheel",
+        "phase": "result",
+        "picks": 1,
+        "excludedIds": [
+          "c"
+        ],
+        "lastWinner": {
+          "id": "c",
+          "label": "Chi"
+        },
+        "diceValues": [],
+        "pending": null,
+        "wheelAngle": 1687.5,
+        "runtimeMode": "local",
+        "generation": 0
+      }
+    },
+    {
+      "slide": "second",
+      "element": "layout-fixed:lesson:inherited",
+      "state": {
+        "mode": "wheel",
+        "phase": "ready",
+        "picks": 0,
+        "excludedIds": [],
+        "lastWinner": null,
+        "diceValues": [],
+        "pending": null,
+        "wheelAngle": 0,
+        "runtimeMode": "local",
+        "generation": 0
+      }
+    }
+  ],
+  "reset": [
+    {
+      "slide": "parent",
+      "element": "layout-fixed:lesson:inherited",
+      "state": {
+        "mode": "wheel",
+        "phase": "ready",
+        "picks": 0,
+        "excludedIds": [],
+        "lastWinner": null,
+        "diceValues": [],
+        "pending": null,
+        "wheelAngle": 0,
+        "runtimeMode": "local",
+        "generation": 0
+      }
+    },
+    {
+      "slide": "parent",
+      "element": "local",
+      "state": {
+        "mode": "wheel",
+        "phase": "ready",
+        "picks": 0,
+        "excludedIds": [],
+        "lastWinner": null,
+        "diceValues": [],
+        "pending": null,
+        "wheelAngle": 0,
+        "runtimeMode": "local",
+        "generation": 3
+      }
+    },
+    {
+      "slide": "child",
+      "element": "layout-fixed:lesson:inherited",
+      "state": {
+        "mode": "wheel",
+        "phase": "result",
+        "picks": 1,
+        "excludedIds": [
+          "c"
+        ],
+        "lastWinner": {
+          "id": "c",
+          "label": "Chi"
+        },
+        "diceValues": [],
+        "pending": null,
+        "wheelAngle": 1687.5,
+        "runtimeMode": "local",
+        "generation": 0
+      }
+    },
+    {
+      "slide": "second",
+      "element": "layout-fixed:lesson:inherited",
+      "state": {
+        "mode": "wheel",
+        "phase": "ready",
+        "picks": 0,
+        "excludedIds": [],
+        "lastWinner": null,
+        "diceValues": [],
+        "pending": null,
+        "wheelAngle": 0,
+        "runtimeMode": "local",
+        "generation": 0
+      }
+    }
+  ],
+  "space": {
+    "mode": "button",
+    "phase": "result",
+    "picks": 1,
+    "excludedIds": [
+      "b"
+    ],
+    "lastWinner": {
+      "id": "b",
+      "label": "Bình"
+    },
+    "diceValues": [],
+    "pending": null,
+    "wheelAngle": 1732.5,
+    "runtimeMode": "local",
+    "generation": 3
+  },
+  "enter": {
+    "mode": "wheel",
+    "phase": "result",
+    "picks": 1,
+    "excludedIds": [
+      "a"
+    ],
+    "lastWinner": {
+      "id": "a",
+      "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\"
+    },
+    "diceValues": [],
+    "pending": null,
+    "wheelAngle": 1777.5,
+    "runtimeMode": "local",
+    "generation": 4
+  },
+  "outsideNavigation": {
+    "h": 1,
+    "v": 0
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "roles": [
+    {
+      "role": "presenter",
+      "presentationId": "3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540",
+      "notes": [
+        "P04_PRIVATE_PARENT_NOTE",
+        "P04_PRIVATE_CHILD_NOTE",
+        "",
+        ""
+      ],
+      "htmlDelivered": true,
+      "htmlNotes": [
+        "P04_PRIVATE_PARENT_NOTE",
+        "P04_PRIVATE_CHILD_NOTE"
+      ],
+      "publicConfigs": [
+        {
+          "items": 3
+        },
+        {
+          "items": 3
+        },
+        {
+          "items": 3
+        },
+        {
+          "items": 3
+        }
+      ],
+      "generation": 1
+    },
+    {
+      "role": "speaker",
+      "presentationId": "3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540",
+      "notes": [
+        "P04_PRIVATE_PARENT_NOTE",
+        "P04_PRIVATE_CHILD_NOTE",
+        "",
+        ""
+      ],
+      "htmlDelivered": true,
+      "htmlNotes": [
+        "P04_PRIVATE_PARENT_NOTE",
+        "P04_PRIVATE_CHILD_NOTE"
+      ],
+      "publicConfigs": [
+        {
+          "items": 3
+        },
+        {
+          "items": 3
+        },
+        {
+          "items": 3
+        },
+        {
+          "items": 3
+        }
+      ],
+      "generation": 1
+    },
+    {
+      "role": "viewer",
+      "presentationId": "3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540",
+      "notes": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "htmlDelivered": true,
+      "htmlNotes": [],
+      "publicConfigs": [
+        {
+          "items": 3
+        },
+        {
+          "items": 3
+        },
+        {
+          "items": 3
+        },
+        {
+          "items": 3
+        }
+      ],
+      "generation": 1
+    },
+    {
+      "role": "remote",
+      "presentationId": "3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540",
+      "notes": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "htmlDelivered": false,
+      "htmlNotes": [],
+      "publicConfigs": []
+    }
+  ],
+  "navigation": {
+    "slideIndex": 0,
+    "verticalIndex": 1,
+    "fragmentIndex": 0
+  },
+  "replacement": {
+    "presentationId": "e10d985a-1d9f-4102-a561-6527e0efe674",
+    "generation": 2,
+    "publicQuestionKeysAbsent": true
+  }
+}

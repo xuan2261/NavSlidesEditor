@@ -1,0 +1,12 @@
+{
+  "status": 200,
+  "moduleBytes": 21860,
+  "styleBytes": 20059,
+  "hasFlexUtility": false,
+  "hasBodyRule": true,
+  "shell": {
+    "className": "relative flex h-full flex-col overflow-hidden",
+    "display": "block",
+    "direction": "row"
+  }
+}

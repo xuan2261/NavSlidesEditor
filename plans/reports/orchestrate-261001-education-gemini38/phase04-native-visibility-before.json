@@ -1,0 +1,28 @@
+{
+  "surface": "http://127.0.0.1:55173/editor/3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540",
+  "hidden": {
+    "time": 101427.80000001192,
+    "hidden": true,
+    "visibility": "hidden",
+    "paused": false,
+    "winner": "Picking…",
+    "progress": "3 names available • 0 picks"
+  },
+  "hiddenAfterDeadline": {
+    "time": 103240.89999997616,
+    "hidden": true,
+    "visibility": "hidden",
+    "paused": false,
+    "winner": "Chi",
+    "progress": "2 names available • 1 picks"
+  },
+  "returned": {
+    "time": 103256,
+    "hidden": false,
+    "visibility": "visible",
+    "paused": false,
+    "winner": "Chi",
+    "progress": "2 names available • 1 picks"
+  },
+  "expectedRed": true
+}

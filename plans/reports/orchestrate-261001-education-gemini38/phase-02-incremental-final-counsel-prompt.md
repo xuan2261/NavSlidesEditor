@@ -1,0 +1,17 @@
+# Phase02 incremental authoring verification counsel
+
+Cook full accepted plan --auto --advice --tdd. User temporarily excludes Gemini; explicit same-model independent-context local52186/gpt-6.1-sol counsel, not Fable/Astra and not model-family independence. No commit/push/deploy. READ ONLY: no edits, commands, tests, browser, delegation, or build/lint/format.
+
+Worktree C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001. Accepted phase02 and prior field/safety reviews under C:/Work/NavSlidesEditor/plans/reports/orchestrate-261001-education-gemini38 govern. Scope all19 ordinary controls; full game runtime belongs03+.
+
+Seven immediate clamp font handlers overwrote intermediate focused input values. Native Chromium source events: shape intended28 first event2, rendered8, next event88 ->88; code22 event2->8 then82->32; timeline16 event1->8 then86->24. Table errors were failed replacement, not source defect; explicit Control+A/Backspace clears and types Authored header/84 correctly. Line style native dashed option value is10,5; corrected smoke expectation, not product source.
+
+Expected-red new font-authoring-keyboard.test.jsx:7 failed at actual wrong first digit. Reused existing focused-authoring-text-input.jsx (draft on focus/change; reset on blur) for all seven fields, existing canonical clamp handlers unchanged. Helper adds primitive default Input; native misc fields pass primitive=input. Stable key resets draft on selected element switch. Callout Number remains native input, only font uses draft.
+
+GREEN command: npx vitest run client/src/components/properties/font-authoring-keyboard.test.jsx client/src/components/properties/list-authoring-keyboard.test.jsx client/src/components/properties/july-audit-property-regressions.test.jsx client/src/components/properties/media-properties-single-source.test.jsx client/src/components/properties/game-properties.test.jsx. 5 files/43 tests pass. Numeric tests exercise first digit, exact complete persistence, bounded999, blur normalization, empty draft canonical fallback.
+
+Real editor native keyboard first/final/blur: shape2/28/28, code2/22/22, latex2/24/24, markdown2/24/24, table2/20/20, callout3/36/36,timeline1/16/16. Save/reload all19 named controls:0 mismatches. Receipt phase-02-all19-incremental-authoring-green.json. Refreshed generated Present renders outer shape28 with explicit rich mark24 retained, code22,latex24,callout36; remaining current offline proof pending.
+
+VERIFICATION/HARNESS FAILURE: browser.waitForDownload({timeout:90000}) locks tab before export click; tab.click returns 'Tab is busy'. Await wait catch+click in Eval hit180s deadline and reset VM; variables lost, browsers retained. Reported both tool defects to xd://report_issue. Fresh tab real native Chromium CDP Browser.setDownloadBehavior(allow,path,eventsEnabled=true) + actual menu click sees native download state canceled, no app errors. Previous direct browser helper click showed no vendor fetch or downloads. Existing Playwright portable-fields.spec.js uses page.waitForEvent(download), actual menu click, download.saveAs, file network block; prior unchanged export source passes. No source export change in this repair.
+
+Question: go/no-go on numeric fix; bounded safest next harness action to prove exact saved all19 portable output without bypassing normal Download, and any consumer-visible focused-draft defect? Consult source/tests, distinguish UI input problem from automation/download policy. Do not waive required smoke or claim phase02 complete.

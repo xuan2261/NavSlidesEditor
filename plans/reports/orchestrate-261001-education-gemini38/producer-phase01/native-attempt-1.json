@@ -1,0 +1,19 @@
+{
+  "jobId": "producer-phase01",
+  "attempt": 1,
+  "nativeHandle": "proc://bg_2",
+  "dispatchMechanism": "current-session functions.bash async finite process",
+  "requestedRoute": "local8045/gemini-3.8-flash-high",
+  "observedProducerRoute": "local8045/gemini-3.8-flash-high",
+  "state": "settled-rejected",
+  "exitCode": null,
+  "externalTimeoutSeconds": 1860,
+  "nativeMaxTime": "30m",
+  "cwd": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001",
+  "sessionDirectory": "plans/reports/orchestrate-261001-education-gemini38/sessions",
+  "enginePrepared": false,
+  "engineLimitation": "ak orchestrate external process supervision unsupported on Windows. Native harness used; this is coordinator evidence, not engine state.",
+  "dependencySetup": {"nativeHandle": "proc://bg_1", "state": "completed", "command": "npm ci --no-audit --no-fund", "result": "1142 packages installed; postinstall vendor published 1672 files; raw output artifact://25"},
+  "adviceCheckpoint": {"nativeHandle": "agent://CookExecutionCounsel", "result": "conditional GO", "deviations": ["Separate lockfile-preserving npm ci instead of junction: workspace packages must resolve to isolated current source", "No yolo or auto-approve bypass flag; process-local write-mode tool grants", "31-minute external and 30-minute internal deadlines"]}
+  ,"acceptance": {"verdict": "NO-GO", "review": "../phase-01-review.json", "authoritativeCounsel": "../phase-01-strong-counsel.md", "observedChecks": "Vitest 37 passed; final Playwright 6 passed and 3 intended RED; successful final screenshot smoke", "blockers": "Incomplete consumer-path contracts, malformed Jeopardy fixture, copied scoring formula, source-text offline check, bug-pinning description assertion, earlier unexpected failures and failed smoke cleanup omitted", "modelEvidence": "Persisted producer session final message provider/model", "capture": "artifact://26"}
+}

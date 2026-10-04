@@ -1,0 +1,34 @@
+{
+  "candidates": [
+    {
+      "id": "",
+      "offlineId": "__offline_iframe_1",
+      "slide": 2,
+      "canvases": 1,
+      "ready": "complete",
+      "Chart": "function",
+      "QRCode": "undefined",
+      "instance": true
+    },
+    {
+      "id": "",
+      "offlineId": "__offline_iframe_2",
+      "slide": 4,
+      "canvases": 1,
+      "ready": "complete",
+      "Chart": "undefined",
+      "QRCode": "object",
+      "instance": false
+    }
+  ],
+  "originalLastMatch": {
+    "id": "",
+    "offlineId": "__offline_iframe_2",
+    "slide": 4,
+    "canvases": 1,
+    "ready": "complete",
+    "Chart": "undefined",
+    "QRCode": "object",
+    "instance": false
+  }
+}

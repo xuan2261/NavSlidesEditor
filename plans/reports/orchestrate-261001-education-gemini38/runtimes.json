@@ -1,0 +1,60 @@
+{
+  "hostOS": "windows",
+  "baseRevision": "760eae26d9bdcdd22cb42dd5f1e0eab487e18fa3",
+  "originalWorkingChanges": [],
+  "authority": "User requested cook of the accepted 16-phase plan with --auto --advice --tdd and producer model local8045/gemini-3.8-flash-high. No commit/push/deploy.",
+  "candidates": [
+    {
+      "id": "omp",
+      "kind": "cli",
+      "state": "constrained",
+      "binary": "C:/Users/Z10PAD8C_Xuan2261/.bun/bin/omp.exe",
+      "version": "18.4.8",
+      "authenticated": true,
+      "models": ["local8045/gemini-3.8-flash-high"],
+      "observedProvider": "local8045",
+      "observedModel": "gemini-3.8-flash-high",
+      "headless": true,
+      "cwdControl": "argument-only",
+      "approval": "scoped",
+      "toolGating": "granular",
+      "isolation": "worktree",
+      "osSandbox": false,
+      "nativeBudget": "--max-time",
+      "externalTimeout": true,
+      "capture": ["json-events", "exit-status", "session"],
+      "resume": "advertised; unverified until used",
+      "worktree": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001",
+      "evidence": ["omp --help", "omp models local8045 --json --no-extensions", "bounded no-tools inference returned LOCAL8045_GEMINI38_READY with exact provider/model", "git status --porcelain=v1 empty before setup", "ak-worktree create success"],
+      "notes": ["ak orchestrate subprocess supervision unsupported on Windows; direct native harness finite async process used instead", "ak probe did not recognize product identity; manual live help/catalog/inference qualification succeeded", "No --auto-approve or yolo flag; write approval plus process-local explicitly authorized producer tools", "No producer nested task agents; coordinator owns kongming advice", "Worktree isolation is not filesystem/network containment", "Separate npm ci avoids workspace symlinks resolving to the main checkout", "Capability qualification proceeds from bounded Phase01 outputs; coordinator retains architecture/security judgment"]
+    },
+    {
+      "id": "internal-kongming",
+      "kind": "internal",
+      "state": "constrained",
+      "agent": "kongming",
+      "model": null,
+      "modelFamily": null,
+      "capture": ["native-handle", "final-result"],
+      "nativeHandle": "agent://CookExecutionCounsel",
+      "evidence": ["current harness live task agent list", "CookExecutionCounsel completed"],
+      "notes": ["Actual original advisory provider/model not exposed by task receipt; do not claim Fable/Astra identity or model-family independence", "Initial conditional GO covered isolated baseline only", "Later BaselineFailureCounsel self-reported local8045/gemini-3.8-flash-medium, which is not strongest available; its conditional acceptance was rejected and replaced by explicit strong CLI counsel"]
+    },
+    {
+      "id": "cli-kongming-strong",
+      "kind": "cli",
+      "state": "verified-read-only",
+      "binary": "C:/Users/Z10PAD8C_Xuan2261/.bun/bin/omp.exe",
+      "observedProvider": "local52186",
+      "observedModel": "gpt-6.1-sol",
+      "thinking": "high",
+      "role": "Installed kongming instructions attached to explicit CLI model; advisory only",
+      "tools": ["read", "glob", "grep"],
+      "nativeHandle": "proc://bg_6",
+      "evidence": ["Fresh omp model catalog and help", "Persisted counsel session final metadata exact provider/model", "phase-01-strong-counsel.md"],
+      "notes": ["NO-GO for Phase01 acceptance; complete baseline repair required", "Separate observed GPT model family from pinned Gemini implementation", "Not Fable/Astra; strongest verified session-model counsel on this omp host"]
+    }
+  ],
+  "journalAuto": true,
+  "journalReason": "Exact skill preference pipeline exited 5 instead of false; default true applies."
+}

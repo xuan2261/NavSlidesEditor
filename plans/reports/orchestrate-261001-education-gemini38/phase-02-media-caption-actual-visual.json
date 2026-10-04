@@ -1,0 +1,18 @@
+{
+  "open": true,
+  "text": "Video transcript authored through the inspector.",
+  "foreground": "rgb(248, 250, 252)",
+  "background": "rgb(20, 20, 19)",
+  "contrast": 17.61851146210465,
+  "reachable": true,
+  "wrapper": {
+    "x": 45,
+    "y": 50,
+    "width": 520,
+    "height": 220
+  },
+  "player": {
+    "width": 520,
+    "height": 220
+  }
+}

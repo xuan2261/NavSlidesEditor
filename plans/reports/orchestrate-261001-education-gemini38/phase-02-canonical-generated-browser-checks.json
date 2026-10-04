@@ -1,0 +1,6 @@
+{
+  "command": "npx playwright test tests/e2e/education/generated-code-image.spec.js tests/e2e/education/printed-markdown.spec.js --config=.playwright/phase02-manual.config.cjs --project=chromium --workers=1 --retries=0 --reporter=line",
+  "exitCode": 0,
+  "stdout": "\nRunning 2 tests using 1 worker\n\n[1/2] [chromium] › tests\\e2e\\education\\generated-code-image.spec.js:53:5 › generated Present and print preserve source, walkthrough and accessible cropped citation\n[2/2] [chromium] › tests\\e2e\\education\\printed-markdown.spec.js:32:5 › PDF print preserves Markdown code literals, blank lines and paragraph structure\n  2 passed (11.9s)\n",
+  "stderr": ""
+}

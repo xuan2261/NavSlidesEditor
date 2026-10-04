@@ -1,0 +1,12 @@
+tools:
+  approvalMode: write
+  approval:
+    bash: allow
+    eval: allow
+    lsp: allow
+    browser: allow
+    task: deny
+    web_search: deny
+    ask: deny
+startup:
+  quiet: true

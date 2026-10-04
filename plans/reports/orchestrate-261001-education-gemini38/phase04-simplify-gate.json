@@ -1,0 +1,73 @@
+{
+  "scope": "Accepted phase04 paths only; unrelated user changes excluded",
+  "threshold": {
+    "locDelta": 400,
+    "fileCount": 8,
+    "singleFileLoc": 200
+  },
+  "locDelta": 1191,
+  "fileCount": 12,
+  "maxAdded": 75,
+  "paths": [
+    {
+      "added": 6,
+      "removed": 2,
+      "path": "client/src/components/PropertiesPanel.jsx"
+    },
+    {
+      "added": 3,
+      "removed": 12,
+      "path": "client/src/utils/offlineExport.js"
+    },
+    {
+      "added": 2,
+      "removed": 0,
+      "path": "scripts/copy-vendor.js"
+    },
+    {
+      "added": 12,
+      "removed": 7,
+      "path": "server/routes/presentations-extras.js"
+    },
+    {
+      "added": 44,
+      "removed": 174,
+      "path": "server/services/presenter-game-bootstrap.js"
+    },
+    {
+      "added": 31,
+      "removed": 223,
+      "path": "server/services/socket-handler.js"
+    },
+    {
+      "added": 75,
+      "removed": 162,
+      "path": "shared/src/element-renderers.js"
+    },
+    {
+      "added": 45,
+      "removed": 36,
+      "path": "shared/src/htmlGenerator.js"
+    },
+    {
+      "added": 12,
+      "removed": 0,
+      "path": "shared/src/index.js"
+    },
+    {
+      "added": 5,
+      "removed": 322,
+      "path": "shared/src/live-presenter-game-runtime.js"
+    },
+    {
+      "added": 6,
+      "removed": 3,
+      "path": "shared/src/live-presenter-runtime.js"
+    },
+    {
+      "added": 8,
+      "removed": 1,
+      "path": "shared/src/reveal-runtime-assets.js"
+    }
+  ]
+}

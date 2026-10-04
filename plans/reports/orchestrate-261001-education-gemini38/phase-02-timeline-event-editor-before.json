@@ -1,0 +1,330 @@
+{
+  "selected": {
+    "text": "Authored event",
+    "y": "-48",
+    "bounds": {
+      "x": 154.97206115722656,
+      "y": 527.0109252929688,
+      "width": 16.773345947265625,
+      "height": 3
+    },
+    "ancestors": [
+      {
+        "tag": "svg",
+        "overflow": "visible",
+        "x": 100.15235137939453,
+        "y": 535.2734375,
+        "w": 67.84374237060547,
+        "h": 28.703125
+      },
+      {
+        "tag": "DIV",
+        "overflow": "visible",
+        "x": 100.15235137939453,
+        "y": 535.2734375,
+        "w": 67.84374237060547,
+        "h": 28.703125
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 100.15235137939453,
+        "y": 535.2734375,
+        "w": 67.84374237060547,
+        "h": 28.703125
+      },
+      {
+        "tag": "DIV",
+        "overflow": "visible",
+        "x": 16,
+        "y": 528.75,
+        "w": 167,
+        "h": 93.9375
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 16,
+        "y": 528.75,
+        "w": 167,
+        "h": 93.9375
+      },
+      {
+        "tag": "BUTTON",
+        "overflow": "visible",
+        "x": 10,
+        "y": 522.75,
+        "w": 179,
+        "h": 105.9375
+      },
+      {
+        "tag": "LI",
+        "overflow": "visible",
+        "x": 8,
+        "y": 520.75,
+        "w": 183,
+        "h": 109.9375
+      },
+      {
+        "tag": "UL",
+        "overflow": "visible",
+        "x": 8,
+        "y": 49,
+        "w": 183,
+        "h": 581.6875
+      },
+      {
+        "tag": "NAV",
+        "overflow": "auto",
+        "x": 0,
+        "y": 174,
+        "w": 199,
+        "h": 465
+      },
+      {
+        "tag": "DIV",
+        "overflow": "visible",
+        "x": 0,
+        "y": 129,
+        "w": 200,
+        "h": 615
+      },
+      {
+        "tag": "DIV",
+        "overflow": "visible",
+        "x": 0,
+        "y": 129,
+        "w": 200,
+        "h": 615
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 129,
+        "w": 1365,
+        "h": 615
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 49,
+        "w": 1365,
+        "h": 695
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 744
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 744
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 768
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 768
+      },
+      {
+        "tag": "BODY",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 768
+      },
+      {
+        "tag": "HTML",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 768
+      }
+    ]
+  },
+  "unselected": {
+    "text": "Authored event",
+    "y": "-48",
+    "bounds": {
+      "x": 154.97206115722656,
+      "y": 527.0109252929688,
+      "width": 16.773345947265625,
+      "height": 3
+    },
+    "ancestors": [
+      {
+        "tag": "svg",
+        "overflow": "visible",
+        "x": 100.15235137939453,
+        "y": 535.2734375,
+        "w": 67.84374237060547,
+        "h": 28.703125
+      },
+      {
+        "tag": "DIV",
+        "overflow": "visible",
+        "x": 100.15235137939453,
+        "y": 535.2734375,
+        "w": 67.84374237060547,
+        "h": 28.703125
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 100.15235137939453,
+        "y": 535.2734375,
+        "w": 67.84374237060547,
+        "h": 28.703125
+      },
+      {
+        "tag": "DIV",
+        "overflow": "visible",
+        "x": 16,
+        "y": 528.75,
+        "w": 167,
+        "h": 93.9375
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 16,
+        "y": 528.75,
+        "w": 167,
+        "h": 93.9375
+      },
+      {
+        "tag": "BUTTON",
+        "overflow": "visible",
+        "x": 10,
+        "y": 522.75,
+        "w": 179,
+        "h": 105.9375
+      },
+      {
+        "tag": "LI",
+        "overflow": "visible",
+        "x": 8,
+        "y": 520.75,
+        "w": 183,
+        "h": 109.9375
+      },
+      {
+        "tag": "UL",
+        "overflow": "visible",
+        "x": 8,
+        "y": 49,
+        "w": 183,
+        "h": 581.6875
+      },
+      {
+        "tag": "NAV",
+        "overflow": "auto",
+        "x": 0,
+        "y": 174,
+        "w": 199,
+        "h": 465
+      },
+      {
+        "tag": "DIV",
+        "overflow": "visible",
+        "x": 0,
+        "y": 129,
+        "w": 200,
+        "h": 615
+      },
+      {
+        "tag": "DIV",
+        "overflow": "visible",
+        "x": 0,
+        "y": 129,
+        "w": 200,
+        "h": 615
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 129,
+        "w": 1365,
+        "h": 615
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 49,
+        "w": 1365,
+        "h": 695
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 744
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 744
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 768
+      },
+      {
+        "tag": "DIV",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 768
+      },
+      {
+        "tag": "BODY",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 768
+      },
+      {
+        "tag": "HTML",
+        "overflow": "hidden",
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 768
+      }
+    ]
+  }
+}

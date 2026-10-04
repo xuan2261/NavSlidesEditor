@@ -1,0 +1,90 @@
+{
+  "confidence": 0.99,
+  "explanation": "NO-GO for Phase01 acceptance: the captured 37 Vitest passes, final 6 Playwright passes/3 intended failures, and successful browser observations are real, but the delivered checks do not establish several explicitly required consumer contracts; no checks were rerun during this review. Smallest acceptance repair list: correct and complete the fixtures; replace the copied scoring formula, bug-pinning assertion, source-string check and presence-only checks with the specified behavioral regressions; exercise editor authoring/save/reload, normal Present popup, alignment and offline interaction through the existing isolated harness; clean up the failed smoke fixture and reconcile all attempted runs, unexpected failures and remaining limits in the …
+  "findings": [
+    {
+      "body": "This test exercises only a function declared inside the test, so it passes independently of the actual Jeopardy renderer and cannot detect double application or a negativePoints regression. The real consumer, InteractiveJeopardyBoard, updates scores in both handleAnswer and its lastEvent effect, while useGameSocket maps game-answer-result into that effect; the local update also clamps the resulting score at zero, which this formula does not exercise. Phase01's high-severity requirement explicitly calls for a local action plus incoming-event sequence. Replace the copied formula with a test of the real consumer and observable scores for both negativePoints settings, and keep the R10 sequence classification conditional until that path is demonstr…
+      "confidence": 1,
+      "file_path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/tests/e2e/education/presentation-baseline.spec.js",
+      "line_end": 85,
+      "line_start": 77,
+      "priority": 1,
+      "title": "Exercise the real Jeopardy score consumer instead of a copied formula"
+    },
+    {
+      "body": "The fixture puts questions in element.questions and names the point value pts, but the existing Jeopardy buildQuestionLookup consumer reads each category.questions and matches question.points. Both fixture categories therefore produce null questions for every cell, so the delivered deck cannot exercise the authored history/science questions in the real board. Move each question into its category using the existing points field before using this fixture as behavioral baseline evidence; otherwise a future renderer test fails because of malformed input rather than the intended feature gap.",
+      "confidence": 1,
+      "file_path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/tests/e2e/education/fixtures/game-configs.js",
+      "line_end": 78,
+      "line_start": 69,
+      "priority": 2,
+      "title": "Use the Jeopardy question schema consumed by the existing board"
+    },
+    {
+      "body": "The permanent GREEN assertion requires the confirmed metadata-loss bug to remain present. Adding the missing image longDescription ownership in Phase02 would make this test fail, while continuing to discard every selected image's update passes. Phase01 instead requires a failing-before regression in which the description is applied to both images and survives reload. Record the current empty-update result in baseline evidence, but replace this bug-pinning assertion with the desired two-image authoring/persistence contract and classify its current failure as intentional RED.",
+      "confidence": 1,
+      "file_path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/tests/e2e/education/presentation-baseline.spec.js",
+      "line_end": 60,
+      "line_start": 55,
+      "priority": 1,
+      "title": "Assert two-image description persistence rather than preserving its loss"
+    },
+    {
+      "body": "The offline test only downloads HTML and searches its source for a literal name. A comment or an unexecuted call would satisfy it while the exported game remained unusable, and a working bundled runtime could omit that exact spelling. It never opens the exported artifact or blocks the network, so it does not cover Phase01's explicit 'network blocked, playable interaction' contract. Replace the source assertion with loading the exported artifact in an offline/network-blocked browser context and performing an interaction with a visible result; capture the present behavioral failure as the offline RED.",
+      "confidence": 1,
+      "file_path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/tests/e2e/education/presentation-baseline.spec.js",
+      "line_end": 131,
+      "line_start": 124,
+      "priority": 1,
+      "title": "Verify offline gameplay instead of matching an HTML source string"
+    },
+    {
+      "body": "The two Present scenarios navigate directly to the generated endpoint and stop when a button is visible. Neither uses the editor's normal Present popup, clicks Pick to observe a winner, nor answers the first Hot Potato question and advances to the second. Adding inert buttons would turn both tests GREEN without implementing the required behaviors. The vertical scenario likewise only checks that a nested section is attached; it never reaches or checks the nested game. Use the normal Present control and actual popup, assert the picker outcome and two-question feedback/progression, and navigate to the identified vertical child before asserting its game surface. These are the acceptance behaviors specified in Phase01, not additional runtime implem…
+      "confidence": 1,
+      "file_path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/tests/e2e/education/presentation-baseline.spec.js",
+      "line_end": 122,
+      "line_start": 114,
+      "priority": 1,
+      "title": "Test popup interactions and progression rather than button presence"
+    },
+    {
+      "body": "The protection cases load API-seeded content once: Shape checks text and font-size but never textColor, while TipTap checks only the presence of strong text and never font family, font size or line height. Neither edits the relevant control nor saves and reloads. The alignment case separately calls buildSelectionUpdates without operating Format controls or observing canvas coordinates. The persisted smoke script performs the same API-seed-and-read shortcut, so it does not fill these gaps. Phase01 explicitly requires Insert → properties → Save → Reload and actual shape/style/multi-align observations; regressions in the authoring handlers or persistence would pass all these checks. Reuse EditorPage and the existing property/ribbon helpers to exe…
+      "confidence": 1,
+      "file_path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/tests/e2e/education/presentation-baseline.spec.js",
+      "line_end": 48,
+      "line_start": 40,
+      "priority": 2,
+      "title": "Protect authoring and persistence through the actual editor controls"
+    },
+    {
+      "body": "The assembled fixture contains only three distinct game types plus another Name Picker in the vertical child; none of the four fixture files provides actions, an HTML quiz or simulation content. Phase01 implementation step 1 explicitly requires ten game configurations and those additional content families. Consequently the report's full-fixture/full-scope completion claim omits mandated baseline consumers, rather than merely deferring production implementation to later phases. Complete the modular fixture using the existing configurations and add the missing action/HTML quiz/simulation content before accepting the phase.",
+      "confidence": 1,
+      "file_path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/tests/e2e/education/fixtures/interactive-deck.js",
+      "line_end": 78,
+      "line_start": 70,
+      "priority": 2,
+      "title": "Complete the explicitly required baseline fixture content"
+    },
+    {
+      "body": "The successful smoke deleted only deck 89178c61-e8ca-4135-a87f-df4976ed0660, but the earlier smoke failed after creating 695bdc52-efdc-4ef2-b8fe-afcec85991f8 and before reaching cleanup. That earlier deck is still present in .playwright/runs/smoke-1790846796479/data/presentations.json, confirmed by read-only inspection. The initial script placed cleanup only after the journey, and the replacement script only deletes its newly created ID, so the later successful deletion does not satisfy the phase's fixture-cleanup criterion for the failed attempt. Have the producer clean up only that known failed-run fixture, use the existing managed lifecycle or guaranteed teardown for subsequent smoke work, and record cleanup for both attempts; the retained …
+      "confidence": 1,
+      "file_path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/plans/261001-0639-interactive-html-education-deep-tdd/reports/baseline-evidence.md",
+      "line_end": 129,
+      "line_start": 128,
+      "priority": 2,
+      "title": "Account for and clean up the failed smoke fixture"
+    },
+    {
+      "body": "The completion declaration and fully checked acceptance list overstate what was established. Captured verification records earlier unexpected Shape and TipTap selector timeouts and a failed smoke attempt, while the persisted final delivery says 'Unexpected failures: 0'; the later 6-pass/3-RED result does not erase those attempts or the required advice checkpoint. The smoke implementation also uses direct page.goto calls, not the claimed normal Present popup, and never performs Insert/properties/save/reload or offline export. Preserve the valid final outputs and screenshots, but distinguish each attempted run, its failure and correction, describe the actual direct-endpoint smoke path, and mark unexercised acceptance criteria incomplete instead …
+      "confidence": 0.99,
+      "file_path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/plans/261001-0639-interactive-html-education-deep-tdd/reports/baseline-evidence.md",
+      "line_end": 7,
+      "line_start": 5,
+      "priority": 1,
+      "title": "Qualify the completion claim with the actual attempts and missing gates"
+    }
+  ],
+  "overall_correctness": "incorrect"
+}
+
+[Some lines truncated to 768 chars]

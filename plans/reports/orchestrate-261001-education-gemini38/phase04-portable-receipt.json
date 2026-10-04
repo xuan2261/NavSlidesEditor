@@ -1,0 +1,101 @@
+{
+  "command": "File > Export Offline HTML",
+  "bytes": 3574040,
+  "url": "file:",
+  "parentIndependent": true,
+  "version": "6.0.2",
+  "label": "Name Picker\nLocal classroom — one device\nAn & Tiếng Việt </ScRi\nBình\nChi\nAn & Tiếng Việt </ScRi\nBình\nChi\nAn & Tiếng Việt </ScRi\nBình\n▼\nChoose a name\n3 names available • 0 picks\nwheel\ndice\nbutton\nSpin\nReset",
+  "config": {
+    "pickerMode": "wheel",
+    "items": [
+      {
+        "id": "a",
+        "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+        "weight": 1
+      },
+      {
+        "id": "b",
+        "label": "Bình",
+        "weight": 3
+      },
+      {
+        "id": "c",
+        "label": "Chi",
+        "weight": 2
+      }
+    ],
+    "wheelSegments": 8,
+    "wheelColors": [
+      "#FF5722",
+      "#2196F3",
+      "#4CAF50",
+      "#FFC107",
+      "#9C27B0",
+      "#00BCD4",
+      "#FF9800",
+      "#795548"
+    ],
+    "diceCount": 2,
+    "weighted": true,
+    "excludeAfterPick": true,
+    "animationDuration": 700,
+    "showConfetti": true
+  },
+  "states": [
+    {
+      "mode": "wheel",
+      "phase": "result",
+      "picks": 1,
+      "excludedIds": [
+        "c"
+      ],
+      "lastWinner": {
+        "id": "c",
+        "label": "Chi"
+      },
+      "diceValues": [],
+      "pending": null,
+      "wheelAngle": 1687.5,
+      "runtimeMode": "local",
+      "generation": 1
+    },
+    {
+      "mode": "dice",
+      "phase": "result",
+      "picks": 1,
+      "excludedIds": [
+        "c"
+      ],
+      "lastWinner": {
+        "id": "c",
+        "label": "Chi"
+      },
+      "diceValues": [
+        6,
+        3
+      ],
+      "pending": null,
+      "wheelAngle": 1687.5,
+      "runtimeMode": "local",
+      "generation": 3
+    },
+    {
+      "mode": "button",
+      "phase": "result",
+      "picks": 1,
+      "excludedIds": [
+        "b"
+      ],
+      "lastWinner": {
+        "id": "b",
+        "label": "Bình"
+      },
+      "diceValues": [],
+      "pending": null,
+      "wheelAngle": 1732.5,
+      "runtimeMode": "local",
+      "generation": 5
+    }
+  ],
+  "networkAttempts": []
+}

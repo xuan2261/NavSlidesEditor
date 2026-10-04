@@ -1,0 +1,9 @@
+{
+  "hasFlexUtility": true,
+  "shell": {
+    "display": "flex",
+    "direction": "column"
+  },
+  "timelineY": "150px",
+  "eventOffset": "-48"
+}

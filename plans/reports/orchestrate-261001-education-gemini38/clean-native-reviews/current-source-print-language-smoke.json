@@ -1,0 +1,70 @@
+{
+  "observed": {
+    "ready": true,
+    "blocks": [
+      {
+        "text": "  const template = \"<strong>literal</strong>\";\n\n  const closing = \"</script> &quot;\";\n  console.log(template);\n",
+        "keyword": [
+          "rgb(249, 38, 114)",
+          "rgb(249, 38, 114)",
+          "rgb(249, 38, 114)",
+          "rgb(249, 38, 114)",
+          "rgb(249, 38, 114)"
+        ],
+        "identifier": [
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)"
+        ]
+      },
+      {
+        "text": "  const template = \"<strong>literal</strong>\";\n\n  const closing = \"</script> &quot;\";\n  console.log(template);\n",
+        "keyword": [
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)"
+        ],
+        "identifier": [
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)"
+        ]
+      },
+      {
+        "text": "const safe = 1;",
+        "keyword": [
+          "rgb(249, 38, 114)",
+          "rgb(249, 38, 114)",
+          "rgb(249, 38, 114)",
+          "rgb(249, 38, 114)",
+          "rgb(249, 38, 114)"
+        ],
+        "identifier": [
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(221, 221, 221)",
+          "rgb(249, 38, 114)"
+        ]
+      }
+    ],
+    "compromised": false,
+    "activeElements": 0
+  },
+  "scope": "Current real generator and vendor, not UI export or frozen-subject receipt; prior harness selector/assert API errors retained separately"
+}

@@ -1,0 +1,24 @@
+{
+  "viewport": {
+    "width": 520,
+    "height": 220
+  },
+  "bitmap": {
+    "width": 500,
+    "height": 500
+  },
+  "inline": {
+    "width": "500px",
+    "height": "500px"
+  },
+  "bounds": {
+    "x": 10,
+    "y": -140,
+    "width": 500,
+    "height": 500
+  },
+  "visible": {
+    "width": 500,
+    "height": 220
+  }
+}

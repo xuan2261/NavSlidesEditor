@@ -1,0 +1,199 @@
+{
+  "scope": "Phase03 authoring and canonical consumers only",
+  "worktree": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001",
+  "command": "npx vitest run shared/tests/education-authoring-schema.test.js shared/tests/education-persistence-boundaries.test.js shared/tests/education-game-domain.test.js shared/tests/weighted-picker.test.js shared/tests/answer-evaluator.test.js shared/tests/education-static-game-snapshot.test.js client/src/components/properties/game-authoring-boundaries.test.jsx client/src/components/properties/game-authoring-settings.test.jsx client/src/components/properties/game-authoring-identity.test.jsx client/src/components/properties/game-question-fields.test.jsx client/src/components/properties/game-question-complex-fields.test.jsx client/src/components/properties/game-properties-question-editor.test.jsx client/src/components/properties/game-properties.test.jsx client/src/utils/editor-presentation-migration.test.js client/src/utils/editor-presentation-draft-migration.test.js server/routes/presentations-game-bootstrap.test.js server/middleware/schemas.test.js server/services/game-canonical-question-socket.test.js --maxWorkers=1",
+  "result": {
+    "files": 18,
+    "tests": 173,
+    "passed": true,
+    "durationSeconds": 31.92
+  },
+  "productionModuleSizeCheck": {
+    "paths": [
+      {
+        "path": "shared/src/education/presentation-game-normalization.js",
+        "lines": 55
+      },
+      {
+        "path": "shared/src/education/game-schema.js",
+        "lines": 39
+      },
+      {
+        "path": "shared/src/education/game-config-projection.js",
+        "lines": 58
+      },
+      {
+        "path": "shared/src/education/normalize-game-config.js",
+        "lines": 50
+      },
+      {
+        "path": "shared/src/education/static-game-content.js",
+        "lines": 34
+      },
+      {
+        "path": "shared/src/education/question-answer-key.js",
+        "lines": 52
+      },
+      {
+        "path": "shared/src/education/game-validation-utils.js",
+        "lines": 55
+      },
+      {
+        "path": "shared/src/education/game-legacy-migration.js",
+        "lines": 115
+      },
+      {
+        "path": "shared/src/education/question-answer-payload.js",
+        "lines": 87
+      },
+      {
+        "path": "shared/src/education/question-shape.js",
+        "lines": 94
+      },
+      {
+        "path": "shared/src/education/question-factory.js",
+        "lines": 41
+      },
+      {
+        "path": "shared/src/education/question-schema.js",
+        "lines": 60
+      },
+      {
+        "path": "shared/src/education/game-content-validation.js",
+        "lines": 70
+      },
+      {
+        "path": "shared/src/education/game-word-validation.js",
+        "lines": 60
+      },
+      {
+        "path": "shared/src/education/question-public-projection.js",
+        "lines": 43
+      },
+      {
+        "path": "shared/src/education/answer-evaluator.js",
+        "lines": 45
+      },
+      {
+        "path": "shared/src/education/game-question-validation.js",
+        "lines": 77
+      },
+      {
+        "path": "shared/src/education/game-field-rules.js",
+        "lines": 35
+      },
+      {
+        "path": "shared/src/education/weighted-picker.js",
+        "lines": 41
+      },
+      {
+        "path": "shared/src/education/game-defaults.js",
+        "lines": 56
+      },
+      {
+        "path": "shared/src/education/game-registry.js",
+        "lines": 38
+      },
+      {
+        "path": "client/src/components/properties/game-authoring-fields.jsx",
+        "lines": 71
+      },
+      {
+        "path": "client/src/components/properties/game-authoring-jeopardy.jsx",
+        "lines": 36
+      },
+      {
+        "path": "client/src/components/properties/game-display-fields.jsx",
+        "lines": 16
+      },
+      {
+        "path": "client/src/components/properties/game-authoring-responses.jsx",
+        "lines": 32
+      },
+      {
+        "path": "client/src/components/properties/game-question-controls.jsx",
+        "lines": 81
+      },
+      {
+        "path": "client/src/components/properties/game-question-option-list.jsx",
+        "lines": 25
+      },
+      {
+        "path": "client/src/components/properties/game-authoring-team-rounds.jsx",
+        "lines": 43
+      },
+      {
+        "path": "client/src/components/properties/game-question-fields.jsx",
+        "lines": 67
+      },
+      {
+        "path": "client/src/components/properties/game-authoring-rounds.jsx",
+        "lines": 22
+      },
+      {
+        "path": "client/src/components/properties/game-question-hotspot-fields.jsx",
+        "lines": 41
+      },
+      {
+        "path": "client/src/components/properties/game-question-matching-fields.jsx",
+        "lines": 29
+      },
+      {
+        "path": "client/src/components/properties/game-question-answer-fields.jsx",
+        "lines": 63
+      },
+      {
+        "path": "client/src/components/properties/game-properties.jsx",
+        "lines": 82
+      },
+      {
+        "path": "client/src/components/properties/game-authoring-media.jsx",
+        "lines": 19
+      },
+      {
+        "path": "client/src/components/properties/game-authoring-picker.jsx",
+        "lines": 19
+      },
+      {
+        "path": "client/src/components/properties/game-properties-question-editor.jsx",
+        "lines": 51
+      }
+    ],
+    "overLimit": []
+  },
+  "limits": [
+    "No standalone gameplay or release qualification",
+    "Browser/save-controller receipts are separate prior observations"
+  ],
+  "fractionalTiming": {
+    "command": "node .playwright/phase03-fractional-live-smoke.cjs",
+    "result": {
+      "bootstrap": true,
+      "publicTimeLimit": 5.5,
+      "expiry": "question-expired",
+      "correct": true,
+      "points": 15,
+      "elapsedMs": 3000
+    }
+  },
+  "advisoryRoute": {
+    "binaryVersion": "18.4.9",
+    "provider": "local52186",
+    "model": "gpt-6.1-sol",
+    "thinking": "max",
+    "sameModel": true,
+    "readOnly": true,
+    "nativeJobs": [
+      {
+        "name": "Phase03CompletionQualification",
+        "handle": "bg_123",
+        "sessions": "phase03-completion-qualification-sessions"
+      },
+      {
+        "name": "Phase04BoundaryDecision",
+        "handle": "bg_124",
+        "sessions": "phase04-boundary-decision-sessions"
+      }
+    ]
+  }
+}

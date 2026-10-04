@@ -1,0 +1,11 @@
+# Goal
+Continue the authorized NavSlides education cook --auto --advice --tdd. Gemini 3.8 is temporarily excluded. Remain on explicit local52186/gpt-6.1-sol; do not switch model or delegate. Worktree: C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001. No commit/push/deploy.
+
+# Role and constraints
+Read plans/reports/orchestrate-261001-education-gemini38/bundled-agent-profiles/scout.md in C:/Work/NavSlidesEditor first and act as that read-only scout. Tools are read/glob/grep only. Do not edit/write/create reports, execute commands, or run build/lint/tests/formatters. Read the worktree accepted phase-04-standalone-runtime.md and execution contracts. Phase03 is finishing; do not declare Phase04 implemented or accepted.
+
+# Slice
+Map every producer of presentation-data HTML and socket HTML fanout against the locked educationView local/host/audience privacy contract. Start with shared/src/htmlGenerator.js and element-renderers.js; server/routes/presentations-extras.js; server/index.js renderShareView; server/services/socket-handler.js; server/routes/presentations-pptx.js, github.js and sync.js; client/src/hooks/use-export-actions.js; client/src/utils/export-project.js, generateHTML.js and offlineExport.js; AnimationPreviewModal.jsx and transition-preview-helpers.js. Discover additional direct/cross-workspace callers from imports/calls. Read canonical shared education game schema/question-public-projection and relevant current tests. Existing normal local Share/file is intentionally inspectable; live audience must never receive private keys or feedback, including fallback fanout and future slides. Server authority selects view; a query role alone is not authorization.
+
+# Deliverable
+Return an exhaustive compact caller table with actual path:line references, current arguments/view ownership, trust source, required cutover at that caller, and plausible consumer-visible privacy regressions. Identify the smallest explicit public-config projection/validation contract using existing shared schema patterns. Do not choose an alternative architecture, invent authentication, weaken CSP, or duplicate the question allowlist. State uncertainty and distinguish observations from inference. Output the complete report inline; no execution or edits.

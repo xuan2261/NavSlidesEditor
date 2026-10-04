@@ -1,0 +1,73 @@
+[
+  {
+    "label": "saved-before",
+    "sha256": "1b142d5c1ac8df2f817543d6f0819ba144358cfe0997276095dc0dadce847126",
+    "ui": {
+      "hidden": false,
+      "viewport": {
+        "width": 929,
+        "height": 869
+      },
+      "focus": null,
+      "inspector": 1,
+      "tryRoots": 0
+    }
+  },
+  {
+    "label": "selection-blocked-by-inspector-overlay",
+    "error": "tab.click([data-element-id=\"local\"]) blocked: covered by <button.absolute.inset-0>"
+  },
+  {
+    "label": "opened",
+    "state": {
+      "focus": "Close Try game",
+      "inspector": 1,
+      "tryRoots": 1,
+      "config": {
+        "pickerMode": "wheel",
+        "items": [
+          {
+            "id": "a",
+            "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+            "weight": 1
+          },
+          {
+            "id": "b",
+            "label": "Bình",
+            "weight": 3
+          },
+          {
+            "id": "c",
+            "label": "Chi",
+            "weight": 2
+          }
+        ],
+        "wheelSegments": 8,
+        "wheelColors": [
+          "#FF5722",
+          "#2196F3",
+          "#4CAF50",
+          "#FFC107",
+          "#9C27B0",
+          "#00BCD4",
+          "#FF9800",
+          "#795548"
+        ],
+        "diceCount": 2,
+        "weighted": true,
+        "excludeAfterPick": true,
+        "animationDuration": 700,
+        "showConfetti": true
+      }
+    }
+  },
+  {
+    "label": "focused-escape",
+    "state": {
+      "focus": null,
+      "inspector": 0,
+      "tryRoots": 0,
+      "tryButton": []
+    }
+  }
+]

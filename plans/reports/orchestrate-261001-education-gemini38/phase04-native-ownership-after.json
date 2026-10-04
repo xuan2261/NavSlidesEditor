@@ -1,0 +1,504 @@
+[
+  {
+    "label": "post-repair-HMR-recovery",
+    "note": "ModalShell refresh reopened draft recovery; choosing saved remote deck, no manual navigation/reload.",
+    "sha256": "1b142d5c1ac8df2f817543d6f0819ba144358cfe0997276095dc0dadce847126"
+  },
+  {
+    "label": "ready",
+    "state": {
+      "time": 1056008,
+      "hidden": false,
+      "focus": "Reset",
+      "inspector": 1,
+      "roots": 1,
+      "tuple": {
+        "effectiveSlideId": "parent",
+        "elementId": "local"
+      },
+      "winner": "Choose a name",
+      "progress": "3 names available • 0 picks",
+      "config": {
+        "pickerMode": "wheel",
+        "items": [
+          {
+            "id": "a",
+            "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+            "weight": 1
+          },
+          {
+            "id": "b",
+            "label": "Bình",
+            "weight": 3
+          },
+          {
+            "id": "c",
+            "label": "Chi",
+            "weight": 2
+          }
+        ],
+        "wheelSegments": 8,
+        "wheelColors": [
+          "#FF5722",
+          "#2196F3",
+          "#4CAF50",
+          "#FFC107",
+          "#9C27B0",
+          "#00BCD4",
+          "#FF9800",
+          "#795548"
+        ],
+        "diceCount": 2,
+        "weighted": true,
+        "excludeAfterPick": true,
+        "animationDuration": 700,
+        "showConfetti": true
+      }
+    }
+  },
+  {
+    "label": "pending-before-reset",
+    "state": {
+      "time": 1056039.800000012,
+      "hidden": false,
+      "focus": "\n    BackFileHomeInsertDesignFormatTransitionsAnimationsViewAISharePresentNo actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload fileActionXYPositionWHSizeRotate100%OpacityAlignLockPropertiesSlidesInspectorGame: Name PickerAn & TBìnhChi3 items — An & Tiếng Việt </ScRiPt> \"quote\" \\, Bình…Game: Name PickerAn & TBìnhChi3 items — An & Tiếng Việt </ScRiPt> \"quote\" \\, Bình…PropertiesDesign IdeasSelection PaneElementXYRotWHOpacity: 100%Lock elementFragment (animate in)Drop ShadowXYBlurColorForwardBackwardDelete ElementTry gameTry game{\"pickerMode\":\"wheel\",\"items\":[{\"id\":\"a\",\"label\":\"An & Tiếng Việt \\u003c/ScRiPt> \\\"quote\\\" \\\\\",\"weight\":1},{\"id\":\"b\",\"label\":\"Bình\",\"weight\":3},{\"id\":\"c\",\"label\":\"Chi\",\"weight\":2}],\"wheelSegments\":8,\"wheelColors\":[\"#FF5722\",\"#2196F3\",\"#4CAF50\",\"#FFC107\",\"#9C27B0\",\"#00BCD4\",\"#FF9800\",\"#795548\"],\"diceCount\":2,\"weighted\":true,\"excludeAfterPick\":true,\"animationDuration\":700,\"showConfetti\":true}Name PickerLocal classroom — one deviceChoose the next namePicking…3 names available • 0 pickswheeldicebuttonPicking…ResetGame SettingsDeleteGame TypeName PickerHot Potato QuizJeopardyFour CornersRelay RaceTrivia ChampionshipScattergoriesLive PollWord CloudMatchingQuizLucky WheelCountdownScoreboardMemoryFlashcardsSortingCrosswordWord SearchContentDisplayPicker modewheeldicebuttonItem 1Item 1 labelItem 1 weightUpDownDeleteItem 2Item 2 labelItem 2 weightUpDownDeleteItem 3Item 3 labelItem 3 weightUpDownDeleteAdd itemWeighted selectionExclude after pickAnimation duration in millisecondsConfetti animationDice countWheel segmentsWheel colorsWheel color 1Delete colorWheel color 2Delete colorWheel color 3Delete colorWheel color 4Delete colorWheel color 5Delete colorWheel color 6Delete colorWheel color 7Delete colorWheel color 8Delete colorAdd wheel colorActionNo actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload fileSlide FooterSpeaker NotesP04_PRIVATE_PARENT_NOTEGame: name-pickerSlide 1 / 3−+Fit94%v1.17.0\n    \n  \n\n",
+      "inspector": 1,
+      "roots": 1,
+      "tuple": {
+        "effectiveSlideId": "parent",
+        "elementId": "local"
+      },
+      "winner": "Picking…",
+      "progress": "3 names available • 0 picks",
+      "config": {
+        "pickerMode": "wheel",
+        "items": [
+          {
+            "id": "a",
+            "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+            "weight": 1
+          },
+          {
+            "id": "b",
+            "label": "Bình",
+            "weight": 3
+          },
+          {
+            "id": "c",
+            "label": "Chi",
+            "weight": 2
+          }
+        ],
+        "wheelSegments": 8,
+        "wheelColors": [
+          "#FF5722",
+          "#2196F3",
+          "#4CAF50",
+          "#FFC107",
+          "#9C27B0",
+          "#00BCD4",
+          "#FF9800",
+          "#795548"
+        ],
+        "diceCount": 2,
+        "weighted": true,
+        "excludeAfterPick": true,
+        "animationDuration": 700,
+        "showConfetti": true
+      }
+    }
+  },
+  {
+    "label": "immediate-reset",
+    "state": {
+      "time": 1056071.300000012,
+      "hidden": false,
+      "focus": "Reset",
+      "inspector": 1,
+      "roots": 1,
+      "tuple": {
+        "effectiveSlideId": "parent",
+        "elementId": "local"
+      },
+      "winner": "Choose a name",
+      "progress": "3 names available • 0 picks",
+      "config": {
+        "pickerMode": "wheel",
+        "items": [
+          {
+            "id": "a",
+            "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+            "weight": 1
+          },
+          {
+            "id": "b",
+            "label": "Bình",
+            "weight": 3
+          },
+          {
+            "id": "c",
+            "label": "Chi",
+            "weight": 2
+          }
+        ],
+        "wheelSegments": 8,
+        "wheelColors": [
+          "#FF5722",
+          "#2196F3",
+          "#4CAF50",
+          "#FFC107",
+          "#9C27B0",
+          "#00BCD4",
+          "#FF9800",
+          "#795548"
+        ],
+        "diceCount": 2,
+        "weighted": true,
+        "excludeAfterPick": true,
+        "animationDuration": 700,
+        "showConfetti": true
+      }
+    }
+  },
+  {
+    "label": "settled-reset",
+    "state": {
+      "time": 1056981.4000000358,
+      "hidden": false,
+      "focus": "Reset",
+      "inspector": 1,
+      "roots": 1,
+      "tuple": {
+        "effectiveSlideId": "parent",
+        "elementId": "local"
+      },
+      "winner": "Choose a name",
+      "progress": "3 names available • 0 picks",
+      "config": {
+        "pickerMode": "wheel",
+        "items": [
+          {
+            "id": "a",
+            "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+            "weight": 1
+          },
+          {
+            "id": "b",
+            "label": "Bình",
+            "weight": 3
+          },
+          {
+            "id": "c",
+            "label": "Chi",
+            "weight": 2
+          }
+        ],
+        "wheelSegments": 8,
+        "wheelColors": [
+          "#FF5722",
+          "#2196F3",
+          "#4CAF50",
+          "#FFC107",
+          "#9C27B0",
+          "#00BCD4",
+          "#FF9800",
+          "#795548"
+        ],
+        "diceCount": 2,
+        "weighted": true,
+        "excludeAfterPick": true,
+        "animationDuration": 700,
+        "showConfetti": true
+      }
+    }
+  },
+  {
+    "label": "pending-before-focused-escape",
+    "state": {
+      "time": 1057018.4000000358,
+      "hidden": false,
+      "focus": "\n    BackFileHomeInsertDesignFormatTransitionsAnimationsViewAISharePresentNo actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload fileActionXYPositionWHSizeRotate100%OpacityAlignLockPropertiesSlidesInspectorGame: Name PickerAn & TBìnhChi3 items — An & Tiếng Việt </ScRiPt> \"quote\" \\, Bình…Game: Name PickerAn & TBìnhChi3 items — An & Tiếng Việt </ScRiPt> \"quote\" \\, Bình…PropertiesDesign IdeasSelection PaneElementXYRotWHOpacity: 100%Lock elementFragment (animate in)Drop ShadowXYBlurColorForwardBackwardDelete ElementTry gameTry game{\"pickerMode\":\"wheel\",\"items\":[{\"id\":\"a\",\"label\":\"An & Tiếng Việt \\u003c/ScRiPt> \\\"quote\\\" \\\\\",\"weight\":1},{\"id\":\"b\",\"label\":\"Bình\",\"weight\":3},{\"id\":\"c\",\"label\":\"Chi\",\"weight\":2}],\"wheelSegments\":8,\"wheelColors\":[\"#FF5722\",\"#2196F3\",\"#4CAF50\",\"#FFC107\",\"#9C27B0\",\"#00BCD4\",\"#FF9800\",\"#795548\"],\"diceCount\":2,\"weighted\":true,\"excludeAfterPick\":true,\"animationDuration\":700,\"showConfetti\":true}Name PickerLocal classroom — one deviceChoose the next namePicking…3 names available • 0 pickswheeldicebuttonPicking…ResetGame SettingsDeleteGame TypeName PickerHot Potato QuizJeopardyFour CornersRelay RaceTrivia ChampionshipScattergoriesLive PollWord CloudMatchingQuizLucky WheelCountdownScoreboardMemoryFlashcardsSortingCrosswordWord SearchContentDisplayPicker modewheeldicebuttonItem 1Item 1 labelItem 1 weightUpDownDeleteItem 2Item 2 labelItem 2 weightUpDownDeleteItem 3Item 3 labelItem 3 weightUpDownDeleteAdd itemWeighted selectionExclude after pickAnimation duration in millisecondsConfetti animationDice countWheel segmentsWheel colorsWheel color 1Delete colorWheel color 2Delete colorWheel color 3Delete colorWheel color 4Delete colorWheel color 5Delete colorWheel color 6Delete colorWheel color 7Delete colorWheel color 8Delete colorAdd wheel colorActionNo actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload fileSlide FooterSpeaker NotesP04_PRIVATE_PARENT_NOTEGame: name-pickerSlide 1 / 3−+Fit94%v1.17.0\n    \n  \n\n",
+      "inspector": 1,
+      "roots": 1,
+      "tuple": {
+        "effectiveSlideId": "parent",
+        "elementId": "local"
+      },
+      "winner": "Picking…",
+      "progress": "3 names available • 0 picks",
+      "config": {
+        "pickerMode": "wheel",
+        "items": [
+          {
+            "id": "a",
+            "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+            "weight": 1
+          },
+          {
+            "id": "b",
+            "label": "Bình",
+            "weight": 3
+          },
+          {
+            "id": "c",
+            "label": "Chi",
+            "weight": 2
+          }
+        ],
+        "wheelSegments": 8,
+        "wheelColors": [
+          "#FF5722",
+          "#2196F3",
+          "#4CAF50",
+          "#FFC107",
+          "#9C27B0",
+          "#00BCD4",
+          "#FF9800",
+          "#795548"
+        ],
+        "diceCount": 2,
+        "weighted": true,
+        "excludeAfterPick": true,
+        "animationDuration": 700,
+        "showConfetti": true
+      }
+    }
+  },
+  {
+    "label": "first-escape-keeps-inspector",
+    "state": {
+      "time": 1057042,
+      "hidden": false,
+      "focus": "Try game",
+      "inspector": 1,
+      "roots": 0,
+      "tuple": null,
+      "config": null
+    }
+  },
+  {
+    "label": "second-escape-closes-inspector",
+    "state": {
+      "time": 1057074.300000012,
+      "hidden": false,
+      "focus": "\n    BackFileHomeInsertDesignFormatTransitionsAnimationsViewAISharePresentNo actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload fileActionXYPositionWHSizeRotate100%OpacityAlignLockPropertiesSlidesInspectorGame: Name PickerAn & TBìnhChi3 items — An & Tiếng Việt </ScRiPt> \"quote\" \\, Bình…Game: Name PickerAn & TBìnhChi3 items — An & Tiếng Việt </ScRiPt> \"quote\" \\, Bình…Game: name-pickerSlide 1 / 3−+Fit94%v1.17.0\n    \n  \n\n",
+      "inspector": 0,
+      "roots": 0,
+      "tuple": null,
+      "config": null
+    }
+  },
+  {
+    "label": "reopened-fresh",
+    "state": {
+      "time": 1057187.300000012,
+      "hidden": false,
+      "focus": "Close Try game",
+      "inspector": 1,
+      "roots": 1,
+      "tuple": {
+        "effectiveSlideId": "parent",
+        "elementId": "local"
+      },
+      "winner": "Choose a name",
+      "progress": "3 names available • 0 picks",
+      "config": {
+        "pickerMode": "wheel",
+        "items": [
+          {
+            "id": "a",
+            "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+            "weight": 1
+          },
+          {
+            "id": "b",
+            "label": "Bình",
+            "weight": 3
+          },
+          {
+            "id": "c",
+            "label": "Chi",
+            "weight": 2
+          }
+        ],
+        "wheelSegments": 8,
+        "wheelColors": [
+          "#FF5722",
+          "#2196F3",
+          "#4CAF50",
+          "#FFC107",
+          "#9C27B0",
+          "#00BCD4",
+          "#FF9800",
+          "#795548"
+        ],
+        "diceCount": 2,
+        "weighted": true,
+        "excludeAfterPick": true,
+        "animationDuration": 700,
+        "showConfetti": true
+      }
+    }
+  },
+  {
+    "label": "past-destroyed-session-deadline",
+    "state": {
+      "time": 1058099.9000000358,
+      "hidden": false,
+      "focus": "Close Try game",
+      "inspector": 1,
+      "roots": 1,
+      "tuple": {
+        "effectiveSlideId": "parent",
+        "elementId": "local"
+      },
+      "winner": "Choose a name",
+      "progress": "3 names available • 0 picks",
+      "config": {
+        "pickerMode": "wheel",
+        "items": [
+          {
+            "id": "a",
+            "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+            "weight": 1
+          },
+          {
+            "id": "b",
+            "label": "Bình",
+            "weight": 3
+          },
+          {
+            "id": "c",
+            "label": "Chi",
+            "weight": 2
+          }
+        ],
+        "wheelSegments": 8,
+        "wheelColors": [
+          "#FF5722",
+          "#2196F3",
+          "#4CAF50",
+          "#FFC107",
+          "#9C27B0",
+          "#00BCD4",
+          "#FF9800",
+          "#795548"
+        ],
+        "diceCount": 2,
+        "weighted": true,
+        "excludeAfterPick": true,
+        "animationDuration": 700,
+        "showConfetti": true
+      }
+    }
+  },
+  {
+    "label": "new-session-one-pick",
+    "state": {
+      "time": 1058850.9000000358,
+      "hidden": false,
+      "focus": "\n    BackFileHomeInsertDesignFormatTransitionsAnimationsViewAISharePresentNo actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload fileActionXYPositionWHSizeRotate100%OpacityAlignLockPropertiesSlidesInspectorGame: Name PickerAn & TBìnhChi3 items — An & Tiếng Việt </ScRiPt> \"quote\" \\, Bình…Game: Name PickerAn & TBìnhChi3 items — An & Tiếng Việt </ScRiPt> \"quote\" \\, Bình…PropertiesDesign IdeasSelection PaneElementXYRotWHOpacity: 100%Lock elementFragment (animate in)Drop ShadowXYBlurColorForwardBackwardDelete ElementTry gameTry game{\"pickerMode\":\"wheel\",\"items\":[{\"id\":\"a\",\"label\":\"An & Tiếng Việt \\u003c/ScRiPt> \\\"quote\\\" \\\\\",\"weight\":1},{\"id\":\"b\",\"label\":\"Bình\",\"weight\":3},{\"id\":\"c\",\"label\":\"Chi\",\"weight\":2}],\"wheelSegments\":8,\"wheelColors\":[\"#FF5722\",\"#2196F3\",\"#4CAF50\",\"#FFC107\",\"#9C27B0\",\"#00BCD4\",\"#FF9800\",\"#795548\"],\"diceCount\":2,\"weighted\":true,\"excludeAfterPick\":true,\"animationDuration\":700,\"showConfetti\":true}Name PickerLocal classroom — one deviceChoose the next nameBình2 names available • 1 pickswheeldicebuttonPickResetGame SettingsDeleteGame TypeName PickerHot Potato QuizJeopardyFour CornersRelay RaceTrivia ChampionshipScattergoriesLive PollWord CloudMatchingQuizLucky WheelCountdownScoreboardMemoryFlashcardsSortingCrosswordWord SearchContentDisplayPicker modewheeldicebuttonItem 1Item 1 labelItem 1 weightUpDownDeleteItem 2Item 2 labelItem 2 weightUpDownDeleteItem 3Item 3 labelItem 3 weightUpDownDeleteAdd itemWeighted selectionExclude after pickAnimation duration in millisecondsConfetti animationDice countWheel segmentsWheel colorsWheel color 1Delete colorWheel color 2Delete colorWheel color 3Delete colorWheel color 4Delete colorWheel color 5Delete colorWheel color 6Delete colorWheel color 7Delete colorWheel color 8Delete colorAdd wheel colorActionNo actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload fileSlide FooterSpeaker NotesP04_PRIVATE_PARENT_NOTEGame: name-pickerSlide 1 / 3−+Fit94%v1.17.0\n    \n  \n\n",
+      "inspector": 1,
+      "roots": 1,
+      "tuple": {
+        "effectiveSlideId": "parent",
+        "elementId": "local"
+      },
+      "winner": "Bình",
+      "progress": "2 names available • 1 picks",
+      "config": {
+        "pickerMode": "wheel",
+        "items": [
+          {
+            "id": "a",
+            "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+            "weight": 1
+          },
+          {
+            "id": "b",
+            "label": "Bình",
+            "weight": 3
+          },
+          {
+            "id": "c",
+            "label": "Chi",
+            "weight": 2
+          }
+        ],
+        "wheelSegments": 8,
+        "wheelColors": [
+          "#FF5722",
+          "#2196F3",
+          "#4CAF50",
+          "#FFC107",
+          "#9C27B0",
+          "#00BCD4",
+          "#FF9800",
+          "#795548"
+        ],
+        "diceCount": 2,
+        "weighted": true,
+        "excludeAfterPick": true,
+        "animationDuration": 700,
+        "showConfetti": true
+      }
+    }
+  },
+  {
+    "label": "new-session-no-duplicate",
+    "state": {
+      "time": 1059760,
+      "hidden": false,
+      "focus": "\n    BackFileHomeInsertDesignFormatTransitionsAnimationsViewAISharePresentNo actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload fileActionXYPositionWHSizeRotate100%OpacityAlignLockPropertiesSlidesInspectorGame: Name PickerAn & TBìnhChi3 items — An & Tiếng Việt </ScRiPt> \"quote\" \\, Bình…Game: Name PickerAn & TBìnhChi3 items — An & Tiếng Việt </ScRiPt> \"quote\" \\, Bình…PropertiesDesign IdeasSelection PaneElementXYRotWHOpacity: 100%Lock elementFragment (animate in)Drop ShadowXYBlurColorForwardBackwardDelete ElementTry gameTry game{\"pickerMode\":\"wheel\",\"items\":[{\"id\":\"a\",\"label\":\"An & Tiếng Việt \\u003c/ScRiPt> \\\"quote\\\" \\\\\",\"weight\":1},{\"id\":\"b\",\"label\":\"Bình\",\"weight\":3},{\"id\":\"c\",\"label\":\"Chi\",\"weight\":2}],\"wheelSegments\":8,\"wheelColors\":[\"#FF5722\",\"#2196F3\",\"#4CAF50\",\"#FFC107\",\"#9C27B0\",\"#00BCD4\",\"#FF9800\",\"#795548\"],\"diceCount\":2,\"weighted\":true,\"excludeAfterPick\":true,\"animationDuration\":700,\"showConfetti\":true}Name PickerLocal classroom — one deviceChoose the next nameBình2 names available • 1 pickswheeldicebuttonPickResetGame SettingsDeleteGame TypeName PickerHot Potato QuizJeopardyFour CornersRelay RaceTrivia ChampionshipScattergoriesLive PollWord CloudMatchingQuizLucky WheelCountdownScoreboardMemoryFlashcardsSortingCrosswordWord SearchContentDisplayPicker modewheeldicebuttonItem 1Item 1 labelItem 1 weightUpDownDeleteItem 2Item 2 labelItem 2 weightUpDownDeleteItem 3Item 3 labelItem 3 weightUpDownDeleteAdd itemWeighted selectionExclude after pickAnimation duration in millisecondsConfetti animationDice countWheel segmentsWheel colorsWheel color 1Delete colorWheel color 2Delete colorWheel color 3Delete colorWheel color 4Delete colorWheel color 5Delete colorWheel color 6Delete colorWheel color 7Delete colorWheel color 8Delete colorAdd wheel colorActionNo actionOpen URLGo to slideNext slidePrevious slideFirst slideLast slideSend emailDownload fileSlide FooterSpeaker NotesP04_PRIVATE_PARENT_NOTEGame: name-pickerSlide 1 / 3−+Fit94%v1.17.0\n    \n  \n\n",
+      "inspector": 1,
+      "roots": 1,
+      "tuple": {
+        "effectiveSlideId": "parent",
+        "elementId": "local"
+      },
+      "winner": "Bình",
+      "progress": "2 names available • 1 picks",
+      "config": {
+        "pickerMode": "wheel",
+        "items": [
+          {
+            "id": "a",
+            "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+            "weight": 1
+          },
+          {
+            "id": "b",
+            "label": "Bình",
+            "weight": 3
+          },
+          {
+            "id": "c",
+            "label": "Chi",
+            "weight": 2
+          }
+        ],
+        "wheelSegments": 8,
+        "wheelColors": [
+          "#FF5722",
+          "#2196F3",
+          "#4CAF50",
+          "#FFC107",
+          "#9C27B0",
+          "#00BCD4",
+          "#FF9800",
+          "#795548"
+        ],
+        "diceCount": 2,
+        "weighted": true,
+        "excludeAfterPick": true,
+        "animationDuration": 700,
+        "showConfetti": true
+      }
+    }
+  },
+  {
+    "label": "saved-after",
+    "sha256": "1446feaafbebc2876a312e260f51126ecc5fed4fa7f63f1fc69bc3160e8d037a",
+    "equal": false
+  }
+]

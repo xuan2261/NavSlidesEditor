@@ -1,0 +1,809 @@
+{
+  "rows": [
+    {
+      "label": "settled-post-recovery-boundary",
+      "state": {
+        "documentId": "19ee4a44-2962-4fa3-b377-e3227be32a37",
+        "time": 1587012,
+        "hidden": true,
+        "focus": {
+          "tag": "BODY",
+          "label": null
+        },
+        "inspector": 1,
+        "roots": 1,
+        "tuple": {
+          "effectiveSlideId": "parent",
+          "elementId": "local"
+        },
+        "winner": "Bình",
+        "progress": "2 names available • 1 picks",
+        "config": {
+          "pickerMode": "wheel",
+          "items": [
+            {
+              "id": "a",
+              "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+              "weight": 1
+            },
+            {
+              "id": "b",
+              "label": "Bình",
+              "weight": 3
+            },
+            {
+              "id": "c",
+              "label": "Chi",
+              "weight": 2
+            }
+          ],
+          "wheelSegments": 8,
+          "wheelColors": [
+            "#FF5722",
+            "#2196F3",
+            "#4CAF50",
+            "#FFC107",
+            "#9C27B0",
+            "#00BCD4",
+            "#FF9800",
+            "#795548"
+          ],
+          "diceCount": 2,
+          "weighted": true,
+          "excludeAfterPick": true,
+          "animationDuration": 700,
+          "showConfetti": true
+        }
+      }
+    },
+    {
+      "label": "full-saved-before",
+      "body": {
+        "layoutMasters": [
+          {
+            "id": "lesson",
+            "name": "Lesson",
+            "fixedElements": [
+              {
+                "id": "inherited",
+                "type": "game",
+                "x": 510,
+                "y": 20,
+                "width": 430,
+                "height": 490,
+                "gameType": "name-picker",
+                "name-picker": {
+                  "pickerMode": "wheel",
+                  "items": [
+                    {
+                      "id": "a",
+                      "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+                      "weight": 1
+                    },
+                    {
+                      "id": "b",
+                      "label": "Bình",
+                      "weight": 3
+                    },
+                    {
+                      "id": "c",
+                      "label": "Chi",
+                      "weight": 2
+                    }
+                  ],
+                  "wheelSegments": 8,
+                  "wheelColors": [
+                    "#FF5722",
+                    "#2196F3",
+                    "#4CAF50",
+                    "#FFC107",
+                    "#9C27B0",
+                    "#00BCD4",
+                    "#FF9800",
+                    "#795548"
+                  ],
+                  "diceCount": 2,
+                  "weighted": true,
+                  "excludeAfterPick": true,
+                  "animationDuration": 700,
+                  "showConfetti": true
+                }
+              }
+            ],
+            "placeholders": []
+          }
+        ],
+        "resolution": {
+          "width": 960,
+          "height": 540
+        },
+        "id": "3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540",
+        "title": "Phase04 native runtime acceptance",
+        "theme": "white",
+        "transition": "none",
+        "designTokens": {
+          "colors": {
+            "bg": "#ffffff",
+            "surface": "#f5f5f7",
+            "accent": "#0066cc",
+            "accent2": "#5599dd",
+            "text": "#1d1d1f",
+            "muted": "#6e6e73"
+          },
+          "fonts": {
+            "heading": "\"Inter\", \"Helvetica Neue\", Arial, sans-serif",
+            "body": "\"Inter\", \"Helvetica Neue\", Arial, sans-serif"
+          },
+          "radius": 6,
+          "spacingScale": 1
+        },
+        "slides": [
+          {
+            "id": "parent",
+            "elements": [
+              {
+                "id": "local",
+                "type": "game",
+                "x": 20,
+                "y": 20,
+                "width": 460,
+                "height": 490,
+                "gameType": "name-picker",
+                "name-picker": {
+                  "pickerMode": "wheel",
+                  "items": [
+                    {
+                      "id": "a",
+                      "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+                      "weight": 1
+                    },
+                    {
+                      "id": "b",
+                      "label": "Bình",
+                      "weight": 3
+                    },
+                    {
+                      "id": "c",
+                      "label": "Chi",
+                      "weight": 2
+                    }
+                  ],
+                  "wheelSegments": 8,
+                  "wheelColors": [
+                    "#FF5722",
+                    "#2196F3",
+                    "#4CAF50",
+                    "#FFC107",
+                    "#9C27B0",
+                    "#00BCD4",
+                    "#FF9800",
+                    "#795548"
+                  ],
+                  "diceCount": 2,
+                  "weighted": true,
+                  "excludeAfterPick": true,
+                  "animationDuration": 700,
+                  "showConfetti": true
+                }
+              }
+            ],
+            "notes": "P04_PRIVATE_PARENT_NOTE",
+            "children": [
+              {
+                "id": "child",
+                "elements": [],
+                "notes": "P04_PRIVATE_CHILD_NOTE",
+                "layoutId": "lesson"
+              }
+            ],
+            "layoutId": "lesson"
+          },
+          {
+            "id": "second",
+            "elements": [],
+            "notes": "",
+            "layoutId": "lesson"
+          },
+          {
+            "id": "hidden",
+            "elements": [],
+            "notes": "",
+            "layoutId": "lesson",
+            "layoutOverrides": {
+              "elementPatches": {
+                "inherited": {
+                  "hidden": true
+                }
+              }
+            }
+          }
+        ],
+        "createdAt": "2026-10-02T10:37:59.078Z",
+        "updatedAt": "2026-10-02T12:20:43.351Z"
+      },
+      "serialized": "{\"layoutMasters\":[{\"id\":\"lesson\",\"name\":\"Lesson\",\"fixedElements\":[{\"id\":\"inherited\",\"type\":\"game\",\"x\":510,\"y\":20,\"width\":430,\"height\":490,\"gameType\":\"name-picker\",\"name-picker\":{\"pickerMode\":\"wheel\",\"items\":[{\"id\":\"a\",\"label\":\"An & Tiếng Việt </ScRiPt> \\\"quote\\\" \\\\\",\"weight\":1},{\"id\":\"b\",\"label\":\"Bình\",\"weight\":3},{\"id\":\"c\",\"label\":\"Chi\",\"weight\":2}],\"wheelSegments\":8,\"wheelColors\":[\"#FF5722\",\"#2196F3\",\"#4CAF50\",\"#FFC107\",\"#9C27B0\",\"#00BCD4\",\"#FF9800\",\"#795548\"],\"diceCount\":2,\"weighted\":true,\"excludeAfterPick\":true,\"animationDuration\":700,\"showConfetti\":true}}],\"placeholders\":[]}],\"resolution\":{\"width\":960,\"height\":540},\"id\":\"3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540\",\"title\":\"Phase04 native runtime acceptance\",\"theme\":\"white\",\"transition\":\"none\",\"designTokens\":{\"colors\":{\"bg\":\"#ffffff\",\"surface\":\"#f5f5f7\",\"accent\":\"#0066cc\",\"accent2\":\"#5599dd\",\"text\":\"#1d1d1f\",\"muted\":\"#6e6e73\"},\"fonts\":{\"heading\":\"\\\"Inter\\\", \\\"Helvetica Neue\\\", Arial, sans-serif\",\"body\":\"\\\"Inter\\\", \\\"Helvetica Neue\\\", Arial, sans-serif\"},\"radius\":6,\"spacingScale\":1},\"slides\":[{\"id\":\"parent\",\"elements\":[{\"id\":\"local\",\"type\":\"game\",\"x\":20,\"y\":20,\"width\":460,\"height\":490,\"gameType\":\"name-picker\",\"name-picker\":{\"pickerMode\":\"wheel\",\"items\":[{\"id\":\"a\",\"label\":\"An & Tiếng Việt </ScRiPt> \\\"quote\\\" \\\\\",\"weight\":1},{\"id\":\"b\",\"label\":\"Bình\",\"weight\":3},{\"id\":\"c\",\"label\":\"Chi\",\"weight\":2}],\"wheelSegments\":8,\"wheelColors\":[\"#FF5722\",\"#2196F3\",\"#4CAF50\",\"#FFC107\",\"#9C27B0\",\"#00BCD4\",\"#FF9800\",\"#795548\"],\"diceCount\":2,\"weighted\":true,\"excludeAfterPick\":true,\"animationDuration\":700,\"showConfetti\":true}}],\"notes\":\"P04_PRIVATE_PARENT_NOTE\",\"children\":[{\"id\":\"child\",\"elements\":[],\"notes\":\"P04_PRIVATE_CHILD_NOTE\",\"layoutId\":\"lesson\"}],\"layoutId\":\"lesson\"},{\"id\":\"second\",\"elements\":[],\"notes\":\"\",\"layoutId\":\"lesson\"},{\"id\":\"hidden\",\"elements\":[],\"notes\":\"\",\"layoutId\":\"lesson\",\"layoutOverrides\":{\"elementPatches\":{\"inherited\":{\"hidden\":true}}}}],\"createdAt\":\"2026-10-02T10:37:59.078Z\",\"updatedAt\":\"2026-10-02T12:20:43.351Z\"}",
+      "sha256": "1446feaafbebc2876a312e260f51126ecc5fed4fa7f63f1fc69bc3160e8d037a"
+    },
+    {
+      "label": "pending-before-reset",
+      "state": {
+        "documentId": "19ee4a44-2962-4fa3-b377-e3227be32a37",
+        "time": 1587114.5,
+        "hidden": true,
+        "focus": {
+          "tag": "BODY",
+          "label": null
+        },
+        "inspector": 1,
+        "roots": 1,
+        "tuple": {
+          "effectiveSlideId": "parent",
+          "elementId": "local"
+        },
+        "winner": "Picking…",
+        "progress": "3 names available • 0 picks",
+        "config": {
+          "pickerMode": "wheel",
+          "items": [
+            {
+              "id": "a",
+              "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+              "weight": 1
+            },
+            {
+              "id": "b",
+              "label": "Bình",
+              "weight": 3
+            },
+            {
+              "id": "c",
+              "label": "Chi",
+              "weight": 2
+            }
+          ],
+          "wheelSegments": 8,
+          "wheelColors": [
+            "#FF5722",
+            "#2196F3",
+            "#4CAF50",
+            "#FFC107",
+            "#9C27B0",
+            "#00BCD4",
+            "#FF9800",
+            "#795548"
+          ],
+          "diceCount": 2,
+          "weighted": true,
+          "excludeAfterPick": true,
+          "animationDuration": 700,
+          "showConfetti": true
+        }
+      }
+    },
+    {
+      "label": "reset-now",
+      "state": {
+        "documentId": "19ee4a44-2962-4fa3-b377-e3227be32a37",
+        "time": 1587142.6000000238,
+        "hidden": true,
+        "focus": {
+          "tag": "BUTTON",
+          "label": null
+        },
+        "inspector": 1,
+        "roots": 1,
+        "tuple": {
+          "effectiveSlideId": "parent",
+          "elementId": "local"
+        },
+        "winner": "Choose a name",
+        "progress": "3 names available • 0 picks",
+        "config": {
+          "pickerMode": "wheel",
+          "items": [
+            {
+              "id": "a",
+              "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+              "weight": 1
+            },
+            {
+              "id": "b",
+              "label": "Bình",
+              "weight": 3
+            },
+            {
+              "id": "c",
+              "label": "Chi",
+              "weight": 2
+            }
+          ],
+          "wheelSegments": 8,
+          "wheelColors": [
+            "#FF5722",
+            "#2196F3",
+            "#4CAF50",
+            "#FFC107",
+            "#9C27B0",
+            "#00BCD4",
+            "#FF9800",
+            "#795548"
+          ],
+          "diceCount": 2,
+          "weighted": true,
+          "excludeAfterPick": true,
+          "animationDuration": 700,
+          "showConfetti": true
+        }
+      }
+    },
+    {
+      "label": "reset-settled",
+      "state": {
+        "documentId": "19ee4a44-2962-4fa3-b377-e3227be32a37",
+        "time": 1588047,
+        "hidden": true,
+        "focus": {
+          "tag": "BUTTON",
+          "label": null
+        },
+        "inspector": 1,
+        "roots": 1,
+        "tuple": {
+          "effectiveSlideId": "parent",
+          "elementId": "local"
+        },
+        "winner": "Choose a name",
+        "progress": "3 names available • 0 picks",
+        "config": {
+          "pickerMode": "wheel",
+          "items": [
+            {
+              "id": "a",
+              "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+              "weight": 1
+            },
+            {
+              "id": "b",
+              "label": "Bình",
+              "weight": 3
+            },
+            {
+              "id": "c",
+              "label": "Chi",
+              "weight": 2
+            }
+          ],
+          "wheelSegments": 8,
+          "wheelColors": [
+            "#FF5722",
+            "#2196F3",
+            "#4CAF50",
+            "#FFC107",
+            "#9C27B0",
+            "#00BCD4",
+            "#FF9800",
+            "#795548"
+          ],
+          "diceCount": 2,
+          "weighted": true,
+          "excludeAfterPick": true,
+          "animationDuration": 700,
+          "showConfetti": true
+        }
+      }
+    },
+    {
+      "label": "pending-before-close",
+      "state": {
+        "documentId": "19ee4a44-2962-4fa3-b377-e3227be32a37",
+        "time": 1588090.5,
+        "hidden": true,
+        "focus": {
+          "tag": "BODY",
+          "label": null
+        },
+        "inspector": 1,
+        "roots": 1,
+        "tuple": {
+          "effectiveSlideId": "parent",
+          "elementId": "local"
+        },
+        "winner": "Picking…",
+        "progress": "3 names available • 0 picks",
+        "config": {
+          "pickerMode": "wheel",
+          "items": [
+            {
+              "id": "a",
+              "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+              "weight": 1
+            },
+            {
+              "id": "b",
+              "label": "Bình",
+              "weight": 3
+            },
+            {
+              "id": "c",
+              "label": "Chi",
+              "weight": 2
+            }
+          ],
+          "wheelSegments": 8,
+          "wheelColors": [
+            "#FF5722",
+            "#2196F3",
+            "#4CAF50",
+            "#FFC107",
+            "#9C27B0",
+            "#00BCD4",
+            "#FF9800",
+            "#795548"
+          ],
+          "diceCount": 2,
+          "weighted": true,
+          "excludeAfterPick": true,
+          "animationDuration": 700,
+          "showConfetti": true
+        }
+      }
+    },
+    {
+      "label": "first-escape",
+      "state": {
+        "documentId": "19ee4a44-2962-4fa3-b377-e3227be32a37",
+        "time": 1588111.2000000477,
+        "hidden": true,
+        "focus": {
+          "tag": "BUTTON",
+          "label": null
+        },
+        "inspector": 1,
+        "roots": 0,
+        "tuple": null,
+        "config": null
+      }
+    },
+    {
+      "label": "second-escape",
+      "state": {
+        "documentId": "19ee4a44-2962-4fa3-b377-e3227be32a37",
+        "time": 1588141.6000000238,
+        "hidden": true,
+        "focus": {
+          "tag": "BODY",
+          "label": null
+        },
+        "inspector": 0,
+        "roots": 0,
+        "tuple": null,
+        "config": null
+      }
+    },
+    {
+      "label": "native-reopen",
+      "state": {
+        "documentId": "19ee4a44-2962-4fa3-b377-e3227be32a37",
+        "time": 1588252.300000012,
+        "hidden": true,
+        "focus": {
+          "tag": "BUTTON",
+          "label": "Close Try game"
+        },
+        "inspector": 1,
+        "roots": 1,
+        "tuple": {
+          "effectiveSlideId": "parent",
+          "elementId": "local"
+        },
+        "winner": "Choose a name",
+        "progress": "3 names available • 0 picks",
+        "config": {
+          "pickerMode": "wheel",
+          "items": [
+            {
+              "id": "a",
+              "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+              "weight": 1
+            },
+            {
+              "id": "b",
+              "label": "Bình",
+              "weight": 3
+            },
+            {
+              "id": "c",
+              "label": "Chi",
+              "weight": 2
+            }
+          ],
+          "wheelSegments": 8,
+          "wheelColors": [
+            "#FF5722",
+            "#2196F3",
+            "#4CAF50",
+            "#FFC107",
+            "#9C27B0",
+            "#00BCD4",
+            "#FF9800",
+            "#795548"
+          ],
+          "diceCount": 2,
+          "weighted": true,
+          "excludeAfterPick": true,
+          "animationDuration": 700,
+          "showConfetti": true
+        }
+      }
+    },
+    {
+      "label": "destroyed-deadline-settled",
+      "state": {
+        "documentId": "19ee4a44-2962-4fa3-b377-e3227be32a37",
+        "time": 1589157,
+        "hidden": true,
+        "focus": {
+          "tag": "BUTTON",
+          "label": "Close Try game"
+        },
+        "inspector": 1,
+        "roots": 1,
+        "tuple": {
+          "effectiveSlideId": "parent",
+          "elementId": "local"
+        },
+        "winner": "Choose a name",
+        "progress": "3 names available • 0 picks",
+        "config": {
+          "pickerMode": "wheel",
+          "items": [
+            {
+              "id": "a",
+              "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+              "weight": 1
+            },
+            {
+              "id": "b",
+              "label": "Bình",
+              "weight": 3
+            },
+            {
+              "id": "c",
+              "label": "Chi",
+              "weight": 2
+            }
+          ],
+          "wheelSegments": 8,
+          "wheelColors": [
+            "#FF5722",
+            "#2196F3",
+            "#4CAF50",
+            "#FFC107",
+            "#9C27B0",
+            "#00BCD4",
+            "#FF9800",
+            "#795548"
+          ],
+          "diceCount": 2,
+          "weighted": true,
+          "excludeAfterPick": true,
+          "animationDuration": 700,
+          "showConfetti": true
+        }
+      }
+    },
+    {
+      "label": "resumed-native-final-pick-settled",
+      "state": {
+        "documentId": "19ee4a44-2962-4fa3-b377-e3227be32a37",
+        "hidden": false,
+        "roots": 1,
+        "inspector": 1,
+        "winner": "Chi",
+        "progress": "2 names available • 1 picks"
+      },
+      "nativeActivation": {
+        "appPid": 29944,
+        "windowId": 16387540,
+        "action": "Select NavSlides Editor tab",
+        "observedVisibility": true
+      },
+      "note": "Initial Eval command aborted while the actual document was hidden. Only the unfinished final pick was resumed through real native tab selection; no document navigation, reload, resize, or config edits."
+    },
+    {
+      "label": "full-saved-after",
+      "body": {
+        "layoutMasters": [
+          {
+            "id": "lesson",
+            "name": "Lesson",
+            "fixedElements": [
+              {
+                "id": "inherited",
+                "type": "game",
+                "x": 510,
+                "y": 20,
+                "width": 430,
+                "height": 490,
+                "gameType": "name-picker",
+                "name-picker": {
+                  "pickerMode": "wheel",
+                  "items": [
+                    {
+                      "id": "a",
+                      "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+                      "weight": 1
+                    },
+                    {
+                      "id": "b",
+                      "label": "Bình",
+                      "weight": 3
+                    },
+                    {
+                      "id": "c",
+                      "label": "Chi",
+                      "weight": 2
+                    }
+                  ],
+                  "wheelSegments": 8,
+                  "wheelColors": [
+                    "#FF5722",
+                    "#2196F3",
+                    "#4CAF50",
+                    "#FFC107",
+                    "#9C27B0",
+                    "#00BCD4",
+                    "#FF9800",
+                    "#795548"
+                  ],
+                  "diceCount": 2,
+                  "weighted": true,
+                  "excludeAfterPick": true,
+                  "animationDuration": 700,
+                  "showConfetti": true
+                }
+              }
+            ],
+            "placeholders": []
+          }
+        ],
+        "resolution": {
+          "width": 960,
+          "height": 540
+        },
+        "id": "3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540",
+        "title": "Phase04 native runtime acceptance",
+        "theme": "white",
+        "transition": "none",
+        "designTokens": {
+          "colors": {
+            "bg": "#ffffff",
+            "surface": "#f5f5f7",
+            "accent": "#0066cc",
+            "accent2": "#5599dd",
+            "text": "#1d1d1f",
+            "muted": "#6e6e73"
+          },
+          "fonts": {
+            "heading": "\"Inter\", \"Helvetica Neue\", Arial, sans-serif",
+            "body": "\"Inter\", \"Helvetica Neue\", Arial, sans-serif"
+          },
+          "radius": 6,
+          "spacingScale": 1
+        },
+        "slides": [
+          {
+            "id": "parent",
+            "elements": [
+              {
+                "id": "local",
+                "type": "game",
+                "x": 20,
+                "y": 20,
+                "width": 460,
+                "height": 490,
+                "gameType": "name-picker",
+                "name-picker": {
+                  "pickerMode": "wheel",
+                  "items": [
+                    {
+                      "id": "a",
+                      "label": "An & Tiếng Việt </ScRiPt> \"quote\" \\",
+                      "weight": 1
+                    },
+                    {
+                      "id": "b",
+                      "label": "Bình",
+                      "weight": 3
+                    },
+                    {
+                      "id": "c",
+                      "label": "Chi",
+                      "weight": 2
+                    }
+                  ],
+                  "wheelSegments": 8,
+                  "wheelColors": [
+                    "#FF5722",
+                    "#2196F3",
+                    "#4CAF50",
+                    "#FFC107",
+                    "#9C27B0",
+                    "#00BCD4",
+                    "#FF9800",
+                    "#795548"
+                  ],
+                  "diceCount": 2,
+                  "weighted": true,
+                  "excludeAfterPick": true,
+                  "animationDuration": 700,
+                  "showConfetti": true
+                }
+              }
+            ],
+            "notes": "P04_PRIVATE_PARENT_NOTE",
+            "children": [
+              {
+                "id": "child",
+                "elements": [],
+                "notes": "P04_PRIVATE_CHILD_NOTE",
+                "layoutId": "lesson"
+              }
+            ],
+            "layoutId": "lesson"
+          },
+          {
+            "id": "second",
+            "elements": [],
+            "notes": "",
+            "layoutId": "lesson"
+          },
+          {
+            "id": "hidden",
+            "elements": [],
+            "notes": "",
+            "layoutId": "lesson",
+            "layoutOverrides": {
+              "elementPatches": {
+                "inherited": {
+                  "hidden": true
+                }
+              }
+            }
+          }
+        ],
+        "createdAt": "2026-10-02T10:37:59.078Z",
+        "updatedAt": "2026-10-02T12:20:43.351Z"
+      },
+      "serialized": "{\"layoutMasters\":[{\"id\":\"lesson\",\"name\":\"Lesson\",\"fixedElements\":[{\"id\":\"inherited\",\"type\":\"game\",\"x\":510,\"y\":20,\"width\":430,\"height\":490,\"gameType\":\"name-picker\",\"name-picker\":{\"pickerMode\":\"wheel\",\"items\":[{\"id\":\"a\",\"label\":\"An & Tiếng Việt </ScRiPt> \\\"quote\\\" \\\\\",\"weight\":1},{\"id\":\"b\",\"label\":\"Bình\",\"weight\":3},{\"id\":\"c\",\"label\":\"Chi\",\"weight\":2}],\"wheelSegments\":8,\"wheelColors\":[\"#FF5722\",\"#2196F3\",\"#4CAF50\",\"#FFC107\",\"#9C27B0\",\"#00BCD4\",\"#FF9800\",\"#795548\"],\"diceCount\":2,\"weighted\":true,\"excludeAfterPick\":true,\"animationDuration\":700,\"showConfetti\":true}}],\"placeholders\":[]}],\"resolution\":{\"width\":960,\"height\":540},\"id\":\"3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540\",\"title\":\"Phase04 native runtime acceptance\",\"theme\":\"white\",\"transition\":\"none\",\"designTokens\":{\"colors\":{\"bg\":\"#ffffff\",\"surface\":\"#f5f5f7\",\"accent\":\"#0066cc\",\"accent2\":\"#5599dd\",\"text\":\"#1d1d1f\",\"muted\":\"#6e6e73\"},\"fonts\":{\"heading\":\"\\\"Inter\\\", \\\"Helvetica Neue\\\", Arial, sans-serif\",\"body\":\"\\\"Inter\\\", \\\"Helvetica Neue\\\", Arial, sans-serif\"},\"radius\":6,\"spacingScale\":1},\"slides\":[{\"id\":\"parent\",\"elements\":[{\"id\":\"local\",\"type\":\"game\",\"x\":20,\"y\":20,\"width\":460,\"height\":490,\"gameType\":\"name-picker\",\"name-picker\":{\"pickerMode\":\"wheel\",\"items\":[{\"id\":\"a\",\"label\":\"An & Tiếng Việt </ScRiPt> \\\"quote\\\" \\\\\",\"weight\":1},{\"id\":\"b\",\"label\":\"Bình\",\"weight\":3},{\"id\":\"c\",\"label\":\"Chi\",\"weight\":2}],\"wheelSegments\":8,\"wheelColors\":[\"#FF5722\",\"#2196F3\",\"#4CAF50\",\"#FFC107\",\"#9C27B0\",\"#00BCD4\",\"#FF9800\",\"#795548\"],\"diceCount\":2,\"weighted\":true,\"excludeAfterPick\":true,\"animationDuration\":700,\"showConfetti\":true}}],\"notes\":\"P04_PRIVATE_PARENT_NOTE\",\"children\":[{\"id\":\"child\",\"elements\":[],\"notes\":\"P04_PRIVATE_CHILD_NOTE\",\"layoutId\":\"lesson\"}],\"layoutId\":\"lesson\"},{\"id\":\"second\",\"elements\":[],\"notes\":\"\",\"layoutId\":\"lesson\"},{\"id\":\"hidden\",\"elements\":[],\"notes\":\"\",\"layoutId\":\"lesson\",\"layoutOverrides\":{\"elementPatches\":{\"inherited\":{\"hidden\":true}}}}],\"createdAt\":\"2026-10-02T10:37:59.078Z\",\"updatedAt\":\"2026-10-02T12:20:43.351Z\"}",
+      "sha256": "1446feaafbebc2876a312e260f51126ecc5fed4fa7f63f1fc69bc3160e8d037a"
+    },
+    {
+      "label": "full-deck-isolation",
+      "equal": true,
+      "before": "1446feaafbebc2876a312e260f51126ecc5fed4fa7f63f1fc69bc3160e8d037a",
+      "after": "1446feaafbebc2876a312e260f51126ecc5fed4fa7f63f1fc69bc3160e8d037a"
+    }
+  ],
+  "writes": [],
+  "activeWrites": 0,
+  "requestEvidence": {
+    "writesBeforeFinalResume": [
+      {
+        "id": "request-513",
+        "method": "PUT",
+        "url": "http://127.0.0.1:55173/api/presentations/3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540",
+        "status": 200
+      }
+    ],
+    "writesThroughFinal": [
+      {
+        "id": "request-513",
+        "method": "PUT",
+        "url": "http://127.0.0.1:55173/api/presentations/3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540",
+        "status": 200
+      }
+    ],
+    "historicalScope": "Request log includes one pre-baseline PUT; initial in-run observer captured0 writes. Both request-log snapshots contain the same pre-existing write, no new deck write during final continuation."
+  }
+}

@@ -1,12 +1,14 @@
 ---
 phase: 4
 title: "Runtime DOM độc lập, đóng gói vendor và mount generated HTML"
-status: pending
+status: in_progress
 priority: P1
 dependencies: [3]
 ---
 
 # Phase 04 — Standalone runtime
+
+Execution tạm dừng theo yêu cầu người dùng. Standalone name-picker checkpoint trước đây là historical evidence, không phải full acceptance của source hiện tại. Implementation/phase checklist hiện hành nằm trên nhánh `feat/education-gemini38-cook-261001`; xem [handoff](../handoffs/education-pause-20261004.md) trước khi resume.
 
 ## Goal
 Generated Present/Preview/Share dùng cùng Vanilla DOM runtime với native Try; core local chạy độc lập không React, HTTP/WebSocket, parent globals, eval hoặc CDN.

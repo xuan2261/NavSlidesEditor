@@ -1,0 +1,6 @@
+{
+  "command": "npx playwright test tests/e2e/education/qr-timeline-layout.spec.js --config=.playwright/phase02-manual.config.cjs --project=chromium --workers=1 --retries=0 --reporter=line",
+  "exitCode": null,
+  "stdout": "",
+  "stderr": ""
+}

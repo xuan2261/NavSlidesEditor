@@ -1,0 +1,302 @@
+ ❯ |node-parallel| shared/tests/live-presenter-runtime.test.js (3 tests | 2 failed) 27ms
+   ❯ generated live presenter runtime (3)
+     × preserves hostile capability keys and drains queued shortcuts safely 13ms
+     × rotates persisted legacy host identities before joining the game room 2ms
+ ❯ |node-serial| server/routes/presentations-game-bootstrap.test.js (6 tests | 3 failed) 560ms
+   ❯ presenter game bootstrap route (6)
+     × authenticates the live presenter and creates authoritative game rooms 145ms
+     × reclaims an empty claimed game room when the presenter starts a new live room 23ms
+     × rejects disconnected claimed room reuse by a different presentation 30ms
+ ❯ |node-serial| server/services/presenter-game-bootstrap.test.js (17 tests | 13 failed) 53ms
+   ❯ presenter game bootstrap (17)
+     × collects supported games from horizontal and vertical slides 10ms
+     × passes nested hot-potato allowLate configuration to the room 12ms
+     × retains full authored settings and fails invalid question configuration explicitly 2ms
+     × creates rooms from authoritative options and returns a private capability 1ms
+     × reuses a claimed room only with the matching presenter capability 1ms
+     × rejects a claimed room without a matching private capability 1ms
+     × rejects a legacy presenter identity preclaimed by an ordinary player 3ms
+     × rejects a cloned deck or second live room from reusing a game id 2ms
+     × keeps an occupied room isolated from a second live owner 1ms
+     × reclaims a disconnected claimed room for a new live owner 1ms
+     × does not reclaim a disconnected room across presentations 1ms
+     × preflights all descriptors before creating rooms 4ms
+     × updates the generation when the same live presenter session reconnects 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 18 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |node-parallel| shared/tests/live-presenter-runtime.test.js > generated live presenter runtime > preserves hostile capability keys and drains queued shortcuts safely
+TypeError: Cannot read properties of undefined (reading '1')
+ ❯ shared/tests/live-presenter-runtime.test.js:98:101
+     96|     )
+     97|
+     98|     const messageHandler = window.addEventListener.mock.calls.find(([e…
+       |                                                                                                     ^
+     99|     expect(opener.postMessage).toHaveBeenCalledWith({
+    100|       type: 'navslides:presenter-ready',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/18]⎯
+
+ FAIL  |node-parallel| shared/tests/live-presenter-runtime.test.js > generated live presenter runtime > rotates persisted legacy host identities before joining the game room
+TypeError: Cannot read properties of undefined (reading 'emitted')
+ ❯ shared/tests/live-presenter-runtime.test.js:377:29
+    375|     await new Promise((resolve) => setTimeout(resolve, 0))
+    376|
+    377|     const join = sockets[0].emitted.find((entry) => entry.event === 'g…
+       |                             ^
+    378|     expect(join.payload.playerId).toBe('presenter-host-fresh-host')
+    379|     expect(join.payload).not.toHaveProperty('sessionToken')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/18]⎯
+
+ FAIL  |node-serial| server/routes/presentations-game-bootstrap.test.js > presenter game bootstrap route > authenticates the live presenter and creates authoritative game rooms
+TypeError: Cannot read properties of undefined (reading 'poll')
+ ❯ server/routes/presentations-game-bootstrap.test.js:112:50
+    110|       expect(response.body.games).toHaveLength(1)
+    111|       expect(typeof response.body.games[0].hostCapability).toBe('strin…
+    112|       expect(GameEngine.getRoom('bootstrap-game').poll.prompt).toBe('A…
+       |                                                  ^
+    113|       expect(GameEngine.getRoom('bootstrap-game').owner).toEqual({
+    114|         presentationId: id,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/18]⎯
+
+ FAIL  |node-serial| server/routes/presentations-game-bootstrap.test.js > presenter game bootstrap route > reclaims an empty claimed game room when the presenter starts a new live room
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ server/routes/presentations-game-bootstrap.test.js:156:25
+    154|       requireSession: true,
+    155|     })
+    156|     expect(hostJoin.ok).toBe(true)
+       |                         ^
+    157|     GameEngine.disconnectRoom('restart-game', 'presenter-host-old', 'g…
+    158|     liveRooms.removeRoom(firstRoomCode)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/18]⎯
+
+ FAIL  |node-serial| server/routes/presentations-game-bootstrap.test.js > presenter game bootstrap route > rejects disconnected claimed room reuse by a different presentation
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ server/routes/presentations-game-bootstrap.test.js:225:25
+    223|       requireSession: true,
+    224|     })
+    225|     expect(hostJoin.ok).toBe(true)
+       |                         ^
+    226|     GameEngine.disconnectRoom('cross-presentation-game', 'presenter-ho…
+    227|     liveRooms.removeRoom(firstRoomCode)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/18]⎯
+
+ FAIL  |node-serial| server/services/presenter-game-bootstrap.test.js > presenter game bootstrap > collects supported games from horizontal and vertical slides
+TypeError: collectGameDescriptors is not a function
+ ❯ server/services/presenter-game-bootstrap.test.js:25:25
+     23| describe('presenter game bootstrap', () => {
+     24|   it('collects supported games from horizontal and vertical slides', (…
+     25|     const descriptors = collectGameDescriptors({
+       |                         ^
+     26|       slides: [
+     27|         {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/18]⎯
+
+ FAIL  |node-serial| server/services/presenter-game-bootstrap.test.js > presenter game bootstrap > passes nested hot-potato allowLate configuration to the room
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ server/services/presenter-game-bootstrap.test.js:53:23
+     51|     })
+     52|
+     53|     expect(result.ok).toBe(true)
+       |                       ^
+     54|     expect(GameEngine.getRoom('late-game')).toMatchObject({ allowLate:…
+     55|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/18]⎯
+
+ FAIL  |node-serial| server/services/presenter-game-bootstrap.test.js > presenter game bootstrap > retains full authored settings and fails invalid question configuration explicitly
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ server/services/presenter-game-bootstrap.test.js:66:23
+     64|       'hot-potato': { questions: [{ id: 'q', question: 'Choose B', opt…
+     65|         shuffleQuestions: true, showLeaderboard: false, customAuthored…
+     66|     expect(result.ok).toBe(true)
+       |                       ^
+     67|     expect(GameEngine.getRoom('full').config).toMatchObject({ shuffleQ…
+     68|     const invalid = bootstrapPresenterGames({ slides: [{ elements: [{ …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/18]⎯
+
+ FAIL  |node-serial| server/services/presenter-game-bootstrap.test.js > presenter game bootstrap > creates rooms from authoritative options and returns a private capability
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ server/services/presenter-game-bootstrap.test.js:107:23
+    105|     })
+    106|
+    107|     expect(result.ok).toBe(true)
+       |                       ^
+    108|     expect(result.games).toHaveLength(1)
+    109|     expect(typeof result.games[0].hostCapability).toBe('string')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/18]⎯
+
+ FAIL  |node-serial| server/services/presenter-game-bootstrap.test.js > presenter game bootstrap > reuses a claimed room only with the matching presenter capability
+TypeError: Cannot read properties of undefined (reading '0')
+ ❯ server/services/presenter-game-bootstrap.test.js:121:37
+    119|       slides: [{ elements: [{ id: 'picker-1', type: 'game', gameType: …
+    120|     })
+    121|     const capability = created.games[0].hostCapability
+       |                                     ^
+    122|     const joined = GameEngine.joinRoom('picker-1', 'presenter', 'Prese…
+    123|       socketId: 'presenter-socket',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/18]⎯
+
+ FAIL  |node-serial| server/services/presenter-game-bootstrap.test.js > presenter game bootstrap > rejects a claimed room without a matching private capability
+TypeError: Cannot read properties of undefined (reading '0')
+ ❯ server/services/presenter-game-bootstrap.test.js:147:36
+    145|       socketId: 'presenter-socket',
+    146|       role: 'host',
+    147|       hostCapability: created.games[0].hostCapability,
+       |                                    ^
+    148|       requireSession: true,
+    149|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/18]⎯
+
+ FAIL  |node-serial| server/services/presenter-game-bootstrap.test.js > presenter game bootstrap > rejects a legacy presenter identity preclaimed by an ordinary player
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ server/services/presenter-game-bootstrap.test.js:165:25
+    163|       role: 'player',
+    164|     })
+    165|     expect(preclaim.ok).toBe(true)
+       |                         ^
+    166|
+    167|     const legacyHostJoin = GameEngine.joinRoom('legacy-host-game', leg…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/18]⎯
+
+ FAIL  |node-serial| server/services/presenter-game-bootstrap.test.js > presenter game bootstrap > rejects a cloned deck or second live room from reusing a game id
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ server/services/presenter-game-bootstrap.test.js:191:22
+    189|     })
+    190|
+    191|     expect(first.ok).toBe(true)
+       |                      ^
+    192|     expect(second).toEqual({ ok: false, error: 'game-room-conflict', g…
+    193|     expect(GameEngine.getRoom('shared-game').owner).toEqual(OWNER)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/18]⎯
+
+ FAIL  |node-serial| server/services/presenter-game-bootstrap.test.js > presenter game bootstrap > keeps an occupied room isolated from a second live owner
+TypeError: Cannot read properties of undefined (reading '0')
+ ❯ server/services/presenter-game-bootstrap.test.js:204:34
+    202|       socketId: 'old-presenter-socket',
+    203|       role: 'host',
+    204|       hostCapability: first.games[0].hostCapability,
+       |                                  ^
+    205|       requireSession: true,
+    206|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/18]⎯
+
+ FAIL  |node-serial| server/services/presenter-game-bootstrap.test.js > presenter game bootstrap > reclaims a disconnected claimed room for a new live owner
+TypeError: Cannot read properties of undefined (reading '0')
+ ❯ server/services/presenter-game-bootstrap.test.js:229:34
+    227|       socketId: 'old-presenter-socket',
+    228|       role: 'host',
+    229|       hostCapability: first.games[0].hostCapability,
+       |                                  ^
+    230|       requireSession: true,
+    231|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/18]⎯
+
+ FAIL  |node-serial| server/services/presenter-game-bootstrap.test.js > presenter game bootstrap > does not reclaim a disconnected room across presentations
+TypeError: Cannot read properties of undefined (reading '0')
+ ❯ server/services/presenter-game-bootstrap.test.js:258:34
+    256|       socketId: 'old-presenter-socket',
+    257|       role: 'host',
+    258|       hostCapability: first.games[0].hostCapability,
+       |                                  ^
+    259|       requireSession: true,
+    260|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/18]⎯
+
+ FAIL  |node-serial| server/services/presenter-game-bootstrap.test.js > presenter game bootstrap > preflights all descriptors before creating rooms
+AssertionError: expected { ok: false, …(1) } to deeply equal { ok: false, …(2) }
+
+- Expected
++ Received
+
+  {
+-   "error": "game-room-conflict",
+-   "gameId": "claimed-game",
++   "error": "game-room-owner-required",
+    "ok": false,
+  }
+
+ ❯ server/services/presenter-game-bootstrap.test.js:297:20
+    295|     })
+    296|
+    297|     expect(result).toEqual({ ok: false, error: 'game-room-conflict', g…
+       |                    ^
+    298|     expect(GameEngine.getRoom('new-game')).toBeUndefined()
+    299|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/18]⎯
+
+ FAIL  |node-serial| server/services/presenter-game-bootstrap.test.js > presenter game bootstrap > updates the generation when the same live presenter session reconnects
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+
+[Showing lines 1-300 of 321. Use :301 to continue]

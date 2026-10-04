@@ -1,0 +1,101 @@
+{
+  "managed": {
+    "paused": true,
+    "exception": {
+      "type": "object",
+      "subtype": "error",
+      "className": "TypeError",
+      "description": "TypeError: Illegal invocation",
+      "objectId": "4911424064834131215.13.1",
+      "uncaught": true
+    },
+    "receiver": {
+      "tagName": "IFRAME",
+      "hasSrcdoc": true,
+      "ownerURL": "file:///C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/.playwright/phase02-manual/all19-final-portable.html",
+      "ownerSlide": 1,
+      "indices": {
+        "h": 2,
+        "v": 0
+      },
+      "windowClosed": false,
+      "contentDocumentAvailable": true,
+      "methodName": "postMessage",
+      "methodText": "function postMessage() { [native code] }",
+      "sameAsParentMethod": false
+    },
+    "method": {
+      "type": "function",
+      "className": "Function",
+      "description": "function postMessage() { [native code] }",
+      "objectId": "4911424064834131215.3.29"
+    },
+    "internalProperties": [
+      {
+        "name": "[[Prototype]]",
+        "value": {
+          "type": "function",
+          "className": "Function",
+          "description": "function () { [native code] }",
+          "objectId": "4911424064834131215.3.30"
+        }
+      },
+      {
+        "name": "[[Scopes]]",
+        "value": {
+          "type": "object",
+          "subtype": "internal#scopeList",
+          "className": "Array",
+          "description": "Scopes[0]",
+          "objectId": "4911424064834131215.3.31"
+        }
+      }
+    ],
+    "version": {
+      "protocolVersion": "1.3",
+      "product": "Chrome/152.0.7977.84",
+      "revision": "@4334922f44c77b1208072c4deac29db3af39bbea",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "jsVersion": "15.2.124.21"
+    }
+  },
+  "isolation": {
+    "sandbox": null,
+    "documentURL": "about:srcdoc",
+    "ownWindowDescriptor": null,
+    "prototypeWindowDescriptor": {
+      "get": "function get contentWindow() { [native code] }",
+      "valueType": "undefined",
+      "configurable": true
+    },
+    "sameAsDocumentWindow": false,
+    "rootMethod": {
+      "ok": true
+    },
+    "frameMethod": {
+      "ok": false,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "parentMethodOnFrame": {
+      "ok": false,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "frameMethodOnParent": {
+      "ok": true
+    }
+  },
+  "native": {
+    "command": "node -e <raw @playwright/test chromium smoke>",
+    "exitCode": 0,
+    "stdout": "{\"version\":\"153.0.8010.12\",\"receiver\":{\"sameAsDocumentWindow\":true,\"posted\":true},\"indices\":[{\"h\":1,\"v\":0},{\"h\":2,\"v\":0},{\"h\":3,\"v\":0},{\"h\":4,\"v\":0}],\"errors\":[]}\n",
+    "stderr": ""
+  },
+  "printVerification": {
+    "command": "npx playwright test tests/e2e/education/printed-markdown.spec.js tests/e2e/education/generated-code-image.spec.js --config=.playwright/phase02-manual.config.cjs --project=chromium --workers=1 --retries=0 --reporter=line",
+    "exitCode": 0,
+    "stdout": "\nRunning 2 tests using 1 worker\n\n[1/2] [chromium] › tests\\e2e\\education\\generated-code-image.spec.js:53:5 › generated Present and print preserve source, walkthrough and accessible cropped citation\n[2/2] [chromium] › tests\\e2e\\education\\printed-markdown.spec.js:32:5 › PDF print preserves Markdown code literals, blank lines and paragraph structure\n  2 passed (9.8s)\n",
+    "stderr": ""
+  }
+}

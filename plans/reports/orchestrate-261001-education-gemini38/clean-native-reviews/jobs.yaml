@@ -1,0 +1,29 @@
+version: 1
+concurrency: 2
+# Recorded dispatch specification; native finite CLI on Windows, not Darwin ak supervision.
+# Both jobs launched after live omp 18.5.1 help/catalog/auth checks.
+authority: "Authorized full cook --auto --advice --tdd; Gemini temporarily excluded; no commit/push/deploy."
+workspace_root: C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001
+jobs:
+  - id: clean-native-trust-review
+    runtime: omp-native-cli
+    model: local52186/gpt-6.1-sol
+    task: security
+    effect: read-only
+    importance: high
+    capability: C3
+    risk: R0
+    timeout: 900s
+    external_timeout_seconds: 960
+    expected_output: "Independent native installer/vendor trust review with concrete file/line findings, inspected scope and GO/NO-GO."
+  - id: clean-live-public-review
+    runtime: omp-native-cli
+    model: local52186/gpt-6.1-sol
+    task: review
+    effect: read-only
+    importance: high
+    capability: C3
+    risk: R0
+    timeout: 900s
+    external_timeout_seconds: 960
+    expected_output: "Independent live projection/replay/isolation review with concrete file/line findings, inspected scope and GO/NO-GO."

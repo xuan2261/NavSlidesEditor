@@ -1,0 +1,76 @@
+version: 1
+concurrency: 1
+workspace_roots:
+  - C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001
+  - C:/Work/NavSlidesEditor/plans/reports/orchestrate-261001-education-gemini38
+defaults:
+  timeout: 31m
+  effect: scoped-write
+  approval: require
+  capture: true
+jobs:
+  - id: producer-phase01
+    runtime: omp
+    task: implement
+    importance: normal
+    model: local8045/gemini-3.8-flash-high
+    cwd: C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001
+    prompt: "Read the coordinator Phase01 prompt attachment, execute only its bounded baseline contract and return truthful evidence. --auto --advice --tdd; advice and integration are coordinator-owned. No production edits, commits, push or deploy."
+    effect: scoped-write
+    approval: require
+    isolation: worktree
+    timeout: 31m
+    authority: "User-requested pinned-model cook of plans/261001-0639-interactive-html-education-deep-tdd/plan.md with --auto --advice --tdd."
+    owned_paths:
+      - tests/e2e/education
+      - shared/tests/element-renderers.test.js
+      - shared/tests/htmlGenerator.test.js
+      - client/src/utils/element-update-fanout.test.js
+      - tests/e2e/games/game-elements-canvas-rendering.spec.js
+      - plans/261001-0639-interactive-html-education-deep-tdd/reports/baseline-evidence.md
+      - plans/261001-0639-interactive-html-education-deep-tdd/reports/execution-contracts.md
+    outputs:
+      - path: plans/261001-0639-interactive-html-education-deep-tdd/reports/baseline-evidence.md
+    expected_output: "Source-backed Phase01 evidence, actual editor/Present browser smoke, valid fixture lifecycle, expected native interaction RED, protection tests GREEN, no production edits."
+    checks:
+      - "Every Phase01 success criterion has actual evidence or remains incomplete."
+      - "Reported provider/model remains exactly local8045/gemini-3.8-flash-high."
+      - "No unrelated data or production source is mutated."
+      - "Unexpected verification failure stops producer for coordinator kongming counsel."
+    invocation:
+      command: C:/Users/Z10PAD8C_Xuan2261/.bun/bin/omp.exe
+      args:
+        - --model
+        - local8045/gemini-3.8-flash-high
+        - --thinking
+        - high
+        - --cwd
+        - C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001
+        - --print
+        - --mode
+        - json
+        - --session-dir
+        - C:/Work/NavSlidesEditor/plans/reports/orchestrate-261001-education-gemini38/sessions
+        - --config
+        - C:/Work/NavSlidesEditor/plans/reports/orchestrate-261001-education-gemini38/producer-permissions.yml
+        - --tools
+        - read,write,edit,glob,grep,bash,lsp,eval,todo
+        - --no-extensions
+        - --no-prewalk
+        - --no-title
+        - --approval-mode
+        - write
+        - --max-time
+        - 30m
+        - '@C:/Work/NavSlidesEditor/plans/reports/orchestrate-261001-education-gemini38/phase-01-prompt.md'
+  - id: review-phase01
+    runtime: internal
+    agent: reviewer
+    task: review
+    importance: high
+    cwd: C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001
+    effect: observe
+    timeout: 10m
+    depends_on: [producer-phase01]
+    prompt: "Independently review the settled Phase01 producer artifacts against all accepted criteria and captured observed proof. No edits or test/build commands. Reject misclassified environment RED, premature production edits or unsupported completion claims."
+    expected_output: "Evidence-backed Phase01 pass/fail review, concrete blockers and ownership findings."

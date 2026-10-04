@@ -1,0 +1,16 @@
+# Kongming failed actual audio smoke checkpoint
+Read-only counsel, no edits/checks/delegation/model switching. Explicit local52186/gpt-6.1-sol; Gemini excluded. Worktree C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001. Authorized accepted cook --auto --advice --tdd. Parent stops edits/re-diagnosis before receiving advice. Two isolated source workers still underway, no integration yet.
+Scope: Phase02 F1/F2/F6 implemented after meaningful expected RED. F1 universal action now stays next in actual editor; F2 metadata appears as 'A short tone demonstrates playbackTranscriptSpoken explanation persisted'. Test verification not yet rerun while independent workers run. All19 phase not declared GREEN. Actual audio playback/source smoke failed at first play. Need classify fixture vs product boundary, not suppress playback check.
+Exact failed browser step (after selecting slide3 audio-source, clipboard-pasting source B into accessible Audio source URL field, and saving transcript):
+await p02Tab.run(async({page})=>{await page.evaluate(async()=>{const audio=document.querySelector('[data-testid="slide-element-audio-source"] audio');await audio.play()});await page.waitForFunction(()=>document.querySelector('[data-testid="slide-element-audio-source"] audio').currentTime>0.1,{timeout:10000})});
+Verbatim observed output before failed step:
+{"source":"page"}
+{"readyState":0,"duration":null,"description":"A short tone demonstrates playbackTranscriptSpoken explanation persisted"}
+Verbatim failure:
+DOMException: NotSupportedError: The element has no supported sources.
+ at #evaluate (...puppeteer-core/lib/puppeteer/cdp/ExecutionContext.js:388:19)
+ at processTicksAndRejections (native:7:39)
+
+Real app frontend 127.0.0.1:55173, isolated API34102, temporary deck16dce88b-590b-4834-8c3d-03199c2e0f8d slide3 audio-source. DO NOT fetch API/browser/runtime yourself; inspect source read-only and advise next diagnostic. No unsupported byte/source conclusions; actual currentSrc and saved src not inspected since checkpoint triggered.
+Source fixture generated as valid-intent PCM WAV data URL via Buffer.alloc(44+16000*2), RIFF length bytes-8 at4, 'WAVEfmt ' at8, fmt length16 at16, format1 at20, channels1 at22, sampleRate8000 at24, byteRate16000 at28, blockAlign2 at32, bits16 at34, 'data' at36, data length32000 at40; sample j int16LE round(8000*sin(2*pi*frequency*j/8000)), j0..15999 at44+j*2. Source A frequency440, B660, prefix data:audio/wav;base64,. Browser clipboard helper returned source page. Input type text onChange currently resolveUrlEntry(...,'audio'). No tracked audio/video fixture exists per prior scout. Parent can generate local short WAV/upload if data URI unsupported by current existing boundary, but not mask a real source authoring bug.
+Question: concrete safe diagnostic and fix sequence for playback/source mutation; check media URL max length/data whitelist/read-normalization/canvas behavior and this WAV header mathematically. Need actual advancing time after save/reload. Classify fixture construction issue versus existing boundary inconsistency using evidence; do not claim cause without runtime. Return advice and permission to continue scoped repairs, not Phase02 approval.

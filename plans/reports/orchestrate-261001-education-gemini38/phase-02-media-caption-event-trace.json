@@ -1,0 +1,65 @@
+{
+  "events": [
+    {
+      "type": "pointerdown",
+      "target": "SUMMARY",
+      "targetId": null,
+      "defaultPrevented": false,
+      "summaryConnected": true,
+      "detailsConnected": true,
+      "summaryIdentity": true,
+      "detailsIdentity": true,
+      "open": false
+    },
+    {
+      "type": "gotpointercapture",
+      "target": "DIV",
+      "targetId": "slide-element-audit-video",
+      "defaultPrevented": false,
+      "summaryConnected": true,
+      "detailsConnected": true,
+      "summaryIdentity": true,
+      "detailsIdentity": true,
+      "open": false
+    },
+    {
+      "type": "pointerup",
+      "target": "DIV",
+      "targetId": "slide-element-audit-video",
+      "defaultPrevented": false,
+      "summaryConnected": true,
+      "detailsConnected": true,
+      "summaryIdentity": true,
+      "detailsIdentity": true,
+      "open": false
+    },
+    {
+      "type": "lostpointercapture",
+      "target": "DIV",
+      "targetId": "slide-element-audit-video",
+      "defaultPrevented": false,
+      "summaryConnected": true,
+      "detailsConnected": true,
+      "summaryIdentity": true,
+      "detailsIdentity": true,
+      "open": false
+    },
+    {
+      "type": "click",
+      "target": "DIV",
+      "targetId": "slide-element-audit-video",
+      "defaultPrevented": false,
+      "summaryConnected": true,
+      "detailsConnected": true,
+      "summaryIdentity": true,
+      "detailsIdentity": true,
+      "open": false
+    }
+  ],
+  "finalOpen": false,
+  "summaryIdentity": true,
+  "geometry": {
+    "x": 45,
+    "y": 50
+  }
+}

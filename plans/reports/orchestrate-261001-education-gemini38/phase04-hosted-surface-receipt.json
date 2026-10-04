@@ -1,0 +1,57 @@
+{
+  "uiPresent": {
+    "url": "/api/presentations/3ea3ae6d-1cb7-40e5-bf87-2b43c3d88540/present",
+    "version": "6.0.2",
+    "state": {
+      "mode": "wheel",
+      "phase": "result",
+      "picks": 1,
+      "excludedIds": [
+        "c"
+      ],
+      "lastWinner": {
+        "id": "c",
+        "label": "Chi"
+      },
+      "diceValues": [],
+      "pending": null,
+      "wheelAngle": 1687.5,
+      "runtimeMode": "local",
+      "generation": 0
+    }
+  },
+  "preview": {
+    "mode": "wheel",
+    "phase": "result",
+    "picks": 1,
+    "excludedIds": [
+      "c"
+    ],
+    "lastWinner": {
+      "id": "c",
+      "label": "Chi"
+    },
+    "diceValues": [],
+    "pending": null,
+    "wheelAngle": 1687.5,
+    "runtimeMode": "local",
+    "generation": 0
+  },
+  "share": {
+    "mode": "wheel",
+    "phase": "result",
+    "picks": 1,
+    "excludedIds": [
+      "b"
+    ],
+    "lastWinner": {
+      "id": "b",
+      "label": "Bình"
+    },
+    "diceValues": [],
+    "pending": null,
+    "wheelAngle": 1732.5,
+    "runtimeMode": "local",
+    "generation": 0
+  }
+}

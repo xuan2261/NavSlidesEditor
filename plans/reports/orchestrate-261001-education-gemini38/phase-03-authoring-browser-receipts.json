@@ -1,0 +1,417 @@
+{
+  "scope": "Phase03 authoring and canonical persistence; not standalone runtime or release evidence",
+  "deckId": "e10d985a-1d9f-4102-a561-6527e0efe674",
+  "duplicateId": "d3c2c48f-102f-4af1-b652-46a54814f111",
+  "controls": [
+    {
+      "type": "jeopardy",
+      "label": "Category 1 title",
+      "value": "Địa lý Việt Nam"
+    },
+    {
+      "type": "four-corners",
+      "label": "Timer duration in seconds",
+      "value": "47"
+    },
+    {
+      "type": "relay-race",
+      "label": "Questions per round",
+      "value": "3"
+    },
+    {
+      "type": "trivia-champ",
+      "label": "Buzz points",
+      "value": "17"
+    },
+    {
+      "type": "scattergories",
+      "label": "Category 1 label",
+      "value": "Động vật biển"
+    },
+    {
+      "type": "poll",
+      "label": "Prompt",
+      "value": "Chọn chủ đề học tiếp"
+    },
+    {
+      "type": "word-cloud",
+      "label": "Maximum submissions per player",
+      "value": "4"
+    },
+    {
+      "type": "matching",
+      "label": "Pair 1 prompt",
+      "value": "Hải quân"
+    }
+  ],
+  "history": [
+    {
+      "type": "name-picker",
+      "label": "Item 1 label",
+      "baseline": "Nguyễn An",
+      "undo": "Nguyễn An",
+      "redo": "Nguyễn An — kiểm chứng",
+      "persisted": "Nguyễn An — kiểm chứng",
+      "itemId": "item-1"
+    },
+    {
+      "type": "hot-potato",
+      "label": "Shuffle questions",
+      "baseline": false,
+      "undo": false,
+      "redo": true,
+      "persisted": true
+    },
+    {
+      "type": "jeopardy",
+      "label": "Wager limit",
+      "baseline": 1000,
+      "undo": "1000",
+      "redo": "800",
+      "persisted": 800
+    },
+    {
+      "type": "four-corners",
+      "label": "Timer duration in seconds",
+      "baseline": 47,
+      "undo": "47",
+      "redo": "48",
+      "persisted": 48
+    },
+    {
+      "type": "relay-race",
+      "label": "Questions per round",
+      "baseline": 3,
+      "undo": "3",
+      "redo": "4",
+      "persisted": 4
+    },
+    {
+      "type": "trivia-champ",
+      "label": "Buzz points",
+      "baseline": 17,
+      "undo": "17",
+      "redo": "13",
+      "persisted": 13
+    },
+    {
+      "type": "scattergories",
+      "label": "Time per round in seconds",
+      "baseline": 60,
+      "undo": "60",
+      "redo": "97",
+      "persisted": 97
+    },
+    {
+      "type": "poll",
+      "label": "Prompt",
+      "baseline": "Chọn chủ đề học tiếp",
+      "undo": "Chọn chủ đề học tiếp",
+      "redo": "Lớp chọn chủ đề nào? — kiểm chứng",
+      "persisted": "Lớp chọn chủ đề nào? — kiểm chứng"
+    },
+    {
+      "type": "word-cloud",
+      "label": "Maximum phrase length",
+      "baseline": 40,
+      "undo": "40",
+      "redo": "27",
+      "persisted": 27
+    },
+    {
+      "type": "matching",
+      "label": "Pair 1 prompt",
+      "baseline": "Hải quân",
+      "undo": "Hải quân",
+      "redo": "Ghép thủ đô — kiểm chứng",
+      "persisted": "Ghép thủ đô — kiểm chứng"
+    }
+  ],
+  "reload": [
+    {
+      "type": "name-picker",
+      "value": "Nguyễn An — kiểm chứng"
+    },
+    {
+      "type": "hot-potato",
+      "value": true
+    },
+    {
+      "type": "jeopardy",
+      "value": "800"
+    },
+    {
+      "type": "four-corners",
+      "value": "48"
+    },
+    {
+      "type": "relay-race",
+      "value": "4"
+    },
+    {
+      "type": "trivia-champ",
+      "value": "13"
+    },
+    {
+      "type": "scattergories",
+      "value": "97"
+    },
+    {
+      "type": "poll",
+      "value": "Lớp chọn chủ đề nào? — kiểm chứng"
+    },
+    {
+      "type": "word-cloud",
+      "value": "27"
+    },
+    {
+      "type": "matching",
+      "value": "Ghép thủ đô — kiểm chứng"
+    }
+  ],
+  "identities": [
+    {
+      "type": "name-picker",
+      "stableIdsAndKeys": true
+    },
+    {
+      "type": "hot-potato",
+      "stableIdsAndKeys": true
+    },
+    {
+      "type": "jeopardy",
+      "stableIdsAndKeys": true
+    },
+    {
+      "type": "four-corners",
+      "stableIdsAndKeys": true
+    },
+    {
+      "type": "relay-race",
+      "stableIdsAndKeys": true
+    },
+    {
+      "type": "trivia-champ",
+      "stableIdsAndKeys": true
+    },
+    {
+      "type": "scattergories",
+      "stableIdsAndKeys": true
+    },
+    {
+      "type": "poll",
+      "stableIdsAndKeys": true
+    },
+    {
+      "type": "word-cloud",
+      "stableIdsAndKeys": true
+    },
+    {
+      "type": "matching",
+      "stableIdsAndKeys": true
+    }
+  ],
+  "offlineStatic": [
+    {
+      "type": "name-picker",
+      "text": "Name Picker\nname-picker\nNguyễn An — kiểm chứng\nHọc sinh 2\nHọc sinh 3\nHọc sinh 4\nHọc sinh 5\nHọc sinh 6\nHọc sinh 7\nHọc sinh 8\nAuthored game snapshot",
+      "images": []
+    },
+    {
+      "type": "hot-potato",
+      "text": "Hot Potato Quiz\nhot-potato\nChọn Paris sau khi đổi thứ tự\nKiểm tra multi-choice\nKiểm tra true-false\nKiểm tra fill-blank\nKiểm tra ordering\nKiểm tra matching\nKiểm tra image-hotspot\nAuthored game snapshot",
+      "images": [
+        {
+          "alt": "Bản đồ minh họa",
+          "embedded": true,
+          "loaded": true
+        },
+        {
+          "alt": "Ảnh vùng mục tiêu",
+          "embedded": true,
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "type": "jeopardy",
+      "text": "Jeopardy\njeopardy\nĐịa lý Việt Nam\nWhat is the capital of France?\nWhat is the capital of France?\nAuthored game snapshot",
+      "images": []
+    },
+    {
+      "type": "four-corners",
+      "text": "Four Corners\nfour-corners\nWhat is the capital of France?\nAuthored game snapshot",
+      "images": []
+    },
+    {
+      "type": "relay-race",
+      "text": "Relay Race\nrelay-race\nWhat is the capital of France?\nAuthored game snapshot",
+      "images": []
+    },
+    {
+      "type": "trivia-champ",
+      "text": "Trivia Championship\ntrivia-champ\nWhat is the capital of France?\nAuthored game snapshot",
+      "images": []
+    },
+    {
+      "type": "scattergories",
+      "text": "Scattergories\nscattergories\nĐộng vật biển\nAnimal\nCountry\nName\nThing\nColor\nAuthored game snapshot",
+      "images": []
+    },
+    {
+      "type": "poll",
+      "text": "Live Poll\npoll\nLớp chọn chủ đề nào? — kiểm chứng\nOption A\nKhôi phục bản nháp\nAuthored game snapshot",
+      "images": []
+    },
+    {
+      "type": "word-cloud",
+      "text": "Word Cloud\nword-cloud\nShare one word or short phrase\nAuthored game snapshot",
+      "images": []
+    },
+    {
+      "type": "matching",
+      "text": "Matching\nmatching\nMatch each item to its answer\nGhép thủ đô — kiểm chứng → Paris\nItaly → Rome\nAuthored game snapshot",
+      "images": []
+    }
+  ],
+  "mobile": {
+    "width": 320,
+    "height": 740,
+    "normalReloadWeight": 4,
+    "itemId": "item-1",
+    "touchSaveStatus": 200
+  },
+  "tablet": {
+    "width": 768,
+    "height": 1024,
+    "keyboard": "ArrowUp then Enter on observed enabled Save button",
+    "normalReloadWeight": 5,
+    "itemId": "item-1",
+    "putStatus": 200
+  },
+  "saveVerification": {
+    "lifetimeBefore": {
+      "files": 1,
+      "tests": 3
+    },
+    "after": {
+      "files": 6,
+      "tests": 47
+    }
+  },
+  "lostAcknowledgementRecovery": {
+    "status": "",
+    "draft": null,
+    "clientPresentation": {
+      "id": "p3-rebased-lost-ack",
+      "title": "Queued edit",
+      "generation": 3
+    },
+    "authority": {
+      "title": "Queued edit",
+      "generation": 3,
+      "requests": [
+        {
+          "title": "First edit",
+          "generation": 1,
+          "key": "fbce0c00-f9b5-4b19-be8b-83f4fc1e1c81",
+          "result": 2,
+          "replay": false
+        },
+        {
+          "title": "Queued edit",
+          "generation": 2,
+          "key": "a04fd262-5efd-41a7-8466-7a1e1fe0d285",
+          "result": 3,
+          "replay": false
+        },
+        {
+          "title": "Queued edit",
+          "generation": 2,
+          "key": "a04fd262-5efd-41a7-8466-7a1e1fe0d285",
+          "result": 3,
+          "replay": true
+        },
+        {
+          "title": "Queued edit",
+          "generation": 2,
+          "key": "a04fd262-5efd-41a7-8466-7a1e1fe0d285",
+          "result": 3,
+          "replay": true
+        },
+        {
+          "title": "Queued edit",
+          "generation": 2,
+          "key": "a04fd262-5efd-41a7-8466-7a1e1fe0d285",
+          "result": 3,
+          "replay": true
+        }
+      ],
+      "faultActive": false,
+      "lostKey": "a04fd262-5efd-41a7-8466-7a1e1fe0d285"
+    }
+  },
+  "mountedSynchronousDrain": {
+    "drained": true,
+    "status": "saved",
+    "draft": null,
+    "clientPresentation": {
+      "id": "p3-sync-explicit-drain",
+      "title": "Final edit",
+      "generation": 3
+    },
+    "authority": {
+      "title": "Final edit",
+      "generation": 3,
+      "requests": [
+        {
+          "title": "Uncertain edit",
+          "generation": 1,
+          "key": "867c2467-c9a9-47b0-a95d-e2b1cd02caf9",
+          "result": 2,
+          "replay": false
+        },
+        {
+          "title": "Uncertain edit",
+          "generation": 1,
+          "key": "867c2467-c9a9-47b0-a95d-e2b1cd02caf9",
+          "result": 2,
+          "replay": true
+        },
+        {
+          "title": "Uncertain edit",
+          "generation": 1,
+          "key": "867c2467-c9a9-47b0-a95d-e2b1cd02caf9",
+          "result": 2,
+          "replay": true
+        },
+        {
+          "title": "Uncertain edit",
+          "generation": 1,
+          "key": "867c2467-c9a9-47b0-a95d-e2b1cd02caf9",
+          "result": 2,
+          "replay": true
+        },
+        {
+          "title": "Final edit",
+          "generation": 2,
+          "key": "b6179d62-32cf-4368-b8c4-5b3a118fbe7a",
+          "result": 3,
+          "replay": false
+        }
+      ],
+      "faultActive": false,
+      "lostKey": "867c2467-c9a9-47b0-a95d-e2b1cd02caf9"
+    }
+  },
+  "synchronousTransport": {
+    "resourceType": "xhr",
+    "requestBytes": 65771,
+    "status": 200
+  },
+  "limits": [
+    "Package authority probe is not full Express CRUD or edited PPTX export",
+    "Offline file static content/media only; standalone playable runtime remains Phase04+",
+    "No commit, push, deploy or release qualification"
+  ]
+}

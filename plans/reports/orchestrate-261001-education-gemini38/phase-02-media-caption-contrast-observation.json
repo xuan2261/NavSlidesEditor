@@ -1,0 +1,32 @@
+{
+  "foreground": "rgb(244, 238, 231)",
+  "background": "rgb(248, 250, 252)",
+  "contrast": 1.1009773726897663,
+  "backgrounds": [
+    {
+      "tag": "DIV",
+      "testId": "canvas-area",
+      "color": "rgb(248, 250, 252)"
+    },
+    {
+      "tag": "DIV",
+      "testId": null,
+      "color": "rgb(20, 17, 15)"
+    },
+    {
+      "tag": "DIV",
+      "testId": null,
+      "color": "rgb(20, 17, 15)"
+    },
+    {
+      "tag": "DIV",
+      "testId": null,
+      "color": "rgb(20, 17, 15)"
+    },
+    {
+      "tag": "BODY",
+      "testId": null,
+      "color": "rgb(20, 17, 15)"
+    }
+  ]
+}

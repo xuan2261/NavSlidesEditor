@@ -1,10 +1,12 @@
 ---
 phase: 1
 title: "Baseline, corrected findings and locked behavioral contracts"
-status: pending
+status: completed
 priority: P1
 dependencies: []
 ---
+
+Status completed chỉ ghi qualified historical checkpoint; không phải current-source acceptance hoặc implementation đã merge vào main. Xem [handoff](../handoffs/education-pause-20261004.md) khi resume.
 
 # Phase 01 — Baseline, đính chính review và khóa contract
 
@@ -101,13 +103,13 @@ Khởi chạy app qua runner hiện có, dùng editor thật: tạo fixture → 
 
 ## Success criteria / executable checklist
 
-- [ ] Current source và ownership documented, user changes untouched.
-- [ ] Scope R01–R14/P01–P12 mapped, no omission.
-- [ ] Confirm/reject conditional review premises by actual path.
-- [ ] Record expected RED for generated Present games and portable game path.
-- [ ] Define shared schemas, reset/scoring and capability semantics for following phases.
-- [ ] Verify baseline fixtures/tests do not modify actual user decks.
-- [ ] Save actual browser observations and baseline limits in evidence.
+- [x] Current source và ownership documented, user changes untouched.
+- [x] Scope R01–R14/P01–P12 mapped, no omission.
+- [x] Confirm/reject conditional review premises by actual path.
+- [x] Record expected RED for generated Present games and portable game path.
+- [x] Define shared schemas, reset/scoring and capability semantics for following phases.
+- [x] Verify baseline fixtures/tests do not modify actual user decks.
+- [x] Save actual browser observations and baseline limits in evidence.
 
 ## Security / risks / failure protocol
 

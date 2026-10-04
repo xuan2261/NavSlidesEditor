@@ -1,7 +1,7 @@
 ---
 title: "Interactive HTML Education — Deep TDD"
 description: "Sửa controls/game, đưa runtime tương tác vào Present/Share/HTML offline, bổ sung quiz, minigame, mô phỏng và live learning với TDD."
-status: pending
+status: in-progress
 priority: P1
 effort: ""
 branch: main
@@ -31,12 +31,16 @@ Giữ **toàn bộ** đề xuất review, gồm sửa controls, 10 game cũ, 7 d
 - Script HTML vẫn chạy trong iframe `allow-scripts`, không quyền same-origin. Portable export gom dependency được khai báo; tài nguyên không đóng gói được phải báo lỗi cụ thể.
 - Không đổi luật chấm điểm sản phẩm chỉ vì review suy đoán. Phase 01 xác minh; Phase 05/12 thống nhất nguồn state/score. Offline chứa đáp án nên không bảo mật answer keys; Live player nhận public projection không có đáp án.
 
-## Roadmap — mọi phase đang pending
+## Trạng thái tạm dừng và nguồn implementation
 
-- [ ] [01 — Baseline, đính chính và khóa contract](./phase-01-start.md) — dependency: none.
-- [ ] [02 — Controls, alignment, fanout và 19-element audit](./phase-02-editor-controls.md) — 01.
-- [ ] [03 — Schema, registry và soạn đủ game](./phase-03-schemas-authoring.md) — 01.
-- [ ] [04 — Runtime standalone và generated-document integration](./phase-04-standalone-runtime.md) — 03.
+Người dùng yêu cầu commit checkpoint, không chạy lại tests và tạm dừng cook. Implementation hiện nằm trong worktree `C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001`, nhánh `feat/education-gemini38-cook-261001`, chưa được nhập vào `main`. [Handoff và TODO tiếp tục](../handoffs/education-pause-20261004.md) giữ bằng chứng và next actions. Phase01–03 đã có qualified historical checkpoints; chúng không chứng minh source hiện tại. Phase04 standalone checkpoint trước đây không đóng current-subject acceptance; Phase04–16 vẫn chưa hoàn tất qualification.
+
+## Roadmap — historical checkpoints và qualification còn mở
+
+- [x] [01 — Baseline, đính chính và khóa contract](./phase-01-start.md) — dependency: none; historical checkpoint.
+- [x] [02 — Controls, alignment, fanout và 19-element audit](./phase-02-editor-controls.md) — 01; historical checkpoint.
+- [x] [03 — Schema, registry và soạn đủ game](./phase-03-schemas-authoring.md) — 01; historical checkpoint.
+- [ ] [04 — Runtime standalone và generated-document integration](./phase-04-standalone-runtime.md) — 03; current-subject acceptance còn mở.
 - [ ] [05 — Chạy đủ 10 game cũ, timer/score/reset](./phase-05-existing-games.md) — 03, 04.
 - [ ] [06 — Native quiz, 7 question kinds](./phase-06-native-quiz.md) — 03, 04.
 - [ ] [07 — Triggers, visibility và biến điểm](./phase-07-triggers-variables.md) — 04.
