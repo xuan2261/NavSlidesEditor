@@ -1,0 +1,3365 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-03T17:18:26.929Z",
+  "qualification": "unqualified-pending",
+  "publishable": false,
+  "dependencyChurn": true,
+  "subject": {
+    "kind": "uncommitted-education-worktree-dependency-inputs",
+    "worktree": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001",
+    "baselineCommit": "760eae26d9bdcdd22cb42dd5f1e0eab487e18fa3",
+    "dependencyInputHash": "4238aeb6496d58e6f8e6f3718c20b99d3ed49a32042239fe1c4a1092fd90c434",
+    "inputs": [
+      {
+        "path": "package-lock.json",
+        "sha256": "8feda003e9c7a9ecc7bcc12fdcc4f6e184999ae43ba6ff36aff2c4eea76c9090",
+        "baselineSha256": "2ceada6ae6632f64154d488bd2864ba0d25496c0a171ef9460adbd3298fff97d"
+      },
+      {
+        "path": "electron/server-package-lock.json",
+        "sha256": "73ef6a14fc9e6e50d2414752f0b3d3f4a170c37485f02bee0cfa44e8867acea9",
+        "baselineSha256": "af13eac3df5700ddd4d7f519fea384c2eefe31b966a44c466b9b9f90e2bb6b31"
+      },
+      {
+        "path": "package.json",
+        "sha256": "57a5cf3213f68f7540b16e19f0a1284fd425a16ea79f34e573c191e3f122c94e",
+        "baselineSha256": "f64b270c32c29dd2856bed4205689a62f2fdc2f38e94a4526f4afc6c212fc101"
+      },
+      {
+        "path": "client/package.json",
+        "sha256": "5f30d1b400f93eb72c435bf4b9ec5f3094a2e22b909ca6080a942fe04d172509",
+        "baselineSha256": "dd4a94e8802b17029eebc18051be9fb32fff94971e6ba7c61d5564764b94e38b"
+      },
+      {
+        "path": "server/package.json",
+        "sha256": "9e235629537c9645daa52367842959ae84517a034ff1b327c14dfad1be3ac319",
+        "baselineSha256": "80f985c5ec0b16feae7a319cb5c383b37d2e667c9b055db5b4f115397c540bcc"
+      },
+      {
+        "path": "shared/package.json",
+        "sha256": "e12b287ae0e552cc05d9876d5a648bc4f9df985d9c94ca5643038f8d111dd60a",
+        "baselineSha256": "a961d39937f9d30a97dd9c7634e216235e704757e0cbba2f626827cbc6ecc1cf"
+      },
+      {
+        "path": "website/package.json",
+        "sha256": "ee512e9d7f56fbcd88d441ddaddcbc1926aa79ff0a772f428a107476ea1dc60c",
+        "baselineSha256": "f4c9d2f69d48c7407c49f11506552b60fdfe6f01b56a82556e52372c4d8bd499"
+      }
+    ]
+  },
+  "historicalReference": {
+    "path": "plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/reports/release-scope-manifest.json",
+    "unchanged": true,
+    "workspaceSemanticHash": "02ee829c6890f15505668e4d824b38718b18d4975d607e487aabab17433609a4",
+    "electronSemanticHash": "d747f0d3879664647c1db7f4284f491b21499f1362fa3e2c55f622934188c3ae",
+    "boundary": "The historical metadata-only release decision is not current dependency resolution or release qualification. The retained HEAD workspace lock already differs from its historical semantic hash; the actual observed worktree delta is recorded against retained HEAD, not falsely attributed directly to the older release decision."
+  },
+  "algorithm": "SHA-256 of JSON.stringify(parsed package-lock v3) after deleting top-level version and packages[path].version for the explicitly listed package paths; raw byte identities use SHA-256 without newline normalization.",
+  "locks": {
+    "package-lock.json": {
+      "excludedPackageVersionPaths": ["", "client", "server", "shared", "website"],
+      "baselineByteHash": "2ceada6ae6632f64154d488bd2864ba0d25496c0a171ef9460adbd3298fff97d",
+      "currentByteHash": "8feda003e9c7a9ecc7bcc12fdcc4f6e184999ae43ba6ff36aff2c4eea76c9090",
+      "baselineSemanticHash": "d5c5a86289fb0b932c7f5bc126753270239a11ffb4c3a38a854e232bbecebc78",
+      "currentSemanticHash": "ca6953c058faff24625ed6f4fa01cd1b6fa50ec4b368fa7245b82b594b490d84"
+    },
+    "electron/server-package-lock.json": {
+      "excludedPackageVersionPaths": [""],
+      "baselineByteHash": "af13eac3df5700ddd4d7f519fea384c2eefe31b966a44c466b9b9f90e2bb6b31",
+      "currentByteHash": "73ef6a14fc9e6e50d2414752f0b3d3f4a170c37485f02bee0cfa44e8867acea9",
+      "baselineSemanticHash": "d747f0d3879664647c1db7f4284f491b21499f1362fa3e2c55f622934188c3ae",
+      "currentSemanticHash": "e1f575e8ea8f348c803b4431ea3edfebe542f37584589967b503b6a30d8d5122"
+    }
+  },
+  "updateEvidence": {
+    "method": "Read-only reconstruction from exact current manifest/lock bytes and git show of retained HEAD. No npm resolution or lock rewriting was performed while recording this evidence.",
+    "originalResolutionCommands": "Not independently recovered from the retained accessible transcript; no claim that dependency changes were metadata-only. Current graph/resolution and metadata deltas are recorded below.",
+    "manifestAgreement": {
+      "workspace": true,
+      "electron": true
+    },
+    "observedChecks": [
+      "Actual Node invocation of validateWorkspaceLock(readWorkspaceManifests(cwd), workspaceLock) returned true.",
+      "Actual Node invocation of validateIsolatedLock(createIsolatedManifest(serverPackage), electronLock) returned true."
+    ],
+    "purpose": [
+      {
+        "dependencies": ["@napi-rs/canvas", "@tesseract.js-data/eng", "tesseract.js", "jsqr"],
+        "evidence": [
+          "tests/e2e/education/release-static-artifacts.js",
+          "tests/e2e/education/release-ordinary-observers.js"
+        ],
+        "use": "Actual PNG/PDF/PPTX pixel capture, local OCR and QR decoding in education artifact verification."
+      },
+      {
+        "dependencies": ["acorn", "postcss-value-parser"],
+        "evidence": [
+          "client/src/utils/portable-script-parser.js",
+          "client/src/utils/portable-css-rewriter.js"
+        ],
+        "use": "Parsing authored JavaScript and rewriting declared CSS resource URLs for portable export."
+      },
+      {
+        "dependencies": ["marked", "parse5"],
+        "evidence": [
+          "shared/src/element-renderers.js",
+          "shared/package.json",
+          "server/package.json"
+        ],
+        "use": "Production parsed Markdown rendering and shared parsed markup admission; marked moved from server development to runtime dependencies and the isolated Electron graph reflects that move."
+      }
+    ]
+  },
+  "manifestDeltas": [
+    {
+      "manifest": "package.json",
+      "field": "devDependencies",
+      "name": "@napi-rs/canvas",
+      "before": null,
+      "after": "1.0.7"
+    },
+    {
+      "manifest": "package.json",
+      "field": "devDependencies",
+      "name": "@tesseract.js-data/eng",
+      "before": null,
+      "after": "^1.0.0"
+    },
+    {
+      "manifest": "package.json",
+      "field": "devDependencies",
+      "name": "jsqr",
+      "before": null,
+      "after": "^1.4.0"
+    },
+    {
+      "manifest": "package.json",
+      "field": "devDependencies",
+      "name": "tesseract.js",
+      "before": null,
+      "after": "^7.0.0"
+    },
+    {
+      "manifest": "client/package.json",
+      "field": "dependencies",
+      "name": "acorn",
+      "before": null,
+      "after": "^8.18.0"
+    },
+    {
+      "manifest": "client/package.json",
+      "field": "dependencies",
+      "name": "postcss-value-parser",
+      "before": null,
+      "after": "^4.2.0"
+    },
+    {
+      "manifest": "server/package.json",
+      "field": "dependencies",
+      "name": "marked",
+      "before": null,
+      "after": "^18.0.4"
+    },
+    {
+      "manifest": "server/package.json",
+      "field": "devDependencies",
+      "name": "marked",
+      "before": "^18.0.4",
+      "after": null
+    },
+    {
+      "manifest": "shared/package.json",
+      "field": "dependencies",
+      "name": "marked",
+      "before": null,
+      "after": "^18.0.4"
+    },
+    {
+      "manifest": "shared/package.json",
+      "field": "dependencies",
+      "name": "parse5",
+      "before": null,
+      "after": "7.3.0"
+    }
+  ],
+  "packageDeltas": {
+    "package-lock.json": [
+      {
+        "package": "",
+        "change": "updated",
+        "fields": {
+          "devDependencies": {
+            "before": {
+              "@axe-core/playwright": "^4.11.3",
+              "@eslint/js": "^9.39.4",
+              "@modelcontextprotocol/sdk": "1.31.0",
+              "@playwright/test": "1.63.0",
+              "@testing-library/dom": "^10.4.2",
+              "@testing-library/react": "^16.3.2",
+              "@testing-library/user-event": "^14.6.1",
+              "@vitest/coverage-v8": "^5.0.1",
+              "concurrently": "^9.2.1",
+              "electron": "42.9.3",
+              "electron-builder": "26.15.3",
+              "esbuild": "0.25.12",
+              "eslint": "^9.39.4",
+              "eslint-plugin-react": "^7.37.5",
+              "eslint-plugin-react-hooks": "7.1.1",
+              "eslint-plugin-unused-imports": "^4.4.1",
+              "globals": "^17.4.0",
+              "happy-dom": "^20.9.0",
+              "husky": "^9.1.7",
+              "jsdom": "^21.1.2",
+              "lint-staged": "^16.4.0",
+              "playwright": "1.63.0",
+              "prettier": "^3.9.7",
+              "react": "18.3.1",
+              "react-dom": "18.3.1",
+              "vitest": "^5.0.1",
+              "zod": "4.6.5"
+            },
+            "after": {
+              "@axe-core/playwright": "^4.11.3",
+              "@eslint/js": "^9.39.4",
+              "@modelcontextprotocol/sdk": "1.31.0",
+              "@napi-rs/canvas": "1.0.7",
+              "@playwright/test": "1.63.0",
+              "@tesseract.js-data/eng": "^1.0.0",
+              "@testing-library/dom": "^10.4.2",
+              "@testing-library/react": "^16.3.2",
+              "@testing-library/user-event": "^14.6.1",
+              "@vitest/coverage-v8": "^5.0.1",
+              "concurrently": "^9.2.1",
+              "electron": "42.9.3",
+              "electron-builder": "26.15.3",
+              "esbuild": "0.25.12",
+              "eslint": "^9.39.4",
+              "eslint-plugin-react": "^7.37.5",
+              "eslint-plugin-react-hooks": "7.1.1",
+              "eslint-plugin-unused-imports": "^4.4.1",
+              "globals": "^17.4.0",
+              "happy-dom": "^20.9.0",
+              "husky": "^9.1.7",
+              "jsdom": "^21.1.2",
+              "jsqr": "^1.4.0",
+              "lint-staged": "^16.4.0",
+              "playwright": "1.63.0",
+              "prettier": "^3.9.7",
+              "react": "18.3.1",
+              "react-dom": "18.3.1",
+              "tesseract.js": "^7.0.0",
+              "vitest": "^5.0.1",
+              "zod": "4.6.5"
+            }
+          }
+        }
+      },
+      {
+        "package": "client",
+        "change": "updated",
+        "fields": {
+          "dependencies": {
+            "before": {
+              "@radix-ui/react-tabs": "^1.1.13",
+              "@tiptap/core": "3.31.3",
+              "@tiptap/extension-color": "3.31.3",
+              "@tiptap/extension-font-family": "3.31.3",
+              "@tiptap/extension-highlight": "3.31.3",
+              "@tiptap/extension-image": "3.31.3",
+              "@tiptap/extension-link": "3.31.3",
+              "@tiptap/extension-placeholder": "3.31.3",
+              "@tiptap/extension-table": "3.31.3",
+              "@tiptap/extension-table-cell": "3.31.3",
+              "@tiptap/extension-table-header": "3.31.3",
+              "@tiptap/extension-table-row": "3.31.3",
+              "@tiptap/extension-text-align": "3.31.3",
+              "@tiptap/extension-text-style": "3.31.3",
+              "@tiptap/extension-underline": "3.31.3",
+              "@tiptap/pm": "3.31.3",
+              "@tiptap/react": "3.31.3",
+              "@tiptap/starter-kit": "3.31.3",
+              "autoprefixer": "^10.5.0",
+              "canvas-confetti": "^1.9.4",
+              "clsx": "^2.1.1",
+              "highlight.js": "^11.11.1",
+              "katex": "^0.16.40",
+              "lucide-react": "^1.47.0",
+              "marked": "^18.0.4",
+              "pdfjs-dist": "6.3.289",
+              "postcss": "^8.5.28",
+              "pptxgenjs": "^4.0.1",
+              "qrcode": "^1.5.4",
+              "react": "^18.3.1",
+              "react-dom": "^18.3.1",
+              "react-joyride": "^3.0.2",
+              "react-router-dom": "^7.14.1",
+              "revealjs-shared": "*",
+              "socket.io-client": "^4.8.3",
+              "tailwind-merge": "^3.5.0",
+              "tailwindcss": "^3.4.19",
+              "zustand": "^5.0.12"
+            },
+            "after": {
+              "@radix-ui/react-tabs": "^1.1.13",
+              "@tiptap/core": "3.31.3",
+              "@tiptap/extension-color": "3.31.3",
+              "@tiptap/extension-font-family": "3.31.3",
+              "@tiptap/extension-highlight": "3.31.3",
+              "@tiptap/extension-image": "3.31.3",
+              "@tiptap/extension-link": "3.31.3",
+              "@tiptap/extension-placeholder": "3.31.3",
+              "@tiptap/extension-table": "3.31.3",
+              "@tiptap/extension-table-cell": "3.31.3",
+              "@tiptap/extension-table-header": "3.31.3",
+              "@tiptap/extension-table-row": "3.31.3",
+              "@tiptap/extension-text-align": "3.31.3",
+              "@tiptap/extension-text-style": "3.31.3",
+              "@tiptap/extension-underline": "3.31.3",
+              "@tiptap/pm": "3.31.3",
+              "@tiptap/react": "3.31.3",
+              "@tiptap/starter-kit": "3.31.3",
+              "acorn": "^8.18.0",
+              "autoprefixer": "^10.5.0",
+              "canvas-confetti": "^1.9.4",
+              "clsx": "^2.1.1",
+              "highlight.js": "^11.11.1",
+              "katex": "^0.16.40",
+              "lucide-react": "^1.47.0",
+              "marked": "^18.0.4",
+              "pdfjs-dist": "6.3.289",
+              "postcss": "^8.5.28",
+              "postcss-value-parser": "^4.2.0",
+              "pptxgenjs": "^4.0.1",
+              "qrcode": "^1.5.4",
+              "react": "^18.3.1",
+              "react-dom": "^18.3.1",
+              "react-joyride": "^3.0.2",
+              "react-router-dom": "^7.14.1",
+              "revealjs-shared": "*",
+              "socket.io-client": "^4.8.3",
+              "tailwind-merge": "^3.5.0",
+              "tailwindcss": "^3.4.19",
+              "zustand": "^5.0.12"
+            }
+          }
+        }
+      },
+      {
+        "package": "node_modules/@napi-rs/canvas",
+        "change": "updated",
+        "fields": {
+          "optional": {
+            "before": true,
+            "after": null
+          },
+          "devOptional": {
+            "before": null,
+            "after": true
+          }
+        }
+      },
+      {
+        "package": "node_modules/@napi-rs/canvas-linux-x64-gnu",
+        "change": "updated",
+        "fields": {
+          "dev": {
+            "before": null,
+            "after": true
+          }
+        }
+      },
+      {
+        "package": "node_modules/@napi-rs/canvas-linux-x64-musl",
+        "change": "updated",
+        "fields": {
+          "dev": {
+            "before": null,
+            "after": true
+          }
+        }
+      },
+      {
+        "package": "node_modules/acorn",
+        "change": "updated",
+        "fields": {
+          "dev": {
+            "before": true,
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "server",
+        "change": "updated",
+        "fields": {
+          "dependencies": {
+            "before": {
+              "@drgrice1/tikzjax": "^1.0.0-beta24",
+              "bcryptjs": "^3.0.3",
+              "cors": "^2.8.5",
+              "dompurify": "^3.4.0",
+              "express": "^4.22.2",
+              "express-rate-limit": "^8.7.0",
+              "file-type": "^22.0.0",
+              "fs-extra": "^11.2.0",
+              "image-size": "file:../vendor-overrides/image-size-disabled",
+              "jsdom": "^25.0.1",
+              "jszip": "3.10.1",
+              "multer": "^2.4.0",
+              "playwright": "^1.63.0",
+              "pptxgenjs": "4.0.1",
+              "pptxtojson": "2.0.2",
+              "revealjs-shared": "*",
+              "socket.io": "^4.8.3",
+              "socket.io-client": "^4.8.3",
+              "undici": "7.29.0",
+              "zod": "^4.6.5"
+            },
+            "after": {
+              "@drgrice1/tikzjax": "^1.0.0-beta24",
+              "bcryptjs": "^3.0.3",
+              "cors": "^2.8.5",
+              "dompurify": "^3.4.0",
+              "express": "^4.22.2",
+              "express-rate-limit": "^8.7.0",
+              "file-type": "^22.0.0",
+              "fs-extra": "^11.2.0",
+              "image-size": "file:../vendor-overrides/image-size-disabled",
+              "jsdom": "^25.0.1",
+              "jszip": "3.10.1",
+              "marked": "^18.0.4",
+              "multer": "^2.4.0",
+              "playwright": "^1.63.0",
+              "pptxgenjs": "4.0.1",
+              "pptxtojson": "2.0.2",
+              "revealjs-shared": "*",
+              "socket.io": "^4.8.3",
+              "socket.io-client": "^4.8.3",
+              "undici": "7.29.0",
+              "zod": "^4.6.5"
+            }
+          },
+          "devDependencies": {
+            "before": {
+              "chart.js": "^4.5.1",
+              "d3": "^7.9.0",
+              "highlight.js": "^11.11.1",
+              "katex": "^0.16.11",
+              "marked": "^18.0.4",
+              "reveal.js": "6.0.2",
+              "supertest": "^7.2.2"
+            },
+            "after": {
+              "chart.js": "^4.5.1",
+              "d3": "^7.9.0",
+              "highlight.js": "^11.11.1",
+              "katex": "^0.16.11",
+              "reveal.js": "6.0.2",
+              "supertest": "^7.2.2"
+            }
+          }
+        }
+      },
+      {
+        "package": "shared",
+        "change": "updated",
+        "fields": {
+          "dependencies": {
+            "before": null,
+            "after": {
+              "marked": "^18.0.4",
+              "parse5": "7.3.0"
+            }
+          }
+        }
+      },
+      {
+        "package": "node_modules/@napi-rs/canvas-win32-x64-msvc",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "1.0.7"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/@napi-rs/canvas-win32-x64-msvc/-/canvas-win32-x64-msvc-1.0.7.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-SKTNdBV/ljfhkPsLhXjm4x2PQ0ILpc0PhkBzRHuroJXidZUaF5yh0j3s3dIzB8PrRmW+nEASzyMTaWT3nH1ywQ=="
+          },
+          "cpu": {
+            "before": null,
+            "after": ["x64"]
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          },
+          "license": {
+            "before": null,
+            "after": "MIT"
+          },
+          "optional": {
+            "before": null,
+            "after": true
+          },
+          "os": {
+            "before": null,
+            "after": ["win32"]
+          },
+          "engines": {
+            "before": null,
+            "after": {
+              "node": ">= 10"
+            }
+          },
+          "funding": {
+            "before": null,
+            "after": {
+              "type": "github",
+              "url": "https://github.com/sponsors/Brooooooklyn"
+            }
+          }
+        }
+      },
+      {
+        "package": "node_modules/@tesseract.js-data/eng",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "1.0.0"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/@tesseract.js-data/eng/-/eng-1.0.0.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-mbTumm6KQPUHyzTPQaF3ObXYnx0SqqfV2nabqFVQBwD6Kl7PhGSLSzOlfFTWy0P3BjghaSKA2W9GB19Jk+ZcTg=="
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          }
+        }
+      },
+      {
+        "package": "node_modules/bmp-js",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "0.1.0"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/bmp-js/-/bmp-js-0.1.0.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-vHdS19CnY3hwiNdkaqk93DvjVLfbEcI8mys4UjuWrlX1haDmroo8o4xCzh4wD6DGV6HxRCyauwhHRqMTfERtjw=="
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          }
+        }
+      },
+      {
+        "package": "node_modules/idb-keyval",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "6.3.0"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/idb-keyval/-/idb-keyval-6.3.0.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-um+2dgAWmYsu615EXpWVwSmapJhON0G43t3Ka/EVaohzPQXSMqKEqeDK/oIW3Ow+BXaF2PvSc+oBTFp793A5Ow=="
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          }
+        }
+      },
+      {
+        "package": "node_modules/is-url",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "1.2.4"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/is-url/-/is-url-1.2.4.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-ITvGim8FhRiYe4IQ5uHSkj7pVaPDrCTkNd3yq3cV7iZAcJdHTUMPMEHcqSOy9xZ9qFenQCvi+2wjH9a1nXqHww=="
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          }
+        }
+      },
+      {
+        "package": "node_modules/jsqr",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "1.4.0"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/jsqr/-/jsqr-1.4.0.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-dxLob7q65Xg2DvstYkRpkYtmKm2sPJ9oFhrhmudT1dZvNFFTlroai3AWSpLey/w5vMcLBXRgOJsbXpdN9HzU/A=="
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          }
+        }
+      },
+      {
+        "package": "node_modules/node-fetch",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "2.7.0"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/node-fetch/-/node-fetch-2.7.0.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A=="
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          },
+          "dependencies": {
+            "before": null,
+            "after": {
+              "whatwg-url": "^5.0.0"
+            }
+          },
+          "engines": {
+            "before": null,
+            "after": {
+              "node": "4.x || >=6.0.0"
+            }
+          },
+          "peerDependencies": {
+            "before": null,
+            "after": {
+              "encoding": "^0.1.0"
+            }
+          },
+          "peerDependenciesMeta": {
+            "before": null,
+            "after": {
+              "encoding": {
+                "optional": true
+              }
+            }
+          }
+        }
+      },
+      {
+        "package": "node_modules/node-fetch/node_modules/tr46",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "0.0.3"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/tr46/-/tr46-0.0.3.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw=="
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          }
+        }
+      },
+      {
+        "package": "node_modules/node-fetch/node_modules/webidl-conversions",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "3.0.1"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/webidl-conversions/-/webidl-conversions-3.0.1.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ=="
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          }
+        }
+      },
+      {
+        "package": "node_modules/node-fetch/node_modules/whatwg-url",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "5.0.0"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/whatwg-url/-/whatwg-url-5.0.0.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw=="
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          },
+          "dependencies": {
+            "before": null,
+            "after": {
+              "tr46": "~0.0.3",
+              "webidl-conversions": "^3.0.0"
+            }
+          }
+        }
+      },
+      {
+        "package": "node_modules/opencollective-postinstall",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "2.0.3"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/opencollective-postinstall/-/opencollective-postinstall-2.0.3.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-8AV/sCtuzUeTo8gQK5qDZzARrulB3egtLzFgteqB2tcT4Mw7B8Kt7JcDHmltjz6FOAHsvTevk70gZEbhM4ZS9Q=="
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          },
+          "bin": {
+            "before": null,
+            "after": {
+              "opencollective-postinstall": "index.js"
+            }
+          }
+        }
+      },
+      {
+        "package": "node_modules/regenerator-runtime",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "0.13.11"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/regenerator-runtime/-/regenerator-runtime-0.13.11.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg=="
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          }
+        }
+      },
+      {
+        "package": "node_modules/tesseract.js",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "7.0.0"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/tesseract.js/-/tesseract.js-7.0.0.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-exPBkd+z+wM1BuMkx/Bjv43OeLBxhL5kKWsz/9JY+DXcXdiBjiAch0V49QR3oAJqCaL5qURE0vx9Eo+G5YE7mA=="
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          },
+          "hasInstallScript": {
+            "before": null,
+            "after": true
+          },
+          "dependencies": {
+            "before": null,
+            "after": {
+              "bmp-js": "^0.1.0",
+              "idb-keyval": "^6.2.0",
+              "is-url": "^1.2.4",
+              "node-fetch": "^2.6.9",
+              "opencollective-postinstall": "^2.0.3",
+              "regenerator-runtime": "^0.13.3",
+              "tesseract.js-core": "^7.0.0",
+              "wasm-feature-detect": "^1.8.0",
+              "zlibjs": "^0.3.1"
+            }
+          }
+        }
+      },
+      {
+        "package": "node_modules/tesseract.js-core",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "7.0.0"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/tesseract.js-core/-/tesseract.js-core-7.0.0.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-WnNH518NzmbSq9zgTPeoF8c+xmilS8rFIl1YKbk/ptuuc7p6cLNELNuPAzcmsYw450ca6bLa8j3t0VAtq435Vw=="
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          }
+        }
+      },
+      {
+        "package": "node_modules/wasm-feature-detect",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "1.9.0"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/wasm-feature-detect/-/wasm-feature-detect-1.9.0.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-zonE+xlIIYtxPy++L24ow0hAD8CICb4+FgPyROd3buyXIqsJvUEDkBgfCCoXOd1Hu3DUr0GOfnPIdcGV+YpNaA=="
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          }
+        }
+      },
+      {
+        "package": "node_modules/zlibjs",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "0.3.1"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/zlibjs/-/zlibjs-0.3.1.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-+J9RrgTKOmlxFSDHo0pI1xM6BLVUv+o0ZT9ANtCxGkjIVCCUdx9alUF8Gm+dGLKbkkkidWIHFDZHDMpfITt4+w=="
+          },
+          "dev": {
+            "before": null,
+            "after": true
+          },
+          "engines": {
+            "before": null,
+            "after": {
+              "node": "*"
+            }
+          }
+        }
+      }
+    ],
+    "electron/server-package-lock.json": [
+      {
+        "package": "",
+        "change": "updated",
+        "fields": {
+          "dependencies": {
+            "before": {
+              "@drgrice1/tikzjax": "^1.0.0-beta24",
+              "bcryptjs": "^3.0.3",
+              "cors": "^2.8.5",
+              "dompurify": "^3.4.0",
+              "express": "^4.22.2",
+              "express-rate-limit": "^8.7.0",
+              "file-type": "^22.0.0",
+              "fs-extra": "^11.2.0",
+              "image-size": "file:../vendor-overrides/image-size-disabled",
+              "jsdom": "^25.0.1",
+              "jszip": "3.10.1",
+              "multer": "^2.4.0",
+              "playwright": "^1.63.0",
+              "pptxgenjs": "4.0.1",
+              "pptxtojson": "2.0.2",
+              "socket.io": "^4.8.3",
+              "socket.io-client": "^4.8.3",
+              "undici": "7.29.0",
+              "zod": "^4.6.5"
+            },
+            "after": {
+              "@drgrice1/tikzjax": "^1.0.0-beta24",
+              "bcryptjs": "^3.0.3",
+              "cors": "^2.8.5",
+              "dompurify": "^3.4.0",
+              "express": "^4.22.2",
+              "express-rate-limit": "^8.7.0",
+              "file-type": "^22.0.0",
+              "fs-extra": "^11.2.0",
+              "image-size": "file:../vendor-overrides/image-size-disabled",
+              "jsdom": "^25.0.1",
+              "jszip": "3.10.1",
+              "marked": "^18.0.4",
+              "multer": "^2.4.0",
+              "playwright": "^1.63.0",
+              "pptxgenjs": "4.0.1",
+              "pptxtojson": "2.0.2",
+              "socket.io": "^4.8.3",
+              "socket.io-client": "^4.8.3",
+              "undici": "7.29.0",
+              "zod": "^4.6.5"
+            }
+          }
+        }
+      },
+      {
+        "package": "../vendor-overrides/image-size-disabled",
+        "change": "updated",
+        "fields": {
+          "name": {
+            "before": "image-size",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@asamuzakjp/css-color",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@borewit/text-codec",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@csstools/color-helpers",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT-0",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@csstools/css-calc",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@csstools/css-color-parser",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@csstools/css-parser-algorithms",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@csstools/css-tokenizer",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@drgrice1/dvi2html",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "GPL-3.0",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@drgrice1/tikzjax",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "GPL-3.0+",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@socket.io/component-emitter",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@tokenizer/inflate",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@tokenizer/inflate/node_modules/debug",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@tokenizer/inflate/node_modules/ms",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@tokenizer/token",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@types/cors",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@types/node",
+        "change": "updated",
+        "fields": {
+          "version": {
+            "before": "22.20.4",
+            "after": "22.20.5"
+          },
+          "resolved": {
+            "before": "https://registry.npmjs.org/@types/node/-/node-22.20.4.tgz",
+            "after": "https://registry.npmjs.org/@types/node/-/node-22.20.5.tgz"
+          },
+          "integrity": {
+            "before": "sha512-zJRE40jpHtKqE/C4fgHrAKQLJuSpzEnP9ff9Y7YtoR3Wd2pwqzlekDeEuUQXjRd+QCYnVnNwuJYmhdk9XV8gvA==",
+            "after": "sha512-U2+DNr+wSjpsTS/wZGYHq7GcwfuSmKiKvoPvK22zwTlRhU91yOniN4qRR5KhIjvif7ysw/dz/hKmfDH0Ris4aA=="
+          },
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@types/trusted-types",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/@types/ws",
+        "change": "updated",
+        "fields": {
+          "version": {
+            "before": "8.18.1",
+            "after": "8.18.2"
+          },
+          "resolved": {
+            "before": "https://registry.npmjs.org/@types/ws/-/ws-8.18.1.tgz",
+            "after": "https://registry.npmjs.org/@types/ws/-/ws-8.18.2.tgz"
+          },
+          "integrity": {
+            "before": "sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==",
+            "after": "sha512-67MQl+fpWKVTT1NYdnmo3U4sc/xPo/zQBncVnI74qmQa0z/b+1g6iYqNmGCPbxO+zz2aklb08a0oHfegiVd0/w=="
+          },
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/accepts",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/agent-base",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/append-field",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/array-flatten",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/asynckit",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/base64-js",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/base64id",
+        "change": "removed",
+        "fields": {
+          "version": {
+            "before": "2.0.0",
+            "after": null
+          },
+          "resolved": {
+            "before": "https://registry.npmjs.org/base64id/-/base64id-2.0.0.tgz",
+            "after": null
+          },
+          "integrity": {
+            "before": "sha512-lGe34o6EHj9y3Kts9R4ZYs/Gr+6N7MCaMlIFA3F1R2O5/m7K06AxfSeO5530PEERE6/WyEg3lsuyw4GHlPZHog==",
+            "after": null
+          },
+          "license": {
+            "before": "MIT",
+            "after": null
+          },
+          "engines": {
+            "before": {
+              "node": "^4.5.0 || >= 5.9"
+            },
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/bcryptjs",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "BSD-3-Clause",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/body-parser",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/buffer",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/bytes",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/call-bind-apply-helpers",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/call-bound",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/callsites",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/combined-stream",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/content-disposition",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/content-type",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/cookie",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/cookie-signature",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/core-util-is",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/cors",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/cssstyle",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/cssstyle/node_modules/rrweb-cssom",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/data-urls",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/debug",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/decimal.js",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/delayed-stream",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/depd",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/destroy",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/dompurify",
+        "change": "updated",
+        "fields": {
+          "version": {
+            "before": "3.4.15",
+            "after": "3.4.16"
+          },
+          "resolved": {
+            "before": "https://registry.npmjs.org/dompurify/-/dompurify-3.4.15.tgz",
+            "after": "https://registry.npmjs.org/dompurify/-/dompurify-3.4.16.tgz"
+          },
+          "integrity": {
+            "before": "sha512-EUBjM+B+lkDE41iE82DDSCfkoPGfXx8IxFxPMjNzm/Uk4xDet77rTN9wqlxlVg71kK7XGuUMv6wUxJUwwv+Xyw==",
+            "after": "sha512-sqo+pNp3qRhCIpbgRi1y8Tgk27Bo2Ry7w0dC1NBeNTdZChWjz9Xb/KOoZbRP/R6pQZ80Qw8YhXw13hWWBbMRnQ=="
+          },
+          "license": {
+            "before": "(MPL-2.0 OR Apache-2.0)",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/dunder-proto",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/ee-first",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/encodeurl",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/engine.io",
+        "change": "updated",
+        "fields": {
+          "version": {
+            "before": "6.6.10",
+            "after": "6.6.11"
+          },
+          "resolved": {
+            "before": "https://registry.npmjs.org/engine.io/-/engine.io-6.6.10.tgz",
+            "after": "https://registry.npmjs.org/engine.io/-/engine.io-6.6.11.tgz"
+          },
+          "integrity": {
+            "before": "sha512-9/lX2bdlizlCXMHRMOIm03VBQHQYC7VvydcxtTAUJRxNW1QzM/2PMFSmr6h/lCiMHcyCP6abK+t9Q+j4vekk8Q==",
+            "after": "sha512-z34mGpLoY/82ZbkX1LqGMIaf3wjVMPL6gVC681QDqnmzJ26synI8qAE32P+a7UazmpJZ8UGrFIeAavgRfXzYrg=="
+          },
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/engine.io-client",
+        "change": "updated",
+        "fields": {
+          "version": {
+            "before": "6.6.6",
+            "after": "6.6.7"
+          },
+          "resolved": {
+            "before": "https://registry.npmjs.org/engine.io-client/-/engine.io-client-6.6.6.tgz",
+            "after": "https://registry.npmjs.org/engine.io-client/-/engine.io-client-6.6.7.tgz"
+          },
+          "integrity": {
+            "before": "sha512-iY6QdftLQ9pyiPoX082bpf/u1UewnOaJrtJIF9T0++QB34lZrj0uP+Q/bj8AlUsAxqhnkTV2BS8SBZSxOmoV5Q==",
+            "after": "sha512-GyAvmPA7gnRCpDQbYACAy79Lg4ewevrmaPzySZz0OVvgyZc3gEfLLqPTYk8wVBScjOEpM9ZO4KryyFpVItjGEA=="
+          },
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/engine.io-client/node_modules/debug",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/engine.io-client/node_modules/ms",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/engine.io-parser",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/engine.io/node_modules/debug",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/engine.io/node_modules/ms",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/entities",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "BSD-2-Clause",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/es-define-property",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/es-errors",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/es-object-atoms",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/es-set-tostringtag",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/escape-html",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/esm",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/etag",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/express",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/express-rate-limit",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/express-rate-limit/node_modules/debug",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/express-rate-limit/node_modules/ms",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/file-type",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/finalhandler",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/form-data",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/forwarded",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/fresh",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/fs-extra",
+        "change": "updated",
+        "fields": {
+          "version": {
+            "before": "11.4.0",
+            "after": "11.4.1"
+          },
+          "resolved": {
+            "before": "https://registry.npmjs.org/fs-extra/-/fs-extra-11.4.0.tgz",
+            "after": "https://registry.npmjs.org/fs-extra/-/fs-extra-11.4.1.tgz"
+          },
+          "integrity": {
+            "before": "sha512-EQsFzMUJkCKGr1ePqlYADkIUmHW1s3ZXr5Yqy6wbGrfUCphpl2maM/kyOIRA2HpP3AaFQTZXD4ldjek+nccddA==",
+            "after": "sha512-KYAb4c9BJQI6QqGKthV68OHe0badztdXJWKo0WtBA9IuCFPTKvE5ZdUBglP833aMjhaSPNO4A5j/EkzZtGlKjA=="
+          },
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/function-bind",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/get-intrinsic",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/get-proto",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/gopd",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/graceful-fs",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "ISC",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/has-symbols",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/has-tostringtag",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/hasown",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/html-encoding-sniffer",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/http-errors",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/http-proxy-agent",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/http-proxy-agent/node_modules/debug",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/http-proxy-agent/node_modules/ms",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/https",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "ISC",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/https-proxy-agent",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/https-proxy-agent/node_modules/debug",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/https-proxy-agent/node_modules/ms",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/iconv-lite",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/idb",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "ISC",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/ieee754",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "BSD-3-Clause",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/immediate",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/inherits",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "ISC",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/ip-address",
+        "change": "updated",
+        "fields": {
+          "version": {
+            "before": "10.7.2",
+            "after": "10.7.3"
+          },
+          "resolved": {
+            "before": "https://registry.npmjs.org/ip-address/-/ip-address-10.7.2.tgz",
+            "after": "https://registry.npmjs.org/ip-address/-/ip-address-10.7.3.tgz"
+          },
+          "integrity": {
+            "before": "sha512-7H/2gFSIitxc0hG3nOI1glS8QLo/EHBFFLk8vEUjXY/xu0AdL8jZ9U1IzO2PUm0d2D/ofQcAifb0g6OBkt8U7w==",
+            "after": "sha512-A1kdq/tSb5QjvKvAMgIoEvDBIgL7qaqVP/jkvSwYYRZ9iEzvPpopxp2wQfu3SuZRHtpHNxMn8Fs0bS+gf5Xmwg=="
+          },
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/ipaddr.js",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/is-observable",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/is-potential-custom-element-name",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/isarray",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/jsdom",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/jsonfile",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/jszip",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "(MIT OR GPL-3.0-or-later)",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/jszip/node_modules/pako",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "(MIT AND Zlib)",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/lie",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/lru-cache",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "ISC",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/math-intrinsics",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/media-typer",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/merge-descriptors",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/methods",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/mime",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/mime-db",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/mime-types",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/ms",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/multer",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/negotiator",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/nwsapi",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/object-assign",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/object-inspect",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/observable-fns",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/on-finished",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/pako",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "(MIT AND Zlib)",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/parse5",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/parseurl",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/path-to-regexp",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/playwright",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "Apache-2.0",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/playwright-core",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "Apache-2.0",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/pptxgenjs",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/pptxtojson",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/process",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/process-nextick-args",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/proxy-addr",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/punycode",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/qs",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "BSD-3-Clause",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/range-parser",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/raw-body",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/readable-stream",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/readable-stream/node_modules/safe-buffer",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/rrweb-cssom",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/safe-buffer",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/safer-buffer",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/saxes",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "ISC",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/send",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/send/node_modules/ms",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/serve-static",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/setimmediate",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/setprototypeof",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "ISC",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/side-channel",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/side-channel-list",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/side-channel-map",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/side-channel-weakmap",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/socket.io",
+        "change": "updated",
+        "fields": {
+          "version": {
+            "before": "4.8.3",
+            "after": "4.8.4"
+          },
+          "resolved": {
+            "before": "https://registry.npmjs.org/socket.io/-/socket.io-4.8.3.tgz",
+            "after": "https://registry.npmjs.org/socket.io/-/socket.io-4.8.4.tgz"
+          },
+          "integrity": {
+            "before": "sha512-2Dd78bqzzjE6KPkD5fHZmDAKRNe3J15q+YHDrIsy9WEkqttc7GY+kT9OBLSMaPbQaEd0x1BjcmtMtXkfpc+T5A==",
+            "after": "sha512-9ZV9zg8vN8hO3Y25DhR7nUkJ1VDnBhq5O/JrXhFT9s6+F0gqytSASTHVfCFc2mJXaTfARroErplXlzFWwETZqQ=="
+          },
+          "license": {
+            "before": "MIT",
+            "after": null
+          },
+          "dependencies": {
+            "before": {
+              "accepts": "~1.3.4",
+              "base64id": "~2.0.0",
+              "cors": "~2.8.5",
+              "debug": "~4.4.1",
+              "engine.io": "~6.6.0",
+              "socket.io-adapter": "~2.5.2",
+              "socket.io-parser": "~4.2.4"
+            },
+            "after": {
+              "accepts": "~1.3.4",
+              "cors": "~2.8.5",
+              "debug": "~4.4.1",
+              "engine.io": "~6.6.0",
+              "socket.io-adapter": "~2.5.2",
+              "socket.io-parser": "~4.2.4"
+            }
+          }
+        }
+      },
+      {
+        "package": "node_modules/socket.io-adapter",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/socket.io-adapter/node_modules/debug",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/socket.io-adapter/node_modules/ms",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/socket.io-client",
+        "change": "updated",
+        "fields": {
+          "version": {
+            "before": "4.8.3",
+            "after": "4.8.4"
+          },
+          "resolved": {
+            "before": "https://registry.npmjs.org/socket.io-client/-/socket.io-client-4.8.3.tgz",
+            "after": "https://registry.npmjs.org/socket.io-client/-/socket.io-client-4.8.4.tgz"
+          },
+          "integrity": {
+            "before": "sha512-uP0bpjWrjQmUt5DTHq9RuoCBdFJF10cdX9X+a368j/Ft0wmaVgxlrjvK3kjvgCODOMMOz9lcaRzxmso0bTWZ/g==",
+            "after": "sha512-7wjKAvVXYOJsbmUgkWbnhPD4bFpkqrUR0++XOjpGFmqDqsqV1CI93VTraeExLxpjxEqrWgFoSRZu1ihjLWfkAA=="
+          },
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/socket.io-client/node_modules/debug",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/socket.io-client/node_modules/ms",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/socket.io-parser",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/socket.io-parser/node_modules/debug",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/socket.io-parser/node_modules/ms",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/socket.io/node_modules/debug",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/socket.io/node_modules/ms",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/statuses",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/stream-browserify",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/stream-browserify/node_modules/readable-stream",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/string_decoder",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/string_decoder/node_modules/safe-buffer",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/strtok3",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/symbol-tree",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/threads",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/threads/node_modules/debug",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/threads/node_modules/ms",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/through2",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/tiny-worker",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "BSD-3-Clause",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/tinycolor2",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/tldts",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/tldts-core",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/toidentifier",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/token-types",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/tough-cookie",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "BSD-3-Clause",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/tr46",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/txml",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/type-is",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/uint8array-extras",
+        "change": "updated",
+        "fields": {
+          "version": {
+            "before": "1.5.0",
+            "after": "1.6.0"
+          },
+          "resolved": {
+            "before": "https://registry.npmjs.org/uint8array-extras/-/uint8array-extras-1.5.0.tgz",
+            "after": "https://registry.npmjs.org/uint8array-extras/-/uint8array-extras-1.6.0.tgz"
+          },
+          "integrity": {
+            "before": "sha512-rvKSBiC5zqCCiDZ9kAOszZcDvdAHwwIKJG33Ykj43OKcWsnmcBRL09YTU4nOeHZ8Y2a7l1MgTd08SBe9A8Qj6A==",
+            "after": "sha512-8iAasVS4wUx0gPLjH8Xtz2PeDzTSiy8QiLGu2DT3X5GU+egFEQhpnbtkehbAwjvDcxIERmCYcysiODFmE3Ud0Q=="
+          },
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/undici",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/undici-types",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/universalify",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/unpipe",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/util-deprecate",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/utils-merge",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/vary",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/w3c-xmlserializer",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/webidl-conversions",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "BSD-2-Clause",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/whatwg-encoding",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/whatwg-encoding/node_modules/iconv-lite",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/whatwg-mimetype",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/whatwg-url",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/ws",
+        "change": "updated",
+        "fields": {
+          "version": {
+            "before": "8.21.3",
+            "after": "8.22.0"
+          },
+          "resolved": {
+            "before": "https://registry.npmjs.org/ws/-/ws-8.21.3.tgz",
+            "after": "https://registry.npmjs.org/ws/-/ws-8.22.0.tgz"
+          },
+          "integrity": {
+            "before": "sha512-201TZ/kPWxoPr/OKWjquZR1SWKXcvxdH+e1xrx89b3YbmzLMFCLfnaG1HFIgWzJOEWZ7MvpK++odZufgYR50Rw==",
+            "after": "sha512-Ydggc987+RO0AnWtZ/7Wq9FtNvcrL1b/RO0ud9mWjUPgDrsAAwQSF51sm2hm1XofbU/4jkpGEsLFsZZxU+1DOg=="
+          },
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/xml-name-validator",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "Apache-2.0",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/xmlchars",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/zod",
+        "change": "updated",
+        "fields": {
+          "license": {
+            "before": "MIT",
+            "after": null
+          }
+        }
+      },
+      {
+        "package": "node_modules/engine.io-client/node_modules/ws",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "8.21.3"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/ws/-/ws-8.21.3.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-201TZ/kPWxoPr/OKWjquZR1SWKXcvxdH+e1xrx89b3YbmzLMFCLfnaG1HFIgWzJOEWZ7MvpK++odZufgYR50Rw=="
+          },
+          "engines": {
+            "before": null,
+            "after": {
+              "node": ">=10.0.0"
+            }
+          },
+          "peerDependencies": {
+            "before": null,
+            "after": {
+              "bufferutil": "^4.0.1",
+              "utf-8-validate": ">=5.0.2"
+            }
+          },
+          "peerDependenciesMeta": {
+            "before": null,
+            "after": {
+              "bufferutil": {
+                "optional": true
+              },
+              "utf-8-validate": {
+                "optional": true
+              }
+            }
+          }
+        }
+      },
+      {
+        "package": "node_modules/engine.io/node_modules/ws",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "8.21.3"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/ws/-/ws-8.21.3.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-201TZ/kPWxoPr/OKWjquZR1SWKXcvxdH+e1xrx89b3YbmzLMFCLfnaG1HFIgWzJOEWZ7MvpK++odZufgYR50Rw=="
+          },
+          "engines": {
+            "before": null,
+            "after": {
+              "node": ">=10.0.0"
+            }
+          },
+          "peerDependencies": {
+            "before": null,
+            "after": {
+              "bufferutil": "^4.0.1",
+              "utf-8-validate": ">=5.0.2"
+            }
+          },
+          "peerDependenciesMeta": {
+            "before": null,
+            "after": {
+              "bufferutil": {
+                "optional": true
+              },
+              "utf-8-validate": {
+                "optional": true
+              }
+            }
+          }
+        }
+      },
+      {
+        "package": "node_modules/marked",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "18.0.14"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/marked/-/marked-18.0.14.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-mBHK6FBHuBAlhgRe88w9F0O1AbwwXJUcQibUbC/QcdTbVGAD7aWza+xt3N6oT/jCZx3/OMeS+8rnuiHZcQ9s7A=="
+          },
+          "bin": {
+            "before": null,
+            "after": {
+              "marked": "bin/marked.js"
+            }
+          },
+          "engines": {
+            "before": null,
+            "after": {
+              "node": ">= 20"
+            }
+          }
+        }
+      },
+      {
+        "package": "node_modules/socket.io-adapter/node_modules/ws",
+        "change": "added",
+        "fields": {
+          "version": {
+            "before": null,
+            "after": "8.21.3"
+          },
+          "resolved": {
+            "before": null,
+            "after": "https://registry.npmjs.org/ws/-/ws-8.21.3.tgz"
+          },
+          "integrity": {
+            "before": null,
+            "after": "sha512-201TZ/kPWxoPr/OKWjquZR1SWKXcvxdH+e1xrx89b3YbmzLMFCLfnaG1HFIgWzJOEWZ7MvpK++odZufgYR50Rw=="
+          },
+          "engines": {
+            "before": null,
+            "after": {
+              "node": ">=10.0.0"
+            }
+          },
+          "peerDependencies": {
+            "before": null,
+            "after": {
+              "bufferutil": "^4.0.1",
+              "utf-8-validate": ">=5.0.2"
+            }
+          },
+          "peerDependenciesMeta": {
+            "before": null,
+            "after": {
+              "bufferutil": {
+                "optional": true
+              },
+              "utf-8-validate": {
+                "optional": true
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "limits": [
+    "This dependency-input record is not a clean Git subject or a browser/Electron/Windows-package receipt.",
+    "Final source/config/docs/policy and artifact identities must be frozen and qualified independently after all repairs.",
+    "Exact graph deltas include optional/dev flags and removed license metadata; these are not hidden by semantic-hash exclusion."
+  ]
+}

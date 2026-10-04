@@ -10,10 +10,7 @@ const MANUAL_CHUNKS = [
   ['vendor-react', ['react', 'react-dom', 'react-router-dom']],
   ['vendor-katex', ['katex']],
   ['vendor-lucide', ['lucide-react']],
-  [
-    'vendor-tiptap',
-    ['@tiptap/core', '@tiptap/starter-kit', '@tiptap/extension-text-style'],
-  ],
+  ['vendor-tiptap', ['@tiptap/core', '@tiptap/starter-kit', '@tiptap/extension-text-style']],
 ]
 
 function manualChunks(id) {
@@ -55,7 +52,29 @@ export default defineConfig({
     proxy: proxyConfig,
   },
   optimizeDeps: {
-    include: ['revealjs-shared'],
+    include: [
+      'revealjs-shared',
+      'revealjs-shared/src/education/config-serialization.js',
+      'revealjs-shared/src/education/browser/mount.js',
+      'revealjs-shared/src/education/game-registry.js',
+      'revealjs-shared/src/education/presets/clone.js',
+      'revealjs-shared/src/education/interaction-references.js',
+      'revealjs-shared/src/education/html-sandbox-policy.js',
+      'revealjs-shared/src/education/plugin-message-contract.js',
+      'revealjs-shared/src/education/static-raster-targets.js',
+      'revealjs-shared/src/education/game-media-references.js',
+      'revealjs-shared/src/education/game-schema.js',
+      'revealjs-shared/src/education/portable-resource-contract.js',
+      'revealjs-shared/src/curved-line-raster.js',
+      'revealjs-shared/src/tikz-runtime-contract.js',
+      'revealjs-shared/src/media-playback.js',
+      'revealjs-shared/src/content-safety.js',
+      'revealjs-shared/src/media-accessibility.js',
+      'revealjs-shared/src/timeline-utils.js',
+      'revealjs-shared/src/chart-authoring-options.js',
+      'revealjs-shared/src/svg-paint-overrides.js',
+      'revealjs-shared/src/rich-text-style-sanitizer.js',
+    ],
   },
   build: {
     // The WYSIWYG editor route is intentionally heavy, but it is lazy-loaded

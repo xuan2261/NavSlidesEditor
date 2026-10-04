@@ -6,24 +6,69 @@ properties cannot be represented by a given format.
 
 ## Reveal.js runtime contract
 
-- Present mode, share HTML, standard HTML export, and offline HTML are qualified
-  against **Reveal.js 6.0.1**. Generated documents record that version in the
-  `navslides-reveal-version` metadata tag.
-- `shared/src/reveal-runtime-assets.js` is the source of truth for core,
-  built-in plugin, theme, vendor-copy, and strict-offline asset paths. The
-  package is pinned exactly in `server/package.json`; no second Reveal.js
-  version is supported in the workspace.
-- Vendor publication copies the Reveal.js 6 `dist/` layout, including built-in
-  plugins under `dist/plugin/`. Publication and startup fail closed when a
-  required path is absent, the manifest version differs, a hash differs, or a
-  legacy `reveal.js/plugin/` path reappears.
-- Offline HTML inlines every referenced runtime asset from the published local
-  tree. A missing required Reveal.js, KaTeX, or Highlight.js asset aborts the
-  export instead of producing a partially portable document.
-- The bundled Menu, Chalkboard, and Custom Controls plugins are compatibility-
-  tested with Reveal.js 6.0.1. User-supplied Reveal plugins remain responsible
-  for their own Reveal.js 6 compatibility; NavSlides does not rewrite third-
-  party plugin APIs.
+- The canonical Reveal.js pin and runtime asset paths are owned by
+  [`REVEAL_RUNTIME_VERSION` in `reveal-runtime-assets.js`](../shared/src/reveal-runtime-assets.js).
+  A source pin is not evidence that every delivery surface has been qualified.
+- Vendor publication and portable dependency closure are owned by
+  [`copy-vendor.js`](../scripts/copy-vendor.js) and
+  [`offlineExport.js`](../client/src/utils/offlineExport.js), respectively.
+- Bundled-plugin browser integration is exercised by
+  [`generated-plugin-boundaries.spec.js`](../tests/e2e/education/generated-plugin-boundaries.spec.js).
+  Those focused journeys do not qualify the whole education release. User-supplied
+  plugins remain responsible for their compatibility; NavSlides does not rewrite
+  third-party plugin APIs.
+- Generated audio/video controllers reattach when Reveal replaces slide DOM during
+  responsive scroll-view switches. The authored speed and trim-loop boundary are
+  preserved; teardown disposes removed players and all remaining controllers on
+  page hide. Real Chromium smoke retained speed 1.5 and a 0.2–0.8-second segment
+  through a 1280→390→1280 viewport round-trip. This is focused playback evidence,
+  not full browser, offline, or packaged-runtime qualification.
+- Native TikZ uses the real pinned compiler, not a canned SVG. The publication
+  contract in [`tikz-runtime-contract.js`](../shared/src/tikz-runtime-contract.js)
+  verifies the package, patched entry/worker and finite resource inventory.
+  [`portable-tikz-adapter.js`](../client/src/utils/portable-tikz-adapter.js) closes
+  those resources into a local worker; unavailable or changed resources fail
+  instead of falling back to network fetches. Disabled caching never accesses
+  IndexedDB in opaque compiler frames.
+- A portable generated root gains `wasm-unsafe-eval` only after a native compiler
+  frame closes successfully; that compiler frame gains its own validated
+  permission. Authored HTML, Mermaid, Markdown, chart and QR siblings and their
+  descendants remain Wasm-denied, regardless of traversal order. Compiler-free
+  decks deny Wasm at root and every child. `unsafe-eval`, same-origin frame access
+  and outbound connections are not enabled. Root inline scripts remain allowed;
+  this is not a hash-protected root.
+- Focused Chromium journeys compile the authored blue closed triangle on canvas
+  and a normal UI-downloaded network-blocked `file://` deck, with zero disabled-cache
+  IndexedDB access. Separate real execution probes verify compiler/root allowance,
+  sibling/descendant denial and compiler-free denial. These are bounded working-tree
+  observations, not complete education, Electron or Windows-package qualification.
+- Authored rich-text paragraph line-height takes precedence over generated fallback
+  typography. The actual link-authoring journey retains line-height 2 and rich marks
+  after save/reload and Present; fresh generated paragraph/list defaults remain 1.5.
+  Canvas SVG root viewports fit the element-owned rectangle without clipping selected
+  artwork or changing persisted viewBox and paint. These are focused surface checks,
+  not full browser/export qualification.
+- Generated and printed Markdown uses generation-time parsing plus the shared
+  parsed-markup sanitizer. Authored active frames and internal print-loader markers
+  are not promoted into root execution. Genuine HTML and TikZ print frames retain
+  their owned sandboxed loading path. Actual Markdown semantic/typography and forged
+  frame-denial journeys passed; this does not qualify every export format.
+- The parsed-markup policy retains a single validated `language-*` token only on
+  code nodes so authored fenced-code language controls print highlighting.
+  Other classes and active/runtime attributes remain excluded. Current-source
+  print smoke distinguishes JavaScript keyword paint from plaintext and
+  preserves literal markup and blank lines; this is not full export qualification.
+- An imported deck may remain editable/readable when an education mutation is not
+  eligible for native edited PPTX. Package bytes, head and ownership remain
+  authoritative; invalid declaration removal cannot alter the saved projection.
+  A real imported-package save/read smoke retained generation 2 and original bytes
+  while the unsupported edited export remained explicitly denied.
+- Live DOM mounting follows implemented runtime capability. Name-picker keeps its
+  existing server broadcast and read-only spectators; its planning classification
+  remains distinct from multiplayer answer protocols. Disconnected/waiting live
+  audiences cannot switch to a local picker. Authenticated host/two-learner journeys
+  passed for eligible educational games and all seven quiz kinds; final frozen
+  browser, desktop and packaged-release qualification remains separate.
 
 ## Fixed mapping gaps (resolved)
 
@@ -288,14 +333,33 @@ level 5 unavailable. Therefore this document does not claim editable
 imported-chart fidelity, a level-4/5 promotion, or PowerPoint compatibility or
 visual fidelity.
 
-### Live-only element types
+### Interactive education and static export boundaries
 
-- **Game elements** are live/player-socket content. Reveal HTML export emits a
-  static whitelist-only placeholder containing public title/type labels, not raw
-  game config, answers, scoring, presenter/admin/session data, or player/admin
-  controls. PPTX export emits a placeholder and warning.
-- **HTML iframe embeds** are interactive/live-only. They render in the editor and
-  live presentation but have no native editable representation in a pptx export.
+Game runtime capability ownership is in
+[`game-registry.js`](../shared/src/education/game-registry.js); generated game and
+print rendering are owned by [`element-renderers.js`](../shared/src/element-renderers.js),
+with static answer-view decisions in
+[`static-snapshot.js`](../shared/src/education/static-snapshot.js). Neither a
+capability declaration nor a static export is interactive or platform qualification.
+
+Portable classroom play does not promise offline multiplayer or secret answer
+keys. Native editable media discovery is owned by
+[`game-media-references.js`](../shared/src/education/game-media-references.js), with
+archive media integration in
+[`project-media-utils.js`](../client/src/utils/project-media-utils.js) and portable
+resource constraints in
+[`portable-resource-contract.js`](../shared/src/education/portable-resource-contract.js).
+These executable owners avoid a separate prose inventory of nested media paths.
+
+The accepted education scope is implemented in the working tree. Browser/live,
+Electron-development and newly built Windows-package qualification are evaluated
+independently for every frozen subject. [Plan progress](../plans/261001-0639-interactive-html-education-deep-tdd/plan.md#execution-progress)
+keeps bounded observations separate from acceptance; the
+[`education-release-gate.mjs`](../scripts/feature-inventory/education-release-gate.mjs)
+owns exact-subject qualification. Preliminary runs and focused plugin/media or
+evidence-integrity checks are not release-ready evidence. HTML iframe content has
+no native editable PPTX representation; see the sandbox owner in
+[`html-sandbox-policy.js`](../shared/src/education/html-sandbox-policy.js).
 
 ## PPTX export warning contract
 

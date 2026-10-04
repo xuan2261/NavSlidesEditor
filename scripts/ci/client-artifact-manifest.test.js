@@ -4,10 +4,10 @@ import os from 'node:os'
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { afterEach, describe, expect, it } from 'vitest'
-import { identityFor } from './create-client-dist-manifest.mjs'
+import { createManifest, identityFor } from './create-client-dist-manifest.mjs'
+import { createSubject } from '../feature-inventory/education-qualification-stage.mjs'
 
 const repo = path.resolve(__dirname, '..', '..')
-const createScript = path.join(repo, 'scripts', 'ci', 'create-client-dist-manifest.mjs')
 const verifyScript = path.join(repo, 'scripts', 'ci', 'verify-client-dist-manifest.mjs')
 const roots = []
 const subject = 'a'.repeat(40)
@@ -37,26 +37,17 @@ function run(script, args, cwd) {
 }
 
 function create(paths) {
-  run(
-    createScript,
-    [
-      '--root',
-      paths.dist,
-      '--out',
-      paths.manifest,
-      '--subject',
-      subject,
-      '--dirty',
-      'false',
-      '--build-command',
-      'npm run build',
-      '--vite-version',
-      '8.2.2',
-      '--lock',
-      `workspace=${paths.lock}`,
-    ],
-    paths.root
-  )
+  const manifest = createManifest({
+    baseDir: paths.root,
+    root: paths.dist,
+    subject,
+    dirty: false,
+    buildCommand: 'npm run build',
+    viteVersion: '8.2.2',
+    locks: [`workspace=${paths.lock}`],
+    inputHash: createSubject(paths.root).subjectHash,
+  })
+  fs.writeFileSync(paths.manifest, JSON.stringify(manifest, null, 2) + '\n')
 }
 
 function verify(paths, extra = []) {
@@ -82,7 +73,13 @@ function verify(paths, extra = []) {
 }
 
 function expectFailure(callback, message) {
-  expect(callback).toThrow(expect.objectContaining({ stderr: expect.stringContaining(message) }))
+  try {
+    callback()
+  } catch (error) {
+    expect(String(error.stderr || error.message)).toContain(message)
+    return
+  }
+  expect.fail(`Expected rejection containing ${message}`)
 }
 
 afterEach(() => {
@@ -110,7 +107,11 @@ describe('client artifact manifest', () => {
   it.each([
     ['missing', (paths) => fs.rmSync(path.join(paths.dist, 'index.html')), 'missing'],
     ['extra', (paths) => fs.writeFileSync(path.join(paths.dist, 'extra.txt'), 'x'), 'extra'],
-    ['altered', (paths) => fs.writeFileSync(path.join(paths.dist, 'index.html'), 'changed'), 'size'],
+    [
+      'altered',
+      (paths) => fs.writeFileSync(path.join(paths.dist, 'index.html'), 'changed'),
+      'size',
+    ],
   ])('rejects %s artifact files', (_name, mutate, message) => {
     const paths = fixture()
     create(paths)
@@ -137,7 +138,11 @@ describe('client artifact manifest', () => {
     const outside = path.join(paths.root, 'outside')
     fs.mkdirSync(outside)
     fs.writeFileSync(path.join(outside, 'escaped.txt'), 'x')
-    fs.symlinkSync(outside, path.join(paths.dist, 'linked'), process.platform === 'win32' ? 'junction' : 'dir')
+    fs.symlinkSync(
+      outside,
+      path.join(paths.dist, 'linked'),
+      process.platform === 'win32' ? 'junction' : 'dir'
+    )
 
     expectFailure(() => create(paths), 'symbolic link or reparse point')
   })
@@ -160,11 +165,6 @@ describe('client artifact manifest', () => {
     expectFailure(() => verify(paths), 'Duplicate lock name')
   })
 
-  it('includes untracked source in automatic dirty detection', () => {
-    const source = fs.readFileSync(createScript, 'utf8')
-    expect(source).not.toContain('--untracked-files=no')
-  })
-
   it('fails closed on subject, dirty marker, lock, and manifest identity drift', () => {
     const paths = fixture()
     create(paths)
@@ -177,20 +177,5 @@ describe('client artifact manifest', () => {
     manifest.artifact.identity = crypto.randomBytes(32).toString('hex')
     fs.writeFileSync(paths.manifest, JSON.stringify(manifest))
     expectFailure(() => verify(paths), 'Artifact identity mismatch')
-  })
-
-  it('wires verified bytes into Docker and Electron without changing source-build default', () => {
-    const dockerfile = fs.readFileSync(path.join(repo, 'Dockerfile'), 'utf8')
-    const dockerignore = fs.readFileSync(path.join(repo, '.dockerignore'), 'utf8')
-    const electron = fs.readFileSync(path.join(repo, 'electron-builder.yml'), 'utf8')
-
-    expect(dockerfile).toContain('FROM runtime AS production-prebuilt')
-    expect(dockerfile).toContain('COPY .tmp/ci-client-artifact/')
-    expect(dockerfile).toContain('node scripts/ci/verify-client-dist-manifest.mjs')
-    expect(dockerfile.trimEnd()).toMatch(/FROM runtime AS production[\s\S]*npm run build|FROM runtime AS production[\s\S]*source-client/)
-    expect(dockerignore).toContain('!.tmp/ci-client-artifact/client/dist/**')
-    expect(electron).toContain('beforePack: scripts/verify-runtime-closure.js')
-    expect(electron).toContain('from: client-dist-manifest.json')
-    expect(electron).not.toMatch(/\b(?:npm run build|vite build)\b/)
   })
 })

@@ -309,7 +309,9 @@ function getPresenterToolsInlineJS(presenterTools) {
     });`)
   }
 
-  return parts.length > 0 ? `\n  <script>${parts.join('')}\n  </script>` : ''
+  return parts.length > 0
+    ? `\n  <script data-navslides-runtime="local">${parts.join('')}\n  </script>`
+    : ''
 }
 
 module.exports = {

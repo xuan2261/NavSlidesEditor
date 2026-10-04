@@ -26,22 +26,24 @@ export default function TransitionPreview({
   const dialogRef = useRef(null)
   const closeButtonRef = useRef(null)
   const previewSlides = useMemo(
-    () => resolveTransitionPreviewSlides({
-      presentation,
-      currentSlideIndex: fromIndex,
-      verticalEdit,
-    }),
+    () =>
+      resolveTransitionPreviewSlides({
+        presentation,
+        currentSlideIndex: fromIndex,
+        verticalEdit,
+      }),
     [presentation, fromIndex, verticalEdit]
   )
   const slide1 = previewSlides.currentSlide
   const slide2 = previewSlides.nextSlide
   const hasNextSlide = Boolean(slide1 && slide2)
   const effective = useMemo(
-    () => resolveEffectiveTransition({
-      presentation,
-      currentSlide: slide1,
-      nextSlide: slide2,
-    }),
+    () =>
+      resolveEffectiveTransition({
+        presentation,
+        currentSlide: slide1,
+        nextSlide: slide2,
+      }),
     [presentation, slide1, slide2]
   )
   const [transitionOverride, setTransitionOverride] = useState(null)
@@ -61,7 +63,7 @@ export default function TransitionPreview({
   useEffect(() => {
     if (!previewSource) return undefined
     let active = true
-    generateOfflineHTML(previewSource.html, { strictRequiredAssets: true })
+    generateOfflineHTML(previewSource.html, { generatedDocument: true, strictRequiredAssets: true })
       .then((offlineHtml) => {
         if (active) {
           setPreviewError(null)
@@ -98,7 +100,9 @@ export default function TransitionPreview({
         >
           <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
             <div className="min-w-0 flex-1">
-              <h2 id={DIALOG_TITLE_ID} className="font-semibold text-sm">Transition Preview</h2>
+              <h2 id={DIALOG_TITLE_ID} className="font-semibold text-sm">
+                Transition Preview
+              </h2>
               <p id={DIALOG_DESCRIPTION_ID} className="text-xs text-text-muted">
                 There is no next slide to preview.
               </p>
@@ -136,7 +140,9 @@ export default function TransitionPreview({
       >
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
           <div className="min-w-0 flex-1">
-            <h2 id={DIALOG_TITLE_ID} className="font-semibold text-sm">Transition Preview</h2>
+            <h2 id={DIALOG_TITLE_ID} className="font-semibold text-sm">
+              Transition Preview
+            </h2>
             <p id={DIALOG_DESCRIPTION_ID} className="text-xs text-text-muted">
               Slide {previewSlides.currentAddress} → {previewSlides.nextAddress}
               {effective.direction !== 'default' ? ` · ${effective.direction}` : ''}

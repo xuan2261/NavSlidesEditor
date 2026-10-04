@@ -1,17 +1,23 @@
 ---
 phase: 10
-title: "Ghép cặp, phân loại và sắp xếp bằng thao tác đa phương thức"
-status: pending
+title: 'Ghép cặp, phân loại và sắp xếp bằng thao tác đa phương thức'
+status: in_progress
 priority: P1
 dependencies: [3, 4, 5, 6]
 ---
 
 # Phase 10 — Drag/drop không phụ thuộc thiết bị
 
+## Execution progress
+
+Matching/sorting/ordering implementation slice đã bàn giao. Final acceptance cần actual generated/portable pointer, touch, click-place và keyboard completion/error/reset receipts, stable IDs sau author/history và capture/cancel/Reveal ownership theo checklist. [Root progress](./plan.md#execution-progress) giữ qualification open; không dùng reducer-only hoặc native-only proof để đóng surfaces khác.
+
 ## Goal
+
 Matching chạy local thực sự; sorting phân loại vào bucket; ordering của quiz dùng cùng evaluator phase 06. Người học hoàn thành bằng pointer, touch, click-place hoặc keyboard, kể cả trong generated Present và file HTML.
 
 ## Context/evidence
+
 - `client/src/constants/game-element-types-constants.js:134-142` lưu Matching bằng `promptId/targetId`; `resolveGameConfig` tại `:149-161` hợp nhất nested config. Không đổi discriminator `matching`.
 - `client/src/pages/game-player-join-page.jsx:229-246` đã có click-select/place; `:289-295` gửi toàn bộ cặp qua `onSubmit`, nhưng đây là learner live, không phải local Present.
 - `client/src/components/canvas/element-renderers/game-renderers/matching.jsx:17-25,60-75` mở host socket và start/reveal; không có local assignment reducer.
@@ -20,6 +26,7 @@ Matching chạy local thực sự; sorting phân loại vào bucket; ordering c�
 - `CLAUDE.md:171-174` yêu cầu module nhỏ và shared logic trong shared; `docs/code-standards.md:30-43` quy định selectors/fixtures và không sleep cứng.
 
 ## Deep scout gate
+
 - [ ] Scout mới xác nhận các citations trên, nhánh generated-document, registry phase 03 và presenter phase 04 đang được dùng thực tế.
 - [ ] Đọc file phase 06 đã tạo trước khi sửa `quiz-answer-controls.js`; trace ordering/matching payload tới evaluator, không dựng evaluator thứ hai.
 - [ ] Liệt kê pointer handlers và Reveal touch/key navigation đang hoạt động; tái hiện swipe trên game trước khi thay gesture policy.
@@ -27,6 +34,7 @@ Matching chạy local thực sự; sorting phân loại vào bucket; ordering c�
 - [ ] Kiểm tra authoring sorting, buckets/items/answerKey/attemptLimit phase 03; ghi thiếu sót vào gate rồi hoàn thiện tại checkpoint, không giảm scope.
 
 ## Requirements
+
 - Giữ 19 canonical element types và 19 game subtypes cuối kế hoạch; sorting là `type:'game',gameType:'sorting'`, ordering là question kind của quiz.
 - Matching dùng bijection `promptId -> targetId`; một target không được gán hai prompt. Đổi assignment giải phóng target cũ một cách atomic.
 - Sorting dùng `{itemId,bucketId}`; nhiều item được nằm cùng bucket, unknown IDs bị từ chối. Reorder labels không đổi đáp án.
@@ -36,6 +44,7 @@ Matching chạy local thực sự; sorting phân loại vào bucket; ordering c�
 - Pointer Events + capture; keyboard/click là đường hoàn thành đầy đủ, không dùng HTML5 drag/drop làm cách duy nhất.
 
 ## Architecture/contracts
+
 - Data flow: persisted config phase 03 → normalizer → local assignment/order state → typed answer phase 06 → evaluator/session → feedback/score → DOM presenter phase 04.
 - Proposed command `assign({generation,itemId,targetId})` hoặc `move({generation,itemId,beforeId})` chỉ cập nhật runtime, không ghi presentation JSON.
 - Local Matching và sorting trả typed stable-ID answer; quiz ordering/matching đi thẳng session/evaluator phase 06. Exact-match thưởng một lần cho mỗi câu; không tự thêm partial-credit policy.
@@ -51,32 +60,35 @@ Matching chạy local thực sự; sorting phân loại vào bucket; ordering c�
 - Hide/show giữ progress; slide leave hủy drag nhưng không xóa assignment. Reset tăng generation để callback pointer/feedback cũ không tác động instance mới.
 
 ## File inventory
+
 Tất cả đường dẫn CREATE dưới đây là đề xuất, không phải file đang tồn tại; file nhận từ dependency phải được re-scout trước khi MODIFY. Mỗi production module mới dưới 200 LOC.
 
-| Full path | Action / fact | Ownership, size và test impact |
-| --- | --- | --- |
-| C:/Work/NavSlidesEditor/shared/src/education/assignment-state.js | CREATE / proposed | Domain; bijection/buckets reducer; <200 LOC; unit invariants |
-| C:/Work/NavSlidesEditor/shared/src/education/sorting-config.js | CREATE / proposed | Domain; config normalization/evaluation; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/drag-controller.js | CREATE / proposed | Domain; pointer capture/cancel; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/assignment-controls.js | CREATE / proposed | Domain; click/keyboard IDs; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/education/games/matching.js | MODIFY / proposed phase 05 output | Integration owner serial; consume shared assignment state/sole matcher; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/games/matching.js | MODIFY / proposed phase 05 output | Integration owner serial; existing click/tap/keyboard thêm drag; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/sorting-presenter.js | CREATE / proposed | Domain; bucket DOM; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/quiz-answer-controls.js | MODIFY / proposed phase 06 output | Integration owner; augment drag, retain typed keyboard path; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/education/answer-evaluator.js | REUSE / proposed phase 03 output | Sole typed matcher; no duplicate quiz evaluator |
-| C:/Work/NavSlidesEditor/shared/src/education/quiz-session.js | REUSE / proposed phase 06 output | Attempts/generation/once-only score |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/mount.js | MODIFY / proposed phase 04 output | Integration owner; connect presenters serially; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/runtime.css | MODIFY / proposed phase 04 output | Integration owner; handles/drop targets/focus, no app Tailwind dependency |
-| C:/Work/NavSlidesEditor/client/src/components/properties/game-properties.jsx | MODIFY / known :9-20,416-436 | Integration owner; route complete authoring only if phase 03 gate reveals gap; do not grow monolith |
-| C:/Work/NavSlidesEditor/shared/tests/education/assignment-state.test.js | CREATE / proposed | Deterministic reducer/score contract tests |
-| C:/Work/NavSlidesEditor/client/src/components/education/assignment-interaction.test.js | CREATE / proposed | jsdom real DOM events/capture seam; consumer behavior |
-| C:/Work/NavSlidesEditor/tests/e2e/games/education-drag-drop.spec.js | CREATE / proposed | Generated HTML + touch/keyboard; <=200 LOC |
-| C:/Work/NavSlidesEditor/tests/e2e/games/education-drag-drop-file.spec.js | CREATE / proposed | Direct file smoke; <=200 LOC |
-| C:/Work/NavSlidesEditor/docs/feature-coverage-matrix.md | MODIFY / known | Integration owner, only after successful implementation smoke |
-| C:/Work/NavSlidesEditor/docs/project-changelog.md | MODIFY / known | Integration owner, only after observed smoke |
+| Full path                                                                              | Action / fact                     | Ownership, size và test impact                                                                      |
+| -------------------------------------------------------------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------- |
+| C:/Work/NavSlidesEditor/shared/src/education/assignment-state.js                       | CREATE / proposed                 | Domain; bijection/buckets reducer; <200 LOC; unit invariants                                        |
+| C:/Work/NavSlidesEditor/shared/src/education/sorting-config.js                         | CREATE / proposed                 | Domain; config normalization/evaluation; <200 LOC                                                   |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/drag-controller.js                | CREATE / proposed                 | Domain; pointer capture/cancel; <200 LOC                                                            |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/assignment-controls.js            | CREATE / proposed                 | Domain; click/keyboard IDs; <200 LOC                                                                |
+| C:/Work/NavSlidesEditor/shared/src/education/games/matching.js                         | MODIFY / proposed phase 05 output | Integration owner serial; consume shared assignment state/sole matcher; <200 LOC                    |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/games/matching.js                 | MODIFY / proposed phase 05 output | Integration owner serial; existing click/tap/keyboard thêm drag; <200 LOC                           |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/sorting-presenter.js              | CREATE / proposed                 | Domain; bucket DOM; <200 LOC                                                                        |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/quiz-answer-controls.js           | MODIFY / proposed phase 06 output | Integration owner; augment drag, retain typed keyboard path; <200 LOC                               |
+| C:/Work/NavSlidesEditor/shared/src/education/answer-evaluator.js                       | REUSE / proposed phase 03 output  | Sole typed matcher; no duplicate quiz evaluator                                                     |
+| C:/Work/NavSlidesEditor/shared/src/education/quiz-session.js                           | REUSE / proposed phase 06 output  | Attempts/generation/once-only score                                                                 |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/mount.js                          | MODIFY / proposed phase 04 output | Integration owner; connect presenters serially; <200 LOC                                            |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/runtime.css                       | MODIFY / proposed phase 04 output | Integration owner; handles/drop targets/focus, no app Tailwind dependency                           |
+| C:/Work/NavSlidesEditor/client/src/components/properties/game-properties.jsx           | MODIFY / known :9-20,416-436      | Integration owner; route complete authoring only if phase 03 gate reveals gap; do not grow monolith |
+| C:/Work/NavSlidesEditor/shared/tests/education/assignment-state.test.js                | CREATE / proposed                 | Deterministic reducer/score contract tests                                                          |
+| C:/Work/NavSlidesEditor/client/src/components/education/assignment-interaction.test.js | CREATE / proposed                 | jsdom real DOM events/capture seam; consumer behavior                                               |
+| C:/Work/NavSlidesEditor/tests/e2e/games/education-drag-drop.spec.js                    | CREATE / proposed                 | Generated HTML + touch/keyboard; <=200 LOC                                                          |
+| C:/Work/NavSlidesEditor/tests/e2e/games/education-drag-drop-file.spec.js               | CREATE / proposed                 | Direct file smoke; <=200 LOC                                                                        |
+| C:/Work/NavSlidesEditor/docs/feature-coverage-matrix.md                                | MODIFY / known                    | Integration owner, only after successful implementation smoke                                       |
+| C:/Work/NavSlidesEditor/docs/project-changelog.md                                      | MODIFY / known                    | Integration owner, only after observed smoke                                                        |
 
 ## Tests Before — RED scenarios
+
 Đây là yêu cầu test-first, không phải kết quả RED đã chạy. Tạo proposed test files trước khi gọi commands.
+
 - Bijection: gán prompt A sang target B đã dùng phải bị từ chối, giữ mapping cũ và hướng dẫn giải phóng target trước; không implicit swap hoặc để hai nguồn chung target.
 - Sorting: phân loại sai, sửa sang đúng, submit hai lần; score tăng đúng một lần; bucket nhiều items không bị cấm nhầm như Matching.
 - Ordering: labels trùng nhau, display bị shuffle; evaluator vẫn chấm đúng theo IDs; missing/duplicate/unknown ID bị từ chối.
@@ -87,6 +99,7 @@ Tất cả đường dẫn CREATE dưới đây là đề xuất, không phải 
 - Live preservation: chạy existing Matching accepted/reveal/rejoin journey; không đổi `{promptId,targetId}` thành display indices.
 
 ## Implementation steps
+
 1. Tạo RED tests với fixture IDs/labels trùng nhau; lưu scenario thất bại thực tế. Nếu dependency thiếu thì dừng tại gate, không chấp nhận test không tìm thấy module làm bằng chứng tính năng.
 2. Viết assignment-state reducer bất biến; mapping validity/tổng điểm độc lập DOM; sorting dùng config phase 03 và không sửa saved data.
 3. Viết drag-controller có capture/cancel đầy đủ, hit-testing target sau khi bỏ ghost; chỉ commit lúc drop hợp lệ, không commit cả pointerup và click giả sau drag.
@@ -97,22 +110,27 @@ Tất cả đường dẫn CREATE dưới đây là đề xuất, không phải 
 8. Sau smoke thành công mới cập nhật docs/changelog: modes hỗ trợ, keyboard path, local answer-key visibility và receipt links.
 
 ## Refactor
+
 Giữ một assignment implementation cho local Matching và quiz matching; khác biệt scoring do session/evaluator sở hữu. Xóa gesture state/duplicate local reducers được thay thế sau khi xác nhận toàn bộ consumers mới; không xóa learner Matching live ở phase 10 vì phase 13 còn sở hữu cutover đó.
 
 ## Tests After — GREEN
+
 Chạy lại đúng RED cases; kiểm tra saved JSON trước/sau play/reset bằng behavioral roundtrip, không so source text. Existing live Matching tests tiếp tục xanh; pointer và click không sinh double activation.
 
 ## Behavior matrix
-| Mức | Scenario | Kết quả quan sát |
-| --- | --- | --- |
-| Critical | Correct + duplicate + reset + stale callback | Điểm đúng một lần, generation mới sạch |
-| High | Matching bijection / sorting many-to-one | State hợp lệ đúng từng game, IDs ổn định |
-| High | Touch drag cạnh slide / cancel | Đặt đúng hoặc không đổi; slide không tự chuyển |
-| High | Tab + Enter/Space + Move up/down | Hoàn thành cùng đáp án/score như pointer |
-| Medium | 320/768/desktop, labels dài, reduced motion | Controls targetable, feedback không che bài |
+
+| Mức      | Scenario                                     | Kết quả quan sát                               |
+| -------- | -------------------------------------------- | ---------------------------------------------- |
+| Critical | Correct + duplicate + reset + stale callback | Điểm đúng một lần, generation mới sạch         |
+| High     | Matching bijection / sorting many-to-one     | State hợp lệ đúng từng game, IDs ổn định       |
+| High     | Touch drag cạnh slide / cancel               | Đặt đúng hoặc không đổi; slide không tự chuyển |
+| High     | Tab + Enter/Space + Move up/down             | Hoàn thành cùng đáp án/score như pointer       |
+| Medium   | 320/768/desktop, labels dài, reduced motion  | Controls targetable, feedback không che bài    |
 
 ## Executable focused commands
+
 Chỉ dùng khi thực thi; không chạy build/test/lint trong lượt lập kế hoạch. Test CREATE trước; phase 04 runtime artifact phải được integration owner chuẩn bị. Specs tự tạo touch context để không phụ thuộc `tablet-touch` testMatch.
+
 ```powershell
 npx vitest run shared/tests/education/assignment-state.test.js client/src/components/education/assignment-interaction.test.js
 npx vitest run server/services/game-matching-reveal-persistence.test.js server/services/game-socket-end-to-end.test.js
@@ -122,13 +140,16 @@ npx playwright test tests/e2e/games/education-drag-drop.spec.js tests/e2e/games/
 ```
 
 ## ACTUAL browser smoke journey
+
 Tạo deck bằng `testPresentation` fixture theo `tests/e2e/fixtures/test-fixtures.js:41-54,80-95`; author đủ Matching/sorting/quiz ordering → save/reload → undo/duplicate → Try → mở `/api/presentations/{id}/present` thật → làm sai/sửa/submit/reset. Touch context kéo qua cạnh game, kiểm tra Reveal slide index không đổi; keyboard context hoàn thành không chuột. Publish current-phase JS/CSS theo contract04 rồi tạo file từ chính artifact đó, mở `file://` bằng browser với HTTP/WS bị chặn và làm lại cả ba game; nhận xét thiếu portable closure là blocker phase14, không gắn nhãn Download hoàn chỉnh.
 
 ## Success criteria + unchecked actionable checklist
+
 - [ ] Cả ba bài hoàn thành bằng pointer/touch/click/keyboard với cùng kết quả, không HTML5-only và không xung đột Reveal.
 - [ ] Wrong/retry/reset/duplicate/stale generation được quan sát và không thay saved deck hoặc cộng điểm lặp.
 - [ ] Live Matching accepted/reveal/reconnect giữ IDs và server result; local không phát HTTP/WS.
 - [ ] Generated localhost và file thực tế có receipt; docs chỉ đổi sau smoke; không còn reducer mới vượt 199 LOC.
 
 ## Security/risks and failure protocol
+
 High (likelihood cao × impact cao): touch capture và Reveal cùng điều hướng; giảm bằng ownership gesture vùng game, capture/cancel và smoke thật. High (vừa × cao): index-based migration làm chấm sai khi shuffle; giảm bằng IDs/duplicate-label tests. High (vừa × cao): callback sau reset ghi vào session khác; generation gate bắt buộc. Medium (vừa × vừa): offline keys có thể đọc được; công khai local boundary, không tuyên bố bí mật. Rollback: hoàn nguyên checkpoint phase 10 cùng registration/style của nó, giữ config IDs đã lưu và dependency runtime; không xóa dữ liệu sorting/quiz của người dùng. Khi RED/GREEN/smoke sai, lưu payload, viewport, generation và trace; dừng bước tích hợp gây lỗi, sửa root cause rồi chạy đúng scenario, không disable gesture hoặc che lỗi để đạt gate.

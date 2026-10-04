@@ -1,18 +1,24 @@
 ---
 phase: 6
-title: "Quiz native với bảy loại câu hỏi và chấm điểm dùng chung"
-status: pending
+title: 'Quiz native với bảy loại câu hỏi và chấm điểm dùng chung'
+status: in_progress
 priority: P1
 dependencies: [3, 4]
 ---
 
 # Phase 06 — Native quiz
 
+## Execution progress
+
+Native quiz implementation slice đã bàn giao. Cần final receipts cho từng canonical kind trên author/save/history, Try/generated/Share/file, correct/wrong/invalid, attempts/deadline/replay và keyboard/touch theo checklist; evaluator/unit greens không qualify đủ surfaces hoặc live authority. [Root progress](./plan.md#execution-progress) phân biệt implementation và acceptance; checklist giữ nguyên.
+
 ## Goal
+
 Tác giả tạo, sửa và chơi được `type:'game', gameType:'quiz'` trên Try, HTML Present và HTML độc lập, với cùng evaluator cho server phase 12.
 Không thêm canonical element; giữ 19 canonical types và catalog cuối cùng gồm 19 game subtypes theo execution-contracts.
 
 ## Context/evidence
+
 - `C:/Work/NavSlidesEditor/client/src/constants/game-element-types-constants.js:149-160,207-229` hợp nhất legacy/nested config rồi factory lưu config dưới discriminator; giữ cơ chế nested này.
 - `C:/Work/NavSlidesEditor/client/src/components/properties/game-properties.jsx:145-159` modal lưu câu bằng ID; danh sách `:255-275` chưa có reorder và chỉ đọc `question`.
 - `C:/Work/NavSlidesEditor/client/src/components/properties/game-properties-question-editor.jsx:63-77` hiện chỉ validate lựa chọn/correctIndex; không suy diễn đây là editor bảy loại.
@@ -22,12 +28,14 @@ Không thêm canonical element; giữ 19 canonical types và catalog cuối cùn
 - Đọc lại GameFixScout, ServerGameScout, PresentRuntimeScout cùng execution-contracts; báo cáo cũ không thay thế scout code mới.
 
 ## Deep scout gate
+
 - Trước code, glob/grep lại các file và symbol trên, đọc phase 03/04 đã triển khai, xác nhận question-schema, mount lifecycle và game registry thật.
 - Trace Insert → nested patch → save/reload/undo → generator → mount; liệt kê từng caller đang sử dụng correctIndex trước migration, không viết “update all”.
 - Kiểm lifetime: config thuộc deck lưu; quiz-session thuộc `(mount, effectiveSlideId, elementId, generation)`, không thuộc module singleton hay Zustand deck.
 - Nếu schema phase 03 thiếu kind/ID/media invariant, integration owner sửa chính schema đó trước RED; không tạo normalizer câu hỏi thứ hai.
 
 ## Requirements
+
 - Bảy kind canonical: `single-choice`, `multi-choice`, `true-false`, `fill-blank`, `ordering`, `matching`, `image-hotspot`; tên UI không thay đổi discriminator.
 - Sửa được prompt, media URL/upload và alt, options/items/pairs/regions, answerKey, points, timeLimit, feedback và settings toàn quiz.
 - Thêm/xóa/reorder câu hỏi và option giữ nguyên ID cùng answer references; undo/reload/duplicate không làm đổi nghĩa đáp án.
@@ -35,6 +43,7 @@ Không thêm canonical element; giữ 19 canonical types và catalog cuối cùn
 - Local offline có answerKey đọc được trong tài liệu; công khai giới hạn này. Live participant chỉ có projection redacted, không tự chấm hay fallback local khi disconnect.
 
 ## Architecture/contracts
+
 - Config canonical: `{type:'game',gameType:'quiz',quiz:{title,questions,attemptLimit,shuffleQuestions,feedbackMode,showScore}}`; defaults dùng catalog phase 03, attemptLimit mặc định 1, hữu hạn integer 1..10.
 - `feedbackMode:'immediate'|'after-question'`; immediate báo đúng/sai sau attempt, nhưng explanation/key chỉ reveal sau câu kết thúc; after-question giữ feedback đến terminal.
 - Câu canonical: `{id,kind,prompt,media?,points,timeLimit,options?,answerKey,feedback:{correct,incorrect,explanation}}`; media `{src,alt}`; points integer 1..1000, timeLimit integer 5..300 giây theo boundary hiện có.
@@ -61,34 +70,37 @@ Không thêm canonical element; giữ 19 canonical types và catalog cuối cùn
 - Một form submit handler; nút phụ type=button, selection không tự submit; action delegation không bắt controls bên trong quiz. Role=status có trước input, polite text feedback, không aria-invalid cho đáp án sai hợp lệ.
 
 ## File inventory
-| Full path | Action / evidence | Ownership, size và test impact |
-| --- | --- | --- |
-| C:/Work/NavSlidesEditor/shared/src/education/quiz-config.js | CREATE proposed | Quiz settings/composition, dùng question-schema phase 03; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/education/answer-evaluator.js | REUSE proposed phase 03 | Sole matcher bảy kind, phase 05/06/12 cùng import; không duplicate |
-| C:/Work/NavSlidesEditor/shared/src/education/quiz-session.js | CREATE proposed | Attempts/generation/score reducer; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/education/quiz-public-projection.js | CREATE proposed | Compose public question boundary03 + controlled attempts/terminal reveal; no duplicated allowlist; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/education/question-public-projection.js | REUSE proposed phase 03 | Sole canonical public question validator/allowlist for local-vs-live document boundary |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/quiz-presenter.js | CREATE proposed | DOM presenter chung, lifecycle phase 04; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/quiz-answer-controls.js | CREATE proposed | Choice/text/order/matching controls; <200 LOC mỗi file split |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/quiz-hotspot-controls.js | CREATE proposed | Image coordinate + keyboard alternative; <200 LOC |
-| C:/Work/NavSlidesEditor/client/src/components/properties/quiz-properties.jsx | CREATE proposed | Settings/list/reorder, nested patches; <200 LOC |
-| C:/Work/NavSlidesEditor/client/src/components/properties/quiz-question-editor.jsx | CREATE proposed | Modal chung; split kind-fields nếu vượt <200 LOC |
-| C:/Work/NavSlidesEditor/client/src/components/properties/quiz-question-kind-fields.jsx | CREATE proposed | Form kind-specific, không chứa grading; <200 LOC mỗi split |
-| C:/Work/NavSlidesEditor/shared/tests/education/quiz-grading.test.js | CREATE proposed | Bảy typed answers qua session thật → points/attempt outcomes, không test forwarding |
-| C:/Work/NavSlidesEditor/shared/tests/education/quiz-session.test.js | CREATE proposed | Retry/deadline/dedup/reset/projection |
-| C:/Work/NavSlidesEditor/client/src/components/properties/quiz-properties.test.jsx | CREATE proposed | Sửa/reorder/media/settings không mất IDs |
-| C:/Work/NavSlidesEditor/tests/e2e/games/native-quiz.spec.js | CREATE proposed | UI → generated Present/Share và keyboard/touch; ≤200 LOC |
-| C:/Work/NavSlidesEditor/tests/e2e/games/native-quiz-file.spec.js | CREATE proposed | File artifact thật, data-image, block HTTP/WS; ≤200 LOC |
-| C:/Work/NavSlidesEditor/client/src/components/properties/game-properties.jsx | MODIFY known :27,145 | Integration owner nối panel mới, không domain sửa monolith |
-| C:/Work/NavSlidesEditor/shared/src/element-renderers.js | MODIFY known :956,1036 | Integration owner nối interactive/public snapshot serial |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/runtime-entry.js | MODIFY proposed phase 04 | Integration owner import presenter khi prerequisite tồn tại |
-| C:/Work/NavSlidesEditor/shared/src/education/question-schema.js | MODIFY proposed phase 03 | Integration owner hoàn tất shape ở scout gate nếu cần |
-| C:/Work/NavSlidesEditor/docs/project-changelog.md | MODIFY known | Chỉ sau implementation smoke; không sửa khi lập plan |
-| C:/Work/NavSlidesEditor/docs/feature-coverage-matrix.md | GENERATED known | Không hand-edit; phase 16 regenerate từ fresh receipts, game scope không nằm editor-core |
-| C:/Work/NavSlidesEditor/scripts/feature-inventory/feature-manifest.json | MODIFY known :125 | Integration owner khai báo proposed game.quiz capability/test tags serial |
+
+| Full path                                                                              | Action / evidence        | Ownership, size và test impact                                                                              |
+| -------------------------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| C:/Work/NavSlidesEditor/shared/src/education/quiz-config.js                            | CREATE proposed          | Quiz settings/composition, dùng question-schema phase 03; <200 LOC                                          |
+| C:/Work/NavSlidesEditor/shared/src/education/answer-evaluator.js                       | REUSE proposed phase 03  | Sole matcher bảy kind, phase 05/06/12 cùng import; không duplicate                                          |
+| C:/Work/NavSlidesEditor/shared/src/education/quiz-session.js                           | CREATE proposed          | Attempts/generation/score reducer; <200 LOC                                                                 |
+| C:/Work/NavSlidesEditor/shared/src/education/quiz-public-projection.js                 | CREATE proposed          | Compose public question boundary03 + controlled attempts/terminal reveal; no duplicated allowlist; <200 LOC |
+| C:/Work/NavSlidesEditor/shared/src/education/question-public-projection.js             | REUSE proposed phase 03  | Sole canonical public question validator/allowlist for local-vs-live document boundary                      |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/quiz-presenter.js                 | CREATE proposed          | DOM presenter chung, lifecycle phase 04; <200 LOC                                                           |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/quiz-answer-controls.js           | CREATE proposed          | Choice/text/order/matching controls; <200 LOC mỗi file split                                                |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/quiz-hotspot-controls.js          | CREATE proposed          | Image coordinate + keyboard alternative; <200 LOC                                                           |
+| C:/Work/NavSlidesEditor/client/src/components/properties/quiz-properties.jsx           | CREATE proposed          | Settings/list/reorder, nested patches; <200 LOC                                                             |
+| C:/Work/NavSlidesEditor/client/src/components/properties/quiz-question-editor.jsx      | CREATE proposed          | Modal chung; split kind-fields nếu vượt <200 LOC                                                            |
+| C:/Work/NavSlidesEditor/client/src/components/properties/quiz-question-kind-fields.jsx | CREATE proposed          | Form kind-specific, không chứa grading; <200 LOC mỗi split                                                  |
+| C:/Work/NavSlidesEditor/shared/tests/education/quiz-grading.test.js                    | CREATE proposed          | Bảy typed answers qua session thật → points/attempt outcomes, không test forwarding                         |
+| C:/Work/NavSlidesEditor/shared/tests/education/quiz-session.test.js                    | CREATE proposed          | Retry/deadline/dedup/reset/projection                                                                       |
+| C:/Work/NavSlidesEditor/client/src/components/properties/quiz-properties.test.jsx      | CREATE proposed          | Sửa/reorder/media/settings không mất IDs                                                                    |
+| C:/Work/NavSlidesEditor/tests/e2e/games/native-quiz.spec.js                            | CREATE proposed          | UI → generated Present/Share và keyboard/touch; ≤200 LOC                                                    |
+| C:/Work/NavSlidesEditor/tests/e2e/games/native-quiz-file.spec.js                       | CREATE proposed          | File artifact thật, data-image, block HTTP/WS; ≤200 LOC                                                     |
+| C:/Work/NavSlidesEditor/client/src/components/properties/game-properties.jsx           | MODIFY known :27,145     | Integration owner nối panel mới, không domain sửa monolith                                                  |
+| C:/Work/NavSlidesEditor/shared/src/element-renderers.js                                | MODIFY known :956,1036   | Integration owner nối interactive/public snapshot serial                                                    |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/runtime-entry.js                  | MODIFY proposed phase 04 | Integration owner import presenter khi prerequisite tồn tại                                                 |
+| C:/Work/NavSlidesEditor/shared/src/education/question-schema.js                        | MODIFY proposed phase 03 | Integration owner hoàn tất shape ở scout gate nếu cần                                                       |
+| C:/Work/NavSlidesEditor/docs/project-changelog.md                                      | MODIFY known             | Chỉ sau implementation smoke; không sửa khi lập plan                                                        |
+| C:/Work/NavSlidesEditor/docs/feature-coverage-matrix.md                                | GENERATED known          | Không hand-edit; phase 16 regenerate từ fresh receipts, game scope không nằm editor-core                    |
+| C:/Work/NavSlidesEditor/scripts/feature-inventory/feature-manifest.json                | MODIFY known :125        | Integration owner khai báo proposed game.quiz capability/test tags serial                                   |
 
 ## Tests Before — RED
+
 Chưa chạy RED trong lượt lập plan; executor tạo các test proposed trước code và ghi failure receipt có assertion hành vi.
+
 - Bảy payload: đúng/sai/invalid, Unicode dạng decomposed, tập lựa chọn thiếu/thừa, permutation lặp, matching trùng rightId, hotspot biên/NaN/letterbox.
 - Submit sai rồi đúng trong retry; duplicate chính nó; hai attempt đúng khác ID; submit sau deadline/reset; tổng điểm không vượt points mỗi câu.
 - Reorder câu/options rồi save/reload/undo: answer vẫn theo IDs; media alt còn; sửa feedback không xóa settings khác.
@@ -96,6 +108,7 @@ Chưa chạy RED trong lượt lập plan; executor tạo các test proposed tr�
 - Generated document hiện chưa có quiz playable: test thao tác Submit và thấy score/feedback thật phải fail vì missing behavior, không vì wording placeholder.
 
 ## Implementation steps
+
 1. Khóa fixture đủ bảy loại bằng schema/evaluateAnswer phase 03; viết RED quiz grading/session/projection với clock deterministic và JSON roundtrip thực, missing-import không tính behavioral RED.
 2. Implement quiz config và điểm/attempt composition trong quiz-session, import sole matcher phase 03; migrate known correctIndex ở normalization boundary rồi liệt kê/cutover caller thực, không evaluator shim.
 3. Implement session reducer, unique attempts, deadline và generation; dùng deadline-clock phase 04 thay decrement interval.
@@ -103,34 +116,41 @@ Chưa chạy RED trong lượt lập plan; executor tạo các test proposed tr�
 5. Tạo panel authoring và modal kind-specific; add/delete/reorder chỉ đổi sequence, không regenerate existing IDs; lỗi schema chỉ rõ trường sai.
 6. Integration owner nối catalog/schema/panel/runtime-entry/render snapshot tuần tự; static PPTX/PDF hiển thị câu thực nhưng không default reveal answerKey.
 7. Chạy focused GREEN và smoke dưới đây; cập nhật docs/changelog sau bằng chứng, chuyển evaluator/public projection cho phase 12, không claim live đã hoàn tất.
-Sau smoke, cập nhật changelog và manifest/test tags proposed `[cap:game.quiz]`; gửi receipts cho phase 16. `C:/Work/NavSlidesEditor/scripts/feature-inventory/build-matrix.mjs:145,188-191` sinh matrix editor-core, không hand-edit hay gán game capability thành editor-core để che gap.
+   Sau smoke, cập nhật changelog và manifest/test tags proposed `[cap:game.quiz]`; gửi receipts cho phase 16. `C:/Work/NavSlidesEditor/scripts/feature-inventory/build-matrix.mjs:145,188-191` sinh matrix editor-core, không hand-edit hay gán game capability thành editor-core để che gap.
 
 ## Refactor
+
 Shared thuần không import React/window; UI không copy grading. Tách controls theo kind nếu size vượt 199 LOC, không tạo engine generic.
 Xóa assertion placeholder/source-wording liên quan sau cutover; giữ regression dựa trên score/transitions, không re-pin implementation text.
 
 ## Tests After — GREEN
+
 Giữ failing-before/passing-after receipts cho chấm điểm, retry và HTML thật; test fakes chỉ clock/random/isolated transport, không mock implementation.
 Test end-to-end live authority với real Socket.IO nằm phase 12/13; phase này kiểm redaction function và live presenter không nhận key/không local-score khi transport thiếu.
 
 ## Behavior matrix
-| Mức | Unit | Integration | Browser/acceptance |
-| --- | --- | --- | --- |
-| Critical | Exact grading + dedup + generation | Session với evaluator/projection thật | Submit/retry/reset trên generated HTML cho bảy kind |
-| High | Media bounds + region geometry + IDs | Form → normalized saved config → render | 320/768/desktop, keyboard, touch, letterbox hotspot |
-| Medium | Feedback timing + shuffle permutation | Static public snapshot không lộ key | Reduced-motion; exit/return giữ tiến độ và pause local timer |
+
+| Mức      | Unit                                  | Integration                             | Browser/acceptance                                           |
+| -------- | ------------------------------------- | --------------------------------------- | ------------------------------------------------------------ |
+| Critical | Exact grading + dedup + generation    | Session với evaluator/projection thật   | Submit/retry/reset trên generated HTML cho bảy kind          |
+| High     | Media bounds + region geometry + IDs  | Form → normalized saved config → render | 320/768/desktop, keyboard, touch, letterbox hotspot          |
+| Medium   | Feedback timing + shuffle permutation | Static public snapshot không lộ key     | Reduced-motion; exit/return giữ tiến độ và pause local timer |
 
 ## Focused commands
+
 Chạy tại `C:/Work/NavSlidesEditor` khi triển khai; các test dưới đây là proposed, phải CREATE trước khi chạy. Không chạy build/lint/suite toàn repo ở phase này.
+
 ```powershell
 npx vitest run shared/tests/education/quiz-grading.test.js shared/tests/education/quiz-session.test.js client/src/components/properties/quiz-properties.test.jsx
 npm run vendor
 $env:PLAYWRIGHT_USE_DEV_SERVERS='1'
 npx playwright test tests/e2e/games/native-quiz.spec.js tests/e2e/games/native-quiz-file.spec.js --project=chromium --workers=1
 ```
+
 Playwright config thật `C:/Work/NavSlidesEditor/playwright.config.js:120-136` khởi động localhost riêng; publish current-phase JS/CSS bằng `npm run vendor` theo contract04 trước smoke, không tái dùng bundle prerequisite cũ.
 
 ## ACTUAL browser smoke journey
+
 Tạo deck riêng bằng testPresentation fixture `C:/Work/NavSlidesEditor/tests/e2e/fixtures/test-fixtures.js:148-152`; tác giả nhập đủ bảy loại bằng panel thật, save/reload, undo reorder, duplicate.
 Mở Try và `/api/presentations/:id/present`, làm đúng/sai/retry, kiểm tổng điểm và Reset; mở hosted Share và lặp đường tương tác, không chỉ mount React.
 Download HTML với ảnh data đã self-contained theo closure phase 04, mở file:// bằng context mới, chặn toàn bộ HTTP/WS và chơi đủ bảy kind; network record không có dependency chạy lại.
@@ -139,6 +159,7 @@ Kiểm accessibility tree/AT đọc label và feedback, focus không bị lấy 
 Ảnh uploads/remote recursive closure đầy đủ được gate phase 14; lỗi tài nguyên phải báo rõ, không đánh dấu file smoke thành công nếu ảnh thiếu.
 
 ## Success criteria + unchecked actionable checklist
+
 - [ ] Bảy kind có một câu đúng, một sai, một invalid với kết quả/score như contract và evidence receipt thực.
 - [ ] Reorder/save/reload/undo/duplicate giữ IDs, đáp án, ảnh/alt và toàn bộ editable settings.
 - [ ] Attempts/deadline/reset generation không cộng điểm hai lần và không giữ callback cũ.
@@ -147,6 +168,7 @@ Kiểm accessibility tree/AT đọc label và feedback, focus không bị lấy 
 - [ ] New production files <200 LOC; integrating owner hoàn tất serial chokepoints trước bàn giao.
 
 ## Security/risks and failure protocol
+
 High = khả năng cao × tác động cao: key leak do nested feedback; mitigate allowlist projection + serialized payload tests, phase 12 wire receipts bắt buộc.
 High = trung bình × cao: grading/index drift khi reorder; mitigate stable IDs + original-deck roundtrip; không sửa triệu chứng bằng khóa reorder.
 High = trung bình × cao: hotspot letterbox hoặc timer stale; mitigate geometry browser proof và generation cleanup, không tin client elapsed.

@@ -1,4 +1,5 @@
 import { pluginRegistry } from './plugin-registry.js'
+import { validateHtmlDependencies } from 'revealjs-shared/src/education/html-sandbox-policy.js'
 
 function createId() {
   return crypto.randomUUID()
@@ -34,6 +35,7 @@ export function createPluginElement(fullType, overrides = {}, registry = pluginR
     pluginRuntime: {
       label: meta.label,
       sandbox: meta.sandbox,
+      htmlDependencies: validateHtmlDependencies(meta.htmlDependencies),
       exportMode: 'fallback',
     },
     ...overrides,

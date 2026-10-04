@@ -1,0 +1,83 @@
+{
+  "recordType": "education-fixture-baseline-migration",
+  "recordedOn": "2026-10-04",
+  "scope": "Only the frozen sim-pid-tuning/1 HTML content in the education legacy fixture is updated. This is not a production-source change or admission of an additional historical input.",
+  "fixturePath": "shared/tests/fixtures/education-legacy-templates.json",
+  "fixtureLocation": {
+    "recordId": "sim-pid-tuning",
+    "sourceId": "sim-pid-tuning/1",
+    "htmlEmbedOrdinal": 1,
+    "line": 1316
+  },
+  "sourceProvenance": {
+    "consumer": "shared/src/education/presets/simulations.js",
+    "import": "./simulation-source-data.json",
+    "sourceDataPath": "shared/src/education/presets/simulation-source-data.json",
+    "sourceDataEntry": "sim-pid-tuning[0]",
+    "sourceFileField": "pid-controller.html",
+    "manifestFilePrefix": "simulation-sources/",
+    "resolvedSourcePath": "shared/src/education/presets/simulation-sources/pid-controller.html",
+    "sourceByteSha256": "bcf09d1834b355fdfe0aeb4a9520b50ef17a0f6f106525f819f0b3f874153e06",
+    "declaredSourceSha256": "bcf09d1834b355fdfe0aeb4a9520b50ef17a0f6f106525f819f0b3f874153e06",
+    "sourceDataContentEqualsSourceFileBytesDecodedAsUtf8": true
+  },
+  "hashAlgorithm": "SHA-256",
+  "contentHashEncoding": "UTF-8 decoded HTML content, not its JSON string literal; includes the source's existing trailing newline",
+  "oldContentSha256": "b846da5985e267a29c7774a4da14d15ac1d044b4d53e70f5846d55897bc1e587",
+  "newContentSha256": "bcf09d1834b355fdfe0aeb4a9520b50ef17a0f6f106525f819f0b3f874153e06",
+  "oldContentByteLength": 11959,
+  "newContentByteLength": 12042,
+  "oldFixtureByteSha256": "8541340377ae670562bb0b523c882e15936b88ab6b64051ba71b7ca835e0e570",
+  "newFixtureByteSha256": "6d1656938c6797be5f8147e09eef2fac4188bf5d59699e5baea3a411477520cb",
+  "controlDistinction": {
+    "oldFixture": "The main PID embed already contained reset(), including its state/history reset implementation, but lacked the Reset button exposing it.",
+    "currentAuditedSourceAndNewFixture": "The main PID embed exposes that same existing reset() through the Reset button already present at source line 76.",
+    "addedHtmlLine": "                <button class=\"btn\" type=\"button\" onclick=\"reset()\">Reset</button>\n",
+    "existingResetImplementationLines": "120-123",
+    "physicsScriptChanged": false,
+    "supplementalPidLessonChanged": false
+  },
+  "observedReadOnlyInvariants": {
+    "method": "Read-only Node SHA-256, JSON parsing, exact string/byte comparisons and counts; no test, CLI publication, build, lint, formatter or browser execution.",
+    "beforeReplacementOccurrences": 1,
+    "actualNewFixtureMatchesPrecomputedSingleContentReplacementHash": true,
+    "removingOnlyAddedResetLineReconstructsOldContentHashAndWholeFixtureByteHash": true,
+    "recordCountBeforeAndAfter": 15,
+    "slideCountBeforeAndAfter": 53,
+    "auditedSimulatorEmbedCountBeforeAndAfter": 11,
+    "otherTenSimulatorEmbedsUnchanged": true,
+    "allElevenFixtureEmbedsEqualAuditedContentSourceBytesAndDeclaredHashesAfter": true,
+    "allOtherFixtureBytesIncludingRecordsSlidesIdsAndNonHtmlContentPreserved": true,
+    "fixtureRemainsStaticallyFrozen": true
+  },
+  "preservedSimulatorContentHashes": {
+    "sim-logic-gates/1": "fcc3babae89275903a38d1bb282de520f236983fb01a96230037ecb191c310cb",
+    "sim-rlc-response/1": "730096f321deda19cc8d5a5cd8d88228f1e27b07643ae44ca5ed63a722c25a19",
+    "sim-rlc-response/2": "e79dd151ebf72b26c0f43b3c2a9e727e2704dee363343091c1a47e477f85d40c",
+    "sim-pid-tuning/2": "f53180f3be9fd40007123e17e53b41e59c074fef7a42eadc5bbae205322615fe",
+    "sim-bode-plot/1": "718b9d54771241aa7817095395aea2bd257c985084ad61e3dfd0e3474dc95768",
+    "sim-bode-plot/2": "e6a68c862e1f5b079c291a9dd5a66d4fcedf55def0ee817d944b35b82a525666",
+    "sim-3phase/1": "8619a408d02e70a7aab710594688ecab3cf98d0891b7ee998ea5fd7faced32a9",
+    "sim-3phase/2": "c2bc8307eb4e18e284b40cfe477d8cb92e11568bc332525793dcdc88932a0faf",
+    "sim-gear-train/1": "5e591ce5be28553fa88682419f4722ec4e96f06b8092c83eaad3888d89413d76",
+    "sim-gear-train/2": "9b6bdd3e9251922943568d958d8d5b73068bba5e89efbc4df2ad32a247e39c92"
+  },
+  "protectedFileByteHashesObservedUnchanged": {
+    "scripts/template-native-migration.test.js": "569c1116411c6cb36da84b51af5a007cdb31ab5648fe0ec7796b5de0c31c95e8",
+    "shared/src/education/presets/known-quiz-migration.js": "16a05a4777455decaf74e81b2d948587fa4f8713098726982a60be6efca22861",
+    "shared/src/education/presets/simulations.js": "4c1c3f3e0b2a31efc8a03638a248b6c73ccf4dd4fd7c084fc90765afb384ff16",
+    "shared/src/education/presets/simulation-source-data.json": "aa83b0e37483c00ee4dea734d67c6c9e3a11cc29f4ff98262fb9ddde00a6588f",
+    "shared/src/education/presets/simulation-sources/pid-controller.html": "bcf09d1834b355fdfe0aeb4a9520b50ef17a0f6f106525f819f0b3f874153e06"
+  },
+  "publicationRepair": {
+    "path": "scripts/template-preset-publication.js",
+    "change": "Import the existing normalizeGameConfig; normalize each game element, then pass its canonical configuration to the same validateGameConfig boundary used by effective-game-descriptors.js.",
+    "unchangedContracts": "Validate all records before staging or backups. Preserve the known-quiz migration's direct strict validation of already-native answers, resource validation, exclusive staging/backups, fsync, and atomic rename.",
+    "retainedTestFile": "scripts/template-native-migration.test.js",
+    "retainedTestCaseCount": 11
+  },
+  "admissionBoundary": "The pre-Reset fixture content remains different from the exact admitted audited source. This correction adds no whitelist, fallback, legacy gameConfig alias or historical-input admission.",
+  "counselEvidence": ["agent://MigrationRasterVerificationCounsel:raw", "artifact://2207:raw"],
+  "verificationStatus": "Runtime and integrated acceptance pending Main's exact 20-file command; no pass or qualification is claimed by this record.",
+  "publishable": false
+}

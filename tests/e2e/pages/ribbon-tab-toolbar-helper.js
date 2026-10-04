@@ -24,7 +24,10 @@ export class RibbonTabToolbarHelper {
   }
 
   async clickQuickAccessSave() {
-    await this.page.locator('button[title*="Save"]').first().click()
+    await this.page
+      .getByRole('toolbar', { name: 'Quick actions', exact: true })
+      .getByRole('button', { name: 'Save', exact: true })
+      .click()
   }
 
   async getToolbarOverflowMetrics() {
@@ -86,7 +89,10 @@ export class RibbonTabToolbarHelper {
       buttons.forEach((btn) => {
         const rect = btn.getBoundingClientRect()
         const label =
-          btn.getAttribute('aria-label') || btn.getAttribute('title') || btn.textContent?.trim() || 'unknown'
+          btn.getAttribute('aria-label') ||
+          btn.getAttribute('title') ||
+          btn.textContent?.trim() ||
+          'unknown'
         const visibleText = getVisibleText(btn).trim()
 
         if (visibleText && btn.scrollWidth > btn.clientWidth + 1) {
@@ -189,7 +195,9 @@ export class RibbonTabToolbarHelper {
         return Array.from(node.childNodes).map(getVisibleText).join('')
       }
       labels.forEach((label) => {
-        const btn = document.querySelector(`button[aria-label="${label}"], button[title="${label}"]`)
+        const btn = document.querySelector(
+          `button[aria-label="${label}"], button[title="${label}"]`
+        )
         if (btn) {
           const visibleText = getVisibleText(btn).trim()
           results[label] = {

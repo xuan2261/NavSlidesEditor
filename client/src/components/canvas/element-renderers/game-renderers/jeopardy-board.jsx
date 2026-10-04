@@ -1,45 +1,52 @@
-import { JEOPARDY_POINTS } from './jeopardy-shared.js'
+import { getBoardPoints } from './jeopardy-shared.js'
 export function JeopardyBoard({ element, usedCells, ddKeys, onCellClick }) {
   const cats = element.categories || []
   const accent = element.accentColor || '#f59e0b'
+  const points = getBoardPoints(element)
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      width: '100%',
-      flex: 1,
-      minHeight: 0,
-      overflow: 'hidden',
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
+        flex: 1,
+        minHeight: 0,
+        overflow: 'hidden',
+      }}
+    >
       {/* Category header row */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(5, 1fr)',
-        gap: 3,
-        marginBottom: 3,
-        flexShrink: 0,
-      }}>
-        {JEOPARDY_POINTS.map((pts, i) => {
-          const cat = cats[i]
-          const catName = cat ? (cat.name || String(cat)) : `Category ${i + 1}`
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${Math.max(1, cats.length)}, 1fr)`,
+          gap: 3,
+          marginBottom: 3,
+          flexShrink: 0,
+        }}
+      >
+        {cats.map((cat) => {
+          const catName = cat.title
           return (
-            <div key={pts} style={{
-              background: accent,
-              borderRadius: 4,
-              padding: '4px 2px',
-              textAlign: 'center',
-              fontSize: 9,
-              fontWeight: 'bold',
-              color: '#1a1a2e',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              minHeight: 28,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
+            <div
+              key={cat.id}
+              style={{
+                background: accent,
+                borderRadius: 4,
+                padding: '4px 2px',
+                textAlign: 'center',
+                fontSize: 9,
+                fontWeight: 'bold',
+                color: '#1a1a2e',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                minHeight: 28,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               {catName}
             </div>
           )
@@ -47,21 +54,33 @@ export function JeopardyBoard({ element, usedCells, ddKeys, onCellClick }) {
       </div>
 
       {/* Point value rows */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, flex: 1, minHeight: 0, overflow: 'auto' }}>
-        {JEOPARDY_POINTS.map(pts => (
-          <div key={pts} style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(5, 1fr)',
-            gap: 3,
-            flex: 1,
-          }}>
-            {JEOPARDY_POINTS.map((_, catIdx) => {
-              const key = `${catIdx}-${pts}`
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+          flex: 1,
+          minHeight: 0,
+          overflow: 'auto',
+        }}
+      >
+        {points.map((pts) => (
+          <div
+            key={pts}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${Math.max(1, cats.length)}, 1fr)`,
+              gap: 3,
+              flex: 1,
+            }}
+          >
+            {cats.map((category) => {
+              const question = category.questions.find((candidate) => candidate.points === pts)
+              const key = question?.id
               const used = !!usedCells?.[key]
               const isDD = ddKeys?.has(key)
-              const interactive = !!onCellClick
-              const category = cats[catIdx]
-              const categoryName = category ? (category.name || String(category)) : `Category ${catIdx + 1}`
+              const interactive = !!onCellClick && !!question
+              const categoryName = category.title
               const cellStyle = {
                 position: 'relative',
                 background: used
@@ -86,9 +105,7 @@ export function JeopardyBoard({ element, usedCells, ddKeys, onCellClick }) {
                 userSelect: 'none',
                 boxSizing: 'border-box',
               }
-              const content = used
-                ? <span style={{ fontSize: 10 }}>✓</span>
-                : <span>{pts}</span>
+              const content = used ? <span style={{ fontSize: 10 }}>✓</span> : <span>{pts}</span>
 
               if (interactive) {
                 return (
@@ -96,7 +113,7 @@ export function JeopardyBoard({ element, usedCells, ddKeys, onCellClick }) {
                     type="button"
                     key={key}
                     disabled={used}
-                    onClick={() => onCellClick(catIdx, pts)}
+                    onClick={() => onCellClick(category.id, question.id)}
                     aria-label={`${categoryName}, ${pts} points${isDD ? ', Daily Double' : ''}${used ? ', used' : ''}`}
                     aria-pressed={used}
                     style={cellStyle}
@@ -105,7 +122,11 @@ export function JeopardyBoard({ element, usedCells, ddKeys, onCellClick }) {
                   </button>
                 )
               }
-              return <div key={key} style={cellStyle}>{content}</div>
+              return (
+                <div key={question?.id || `${category.id}-empty-${pts}`} style={cellStyle}>
+                  {question ? content : null}
+                </div>
+              )
             })}
           </div>
         ))}

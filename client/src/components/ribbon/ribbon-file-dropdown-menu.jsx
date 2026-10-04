@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { FileText, FolderOpen, Download, FileDown, History, CloudUpload } from 'lucide-react'
+import {
+  FileText,
+  FolderOpen,
+  Download,
+  FileDown,
+  History,
+  CloudUpload,
+  CheckSquare,
+  Square,
+} from 'lucide-react'
 import GithubIcon from '../icons/github-icon'
 import { Button } from '../ui'
 import RibbonFloatingOverlay from './ribbon-floating-overlay'
@@ -19,8 +28,12 @@ const MENU_GROUPS = [
       { id: 'pdf', label: 'Export PDF', icon: Download, action: 'onExportPDF' },
       { id: 'pptx', label: 'Export PPTX', icon: Download, action: 'onExportPPTX' },
       { id: 'html', label: 'Export HTML', icon: Download, action: 'onExportHTML' },
-      { id: 'offline', label: 'Export Offline HTML', icon: FileDown, action: 'onExportOffline' },
       { id: 'project', label: 'Export Project', icon: FileDown, action: 'onExportProject' },
+      {
+        id: 'teacher-reveal',
+        label: 'Include answers in PDF / reconstructed PPTX',
+        teacherReveal: true,
+      },
     ],
   },
   {
@@ -42,7 +55,8 @@ export default function FileDropdown({
   onExportPDF,
   onExportPPTX,
   onExportHTML,
-  onExportOffline,
+  staticExportTeacherReveal = false,
+  onStaticExportTeacherRevealChange,
   onExportProject,
   onGithub,
   onSync,
@@ -63,7 +77,6 @@ export default function FileDropdown({
     onExportPDF,
     onExportPPTX,
     onExportHTML,
-    onExportOffline,
     onExportProject,
     onGithub,
     onSync,
@@ -162,8 +175,16 @@ export default function FileDropdown({
                 {group.label}
               </div>
               {group.items.map((item) => {
-                const Icon = item.icon
+                const Icon = item.teacherReveal
+                  ? staticExportTeacherReveal
+                    ? CheckSquare
+                    : Square
+                  : item.icon
                 const itemIndex = menuItems.findIndex((menuItem) => menuItem.id === item.id)
+                const activate = () =>
+                  item.teacherReveal
+                    ? onStaticExportTeacherRevealChange?.(!staticExportTeacherReveal)
+                    : handleAction(item.action)
                 return (
                   <button
                     key={item.id}
@@ -178,21 +199,26 @@ export default function FileDropdown({
                           : undefined
                     }
                     className="ui-coarse-target dropdown-item w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-text-primary hover:bg-secondary cursor-pointer transition-colors text-left"
-                    role="menuitem"
+                    role={item.teacherReveal ? 'menuitemcheckbox' : 'menuitem'}
+                    aria-checked={item.teacherReveal ? staticExportTeacherReveal : undefined}
                     tabIndex={-1}
                     onMouseDown={(e) => {
                       e.preventDefault()
-                      handleAction(item.action)
+                      activate()
                     }}
-                    onKeyDown={(e) =>
-                      handleMenuItemKeyDown(e, itemIndex, () => handleAction(item.action))
-                    }
+                    onKeyDown={(e) => handleMenuItemKeyDown(e, itemIndex, activate)}
                   >
                     <Icon size={14} className="text-text-muted" />
                     {item.label}
                   </button>
                 )
               })}
+              {group.label === 'Export' && staticExportTeacherReveal && (
+                <p role="note" className="px-3 py-1 text-[11px] text-amber-300">
+                  Answer keys will be visible in teacher PDF and reconstructed PPTX. Do not
+                  distribute these files to learners.
+                </p>
+              )}
               <div className="mx-2 my-0.5 border-t border-border" />
             </div>
           ))}

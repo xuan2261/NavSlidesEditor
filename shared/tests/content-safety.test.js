@@ -1,9 +1,11 @@
 import { createRequire } from 'node:module'
 import { describe, expect, test } from 'vitest'
+import { JSDOM } from 'jsdom'
 
 const require = createRequire(import.meta.url)
 const {
   sanitizeRichTextHtml,
+  sanitizeMarkdownHtml,
   sanitizeRichTextStyle,
   sanitizeMediaSrc,
   sanitizeHref,
@@ -35,9 +37,9 @@ describe('shared rich text content safety', () => {
   })
 
   test('preserves editor-supported line-height and highlight styles', () => {
-    expect(sanitizeRichTextStyle('line-height: 1.5; line-height: 30.87pt; background-color: #fef08a')).toBe(
-      'line-height: 1.5; line-height: 41.2px; background-color: #fef08a'
-    )
+    expect(
+      sanitizeRichTextStyle('line-height: 1.5; line-height: 30.87pt; background-color: #fef08a')
+    ).toBe('line-height: 1.5; line-height: 41.2px; background-color: #fef08a')
   })
 
   test('removes unsafe style declarations from rich text html', () => {
@@ -56,6 +58,70 @@ describe('shared rich text content safety', () => {
     expect(sanitizeRichTextHtml('<a href="tel:+1234567890">Call</a>')).toContain(
       'href="tel:+1234567890"'
     )
+  })
+  test('preserves a single inert code language without admitting active classes or document authority', () => {
+    const literal = '  const tag = "<strong>literal</strong>";\n\n'
+    const source =
+      '<pre class="language-python"><code class="fragment hljs nohighlight language-javascript language-python arbitrary" ' +
+      'onclick="alert(1)" data-highlighted="yes" data-navslides-runtime="local" data-ns-generated-frame="true" ' +
+      'srcdoc="attack" style="position:absolute;background:url(https://example.test/x);color:expression(alert(1))">' +
+      '  const tag = "&lt;strong&gt;literal&lt;/strong&gt;";\n\n</code></pre>' +
+      '<code class="language- language-javascript/evil language-&quot;bad">plain</code>' +
+      '<p class="language-javascript">Prose</p><script>window.compromised=true</script>' +
+      '<iframe data-ns-generated-frame="true" srcdoc="attack"></iframe>' +
+      '<a href="javascript:alert(1)">Unsafe reference</a><img src="data:text/html,attack">'
+    const dom = new JSDOM(sanitizeMarkdownHtml(source), { url: 'https://navslides.test/' })
+    try {
+      const document = dom.window.document,
+        code = document.querySelector('pre code')
+      expect(code.className).toBe('language-javascript')
+      expect(code.textContent).toBe(literal)
+      expect(code.querySelector('strong')).toBeNull()
+      expect(document.querySelector('pre').hasAttribute('class')).toBe(false)
+      expect(document.querySelector('p').hasAttribute('class')).toBe(false)
+      expect(document.querySelector('body > code').hasAttribute('class')).toBe(false)
+      expect(document.querySelector('script, iframe')).toBeNull()
+      expect(
+        [...document.body.querySelectorAll('*')]
+          .flatMap((node) => [...node.attributes])
+          .filter((attribute) => /^(?:on|data-|srcdoc$|style$)/.test(attribute.name))
+      ).toEqual([])
+      expect(document.querySelector('a').getAttribute('href')).toBe('#')
+      expect(document.querySelector('img').hasAttribute('src')).toBe(false)
+    } finally {
+      dom.window.close()
+    }
+  })
+
+  test.each([
+    '<iframe data-ns-generated-frame="true" srcdoc="&lt;script data-navslides-runtime=local&gt;window.rootEscape=true&lt;/script&gt;"></iframe>',
+    '<SVG><foreignObject><iframe data-ns-generated-frame=true></iframe></foreignObject></SVG><object data="data:text/html,attack"></object><embed src="data:text/html,attack">',
+    '<template><iframe data-ns-generated-frame=true></iframe></template><math><mtext><style></style><iframe data-ns-generated-frame=true></iframe></mtext></math>',
+  ])('rich prose cannot grant root runtime or frame authority: %s', (attack) => {
+    const source =
+      '<p style="line-height:2"><strong>Lesson</strong> <a href="https://example.test/lesson">Read</a></p>' +
+      attack +
+      '<span data-ns-generated-frame=true data-navslides-runtime=local data-html-dependencies="{}" data-ns-srcdoc="attack" srcdoc="attack">Safe prose</span>'
+    const dom = new JSDOM(sanitizeRichTextHtml(source), { url: 'https://navslides.test/' })
+    try {
+      const document = dom.window.document
+      expect(document.querySelector('iframe,object,embed,script,svg,math,template') === null).toBe(
+        true
+      )
+      expect(
+        [...document.body.querySelectorAll('*')]
+          .flatMap((node) => [...node.attributes])
+          .filter((attribute) =>
+            /^(?:data-ns-|data-navslides-|data-html-dependencies$|srcdoc$)/.test(attribute.name)
+          )
+      ).toEqual([])
+      expect(document.querySelector('strong').textContent).toBe('Lesson')
+      expect(document.querySelector('p').style.lineHeight).toBe('2')
+      expect(document.querySelector('a').href).toBe('https://example.test/lesson')
+      expect(document.body.textContent).toContain('Safe prose')
+    } finally {
+      dom.window.close()
+    }
   })
 
   test('href policy rejects control characters and attribute breakout payloads', () => {

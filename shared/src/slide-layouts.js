@@ -1,14 +1,28 @@
 const { mergeTokens } = require('./design-tokens.js')
-const { clone, isId, isObject, normalizeLayoutMasters, normalizeLayoutOverrides } = require('./slide-layout-normalization.js')
+const {
+  clone,
+  isId,
+  isObject,
+  normalizeLayoutMasters,
+  normalizeLayoutOverrides,
+} = require('./slide-layout-normalization.js')
+const { remapInteractionReferences } = require('./education/interaction-references.js')
+const { clonePresetElements, remapElementLinks } = require('./education/presets/clone.js')
 
 const FIXED_ID_PREFIX = 'layout-fixed:'
 const fixedId = (layoutId, elementId) => `${FIXED_ID_PREFIX}${layoutId}:${elementId}`
-const position = (element, fallback) => Number.isFinite(element?.zIndex) ? element.zIndex : fallback
-const safePatch = (patch) => Object.fromEntries(Object.entries(patch || {}).filter(([key]) => key !== 'id' && key !== 'type'))
-const withoutLayout = ({ layoutId: _layoutId, layoutOverrides: _layoutOverrides, ...slide }) => slide
+const position = (element, fallback) =>
+  Number.isFinite(element?.zIndex) ? element.zIndex : fallback
+const warningText = (warning) => `${warning.sourceElementId}: ${warning.error}`
+const safePatch = (patch) =>
+  Object.fromEntries(Object.entries(patch || {}).filter(([key]) => key !== 'id' && key !== 'type'))
+const withoutLayout = ({ layoutId: _layoutId, layoutOverrides: _layoutOverrides, ...slide }) =>
+  slide
 
 function findLayout(layoutMasters, layoutId) {
-  return isId(layoutId) ? (normalizeLayoutMasters(layoutMasters) || []).find((layout) => layout.id === layoutId) : null
+  return isId(layoutId)
+    ? (normalizeLayoutMasters(layoutMasters) || []).find((layout) => layout.id === layoutId)
+    : null
 }
 
 function classifyElement(element) {
@@ -24,38 +38,129 @@ function classifyElement(element) {
 }
 
 function createPlaceholderElement(placeholder, createId) {
-  const defaults = isObject(placeholder.contentPolicy?.elementDefaults) ? clone(placeholder.contentPolicy.elementDefaults) : {}
-  return { ...defaults, id: createId(), type: placeholder.type, x: placeholder.x, y: placeholder.y, width: placeholder.width, height: placeholder.height, ...(placeholder.zIndex != null ? { zIndex: placeholder.zIndex } : {}) }
+  const defaults = isObject(placeholder.contentPolicy?.elementDefaults)
+    ? clone(placeholder.contentPolicy.elementDefaults)
+    : {}
+  return {
+    ...defaults,
+    id: createId(),
+    type: placeholder.type,
+    x: placeholder.x,
+    y: placeholder.y,
+    width: placeholder.width,
+    height: placeholder.height,
+    ...(placeholder.zIndex != null ? { zIndex: placeholder.zIndex } : {}),
+  }
 }
 
 function resolveEffectiveElements(slide, layoutMasters) {
   const owned = Array.isArray(slide?.elements) ? slide.elements : []
   const layout = findLayout(layoutMasters, slide?.layoutId)
-  if (!layout) return { elements: owned.map(clone), warnings: slide?.layoutId ? ['Missing or malformed layout reference'] : [] }
+  if (!layout)
+    return {
+      elements: owned.map(clone),
+      warnings: slide?.layoutId ? ['Missing or malformed layout reference'] : [],
+    }
   const overrides = normalizeLayoutOverrides(slide.layoutOverrides) || {}
   const hidden = new Set(overrides.hiddenElementIds || [])
   const patches = overrides.elementPatches || {}
-  const ownedById = new Map(owned.filter((element) => isId(element?.id)).map((element) => [element.id, element]))
+  const ownedById = new Map(
+    owned.filter((element) => isId(element?.id)).map((element) => [element.id, element])
+  )
   const boundIds = new Set()
-  const fixed = layout.fixedElements.filter((element) => !hidden.has(element.id) && !hidden.has(fixedId(layout.id, element.id))).map((element, index) => ({ ...clone(element), ...safePatch(patches[element.id] || patches[fixedId(layout.id, element.id)]), id: fixedId(layout.id, element.id), locked: true, __order: index }))
+  const fixed = layout.fixedElements
+    .filter((element) => !hidden.has(element.id) && !hidden.has(fixedId(layout.id, element.id)))
+    .map((element, index) => ({
+      ...clone(element),
+      ...safePatch(patches[element.id] || patches[fixedId(layout.id, element.id)]),
+      id: fixedId(layout.id, element.id),
+      locked: true,
+      __order: index,
+    }))
   const placeholders = layout.placeholders.flatMap((placeholder, index) => {
     const binding = overrides.placeholderBindings?.[placeholder.id]
     const ownedElement = ownedById.get(binding)
     if (!ownedElement || hidden.has(placeholder.id) || hidden.has(binding)) return []
     boundIds.add(binding)
-    return [{ ...clone(placeholder), ...clone(ownedElement), id: binding, type: placeholder.type, x: placeholder.x, y: placeholder.y, width: placeholder.width, height: placeholder.height, ...(placeholder.zIndex != null ? { zIndex: placeholder.zIndex } : {}), __order: fixed.length + index }]
+    return [
+      {
+        ...clone(placeholder),
+        ...clone(ownedElement),
+        id: binding,
+        type: placeholder.type,
+        x: placeholder.x,
+        y: placeholder.y,
+        width: placeholder.width,
+        height: placeholder.height,
+        ...(placeholder.zIndex != null ? { zIndex: placeholder.zIndex } : {}),
+        __order: fixed.length + index,
+      },
+    ]
   })
-  const remaining = owned.filter((element) => !boundIds.has(element?.id) && !hidden.has(element?.id)).map((element, index) => ({ ...clone(element), __order: fixed.length + placeholders.length + index }))
+  const remaining = owned
+    .filter((element) => !boundIds.has(element?.id) && !hidden.has(element?.id))
+    .map((element, index) => ({
+      ...clone(element),
+      __order: fixed.length + placeholders.length + index,
+    }))
+  const sorted = [...fixed, ...placeholders, ...remaining]
+    .sort((a, b) => position(a, a.__order) - position(b, b.__order) || a.__order - b.__order)
+    .map(({ __order, ...element }) => element)
+  const fixedMap = new Map(
+    layout.fixedElements.map((element) => [element.id, fixedId(layout.id, element.id)])
+  )
+  for (const placeholder of layout.placeholders)
+    fixedMap.set(
+      placeholder.id,
+      ownedById.has(overrides.placeholderBindings?.[placeholder.id])
+        ? overrides.placeholderBindings[placeholder.id]
+        : fixedId(layout.id, placeholder.id)
+    )
+  const ownMap = new Map([...fixedMap].filter(([id]) => !ownedById.has(id)))
+  const inherited = new Set(fixed.map((element) => element.id))
+  const remapped = sorted.map((element) => {
+    const mapping = inherited.has(element.id) ? fixedMap : ownMap
+    const action = element.action
+    return {
+      ...remapElementLinks({ ...element, action: undefined }, mapping),
+      ...(action ? { action } : {}),
+    }
+  })
+  const fixedSources = new Map(
+    layout.fixedElements.map((element) => [fixedId(layout.id, element.id), element.id])
+  )
+  const canonicalTargets = new Set(fixedMap.values())
+  const resolved = remapped.map((element) => {
+    const rawSource = fixedSources.get(element.id)
+    const patch = patches[rawSource] || patches[element.id]
+    const overriddenAction = Object.hasOwn(patch || {}, 'action')
+    const preserveExternalTargets =
+      !inherited.has(element.id) ||
+      overriddenAction ||
+      canonicalTargets.has(element.action?.targetElementId)
+    return remapInteractionReferences(
+      [element],
+      inherited.has(element.id) && !overriddenAction ? fixedMap : ownMap,
+      { destinationElements: remapped, preserveExternalTargets }
+    )
+  })
   return {
-    elements: [...fixed, ...placeholders, ...remaining].sort((a, b) => position(a, a.__order) - position(b, b.__order) || a.__order - b.__order).map(({ __order, ...element }) => element),
-    warnings: [],
+    elements: resolved.flatMap((result) => result.elements),
+    warnings: resolved.flatMap((result) => result.warnings).map(warningText),
   }
 }
 
 function resolveEffectiveSlide(slide, layoutMasters) {
   const layout = findLayout(layoutMasters, slide?.layoutId)
   const { elements, warnings } = resolveEffectiveElements(slide, layoutMasters)
-  return { slide: { ...clone(slide || {}), elements, ...(layout?.tokens ? { designTokens: mergeTokens(layout.tokens, slide?.designTokens) } : {}) }, warnings }
+  return {
+    slide: {
+      ...clone(slide || {}),
+      elements,
+      ...(layout?.tokens ? { designTokens: mergeTokens(layout.tokens, slide?.designTokens) } : {}),
+    },
+    warnings,
+  }
 }
 
 function bindPlaceholders(elements, layout, createId) {
@@ -63,8 +168,13 @@ function bindPlaceholders(elements, layout, createId) {
   const bindings = {}
   const nextElements = elements.map(clone)
   for (const placeholder of layout.placeholders) {
-    const match = [...unused].find((index) => nextElements[index]?.type === placeholder.type && classifyElement(nextElements[index]) === placeholder.role)
-    const index = match == null ? nextElements.push(createPlaceholderElement(placeholder, createId)) - 1 : match
+    const match = [...unused].find(
+      (index) =>
+        nextElements[index]?.type === placeholder.type &&
+        classifyElement(nextElements[index]) === placeholder.role
+    )
+    const index =
+      match == null ? nextElements.push(createPlaceholderElement(placeholder, createId)) - 1 : match
     unused.delete(index)
     bindings[placeholder.id] = nextElements[index].id
   }
@@ -74,8 +184,20 @@ function bindPlaceholders(elements, layout, createId) {
 function applyLayout(slide, layoutMasters, layoutId, createId = () => crypto.randomUUID()) {
   const layout = findLayout(layoutMasters, layoutId)
   if (!layout) return { slide: clone(slide), warnings: ['Missing or malformed layout reference'] }
-  const bound = bindPlaceholders(Array.isArray(slide?.elements) ? slide.elements : [], layout, createId)
-  return { slide: { ...clone(slide || {}), elements: bound.elements, layoutId: layout.id, layoutOverrides: { placeholderBindings: bound.placeholderBindings } }, warnings: [] }
+  const bound = bindPlaceholders(
+    Array.isArray(slide?.elements) ? slide.elements : [],
+    layout,
+    createId
+  )
+  return {
+    slide: {
+      ...clone(slide || {}),
+      elements: bound.elements,
+      layoutId: layout.id,
+      layoutOverrides: { placeholderBindings: bound.placeholderBindings },
+    },
+    warnings: [],
+  }
 }
 
 function changeLayout(slide, layoutMasters, layoutId, createId = () => crypto.randomUUID()) {
@@ -84,11 +206,42 @@ function changeLayout(slide, layoutMasters, layoutId, createId = () => crypto.ra
 
 function detachLayout(slide, layoutMasters, createId = () => crypto.randomUUID()) {
   const layout = findLayout(layoutMasters, slide?.layoutId)
-  if (!layout) return { slide: withoutLayout(clone(slide || {})), warnings: slide?.layoutId ? ['Missing or malformed layout reference'] : [] }
+  if (!layout)
+    return {
+      slide: withoutLayout(clone(slide || {})),
+      warnings: slide?.layoutId ? ['Missing or malformed layout reference'] : [],
+    }
   const { slide: effective, warnings } = resolveEffectiveSlide(slide, layoutMasters)
   const fixedIds = new Set(layout.fixedElements.map((element) => fixedId(layout.id, element.id)))
-  const elements = effective.elements.map((element) => fixedIds.has(element.id) ? { ...element, id: createId() } : element)
-  return { slide: { ...withoutLayout(effective), elements }, warnings }
+  const fixedElements = effective.elements.filter((element) => fixedIds.has(element.id))
+  const copied = fixedElements.length
+    ? clonePresetElements(
+        { elements: fixedElements },
+        { createId, destinationElements: effective.elements, preserveExternalTargets: true }
+      )
+    : { elements: [], idMap: new Map() }
+  const byId = new Map(
+    fixedElements.map((element, index) => [
+      element.id,
+      { ...copied.elements[index], locked: false },
+    ])
+  )
+  const combined = effective.elements.map(
+    (element) => byId.get(element.id) || remapElementLinks(element, copied.idMap)
+  )
+  const detached = remapInteractionReferences(combined, copied.idMap)
+  return {
+    slide: { ...withoutLayout(effective), elements: detached.elements },
+    warnings: [...new Set([...warnings, ...detached.warnings.map(warningText)])],
+  }
 }
 
-module.exports = { FIXED_ID_PREFIX, fixedId, resolveEffectiveElements, resolveEffectiveSlide, applyLayout, changeLayout, detachLayout }
+module.exports = {
+  FIXED_ID_PREFIX,
+  fixedId,
+  resolveEffectiveElements,
+  resolveEffectiveSlide,
+  applyLayout,
+  changeLayout,
+  detachLayout,
+}

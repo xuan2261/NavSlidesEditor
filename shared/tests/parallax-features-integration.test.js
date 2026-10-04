@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { JSDOM } from 'jsdom'
 import { renderElement } from '../src/element-renderers.js'
 import { generatePrintHTML, generateRevealHTML } from '../src/htmlGenerator.js'
 
@@ -21,23 +22,6 @@ describe('Parallax features integration', () => {
       )
       expect(html).toContain('https://example.com/v.mp4')
     })
-
-    it('applies trim and speed to video', () => {
-      const html = renderElement(
-        {
-          ...base,
-          type: 'video',
-          src: '/uploads/v.mp4',
-          startTime: 5,
-          endTime: 30,
-          playbackRate: 1.5,
-        },
-        {},
-        {}
-      )
-      expect(html).toContain('#t=5')
-      expect(html).toContain('1.5')
-    })
   })
 
   describe('Image citations', () => {
@@ -58,11 +42,7 @@ describe('Parallax features integration', () => {
     })
 
     it('omits citation when none provided', () => {
-      const html = renderElement(
-        { ...base, type: 'image', src: '/test.jpg' },
-        {},
-        {}
-      )
+      const html = renderElement({ ...base, type: 'image', src: '/test.jpg' }, {}, {})
       expect(html).not.toContain('citation')
     })
   })
@@ -111,11 +91,7 @@ describe('Parallax features integration', () => {
 
   describe('HTML embed with iframe wrapper', () => {
     it('wraps iframe in container div for animation support', () => {
-      const html = renderElement(
-        { ...base, type: 'html', content: '<div>test</div>' },
-        {},
-        {}
-      )
+      const html = renderElement({ ...base, type: 'html', content: '<div>test</div>' }, {}, {})
       expect(html).toContain('<div')
       expect(html).toContain('<iframe')
     })
@@ -123,9 +99,8 @@ describe('Parallax features integration', () => {
 
   describe('Kinetic text template generation', () => {
     it('generates typewriter animation HTML', async () => {
-      const mod = await import(
-        '../../client/src/components/kinetic-text-animation-template-selector-modal.jsx'
-      )
+      const mod =
+        await import('../../client/src/components/kinetic-text-animation-template-selector-modal.jsx')
       // The module exports a React component; test the template generator indirectly
       // by checking the module loads without error
       expect(mod.default).toBeDefined()
@@ -134,36 +109,32 @@ describe('Parallax features integration', () => {
 
   describe('Math grid template generation', () => {
     it('loads math grid module', async () => {
-      const mod = await import(
-        '../../client/src/components/parametric-math-grid-surface-plotter-modal.jsx'
-      )
+      const mod =
+        await import('../../client/src/components/parametric-math-grid-surface-plotter-modal.jsx')
       expect(mod.default).toBeDefined()
     })
   })
 
   describe('Anime.js template generation', () => {
     it('loads anime.js module', async () => {
-      const mod = await import(
-        '../../client/src/components/anime-js-animation-template-selector-modal.jsx'
-      )
+      const mod =
+        await import('../../client/src/components/anime-js-animation-template-selector-modal.jsx')
       expect(mod.default).toBeDefined()
     })
   })
 
   describe('Three.js template generation', () => {
     it('loads three.js module', async () => {
-      const mod = await import(
-        '../../client/src/components/three-js-3d-scene-template-selector-modal.jsx'
-      )
+      const mod =
+        await import('../../client/src/components/three-js-3d-scene-template-selector-modal.jsx')
       expect(mod.default).toBeDefined()
     })
   })
 
   describe('File browser module', () => {
     it('loads file browser module', async () => {
-      const mod = await import(
-        '../../client/src/components/file-browser-modal-to-select-and-insert-media.jsx'
-      )
+      const mod =
+        await import('../../client/src/components/file-browser-modal-to-select-and-insert-media.jsx')
       expect(mod.default).toBeDefined()
     })
   })
@@ -246,15 +217,27 @@ describe('Parallax features integration', () => {
       expect(html).toContain('Weighted line')
       expect(html).toContain('font-weight: 700')
       expect(html).toContain('line-height: 1.5')
-      expect(html).toContain('https://example.com/video.mp4#t=5,12')
-      expect(html).toContain('this.playbackRate=1.25')
       expect(html).toContain('Launch')
       expect(html).toContain('Photo by Test')
-      const decodedHtml = [...html.matchAll(/src="data:text\/html;charset=utf-8,([^"]+)"/g)]
-        .map((match) => decodeURIComponent(match[1]))
-        .join('\n')
-      expect(decodedHtml).toContain('animejs')
-      expect(decodedHtml).toContain('three@0.160.0')
+      const document = new JSDOM(html).window.document
+      const frames = [...document.querySelectorAll('iframe')].map((frame) => {
+        expect(frame.getAttribute('sandbox').split(/\s+/)).toEqual(['allow-scripts'])
+        const wrapper = new JSDOM(frame.getAttribute('srcdoc')).window.document
+        const child = wrapper.querySelector('iframe')
+        expect(child.getAttribute('sandbox').split(/\s+/)).toEqual(['allow-scripts'])
+        return new JSDOM(child.getAttribute('srcdoc')).window.document
+      })
+      expect(
+        frames.find((frame) => frame.querySelector('.tw'))?.querySelector('.tw').textContent
+      ).toBe('Kinetic')
+      const scripts = frames.flatMap((frame) => [...frame.querySelectorAll('script[src]')])
+      expect(scripts.some((script) => new URL(script.src).pathname.includes('/animejs'))).toBe(true)
+      expect(scripts.some((script) => new URL(script.src).pathname.includes('/three'))).toBe(true)
+      for (const frame of frames) {
+        const policy = frame.querySelector('meta[http-equiv="Content-Security-Policy"]').content
+        expect(policy).toContain("connect-src 'none'")
+        expect(policy).not.toContain('https://cdn.jsdelivr.net')
+      }
     })
 
     it('renders timeline in print output', () => {

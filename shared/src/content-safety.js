@@ -1,5 +1,63 @@
 const { convertCssLengthToPx } = require('./css-length-conversion.js')
 const { sanitizeRichTextStyle, sanitizeStyleAttributes } = require('./rich-text-style-sanitizer.js')
+const { parseFragment, serialize } = require('parse5')
+
+const RICH_TEXT_TAGS = new Set([
+  'p',
+  'div',
+  'span',
+  'b',
+  'strong',
+  'i',
+  'em',
+  'u',
+  's',
+  'strike',
+  'del',
+  'ins',
+  'sub',
+  'sup',
+  'mark',
+  'a',
+  'br',
+  'hr',
+  'ul',
+  'ol',
+  'li',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'blockquote',
+  'pre',
+  'code',
+  'table',
+  'thead',
+  'tbody',
+  'tfoot',
+  'tr',
+  'td',
+  'th',
+  'caption',
+  'colgroup',
+  'col',
+  'img',
+])
+const RICH_TEXT_ATTRIBUTES = new Set([
+  'title',
+  'lang',
+  'dir',
+  'align',
+  'alt',
+  'width',
+  'height',
+  'colspan',
+  'rowspan',
+  'start',
+  'type',
+])
 
 const SAFE_HREF_SCHEMES = new Set(['http:', 'https:', 'mailto:', 'tel:'])
 const SAFE_MEDIA_SCHEMES = new Set(['http:', 'https:'])
@@ -79,11 +137,39 @@ function sanitizeSvgUrlAttributes(html) {
 }
 
 function sanitizeRichTextHtml(html) {
-  return sanitizeStyleAttributes(
-    sanitizeUrlAttributes(
-      stripEventAttributes(String(html || '').replace(/<script[\s\S]*?<\/script>/gi, ''))
-    )
-  )
+  const fragment = parseFragment(String(html || ''))
+  function clean(parent) {
+    parent.childNodes = parent.childNodes.filter((node) => {
+      if (node.nodeName === '#text') return true
+      if (node.namespaceURI !== 'http://www.w3.org/1999/xhtml' || !RICH_TEXT_TAGS.has(node.tagName))
+        return false
+      node.attrs = node.attrs.flatMap((attribute) => {
+        if (attribute.namespace || attribute.prefix) return []
+        const { name, value } = attribute
+        if (name === 'class' && node.tagName === 'code') {
+          const language = value.split(/\s+/).find((token) => /^language-[a-z0-9_-]+$/i.test(token))
+          return language ? [{ name, value: language }] : []
+        }
+        if (name === 'style') {
+          const style = sanitizeRichTextStyle(value)
+          return style ? [{ name, value: style }] : []
+        }
+        if (name === 'href' && node.tagName === 'a') return [{ name, value: sanitizeHref(value) }]
+        if (name === 'src' && node.tagName === 'img') {
+          const src = sanitizeMediaSrc(value)
+          return src ? [{ name, value: src }] : []
+        }
+        if (name === 'target' && node.tagName === 'a' && ['_blank', '_self'].includes(value))
+          return [attribute]
+        return RICH_TEXT_ATTRIBUTES.has(name) ? [attribute] : []
+      })
+      if (node.tagName === 'a') node.attrs.push({ name: 'rel', value: 'noopener noreferrer' })
+      clean(node)
+      return true
+    })
+  }
+  clean(fragment)
+  return serialize(fragment)
 }
 
 function sanitizeMarkdownHtml(html) {

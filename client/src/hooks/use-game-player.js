@@ -1,381 +1,91 @@
-/**
- * useGamePlayer — Socket.IO hook for game player (HS) side.
- * Manages player join, answer submission, timer, and real-time game state.
- */
-import { useEffect, useState, useCallback, useRef } from 'react'
-import { io } from 'socket.io-client'
-
-// Stable per-browser player identity. Survives reconnects so the server can
-// keep host designation and the room reconnect-grace window valid.
-function getPlayerId() {
-  if (typeof localStorage === 'undefined') {
-    return `p-${Math.random().toString(36).slice(2)}`
-  }
-  let id = localStorage.getItem('navslides-game-player-id')
-  if (!id) {
-    id =
-      typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `p-${Date.now()}-${Math.random().toString(36).slice(2)}`
-    localStorage.setItem('navslides-game-player-id', id)
-  }
-  return id
-}
-
-function getSessionStorageKey(gameId, playerId) {
-  return `navslides-game-session:${gameId}:${playerId}`
-}
-
-function getStoredSessionToken(gameId, playerId) {
-  if (typeof localStorage === 'undefined') return null
-  return localStorage.getItem(getSessionStorageKey(gameId, playerId))
-}
-
-function storeSessionToken(gameId, playerId, sessionToken) {
-  if (typeof localStorage === 'undefined' || !sessionToken) return
-  localStorage.setItem(getSessionStorageKey(gameId, playerId), sessionToken)
-}
-
-export function normalizeQuestionEvent(data) {
-  if (!data || typeof data !== 'object') return null
-  if (!data.question || typeof data.question !== 'object') return data
-  const publicQuestion = { ...data.question }
-  for (const key of [
-    'correctIndex',
-    'correctAnswer',
-    'answer',
-    'answerIndex',
-    'answerKey',
-    'solution',
-    'explanation',
-  ]) delete publicQuestion[key]
-  return {
-    ...publicQuestion,
-    questionNumber: data.questionNumber ?? data.question.questionNumber,
-    totalQuestions: data.totalQuestions ?? data.question.totalQuestions,
-    questionStartedAt: data.questionStartedAt ?? data.question.questionStartedAt,
-    timeRemainingMs: data.timeRemainingMs ?? data.question.timeRemainingMs,
-    allowLate: data.allowLate ?? data.question.allowLate,
-  }
-}
-
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { createLivePlayerClock } from 'revealjs-shared'
+import { useGameSocket } from './use-game-socket.js'
 export function useGamePlayer({ gameId, playerName }) {
-  const [status, setStatus] = useState('joining') // joining | waiting | question | answered | expired | result | finished
-  const [players, setPlayers] = useState([])
-  const [currentQuestion, setCurrentQuestion] = useState(null)
-  const [pollState, setPollState] = useState(null)
-  const [selectedPollOption, setSelectedPollOption] = useState(null)
-  const [wordCloudState, setWordCloudState] = useState(null)
-  const [wordCloudSubmissionCount, setWordCloudSubmissionCount] = useState(0)
-  const [matchingState, setMatchingState] = useState(null)
-  const [matchingResult, setMatchingResult] = useState(null)
-  const [selectedAnswer, setSelectedAnswer] = useState(null)
-  const [answerResult, setAnswerResult] = useState(null)
-  const [myScore, setMyScore] = useState(0)
-  const [myRank, setMyRank] = useState(null)
-  const [leaderboard, setLeaderboard] = useState([])
-  const [playerIdentity] = useState(() => getPlayerId())
-  const [isConnected, setIsConnected] = useState(false)
-  const [error, setError] = useState(null)
+  const game = useGameSocket(gameId, playerName, 'player'),
+    state = game.snapshot
   const [timeLeft, setTimeLeft] = useState(null)
-
-  const socketRef = useRef(null)
-  const playerIdRef = useRef(playerIdentity)
-  const timerRef = useRef(null)
-  const questionStartRef = useRef(null)
-  const questionIdRef = useRef(null)
-
-  const startTimer = useCallback((timeLimit, allowLate = false) => {
-    if (timerRef.current) clearInterval(timerRef.current)
-    const duration = Number.isFinite(Number(timeLimit)) ? Math.max(0, Number(timeLimit)) : 0
-    questionStartRef.current = Date.now()
-    setTimeLeft(duration)
-    if (duration <= 0) {
-      if (!allowLate) setStatus('expired')
-      return
-    }
-    timerRef.current = setInterval(() => {
-      const elapsed = (Date.now() - questionStartRef.current) / 1000
-      const left = Math.max(0, Math.ceil(duration - elapsed))
-      setTimeLeft(left)
-      if (left <= 0) {
-        clearInterval(timerRef.current)
-        timerRef.current = null
-        if (!allowLate) setStatus('expired')
-      }
-    }, 500)
-  }, [])
-
-  const stopTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-      timerRef.current = null
-    }
-  }, [])
-
-  const submitAnswer = useCallback((answerIndex) => {
-    if (!socketRef.current || status !== 'question' || !questionIdRef.current) return
-    const timeSpent = questionStartRef.current ? (Date.now() - questionStartRef.current) / 1000 : 0
-    socketRef.current.emit('game-answer', {
-      gameId,
-      questionId: questionIdRef.current,
-      answerIndex,
-      timeSpentMs: Math.round(timeSpent * 1000),
-    })
-    setSelectedAnswer(answerIndex)
-    setStatus('answered')
-    stopTimer()
-  }, [gameId, status, stopTimer])
-
-  const submitPollVote = useCallback((optionId) => {
-    if (!socketRef.current || status !== 'poll') return
-    socketRef.current.emit('game-poll-submit', { gameId, optionId })
-    setSelectedPollOption(optionId)
-  }, [gameId, status])
-
-  const submitWordCloudText = useCallback((text) => {
-    if (!socketRef.current || status !== 'word-cloud') return
-    socketRef.current.emit('game-word-cloud-submit', { gameId, text })
-  }, [gameId, status])
-
-  const submitMatchingPairs = useCallback((pairs) => {
-    if (!socketRef.current || status !== 'matching') return
-    socketRef.current.emit('game-matching-submit', { gameId, pairs })
-  }, [gameId, status])
-
+  const countdown = useRef(null)
+  if (!countdown.current) countdown.current = createLivePlayerClock()
   useEffect(() => {
-    if (!gameId || !playerName) return
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset player state before subscribing to a new room
-    setStatus('joining')
-    setPlayers([])
-    setCurrentQuestion(null)
-    setPollState(null)
-    setSelectedPollOption(null)
-    setWordCloudState(null)
-    setWordCloudSubmissionCount(0)
-    setMatchingState(null)
-    setMatchingResult(null)
-    setSelectedAnswer(null)
-    setAnswerResult(null)
-    setMyScore(0)
-    setMyRank(null)
-    setLeaderboard([])
-    setError(null)
-    setTimeLeft(null)
-    setIsConnected(false)
-    questionIdRef.current = null
-    stopTimer()
-    let cancelled = false
-
-    // Player-game traffic lives on the '/games' namespace (the live default
-    // namespace is reserved for EditorPage game-timer events).
-    const playerId = playerIdRef.current
-    let sessionToken = getStoredSessionToken(gameId, playerId)
-    const sock = io('/games', { path: '/ws', reconnection: true })
-
-    sock.on('connect', () => {
-      if (cancelled) { sock.disconnect(); return }
-      setIsConnected(true)
-      setError(null)
-      sock.emit('game-join', {
-        gameId,
-        playerName,
-        playerId,
-        role: 'player',
-        ...(sessionToken ? { sessionToken } : {}),
-      })
-      setStatus('waiting')
-    })
-
-    sock.on('connect_error', (err) => {
-      if (cancelled) return
-      setError(err.message || 'Connection failed')
-      setStatus('joining')
-    })
-
-    sock.on('disconnect', () => {
-      if (cancelled) return
-      setIsConnected(false)
-      stopTimer()
-    })
-
-    sock.on('game-room-expired', () => {
-      if (cancelled) return
-      setIsConnected(false)
-      setError('Game room expired. Reload to rejoin.')
-      setStatus('joining')
-      stopTimer()
-      sock.disconnect()
-    })
-
-    sock.on('game-session', (data = {}) => {
-      if (cancelled) return
-      const { playerId: issuedPlayerId, sessionToken: issuedSessionToken } = data
-      if (issuedPlayerId !== playerId || typeof issuedSessionToken !== 'string') return
-      sessionToken = issuedSessionToken
-      storeSessionToken(gameId, playerId, issuedSessionToken)
-    })
-
-    sock.on('game-player-joined', ({ players: p }) => {
-      if (cancelled) return
-      setPlayers(p || [])
-    })
-
-    sock.on('game-question', (data) => {
-      if (cancelled) return
-      const question = normalizeQuestionEvent(data)
-      if (!Array.isArray(question?.options) || typeof question.question !== 'string') {
-        setError('Received an invalid game question.')
-        return
-      }
-      questionIdRef.current = question.id
-      setCurrentQuestion(question)
-      setSelectedAnswer(null)
-      setAnswerResult(null)
-      setStatus('question')
-      const remainingSeconds = Number.isFinite(Number(question.timeRemainingMs))
-        ? Math.max(0, Number(question.timeRemainingMs) / 1000)
-        : Number.isFinite(Number(question.questionStartedAt)) && Number.isFinite(Number(question.timeLimit))
-          ? Math.max(0, (Number(question.timeLimit) * 1000 - (Date.now() - Number(question.questionStartedAt))) / 1000)
-          : question.timeLimit || 30
-      startTimer(remainingSeconds, question.allowLate === true)
-    })
-
-    sock.on('game-poll-started', (data) => {
-      if (cancelled) return
-      setPollState(data)
-      setSelectedPollOption(null)
-      setStatus('poll')
-    })
-
-    sock.on('game-poll-results', (data) => {
-      if (cancelled) return
-      setPollState(data)
-      setStatus('poll')
-    })
-
-    sock.on('game-poll-vote-accepted', ({ optionId }) => {
-      if (cancelled) return
-      setSelectedPollOption(optionId)
-    })
-
-    sock.on('game-word-cloud-started', (data) => {
-      if (cancelled) return
-      setWordCloudState(data)
-      setWordCloudSubmissionCount(0)
-      setStatus('word-cloud')
-    })
-
-    sock.on('game-word-cloud-results', (data) => {
-      if (cancelled) return
-      setWordCloudState(data)
-      setStatus('word-cloud')
-    })
-
-    sock.on('game-word-cloud-submit-accepted', () => {
-      if (cancelled) return
-      setWordCloudSubmissionCount((count) => count + 1)
-    })
-
-    sock.on('game-matching-started', (data) => {
-      if (cancelled) return
-      setMatchingState(data)
-      setMatchingResult(null)
-      setStatus('matching')
-    })
-
-    sock.on('game-matching-results', (data) => {
-      if (cancelled) return
-      setMatchingState(data)
-      setStatus('matching')
-    })
-
-    sock.on('game-matching-submit-accepted', (data) => {
-      if (cancelled) return
-      setMatchingResult(data)
-    })
-
-    sock.on('game-answer-result', (data = {}) => {
-      if (cancelled) return
-      const { correct, correctIndex, answerIndex, points, totalScore, rank } = data
-      stopTimer()
-      setSelectedAnswer(Number.isInteger(answerIndex) ? answerIndex : null)
-      setAnswerResult({ correct, correctIndex, points })
-      setMyScore(totalScore ?? 0)
-      if (rank !== undefined) setMyRank(rank)
-      setStatus('result')
-    })
-
-    sock.on('game-leaderboard', ({ scores }) => {
-      if (cancelled) return
-      setLeaderboard(scores || [])
-      const me = (scores || []).find((entry) => entry.playerId === playerIdRef.current)
-      if (me) setMyRank(scores.indexOf(me) + 1)
-    })
-
-    sock.on('game-ended', ({ finalScores }) => {
-      if (cancelled) return
-      const scores = finalScores || []
-      setLeaderboard(scores)
-      const me = scores.find((entry) => entry.playerId === playerIdRef.current)
-      setMyRank(me ? scores.indexOf(me) + 1 : null)
-      setStatus('finished')
-      setCurrentQuestion(null)
-      questionIdRef.current = null
-      stopTimer()
-    })
-
-    sock.on('game-error', ({ message } = {}) => {
-      if (cancelled) return
-      if (message === 'question-expired') {
-        stopTimer()
-        setAnswerResult(null)
-        setStatus('expired')
-        setError(null)
-        return
-      }
-      if (message === 'stale-question') {
-        setSelectedAnswer(null)
-        setAnswerResult(null)
-        setStatus('question')
-      }
-      setError(message)
-    })
-
-    socketRef.current = sock
-
-    return () => {
-      cancelled = true
-      questionIdRef.current = null
-      stopTimer()
-      sock.disconnect()
-      socketRef.current = null
-    }
-  }, [gameId, playerName, startTimer, stopTimer])
-
+    countdown.current.hydrate(state)
+    const update = () => setTimeLeft(countdown.current.seconds())
+    update()
+    const timer = setInterval(update, 250)
+    return () => clearInterval(timer)
+  }, [
+    state.roomInstanceId,
+    state.generation,
+    state.roundId,
+    state.deadlineRevision,
+    state.timeRemainingMs,
+  ])
+  const submitAnswer = useCallback(
+    (answer) => {
+      const snapshot = game.connection?.getSnapshot()
+      if (!snapshot?.question) return false
+      const typed = typeof answer === 'string' ? { optionId: answer } : answer
+      game.connection.setDraft({ questionId: snapshot.question.id, answer: typed })
+      return game.emit('game-answer', { questionId: snapshot.question.id, answer: typed })
+    },
+    [game.connection, game.emit]
+  )
+  const submitPollVote = useCallback(
+    (optionId) => game.emit('game-poll-submit', { optionId }),
+    [game.emit]
+  )
+  const submitWordCloudText = useCallback(
+    (text) => game.emit('game-word-cloud-submit', { text }),
+    [game.emit]
+  )
+  const submitMatchingPairs = useCallback(
+    (pairs) => game.emit('game-matching-submit', { pairs }),
+    [game.emit]
+  )
+  const own = state.ownSubmission,
+    answerResult = state.receipt?.result || own?.result || null
+  const me = state.leaderboard.find((row) => row.playerId === state.playerId)
+  const finished = ['finished', 'ended', 'complete'].includes(state.phase)
+  const status = !state.hydrated
+    ? state.phase === 'joining'
+      ? 'joining'
+      : 'waiting'
+    : finished
+      ? 'finished'
+      : state.poll
+        ? 'poll'
+        : state.wordCloud
+          ? 'word-cloud'
+          : state.matching
+            ? 'matching'
+            : state.pending
+              ? 'answered'
+              : answerResult
+                ? 'result'
+                : state.question
+                  ? 'question'
+                  : 'waiting'
   return {
-    isConnected,
-    error,
+    ...game,
     status,
-    players,
-    playerCount: players.length,
-    currentQuestion,
-    pollState,
-    wordCloudState,
-    matchingState,
+    error: state.error,
+    playerId: state.playerId,
+    playerCount: state.players.length,
+    currentQuestion: state.question || null,
+    pollState: state.poll || null,
+    wordCloudState: state.wordCloud || null,
+    matchingState: state.matching || null,
     timeLeft,
-    selectedAnswer,
+    selectedAnswer: state.draft?.answer || own?.answer || null,
     answerResult,
+    selectedPollOption: own?.optionId || null,
+    wordCloudSubmissionCount: own?.count || 0,
+    matchingResult: state.matching ? own || null : null,
+    myScore: me?.score || 0,
+    myRank: me ? state.leaderboard.indexOf(me) + 1 : null,
     submitAnswer,
     submitPollVote,
     submitWordCloudText,
     submitMatchingPairs,
-    selectedPollOption,
-    wordCloudSubmissionCount,
-    matchingResult,
-    myScore,
-    myRank,
-    leaderboard,
-    playerId: playerIdentity,
   }
 }

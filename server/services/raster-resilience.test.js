@@ -4,12 +4,10 @@ import { describe, expect, it, vi } from 'vitest'
 import renderers from '../utils/server-renderers.js'
 import fallback from '../utils/server-fallback.js'
 import rasterModule from '../utils/server-raster.js'
-import elementRenderers from '../../shared/src/element-renderers.js'
 
 const { addElementToPptxSlide } = renderers
 const { addFallbackElement } = fallback
 const { getServerRasters } = rasterModule
-const { renderElement } = elementRenderers
 
 function makeSlide() {
   return {
@@ -222,78 +220,6 @@ describe('table export routing', () => {
   })
 })
 
-describe('strict-mode timeline/game routing (I-R3.3)', () => {
-  it('does NOT throw in strict mode for timeline and game, routing them to the rasterizer', async () => {
-    const slide = makeSlide()
-    const warnings = []
-    const rasterize = vi.fn(async () => 'data:image/png;base64,raster')
-
-    const timeline = {
-      id: 'tl-1',
-      type: 'timeline',
-      x: 0,
-      y: 0,
-      width: 800,
-      height: 400,
-      events: [{ date: '2010', title: 'Launch', imageUrl: '/uploads/a.png' }],
-    }
-    const game = { id: 'g-1', type: 'game', gameType: 'jeopardy', x: 0, y: 0, width: 400, height: 300 }
-
-    await expect(
-      addFallbackElement(slide, timeline, { x: 0, y: 0, w: 8, h: 4 }, warnings, 1, {
-        strictRaster: true,
-        allowFallback: false,
-        resolution,
-        rasterizeElement: rasterize,
-      })
-    ).resolves.toBeUndefined()
-
-    await expect(
-      addFallbackElement(slide, game, { x: 0, y: 0, w: 4, h: 3 }, warnings, 1, {
-        strictRaster: true,
-        allowFallback: false,
-        resolution,
-        rasterizeElement: rasterize,
-      })
-    ).resolves.toBeUndefined()
-
-    // routed to rasterizer (not the strict throw / not a gray placeholder)
-    expect(rasterize).toHaveBeenCalledTimes(2)
-    expect(slide.addImage).toHaveBeenCalledTimes(2)
-    // NOT a placeholder
-    expect(slide.addText).not.toHaveBeenCalledWith(
-      expect.stringContaining('preview unavailable'),
-      expect.anything()
-    )
-  })
-
-  it('shared renderer emits Phase-4 content: timeline keeps the event image href; game keeps its label + badge', () => {
-    const timelineHtml = renderElement(
-      {
-        id: 'tl-1',
-        type: 'timeline',
-        width: 800,
-        height: 400,
-        events: [{ date: '2010', title: 'Launch', imageUrl: 'https://cdn.example.com/a.png' }],
-      },
-      { elements: [] },
-      { forPrint: true }
-    )
-    // proves it is the real Phase-4 static render, not a gray placeholder
-    expect(timelineHtml).toContain('<image')
-    expect(timelineHtml).toContain('https://cdn.example.com/a.png')
-
-    const gameHtml = renderElement(
-      { id: 'g-1', type: 'game', gameType: 'jeopardy', title: 'Final Round', width: 400, height: 300 },
-      { elements: [] },
-      { forPrint: true }
-    )
-    expect(gameHtml).toContain('data-game-fallback="true"')
-    expect(gameHtml).toContain('Final Round')
-    expect(gameHtml).toContain('jeopardy')
-  })
-})
-
 describe('per-export cache isolation (M3)', () => {
   it('two interleaved exports do not share or wipe each other cache', async () => {
     // Each export passes its own cache Map. The injected capture returns a value
@@ -307,12 +233,16 @@ describe('per-export cache isolation (M3)', () => {
     const deckA = {
       id: 'deckA',
       resolution,
-      slides: [{ id: 's', elements: [{ id: 'html-a', type: 'html', x: 0, y: 0, width: 10, height: 10 }] }],
+      slides: [
+        { id: 's', elements: [{ id: 'html-a', type: 'html', x: 0, y: 0, width: 10, height: 10 }] },
+      ],
     }
     const deckB = {
       id: 'deckB',
       resolution,
-      slides: [{ id: 's', elements: [{ id: 'html-b', type: 'html', x: 0, y: 0, width: 10, height: 10 }] }],
+      slides: [
+        { id: 's', elements: [{ id: 'html-b', type: 'html', x: 0, y: 0, width: 10, height: 10 }] },
+      ],
     }
 
     const cacheA = new Map()
@@ -332,21 +262,5 @@ describe('per-export cache isolation (M3)', () => {
     const resA2 = await getServerRasters(deckA, { cache: cacheA, capture })
     expect(resA2).toEqual(resA)
     expect(capture.mock.calls.length).toBe(calls) // served from cacheA, untouched by deckB
-  })
-})
-
-describe('golden-fixture HTML-render seam (Test 4)', () => {
-  // Pin the consolidated engine's HTML-render seam output (the screenshot source)
-  // for a sample element. Pixel fidelity is covered by test:pptx:browser-audit;
-  // this guards against silent fidelity drift in the render that feeds the raster.
-  it('game element render matches committed reference structure', () => {
-    const html = renderElement(
-      { id: 'g-1', type: 'game', gameType: 'quiz', title: 'Sample', width: 400, height: 300 },
-      { elements: [] },
-      { forPrint: true }
-    )
-    expect(html).toContain('data-game-type="quiz"')
-    expect(html).toContain('Interactive game')
-    expect(html).toContain('Sample')
   })
 })

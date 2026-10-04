@@ -1,0 +1,166 @@
+[data-ns-game] {
+  box-sizing: border-box;
+  position: relative;
+  container-type: inline-size;
+}
+[data-ns-game-ui] {
+  position: relative;
+  height: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5em;
+  padding: 1em;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: clamp(12px, 3cqw, 22px);
+}
+[data-ns-game-ui] h3 {
+  margin: 0;
+  font-size: 1.2em;
+}
+[data-ns-game] [data-ns-game-ui] :is(h1, h2, h3, h4, h5, h6) {
+  color: inherit;
+}
+[data-ns-game-ui] small {
+  font-size: 0.7em;
+}
+[data-ns-game-ui] output {
+  font-size: 1.25em;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+[data-ns-game-ui] ul {
+  padding: 0;
+  list-style: none;
+}
+[data-ns-game-ui] button,
+[data-ns-game-ui] input,
+[data-ns-game-ui] select {
+  font: inherit;
+  color: #f8fafc;
+  background: #312e81;
+  border: 1px solid #a5b4fc;
+  border-radius: 0.4em;
+  padding: 0.5em 0.8em;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+[data-ns-game-ui] input,
+[data-ns-game-ui] select {
+  background: #111827;
+}
+[data-ns-game-ui] button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+[data-ns-game-ui] button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+[data-ns-game-ui] :focus-visible {
+  outline: 3px solid #fbbf24;
+  outline-offset: 3px;
+}
+[data-ns-game-ui] [hidden],
+[data-ns-game-static][hidden] {
+  display: none !important;
+}
+.ns-game-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+.ns-picker-visual {
+  flex: 1;
+  min-height: 80px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.ns-picker-wheel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  min-height: 80px;
+}
+.ns-picker-wheel svg {
+  width: min(90%, 300px);
+  max-height: 100%;
+  aspect-ratio: 1;
+}
+.ns-picker-pointer {
+  position: absolute;
+  top: -0.4em;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fbbf24;
+  font-size: 1.7em;
+}
+.ns-picker-dice {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5em;
+}
+.ns-picker-dice svg {
+  width: clamp(36px, 12cqw, 72px);
+  aspect-ratio: 1;
+}
+.ns-picker-button-display {
+  padding: 1em;
+  background: #312e81;
+  border-radius: 1em;
+  text-align: center;
+}
+.ns-picker-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ns-picker-confetti i {
+  position: absolute;
+  top: 0;
+  width: 8px;
+  height: 12px;
+  animation: ns-picker-confetti 1.2s ease-out forwards;
+}
+.ns-education-paused *,
+.ns-education-paused *::before {
+  animation-play-state: paused !important;
+}
+@keyframes ns-picker-spin {
+  from {
+    transform: rotate(var(--ns-spin-from));
+  }
+  to {
+    transform: rotate(var(--ns-spin-to));
+  }
+}
+@keyframes ns-picker-confetti {
+  from {
+    transform: translateY(-20px) rotate(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(400px) rotate(480deg);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ns-picker-confetti {
+    display: none;
+  }
+  .ns-picker-wheel svg {
+    animation-timing-function: steps(1, end) !important;
+  }
+}

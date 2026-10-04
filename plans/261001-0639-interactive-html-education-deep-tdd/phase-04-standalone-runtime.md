@@ -1,18 +1,24 @@
 ---
 phase: 4
-title: "Runtime DOM độc lập, đóng gói vendor và mount generated HTML"
-status: pending
+title: 'Runtime DOM độc lập, đóng gói vendor và mount generated HTML'
+status: in_progress
 priority: P1
 dependencies: [3]
 ---
 
 # Phase 04 — Standalone runtime
 
+## Execution progress
+
+Standalone implementation slice đã bàn giao; historical name-picker qualified checkpoint được dẫn tại [root progress](./plan.md#execution-progress). Current-subject generated/native/file lifecycle, effective-root isolation, keyboard và runtime/CSP receipts vẫn cần đối chiếu từng checklist cell sau integration; không dùng checkpoint cũ để đóng current all-surface qualification. Checklist và FailureProtocol giữ nguyên.
+
 ## Goal
+
 Generated Present/Preview/Share dùng cùng Vanilla DOM runtime với native Try; core local chạy độc lập không React, HTTP/WebSocket, parent globals, eval hoặc CDN.
 Khóa mount/state/lifecycle/packaging đúng trước game presenters05; phase04 chứng minh đường mount bằng presenter thật name-picker, không fake button demo hay runtime placeholder.
 
 ## Context/evidence
+
 - `shared/src/element-renderers.js:951-1004` hiện xuất labeled placeholder; normal Present không mount React game branch ở `client/src/components/canvas/element-renderers/game-element-renderer.jsx:35-67`.
 - Client `client/src/utils/generateHTML.js:24-25` gọi shared present; `shared/src/htmlGenerator.js:780-790` mở endpoint saved-deck hoặc generated blob.
 - `server/routes/presentations-extras.js:97-116` generateRevealHTML rồi gửi text/html; preview chỉ tắt Reveal navigation, không tạo React subtree.
@@ -24,6 +30,7 @@ Khóa mount/state/lifecycle/packaging đúng trước game presenters05; phase04
 - Offline inliner tại `client/src/utils/offlineExport.js:79-80` chưa case-insensitive như comment; esbuild escaping không bao phủ raw JSON/bootstrap/vendor concatenation.
 
 ## Deep scout gate
+
 - Re-glob inventory và trace cả Present popup, Preview iframe, Share route, Download caller, template blob, effective master và vertical section.
 - Đọc runtime/security/accessibility research trong plan và Electron CSP; xác minh loaded vendor version bằng receipt, không sửa dependency.
 - Grep current renderGame call/options, presenter bootstrap socket events, required-assets exports và offline serializer để không thêm connection thứ hai.
@@ -32,6 +39,7 @@ Khóa mount/state/lifecycle/packaging đúng trước game presenters05; phase04
 - Kiểm tra Vitest discovery của CREATE test files và Playwright dev launch; không coi React-only or page.setContent là bằng chứng normal Present.
 
 ## Requirements
+
 - Public API duy nhất `NavSlidesEducation.mount(root,{mode,transport,clock,random}) -> {getState,reset,destroy}`; root mount idempotent, destroy dọn toàn bộ owned resources.
 - Browser presenters under shared/src/education/browser/, pure configuration/state under shared/src/education/; không import React/editor stores/server modules.
 - Stable wrapper `data-ns-element-id`, playable root `data-ns-game`, subtype metadata và associated application/json config; DOM scope effective slide, không global document IDs cho teams/options.
@@ -47,6 +55,7 @@ Khóa mount/state/lifecycle/packaging đúng trước game presenters05; phase04
 - Hosted assets `/vendor/navslides-education/runtime.js` + runtime.css phải có manifest/hash/required closure; portable inline JS/CSS theo CSP hiện hữu, không blanket data-script/style support.
 
 ## Architecture/contracts
+
 Dữ liệu saved nested config từ03 → generated escaped config + stable wrapper → lifecycle tìm active leaf → mount parses/normalizes → runtime-session creates isolated pure state → DOM presenter renders bằng safe textContent.
 User interaction → reducer command với instance/session generation → state result → DOM feedback; config không mutate và getState không trả writable saved store object.
 Runtime-entry compose actual presenters; phase04 tạo shared weighted name-picker presenter/state đầu tiên để smoke end-to-end, phase05 mở rộng cùng modules, không tạo play implementation trùng.
@@ -56,48 +65,51 @@ KeyboardCondition nối điều kiện cũ và nhường keys khi focus/event �
 Integration owner tuần tự nối renderers/htmlGenerator, assets/package/vendor, existing live bootstrap, adapter/PropertiesPanel và offline asset contract; domain worker không ghi các chokepoints này.
 
 ## File inventory
-| Đường dẫn đầy đủ | Thao tác/trạng thái | Owner, size/test impact |
-| --- | --- | --- |
-| C:/Work/NavSlidesEditor/shared/src/education/runtime-session.js | CREATE, đề xuất | Runtime worker; isolated state/generation/resources, <200 LOC. |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/runtime-entry.js | CREATE, đề xuất | Runtime worker; exports API/composition, <200 LOC; later integration owner connects presenters. |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/mount.js | CREATE, đề xuất | Runtime worker; root parse/normalize/dispatch/destroy, <200 LOC. |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/reveal-lifecycle.js | CREATE, đề xuất | Runtime worker; leaf active scope, resources pause/resume, <200 LOC. |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/deadline-clock.js | CREATE, đề xuất | Runtime worker; deadline/remaining scheduler, <200 LOC. |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/live-transport.js | CREATE, đề xuất | Runtime worker; bootstrap subscribe/send boundary, <200 LOC; owner12/13 reconnect changes serial. |
-| C:/Work/NavSlidesEditor/shared/src/education/effective-game-descriptors.js | CREATE, đề xuất | Runtime worker04; pure effective traversal reused by generator/bootstrap, <200 LOC. |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/runtime.css | CREATE, đề xuất | Runtime worker; scoped actual controls, <200 LOC per stylesheet chunk. |
-| C:/Work/NavSlidesEditor/shared/src/education/games/name-picker.js | CREATE, đề xuất | Runtime worker04 then game worker05 serial; actual weighted/exclusion/replay reducer <200 LOC. |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/games/name-picker.js | CREATE, đề xuất | Runtime worker04 then05 serial; meaningful wheel/dice/button presenter <200 LOC, split animation concern if needed. |
-| C:/Work/NavSlidesEditor/client/src/components/education/native-game-try-adapter.jsx | CREATE, đề xuất | Adapter worker; mount same presenter/destroy on close, <200 LOC. |
-| C:/Work/NavSlidesEditor/shared/src/element-renderers.js | MODIFY, đã có | Integration owner; mount markup + distinct print static snapshot, no inlined domain reducers. |
-| C:/Work/NavSlidesEditor/shared/src/htmlGenerator.js | MODIFY, đã có | Integration owner; assets/init/keyboard/lifecycle; not concurrent domain writes. |
-| C:/Work/NavSlidesEditor/server/services/presenter-game-bootstrap.js | MODIFY, đã có | Integration owner04; owner-bound opaque tuple mapping, reuse/cleanup and metadata emission;12 extends authority. |
-| C:/Work/NavSlidesEditor/server/routes/presentations-extras.js | MODIFY, đã có | Integration owner; validated document view and bootstrap tuple mapping passed to generator. |
-| C:/Work/NavSlidesEditor/server/services/socket-handler.js | MODIFY, đã có | Integration owner04; all audience HTML fanout/fallback passes server-derived public view, never default local/private config. |
-| C:/Work/NavSlidesEditor/shared/src/live-presenter-runtime.js | MODIFY, đã có | Integration owner; transport bridge/lifecycle only, keep authorization. |
-| C:/Work/NavSlidesEditor/shared/src/live-presenter-game-runtime.js | MODIFY, đã có | Integration owner; expose narrow subscribe/command bridge, no credentials in configs. |
-| C:/Work/NavSlidesEditor/shared/src/reveal-runtime-assets.js | MODIFY, đã có | Integration owner; education required runtime asset composition. |
-| C:/Work/NavSlidesEditor/shared/src/index.js | MODIFY, đã có | Integration owner; export shared asset/registry contracts cho workspace consumers, tránh shim duplicate. |
-| C:/Work/NavSlidesEditor/scripts/build-education-runtime.js | CREATE, đề xuất | Packaging worker; pinned esbuild generated output build helper <200 LOC. |
-| C:/Work/NavSlidesEditor/scripts/copy-vendor.js | MODIFY, đã có | Integration owner; generated bundles join existing staging transaction. |
-| C:/Work/NavSlidesEditor/scripts/vendor-publication.js | MODIFY chỉ cần, đã có | Integration owner; reuse atomic/hash behavior, không tự copy trực tiếp server/vendor. |
-| C:/Work/NavSlidesEditor/scripts/verify-runtime-closure.js | MODIFY, đã có | Integration owner; required hashes/paths checked through shared contracts. |
-| C:/Work/NavSlidesEditor/package.json | MODIFY chỉ script cần thiết, đã có | Integration owner; esbuild giữ0.25.12, không add runtime deps. |
-| C:/Work/NavSlidesEditor/client/src/components/PropertiesPanel.jsx | MODIFY, đã có | Integration owner; explicit Try entry, canvas inert, no invisible isPresenting branch. |
-| C:/Work/NavSlidesEditor/client/src/utils/offlineExport.js | MODIFY giới hạn assets/escaping, đã có | Integration owner04; full recursive closure owner14; preserve existing iframe paths. |
-| C:/Work/NavSlidesEditor/shared/tests/education-runtime-session.test.js | CREATE, đề xuất | Pure lifecycle/generation/deadline invariants. |
-| C:/Work/NavSlidesEditor/shared/tests/education-generated-document.test.js | CREATE, đề xuất | Parse config/DOM behavior, not source text assertions. |
-| C:/Work/NavSlidesEditor/scripts/education-runtime-assets.test.js | CREATE, đề xuất | Stage/hash/missing asset behavior actual bundle, no source scanning. |
-| C:/Work/NavSlidesEditor/tests/e2e/games/standalone-runtime-lifecycle.spec.js | CREATE, đề xuất | Real endpoint/Share/Download/file smoke, ≤200 LOC. |
-| C:/Work/NavSlidesEditor/docs/system-architecture.md | MODIFY sau smoke, đã có | Integration owner; mount/ownership/local-live evidence. |
-| C:/Work/NavSlidesEditor/docs/project-changelog.md | MODIFY sau smoke, đã có | Integration owner; actual packaged-runtime receipts. |
+
+| Đường dẫn đầy đủ                                                                    | Thao tác/trạng thái                    | Owner, size/test impact                                                                                                       |
+| ----------------------------------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| C:/Work/NavSlidesEditor/shared/src/education/runtime-session.js                     | CREATE, đề xuất                        | Runtime worker; isolated state/generation/resources, <200 LOC.                                                                |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/runtime-entry.js               | CREATE, đề xuất                        | Runtime worker; exports API/composition, <200 LOC; later integration owner connects presenters.                               |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/mount.js                       | CREATE, đề xuất                        | Runtime worker; root parse/normalize/dispatch/destroy, <200 LOC.                                                              |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/reveal-lifecycle.js            | CREATE, đề xuất                        | Runtime worker; leaf active scope, resources pause/resume, <200 LOC.                                                          |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/deadline-clock.js              | CREATE, đề xuất                        | Runtime worker; deadline/remaining scheduler, <200 LOC.                                                                       |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/live-transport.js              | CREATE, đề xuất                        | Runtime worker; bootstrap subscribe/send boundary, <200 LOC; owner12/13 reconnect changes serial.                             |
+| C:/Work/NavSlidesEditor/shared/src/education/effective-game-descriptors.js          | CREATE, đề xuất                        | Runtime worker04; pure effective traversal reused by generator/bootstrap, <200 LOC.                                           |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/runtime.css                    | CREATE, đề xuất                        | Runtime worker; scoped actual controls, <200 LOC per stylesheet chunk.                                                        |
+| C:/Work/NavSlidesEditor/shared/src/education/games/name-picker.js                   | CREATE, đề xuất                        | Runtime worker04 then game worker05 serial; actual weighted/exclusion/replay reducer <200 LOC.                                |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/games/name-picker.js           | CREATE, đề xuất                        | Runtime worker04 then05 serial; meaningful wheel/dice/button presenter <200 LOC, split animation concern if needed.           |
+| C:/Work/NavSlidesEditor/client/src/components/education/native-game-try-adapter.jsx | CREATE, đề xuất                        | Adapter worker; mount same presenter/destroy on close, <200 LOC.                                                              |
+| C:/Work/NavSlidesEditor/shared/src/element-renderers.js                             | MODIFY, đã có                          | Integration owner; mount markup + distinct print static snapshot, no inlined domain reducers.                                 |
+| C:/Work/NavSlidesEditor/shared/src/htmlGenerator.js                                 | MODIFY, đã có                          | Integration owner; assets/init/keyboard/lifecycle; not concurrent domain writes.                                              |
+| C:/Work/NavSlidesEditor/server/services/presenter-game-bootstrap.js                 | MODIFY, đã có                          | Integration owner04; owner-bound opaque tuple mapping, reuse/cleanup and metadata emission;12 extends authority.              |
+| C:/Work/NavSlidesEditor/server/routes/presentations-extras.js                       | MODIFY, đã có                          | Integration owner; validated document view and bootstrap tuple mapping passed to generator.                                   |
+| C:/Work/NavSlidesEditor/server/services/socket-handler.js                           | MODIFY, đã có                          | Integration owner04; all audience HTML fanout/fallback passes server-derived public view, never default local/private config. |
+| C:/Work/NavSlidesEditor/shared/src/live-presenter-runtime.js                        | MODIFY, đã có                          | Integration owner; transport bridge/lifecycle only, keep authorization.                                                       |
+| C:/Work/NavSlidesEditor/shared/src/live-presenter-game-runtime.js                   | MODIFY, đã có                          | Integration owner; expose narrow subscribe/command bridge, no credentials in configs.                                         |
+| C:/Work/NavSlidesEditor/shared/src/reveal-runtime-assets.js                         | MODIFY, đã có                          | Integration owner; education required runtime asset composition.                                                              |
+| C:/Work/NavSlidesEditor/shared/src/index.js                                         | MODIFY, đã có                          | Integration owner; export shared asset/registry contracts cho workspace consumers, tránh shim duplicate.                      |
+| C:/Work/NavSlidesEditor/scripts/build-education-runtime.js                          | CREATE, đề xuất                        | Packaging worker; pinned esbuild generated output build helper <200 LOC.                                                      |
+| C:/Work/NavSlidesEditor/scripts/copy-vendor.js                                      | MODIFY, đã có                          | Integration owner; generated bundles join existing staging transaction.                                                       |
+| C:/Work/NavSlidesEditor/scripts/vendor-publication.js                               | MODIFY chỉ cần, đã có                  | Integration owner; reuse atomic/hash behavior, không tự copy trực tiếp server/vendor.                                         |
+| C:/Work/NavSlidesEditor/scripts/verify-runtime-closure.js                           | MODIFY, đã có                          | Integration owner; required hashes/paths checked through shared contracts.                                                    |
+| C:/Work/NavSlidesEditor/package.json                                                | MODIFY chỉ script cần thiết, đã có     | Integration owner; esbuild giữ0.25.12, không add runtime deps.                                                                |
+| C:/Work/NavSlidesEditor/client/src/components/PropertiesPanel.jsx                   | MODIFY, đã có                          | Integration owner; explicit Try entry, canvas inert, no invisible isPresenting branch.                                        |
+| C:/Work/NavSlidesEditor/client/src/utils/offlineExport.js                           | MODIFY giới hạn assets/escaping, đã có | Integration owner04; full recursive closure owner14; preserve existing iframe paths.                                          |
+| C:/Work/NavSlidesEditor/shared/tests/education-runtime-session.test.js              | CREATE, đề xuất                        | Pure lifecycle/generation/deadline invariants.                                                                                |
+| C:/Work/NavSlidesEditor/shared/tests/education-generated-document.test.js           | CREATE, đề xuất                        | Parse config/DOM behavior, not source text assertions.                                                                        |
+| C:/Work/NavSlidesEditor/scripts/education-runtime-assets.test.js                    | CREATE, đề xuất                        | Stage/hash/missing asset behavior actual bundle, no source scanning.                                                          |
+| C:/Work/NavSlidesEditor/tests/e2e/games/standalone-runtime-lifecycle.spec.js        | CREATE, đề xuất                        | Real endpoint/Share/Download/file smoke, ≤200 LOC.                                                                            |
+| C:/Work/NavSlidesEditor/docs/system-architecture.md                                 | MODIFY sau smoke, đã có                | Integration owner; mount/ownership/local-live evidence.                                                                       |
+| C:/Work/NavSlidesEditor/docs/project-changelog.md                                   | MODIFY sau smoke, đã có                | Integration owner; actual packaged-runtime receipts.                                                                          |
 
 ## Chokepoint caller map
+
 Generator consumers: saved Present `server/routes/presentations-extras.js:104-116`; client wrapper `client/src/utils/generateHTML.js:24-25`; template/blob `shared/src/htmlGenerator.js:786-790`; element generation parent/child `shared/src/htmlGenerator.js:281-284,344-347`.
 Runtime injection chokepoint `shared/src/htmlGenerator.js:443-445`; bootstrap socket `shared/src/live-presenter-game-runtime.js:118-146`; live query `shared/src/live-presenter-runtime.js:22-35`; assets publication `scripts/copy-vendor.js:99-117`; offline consumption `client/src/utils/offlineExport.js:1,201-207`.
 Hosted Share trace đã xác minh: GET `server/index.js:358-396` kiểm token/expiry rồi renderShareView; helper tại289-309 đọc authoritative deck, sanitize customCSS rồi generateRevealHTML tại306. API mount mới không cần React route; phase14 owns final offline rewrite, phase12/13 own authoritative protocol.
 
 ## Tests Before — RED scenarios
+
 1. Generated endpoint name-picker hiện không spin/exclude/reset; tạo browser failing journey actual generated URL, không render React game component.
 2. Multi blocks và parent+vertical child navigate: state scoped roots, local deadlines pause immediate on leave, return giữ progress; existing missing mount phải được observed.
    Include one master-only game inherited by two parent slides plus a vertical child and hidden override: descriptor tuples/transport IDs distinct, hidden root absent, reconnect reuses its own owner-bound mapping. Full live round/score proof follows12, not a premature claim that04 implements every game.
@@ -107,6 +119,7 @@ Hosted Share trace đã xác minh: GET `server/index.js:358-396` kiểm token/ex
 6. Missing/stale runtime CSS/JS/hash staging fails actionable; local no Socket.IO request; live disconnected giữ waiting/read-only, không local điểm.
 
 ## Numbered implementation steps
+
 1. Scout original paths/control flow, create deterministic RED tests và actual generated failing receipts; khóa owner chokepoints trước edits.
 2. Implement runtime-session isolation/generation, monotonic clock/deadline lifecycle và mount registry; test wrong/destroyed roots không mutate instance khác.
 3. Implement real name-picker reducer + wheel/dice/button DOM using weighted-picker03, exclusions/exhaustion/reset; phase05 tiếp nối file này, không bản thứ hai.
@@ -118,24 +131,29 @@ Hosted Share trace đã xác minh: GET `server/index.js:358-396` kiểm token/ex
 9. Run focused GREEN và actual hosted/file name-picker journeys; sau receipts mới docs/changelog, phase05 không được bypass runtime mount.
 
 ## Refactor
+
 Tách per-concern modules dưới200 LOC, shared logic dưới shared/; không đưa Tailwind app/React graph vào standalone bundle hoặc nới CSP để cứu dependency.
 Không mở hidden React play entry mới; old duplicate play cleanup hoàn thành05 sau adapter cutover, giữ static editor previews có giá trị.
 
 ## Tests After — GREEN
+
 Inject deterministic clock/random cho pure test; actual bundle execute trong generated document. Asset manifest/hash failure exercise thật, không assert bundle source chứa string.
 Hosted Present/Preview/Share và file local name-picker có một state owner/listener set; destroy closes resources, replay không callback cũ, deck saved JSON unchanged.
 
 ## Behavior matrix
-| Mức | Scenario | Unit / integration / E2E |
-| --- | --- | --- |
-| critical | Real generated mounts, safe config serializer | Parse roundtrip + actual IIFE + endpoint/browser interactions. |
-| critical | Replay/destroy/leave/local-vs-live timers | Deterministic state/deadline + multi-root DOM + vertical generated deck. |
-| high | Vendor closure/CSP/offline assets | Actual stage/hash/build + Download/file:// zero HTTP/WS + Electron smoke. |
-| high | Native keys/action wrapper collision | Input/score count + slide/fragment focus assertions + real Reveal6.0.2. |
-| medium | Try parity/320/768/touch/reduced motion | Same DOM transitions, reachable controls, progress preserved. |
+
+| Mức      | Scenario                                      | Unit / integration / E2E                                                  |
+| -------- | --------------------------------------------- | ------------------------------------------------------------------------- |
+| critical | Real generated mounts, safe config serializer | Parse roundtrip + actual IIFE + endpoint/browser interactions.            |
+| critical | Replay/destroy/leave/local-vs-live timers     | Deterministic state/deadline + multi-root DOM + vertical generated deck.  |
+| high     | Vendor closure/CSP/offline assets             | Actual stage/hash/build + Download/file:// zero HTTP/WS + Electron smoke. |
+| high     | Native keys/action wrapper collision          | Input/score count + slide/fragment focus assertions + real Reveal6.0.2.   |
+| medium   | Try parity/320/768/touch/reduced motion       | Same DOM transitions, reachable controls, progress preserved.             |
 
 ## Executable focused commands
+
 CREATE tests/build helper phải được viết trước; các lệnh dành implementation, không chạy trong planning.
+
 ```powershell
 node scripts/build-education-runtime.js --out-dir .tmp/education-runtime-smoke
 npx vitest run shared/tests/education-runtime-session.test.js shared/tests/education-generated-document.test.js scripts/education-runtime-assets.test.js
@@ -143,15 +161,18 @@ npx vitest run scripts/vendor-publication.test.js scripts/verify-runtime-closure
 npm run vendor
 $env:PLAYWRIGHT_USE_DEV_SERVERS='1'; npx playwright test tests/e2e/games/standalone-runtime-lifecycle.spec.js --project=chromium --workers=1
 ```
+
 `npm run vendor` là targeted runtime artifact publication cần phase04, không project-wide client build/lint; test helper dùng same installed esbuild/staging logic, không mô phỏng bundle.
 
 ## ACTUAL browser smoke journey
+
 Author/save name-picker nhiều weighted items; Try spin→exclude→reset; đóng Try, saved config không đổi. Present popup từ UI, Preview endpoint và hosted Share đều mount trực tiếp runtime thật.
 Chơi hai blocks cùng slide và vertical child, rời/quay lại, hide/show và replay trong animation/timer pending; observer kiểm score/exclusion/remaining và không nghe duplicate events.
 Download portable HTML từ UI, mở file:// context mới với network blocked, wheel/dice/button chọn/reset được, JS/CSS/image tải đủ không parent globals; local label không hứa multiplayer.
 Exercise Enter/Space/arrows/native select tại320/768/desktop/touch/reduced motion, navigation ngoài root còn chạy; Electron current CSP chạy IIFE/inlineCSS không eval, không giả định data-script được phép.
 
 ## Success criteria + unchecked actionable checklist
+
 - [ ] Generated Present/Preview/Share và native Try chơi name-picker thật cùng implementation; canvas edit inert và saved JSON unchanged.
 - [ ] Root mount/config serialization an toàn, roots effective parent/vertical/master độc lập, không duplicate listeners/sockets.
 - [ ] Local deadlines pause/resume đúng; live deadlines không pause; replay/destroy chặn mọi callback generation cũ.
@@ -160,6 +181,7 @@ Exercise Enter/Space/arrows/native select tại320/768/desktop/touch/reduced mot
 - [ ] New/split production modules <200 LOC, no React/CDN/eval/dynamic import/parent polling; docs/changelog cập nhật sau smoke receipts.
 
 ## Security/risks and failure protocol
+
 High (cao × cao): generated injection parser break; context-specific JSON/bootstrap/vendor escaping, mixed-case closing fixtures và parent marker behavioral test, không dựa esbuild escape đơn lẻ.
 High (cao × cao): duplicate socket/scoring hoặc callbacks replay; existing bootstrap owns auth/socket, generation scoped session và destroy resource cleanup.
 High (cao × cao): Reveal Space/button collision; scoped keyboardCondition chained, action delegation child-control exclusion và actual6.0.2 smoke; không global keyboard=false.

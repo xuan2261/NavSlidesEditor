@@ -10,8 +10,9 @@ let sessions
 let storage
 
 function resetCjsModules() {
+  const serverDir = `${path.resolve(path.dirname(require.resolve('./storage')), '..')}${path.sep}`
   for (const key of Object.keys(require.cache)) {
-    if (key.includes(`${path.sep}NavSlidesEditor${path.sep}server${path.sep}`)) {
+    if (key.startsWith(serverDir)) {
       delete require.cache[key]
     }
   }
@@ -55,11 +56,13 @@ describe('project import media session', () => {
     expect(durable.capabilityHash).toMatch(/^[a-f0-9]{64}$/)
     expect(JSON.stringify(durable)).not.toContain(admitted.capability)
 
-    await expect(sessions.publishProjectImport({
-      sessionId: admitted.sessionId,
-      capability: admitted.sessionId,
-      trustedAuthorActiveContentAcknowledged: false,
-    })).rejects.toMatchObject({ code: 'PROJECT_IMPORT_CAPABILITY_INVALID', status: 403 })
+    await expect(
+      sessions.publishProjectImport({
+        sessionId: admitted.sessionId,
+        capability: admitted.sessionId,
+        trustedAuthorActiveContentAcknowledged: false,
+      })
+    ).rejects.toMatchObject({ code: 'PROJECT_IMPORT_CAPABILITY_INVALID', status: 403 })
   })
 
   it('publishes once through committing and makes rollback ineligible', async () => {
@@ -70,78 +73,106 @@ describe('project import media session', () => {
     })
     expect(receipt).toMatchObject({ status: 'committed', presentationId: expect.any(String) })
     expect(await storage.readPresentations()).toHaveLength(1)
-    await expect(sessions.publishProjectImport({
-      ...admitted,
-      trustedAuthorActiveContentAcknowledged: false,
-    })).resolves.toEqual(receipt)
+    await expect(
+      sessions.publishProjectImport({
+        ...admitted,
+        trustedAuthorActiveContentAcknowledged: false,
+      })
+    ).resolves.toEqual(receipt)
     expect(await storage.readPresentations()).toHaveLength(1)
-    await expect(sessions.rollbackProjectImport(admitted))
-      .rejects.toMatchObject({ code: 'PROJECT_IMPORT_NOT_ROLLBACKABLE', status: 409 })
+    await expect(sessions.rollbackProjectImport(admitted)).rejects.toMatchObject({
+      code: 'PROJECT_IMPORT_NOT_ROLLBACKABLE',
+      status: 409,
+    })
   })
 
   it('requires active-content acknowledgement again at publish', async () => {
-    const admitted = await sessions.createProjectImportSession(validated({
-      activeContent: ['html-element'],
-      trustedAuthorActiveContentAcknowledged: true,
-      presentation: {
-        title: 'Active',
-        slides: [{
-          id: 's1',
-          elements: [{ id: 'e1', type: 'html', content: '<script>demo()</script>' }],
-        }],
-      },
-    }))
-    await expect(sessions.publishProjectImport({
-      sessionId: admitted.sessionId,
-      capability: admitted.capability,
-    }))
-      .rejects.toMatchObject({ code: 'ACTIVE_CONTENT_ACK_REQUIRED', status: 409 })
+    const admitted = await sessions.createProjectImportSession(
+      validated({
+        activeContent: ['html-element'],
+        trustedAuthorActiveContentAcknowledged: true,
+        presentation: {
+          title: 'Active',
+          slides: [
+            {
+              id: 's1',
+              elements: [{ id: 'e1', type: 'html', content: '<script>demo()</script>' }],
+            },
+          ],
+        },
+      })
+    )
+    await expect(
+      sessions.publishProjectImport({
+        sessionId: admitted.sessionId,
+        capability: admitted.capability,
+      })
+    ).rejects.toMatchObject({ code: 'ACTIVE_CONTENT_ACK_REQUIRED', status: 409 })
     const receipt = await sessions.publishProjectImport({
       ...admitted,
       trustedAuthorActiveContentAcknowledged: true,
     })
-    const stored = (await storage.readPresentations()).find((item) => item.id === receipt.presentationId)
+    const stored = (await storage.readPresentations()).find(
+      (item) => item.id === receipt.presentationId
+    )
     expect(stored.slides[0].elements[0].content).toBe('<script>demo()</script>')
   })
 
   it('places archive media and publishes rewritten upload URLs', async () => {
     const stagingPath = path.join(root, 'staged.png')
     await fs.writeFile(stagingPath, 'image-bytes')
-    const admitted = await sessions.createProjectImportSession(validated({
-      presentation: {
-        title: 'Media',
-        slides: [{
-          id: 's1',
-          elements: [{
-            id: 'e1', type: 'image', x: 0, y: 0, width: 10, height: 10,
-            src: '/uploads/source.png',
-          }],
-        }],
-      },
-      media: [{
-        archivePath: 'media/source.png',
-        originalUrl: '/uploads/source.png',
-        filename: 'source.png',
-        mimeType: 'image/png',
-        stagingPath,
-      }],
-    }))
+    const admitted = await sessions.createProjectImportSession(
+      validated({
+        presentation: {
+          title: 'Media',
+          slides: [
+            {
+              id: 's1',
+              elements: [
+                {
+                  id: 'e1',
+                  type: 'image',
+                  x: 0,
+                  y: 0,
+                  width: 10,
+                  height: 10,
+                  src: '/uploads/source.png',
+                },
+              ],
+            },
+          ],
+        },
+        media: [
+          {
+            archivePath: 'media/source.png',
+            originalUrl: '/uploads/source.png',
+            filename: 'source.png',
+            mimeType: 'image/png',
+            stagingPath,
+          },
+        ],
+      })
+    )
     await sessions.stageProjectImportMedia(admitted)
     const receipt = await sessions.publishProjectImport({
       ...admitted,
       trustedAuthorActiveContentAcknowledged: false,
     })
-    const stored = (await storage.readPresentations()).find((item) => item.id === receipt.presentationId)
+    const stored = (await storage.readPresentations()).find(
+      (item) => item.id === receipt.presentationId
+    )
     expect(stored.slides[0].elements[0].src).toMatch(/^\/uploads\/[a-f0-9]{64}\.png$/u)
     await expect(fs.pathExists(stagingPath)).resolves.toBe(false)
   })
 
   it('expires only pending sessions and leaves committing sessions recoverable', async () => {
     const pending = await sessions.createProjectImportSession(validated())
-    const committing = await sessions.createProjectImportSession(validated({
-      archiveDigest: 'c'.repeat(64),
-      payloadDigest: 'd'.repeat(64),
-    }))
+    const committing = await sessions.createProjectImportSession(
+      validated({
+        archiveDigest: 'c'.repeat(64),
+        payloadDigest: 'd'.repeat(64),
+      })
+    )
     await sessions.beginProjectImportCommit(committing)
     await sessions.expirePendingProjectImports(Date.now() + 60 * 60 * 1000)
     expect((await sessions.readProjectImportSession(pending.sessionId)).state).toBe('rolled-back')

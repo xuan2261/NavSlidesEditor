@@ -25,6 +25,40 @@ describe('PPTX raster API', () => {
     await new Promise((resolve) => server.close(resolve))
   })
 
+  it('rejects nonboolean teacher opt-in rather than accidentally revealing answers', async () => {
+    const res = await request(baseUrl)
+      .post('/api/presentations/raster-elements')
+      .send({ presentation: { slides: [] }, options: { teacherReveal: 'true' } })
+    expect(res.status).toBe(400)
+  })
+
+  it('rejects failed native game snapshots at the real API boundary', async () => {
+    const res = await request(baseUrl)
+      .post('/api/presentations/raster-elements')
+      .send({
+        presentation: {
+          slides: [
+            {
+              elements: [
+                {
+                  id: 'invalid-game',
+                  type: 'game',
+                  gameType: 'quiz',
+                  quiz: { questions: [] },
+                  x: 0,
+                  y: 0,
+                  width: 600,
+                  height: 400,
+                },
+              ],
+            },
+          ],
+        },
+      })
+    expect(res.status).toBe(500)
+    expect(res.body.rasters).toBeUndefined()
+  })
+
   it('rasterizes only HTML embeds and LaTeX elements for hybrid PPTX export', async () => {
     const presentation = {
       title: 'HTML LaTeX PPTX',
@@ -67,7 +101,9 @@ describe('PPTX raster API', () => {
       ],
     }
 
-    const res = await request(baseUrl).post('/api/presentations/raster-elements').send({ presentation })
+    const res = await request(baseUrl)
+      .post('/api/presentations/raster-elements')
+      .send({ presentation })
 
     expect(res.status).toBe(200)
     expect(Object.keys(res.body.rasters).sort()).toEqual(['html-1', 'latex-1'])

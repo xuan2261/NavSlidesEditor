@@ -1,0 +1,97 @@
+const { evaluateAnswer } = require('../answer-evaluator.js')
+const { validateGameConfig } = require('../game-schema.js')
+const { throwInvalid } = require('../game-validation-utils.js')
+
+function createRelayRaceState(config) {
+  throwInvalid(validateGameConfig('relay-race', config).errors, 'relay-race configuration')
+  const error = !config.teams.length
+    ? 'No teams available.'
+    : !config.questions.length
+      ? 'No questions available.'
+      : null
+  return {
+    phase: error ? 'no-play' : 'setup',
+    error,
+    positions: Object.fromEntries(config.teams.map((team) => [team.id, 0])),
+    activeTeamId: config.teams[0]?.id ?? null,
+    questionId: null,
+    turn: 0,
+    deadline: null,
+    batonDue: null,
+    correct: null,
+    winnerId: null,
+  }
+}
+function chooseQuestion(config, random) {
+  return config.questions[
+    Math.min(
+      config.questions.length - 1,
+      Math.max(0, Math.floor(random() * config.questions.length))
+    )
+  ].id
+}
+function activate(config, state, now, random) {
+  return {
+    ...state,
+    phase: 'active',
+    turn: state.turn + 1,
+    questionId: chooseQuestion(config, random),
+    deadline: now + config.timerDuration * 1000,
+    batonDue: null,
+    correct: null,
+    error: null,
+  }
+}
+function reduceRelayRace(config, state, command, { now = () => 0, random = Math.random } = {}) {
+  if (
+    !command ||
+    command.generation !== state.generation ||
+    ['no-play', 'ended'].includes(state.phase)
+  )
+    return state
+  const time = now()
+  if (command.type === 'start')
+    return state.phase === 'setup' ? activate(config, state, time, random) : state
+  if (command.turn !== state.turn || command.questionId !== state.questionId) return state
+  if (command.type === 'baton') {
+    if (state.phase !== 'waiting' || time < state.batonDue) return state
+    const index = config.teams.findIndex((team) => team.id === state.activeTeamId),
+      next = (index + 1) % config.teams.length
+    const mover = state.correct ? index : config.passOnWrong ? next : null
+    const positions = { ...state.positions }
+    if (mover !== null) {
+      const id = config.teams[mover].id
+      positions[id] = Math.min(config.questionsPerRound, positions[id] + 1)
+      if (positions[id] === config.questionsPerRound)
+        return { ...state, positions, phase: 'ended', winnerId: id, deadline: null, batonDue: null }
+    }
+    const activeTeamId =
+      config.teams[
+        (!state.correct && config.passOnWrong ? index + 2 : index + 1) % config.teams.length
+      ].id
+    return activate(config, { ...state, positions, activeTeamId }, time, random)
+  }
+  if (state.phase !== 'active') return state
+  if (command.type === 'deadline') {
+    if (time < state.deadline || !config.passOnWrong) return state
+    return { ...state, phase: 'waiting', correct: false, batonDue: time + 1200, error: null }
+  }
+  if (command.type === 'pass')
+    return { ...state, phase: 'waiting', correct: false, batonDue: time + 1200, error: null }
+  if (command.type !== 'answer' || command.teamId !== state.activeTeamId) return state
+  if (time >= state.deadline)
+    return config.passOnWrong
+      ? {
+          ...state,
+          phase: 'waiting',
+          correct: false,
+          batonDue: time + 1200,
+          error: 'Time expired.',
+        }
+      : { ...state, error: 'Time expired. Pass the baton to continue.' }
+  const question = config.questions.find((candidate) => candidate.id === state.questionId)
+  const result = evaluateAnswer(question, command.answer)
+  if (!result.valid) return { ...state, error: result.error }
+  return { ...state, phase: 'waiting', correct: result.correct, batonDue: time + 1200, error: null }
+}
+module.exports = { createRelayRaceState, reduceRelayRace }

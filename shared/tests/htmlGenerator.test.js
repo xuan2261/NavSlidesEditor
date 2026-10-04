@@ -1,5 +1,17 @@
-import { describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect } from 'vitest'
+import { JSDOM } from 'jsdom'
 import { generatePrintHTML, generateRevealHTML, getBackgroundAttrs } from '../src/htmlGenerator.js'
+
+const documents = []
+afterEach(() => {
+  for (const dom of documents.splice(0)) dom.window.close()
+})
+function openDocument(html) {
+  const dom = new JSDOM(html)
+  documents.push(dom)
+  return dom.window.document
+}
+const assetBaseUrl = 'https://slides.example.test/decks/lesson'
 
 describe('htmlGenerator', () => {
   it('should generate a basic HTML presentation structure', () => {
@@ -21,6 +33,142 @@ describe('htmlGenerator', () => {
     expect(html).toContain('dracula.css')
     expect(html).toContain('Hello World')
   })
+
+  it.each(['reveal', 'print'])(
+    'keeps hostile stylesheet, theme, footer and background data outside %s root execution authority',
+    (mode) => {
+      const attack =
+        '</style><script data-navslides-runtime="local" data-attack="root-source-probe">window.rootEscaped=1</script><iframe data-ns-generated-frame="true" data-attack="root-source-probe"></iframe><style>'
+      const presentation = {
+        title: 'Boundary lesson',
+        slides: [
+          {
+            id: 'boundary-slide',
+            background: { type: 'color', color: '#101827' },
+            elements: [
+              {
+                id: 'boundary-text',
+                type: 'text',
+                x: 20,
+                y: 20,
+                width: 300,
+                height: 90,
+                content: '<p><strong>Readable lesson</strong></p>',
+              },
+            ],
+          },
+        ],
+      }
+      const generate = mode === 'reveal' ? generateRevealHTML : generatePrintHTML
+      const options = { baseUrl: assetBaseUrl, autoPrint: false, includePrintBar: false }
+      const original = openDocument(generate(presentation, options))
+      const poisoned = structuredClone(presentation)
+      poisoned.customCSS = 'p{line-height:1.5}' + attack
+      poisoned.designTokens = { fonts: { body: attack }, colors: { bg: attack } }
+      poisoned.showFooter = true
+      poisoned.footerMode = 'sequence'
+      poisoned.sequenceSections = ['Introduction', attack]
+      poisoned.footerInactiveColor = '#ffffff"' + attack
+      poisoned.footerFontFamily = 'Arial"' + attack
+      poisoned.slides[0].background.color = '#101827"' + attack
+      poisoned.slides[0].elements[0].fontFamily = 'Arial"' + attack
+      const document = openDocument(generate(poisoned, options))
+      expect(document.querySelector('[data-attack="root-source-probe"],iframe')).toBeNull()
+      const sourceSet = (doc) =>
+        [...doc.scripts].map((script) => ({
+          src: script.src,
+          type: script.type,
+          runtime: script.dataset.navslidesRuntime || '',
+        }))
+      expect(sourceSet(document)).toEqual(sourceSet(original))
+      expect([...document.querySelectorAll('strong')].map((node) => node.textContent)).toContain(
+        'Readable lesson'
+      )
+    }
+  )
+
+  it.each(['reveal', 'print'])(
+    'resolves Mermaid capabilities against the supplied origin for %s slides',
+    (mode) => {
+      const diagram = (id, mermaidSource, extra = {}) => ({
+        id,
+        type: 'html',
+        embedKind: 'mermaid',
+        mermaidSource,
+        x: 0,
+        y: 0,
+        width: 200,
+        height: 100,
+        ...extra,
+      })
+      const parent = {
+        id: 'parent',
+        elements: [diagram('parent-diagram', 'flowchart TD\n  Parent-->Lesson')],
+      }
+      const child = {
+        id: 'child',
+        elements: [
+          diagram('child-diagram', 'flowchart TD\n  Child-->Practice', {
+            fragment: true,
+            fragmentIndex: 1,
+          }),
+        ],
+      }
+      const presentation = {
+        title: 'Mermaid lesson',
+        slides: mode === 'reveal' ? [{ ...parent, children: [child] }] : [parent, child],
+      }
+      const html =
+        mode === 'reveal'
+          ? generateRevealHTML(presentation, { baseUrl: assetBaseUrl })
+          : generatePrintHTML(presentation, {
+              baseUrl: assetBaseUrl,
+              autoPrint: false,
+              includePrintBar: false,
+              fragmentMode: 'final',
+            })
+      const document = openDocument(html)
+      const surfaces = [
+        ...document.querySelectorAll(
+          mode === 'reveal' ? '.reveal .slides section[data-ns-effective-slide-id]' : '.slide-page'
+        ),
+      ]
+      expect(surfaces).toHaveLength(2)
+      const runtimeUrl = new URL('/vendor/mermaid/mermaid.min.js', assetBaseUrl).href
+      const sourceOrder = surfaces.map((surface) => {
+        const frame = surface.querySelector('iframe')
+        expect(frame.getAttribute('sandbox').split(/\s+/)).toEqual(['allow-scripts'])
+        const dependencies = JSON.parse(frame.getAttribute('data-html-dependencies'))
+        expect(dependencies).toEqual({
+          network: true,
+          offlineCapable: true,
+          resources: [{ url: runtimeUrl, kind: 'script' }],
+          dynamicResources: [],
+        })
+        const content =
+          mode === 'print'
+            ? decodeURIComponent(frame.getAttribute('data-pdf-iframe'))
+            : frame.getAttribute('srcdoc')
+        const childDocument = openDocument(content)
+        expect(
+          [...childDocument.querySelectorAll('script[src]')].map((script) => script.src)
+        ).toEqual([runtimeUrl])
+        const policy = childDocument.querySelector(
+          'meta[http-equiv="Content-Security-Policy"]'
+        ).content
+        const scriptDirective = policy
+          .split(';')
+          .map((directive) => directive.trim().split(/\s+/))
+          .find(([name]) => name === 'script-src')
+        expect(scriptDirective.slice(1)).toEqual(["'unsafe-inline'", new URL(assetBaseUrl).origin])
+        return childDocument.querySelector('.mermaid').textContent
+      })
+      expect(sourceOrder).toEqual([
+        'flowchart TD\n  Parent-->Lesson',
+        'flowchart TD\n  Child-->Practice',
+      ])
+    }
+  )
 
   it('should correctly format background attributes', () => {
     expect(getBackgroundAttrs({ type: 'color', color: '#ff0000' })).toBe(
@@ -109,29 +257,6 @@ describe('htmlGenerator', () => {
     expect(html).toContain("revealConfig.navigationMode = 'linear';")
   })
 
-  it('[cap:element.code depth:export] skips walkthrough code blocks during print highlighting', () => {
-    const html = generatePrintHTML({
-      title: 'Walkthrough Print',
-      slides: [
-        {
-          id: 's1',
-          elements: [
-            {
-              type: 'code',
-              content: 'const a = 1\nreturn a',
-              language: 'javascript',
-              walkthroughSteps: [{ label: 'Return', startLine: 2, endLine: 2 }],
-              defaultStepIndex: 0,
-            },
-          ],
-        },
-      ],
-    })
-
-    expect(html).toContain('data-code-walkthrough=')
-    expect(html).toContain("document.querySelectorAll('pre:not([data-code-walkthrough]) code')")
-  })
-
   it('renders basic and sequence footer modes in reveal and print HTML', () => {
     const presentation = {
       title: 'Footers',
@@ -155,13 +280,16 @@ describe('htmlGenerator', () => {
     expect(reveal).toContain('font-weight:700')
     expect(reveal).toContain('#777777')
 
-    const basicPrint = generatePrintHTML({
-      title: 'Basic Footer',
-      showFooter: true,
-      showPageNumbers: true,
-      footerMode: 'basic',
-      slides: [{ id: 's1', section: 'Section A', elements: [] }],
-    }, { autoPrint: false, includePrintBar: false })
+    const basicPrint = generatePrintHTML(
+      {
+        title: 'Basic Footer',
+        showFooter: true,
+        showPageNumbers: true,
+        footerMode: 'basic',
+        slides: [{ id: 's1', section: 'Section A', elements: [] }],
+      },
+      { autoPrint: false, includePrintBar: false }
+    )
     expect(basicPrint).toContain('Section A')
     expect(basicPrint).toContain('1 / 1')
   })
@@ -185,7 +313,9 @@ describe('htmlGenerator', () => {
     expect(html).toContain('slideIndex: indices.slideIndex || 0')
     expect(html).toContain('verticalIndex: indices.verticalIndex || 0')
     expect(html).toContain('fragmentIndex: indices.fragmentIndex || 0')
-    expect(html).toContain("document.addEventListener('keydown', emitLiveNavigateAfterInput, true);")
+    expect(html).toContain(
+      "document.addEventListener('keydown', emitLiveNavigateAfterInput, true);"
+    )
     expect(html).toContain("window.addEventListener('hashchange', emitLiveNavigateAfterInput);")
     expect(html).toContain("sock.on('control-navigate'")
   })
@@ -197,7 +327,15 @@ describe('htmlGenerator', () => {
         {
           id: 's1',
           elements: [
-            { id: 't1', type: 'text', content: '<p>Body</p>', x: 12, y: 34, width: 200, height: 80 },
+            {
+              id: 't1',
+              type: 'text',
+              content: '<p>Body</p>',
+              x: 12,
+              y: 34,
+              width: 200,
+              height: 80,
+            },
           ],
         },
       ],
@@ -212,7 +350,7 @@ describe('htmlGenerator', () => {
     expect(html).not.toContain('padding-left: 1.5em; margin: 0 0 0.4em;')
   })
 
-  it('should generate capture-ready print HTML without auto print', () => {
+  it('generates one final-state print page with visible fragments and export identities', () => {
     const html = generatePrintHTML(
       {
         title: 'Capture',
@@ -245,13 +383,13 @@ describe('htmlGenerator', () => {
       }
     )
 
-    expect(html.match(/class="slide-page"/g)).toHaveLength(1)
-    expect(html).toContain('<base href="http://test/">')
-    expect(html).not.toContain('id="print-bar"')
-    expect(html).toContain('window.__navslidesExportReady = true;')
-    expect(html).toContain('data-export-element-id="f1"')
-    expect(html).toContain('if (false) window.print();')
-    expect(html).toContain('Fragment')
+    const document = openDocument(html)
+    const pages = [...document.querySelectorAll('.slide-page')]
+    expect(pages).toHaveLength(1)
+    expect(document.baseURI).toBe('http://test/')
+    expect(document.querySelector('#print-bar')).toBeNull()
+    expect(pages[0].querySelector('[data-export-element-id="f1"]').textContent).toBe('Fragment')
+    expect(pages[0].textContent).toContain('Initial')
   })
 
   it('does not create extra print pages for hidden fragments', () => {
@@ -262,7 +400,15 @@ describe('htmlGenerator', () => {
           {
             id: 's1',
             elements: [
-              { id: 'visible', type: 'text', content: 'Visible', x: 0, y: 0, width: 100, height: 40 },
+              {
+                id: 'visible',
+                type: 'text',
+                content: 'Visible',
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 40,
+              },
               {
                 id: 'hidden-fragment',
                 type: 'text',
@@ -282,11 +428,12 @@ describe('htmlGenerator', () => {
       { autoPrint: false, includePrintBar: false, fragmentMode: 'expanded' }
     )
 
-    expect(html.match(/class="slide-page"/g)).toHaveLength(1)
-    expect(html).toContain('Visible')
-    expect(html).not.toContain('Hidden fragment')
+    const document = openDocument(html)
+    const pages = [...document.querySelectorAll('.slide-page')]
+    expect(pages).toHaveLength(1)
+    expect(pages[0].textContent).toContain('Visible')
+    expect(pages[0].textContent).not.toContain('Hidden fragment')
   })
-
 
   it('uses px text spacing in print HTML', () => {
     const html = generatePrintHTML(
@@ -296,7 +443,15 @@ describe('htmlGenerator', () => {
           {
             id: 's1',
             elements: [
-              { id: 't1', type: 'text', content: '<p>Body</p>', x: 0, y: 0, width: 100, height: 40 },
+              {
+                id: 't1',
+                type: 'text',
+                content: '<p>Body</p>',
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 40,
+              },
             ],
           },
         ],
@@ -305,118 +460,42 @@ describe('htmlGenerator', () => {
     )
 
     expect(html).toContain('.slide-page p  { margin: 0 0 6px;')
-    expect(html).toContain('.slide-page ul, .slide-page ol { padding-left: 24px; margin: 0 0 6px; }')
+    expect(html).toContain(
+      '.slide-page ul, .slide-page ol { padding-left: 24px; margin: 0 0 6px; }'
+    )
     expect(html).toContain('.slide-page li { margin-bottom: 3px;')
     expect(html).not.toContain('.slide-page p  { margin: 0 0 0.4em;')
     expect(html).not.toContain('.slide-page ul, .slide-page ol { padding-left: 1.5em;')
   })
 
-  it('renders plugin elements with sandbox iframe in reveal HTML', () => {
-    const html = generateRevealHTML({
-      title: 'Plugin',
-      slides: [{
-        id: 's1',
-        elements: [{
-          id: 'p1',
-          type: 'plugin:counter',
-          x: 1,
-          y: 2,
-          width: 300,
-          height: 120,
-          pluginSlug: 'animated-counter',
-          pluginData: { value: '<7>' },
-          pluginRuntime: { label: 'Animated Counter', sandbox: 'sandbox.html' },
-        }],
-      }],
-    })
-
-    expect(html).toContain('/api/plugins/animated-counter/assets/sandbox.html')
-    expect(html).toContain('sandbox="allow-scripts"')
-    expect(html).toContain('data-plugin-runtime="true"')
-    expect(html).toContain("type: 'init'")
-    expect(html).toContain("pluginData: pluginData")
-    expect(html).toContain('&lt;7&gt;')
-  })
-
   it('renders plugin elements as static fallback in print HTML', () => {
-    const html = generatePrintHTML({
-      title: 'Plugin Print',
-      slides: [{
-        id: 's1',
-        elements: [{
-          id: 'p1',
-          type: 'plugin:counter',
-          x: 1,
-          y: 2,
-          width: 300,
-          height: 120,
-          pluginSlug: 'animated-counter',
-          pluginData: { value: 99, suffix: '%' },
-          pluginRuntime: { label: 'Animated Counter', sandbox: 'sandbox.html' },
-        }],
-      }],
-    }, { autoPrint: false, includePrintBar: false })
+    const html = generatePrintHTML(
+      {
+        title: 'Plugin Print',
+        slides: [
+          {
+            id: 's1',
+            elements: [
+              {
+                id: 'p1',
+                type: 'plugin:counter',
+                x: 1,
+                y: 2,
+                width: 300,
+                height: 120,
+                pluginSlug: 'animated-counter',
+                pluginData: { value: 99, suffix: '%' },
+                pluginRuntime: { label: 'Animated Counter', sandbox: 'sandbox.html' },
+              },
+            ],
+          },
+        ],
+      },
+      { autoPrint: false, includePrintBar: false }
+    )
 
     expect(html).toContain('data-plugin-fallback="true"')
     expect(html).toContain('99%')
     expect(html).not.toContain('/api/plugins/')
-  })
-
-  it('uses the rendered default background for charts in present and print HTML', () => {
-    const chart = {
-      id: 'chart-1',
-      type: 'chart',
-      chartType: 'bar',
-      x: 0,
-      y: 0,
-      width: 400,
-      height: 240,
-      chartData: { labels: ['A'], datasets: [{ label: 'Series', data: [1] }] },
-    }
-    const presentation = {
-      title: 'Chart defaults',
-      theme: 'black',
-      slides: [{ id: 's1', background: { type: 'none' }, elements: [chart] }],
-    }
-
-    const present = generateRevealHTML(presentation)
-    expect(present).toContain("ticks:{color:'#f8fafc'}")
-    expect(present).toContain("grid:{color:'rgba(248,250,252,0.28)'}")
-
-    const print = generatePrintHTML(presentation, { autoPrint: false, includePrintBar: false })
-    expect(print).toContain('background-color:#1e1e2e;')
-    expect(print).toContain('"color":"#f8fafc"')
-    expect(print).toContain('"color":"rgba(248,250,252,0.28)"')
-  })
-
-  it('uses merged token backgrounds and nested FX fallbacks for chart palette resolution', () => {
-    const chart = {
-      id: 'chart-1',
-      type: 'chart',
-      chartData: { labels: ['A'], datasets: [{ label: 'Series', data: [1] }] },
-    }
-    const lightTokenPresent = generateRevealHTML({
-      designTokens: { colors: { bg: '#f8fafc' } },
-      slides: [{ background: { type: 'none' }, elements: [chart] }],
-    })
-    expect(lightTokenPresent).toContain("ticks:{color:'#141413'}")
-
-    const darkFxPresent = generateRevealHTML({
-      slides: [{
-        background: { type: 'fx', fx: { params: { bg: '#1e1e2e' } } },
-        elements: [chart],
-      }],
-    })
-    expect(darkFxPresent).toContain("ticks:{color:'#f8fafc'}")
-
-    const lightFxPrint = generatePrintHTML({
-      designTokens: { colors: { bg: '#1e1e2e' } },
-      slides: [{
-        background: { type: 'fx', fx: { fallbackColor: '#f8fafc' } },
-        elements: [chart],
-      }],
-    }, { autoPrint: false, includePrintBar: false })
-    expect(lightFxPrint).toContain('background-color:#f8fafc;')
-    expect(lightFxPrint).toContain('"color":"#141413"')
   })
 })

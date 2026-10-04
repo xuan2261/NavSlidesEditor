@@ -43,7 +43,7 @@ describe('dependency audit security floor', () => {
     expectAtLeast(serverPkg.dependencies['express-rate-limit'], '8.5.1')
     expectAtLeast(serverPkg.dependencies['socket.io'], '4.8.3')
     expectAtLeast(serverPkg.dependencies.undici, '7.29.0')
-    expectAtLeast(serverPkg.devDependencies.marked, '18.0.4')
+    expectAtLeast(serverPkg.dependencies.marked, '18.0.4')
     expectAtLeast(clientPkg.dependencies.marked, '18.0.4')
     expectAtLeast(clientPkg.dependencies['socket.io-client'], '4.8.3')
     expectAtLeast(clientPkg.dependencies['pdfjs-dist'], '6.2.108')
@@ -77,5 +77,4 @@ describe('dependency audit security floor', () => {
       'Automatic image dimension parsing is disabled'
     )
   })
-
 })

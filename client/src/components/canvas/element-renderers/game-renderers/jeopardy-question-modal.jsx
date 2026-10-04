@@ -1,5 +1,17 @@
+import { getCanonicalAnswerText } from './shared.jsx'
 
-export function JeopardyQuestionModal({ question, pts, isDailyDouble, showAnswer, timeLeft, onReveal, onCorrect, onWrong, onClose, accentColor }) {
+export function JeopardyQuestionModal({
+  question,
+  pts,
+  isDailyDouble,
+  showAnswer,
+  timeLeft,
+  onReveal,
+  onCorrect,
+  onWrong,
+  onClose,
+  accentColor,
+}) {
   const flipStyle = {
     perspective: '800px',
     width: '100%',
@@ -41,55 +53,67 @@ export function JeopardyQuestionModal({ question, pts, isDailyDouble, showAnswer
     border: '2px solid #22c55e',
     transform: 'rotateY(180deg)',
   }
-  const questionText = question?.question || 'No question configured'
-  const answerText = question?.answer || question?.correctIndex != null
-    ? String(question.options?.[question.correctIndex] || 'Answer')
-    : (question?.answer || 'No answer')
+  const questionText = question?.prompt || 'No question configured'
+  const answerText = getCanonicalAnswerText(question)
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(0,0,0,0.85)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 16,
-      zIndex: 9999,
-      padding: 16,
-    }}>
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.85)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 16,
+        zIndex: 9999,
+        padding: 16,
+      }}
+    >
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%', maxWidth: 500 }}>
         <button
           onClick={onClose}
-          style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, color: 'white', padding: '4px 12px', cursor: 'pointer', fontSize: 12 }}
+          style={{
+            background: 'rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: 6,
+            color: 'white',
+            padding: '4px 12px',
+            cursor: 'pointer',
+            fontSize: 12,
+          }}
         >
           ✕
         </button>
-        <div style={{
-          flex: 1,
-          background: isDailyDouble ? 'linear-gradient(90deg, #fbbf24, #f59e0b)' : accentColor,
-          borderRadius: 6,
-          padding: '4px 12px',
-          textAlign: 'center',
-          fontWeight: 'bold',
-          color: isDailyDouble ? '#1a1a2e' : '#fff',
-          fontSize: 13,
-        }}>
+        <div
+          style={{
+            flex: 1,
+            background: isDailyDouble ? 'linear-gradient(90deg, #fbbf24, #f59e0b)' : accentColor,
+            borderRadius: 6,
+            padding: '4px 12px',
+            textAlign: 'center',
+            fontWeight: 'bold',
+            color: isDailyDouble ? '#1a1a2e' : '#fff',
+            fontSize: 13,
+          }}
+        >
           {isDailyDouble ? 'DAILY DOUBLE!' : `${pts} Points`}
         </div>
         {timeLeft != null && (
-          <div style={{
-            background: timeLeft <= 5 ? '#ef4444' : 'rgba(255,255,255,0.1)',
-            borderRadius: 6,
-            padding: '4px 12px',
-            color: timeLeft <= 5 ? 'white' : 'rgba(255,255,255,0.7)',
-            fontSize: 12,
-            fontWeight: 'bold',
-            minWidth: 48,
-            textAlign: 'center',
-          }}>
+          <div
+            style={{
+              background: timeLeft <= 5 ? '#ef4444' : 'rgba(255,255,255,0.1)',
+              borderRadius: 6,
+              padding: '4px 12px',
+              color: timeLeft <= 5 ? 'white' : 'rgba(255,255,255,0.7)',
+              fontSize: 12,
+              fontWeight: 'bold',
+              minWidth: 48,
+              textAlign: 'center',
+            }}
+          >
             {timeLeft}s
           </div>
         )}
@@ -105,14 +129,48 @@ export function JeopardyQuestionModal({ question, pts, isDailyDouble, showAnswer
                 Click to reveal answer
               </div>
             )}
-            <div data-testid="game-question" style={{ fontSize: 14, color: 'white', textAlign: 'center', lineHeight: 1.5, fontFamily: 'sans-serif', maxHeight: 160, overflow: 'auto', width: '100%' }}>
+            <div
+              data-testid="game-question"
+              style={{
+                fontSize: 14,
+                color: 'white',
+                textAlign: 'center',
+                lineHeight: 1.5,
+                fontFamily: 'sans-serif',
+                maxHeight: 160,
+                overflow: 'auto',
+                width: '100%',
+              }}
+            >
               {questionText}
             </div>
-            {question?.options && question.options.length > 0 && (
+            {question?.media && (
+              <img
+                src={question.media.src}
+                alt={question.media.alt}
+                style={{ maxHeight: 100, maxWidth: '100%', objectFit: 'contain' }}
+              />
+            )}
+            {Array.isArray(question?.options) && question.options.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%' }}>
                 {question.options.map((opt, i) => (
-                  <div key={i} style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', padding: '2px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    {String.fromCharCode(65 + i)}. {opt}
+                  <div
+                    key={opt.id}
+                    style={{
+                      fontSize: 11,
+                      color: 'rgba(255,255,255,0.7)',
+                      padding: '2px 0',
+                      borderBottom: '1px solid rgba(255,255,255,0.05)',
+                    }}
+                  >
+                    {String.fromCharCode(65 + i)}. {opt.text}
+                    {opt.media && (
+                      <img
+                        src={opt.media.src}
+                        alt={opt.media.alt}
+                        style={{ maxHeight: 60, objectFit: 'contain' }}
+                      />
+                    )}
                   </div>
                 ))}
               </div>
@@ -124,9 +182,31 @@ export function JeopardyQuestionModal({ question, pts, isDailyDouble, showAnswer
             <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>
               Answer
             </div>
-            <div style={{ fontSize: 16, color: '#22c55e', textAlign: 'center', fontWeight: 'bold', fontFamily: 'sans-serif', lineHeight: 1.4 }}>
+            <div
+              style={{
+                fontSize: 16,
+                color: '#22c55e',
+                textAlign: 'center',
+                fontWeight: 'bold',
+                fontFamily: 'sans-serif',
+                lineHeight: 1.4,
+              }}
+            >
               {answerText}
             </div>
+            {question?.feedback?.explanation && (
+              <div
+                style={{
+                  fontSize: 12,
+                  color: 'white',
+                  textAlign: 'center',
+                  maxHeight: 80,
+                  overflow: 'auto',
+                }}
+              >
+                {question.feedback.explanation}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -136,13 +216,31 @@ export function JeopardyQuestionModal({ question, pts, isDailyDouble, showAnswer
         <div style={{ display: 'flex', gap: 12 }}>
           <button
             onClick={onCorrect}
-            style={{ background: '#22c55e', color: 'white', border: 'none', borderRadius: 8, padding: '10px 28px', fontSize: 14, fontWeight: 'bold', cursor: 'pointer' }}
+            style={{
+              background: '#22c55e',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              padding: '10px 28px',
+              fontSize: 14,
+              fontWeight: 'bold',
+              cursor: 'pointer',
+            }}
           >
             ✓ Correct
           </button>
           <button
             onClick={onWrong}
-            style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: 8, padding: '10px 28px', fontSize: 14, fontWeight: 'bold', cursor: 'pointer' }}
+            style={{
+              background: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              padding: '10px 28px',
+              fontSize: 14,
+              fontWeight: 'bold',
+              cursor: 'pointer',
+            }}
           >
             ✗ Wrong
           </button>
@@ -153,7 +251,16 @@ export function JeopardyQuestionModal({ question, pts, isDailyDouble, showAnswer
       {!showAnswer && (
         <button
           onClick={onReveal}
-          style={{ background: accentColor, color: 'white', border: 'none', borderRadius: 8, padding: '10px 28px', fontSize: 14, fontWeight: 'bold', cursor: 'pointer' }}
+          style={{
+            background: accentColor,
+            color: 'white',
+            border: 'none',
+            borderRadius: 8,
+            padding: '10px 28px',
+            fontSize: 14,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+          }}
         >
           Reveal Answer
         </button>

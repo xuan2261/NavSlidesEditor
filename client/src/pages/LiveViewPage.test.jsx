@@ -2,12 +2,15 @@ import React from 'react'
 import { act, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import LiveViewPage from './LiveViewPage.jsx'
+import { gameInstanceKey } from 'revealjs-shared'
 
 const mocks = vi.hoisted(() => {
   const createSocket = () => {
     const handlers = {}
     return {
-      on: vi.fn((event, handler) => { handlers[event] = handler }),
+      on: vi.fn((event, handler) => {
+        handlers[event] = handler
+      }),
       off: vi.fn(),
       emit: vi.fn(),
       disconnect: vi.fn(),
@@ -41,7 +44,9 @@ vi.mock('../utils/default-keyboard-shortcut-definitions-registry.js', () => ({
 
 function deferred() {
   let resolve
-  const promise = new Promise((nextResolve) => { resolve = nextResolve })
+  const promise = new Promise((nextResolve) => {
+    resolve = nextResolve
+  })
   return { promise, resolve }
 }
 
@@ -70,29 +75,41 @@ describe('LiveViewPage presenter fallback polling', () => {
 
   it('publishes timer transitions immediately and polls only while a countdown runs', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ exists: true })))
+    const identity = { effectiveSlideId: 's1', elementId: 'timer' },
+      key = gameInstanceKey(identity)
     const view = render(<LiveViewPage />)
-    await act(async () => { await Promise.resolve() })
+    await act(async () => {
+      await Promise.resolve()
+    })
     act(() => mocks.socket.handlers.connect())
-    const idleSnapshot = window.__timerStates
     await act(() => vi.advanceTimersByTimeAsync(500))
-    expect(window.__timerStates).toBe(idleSnapshot)
+    expect(window.__timerStates).toEqual({})
 
-    act(() => mocks.socket.handlers['timer:sync']({
-      elementId: 'timer', duration: 10, running: true, endedAt: Date.now() + 2500,
-    }))
-    expect(window.__timerStates.timer.remaining).toBe(3)
+    act(() =>
+      mocks.socket.handlers['timer:sync']({
+        ...identity,
+        duration: 10,
+        running: true,
+        endedAt: Date.now() + 2500,
+      })
+    )
+    expect(window.__timerStates[key].remaining).toBe(3)
     await act(() => vi.advanceTimersByTimeAsync(1000))
-    expect(window.__timerStates.timer.remaining).toBe(2)
+    expect(window.__timerStates[key].remaining).toBe(2)
 
-    act(() => mocks.socket.handlers['timer:sync']({
-      elementId: 'timer', duration: 10, running: false, pausedRemaining: 2,
-    }))
-    expect(window.__timerStates.timer.remaining).toBe(2)
-    const pausedSnapshot = window.__timerStates
+    act(() =>
+      mocks.socket.handlers['timer:sync']({
+        ...identity,
+        duration: 10,
+        running: false,
+        pausedRemaining: 2,
+      })
+    )
+    expect(window.__timerStates[key].remaining).toBe(2)
     await act(() => vi.advanceTimersByTimeAsync(500))
-    expect(window.__timerStates).toBe(pausedSnapshot)
+    expect(window.__timerStates[key].remaining).toBe(2)
 
-    act(() => mocks.socket.handlers['timer:ended']({ elementId: 'timer' }))
+    act(() => mocks.socket.handlers['timer:ended'](identity))
     expect(window.__timerStates).toEqual({})
     view.unmount()
     expect(window.__timerStates).toEqual({})
@@ -101,7 +118,8 @@ describe('LiveViewPage presenter fallback polling', () => {
   it('does not start a later presenter poll while the previous one is pending', async () => {
     const initialRoomCheck = deferred()
     const firstPresenterPoll = deferred()
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       .mockReturnValueOnce(initialRoomCheck.promise)
       .mockReturnValueOnce(firstPresenterPoll.promise)
     vi.stubGlobal('fetch', fetchMock)
@@ -136,7 +154,8 @@ describe('LiveViewPage presenter fallback polling', () => {
   it('does not let an earlier poll override a newer socket reconnect event', async () => {
     const initialRoomCheck = deferred()
     const firstPresenterPoll = deferred()
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       .mockReturnValueOnce(initialRoomCheck.promise)
       .mockReturnValueOnce(firstPresenterPoll.promise)
     vi.stubGlobal('fetch', fetchMock)
@@ -158,11 +177,13 @@ describe('LiveViewPage presenter fallback polling', () => {
     expect(view.queryByText('Presenter reconnecting...')).toBeNull()
 
     await act(async () => {
-      firstPresenterPoll.resolve(jsonResponse({
-        exists: true,
-        hasPresenter: false,
-        presenterConnected: true,
-      }))
+      firstPresenterPoll.resolve(
+        jsonResponse({
+          exists: true,
+          hasPresenter: false,
+          presenterConnected: true,
+        })
+      )
       await Promise.resolve()
     })
     expect(view.queryByText('Presenter reconnecting...')).toBeNull()
@@ -176,14 +197,18 @@ describe('LiveViewPage presenter fallback polling', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ exists: true })))
 
     const view = render(<LiveViewPage />)
-    await act(async () => { await Promise.resolve() })
+    await act(async () => {
+      await Promise.resolve()
+    })
     act(() => firstSocket.handlers.connect())
     expect(view.getByText('Waiting for presenter...')).toBeTruthy()
     expect(view.getByText('Room: ROOM1')).toBeTruthy()
 
     mocks.roomCode = 'ROOM2'
     view.rerender(<LiveViewPage />)
-    await act(async () => { await Promise.resolve() })
+    await act(async () => {
+      await Promise.resolve()
+    })
     act(() => secondSocket.handlers.connect())
     expect(view.getByText('Waiting for presenter...')).toBeTruthy()
     expect(view.getByText('Room: ROOM2')).toBeTruthy()

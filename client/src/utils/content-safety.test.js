@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { sanitizeRichTextHtml, sanitizeSvgContent } from './content-safety'
+import { sanitizeSvgContent } from './content-safety'
+import { sanitizeRichTextHtml } from 'revealjs-shared/src/content-safety.js'
 
 describe('content safety helpers', () => {
   it('removes script tags and event attributes from rich text html', () => {

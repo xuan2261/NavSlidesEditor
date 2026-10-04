@@ -1,7 +1,4 @@
-const {
-  buildGameBootstrapRuntime,
-  safeScriptLiteral,
-} = require('./live-presenter-game-runtime.js')
+const { buildGameBootstrapRuntime, safeScriptLiteral } = require('./live-presenter-game-runtime.js')
 
 function buildLivePresenterRuntime({ presentationId, hasGames }) {
   const gameBootstrapRuntime = hasGames ? buildGameBootstrapRuntime(presentationId) : ''
@@ -12,8 +9,8 @@ function buildLivePresenterRuntime({ presentationId, hasGames }) {
     : ''
   const presentationDataListener = hasGames
     ? [
-        "          sock.on('presentation-data', function() {",
-        '            livePresentationReady();',
+        "          sock.on('presentation-data', function(data) {",
+        '            livePresentationReady(data);',
         '          });',
       ].join(lineBreak) + lineBreak
     : ''
@@ -40,7 +37,6 @@ ${livePresentationReadyDeclaration}        var script = document.createElement('
               presentationId: ${presentationIdLiteral},
               presenterToken: presenterToken
             });
-            if (typeof drainAllGameShortcutActions === 'function') drainAllGameShortcutActions();
             if (!document.getElementById('navslides-live-indicator')) {
               var badge = document.createElement('div');
               badge.id = 'navslides-live-indicator';
@@ -54,7 +50,11 @@ ${livePresentationReadyDeclaration}        var script = document.createElement('
             }
             emitLiveNavigate(true);
           });
+          sock.on('disconnect', function() {
+            if (window.__navslidesEducationTransport) window.__navslidesEducationTransport.disconnect();
+          });
 ${presentationDataListener}          sock.on('join-error', function(payload) {
+            if (window.__navslidesEducationTransport) window.__navslidesEducationTransport.disconnect();
             var notice = document.getElementById('navslides-live-error');
             if (!notice) {
               notice = document.createElement('div');

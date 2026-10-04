@@ -17,7 +17,7 @@ export function DrawingRenderer({ element }) {
             key={i}
             d={p.d}
             stroke={p.stroke || resolvedStroke || '#ffffff'}
-            strokeWidth={p.strokeWidth || element.strokeWidth || 3}
+            strokeWidth={p.strokeWidth ?? element.strokeWidth ?? 3}
             fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"

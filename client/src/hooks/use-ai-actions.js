@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { buildSlidesFromOutline } from '../utils/build-slides-from-outline'
-import { sanitizeRichTextHtml } from '../utils/content-safety'
+import { sanitizeRichTextHtml } from 'revealjs-shared/src/content-safety.js'
 import { applyTranslatedNotes, getSlideNotesTranslationKey } from '../utils/slide-notes'
 import { cloneInheritedDesignTokens } from '../utils/slide-template-theme-normalization'
 import { showError } from '../utils/app-feedback'

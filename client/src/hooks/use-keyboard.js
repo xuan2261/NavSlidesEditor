@@ -105,13 +105,39 @@ export function createKeyboardHandler({
       }
     }
 
-    if (disabled || isEditing) return
     const activeElement = getActiveElement()
+    const richTextTarget = activeElement?.closest?.('.ProseMirror[contenteditable="true"]')
+    if (
+      !disabled &&
+      isEditing &&
+      !presenting &&
+      richTextTarget &&
+      !activeElement.closest('[role="dialog"], dialog')
+    ) {
+      const paletteShortcut = scopeShortcuts.find(
+        (shortcut) => shortcut.id === 'commandPalette' && shortcut.activeKey === normalizeKey(e)
+      )
+      if (paletteShortcut) {
+        if (!e.repeat) callbacks.onCommandPalette?.()
+        e.preventDefault()
+        return
+      }
+    }
+    if (disabled || isEditing) return
     const interactiveTarget = isInteractiveKeyboardTarget(activeElement)
     const presentationKeyOnButton = !ctrl && e.key === 'F5' && activeElement?.tagName === 'BUTTON'
-    const cycleTarget = !activeElement || activeElement === document.body ||
+    const cycleTarget =
+      !activeElement ||
+      activeElement === document.body ||
       activeElement.matches?.('.element-wrapper[data-element-id], .slide-canvas')
-    if (e.key === 'Tab' && !ctrl && !e.altKey && !presenting && cycleTarget && callbacks.onCycleElement) {
+    if (
+      e.key === 'Tab' &&
+      !ctrl &&
+      !e.altKey &&
+      !presenting &&
+      cycleTarget &&
+      callbacks.onCycleElement
+    ) {
       callbacks.onCycleElement(e.shiftKey ? 'previous' : 'next', e)
       return
     }
@@ -120,7 +146,16 @@ export function createKeyboardHandler({
     if (ctrl) {
       const chord = normalizeKey(e)
       const shortcut = scopeShortcuts.find((s) => s.activeKey === chord)
-      if (shortcut && !interactiveTarget) {
+      const historyOnCommandButton =
+        !presenting &&
+        (shortcut?.id === 'undo' || shortcut?.id === 'redo') &&
+        activeElement?.tagName === 'BUTTON' &&
+        activeElement.closest?.(
+          '[data-ribbon-section], [role="toolbar"][aria-label="Quick actions"]'
+        ) &&
+        !activeElement.closest('form, [role="form"], dialog, [popover]') &&
+        !isInteractiveKeyboardTarget(activeElement.parentElement)
+      if (shortcut && (!interactiveTarget || historyOnCommandButton)) {
         // One-shot chords must not re-fire while the key is held down.
         if (e.repeat && REPEAT_SUPPRESSED_IDS.has(shortcut.id)) {
           e.preventDefault()
@@ -169,8 +204,16 @@ export function createKeyboardHandler({
 
     // Backspace is an alias only for the default Delete binding. Remapping Delete
     // must retire both old keys; an explicit Backspace binding resolves above.
-    if (e.key === 'Backspace' && !ctrl && !e.shiftKey && !e.altKey && !presenting &&
-        scopeShortcuts.some((shortcut) => shortcut.id === 'delete' && shortcut.activeKey === shortcut.defaultKey)) {
+    if (
+      e.key === 'Backspace' &&
+      !ctrl &&
+      !e.shiftKey &&
+      !e.altKey &&
+      !presenting &&
+      scopeShortcuts.some(
+        (shortcut) => shortcut.id === 'delete' && shortcut.activeKey === shortcut.defaultKey
+      )
+    ) {
       callbacks.onDelete?.()
       e.preventDefault()
       return

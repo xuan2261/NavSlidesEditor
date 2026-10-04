@@ -22,6 +22,7 @@ export const ELEMENT_DEFAULTS = {
     borderWidth: 0,
     borderColor: '#000000',
     alt: '',
+    longDescription: '',
     decorative: false,
     borderRadius: 0,
     opacity: 1,
@@ -49,6 +50,7 @@ export const ELEMENT_DEFAULTS = {
     borderRadius: 0,
     opacity: 1,
     text: '',
+    textHtml: '',
     fontSize: 16,
     textColor: 'auto', // --ns-text (= #ffffff)
   },
@@ -130,6 +132,8 @@ svg.selectAll('circle').data(data).join('circle')
     endTime: 0,
     playbackRate: 1,
     tracks: [],
+    transcript: '',
+    audioDescription: '',
   },
   audio: {
     width: 400,
@@ -141,6 +145,8 @@ svg.selectAll('circle').data(data).join('circle')
     loop: false,
     muted: false,
     tracks: [],
+    transcript: '',
+    audioDescription: '',
   },
   table: {
     width: 600,

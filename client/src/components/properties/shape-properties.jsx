@@ -3,39 +3,70 @@ import { Input, Select, ColorPicker } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
 import { computeMixedValues } from '../../utils/selection-mixed-values'
 import MixedValueNotice from './mixed-value-notice'
+import ShapeKindControl from './shape-kind-control'
+import ShapeRichLabelEditor from './shape-rich-label-editor'
+import FocusedAuthoringTextInput from './focused-authoring-text-input'
 /**
  * Shape and Line specific properties.
  */
 
 const CONNECTION_ANCHORS = [
-  ['center', 'Center'], ['n', 'Top'], ['ne', 'Top right'], ['e', 'Right'], ['se', 'Bottom right'],
-  ['s', 'Bottom'], ['sw', 'Bottom left'], ['w', 'Left'], ['nw', 'Top left'],
+  ['center', 'Center'],
+  ['n', 'Top'],
+  ['ne', 'Top right'],
+  ['e', 'Right'],
+  ['se', 'Bottom right'],
+  ['s', 'Bottom'],
+  ['sw', 'Bottom left'],
+  ['w', 'Left'],
+  ['nw', 'Top left'],
 ]
 
 function connectionPatch(connections, endpointName, change) {
   const next = { ...(connections || {}) }
   if (!change) delete next[endpointName]
   else next[endpointName] = change
-  return Object.keys(next).length ? next : undefined
+  return next
 }
 
-export default function ShapeProperties({ element, onUpdate, elements, selectedElementIds }) {
+export default function ShapeProperties({
+  element,
+  onUpdate,
+  elements,
+  selectedElementIds,
+  slideLocked = false,
+}) {
   const isLine = element.type === 'line'
   const mixedId = useId()
+  const selectionIds = selectedElementIds || [element.id]
+  const richLabelSelected = (elements || [element]).some(
+    (candidate) =>
+      selectionIds.includes(candidate.id) && candidate.type === 'shape' && candidate.textHtml
+  )
   const mixed = computeMixedValues(elements || [], selectedElementIds || [], [
     'opacity',
     'fill',
     'stroke',
     'textColor',
   ])
-  const mixedDescription = (key) => mixed[key]?.isMixed ? `${mixedId}-${key}` : undefined
+  const mixedDescription = (key) => (mixed[key]?.isMixed ? `${mixedId}-${key}` : undefined)
   const mixedNotice = (key, label, value) => (
-    <MixedValueNotice id={`${mixedId}-${key}`} isMixed={mixed[key]?.isMixed}
-      label={label} onApply={() => onUpdate({ [key]: value })} />
+    <MixedValueNotice
+      id={`${mixedId}-${key}`}
+      isMixed={mixed[key]?.isMixed}
+      label={label}
+      onApply={() => onUpdate({ [key]: value })}
+    />
   )
 
   return (
     <>
+      <ShapeKindControl
+        element={element}
+        elements={elements}
+        selectedElementIds={selectedElementIds}
+        onUpdate={onUpdate}
+      />
       <div className={`grid ${isLine ? 'grid-cols-1' : 'grid-cols-2'} gap-2 mb-2.5`}>
         {!isLine && (
           <div className="flex flex-col gap-1">
@@ -63,7 +94,11 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
             value={element.stroke === 'none' || !element.stroke ? '#ffffff' : element.stroke}
             onChange={(e) => onUpdate({ stroke: e.target.value })}
           />
-          {mixedNotice('stroke', isLine ? 'line color' : 'shape stroke color', element.stroke || 'none')}
+          {mixedNotice(
+            'stroke',
+            isLine ? 'line color' : 'shape stroke color',
+            element.stroke || 'none'
+          )}
         </div>
       </div>
 
@@ -140,9 +175,15 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
               (candidate) => candidate.id !== element.id && candidate.type !== 'line'
             )
             const targetIds = new Set(targets.map((candidate) => candidate.id))
-            const controls = [['start', 'Start'], ['end', 'End']]
+            const controls = [
+              ['start', 'Start'],
+              ['end', 'End'],
+            ]
             return (
-              <fieldset className="mb-2.5 rounded border border-border p-2" disabled={element.locked}>
+              <fieldset
+                className="mb-2.5 rounded border border-border p-2"
+                disabled={element.locked}
+              >
                 <legend className="px-1 text-[11px] text-text-muted">Connector attachments</legend>
                 {controls.map(([endpointName, label]) => {
                   const connection = element.connections?.[endpointName]
@@ -160,13 +201,17 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
                               connections: connectionPatch(
                                 element.connections,
                                 endpointName,
-                                targetId ? { targetId, anchor: connection?.anchor || 'center' } : null
+                                targetId
+                                  ? { targetId, anchor: connection?.anchor || 'center' }
+                                  : null
                               ),
                             })
                           }}
                         >
                           <option value="">Free endpoint</option>
-                          {unavailable && <option value={connection.targetId}>Target unavailable</option>}
+                          {unavailable && (
+                            <option value={connection.targetId}>Target unavailable</option>
+                          )}
                           {targets.map((target) => (
                             <option key={target.id} value={target.id}>
                               {target.name || target.title || `${target.type} ${target.id}`}
@@ -180,15 +225,19 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
                           aria-label={`${label} connector anchor`}
                           disabled={!connection}
                           value={connection?.anchor || 'center'}
-                          onChange={(event) => onUpdate({
-                            connections: connectionPatch(element.connections, endpointName, {
-                              targetId: connection.targetId,
-                              anchor: event.target.value,
-                            }),
-                          })}
+                          onChange={(event) =>
+                            onUpdate({
+                              connections: connectionPatch(element.connections, endpointName, {
+                                targetId: connection.targetId,
+                                anchor: event.target.value,
+                              }),
+                            })
+                          }
                         >
                           {CONNECTION_ANCHORS.map(([value, anchorLabel]) => (
-                            <option key={value} value={value}>{anchorLabel}</option>
+                            <option key={value} value={value}>
+                              {anchorLabel}
+                            </option>
                           ))}
                         </Select>
                       </label>
@@ -244,7 +293,15 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
         </div>
       )}
 
-      {!isLine && (
+      {!isLine && element.textHtml && (
+        <ShapeRichLabelEditor
+          element={element}
+          selectedElementIds={selectedElementIds}
+          disabled={slideLocked}
+          onUpdate={onUpdate}
+        />
+      )}
+      {!isLine && !element.textHtml && (
         <div className="flex flex-col gap-1 mb-2.5">
           <div className="text-[11px] text-text-muted">Label Text</div>
           <Input
@@ -253,6 +310,10 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="text"
             value={element.text || ''}
+            disabled={slideLocked || Boolean(element.locked) || richLabelSelected}
+            title={
+              richLabelSelected ? 'Select one unlocked shape to edit its rich label.' : undefined
+            }
             onChange={(e) => onUpdate({ text: e.target.value })}
             placeholder="Text inside shape"
           />
@@ -263,7 +324,8 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
         <div className="grid grid-cols-2 gap-2 mb-2.5">
           <div className="flex flex-col gap-1">
             <div className="text-[11px] text-text-muted">Text Size</div>
-            <Input
+            <FocusedAuthoringTextInput
+              key={`${element.id}-shape-font`}
               data-testid="prop-shape-text-size"
               aria-label="Shape label text size"
               className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"

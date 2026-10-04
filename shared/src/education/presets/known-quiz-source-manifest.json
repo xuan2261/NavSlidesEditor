@@ -1,0 +1,42 @@
+{
+  "quiz-multiple-choice": [
+    {
+      "slideId": "slide-2",
+      "elementId": "el-quiz-1",
+      "sha256": "aa014cd27bdd4a7c2dce02a0cb0dbe686419e738261df4dafa8c4414450bb7c0"
+    },
+    {
+      "slideId": "slide-3",
+      "elementId": "el-quiz-2",
+      "sha256": "7144929700ff96ac746612a1d4f9e7078cf189f011b43322fc0f9f61a7843bb4"
+    }
+  ],
+  "quiz-true-false": [
+    {
+      "slideId": "slide-2",
+      "elementId": "el-tf-1",
+      "sha256": "5430bb42006d1398ab15ccfa179965ff18b5f0e2a42e6a69ad2a19ff46a4e224"
+    }
+  ],
+  "quiz-fill-blank": [
+    {
+      "slideId": "slide-2",
+      "elementId": "el-fb-1",
+      "sha256": "91426a03031498ba639088e12a1ae958b0f4f5f71043bbe25b8be02e064e3b2a"
+    }
+  ],
+  "quiz-ordering": [
+    {
+      "slideId": "slide-2",
+      "elementId": "el-ord-1",
+      "sha256": "b7100e18973105dec59e07869dd6b3dc6943fd517cbb7c23f9215db91dffc565"
+    }
+  ],
+  "quiz-matching": [
+    {
+      "slideId": "slide-2",
+      "elementId": "el-match-1",
+      "sha256": "e47ee8bf99ea72a9d098fbfc596c7bbf0685767a0d44219e80b947292abd79fa"
+    }
+  ]
+}

@@ -1,7 +1,20 @@
+const { getCurvedLineRasterGeometry } = require('revealjs-shared/src/curved-line-raster.js')
+const { captureCurvedLine } = require('./server-curved-line-capture.js')
+const {
+  prepareStaticRasterPresentation,
+} = require('revealjs-shared/src/education/static-raster-targets.js')
 const { chromium } = require('playwright')
 const crypto = require('crypto')
 const {
+  canPassThroughRequest,
+  installVendorRoute,
+  loadRasterHTML,
+  normalizeBaseUrl,
+  resolveVendorPath,
+} = require('./server-raster-vendor-route.js')
+const {
   generatePrintHTML,
+  getPptxElementExportStrategy,
   hasPptxImageVisualEffects,
   isNativeChartType,
   isPptxRasterSafeImageSource,
@@ -22,23 +35,8 @@ const DEFAULT_RASTER_TYPES = new Set([
   'timeline',
   'game',
   'image',
+  'line',
 ])
-
-const CDN_TO_VENDOR = [
-  [/cdn\.jsdelivr\.net\/npm\/d3(?:@[^/"']*)?/i, '/vendor/d3/dist/d3.min.js'],
-  [/cdnjs\.cloudflare\.com\/ajax\/libs\/d3\/[^/]+\/d3\.min\.js/i, '/vendor/d3/dist/d3.min.js'],
-  [/cdn\.jsdelivr\.net\/npm\/chart\.js(?:@[^/"']*)?/i, '/vendor/chart.js/dist/chart.umd.js'],
-  [
-    /cdn\.jsdelivr\.net\/npm\/katex(?:@[^/"']*)?\/?dist\/katex\.min\.css/i,
-    '/vendor/katex/dist/katex.min.css',
-  ],
-  [
-    /cdn\.jsdelivr\.net\/npm\/katex(?:@[^/"']*)?\/?dist\/katex\.min\.js/i,
-    '/vendor/katex/dist/katex.min.js',
-  ],
-  [/tikzjax\.com\/v1\/fonts\.css/i, '/vendor/tikzjax/fonts.css'],
-  [/tikzjax\.com\/v1\/tikzjax\.js/i, '/vendor/tikzjax/tikzjax.js'],
-]
 
 function getResolution(presentation) {
   return {
@@ -49,43 +47,6 @@ function getResolution(presentation) {
       Number(presentation && presentation.resolution && presentation.resolution.height) ||
       DEFAULT_HEIGHT,
   }
-}
-
-function resolveVendorPath(url) {
-  const raw = String(url || '')
-  const vendorIndex = raw.indexOf('/vendor/')
-  if (vendorIndex >= 0) return raw.slice(vendorIndex)
-  const match = CDN_TO_VENDOR.find(([pattern]) => pattern.test(raw))
-  return match ? match[1] : ''
-}
-
-function normalizeBaseUrl(baseUrl) {
-  const raw = String(baseUrl || '').trim()
-  return raw ? raw.replace(/\/+$/, '') : ''
-}
-
-function isSameOrigin(requestUrl, baseUrl) {
-  const normalizedBase = normalizeBaseUrl(baseUrl)
-  if (!normalizedBase) return false
-
-  try {
-    const request = new URL(requestUrl)
-    const base = new URL(normalizedBase)
-    return request.origin === base.origin
-  } catch {
-    return false
-  }
-}
-
-function canPassThroughRequest(url, baseUrl) {
-  const raw = String(url || '')
-  const normalizedBase = normalizeBaseUrl(baseUrl)
-  return (
-    raw === 'about:blank' ||
-    raw.startsWith('data:') ||
-    raw.startsWith('blob:') ||
-    (normalizedBase && isSameOrigin(raw, normalizedBase))
-  )
 }
 
 function getLaunchOptions() {
@@ -99,6 +60,9 @@ function getLaunchOptions() {
 
 function shouldRasterElement(element, rasterTypes) {
   if (!element) return false
+  if (element.type === 'line') {
+    return rasterTypes.has('line') && getPptxElementExportStrategy(element).requiresServer === true
+  }
   if (element.type === 'image') {
     return (
       rasterTypes.has('image') &&
@@ -142,16 +106,23 @@ function collectRasterTargets(presentation, rasterTypes) {
     (slide.elements || [])
       .filter((element) => !(element.hidden || false))
       .filter((element) => shouldRasterElement(element, rasterTypes))
-      .map((element) => ({ id: element.id.trim(), slideIndex, type: element.type }))
+      .map((element) => ({
+        id: element.id.trim(),
+        slideIndex,
+        type: element.type,
+        ...(element.type === 'line' ? { geometry: getCurvedLineRasterGeometry(element) } : {}),
+      }))
   )
 }
 
-function getCacheKey(presentation, baseUrl, rasterTypes) {
+function getCacheKey(presentation, baseUrl, rasterTypes, teacherReveal) {
   const contentHash = crypto
     .createHash('sha1')
     .update(
       JSON.stringify({
         resolution: presentation?.resolution || null,
+        designTokens: presentation?.designTokens || null,
+        teacherReveal: teacherReveal === true,
         slides: presentation?.slides || [],
       })
     )
@@ -164,42 +135,6 @@ function getCacheKey(presentation, baseUrl, rasterTypes) {
     rasterTypes: [...rasterTypes].sort(),
   }
   return JSON.stringify(summary)
-}
-
-async function installVendorRoute(page, baseUrl) {
-  const normalizedBaseUrl = normalizeBaseUrl(baseUrl)
-  await page.route('**/*', async (route) => {
-    const requestUrl = route.request().url()
-    const vendorPath = resolveVendorPath(requestUrl)
-
-    if (!vendorPath && canPassThroughRequest(requestUrl, normalizedBaseUrl)) {
-      await route.continue()
-      return
-    }
-
-    if (!vendorPath || !normalizedBaseUrl) {
-      await route.abort('blockedbyclient')
-      return
-    }
-
-    try {
-      const response = await fetch(`${normalizedBaseUrl}${vendorPath}`)
-      if (!response.ok) {
-        await route.abort('failed')
-        return
-      }
-      await route.fulfill({
-        status: response.status,
-        headers: {
-          'content-type': response.headers.get('content-type') || 'application/octet-stream',
-          'access-control-allow-origin': '*',
-        },
-        body: Buffer.from(await response.arrayBuffer()),
-      })
-    } catch {
-      await route.abort('failed')
-    }
-  })
 }
 
 async function captureRasters(html, targets, { resolution, scale, baseUrl }) {
@@ -219,8 +154,7 @@ async function captureRasters(html, targets, { resolution, scale, baseUrl }) {
       deviceScaleFactor: scale,
     })
     const page = await context.newPage()
-    await installVendorRoute(page, baseUrl)
-    await page.setContent(html, { waitUntil: 'load', timeout: 30000 })
+    await loadRasterHTML(page, html, baseUrl)
     await page.waitForFunction('window.__navslidesExportReady === true', null, { timeout: 15000 })
     await page.evaluate('document.fonts && document.fonts.ready ? document.fonts.ready : true')
     await page.waitForTimeout(150)
@@ -230,10 +164,28 @@ async function captureRasters(html, targets, { resolution, scale, baseUrl }) {
         const slidePage = page.locator('.slide-page').nth(target.slideIndex)
         const element = slidePage.locator(`[data-export-element-id="${target.id}"]`).first()
         await element.waitFor({ state: 'visible', timeout: 4000 })
-        if (target.type === 'image') {
-          await element.evaluate((node) => {
-            node.style.transform = 'none'
-            node.style.opacity = '1'
+        // Rotation is reapplied by the PPTX image object, not baked twice.
+        await element.evaluate((node, image) => {
+          node.style.transform = 'none'
+          if (image) node.style.opacity = '1'
+        }, target.type === 'image')
+        if (target.type === 'line') {
+          rasters[target.id] = await captureCurvedLine(element, target.geometry, scale)
+          continue
+        }
+        if (target.type === 'game') {
+          await element.evaluate(async (node) => {
+            await Promise.all(
+              [...node.querySelectorAll('img')].map(async (image) => {
+                try {
+                  await image.decode()
+                } catch {
+                  throw new Error(`Authored game media failed to load: ${image.alt || image.src}`)
+                }
+                if (!image.naturalWidth)
+                  throw new Error('Authored game image has no decoded pixels')
+              })
+            )
           })
         }
         const buffer = await element.screenshot({
@@ -242,8 +194,12 @@ async function captureRasters(html, targets, { resolution, scale, baseUrl }) {
           omitBackground: true,
         })
         rasters[target.id] = `data:image/png;base64,${buffer.toString('base64')}`
-      } catch {
-        // keep non-rasterized target unresolved; strict mode decides later
+      } catch (error) {
+        if (target.type === 'game' || target.type === 'line')
+          throw new Error(`Failed to capture ${target.type} "${target.id}": ${error.message}`, {
+            cause: error,
+          })
+        // Other targets remain unresolved for their existing export policy.
       }
     }
 
@@ -261,15 +217,23 @@ async function captureRasters(html, targets, { resolution, scale, baseUrl }) {
 // a real browser.
 async function getServerRasters(
   sourcePresentation,
-  { baseUrl = '', rasterTypes: customRasterTypes, cache = new Map(), capture = captureRasters } = {}
+  {
+    baseUrl = '',
+    teacherReveal = false,
+    rasterTypes: customRasterTypes,
+    cache = new Map(),
+    capture = captureRasters,
+  } = {}
 ) {
   const normalizedBaseUrl = normalizeBaseUrl(baseUrl)
-  const presentation = normalizePresentationNotes(sourcePresentation || {})
+  const presentation = prepareStaticRasterPresentation(
+    normalizePresentationNotes(sourcePresentation || {})
+  )
   const rasterTypes = customRasterTypes ? new Set(customRasterTypes) : DEFAULT_RASTER_TYPES
   const targets = collectRasterTargets(presentation, rasterTypes)
   if (!targets.length) return {}
 
-  const cacheKey = getCacheKey(presentation, normalizedBaseUrl, rasterTypes)
+  const cacheKey = getCacheKey(presentation, normalizedBaseUrl, rasterTypes, teacherReveal)
   if (cache.has(cacheKey)) return cache.get(cacheKey)
 
   const resolution = getResolution(presentation)
@@ -281,9 +245,17 @@ async function getServerRasters(
     baseUrl: normalizedBaseUrl,
     exportElementIds: true,
     exportReadyDelayMs: 300,
+    teacherReveal: teacherReveal === true,
   })
 
   const rasters = await capture(html, targets, { resolution, scale, baseUrl: normalizedBaseUrl })
+  const missingRequired = targets.filter(
+    (target) => (target.type === 'game' || target.type === 'line') && !rasters[target.id]
+  )
+  if (missingRequired.length)
+    throw new Error(
+      `Missing authored raster capture: ${missingRequired.map((target) => `${target.type} "${target.id}"`).join(', ')}`
+    )
 
   cache.set(cacheKey, rasters)
   return rasters

@@ -32,6 +32,7 @@ const ALLOWED_UPLOAD_EXTENSIONS = new Set([
   '.aac',
   '.m4a',
   '.pdf',
+  '.vtt',
 ])
 
 // Allowed MIME prefixes for magic-byte validation
@@ -63,11 +64,32 @@ const router = express.Router()
 router.post('/', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
 
+  const isCaption = path.extname(req.file.path).toLowerCase() === '.vtt'
+  if (isCaption) {
+    try {
+      if (!['text/vtt', 'text/plain'].includes(req.file.mimetype)) {
+        throw new Error('Caption MIME type must be text/vtt or text/plain')
+      }
+      const bytes = await fs.readFile(req.file.path)
+      const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+      if (text.includes('\0') || !/^WEBVTT(?:[ \t][^\r\n]*)?(?:\r\n|\n|\r|$)/.test(text)) {
+        throw new Error('Caption content must be UTF-8 WebVTT')
+      }
+    } catch (error) {
+      await fs.unlink(req.file.path).catch(() => {})
+      return res.status(400).json({ error: error.message, code: 'invalid-vtt' })
+    }
+  }
+
   // Verify actual file content matches claimed type via magic bytes
   try {
     const { fileTypeFromFile } = await import('file-type')
     const detected = await fileTypeFromFile(req.file.path)
-    if (detected && !ALLOWED_MIME_PREFIXES.some((p) => detected.mime.startsWith(p))) {
+    if (
+      detected &&
+      !(isCaption && detected.mime === 'text/vtt') &&
+      !ALLOWED_MIME_PREFIXES.some((p) => detected.mime.startsWith(p))
+    ) {
       // Delete the uploaded file — MIME doesn't match allowed types
       await fs.unlink(req.file.path).catch(() => {})
       return res.status(400).json({ error: `File type ${detected.mime} not allowed` })
@@ -86,9 +108,7 @@ router.post('/', upload.single('file'), async (req, res) => {
       const code = ['invalid-svg', 'unsafe-svg', 'svg-too-large'].includes(error?.code)
         ? error.code
         : 'invalid-svg'
-      const message = code === error?.code
-        ? error.message
-        : 'File content is not valid SVG'
+      const message = code === error?.code ? error.message : 'File content is not valid SVG'
       return res.status(400).json({ error: message, code })
     }
   }

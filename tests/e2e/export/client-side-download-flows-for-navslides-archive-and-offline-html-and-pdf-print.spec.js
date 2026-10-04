@@ -72,7 +72,7 @@ test.describe('Client side download flows for navslides project archive and offl
   test('exports offline HTML with no remote CDN scripts', async ({ page, request }, testInfo) => {
     await withSeededPresentation({ request, page }, async ({ editor }) => {
       const downloadPromise = page.waitForEvent('download', { timeout: 60000 })
-      await editor.menubar.openFileMenuItem('Export Offline HTML')
+      await editor.menubar.openFileMenuItem('Export HTML')
       const download = await downloadPromise
       const name = download.suggestedFilename()
       expect(name).toMatch(/\.html$/)

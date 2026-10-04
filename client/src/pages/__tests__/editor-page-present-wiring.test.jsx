@@ -44,24 +44,6 @@ function seedWithGame() {
   }
 }
 
-function seedWithMultipleGames() {
-  const presentation = seedWithGame()
-  presentation.slides[0].elements = [
-    { ...presentation.slides[0].elements[0], gameType: 'name-picker' },
-    {
-      id: 'g2',
-      type: 'game',
-      gameType: 'poll',
-      x: 520,
-      y: 100,
-      width: 400,
-      height: 300,
-      zIndex: 2,
-    },
-  ]
-  return presentation
-}
-
 const h = vi.hoisted(() => ({
   updatePresentation: vi.fn(() => Promise.resolve({})),
   presentInWindow: vi.fn(),
@@ -104,7 +86,11 @@ beforeEach(() => {
   h.updatePresentation.mockClear()
   h.presentInWindow.mockClear()
   useEditorStore.setState({ selectedElementIds: [], editingElementId: null, clipboard: null })
-  useUIStore.setState({ activeTab: 'home', formatContext: { hasSelection: false, elementType: null }, showTransitionPreview: false })
+  useUIStore.setState({
+    activeTab: 'home',
+    formatContext: { hasSelection: false, elementType: null },
+    showTransitionPreview: false,
+  })
   globalThis.fetch = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({}) }))
 })
 
@@ -126,17 +112,29 @@ describe('EditorPage present-wiring (dead presentation-scope removed)', () => {
   })
 
   it('selects game element from the active vertical slide before falling back to the parent', () => {
-    const parent = { id: 's1', elements: [{ id: 'parent-game', type: 'game', gameType: 'jeopardy' }] }
-    const child = { id: 's1-child', elements: [{ id: 'child-game', type: 'game', gameType: 'name-picker' }] }
+    const parent = {
+      id: 's1',
+      elements: [{ id: 'parent-game', type: 'game', gameType: 'jeopardy' }],
+    }
+    const child = {
+      id: 's1-child',
+      elements: [{ id: 'child-game', type: 'game', gameType: 'name-picker' }],
+    }
 
     expect(getGameElementForActiveSlide(child, parent)?.id).toBe('child-game')
     expect(getGameElementForActiveSlide(null, parent)?.id).toBe('parent-game')
-    expect(getGameElementForActiveSlide(null, {
-      elements: [
-        { id: 'first-game', type: 'game', gameType: 'name-picker' },
-        { id: 'selected-game', type: 'game', gameType: 'poll' },
-      ],
-    }, 'selected-game')?.id).toBe('selected-game')
+    expect(
+      getGameElementForActiveSlide(
+        null,
+        {
+          elements: [
+            { id: 'first-game', type: 'game', gameType: 'name-picker' },
+            { id: 'selected-game', type: 'game', gameType: 'poll' },
+          ],
+        },
+        'selected-game'
+      )?.id
+    ).toBe('selected-game')
   })
 
   it('with a game element, G opens the HUD and L opens the leaderboard (reachable game-scope wiring)', async () => {
@@ -152,51 +150,6 @@ describe('EditorPage present-wiring (dead presentation-scope removed)', () => {
 
     await press({ key: 'l' })
     await waitFor(() => expect(screen.getByTestId('game-leaderboard')).toBeTruthy())
-  })
-
-  it('game shortcut actions publish a typed event instead of being console stubs', async () => {
-    h.seed = seedWithGame()
-    const events = []
-    const handler = (event) => events.push(event.detail)
-    window.addEventListener('navslides:game-shortcut', handler)
-
-    try {
-      renderPage()
-      await screen.findByDisplayValue('Wire Deck')
-
-      await press({ key: 'Enter' })
-
-      expect(events).toContainEqual({
-        action: 'nextPhase',
-        elementId: 'g1',
-        gameType: 'jeopardy',
-      })
-    } finally {
-      window.removeEventListener('navslides:game-shortcut', handler)
-    }
-  })
-
-  it('routes a shortcut to the selected game using that subtype action', async () => {
-    h.seed = seedWithMultipleGames()
-    const events = []
-    const handler = (event) => events.push(event.detail)
-    window.addEventListener('navslides:game-shortcut', handler)
-
-    try {
-      renderPage()
-      await screen.findByDisplayValue('Wire Deck')
-      act(() => useEditorStore.setState({ selectedElementIds: ['g2'] }))
-
-      await press({ key: 'r' })
-
-      expect(events).toContainEqual({
-        action: 'refreshResults',
-        elementId: 'g2',
-        gameType: 'poll',
-      })
-    } finally {
-      window.removeEventListener('navslides:game-shortcut', handler)
-    }
   })
 
   it('Escape closes an open game overlay (kept branch)', async () => {

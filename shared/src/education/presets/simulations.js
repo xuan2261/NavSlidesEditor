@@ -1,0 +1,94 @@
+const sourceData = require('./simulation-source-data.json')
+const { exactTargets } = require('./migration-validation.js')
+const { freezePreset } = require('./preset-factory.js')
+const SELF_CONTAINED_DEPENDENCIES = Object.freeze({
+  network: false,
+  offlineCapable: true,
+  resources: Object.freeze([]),
+  dynamicResources: Object.freeze([]),
+})
+const labels = {
+  'sim-logic-gates': ['Cổng logic', 'Logic Gates'],
+  'sim-rlc-response': ['Đáp ứng tần số RLC', 'RLC Frequency Response'],
+  'sim-pid-tuning': ['Chỉnh định PID', 'PID Controller Tuning'],
+  'sim-bode-plot': ['Biểu đồ Bode', 'Bode Plot Generator'],
+  'sim-3phase': ['Điện ba pha', 'Three-Phase Power'],
+  'sim-gear-train': ['Truyền động bánh răng', 'Gear Train'],
+}
+const SIMULATION_MANIFEST = freezePreset(
+  Object.fromEntries(
+    Object.entries(sourceData).map(([id, sources]) => [
+      id,
+      {
+        ...SELF_CONTAINED_DEPENDENCIES,
+        local: true,
+        sourceId: sources[0].sourceId,
+        file: `simulation-sources/${sources[0].file}`,
+        sources: sources.map((source) => ({
+          sourceId: source.sourceId,
+          file: `simulation-sources/${source.file}`,
+          sha256: source.sha256,
+        })),
+      },
+    ])
+  )
+)
+const SIMULATION_PRESETS = freezePreset(
+  Object.entries(sourceData).map(([id, sources]) => ({
+    id,
+    labels: { vi: labels[id][0], en: labels[id][1] },
+    category: 'simulations',
+    tags: [id, 'physics', 'local', 'simulation'],
+    capabilities: { local: true, live: false, offline: true, network: false },
+    preview: {
+      title: labels[id][0],
+      summary: labels[id][1],
+      items: ['Local controls', 'Canvas / SVG', 'No network dependencies'],
+    },
+    elements: [
+      {
+        id: `${id}/element`,
+        type: 'html',
+        x: 10,
+        y: 10,
+        width: 940,
+        height: 520,
+        zIndex: 5,
+        content: sources[0].content,
+        sourceMetadata: { presetId: id, sourceId: sources[0].sourceId },
+        htmlDependencies: { ...SELF_CONTAINED_DEPENDENCIES, resources: [], dynamicResources: [] },
+      },
+    ],
+  }))
+)
+function migrateSimulationTemplates(records) {
+  const targets = exactTargets(records, Object.keys(sourceData))
+  const replacements = new Map()
+  for (const record of targets) {
+    const next = structuredClone(record)
+    const embeds = next.slides.flatMap((slide) =>
+      slide.elements.filter((element) => element.type === 'html')
+    )
+    const sources = sourceData[record.id]
+    if (embeds.length !== sources.length)
+      throw new Error(
+        `${record.id}: expected ${sources.length} audited simulator sources, found ${embeds.length}; restore the complete lesson.`
+      )
+    embeds.forEach((element, index) => {
+      const source = sources[index]
+      if (element.content !== source.content)
+        throw new Error(
+          `${record.id}: simulator source ${source.sourceId} differs from the audited physics. Restore the checked-in source before publication.`
+        )
+      element.sourceMetadata = { presetId: record.id, sourceId: source.sourceId }
+      element.htmlDependencies = {
+        ...SELF_CONTAINED_DEPENDENCIES,
+        resources: [],
+        dynamicResources: [],
+      }
+    })
+    replacements.set(record.id, next)
+  }
+  return records.map((record) => replacements.get(record.id) || record)
+}
+module.exports = { SIMULATION_PRESETS, SIMULATION_MANIFEST, migrateSimulationTemplates }

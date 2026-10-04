@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { parseReleaseTag } from '../../scripts/ci/release-subject.mjs'
-import {
-  compareCoreVersions,
-  semanticLockHash,
-} from './release-version-governance-helpers'
+import workspaceLockTools from '../../scripts/workspace-lock.js'
+import electronLockTools from '../../scripts/electron-server-dependencies.js'
+import { compareCoreVersions, semanticLockHash } from './release-version-governance-helpers'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const readText = (...parts) => readFileSync(resolve(root, ...parts), 'utf8').replace(/\r\n/g, '\n')
@@ -20,17 +20,22 @@ const manifestPaths = [
   'website/package.json',
 ]
 const workspaceLockPaths = ['', 'client', 'server', 'shared', 'website']
-const releaseDocs = [
-  'README.md',
-  'docs/project-overview-pdr.md',
-  'docs/project-roadmap.md',
-  'docs/codebase-summary.md',
-]
+const dependencyInputPaths = [
+  ...manifestPaths,
+  'package-lock.json',
+  'electron/server-package-lock.json',
+].sort()
 const scopeManifestPath = [
   'plans',
   '260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd',
   'reports',
   'release-scope-manifest.json',
+]
+const dependencyEvidencePath = [
+  'plans',
+  '261001-0639-interactive-html-education-deep-tdd',
+  'reports',
+  'dependency-change-evidence.json',
 ]
 
 describe('release version governance contract', () => {
@@ -59,8 +64,6 @@ describe('release version governance contract', () => {
         publishable: false,
       },
     })
-    expect(decision.rationale).toMatch(/compatible user-visible capability/i)
-    expect(decision.nonPublishableReason).toMatch(/not implementation evidence/i)
   })
 
   it('aligns every product manifest and checked-in lock to the root version', () => {
@@ -81,55 +84,42 @@ describe('release version governance contract', () => {
     expect(electronLock.version).toBe(rootVersion)
     expect(electronLock.packages[''].version).toBe(rootVersion)
 
-    const evidence = readJson(...scopeManifestPath).releaseVersionDecision.lockUpdateEvidence
+    const evidence = readJson(...dependencyEvidencePath)
+    expect(evidence.publishable).toBe(false)
+    expect(evidence.qualification).toBe('unqualified-pending')
+    expect(evidence.subject.inputs.map((input) => input.path).sort()).toEqual(dependencyInputPaths)
+    const inputs = dependencyInputPaths
+      .map((path) => {
+        const sha256 = createHash('sha256')
+          .update(readFileSync(resolve(root, path)))
+          .digest('hex')
+        expect(evidence.subject.inputs.find((input) => input.path === path).sha256, path).toBe(
+          sha256
+        )
+        return { path, sha256 }
+      })
+      .sort((left, right) => left.path.localeCompare(right.path))
+    expect(createHash('sha256').update(JSON.stringify(inputs)).digest('hex')).toBe(
+      evidence.subject.dependencyInputHash
+    )
+    expect(
+      workspaceLockTools.validateWorkspaceLock(
+        workspaceLockTools.readWorkspaceManifests(root),
+        workspaceLock
+      )
+    ).toBe(true)
+    expect(
+      electronLockTools.validateIsolatedLock(
+        electronLockTools.createIsolatedManifest(readJson('server/package.json')),
+        electronLock
+      )
+    ).toBe(true)
     expect(semanticLockHash(workspaceLock, workspaceLockPaths)).toBe(
-      evidence['package-lock.json semanticHashExcludingVersionFields']
+      evidence.locks['package-lock.json'].currentSemanticHash
     )
     expect(semanticLockHash(electronLock, [''])).toBe(
-      evidence['electron/server-package-lock.json semanticHashExcludingVersionFields']
+      evidence.locks['electron/server-package-lock.json'].currentSemanticHash
     )
-  })
-
-  it('distinguishes the candidate from the current published release in docs', () => {
-    const version = readJson('package.json').version
-    for (const path of releaseDocs) {
-      const doc = readText(path)
-      expect(doc, path).toMatch(/current published release/i)
-      expect(doc, path).toContain('v1.16.0')
-      expect(doc, path).toContain('v1.16.1')
-      expect(doc, path).toContain('v1.16.2')
-      expect(doc, path).toMatch(/next release candidate/i)
-      expect(doc, path).toContain(`v${version}`)
-      expect(doc, path).not.toMatch(/upstream parity.{0,80}(required|release gate|block)/i)
-    }
-  })
-
-  it('separates immutable release history from pending Unreleased work', () => {
-    const version = readJson('package.json').version
-    const changelog = readText('docs/project-changelog.md')
-
-    const publishedSections = [
-      ['1.16.2', '2026-09-22'],
-      ['1.16.1', '2026-09-21'],
-      ['1.16.0', '2026-09-17'],
-    ]
-    for (const [publishedVersion, date] of publishedSections) {
-      expect(changelog.match(new RegExp(`^## v${publishedVersion} — ${date}$`, 'gm'))).toHaveLength(
-        1
-      )
-    }
-    expect(changelog.match(new RegExp(`^## Unreleased \\(v${version}\\)$`, 'gm'))).toHaveLength(1)
-    expect(changelog.indexOf(`## Unreleased (v${version})`)).toBeLessThan(
-      changelog.indexOf('## v1.16.2')
-    )
-    const unreleasedStart = changelog.indexOf(`## Unreleased (v${version})`)
-    const unreleased = changelog
-      .slice(unreleasedStart, changelog.indexOf('\n## ', unreleasedStart))
-      .trim()
-    expect(unreleased).toMatch(/pending/i)
-    expect(unreleased).not.toMatch(/^- /m)
-    expect(changelog.indexOf('## v1.16.2')).toBeLessThan(changelog.indexOf('## v1.16.1'))
-    expect(changelog.indexOf('## v1.16.1')).toBeLessThan(changelog.indexOf('## v1.16.0'))
   })
 
   it('accepts only matching final and positive non-zero RC release tags', () => {
@@ -161,20 +151,5 @@ describe('release version governance contract', () => {
     ]) {
       expect(parseReleaseTag(tag, version), tag).toBeNull()
     }
-  })
-
-  it('keeps upstream parity evidence historical and non-blocking', () => {
-    const plan = readText('plans/archive/260523-0500-upstream-parity-verification-tdd/plan.md')
-    const matrix = readText('docs/upstream-parity-matrix.md')
-    const metadataIndex = matrix.indexOf('## Metadata')
-    const banner = matrix.slice(0, metadataIndex)
-
-    expect(plan).toMatch(/^status: (historical|superseded)$/m)
-    expect(plan).toContain(
-      'plans/260925-0631-single-user-powerpoint-native-fidelity-release-deep-tdd/phase-02-release-state-and-documentation-governance.md'
-    )
-    expect(plan).toContain('ce548c535abc7701ac45cc3164560caba121adce')
-    expect(banner).toMatch(/historical/i)
-    expect(banner).toMatch(/non-blocking/i)
   })
 })

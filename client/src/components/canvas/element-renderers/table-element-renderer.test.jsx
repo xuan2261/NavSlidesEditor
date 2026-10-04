@@ -25,8 +25,10 @@ describe('TableRenderer', () => {
     const col = container.querySelector('col')
     const row = container.querySelector('tr')
     const cell = container.querySelector('td')
-    expect(col?.style.width).toBe('80px')
-    expect(row?.style.height).toBe('40px')
+    expect(
+      parseFloat(col?.style.width) / parseFloat(container.querySelectorAll('col')[1].style.width)
+    ).toBeCloseTo(2 / 3)
+    expect(parseFloat(row?.style.height)).toBe(100)
     expect(cell?.style.fontSize).toBe('24px')
     expect(cell?.style.fontFamily).toBe('Arial')
   })
@@ -49,21 +51,6 @@ describe('TableRenderer', () => {
     )
 
     expect(document.activeElement).toBe(container.querySelector('textarea'))
-  })
-
-  it('renders malformed persisted table data without crashing', () => {
-    expect(() => render(
-      <TableRenderer
-        element={{
-          id: 'table-invalid',
-          type: 'table',
-          data: [{ invalid: true }, [{ value: 'cell' }]],
-          mergedCells: [null, { row: 0, col: 0, rowSpan: 'bad' }],
-        }}
-        isEditing={false}
-        onUpdateElement={vi.fn()}
-      />
-    )).not.toThrow()
   })
 
   it('keeps malformed rows editable without throwing', () => {

@@ -1,5 +1,7 @@
 import { recordPptxExportWarning } from './export-pptx-core'
 import { resolveClientPptxPoster } from './export-pptx-media'
+import { addTimelineElement } from './export-pptx-basic-renderers'
+import { parseUploadSource } from 'revealjs-shared'
 import {
   buildPptxPlaceholderLabel,
   getPlaceholderTheme,
@@ -27,9 +29,20 @@ function addPlaceholder(slide, bounds, element, warning) {
   warning()
 }
 
-export async function addFallbackElement(slide, element, bounds, warnings, slideNumber, designTokens) {
-  const coverData =
-    element.type === 'video' ? await resolveClientPptxPoster(element.poster) : null
+export async function addFallbackElement(
+  slide,
+  element,
+  bounds,
+  warnings,
+  slideNumber,
+  designTokens,
+  options = {}
+) {
+  if (element.type === 'timeline') {
+    addTimelineElement(slide, element, bounds, designTokens)
+    return
+  }
+  const coverData = element.type === 'video' ? await resolveClientPptxPoster(element.poster) : null
   if (coverData) {
     slide.addImage({ data: coverData, ...bounds, rotate: element.rotation || 0 })
     recordPptxExportWarning(warnings, {
@@ -40,8 +53,15 @@ export async function addFallbackElement(slide, element, bounds, warnings, slide
     })
     return
   }
+  if (
+    element.type === 'video' &&
+    (/^data:image\//i.test(element.poster || '') ||
+      parseUploadSource(element.poster)?.extension === 'svg')
+  ) {
+    throw new Error(`Failed to decode authored video poster "${element.id || ''}"`)
+  }
 
-  const fallbackData = await renderElementFallbackDataUri(element, designTokens)
+  const fallbackData = await renderElementFallbackDataUri(element, designTokens, options)
   if (fallbackData) {
     slide.addImage({ data: fallbackData, ...bounds, rotate: element.rotation || 0 })
     recordPptxExportWarning(warnings, {
@@ -52,6 +72,10 @@ export async function addFallbackElement(slide, element, bounds, warnings, slide
     })
     return
   }
+  if (element.type === 'game' || element.type === 'svg')
+    throw new Error(
+      `Failed to capture authored ${element.type} "${element.id || element.gameType || ''}"`
+    )
 
   addPlaceholder(slide, bounds, element, () => {
     recordPptxExportWarning(warnings, {

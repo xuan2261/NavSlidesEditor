@@ -4,6 +4,7 @@ const path = require('path')
 const {
   generateRevealHTML,
   normalizePresentationNotes,
+  normalizePresentationGames,
 } = require('revealjs-shared')
 const {
   readPresentations,
@@ -13,7 +14,9 @@ const {
 } = require('../services/storage')
 const { validate } = require('../middleware/validate')
 const { saveAsTemplateSchema } = require('../middleware/schemas')
-const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
+const {
+  normalizePptxImportedPresentationForRead,
+} = require('../services/presentation-normalization')
 const { findServeablePresentation } = require('../services/presentation-finder')
 const liveRooms = require('../services/live-rooms')
 const { bootstrapPresenterGames } = require('../services/presenter-game-bootstrap')
@@ -23,6 +26,7 @@ const { toPresentationEditorDto } = require('../services/pptx-import/package-sto
 // the router, so call sites must resolve through the module object.
 const packageLifecycle = require('../services/package-lifecycle-integration')
 const { readAuthoritativePresentation } = require('../services/package-backed-presentation-read')
+const { getServingBaseUrl } = require('../utils/serving-origin')
 const {
   uuidv4,
   isCurrentPresenterBootstrap,
@@ -76,18 +80,35 @@ router.post('/:id/present/game-bootstrap', async (req, res) => {
       presentationId: req.params.id,
       liveRoomCode: roomCode,
       presentationGeneration: expectedBootstrap.presentationGeneration,
+      allocationScope: currentRoom,
     })
     if (!bootstrap.ok) {
-      const status = ['game-room-conflict', 'host-capability-required'].includes(bootstrap.error)
-        ? 409
-        : 503
+      const status =
+        bootstrap.error === 'invalid-game-config'
+          ? 400
+          : ['game-room-conflict', 'host-capability-required'].includes(bootstrap.error)
+            ? 409
+            : 503
       return res.status(status).json({
         error: bootstrap.error,
+        ...(bootstrap.message ? { message: bootstrap.message.slice(0, 2000) } : {}),
+        ...(Array.isArray(bootstrap.errors)
+          ? {
+              errors: bootstrap.errors.slice(0, 20).map(({ path, message }) => ({ path, message })),
+            }
+          : {}),
         ...(bootstrap.gameId ? { gameId: bootstrap.gameId } : {}),
         ...(bootstrap.gameIds ? { gameIds: bootstrap.gameIds } : {}),
       })
     }
-    return res.json({ presentationId: req.params.id, games: bootstrap.games })
+    return res.json({
+      presentationId: req.params.id,
+      presentationGeneration: expectedBootstrap.presentationGeneration,
+      presentationRevision: normalized.updatedAt || '',
+      allocationGeneration: bootstrap.allocationGeneration,
+      sessionChanged: bootstrap.sessionChanged,
+      games: bootstrap.games,
+    })
   } catch (err) {
     return res.status(500).json({ error: err.message })
   }
@@ -101,7 +122,10 @@ router.get('/:id/present', async (req, res) => {
     let presentation = await readPresentablePresentation(req.params.id)
     if (!presentation) return res.status(404).json({ error: 'Not found' })
     presentation = normalizePptxImportedPresentationForRead(presentation)
-    let html = generateRevealHTML(normalizePresentationNotes(presentation))
+    let html = generateRevealHTML(normalizePresentationNotes(presentation), {
+      baseUrl: getServingBaseUrl(req),
+      educationView: req.query.live ? 'audience' : 'local',
+    })
     if (req.query.preview === 'true') {
       html = html.replace(
         '</head>',
@@ -135,21 +159,21 @@ router.post('/:id/save-as-template', validate(saveAsTemplateSchema), async (req,
       })
     }
     const now = new Date().toISOString()
-    const template = normalizePresentationNotes({
-      ...sanitizeClientEditableData(JSON.parse(JSON.stringify(pres))),
-      id: uuidv4(),
-      title: (req.body.title || pres.title || 'Untitled') + ' (template)',
-      isTemplate: true,
-      createdAt: now,
-      updatedAt: now,
-    })
+    const template = normalizePresentationGames(
+      normalizePresentationNotes({
+        ...sanitizeClientEditableData(JSON.parse(JSON.stringify(pres))),
+        id: uuidv4(),
+        title: (req.body.title || pres.title || 'Untitled') + ' (template)',
+        isTemplate: true,
+        createdAt: now,
+        updatedAt: now,
+      })
+    )
     templateOwner = { ownerType: 'template', ownerId: template.id }
     retentionAttempted = true
-    const retainedHead = await packageLifecycle.retainPackageHead(
-      templateOwner,
-      pres.id,
-      { ...(pres.pptxAggregateHead ? { expectedHead: pres.pptxAggregateHead } : {}) }
-    )
+    const retainedHead = await packageLifecycle.retainPackageHead(templateOwner, pres.id, {
+      ...(pres.pptxAggregateHead ? { expectedHead: pres.pptxAggregateHead } : {}),
+    })
     if (pres.pptxAggregateHead && !retainedHead) {
       throw Object.assign(new Error('Package-backed presentation head is unavailable'), {
         code: 'PRESENTATION_PACKAGE_HEAD_UNAVAILABLE',
@@ -168,13 +192,16 @@ router.post('/:id/save-as-template', validate(saveAsTemplateSchema), async (req,
       try {
         await packageLifecycle.releasePackageOwnerWithRetry(templateOwner)
       } catch (rollbackError) {
-        responseError = Object.assign(new AggregateError(
-          [err, rollbackError],
-          'Template creation and package retention rollback failed'
-        ), {
-          code: 'PACKAGE_LIFECYCLE_ROLLBACK_FAILED',
-          status: 503,
-        })
+        responseError = Object.assign(
+          new AggregateError(
+            [err, rollbackError],
+            'Template creation and package retention rollback failed'
+          ),
+          {
+            code: 'PACKAGE_LIFECYCLE_ROLLBACK_FAILED',
+            status: 503,
+          }
+        )
       }
     }
     res.status(responseError.status || 500).json({

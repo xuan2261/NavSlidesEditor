@@ -1,0 +1,306 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Multi-Stage Gear Train</title>
+    <style>
+      :root {
+        --bg: #121820;
+        --primary: #95adb6;
+        --text: #dce5e8;
+        --glass: rgba(20, 28, 38, 0.6);
+        --border: rgba(149, 173, 182, 0.2);
+        --accent: #64ffda;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 12px;
+        overflow: hidden;
+      }
+      h3 {
+        font-size: 1.1rem;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+        text-shadow: 0 0 10px rgba(100, 255, 218, 0.4);
+      }
+      .main {
+        display: flex;
+        gap: 16px;
+        width: 100%;
+        max-width: 920px;
+        height: 380px;
+        background: var(--glass);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        backdrop-filter: blur(10px);
+      }
+      .canvas-wrap {
+        flex: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      canvas {
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.25);
+      }
+      .panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 12px;
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        overflow-y: auto;
+      }
+      .panel h4 {
+        text-align: center;
+        color: var(--accent);
+        font-size: 0.85rem;
+        margin-bottom: 2px;
+      }
+      .slider-group label {
+        font-size: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .slider-group label span {
+        color: var(--accent);
+        font-weight: bold;
+      }
+      input[type='range'] {
+        width: 100%;
+        accent-color: var(--accent);
+        height: 5px;
+      }
+      .info-box {
+        padding: 6px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        background: rgba(0, 0, 0, 0.2);
+        display: flex;
+        justify-content: space-between;
+      }
+      .info-box .val {
+        font-family: monospace;
+        font-weight: bold;
+        color: var(--accent);
+      }
+      .gear-label {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+        border-radius: 4px;
+        text-align: center;
+      }
+      .g1 {
+        background: rgba(255, 107, 107, 0.15);
+        color: #ff6b6b;
+        border: 1px solid rgba(255, 107, 107, 0.2);
+      }
+      .g2 {
+        background: rgba(255, 217, 61, 0.15);
+        color: #ffd93d;
+        border: 1px solid rgba(255, 217, 61, 0.2);
+      }
+      .g3 {
+        background: rgba(78, 205, 196, 0.15);
+        color: #4ecdc4;
+        border: 1px solid rgba(78, 205, 196, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <h3>Multi-Stage Gear Train Simulator</h3>
+    <div class="main">
+      <div class="canvas-wrap"><canvas id="cv" width="540" height="350"></canvas></div>
+      <div class="panel">
+        <h4>Gear Teeth</h4>
+        <div class="gear-label g1">Gear 1 (Input/Driver)</div>
+        <div class="slider-group">
+          <label>Z₁ <span id="z1v">20</span></label
+          ><input type="range" id="z1" min="10" max="60" value="20" oninput="update()" />
+        </div>
+        <div class="gear-label g2">Gear 2 (Idler)</div>
+        <div class="slider-group">
+          <label>Z₂ <span id="z2v">40</span></label
+          ><input type="range" id="z2" min="10" max="60" value="40" oninput="update()" />
+        </div>
+        <div class="gear-label g3">Gear 3 (Output/Driven)</div>
+        <div class="slider-group">
+          <label>Z₃ <span id="z3v">30</span></label
+          ><input type="range" id="z3" min="10" max="60" value="30" oninput="update()" />
+        </div>
+        <div class="slider-group">
+          <label>ω₁ (input) <span id="w1v">60</span> rpm</label
+          ><input type="range" id="w1" min="10" max="200" value="60" oninput="update()" />
+        </div>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 4px 0"></div>
+        <h4>Results</h4>
+        <div class="info-box"><span>i₁₂ = Z₂/Z₁</span><span class="val" id="i12">—</span></div>
+        <div class="info-box"><span>i₂₃ = Z₃/Z₂</span><span class="val" id="i23">—</span></div>
+        <div class="info-box">
+          <span>i<sub>total</sub> = Z₃/Z₁</span><span class="val" id="itot">—</span>
+        </div>
+        <div class="info-box"><span>ω₃ (output)</span><span class="val" id="w3v">—</span></div>
+        <div class="info-box"><span>T₃/T₁ ratio</span><span class="val" id="tratio">—</span></div>
+      </div>
+    </div>
+    <script>
+      const cv = document.getElementById('cv'),
+        ctx = cv.getContext('2d')
+      let angle1 = 0
+      function drawGear(x, y, r, teeth, angle, color, label) {
+        const toothH = 8,
+          toothW = (Math.PI * 2) / teeth / 2
+        ctx.save()
+        ctx.translate(x, y)
+        ctx.rotate(angle)
+        // Gear body
+        ctx.beginPath()
+        for (let i = 0; i < teeth; i++) {
+          const a = (i * Math.PI * 2) / teeth
+          const a1 = a - toothW / 2,
+            a2 = a + toothW / 2
+          ctx.lineTo((r + toothH) * Math.cos(a1), (r + toothH) * Math.sin(a1))
+          ctx.lineTo((r + toothH) * Math.cos(a2), (r + toothH) * Math.sin(a2))
+          const a3 = a + Math.PI / teeth - toothW / 2,
+            a4 = a + Math.PI / teeth + toothW / 2
+          ctx.lineTo(r * Math.cos(a3), r * Math.sin(a3))
+          ctx.lineTo(r * Math.cos(a4), r * Math.sin(a4))
+        }
+        ctx.closePath()
+        ctx.fillStyle = color + '25'
+        ctx.fill()
+        ctx.strokeStyle = color
+        ctx.lineWidth = 2
+        ctx.stroke()
+        // Center hub
+        ctx.beginPath()
+        ctx.arc(0, 0, 8, 0, Math.PI * 2)
+        ctx.fillStyle = color
+        ctx.fill()
+        // Spokes
+        ctx.strokeStyle = color + '60'
+        ctx.lineWidth = 1.5
+        for (let i = 0; i < 4; i++) {
+          const a = (i * Math.PI) / 2
+          ctx.beginPath()
+          ctx.moveTo(10 * Math.cos(a), 10 * Math.sin(a))
+          ctx.lineTo((r - 5) * Math.cos(a), (r - 5) * Math.sin(a))
+          ctx.stroke()
+        }
+        ctx.restore()
+        // Label below
+        ctx.fillStyle = color
+        ctx.font = 'bold 12px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.fillText(label, x, y + r + 25)
+      }
+      function update() {
+        const Z1 = +document.getElementById('z1').value,
+          Z2 = +document.getElementById('z2').value,
+          Z3 = +document.getElementById('z3').value
+        const w1 = +document.getElementById('w1').value
+        document.getElementById('z1v').textContent = Z1
+        document.getElementById('z2v').textContent = Z2
+        document.getElementById('z3v').textContent = Z3
+        document.getElementById('w1v').textContent = w1
+        const i12 = Z2 / Z1,
+          i23 = Z3 / Z2,
+          itot = Z3 / Z1
+        const w3 = w1 / itot
+        document.getElementById('i12').textContent = i12.toFixed(2)
+        document.getElementById('i23').textContent = i23.toFixed(2)
+        document.getElementById('itot').textContent = itot.toFixed(2)
+        document.getElementById('w3v').textContent = w3.toFixed(1) + ' rpm'
+        document.getElementById('tratio').textContent = itot.toFixed(2)
+      }
+      function animate() {
+        const Z1 = +document.getElementById('z1').value,
+          Z2 = +document.getElementById('z2').value,
+          Z3 = +document.getElementById('z3').value
+        const w1 = +document.getElementById('w1').value
+        const sc = 1.8,
+          r1 = Z1 * sc,
+          r2 = Z2 * sc,
+          r3 = Z3 * sc
+        const speed = (w1 / 60) * 0.05
+        angle1 += speed
+        const angle2 = (-angle1 * Z1) / Z2
+        const angle3 = (-angle2 * Z2) / Z3
+        ctx.clearRect(0, 0, 540, 350)
+        // Positions: gears mesh
+        const x1 = 100,
+          y1 = 175
+        const x2 = x1 + r1 + r2 + 12,
+          y2 = 175
+        const x3 = x2 + r2 + r3 + 12,
+          y3 = 175
+        // Connection lines
+        ctx.setLineDash([4, 4])
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(x1, y1)
+        ctx.lineTo(x3, y3)
+        ctx.stroke()
+        ctx.setLineDash([])
+        drawGear(x1, y1, r1, Z1, angle1, '#ff6b6b', 'Z₁=' + Z1)
+        drawGear(x2, y2, r2, Z2, angle2, '#ffd93d', 'Z₂=' + Z2)
+        drawGear(x3, y3, r3, Z3, angle3, '#4ecdc4', 'Z₃=' + Z3)
+        // Speed labels
+        ctx.font = '10px monospace'
+        ctx.textAlign = 'center'
+        ctx.fillStyle = '#ff6b6b'
+        ctx.fillText(w1 + ' rpm', x1, y1 + r1 + 38)
+        ctx.fillStyle = '#ffd93d'
+        ctx.fillText(((w1 * Z1) / Z2).toFixed(0) + ' rpm', x2, y2 + r2 + 38)
+        ctx.fillStyle = '#4ecdc4'
+        ctx.fillText(((w1 * Z1) / Z3).toFixed(0) + ' rpm', x3, y3 + r3 + 38)
+        // Direction arrows
+        const dirs = [
+          { x: x1, y: y1, r: r1, cw: true, c: '#ff6b6b' },
+          { x: x2, y: y2, r: r2, cw: false, c: '#ffd93d' },
+          { x: x3, y: y3, r: r3, cw: true, c: '#4ecdc4' },
+        ]
+        dirs.forEach((d) => {
+          ctx.strokeStyle = d.c + '80'
+          ctx.lineWidth = 1.5
+          const sa = d.cw ? -0.5 : 0.5,
+            ea = d.cw ? 1 : 2.5
+          ctx.beginPath()
+          ctx.arc(d.x, d.y, d.r + 18, sa, ea)
+          ctx.stroke()
+          const ae = d.cw ? ea : sa
+          const ax = d.x + (d.r + 18) * Math.cos(ae),
+            ay = d.y + (d.r + 18) * Math.sin(ae)
+          ctx.fillStyle = d.c + '80'
+          ctx.beginPath()
+          ctx.arc(ax, ay, 3, 0, Math.PI * 2)
+          ctx.fill()
+        })
+        requestAnimationFrame(animate)
+      }
+      update()
+      animate()
+    </script>
+  </body>
+</html>

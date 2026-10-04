@@ -27,16 +27,18 @@ describe('stem simulation embed presets', () => {
   ])('builds a safe iframe for %s IDs', (provider, input, expectedUrl) => {
     const embed = buildStemSimulationEmbed(provider, input)
 
-    expect(embed.type).toBe('html')
-    expect(embed.embedKind).toBe('stem-simulation')
-    expect(embed.provider).toBe(provider)
+    const document = new DOMParser().parseFromString(embed.content, 'text/html')
+    const frame = document.querySelector('iframe')
+    expect(frame.src).toBe(expectedUrl)
+    expect(frame.sandbox?.value || frame.getAttribute('sandbox')).toBe('allow-scripts')
+    expect(frame.hasAttribute('allow')).toBe(false)
+    expect(embed.htmlDependencies).toEqual({
+      network: true,
+      offlineCapable: false,
+      resources: [{ url: expectedUrl, kind: 'frame' }],
+      dynamicResources: [],
+    })
     expect(embed.sourceUrl).toBe(expectedUrl)
-    expect(embed.content).toContain(`src="${expectedUrl}"`)
-    expect(embed.content).toContain(
-      'sandbox="allow-scripts allow-same-origin allow-forms allow-popups"'
-    )
-    expect(embed.content).toContain('referrerpolicy="no-referrer"')
-    expect(embed.content).toContain('loading="lazy"')
   })
 
   it('accepts allowed provider URLs', () => {

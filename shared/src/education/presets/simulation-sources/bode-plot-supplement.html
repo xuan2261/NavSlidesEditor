@@ -1,0 +1,321 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Pole-Zero Map</title>
+    <style>
+      :root {
+        --bg: #0a1a1a;
+        --primary: #4ecdc4;
+        --text: #d0fff5;
+        --glass: rgba(10, 40, 40, 0.6);
+        --border: rgba(78, 205, 196, 0.2);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 12px;
+        overflow: hidden;
+      }
+      h3 {
+        font-size: 1.1rem;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+        text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+      }
+      .main {
+        display: flex;
+        gap: 16px;
+        width: 100%;
+        max-width: 920px;
+        height: 380px;
+        background: var(--glass);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        backdrop-filter: blur(10px);
+      }
+      .canvas-wrap {
+        flex: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      canvas {
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.3);
+      }
+      .panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 12px;
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        overflow-y: auto;
+      }
+      .panel h4 {
+        text-align: center;
+        color: var(--primary);
+        font-size: 0.85rem;
+      }
+      .preset-btn {
+        background: rgba(78, 205, 196, 0.1);
+        border: 1px solid rgba(78, 205, 196, 0.3);
+        color: var(--text);
+        padding: 5px 10px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: left;
+      }
+      .preset-btn:hover {
+        background: rgba(78, 205, 196, 0.25);
+      }
+      .preset-btn.active {
+        background: var(--primary);
+        color: var(--bg);
+        font-weight: bold;
+      }
+      .info {
+        font-size: 0.75rem;
+        padding: 6px 8px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 6px;
+        line-height: 1.5;
+      }
+      .stability {
+        padding: 6px;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 0.85rem;
+      }
+      .stable {
+        background: rgba(0, 255, 135, 0.15);
+        color: #00ff87;
+        border: 1px solid rgba(0, 255, 135, 0.3);
+      }
+      .unstable {
+        background: rgba(255, 71, 87, 0.15);
+        color: #ff4757;
+        border: 1px solid rgba(255, 71, 87, 0.3);
+      }
+      .marginal {
+        background: rgba(255, 217, 61, 0.15);
+        color: #ffd93d;
+        border: 1px solid rgba(255, 217, 61, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <h3>Pole-Zero Map — s-Plane</h3>
+    <div class="main">
+      <div class="canvas-wrap"><canvas id="cv" width="480" height="350"></canvas></div>
+      <div class="panel">
+        <h4>System Presets</h4>
+        <button class="preset-btn active" onclick="setPreset(0, this)">
+          1st Order: 1/(s+2)<br /><small>1 pole at s=-2</small>
+        </button>
+        <button class="preset-btn" onclick="setPreset(1, this)">
+          2nd Order Stable<br /><small>poles: -1±j2</small>
+        </button>
+        <button class="preset-btn" onclick="setPreset(2, this)">
+          Underdamped<br /><small>poles: -0.5±j3</small>
+        </button>
+        <button class="preset-btn" onclick="setPreset(3, this)">
+          Marginally Stable<br /><small>poles: ±j2</small>
+        </button>
+        <button class="preset-btn" onclick="setPreset(4, this)">
+          Unstable<br /><small>poles: +1±j1</small>
+        </button>
+        <button class="preset-btn" onclick="setPreset(5, this)">
+          With Zeros<br /><small>pole:-2±j1, zero:-1</small>
+        </button>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 4px 0"></div>
+        <div id="stability" class="stability stable">✓ STABLE</div>
+        <div class="info" id="info">Poles in left half-plane → stable system</div>
+      </div>
+    </div>
+    <script>
+      const presets = [
+        { poles: [{ r: -2, i: 0 }], zeros: [], name: '1st Order' },
+        {
+          poles: [
+            { r: -1, i: 2 },
+            { r: -1, i: -2 },
+          ],
+          zeros: [],
+          name: '2nd Order Stable',
+        },
+        {
+          poles: [
+            { r: -0.5, i: 3 },
+            { r: -0.5, i: -3 },
+          ],
+          zeros: [],
+          name: 'Underdamped',
+        },
+        {
+          poles: [
+            { r: 0, i: 2 },
+            { r: 0, i: -2 },
+          ],
+          zeros: [],
+          name: 'Marginally Stable',
+        },
+        {
+          poles: [
+            { r: 1, i: 1 },
+            { r: 1, i: -1 },
+          ],
+          zeros: [],
+          name: 'Unstable',
+        },
+        {
+          poles: [
+            { r: -2, i: 1 },
+            { r: -2, i: -1 },
+          ],
+          zeros: [{ r: -1, i: 0 }],
+          name: 'With Zeros',
+        },
+      ]
+      let current = presets[0]
+      const cv = document.getElementById('cv'),
+        ctx = cv.getContext('2d')
+      function setPreset(idx, btn) {
+        document.querySelectorAll('.preset-btn').forEach((b) => b.classList.remove('active'))
+        btn.classList.add('active')
+        current = presets[idx]
+        draw()
+      }
+      function draw() {
+        ctx.clearRect(0, 0, 480, 350)
+        const cx = 240,
+          cy = 175,
+          sc = 40
+        // Grid
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)'
+        ctx.lineWidth = 1
+        for (let x = -5; x <= 5; x++) {
+          ctx.beginPath()
+          ctx.moveTo(cx + x * sc, 0)
+          ctx.lineTo(cx + x * sc, 350)
+          ctx.stroke()
+        }
+        for (let y = -4; y <= 4; y++) {
+          ctx.beginPath()
+          ctx.moveTo(0, cy + y * sc)
+          ctx.lineTo(480, cy + y * sc)
+          ctx.stroke()
+        }
+        // Axes
+        ctx.strokeStyle = 'rgba(255,255,255,0.25)'
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        ctx.moveTo(0, cy)
+        ctx.lineTo(480, cy)
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.moveTo(cx, 0)
+        ctx.lineTo(cx, 350)
+        ctx.stroke()
+        // Left half shading (stable region)
+        ctx.fillStyle = 'rgba(0,255,135,0.03)'
+        ctx.fillRect(0, 0, cx, 350)
+        // Right half shading (unstable)
+        ctx.fillStyle = 'rgba(255,71,87,0.03)'
+        ctx.fillRect(cx, 0, 240, 350)
+        // Labels
+        ctx.fillStyle = 'rgba(255,255,255,0.4)'
+        ctx.font = '11px sans-serif'
+        ctx.fillText('σ (Real)', 440, cy - 8)
+        ctx.fillText('jω (Imag)', cx + 6, 14)
+        ctx.fillStyle = 'rgba(0,255,135,0.2)'
+        ctx.font = '10px sans-serif'
+        ctx.fillText('Stable', 20, 20)
+        ctx.fillStyle = 'rgba(255,71,87,0.2)'
+        ctx.fillText('Unstable', 430, 20)
+        for (let x = -5; x <= 5; x++)
+          if (x !== 0) {
+            ctx.fillStyle = 'rgba(255,255,255,0.3)'
+            ctx.font = '9px sans-serif'
+            ctx.fillText(x, cx + x * sc - 3, cy + 14)
+          }
+        for (let y = -4; y <= 4; y++)
+          if (y !== 0) {
+            ctx.fillStyle = 'rgba(255,255,255,0.3)'
+            ctx.font = '9px sans-serif'
+            ctx.fillText((y > 0 ? '-' : '') + 'j' + Math.abs(y), cx + 6, cy + y * sc + 3)
+          }
+        // Draw zeros (circles)
+        current.zeros.forEach((z) => {
+          ctx.strokeStyle = '#4ecdc4'
+          ctx.lineWidth = 2.5
+          ctx.beginPath()
+          ctx.arc(cx + z.r * sc, cy - z.i * sc, 8, 0, Math.PI * 2)
+          ctx.stroke()
+        })
+        // Draw poles (crosses)
+        current.poles.forEach((p) => {
+          const px2 = cx + p.r * sc,
+            py2 = cy - p.i * sc
+          ctx.strokeStyle = '#ff4757'
+          ctx.lineWidth = 2.5
+          ctx.beginPath()
+          ctx.moveTo(px2 - 7, py2 - 7)
+          ctx.lineTo(px2 + 7, py2 + 7)
+          ctx.stroke()
+          ctx.beginPath()
+          ctx.moveTo(px2 + 7, py2 - 7)
+          ctx.lineTo(px2 - 7, py2 + 7)
+          ctx.stroke()
+          // Glow
+          ctx.shadowColor = 'rgba(255,71,87,0.5)'
+          ctx.shadowBlur = 8
+          ctx.beginPath()
+          ctx.arc(px2, py2, 1, 0, Math.PI * 2)
+          ctx.fillStyle = '#ff4757'
+          ctx.fill()
+          ctx.shadowBlur = 0
+        })
+        // Stability check
+        const stable = current.poles.every((p) => p.r < 0)
+        const marginal = current.poles.some((p) => p.r === 0) && !current.poles.some((p) => p.r > 0)
+        const el = document.getElementById('stability')
+        const info = document.getElementById('info')
+        if (stable) {
+          el.className = 'stability stable'
+          el.textContent = '✓ STABLE'
+          info.textContent = 'All poles in LHP (Re < 0) → System is asymptotically stable'
+        } else if (marginal) {
+          el.className = 'stability marginal'
+          el.textContent = '⚠ MARGINALLY STABLE'
+          info.textContent = 'Poles on jω axis → Bounded output, sustained oscillation'
+        } else {
+          el.className = 'stability unstable'
+          el.textContent = '✗ UNSTABLE'
+          info.textContent = 'Poles in RHP (Re > 0) → Output grows unbounded'
+        }
+      }
+      draw()
+    </script>
+  </body>
+</html>

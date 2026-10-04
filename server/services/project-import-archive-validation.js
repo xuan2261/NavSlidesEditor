@@ -4,9 +4,27 @@ const { createPresentationSchema } = require('../middleware/schemas')
 const { getProjectImportContentErrors } = require('revealjs-shared')
 
 const SAFE_MEDIA_EXTENSIONS = new Set([
-  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico',
-  '.mp4', '.webm', '.ogg', '.ogv', '.mov', '.avi',
-  '.mp3', '.wav', '.flac', '.aac', '.m4a', '.pdf', '.vtt',
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.gif',
+  '.webp',
+  '.svg',
+  '.bmp',
+  '.ico',
+  '.mp4',
+  '.webm',
+  '.ogg',
+  '.ogv',
+  '.mov',
+  '.avi',
+  '.mp3',
+  '.wav',
+  '.flac',
+  '.aac',
+  '.m4a',
+  '.pdf',
+  '.vtt',
 ])
 
 function importError(code, message, status = 400, details = {}) {
@@ -51,11 +69,23 @@ function inspectPresentation(presentation, limits) {
   }
   walk(presentation)
   visitSlides(presentation.slides)
-  if (maxString > limits.maxStringBytes || slides > limits.maxSlides || elements > limits.maxElements) {
-    throw importError('PROJECT_PRESENTATION_BUDGET_EXCEEDED', 'Presentation exceeds content budget', 413)
+  if (
+    maxString > limits.maxStringBytes ||
+    slides > limits.maxSlides ||
+    elements > limits.maxElements
+  ) {
+    throw importError(
+      'PROJECT_PRESENTATION_BUDGET_EXCEEDED',
+      'Presentation exceeds content budget',
+      413
+    )
   }
-  if (!createPresentationSchema.safeParse(presentation).success) {
-    throw importError('PROJECT_PRESENTATION_INVALID', 'Presentation schema is invalid')
+  const admitted = createPresentationSchema.safeParse(presentation)
+  if (!admitted.success) {
+    throw importError(
+      'PROJECT_PRESENTATION_INVALID',
+      admitted.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; ')
+    )
   }
   const contentErrors = getProjectImportContentErrors(presentation)
   if (contentErrors.length) {
@@ -67,14 +97,15 @@ function activeContentInventory(presentation) {
   const inventory = new Set()
   if (presentation?.customCSS) inventory.add('custom-css')
   if (presentation?.customJS || presentation?.customScript) inventory.add('custom-javascript')
-  const visit = (slides) => (slides || []).forEach((slide) => {
-    ;(slide?.elements || []).forEach((element) => {
-      if (element?.type === 'html' && String(element.content || element.html || '').trim()) {
-        inventory.add('html-element')
-      }
+  const visit = (slides) =>
+    (slides || []).forEach((slide) => {
+      ;(slide?.elements || []).forEach((element) => {
+        if (element?.type === 'html' && String(element.content || element.html || '').trim()) {
+          inventory.add('html-element')
+        }
+      })
+      visit(slide?.children)
     })
-    visit(slide?.children)
-  })
   visit(presentation?.slides)
   return [...inventory].sort()
 }

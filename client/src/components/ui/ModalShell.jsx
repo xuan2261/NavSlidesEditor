@@ -22,9 +22,7 @@ function getFocusableElements(root) {
 
 export function useModalFocusTrap({ initialFocusRef, autoFocus = true } = {}) {
   const dialogRef = useRef(null)
-  const previousFocusRef = useRef(
-    typeof document === 'undefined' ? null : document.activeElement
-  )
+  const previousFocusRef = useRef(typeof document === 'undefined' ? null : document.activeElement)
 
   useEffect(() => {
     const previousFocus = previousFocusRef.current
@@ -93,7 +91,13 @@ export function ModalShell({
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      onKeyDown={handleFocusTrapKeyDown}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && !event.defaultPrevented) {
+          event.preventDefault()
+          event.stopPropagation()
+          handleClose()
+        } else handleFocusTrapKeyDown(event)
+      }}
     >
       <div
         ref={dialogRef}

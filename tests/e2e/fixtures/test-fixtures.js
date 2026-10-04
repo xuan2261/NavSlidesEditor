@@ -8,12 +8,12 @@ export function getBaseUrl() {
   return process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:4173'
 }
 
-function assertLoopback() {
+function assertLoopback(apiBase = API_BASE) {
   const baseUrl = getBaseUrl()
-  const apiBaseUrl = API_BASE.startsWith('http') ? API_BASE : baseUrl
+  const apiBaseUrl = apiBase.startsWith('http') ? apiBase : baseUrl
   if (!ALLOWED_BASE_URL.test(baseUrl) || !ALLOWED_BASE_URL.test(apiBaseUrl)) {
     throw new Error(
-      `Refusing API write: PLAYWRIGHT_TEST_BASE_URL=${baseUrl}, API_BASE=${API_BASE} is not a loopback address. ` +
+      `Refusing API write: PLAYWRIGHT_TEST_BASE_URL=${baseUrl}, API_BASE=${apiBase} is not a loopback address. ` +
         `E2E tests perform destructive ops (create/update/delete) and must never run against shared/prod.`
     )
   }
@@ -38,15 +38,22 @@ async function withApiRetry(action, attempts = 5) {
 /**
  * Helper: create a presentation via API (bypasses UI).
  */
-export async function apiCreatePresentation(request, title = 'E2E Test Presentation') {
-  assertLoopback()
-  const res = await withApiRetry(() => request.post(`${API_BASE}/presentations`, {
-    data: {
-      title,
-      theme: 'black',
-      transition: 'slide',
-    },
-  }))
+export async function apiCreatePresentation(
+  request,
+  title = 'E2E Test Presentation',
+  apiBase = API_BASE
+) {
+  assertLoopback(apiBase)
+  const res = await withApiRetry(() =>
+    request.post(`${apiBase}/presentations`, {
+      headers: { connection: 'close' },
+      data: {
+        title,
+        theme: 'black',
+        transition: 'slide',
+      },
+    })
+  )
   if (!res.ok()) {
     console.error('API Error:', res.status(), await res.text())
   }
@@ -57,20 +64,22 @@ export async function apiCreatePresentation(request, title = 'E2E Test Presentat
 /**
  * Helper: delete presentation permanently via API.
  */
-export async function apiDeletePresentation(request, id) {
-  assertLoopback()
+export async function apiDeletePresentation(request, id, apiBase = API_BASE) {
+  assertLoopback(apiBase)
   if (!id) return
-  const softDelete = await withApiRetry(() => request.delete(`${API_BASE}/presentations/${id}`))
+  const softDelete = await withApiRetry(() =>
+    request.delete(`${apiBase}/presentations/${id}`, {
+      headers: { connection: 'close' },
+    })
+  )
   const hardDelete = await withApiRetry(() =>
-    request.delete(`${API_BASE}/presentations/${id}/permanent`)
+    request.delete(`${apiBase}/presentations/${id}/permanent`, { headers: { connection: 'close' } })
   )
   const acceptable = new Set([200, 404])
   const softStatus = responseStatus(softDelete)
   const hardStatus = responseStatus(hardDelete)
   if (!acceptable.has(softStatus) || !acceptable.has(hardStatus)) {
-    throw new Error(
-      `Cleanup failed for ${id}: soft=${softStatus} hard=${hardStatus}`
-    )
+    throw new Error(`Cleanup failed for ${id}: soft=${softStatus} hard=${hardStatus}`)
   }
 }
 
@@ -79,7 +88,11 @@ export async function apiDeletePresentation(request, id) {
  */
 export async function apiGetPresentation(request, id) {
   assertLoopback()
-  const res = await withApiRetry(() => request.get(`${API_BASE}/presentations/${id}`))
+  const res = await withApiRetry(() =>
+    request.get(`${API_BASE}/presentations/${id}`, {
+      headers: { connection: 'close' },
+    })
+  )
   if (!res.ok()) {
     throw new Error(`Failed to fetch presentation ${id}: ${res.status()} ${await res.text()}`)
   }
@@ -89,9 +102,14 @@ export async function apiGetPresentation(request, id) {
 /**
  * Helper: update a presentation.
  */
-export async function apiUpdatePresentation(request, id, data) {
-  assertLoopback()
-  const res = await withApiRetry(() => request.put(`${API_BASE}/presentations/${id}`, { data }))
+export async function apiUpdatePresentation(request, id, data, apiBase = API_BASE) {
+  assertLoopback(apiBase)
+  const res = await withApiRetry(() =>
+    request.put(`${apiBase}/presentations/${id}`, {
+      data,
+      headers: { connection: 'close' },
+    })
+  )
   expect(res.ok()).toBeTruthy()
   return res.json()
 }
@@ -101,9 +119,12 @@ export async function apiUpdatePresentation(request, id, data) {
  */
 export async function apiCreateShareLink(request, id) {
   assertLoopback()
-  const res = await withApiRetry(() => request.post(`${API_BASE}/presentations/${id}/share`, {
-    data: { name: 'E2E Test Link' },
-  }))
+  const res = await withApiRetry(() =>
+    request.post(`${API_BASE}/presentations/${id}/share`, {
+      headers: { connection: 'close' },
+      data: { name: 'E2E Test Link' },
+    })
+  )
   expect(res.ok()).toBeTruthy()
   return res.json()
 }
@@ -113,9 +134,12 @@ export async function apiCreateShareLink(request, id) {
  */
 export async function apiCreateShareLinkWithPassword(request, id, password, opts = {}) {
   assertLoopback()
-  const res = await withApiRetry(() => request.post(`${API_BASE}/presentations/${id}/share`, {
-    data: { name: opts.name || 'E2E Password Link', password, expiresInDays: opts.expiresInDays },
-  }))
+  const res = await withApiRetry(() =>
+    request.post(`${API_BASE}/presentations/${id}/share`, {
+      headers: { connection: 'close' },
+      data: { name: opts.name || 'E2E Password Link', password, expiresInDays: opts.expiresInDays },
+    })
+  )
   expect(res.ok()).toBeTruthy()
   return res.json()
 }
@@ -125,7 +149,11 @@ export async function apiCreateShareLinkWithPassword(request, id, password, opts
  */
 export async function apiRevokeShareToken(request, token) {
   assertLoopback()
-  const res = await withApiRetry(() => request.delete(`${API_BASE}/shares/${token}`))
+  const res = await withApiRetry(() =>
+    request.delete(`${API_BASE}/shares/${token}`, {
+      headers: { connection: 'close' },
+    })
+  )
   return res
 }
 
@@ -134,9 +162,12 @@ export async function apiRevokeShareToken(request, token) {
  */
 export async function apiCreateSnapshot(request, id, name = 'E2E Snapshot') {
   assertLoopback()
-  const res = await withApiRetry(() => request.post(`${API_BASE}/presentations/${id}/snapshot`, {
-    data: { name },
-  }))
+  const res = await withApiRetry(() =>
+    request.post(`${API_BASE}/presentations/${id}/snapshot`, {
+      headers: { connection: 'close' },
+      data: { name },
+    })
+  )
   expect(res.ok()).toBeTruthy()
   return res.json()
 }

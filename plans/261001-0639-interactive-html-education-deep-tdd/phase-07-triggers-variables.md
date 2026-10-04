@@ -1,18 +1,24 @@
 ---
 phase: 7
-title: "Sáu click actions, visibility và biến điểm giới hạn"
-status: pending
+title: 'Sáu click actions, visibility và biến điểm giới hạn'
+status: in_progress
 priority: P1
 dependencies: [4]
 ---
 
 # Phase 07 — Triggers và variables
 
+## Execution progress
+
+Triggers/variables implementation slice đã bàn giao. Final receipts còn mở cho authored action/reference roundtrip, effective master/child/fragment visibility, numeric bindings/reset và generated/Share/file keyboard/touch; eligible live authority không được suy từ local variables. [Root progress](./plan.md#execution-progress) giữ current qualification boundary; checklist/FailureProtocol không thay đổi.
+
 ## Goal
+
 Tác giả gắn được show/hide/toggle/score-add/score-subtract/reset-slide và quan sát kết quả trong tài liệu Reveal thật, không cần eval hoặc generic workflow engine.
 Giữ action navigation hiện có; biến điểm có contract để scoreboard phase 08 bind, không biến mọi block local thành multiplayer.
 
 ## Context/evidence
+
 - `C:/Work/NavSlidesEditor/shared/src/element-actions.js:32-57` normalize kind bằng allowlist và reject field không hợp lệ; mở rộng đúng boundary này.
 - `C:/Work/NavSlidesEditor/client/src/components/properties/action-controls.jsx:39-58` begin chỉ seed slide/URL và luôn hiện new-window cho nhiều kind; phải tách field theo kind.
 - `C:/Work/NavSlidesEditor/shared/src/htmlGenerator.js:195-223` runtime navigation gắn cả click/key; `:34-43,328-349` resolve master và child trước render.
@@ -23,6 +29,7 @@ Giữ action navigation hiện có; biến điểm có contract để scoreboard
 - `C:/Work/NavSlidesEditor/shared/tests/action-runtime.test.js:7-14` đang assert source/wording; bỏ test này khi chuyển sang proof runtime behavior, không re-pin chuỗi.
 
 ## Deep scout gate
+
 - Mỗi lần executor bắt đầu phase phải grep lại citations, glob các callers action controls/copy/duplicate/detach/layout và đọc code paths hiện tại.
 - Trace event thật: native button key có thể sinh click, delegated key hiện tại có thể thực thi đôi; RED phải tái hiện trước khi sửa.
 - Kiểm renderers nhận wrap vào node nào và sibling action overlay; visibility phải áp lên cả content/action surface, không chừa hotspot vô hình vẫn active.
@@ -30,6 +37,7 @@ Giữ action navigation hiện có; biến điểm có contract để scoreboard
 - Scout current Presentation persistence/validation và history/undo; không thêm process/global singleton hoặc thay lưu runtime score vào deck JSON.
 
 ## Requirements
+
 - Chỉ sáu action mới `show`, `hide`, `toggle`, `score-add`, `score-subtract`, `reset-slide`; không play-media, selector expression, JS, conditional chain.
 - `initialVisibility` dành cho target có thể chơi; editor `hidden` vẫn bỏ khỏi export và không thể show target không tồn tại.
 - Fragment gate AND trigger visibility; Show không reveal fragment chưa đến, Hide không xóa progress của game.
@@ -38,6 +46,7 @@ Giữ action navigation hiện có; biến điểm có contract để scoreboard
 - Reset slide chỉ reset state/lifecycle của slide đang effective; không reset deck variables trừ author bật tùy chọn rõ ràng.
 
 ## Architecture/contracts
+
 - Action payload visibility `{kind:'show'|'hide'|'toggle',targetElementId,label?,hotspot?}`; target chỉ element ID trong effective slide, không CSS selector.
 - Score payload `{kind:'score-add'|'score-subtract',variableId,amount,label?,hotspot?}`; amount finite dương ≤1,000,000, chỉ +/- theo kind.
 - Reset payload `{kind:'reset-slide',resetVariables?:boolean,label?,hotspot?}`; default false, true reset deck variables về authored initial values và UI cảnh báo phạm vi deck.
@@ -65,41 +74,44 @@ Giữ action navigation hiện có; biến điểm có contract để scoreboard
 - Data flow: authored config → shared validation/normalization → scoped ID remap → DOM activation → bounded presenter-document variable reducer → bindings/textContent/ARIA; eligible game commands follow their separate transport authority.
 
 ## File inventory
-| Full path | Action / evidence | Ownership, size và test impact |
-| --- | --- | --- |
-| C:/Work/NavSlidesEditor/shared/src/education/interaction-variables.js | CREATE proposed | Numeric normalize/reducer/store contract; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/education/interaction-actions.js | CREATE proposed | Sáu reducers/actions, không eval; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/education/interaction-references.js | CREATE proposed | Remap/scoped IDs thuần dùng chung; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/interaction-presenter.js | CREATE proposed | Delegation/visibility/reset DOM; <200 LOC mỗi split |
-| C:/Work/NavSlidesEditor/client/src/components/properties/interaction-variable-controls.jsx | CREATE proposed | Add/edit/delete variable, bounds và references; <200 LOC |
-| C:/Work/NavSlidesEditor/shared/tests/education/interaction-actions.test.js | CREATE proposed | Bounded values, target scope, visibility/reset invariants |
-| C:/Work/NavSlidesEditor/shared/tests/education/interaction-references.test.js | CREATE proposed | Clipboard/duplicate/master remapping |
-| C:/Work/NavSlidesEditor/client/src/components/properties/interaction-variable-controls.test.jsx | CREATE proposed | Field edit/save/reload, invalid draft feedback |
-| C:/Work/NavSlidesEditor/tests/e2e/games/interaction-actions.spec.js | CREATE proposed | Six actions qua UI và generated browser; ≤200 LOC |
-| C:/Work/NavSlidesEditor/tests/e2e/games/interaction-actions-file.spec.js | CREATE proposed | Portable file cùng actions, blocked network; ≤200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/element-actions.js | MODIFY known :32 | Integration owner mở strict kind/field schemas serial |
-| C:/Work/NavSlidesEditor/shared/src/types/presentation.js | MODIFY known :17-43,332 | Integration owner thêm action/visibility/variables contract |
-| C:/Work/NavSlidesEditor/server/middleware/schemas.js | MODIFY known :107-122 | Integration owner07; same shared interactionVariables validator in create/update schemas, no passthrough bypass |
-| C:/Work/NavSlidesEditor/server/routes/presentations.js | MODIFY known | Validate complete merged deck/action/binding references before persisting partial updates; do not validate PATCH against an incomplete document |
-| C:/Work/NavSlidesEditor/server/services/project-import-archive-validation.js | MODIFY known :57-60 | Existing create-schema admission consumes same field/reference validator; no duplicated variable schema |
-| C:/Work/NavSlidesEditor/server/routes/interaction-variable-validation.test.js | CREATE proposed | Real create/update/import valid32, invalid33/duplicate/nonfinite/reversed bounds and unknown references; <=200 LOC |
-| C:/Work/NavSlidesEditor/shared/src/htmlGenerator.js | MODIFY known :195,281,344 | Integration owner nối one runtime dispatch, section scope |
-| C:/Work/NavSlidesEditor/shared/src/element-renderers.js | MODIFY known :1036 | Integration owner universal ID + surface association |
-| C:/Work/NavSlidesEditor/shared/src/slide-layouts.js | MODIFY known :31,85 | Integration owner master/detach reference normalization |
-| C:/Work/NavSlidesEditor/shared/src/education/browser/runtime-entry.js | MODIFY proposed phase 04 | Integration owner import controller serial |
-| C:/Work/NavSlidesEditor/shared/src/education/runtime-session.js | MODIFY proposed phase 04 | Integration owner deck store lifetime và scoped reset |
-| C:/Work/NavSlidesEditor/client/src/components/properties/action-controls.jsx | MODIFY known :39 | Integration owner nối fields đúng kind, initialVisibility |
-| C:/Work/NavSlidesEditor/client/src/components/PropertiesPanel.jsx | MODIFY known :206 | Integration owner compose action/variable controls sau fresh scout |
-| C:/Work/NavSlidesEditor/client/src/hooks/use-clipboard.js | MODIFY known :54,105 | Integrator reuse ID map cho action refs |
-| C:/Work/NavSlidesEditor/client/src/hooks/slide-operation-helpers.js | MODIFY known :12 | Integrator recursive clone remap |
-| C:/Work/NavSlidesEditor/client/src/hooks/use-slide-operations.js | MODIFY known :427 | Integrator duplicate child dùng same helper |
-| C:/Work/NavSlidesEditor/shared/tests/action-runtime.test.js | DELETE known :7-14 | Source/wording assertions obsolete; replacement hành vi ở proposed tests |
-| C:/Work/NavSlidesEditor/docs/project-changelog.md | MODIFY known | Sau successful smoke, không sửa trong planning |
-| C:/Work/NavSlidesEditor/docs/feature-coverage-matrix.md | GENERATED known | Không hand-edit; phase 16 regenerate từ fresh receipts và đúng scope |
-| C:/Work/NavSlidesEditor/scripts/feature-inventory/feature-manifest.json | MODIFY known :125 | Integration owner khai báo proposed game.interactions capability serial |
+
+| Full path                                                                                       | Action / evidence         | Ownership, size và test impact                                                                                                                  |
+| ----------------------------------------------------------------------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| C:/Work/NavSlidesEditor/shared/src/education/interaction-variables.js                           | CREATE proposed           | Numeric normalize/reducer/store contract; <200 LOC                                                                                              |
+| C:/Work/NavSlidesEditor/shared/src/education/interaction-actions.js                             | CREATE proposed           | Sáu reducers/actions, không eval; <200 LOC                                                                                                      |
+| C:/Work/NavSlidesEditor/shared/src/education/interaction-references.js                          | CREATE proposed           | Remap/scoped IDs thuần dùng chung; <200 LOC                                                                                                     |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/interaction-presenter.js                   | CREATE proposed           | Delegation/visibility/reset DOM; <200 LOC mỗi split                                                                                             |
+| C:/Work/NavSlidesEditor/client/src/components/properties/interaction-variable-controls.jsx      | CREATE proposed           | Add/edit/delete variable, bounds và references; <200 LOC                                                                                        |
+| C:/Work/NavSlidesEditor/shared/tests/education/interaction-actions.test.js                      | CREATE proposed           | Bounded values, target scope, visibility/reset invariants                                                                                       |
+| C:/Work/NavSlidesEditor/shared/tests/education/interaction-references.test.js                   | CREATE proposed           | Clipboard/duplicate/master remapping                                                                                                            |
+| C:/Work/NavSlidesEditor/client/src/components/properties/interaction-variable-controls.test.jsx | CREATE proposed           | Field edit/save/reload, invalid draft feedback                                                                                                  |
+| C:/Work/NavSlidesEditor/tests/e2e/games/interaction-actions.spec.js                             | CREATE proposed           | Six actions qua UI và generated browser; ≤200 LOC                                                                                               |
+| C:/Work/NavSlidesEditor/tests/e2e/games/interaction-actions-file.spec.js                        | CREATE proposed           | Portable file cùng actions, blocked network; ≤200 LOC                                                                                           |
+| C:/Work/NavSlidesEditor/shared/src/element-actions.js                                           | MODIFY known :32          | Integration owner mở strict kind/field schemas serial                                                                                           |
+| C:/Work/NavSlidesEditor/shared/src/types/presentation.js                                        | MODIFY known :17-43,332   | Integration owner thêm action/visibility/variables contract                                                                                     |
+| C:/Work/NavSlidesEditor/server/middleware/schemas.js                                            | MODIFY known :107-122     | Integration owner07; same shared interactionVariables validator in create/update schemas, no passthrough bypass                                 |
+| C:/Work/NavSlidesEditor/server/routes/presentations.js                                          | MODIFY known              | Validate complete merged deck/action/binding references before persisting partial updates; do not validate PATCH against an incomplete document |
+| C:/Work/NavSlidesEditor/server/services/project-import-archive-validation.js                    | MODIFY known :57-60       | Existing create-schema admission consumes same field/reference validator; no duplicated variable schema                                         |
+| C:/Work/NavSlidesEditor/server/routes/interaction-variable-validation.test.js                   | CREATE proposed           | Real create/update/import valid32, invalid33/duplicate/nonfinite/reversed bounds and unknown references; <=200 LOC                              |
+| C:/Work/NavSlidesEditor/shared/src/htmlGenerator.js                                             | MODIFY known :195,281,344 | Integration owner nối one runtime dispatch, section scope                                                                                       |
+| C:/Work/NavSlidesEditor/shared/src/element-renderers.js                                         | MODIFY known :1036        | Integration owner universal ID + surface association                                                                                            |
+| C:/Work/NavSlidesEditor/shared/src/slide-layouts.js                                             | MODIFY known :31,85       | Integration owner master/detach reference normalization                                                                                         |
+| C:/Work/NavSlidesEditor/shared/src/education/browser/runtime-entry.js                           | MODIFY proposed phase 04  | Integration owner import controller serial                                                                                                      |
+| C:/Work/NavSlidesEditor/shared/src/education/runtime-session.js                                 | MODIFY proposed phase 04  | Integration owner deck store lifetime và scoped reset                                                                                           |
+| C:/Work/NavSlidesEditor/client/src/components/properties/action-controls.jsx                    | MODIFY known :39          | Integration owner nối fields đúng kind, initialVisibility                                                                                       |
+| C:/Work/NavSlidesEditor/client/src/components/PropertiesPanel.jsx                               | MODIFY known :206         | Integration owner compose action/variable controls sau fresh scout                                                                              |
+| C:/Work/NavSlidesEditor/client/src/hooks/use-clipboard.js                                       | MODIFY known :54,105      | Integrator reuse ID map cho action refs                                                                                                         |
+| C:/Work/NavSlidesEditor/client/src/hooks/slide-operation-helpers.js                             | MODIFY known :12          | Integrator recursive clone remap                                                                                                                |
+| C:/Work/NavSlidesEditor/client/src/hooks/use-slide-operations.js                                | MODIFY known :427         | Integrator duplicate child dùng same helper                                                                                                     |
+| C:/Work/NavSlidesEditor/shared/tests/action-runtime.test.js                                     | DELETE known :7-14        | Source/wording assertions obsolete; replacement hành vi ở proposed tests                                                                        |
+| C:/Work/NavSlidesEditor/docs/project-changelog.md                                               | MODIFY known              | Sau successful smoke, không sửa trong planning                                                                                                  |
+| C:/Work/NavSlidesEditor/docs/feature-coverage-matrix.md                                         | GENERATED known           | Không hand-edit; phase 16 regenerate từ fresh receipts và đúng scope                                                                            |
+| C:/Work/NavSlidesEditor/scripts/feature-inventory/feature-manifest.json                         | MODIFY known :125         | Integration owner khai báo proposed game.interactions capability serial                                                                         |
 
 ## Tests Before — RED
+
 Không chạy gate lúc lập plan. CREATE tests proposed rồi thực thi RED khi code được phép, ghi expected/observed thực.
+
 - Click, Enter và Space mỗi lần đúng một delta; held repeat không double-apply synthetic click; editor click không thực thi.
 - Target initial hidden + unrevealed fragment: Show vẫn invisible; reveal fragment mới thấy, Hide rồi fragment change không tự hiện lại.
 - Hidden editor không có target; stale ID không trúng ancestor/child/master slide khác; source button hidden không còn focus/click surface.
@@ -111,6 +123,7 @@ Không chạy gate lúc lập plan. CREATE tests proposed rồi thực thi RED k
 - Exit/return giữ activity progress; pending timeout generation cũ sau reset không đổi target hay cộng điểm.
 
 ## Implementation steps
+
 1. Tạo RED reducer/reference/browser fixtures với hai top-level, một vertical child và cùng master; ghi geometry/visibility/counter trước và sau actions.
 2. Implement shared variable normalization/validation and safe action payloads; integrate API create/update schemas and project admission, validate complete merged references before save. Preserve eight old actions and reject incompatible fields, no duplicate server-only schema.
 3. Implement reference helper dùng ID map hiện có; trace và migrate từng caller liệt kê trên, kiểm partial copy và detach bằng JSON roundtrip.
@@ -118,25 +131,30 @@ Không chạy gate lúc lập plan. CREATE tests proposed rồi thực thi RED k
 5. Implement deck variable lifetime, subscriber cleanup và scoped reset generation trong runtime phase 04; xử lý missing target bằng accessible feedback.
 6. Integration owner nối UI authoring variable/visibility/target controls và runtime entry tuần tự; chọn target chỉ từ effective slide, không nhập selector.
 7. Chạy focused proof, actual smoke; sau thành công cập nhật docs/changelog và chuyển binding/authority contract cho phase 08/12/13.
-Sau smoke, changelog ghi behavior đã exercise; manifest/test tags proposed `[cap:game.interactions]` do integration owner nối serial. `C:/Work/NavSlidesEditor/scripts/feature-inventory/build-matrix.mjs:145,188-191` chỉ sinh editor-core matrix; gửi receipts phase 16, không hand-edit output hoặc đổi game scope để né gate.
+   Sau smoke, changelog ghi behavior đã exercise; manifest/test tags proposed `[cap:game.interactions]` do integration owner nối serial. `C:/Work/NavSlidesEditor/scripts/feature-inventory/build-matrix.mjs:145,188-191` chỉ sinh editor-core matrix; gửi receipts phase 16, không hand-edit output hoặc đổi game scope để né gate.
 
 ## Refactor
+
 Một delegated controller mỗi document, một subscription mỗi binding; destroy phải unsubscribe, không thêm listener khi mỗi slide visit.
 Chuyển action runtime duplicate sang controller chung, giữ navigation API Reveal; xóa source-text assertions và obsolete inline branch sau consumer cutover.
 
 ## Tests After — GREEN
+
 Chạy lại RED behavior cases với runtime thật; DOM integration dùng document/Reveal lifecycle thật ở E2E, clock fake chỉ cho isolated reducer/timer cleanup.
 Verify điểm thể hiện qua observer và phase 08 scoreboard sau DAG tương ứng; live real Socket.IO authority thuộc phases 12/13, không hứa phone-play ở phase này.
 
 ## Behavior matrix
-| Mức | Unit | Integration | Browser |
-| --- | --- | --- | --- |
+
+| Mức      | Unit                                    | Integration                         | Browser                                                |
+| -------- | --------------------------------------- | ----------------------------------- | ------------------------------------------------------ |
 | Critical | Clamp + single activation + scope/reset | References qua clone/resolve/detach | Generated Show/Hide/Score/Reset và fragment precedence |
-| High | Invalid IDs/fields + lifetime | Author edit/save/undo, editor inert | Master + child + duplicate, offline file không network |
-| Medium | Subscription/generation cleanup | Hide/show giữ progress và bindings | 320/768/desktop, touch + keyboard, reduced-motion |
+| High     | Invalid IDs/fields + lifetime           | Author edit/save/undo, editor inert | Master + child + duplicate, offline file không network |
+| Medium   | Subscription/generation cleanup         | Hide/show giữ progress và bindings  | 320/768/desktop, touch + keyboard, reduced-motion      |
 
 ## Focused commands
+
 Test paths proposed phải CREATE trước khi chạy; không project-wide build/test/lint ở checkpoint này.
+
 ```powershell
 npx vitest run shared/tests/education/interaction-actions.test.js shared/tests/education/interaction-references.test.js client/src/components/properties/interaction-variable-controls.test.jsx
 npx vitest run server/routes/interaction-variable-validation.test.js
@@ -144,9 +162,11 @@ npm run vendor
 $env:PLAYWRIGHT_USE_DEV_SERVERS='1'
 npx playwright test tests/e2e/games/interaction-actions.spec.js tests/e2e/games/interaction-actions-file.spec.js --project=chromium --workers=1
 ```
+
 Dùng dev-server lane đã có `C:/Work/NavSlidesEditor/playwright.config.js:120-136`; publish current-phase JS/CSS bằng `npm run vendor` theo contract04 trước smoke, không build/lint toàn repo chỉ để phase qua.
 
 ## ACTUAL browser smoke journey
+
 Tác giả tạo shape source + text target + game target, đặt initialVisibility hidden, fragment và đủ sáu actions; sửa bounded deck variables bằng UI rồi save/reload/undo.
 Copy nhóm source/target, duplicate top-level/child và detach master; mở Try rồi generated `/api/presentations/:id/present`, kiểm mỗi source chỉ tác động scope đang active.
 Enter/Space/touch, Show trước fragment reveal, hide/reveal, cộng/trừ tới min/max, reset current slide và kiểm deck score còn; explicit resetVariables mới xóa deck score.
@@ -154,6 +174,7 @@ Mở Share và Download file self-contained theo phase 04, double-click file:// 
 Chạy 320/768/desktop và reduced-motion; kiểm target hidden mất focus/hit-testing và focus Reset quay về control hợp lệ.
 
 ## Success criteria + unchecked actionable checklist
+
 - [ ] Sáu actions thực thi đủ UI → persisted config → generated document → visible result, mỗi activation đúng một lần.
 - [ ] Fragment AND trigger visibility đúng, editor hidden vẫn export omission, hidden overlays không click/focus.
 - [ ] Copy/paste/duplicate top-level/child/master/detach đều giữ đúng ID semantics, không tác động slide khác.
@@ -162,6 +183,7 @@ Chạy 320/768/desktop và reduced-motion; kiểm target hidden mất focus/hit-
 - [ ] Shared controller/reducers <200 LOC mỗi file và docs cập nhật chỉ sau successful smoke.
 
 ## Security/risks and failure protocol
+
 High = cao × cao: source/target ID collision từ master; mitigate scoped Map và clone/detach regression, không dùng document-wide first match.
 High = cao × cao: keydown + native click double-score; mitigate one activation path, browser Enter/Space receipt, không debounce tùy tiện che lỗi.
 High = trung bình × cao: fragment/display conflict và stale reset timers; mitigate two gates, generation cleanup; rollback nối controller trước modules.

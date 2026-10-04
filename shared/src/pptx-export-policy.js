@@ -1,7 +1,4 @@
-const {
-  hasPptxImageVisualEffects,
-  isPptxRasterSafeImageSource,
-} = require('./pptx-image-options')
+const { hasPptxImageVisualEffects, isPptxRasterSafeImageSource } = require('./pptx-image-options')
 const { classifyPptxMediaSource } = require('./pptx-media-options')
 
 const PPTX_ELEMENT_EXPORT_POLICY = {
@@ -23,7 +20,7 @@ const PPTX_ELEMENT_EXPORT_POLICY = {
   line: { mode: 'native' },
   svg: { mode: 'client-fallback-raster' },
   timeline: { mode: 'client-fallback-raster' },
-  game: { mode: 'live-only-static', fallback: 'placeholder' },
+  game: { mode: 'server-prefetch-raster', requiresServer: true, failure: 'error' },
 }
 
 const PPTX_CHART_EXPORT_POLICY = {
@@ -40,6 +37,9 @@ function getPptxElementExportPolicy(type) {
 }
 
 function getPptxElementExportStrategy(element) {
+  if (element?.type === 'line' && Number.isFinite(element.cx) && Number.isFinite(element.cy)) {
+    return { mode: 'server-prefetch-raster', requiresServer: true, failure: 'error' }
+  }
   if (element?.type === 'audio' || element?.type === 'video') {
     const media = classifyPptxMediaSource(element)
     return media.embeddable

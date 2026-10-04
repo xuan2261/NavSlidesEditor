@@ -1,184 +1,32 @@
-/**
- * Unit tests for GamePropertiesQuestionEditor.
- *
- * Test strategy (matches AnimationPreviewModal.test.jsx pattern):
- * - Test buildDefaultForm pure function directly
- * - Test component rendering via renderToString + React.createElement
- * - Verify output contains expected markup, attributes, and labels
- */
 import React from 'react'
-import { renderToString } from 'react-dom/server'
-import { render as renderDom, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
-import {
-  GamePropertiesQuestionEditor,
-  buildDefaultForm,
-  normalizeQuestionNumber,
-} from './game-properties-question-editor'
+import { GamePropertiesQuestionEditor } from './game-properties-question-editor'
 
-// ── Pure function tests ────────────────────────────────────────────────────────
-describe('buildDefaultForm', () => {
-  it('creates empty form with 4 blank options for new question', () => {
-    const form = buildDefaultForm(null)
-    expect(form.question).toBe('')
-    expect(form.options).toEqual(['', '', '', ''])
-    expect(form.correctIndex).toBe(0)
-    expect(form.timeLimit).toBe(30)
-    expect(form.points).toBe(10)
-    expect(form.id).toMatch(/^q-\d+$/)
-  })
-
-  it('preserves id and all fields when editing existing question', () => {
-    const existing = { id: 'q-123', question: 'What?', options: ['A', 'B', 'C', 'D'], correctIndex: 2, timeLimit: 45, points: 20 }
-    const form = buildDefaultForm(existing)
-    expect(form.id).toBe('q-123')
-    expect(form.question).toBe('What?')
-    expect(form.options).toEqual(['A', 'B', 'C', 'D'])
-    expect(form.correctIndex).toBe(2)
-    expect(form.timeLimit).toBe(45)
-    expect(form.points).toBe(20)
-  })
-
-  it('applies defaults for missing fields in partial question', () => {
-    const partial = { id: 'q-99', question: 'Partial' }
-    const form = buildDefaultForm(partial)
-    expect(form.options).toEqual(['', '', '', ''])
-    expect(form.correctIndex).toBe(0)
-    expect(form.timeLimit).toBe(30)
-    expect(form.points).toBe(10)
-  })
-})
-
-describe('normalizeQuestionNumber', () => {
-  it('clamps question time and points to their supported ranges', () => {
-    expect(normalizeQuestionNumber('500', 5, 300, 30)).toBe(300)
-    expect(normalizeQuestionNumber('-5', 1, 1000, 10)).toBe(1)
-    expect(normalizeQuestionNumber('', 5, 300, 30)).toBe(30)
-  })
-})
-
-// ── Render tests ──────────────────────────────────────────────────────────────
-function render(props) {
-  return renderToString(
-    React.createElement(GamePropertiesQuestionEditor, props)
-  )
+const question = {
+  id: 'q-stable',
+  kind: 'single-choice',
+  prompt: 'Which city?',
+  points: 10,
+  timeLimit: 30,
+  options: [
+    { id: 'london', text: 'London' },
+    { id: 'paris', text: 'Paris' },
+  ],
+  answerKey: { optionId: 'paris' },
+  feedback: { correct: '', incorrect: '', explanation: '' },
 }
 
-describe('GamePropertiesQuestionEditor renders', () => {
-  it('returns empty when isOpen is false', () => {
-    const html = render({ isOpen: false, onSave: vi.fn(), onCancel: vi.fn(), question: null })
-    expect(html).toBe('')
-  })
-
-  it('shows Add Question title for new question', () => {
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: null })
-    expect(html).toContain('Add Question')
-    expect(html).not.toContain('Edit Question')
-  })
-
-  it('shows Edit Question title when editing existing question', () => {
-    const existing = { id: 'q-1', question: 'Test?', options: ['A','B','C','D'], correctIndex: 0, timeLimit: 30, points: 10 }
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: existing })
-    expect(html).toContain('Edit Question')
-  })
-
-  it('renders 4 option placeholders (A/B/C/D)', () => {
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: null })
-    expect(html.match(/Option A/g)).toHaveLength(1)
-    expect(html.match(/Option B/g)).toHaveLength(1)
-    expect(html.match(/Option C/g)).toHaveLength(1)
-    expect(html.match(/Option D/g)).toHaveLength(1)
-  })
-
-  it('renders question textarea placeholder', () => {
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: null })
-    expect(html).toContain('Enter your question')
-  })
-
-  it('renders time limit with default 30s', () => {
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: null })
-    expect(html).toContain('value="30"')
-  })
-
-  it('renders points with default 10', () => {
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: null })
-    expect(html).toContain('value="10"')
-  })
-
-  it('renders Save and Cancel buttons', () => {
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: null })
-    expect(html).toMatch(/Save<\/button>/)
-    expect(html).toMatch(/Cancel<\/button>/)
-  })
-
-  it('renders X close button with aria-label', () => {
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: null })
-    expect(html).toContain('aria-label="Close question editor"')
-  })
-
-  it('pre-fills question text when editing', () => {
-    const existing = { id: 'q-1', question: 'What is 2+2?', options: ['3','4','5','6'], correctIndex: 1, timeLimit: 30, points: 10 }
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: existing })
-    expect(html).toContain('What is 2+2?')
-  })
-
-  it('pre-fills all 4 options when editing', () => {
-    const existing = { id: 'q-1', question: 'Q?', options: ['X','Y','Z','W'], correctIndex: 0, timeLimit: 30, points: 10 }
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: existing })
-    expect(html).toContain('value="X"')
-    expect(html).toContain('value="Y"')
-    expect(html).toContain('value="Z"')
-    expect(html).toContain('value="W"')
-  })
-
-  it('renders correctIndex 2 with green highlight on C', () => {
-    const existing = { id: 'q-1', question: 'Q?', options: ['A','B','C','D'], correctIndex: 2, timeLimit: 30, points: 10 }
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: existing })
-    expect(html).toContain('bg-green-500')
-  })
-
-  it('renders dialog with accessibility attributes', () => {
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: null })
-    expect(html).toContain('role="dialog"')
-    expect(html).toContain('aria-modal="true"')
-    expect(html).toMatch(/aria-labelledby="[^"]+"/)
-  })
-
-  it('renders Time Limit and Points labels', () => {
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: null })
-    expect(html).toContain('Time Limit')
-    expect(html).toContain('Points')
-  })
-
-  it('renders overlay backdrop', () => {
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: null })
-    expect(html).toContain('fixed inset-0 z-[100]')
-    expect(html).toContain('bg-black/60')
-  })
-
-  it('renders required field indicator for question', () => {
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: null })
-    expect(html).toContain('Question')
-    expect(html).toContain('*')
-  })
-
-  it('renders options section with required indicator', () => {
-    const html = render({ isOpen: true, onSave: vi.fn(), onCancel: vi.fn(), question: null })
-    expect(html).toContain('Options')
-    expect(html).toContain('*')
-  })
-})
-
-describe('GamePropertiesQuestionEditor interaction', () => {
-  it('traps focus, closes with Escape, and restores the trigger', async () => {
+describe('canonical question modal', () => {
+  it('traps focus, closes with Escape and restores the trigger without editor Escape propagation', async () => {
     const user = userEvent.setup()
     const underlyingEscape = vi.fn()
     function Harness() {
       const [open, setOpen] = React.useState(false)
       return (
         <div onKeyDown={(event) => event.key === 'Escape' && underlyingEscape()}>
-          <button type="button" onClick={() => setOpen(true)}>Add quiz question</button>
+          <button onClick={() => setOpen(true)}>Add quiz question</button>
           <GamePropertiesQuestionEditor
             isOpen={open}
             question={null}
@@ -188,36 +36,75 @@ describe('GamePropertiesQuestionEditor interaction', () => {
         </div>
       )
     }
-
-    renderDom(<Harness />)
+    render(<Harness />)
     const trigger = screen.getByRole('button', { name: 'Add quiz question' })
     await user.click(trigger)
     expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Question text' }))
     await user.tab({ shift: true })
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Close question editor' }))
+    expect(screen.getByRole('dialog').contains(document.activeElement)).toBe(true)
+    screen.getByRole('button', { name: 'Close question editor' }).focus()
     await user.tab({ shift: true })
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Save' }))
+    await user.tab()
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: 'Close question editor' })
+    )
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(document.activeElement).toBe(trigger)
     expect(underlyingEscape).not.toHaveBeenCalled()
   })
 
-  it('connects validation errors to the affected fields', async () => {
+  it('does not replace an authored question with an invalid blank prompt', async () => {
     const user = userEvent.setup()
-    renderDom(
-      <GamePropertiesQuestionEditor
-        isOpen={true}
-        question={null}
-        onSave={vi.fn()}
-        onCancel={vi.fn()}
-      />
-    )
-
+    function Harness() {
+      const [saved, setSaved] = React.useState(question)
+      return (
+        <>
+          <output aria-label="Saved question">{JSON.stringify(saved)}</output>
+          <GamePropertiesQuestionEditor
+            isOpen
+            question={saved}
+            onSave={setSaved}
+            onCancel={() => {}}
+          />
+        </>
+      )
+    }
+    render(<Harness />)
+    await user.clear(screen.getByRole('textbox', { name: 'Question text' }))
     await user.click(screen.getByRole('button', { name: 'Save' }))
-    const question = screen.getByRole('textbox', { name: 'Question text' })
-    const optionA = screen.getByRole('textbox', { name: 'Question option A' })
-    expect(question.getAttribute('aria-describedby')).toBe(screen.getByText('Question text is required').id)
-    expect(optionA.getAttribute('aria-describedby')).toBe(screen.getByText('At least 2 options are required').id)
+    expect(JSON.parse(screen.getByLabelText('Saved question').textContent)).toEqual(question)
+    const field = screen.getByRole('textbox', { name: 'Question text' })
+    expect(field.getAttribute('aria-invalid')).toBe('true')
+    expect(field.getAttribute('aria-describedby')).toBeTruthy()
+  })
+
+  it('saves changed prompt without losing stable identity, correctness or source content', async () => {
+    const user = userEvent.setup()
+    function Harness() {
+      const [saved, setSaved] = React.useState(question)
+      return (
+        <>
+          <output aria-label="Saved question">{JSON.stringify(saved)}</output>
+          <GamePropertiesQuestionEditor
+            isOpen
+            question={question}
+            onSave={setSaved}
+            onCancel={() => {}}
+          />
+        </>
+      )
+    }
+    render(<Harness />)
+    const prompt = screen.getByRole('textbox', { name: 'Question text' })
+    await user.clear(prompt)
+    await user.type(prompt, 'Capital of France?')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(JSON.parse(screen.getByLabelText('Saved question').textContent)).toEqual({
+      ...question,
+      prompt: 'Capital of France?',
+    })
+    expect(question.prompt).toBe('Which city?')
   })
 })

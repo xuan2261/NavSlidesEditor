@@ -2,7 +2,11 @@ import {
   classifyPptxMediaSource,
   classifyPptxPosterSource,
   hasPptxUploadSignature,
+  parseUploadSource,
 } from 'revealjs-shared'
+import { sanitizeSvgContent } from './content-safety'
+import { createSvgDataUri } from './export-pptx-core'
+import { renderImageToPngDataUri } from './export-pptx-raster-capture'
 
 const POSTER_MIMES = {
   gif: ['image/gif'],
@@ -61,10 +65,18 @@ export async function resolveClientPptxMedia(element, fetchImpl = globalThis.fet
 
   let cover
   if (element.type === 'video') {
-    const poster = classifyPptxPosterSource(element.poster, { embeddedCover: true })
+    const poster = await resolveClientPptxPoster(element.poster, fetchImpl)
     if (poster) {
-      cover =
-        (await fetchValidatedData(poster.source, 'png', ['image/png'], fetchImpl)) || undefined
+      cover = /^data:image\/png;/i.test(poster)
+        ? poster
+        : (await renderImageToPngDataUri(poster)) || undefined
+    }
+    if (
+      !cover &&
+      (/^data:image\//i.test(element.poster || '') ||
+        parseUploadSource(element.poster)?.extension === 'svg')
+    ) {
+      throw new Error(`Failed to decode authored video poster "${element.id || ''}"`)
     }
   }
 
@@ -72,6 +84,42 @@ export async function resolveClientPptxMedia(element, fetchImpl = globalThis.fet
 }
 
 export async function resolveClientPptxPoster(source, fetchImpl = globalThis.fetch) {
+  const data =
+    /^data:(image\/(?:png|jpeg|gif|webp|svg\+xml))(?:;charset=[\w-]+)?(;base64)?,([\s\S]*)$/i.exec(
+      String(source || '')
+    )
+  if (data) {
+    try {
+      const bytes = data[2]
+        ? Uint8Array.from(atob(data[3]), (character) => character.charCodeAt(0))
+        : new TextEncoder().encode(decodeURIComponent(data[3]))
+      if (data[1].toLowerCase() === 'image/svg+xml') {
+        const svg = sanitizeSvgContent(new TextDecoder().decode(bytes))
+        if (!/<svg\b/i.test(svg)) return null
+        return await renderImageToPngDataUri(createSvgDataUri(svg))
+      }
+      const extension = data[1].slice('image/'.length).toLowerCase()
+      if (!hasPptxUploadSignature(bytes, extension)) return null
+      return `data:${data[1].toLowerCase()};base64,${toBase64(bytes)}`
+    } catch {
+      return null
+    }
+  }
+  const upload = parseUploadSource(source)
+  if (upload?.extension === 'svg' && typeof fetchImpl === 'function') {
+    try {
+      const response = await fetchImpl(upload.source, {
+        credentials: 'same-origin',
+        redirect: 'error',
+      })
+      if (!response.ok || responseMime(response) !== 'image/svg+xml') return null
+      const svg = sanitizeSvgContent(await response.text())
+      if (!/<svg\b/i.test(svg)) return null
+      return await renderImageToPngDataUri(createSvgDataUri(svg))
+    } catch {
+      return null
+    }
+  }
   const poster = classifyPptxPosterSource(source)
   if (!poster) return null
   return fetchValidatedData(

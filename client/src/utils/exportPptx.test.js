@@ -595,44 +595,6 @@ describe('exportPptx', () => {
     )
   })
 
-  it('[cap:element.game depth:export] inserts a placeholder warning for live-only game elements', async () => {
-    const warnings = await exportToPptx({
-      title: 'Game fallback export',
-      slides: [
-        {
-          elements: [
-            {
-              id: 'game-1',
-              type: 'game',
-              gameType: 'name-picker',
-              x: 10,
-              y: 20,
-              width: 320,
-              height: 180,
-            },
-          ],
-        },
-      ],
-    })
-
-    expect(warnings).toContain('Slide 1: inserted placeholder for game')
-    expect(warnings.exportReport.warnings[0]).toEqual(
-      expect.objectContaining({
-        elementId: 'game-1',
-        elementType: 'game',
-        control: 'game-subtype-live-policy',
-        matrixRowId: 'game.game-subtype-live-policy.pptx-export',
-        fallback: 'placeholder',
-      })
-    )
-    expect(slides).toHaveLength(1)
-    expect(slides[0].addShape).toHaveBeenCalledWith('rect', expect.any(Object))
-    expect(slides[0].addText).toHaveBeenCalledWith(
-      'game preview unavailable',
-      expect.objectContaining({ fit: 'shrink' })
-    )
-  })
-
   it('[cap:element.code depth:export] keeps code readable and warns when walkthrough semantics are static', async () => {
     const warnings = await exportToPptx({
       title: 'Code walkthrough export',

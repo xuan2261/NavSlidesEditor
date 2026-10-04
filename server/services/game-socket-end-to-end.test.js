@@ -20,6 +20,37 @@ import { io as ioClient } from 'socket.io-client'
 const require = createRequire(import.meta.url)
 const GameEngine = require('./game-room-manager-singleton-service')
 const { setupGameSocketHandlers } = require('./game-socket-handler')
+const { now } = require('./games/room-lifecycle')
+let commandCounter = 0
+function advanceFixture(gameId) {
+  const room = GameEngine.getRoom(gameId)
+  const capability = GameEngine.peekHostCapability(gameId)
+  const playerId = room.hostPlayerId || 'fixture-host'
+  const socketId = room.hostSocketId || 'fixture-host-socket'
+  const host = GameEngine.joinRoom(gameId, playerId, 'Host', {
+    role: 'host',
+    socketId,
+    hostCapability: capability || fixtureCapabilities.get(gameId),
+  })
+  if (capability) fixtureCapabilities.set(gameId, capability)
+  return GameEngine.command(
+    'game-next',
+    {
+      gameId,
+      roomInstanceId: room.roomInstanceId,
+      generation: room.generation,
+      roundId: room.roundId,
+      commandId: `fixture-${++commandCounter}`,
+    },
+    {
+      playerId,
+      socketId,
+      sessionToken: host.sessionToken,
+      hostCapability: capability || fixtureCapabilities.get(gameId),
+    }
+  )
+}
+const fixtureCapabilities = new Map()
 
 let httpServer
 let io
@@ -34,6 +65,32 @@ function connectClient() {
     forceNew: true,
     transports: ['websocket'],
   })
+  let identity
+  sock.on('game-session', (state) => {
+    identity = state
+  })
+  sock.on('game-round-state', (state) => {
+    identity = state
+  })
+  const emit = sock.emit.bind(sock)
+  sock.emit = (event, payload, ...rest) => {
+    if (
+      payload &&
+      identity &&
+      !['game-join', 'game-leave'].includes(event) &&
+      event.startsWith('game-')
+    ) {
+      payload = {
+        roomInstanceId: identity.roomInstanceId,
+        generation: identity.generation,
+        roundId: identity.roundId,
+        commandId: `wire-${++commandCounter}`,
+        ...(event === 'game-answer' ? { attemptId: `attempt-${commandCounter}` } : {}),
+        ...payload,
+      }
+    }
+    return emit(event, payload, ...rest)
+  }
   clients.push(sock)
   return sock
 }
@@ -110,15 +167,17 @@ describe('game socket end-to-end', () => {
 
   it('redacts answer keys from public question events and rejects missing timing', async () => {
     GameEngine.createRoom('redaction-room', 'hot-potato', {
-      questions: [{
-        id: 'q-secret',
-        question: 'Which option is correct?',
-        options: ['A', 'B'],
-        correctIndex: 1,
-        explanation: 'Private explanation',
-        timeLimit: 30,
-        points: 10,
-      }],
+      questions: [
+        {
+          id: 'q-secret',
+          question: 'Which option is correct?',
+          options: ['A', 'B'],
+          correctIndex: 1,
+          explanation: 'Private explanation',
+          timeLimit: 30,
+          points: 10,
+        },
+      ],
     })
     const host = connectClient()
     const player = connectClient()
@@ -143,16 +202,19 @@ describe('game socket end-to-end', () => {
     const question = await questionEvent
     expect(question.question).toMatchObject({
       id: 'q-secret',
-      question: 'Which option is correct?',
-      options: ['A', 'B'],
+      prompt: 'Which option is correct?',
+      options: [
+        { id: expect.any(String), text: 'A' },
+        { id: expect.any(String), text: 'B' },
+      ],
     })
     expect(question.question).not.toHaveProperty('correctIndex')
     expect(question.question).not.toHaveProperty('explanation')
     expect(question.allowLate).toBe(false)
-    expect(question.questionStartedAt).toEqual(expect.any(Number))
+    expect(question.serverTimeMs).toEqual(expect.any(Number))
     expect(question.timeRemainingMs).toBeGreaterThan(0)
 
-    GameEngine.getRoom('redaction-room').questionStartedAt = Date.now() - 15000
+    GameEngine.getRoom('redaction-room').questionStartedAt = now() - 15000
     const answerResult = once(player, 'game-answer-result')
     player.emit('game-answer', { gameId: 'redaction-room', questionId: 'q-secret', answerIndex: 1 })
     const result = await answerResult
@@ -161,19 +223,21 @@ describe('game socket end-to-end', () => {
     expect(result.points).toBeLessThan(20)
   })
 
-  it('redacts answer markers from object options and scores by correctIndex', async () => {
+  it('redacts legacy option answer markers and grades the canonical key', async () => {
     GameEngine.createRoom('object-option-redaction-room', 'hot-potato', {
-      questions: [{
-        id: 'q-object-options',
-        question: 'Choose the canonical answer',
-        options: [
-          { text: 'A', correct: true },
-          { text: 'B', correct: false },
-        ],
-        correctIndex: 1,
-        timeLimit: 30,
-        points: 10,
-      }],
+      questions: [
+        {
+          id: 'q-object-options',
+          question: 'Choose the canonical answer',
+          options: [
+            { text: 'A', correct: true },
+            { text: 'B', correct: false },
+          ],
+          correctIndex: 1,
+          timeLimit: 30,
+          points: 10,
+        },
+      ],
     })
     const host = connectClient()
     const player = connectClient()
@@ -197,8 +261,11 @@ describe('game socket end-to-end', () => {
     host.emit('game-next', { gameId: 'object-option-redaction-room' })
     const question = await questionEvent
 
-    expect(question.question.options).toEqual(['A', 'B'])
-    expect(question.question.options.some((option) => option && typeof option === 'object')).toBe(false)
+    expect(question.question.options).toEqual([
+      { id: expect.any(String), text: 'A' },
+      { id: expect.any(String), text: 'B' },
+    ])
+    expect(JSON.stringify(question.question)).not.toContain('correct')
 
     const answerResult = once(player, 'game-answer-result')
     player.emit('game-answer', {
@@ -207,14 +274,17 @@ describe('game socket end-to-end', () => {
       answerIndex: 1,
       timeSpentMs: 100,
     })
-    expect(await answerResult).toMatchObject({ correct: true, answerIndex: 1 })
+    expect(await answerResult).toMatchObject({
+      correct: true,
+      selectedOptionId: question.question.options[1].id,
+    })
   })
 
   it('rejects an answer bound to a previous question after the host advances', async () => {
     GameEngine.createRoom('stale-question-room', 'hot-potato', {
       questions: [
-        { id: 'q1', correctIndex: 0, points: 10 },
-        { id: 'q2', correctIndex: 1, points: 10 },
+        { id: 'q1', question: 'Choose A', options: ['A', 'B'], correctIndex: 0, points: 10 },
+        { id: 'q2', question: 'Choose B', options: ['A', 'B'], correctIndex: 1, points: 10 },
       ],
     })
     const host = connectClient()
@@ -268,7 +338,9 @@ describe('game socket end-to-end', () => {
 
   it('emits game-ended instead of replaying the final question', async () => {
     GameEngine.createRoom('final-question-room', 'hot-potato', {
-      questions: [{ id: 'q1', correctIndex: 0, points: 10 }],
+      questions: [
+        { id: 'q1', question: 'Choose A', options: ['A', 'B'], correctIndex: 0, points: 10 },
+      ],
     })
     const host = connectClient()
     await waitConnect(host)
@@ -306,7 +378,10 @@ describe('game socket end-to-end', () => {
 
   it('rejects player-id impersonation without the server-issued session', async () => {
     GameEngine.createRoom('session-host-room', 'hot-potato', {
-      questions: [{ id: 'q1', correctIndex: 0, points: 10 }, { id: 'q2', correctIndex: 1, points: 10 }],
+      questions: [
+        { id: 'q1', question: 'Choose A', options: ['A', 'B'], correctIndex: 0, points: 10 },
+        { id: 'q2', question: 'Choose B', options: ['A', 'B'], correctIndex: 1, points: 10 },
+      ],
     })
     const host = connectClient()
     await waitConnect(host)
@@ -392,7 +467,9 @@ describe('game socket end-to-end', () => {
     expect(GameEngine.getRoom('expired-generation-room')).toBeUndefined()
 
     let staleBroadcast = false
-    const onStaleBroadcast = () => { staleBroadcast = true }
+    const onStaleBroadcast = () => {
+      staleBroadcast = true
+    }
     player.on('game-player-joined', onStaleBroadcast)
 
     GameEngine.createRoom('expired-generation-room', 'name-picker', { items: ['B'] })
@@ -414,9 +491,11 @@ describe('game socket end-to-end', () => {
 
   it('rejects answers from a stale socket after a valid player reconnects', async () => {
     GameEngine.createRoom('session-player-room', 'hot-potato', {
-      questions: [{ id: 'q1', correctIndex: 0, points: 10 }],
+      questions: [
+        { id: 'q1', question: 'Choose A', options: ['A', 'B'], correctIndex: 0, points: 10 },
+      ],
     })
-    GameEngine.nextQuestion('session-player-room')
+    advanceFixture('session-player-room')
     const first = connectClient()
     await waitConnect(first)
     const firstSession = once(first, 'game-session')
@@ -439,20 +518,39 @@ describe('game socket end-to-end', () => {
     })
 
     const staleError = once(first, 'game-error')
-    first.emit('game-answer', { gameId: 'session-player-room', questionId: 'q1', answerIndex: 0, timeSpentMs: 1000 })
+    first.emit('game-answer', {
+      gameId: 'session-player-room',
+      questionId: 'q1',
+      answerIndex: 0,
+      timeSpentMs: 1000,
+    })
     expect((await staleError).message).toBe('stale-player-session')
     expect(GameEngine.getRoom('session-player-room').players.get('p-alice').score).toBe(0)
 
     const answerResult = once(second, 'game-answer-result')
-    second.emit('game-answer', { gameId: 'session-player-room', questionId: 'q1', answerIndex: 0, timeSpentMs: 1000 })
+    second.emit('game-answer', {
+      gameId: 'session-player-room',
+      questionId: 'q1',
+      answerIndex: 0,
+      timeSpentMs: 1000,
+    })
     expect((await answerResult).totalScore).toBe(10)
   })
 
   it('hydrates an answered question after the player reconnects', async () => {
     GameEngine.createRoom('reconnect-answer-room', 'hot-potato', {
-      questions: [{ id: 'q1', correctIndex: 1, points: 10, timeLimit: 30 }],
+      questions: [
+        {
+          id: 'q1',
+          question: 'Choose B',
+          options: ['A', 'B'],
+          correctIndex: 1,
+          points: 10,
+          timeLimit: 30,
+        },
+      ],
     })
-    GameEngine.nextQuestion('reconnect-answer-room')
+    advanceFixture('reconnect-answer-room')
 
     const first = connectClient()
     await waitConnect(first)
@@ -474,10 +572,11 @@ describe('game socket end-to-end', () => {
       answerIndex: 0,
       timeSpentMs: 1000,
     })
-    await expect(firstResult).resolves.toMatchObject({
+    const firstAnswer = await firstResult
+    expect(firstAnswer).not.toHaveProperty('correctOptionId')
+    expect(firstAnswer).toMatchObject({
       correct: false,
-      correctIndex: 1,
-      answerIndex: 0,
+      selectedOptionId: 'q1/option-1',
       points: 0,
     })
     first.disconnect()
@@ -498,20 +597,29 @@ describe('game socket end-to-end', () => {
     expect(question.question).not.toHaveProperty('correctIndex')
     expect(result).toMatchObject({
       correct: false,
-      correctIndex: 1,
-      answerIndex: 0,
+      selectedOptionId: 'q1/option-1',
       points: 0,
       totalScore: 0,
     })
+    expect(result).not.toHaveProperty('correctOptionId')
   })
 
   it('rejects an expired answer when late answers are disabled', async () => {
     GameEngine.createRoom('expired-answer-room', 'hot-potato', {
       allowLate: false,
-      questions: [{ id: 'q1', correctIndex: 0, points: 10, timeLimit: 5 }],
+      questions: [
+        {
+          id: 'q1',
+          question: 'Choose A',
+          options: ['A', 'B'],
+          correctIndex: 0,
+          points: 10,
+          timeLimit: 5,
+        },
+      ],
     })
-    GameEngine.nextQuestion('expired-answer-room')
-    GameEngine.getRoom('expired-answer-room').questionStartedAt = Date.now() - 6000
+    advanceFixture('expired-answer-room')
+    GameEngine.getRoom('expired-answer-room').deadlineMs = now() - 1000
 
     const sock = connectClient()
     await waitConnect(sock)
@@ -522,7 +630,12 @@ describe('game socket end-to-end', () => {
     })
 
     const expired = once(sock, 'game-error')
-    sock.emit('game-answer', { gameId: 'expired-answer-room', questionId: 'q1', answerIndex: 0, timeSpentMs: 0 })
+    sock.emit('game-answer', {
+      gameId: 'expired-answer-room',
+      questionId: 'q1',
+      answerIndex: 0,
+      timeSpentMs: 0,
+    })
     expect(await expired).toMatchObject({ message: 'question-expired' })
     expect(GameEngine.getRoom('expired-answer-room').players.get('p-alice').score).toBe(0)
   })
@@ -536,13 +649,19 @@ describe('game socket end-to-end', () => {
       playerId: 'p-host',
       role: 'host',
       gameType: 'hot-potato',
-      options: { questions: [{ id: 'q1', correctIndex: 0, points: 10 }] },
+      options: {
+        questions: [
+          { id: 'q1', question: 'Choose A', options: ['A', 'B'], correctIndex: 0, points: 10 },
+        ],
+      },
     })
     expect(GameEngine.getRoom('observer-room')).toMatchObject({
       hostPlayerId: 'p-host',
       hostSocketId: host.id,
     })
-    GameEngine.nextQuestion('observer-room')
+    const started = once(host, 'game-question')
+    host.emit('game-next', { gameId: 'observer-room' })
+    await started
 
     const observer = connectClient()
     await waitConnect(observer)
@@ -565,6 +684,9 @@ describe('game socket end-to-end', () => {
 
     const player = connectClient()
     await waitConnect(player)
+    const observerScores = []
+    const recordScores = (state) => observerScores.push(state)
+    observer.on('game-leaderboard', recordScores)
     await joinAndWait(player, {
       gameId: 'observer-room',
       playerName: 'Alice',
@@ -573,34 +695,65 @@ describe('game socket end-to-end', () => {
     })
     expect(GameEngine.isHost('observer-room', 'p-alice')).toBe(false)
 
-    const observerLeaderboard = once(observer, 'game-leaderboard')
-    player.emit('game-answer', { gameId: 'observer-room', questionId: 'q1', answerIndex: 0, timeSpentMs: 1000 })
-    const updatedScores = await observerLeaderboard
-    expect(updatedScores.scores).toHaveLength(2)
-    expect(updatedScores.scores[0]).toMatchObject({ playerId: 'p-alice', score: 10 })
+    const answerResult = once(player, 'game-answer-result')
+    player.emit('game-answer', {
+      gameId: 'observer-room',
+      questionId: 'q1',
+      answerIndex: 0,
+      timeSpentMs: 1000,
+    })
+    const receipt = await answerResult
+    expect(receipt).toMatchObject({ correct: true, points: 10, totalScore: 10 })
+    await vi.waitFor(() => {
+      const updatedScores = observerScores.at(-1)
+      expect(updatedScores?.scores.find((row) => row.playerId === 'p-alice')).toMatchObject({
+        score: receipt.totalScore,
+      })
+      expect(updatedScores.scores).toHaveLength(2)
+    })
+    observer.off('game-leaderboard', recordScores)
   })
 
   // 2. Anti-cheat: answering the same question twice scores only once.
   it('rejects duplicate answers — score increments only once', async () => {
     GameEngine.createRoom('room2', 'hot-potato', {
-      questions: [{ id: 'q1', correctIndex: 0, points: 10 }],
+      questions: [
+        { id: 'q1', question: 'Choose A', options: ['A', 'B'], correctIndex: 0, points: 10 },
+      ],
     })
-    GameEngine.nextQuestion('room2')
+    advanceFixture('room2')
     const sock = connectClient()
     await waitConnect(sock)
     await joinAndWait(sock, { gameId: 'room2', playerName: 'Bob', playerId: 'p-bob' })
 
     const r1 = once(sock, 'game-answer-result')
-    sock.emit('game-answer', { gameId: 'room2', questionId: 'q1', answerIndex: 0, timeSpentMs: 1000 })
+    sock.emit('game-answer', {
+      gameId: 'room2',
+      questionId: 'q1',
+      answerIndex: 0,
+      timeSpentMs: 1000,
+    })
     await r1
 
     // The repeat returns the persisted result, not a misleading pending error.
     const dup = once(sock, 'game-answer-result')
-    sock.emit('game-answer', { gameId: 'room2', questionId: 'q1', answerIndex: 0, timeSpentMs: 1000 })
-    expect((await dup)).toMatchObject({ correct: true, answerIndex: 0, points: 10, totalScore: 10 })
+    sock.emit('game-answer', {
+      gameId: 'room2',
+      questionId: 'q1',
+      answerIndex: 0,
+      timeSpentMs: 1000,
+    })
+    const duplicateResult = await dup
+    expect(duplicateResult).toMatchObject({
+      correct: true,
+      selectedOptionId: 'q1/option-1',
+      points: 10,
+      totalScore: 10,
+    })
+    expect(duplicateResult).not.toHaveProperty('correctOptionId')
 
     const room = GameEngine.getRoom('room2')
-    const player = [...room.players.values()][0]
+    const player = room.players.get('p-bob')
     expect(player.score).toBe(10)
     expect(player.answers).toHaveLength(1)
   })
@@ -608,12 +761,20 @@ describe('game socket end-to-end', () => {
   // 3. Authorization: a non-host socket cannot advance the question.
   it('rejects presenter event (game-next) from a non-host socket', async () => {
     GameEngine.createRoom('room3', 'hot-potato', {
-      questions: [{ id: 'q1', correctIndex: 0, points: 10 }, { id: 'q2', correctIndex: 1, points: 10 }],
+      questions: [
+        { id: 'q1', question: 'Choose A', options: ['A', 'B'], correctIndex: 0, points: 10 },
+        { id: 'q2', question: 'Choose B', options: ['A', 'B'], correctIndex: 1, points: 10 },
+      ],
     })
 
     const host = connectClient()
     await waitConnect(host)
-    await joinAndWait(host, { gameId: 'room3', playerName: 'Host', playerId: 'p-host', role: 'host' })
+    await joinAndWait(host, {
+      gameId: 'room3',
+      playerName: 'Host',
+      playerId: 'p-host',
+      role: 'host',
+    })
 
     const player = connectClient()
     await waitConnect(player)
@@ -724,11 +885,19 @@ describe('game socket end-to-end', () => {
 
   // 5. Random determinism: every client sees the SAME server-chosen index.
   it('broadcasts identical winnerIndex to all clients on game-random', async () => {
-    GameEngine.createRoom('room5', 'name-picker', { items: ['A', 'B', 'C'], excludeAfterPick: false })
+    GameEngine.createRoom('room5', 'name-picker', {
+      items: ['A', 'B', 'C'],
+      excludeAfterPick: false,
+    })
 
     const host = connectClient()
     await waitConnect(host)
-    await joinAndWait(host, { gameId: 'room5', playerName: 'Host', playerId: 'p-host', role: 'host' })
+    await joinAndWait(host, {
+      gameId: 'room5',
+      playerName: 'Host',
+      playerId: 'p-host',
+      role: 'host',
+    })
 
     const viewer = connectClient()
     await waitConnect(viewer)
@@ -744,9 +913,7 @@ describe('game socket end-to-end', () => {
   })
 
   it('broadcasts the stable picked value after excluded items shift server indexes', async () => {
-    const random = vi.spyOn(Math, 'random')
-      .mockReturnValueOnce(0.5)
-      .mockReturnValueOnce(0.99)
+    const random = vi.spyOn(Math, 'random').mockReturnValueOnce(0.5).mockReturnValueOnce(0.99)
     try {
       GameEngine.createRoom('room5-excluded', 'name-picker', {
         items: ['A', 'B', 'C'],
@@ -807,7 +974,7 @@ describe('game socket end-to-end', () => {
 
     const nonHostErr = once(player, 'game-error')
     player.emit('game-poll-reveal', { gameId: 'poll-room' })
-    expect((await nonHostErr).message).toContain('host only')
+    expect((await nonHostErr).error).toBe('host-only')
 
     const startedHost = once(host, 'game-poll-started')
     const startedPlayer = once(player, 'game-poll-started')
@@ -872,7 +1039,7 @@ describe('game socket end-to-end', () => {
 
     const nonHostErr = once(player, 'game-error')
     player.emit('game-word-cloud-clear', { gameId: 'cloud-room' })
-    expect((await nonHostErr).message).toContain('host only')
+    expect((await nonHostErr).error).toBe('host-only')
 
     const startedHost = once(host, 'game-word-cloud-started')
     const startedPlayer = once(player, 'game-word-cloud-started')
@@ -949,14 +1116,22 @@ describe('game socket end-to-end', () => {
     await hydrate({
       gameId: 'hydrate-quiz',
       gameType: 'hot-potato',
-      options: { questions: [{ id: 'q1', question: 'One?', options: ['Yes'], correctIndex: 0 }] },
+      options: {
+        questions: [{ id: 'q1', question: 'One?', options: ['Yes', 'No'], correctIndex: 0 }],
+      },
       event: 'game-question',
       expected: { question: { id: 'q1' }, questionNumber: 1 },
     })
     await hydrate({
       gameId: 'hydrate-poll',
       gameType: 'poll',
-      options: { prompt: 'Choose one', options: [{ id: 'a', text: 'Alpha' }] },
+      options: {
+        prompt: 'Choose one',
+        options: [
+          { id: 'a', text: 'Alpha' },
+          { id: 'b', text: 'Beta' },
+        ],
+      },
       event: 'game-poll-started',
       startEvent: 'game-poll-start',
       expected: { prompt: 'Choose one' },
@@ -972,7 +1147,13 @@ describe('game socket end-to-end', () => {
     await hydrate({
       gameId: 'hydrate-matching',
       gameType: 'matching',
-      options: { prompt: 'Match terms', pairs: [{ promptId: 'p1', prompt: 'A', targetId: 't1', target: 'B' }] },
+      options: {
+        prompt: 'Match terms',
+        pairs: [
+          { promptId: 'p1', prompt: 'A', targetId: 't1', target: 'B' },
+          { promptId: 'p2', prompt: 'C', targetId: 't2', target: 'D' },
+        ],
+      },
       event: 'game-matching-started',
       startEvent: 'game-matching-start',
       expected: { prompt: 'Match terms' },
@@ -1015,11 +1196,16 @@ describe('game socket end-to-end', () => {
 
     const startedPlayer = once(player, 'game-matching-started')
     host.emit('game-matching-start', { gameId: 'match-room' })
-    expect(await startedPlayer).toMatchObject({
-      prompt: 'Match terms',
-      prompts: [{ id: 'p-http', text: 'HTTP' }, { id: 'p-tls', text: 'TLS' }],
-      targets: [{ id: 't-security', text: 'Security' }, { id: 't-protocol', text: 'Protocol' }],
-    })
+    const started = await startedPlayer
+    expect(started.prompt).toBe('Match terms')
+    expect(started.prompts).toEqual([
+      { id: 'p-http', text: 'HTTP' },
+      { id: 'p-tls', text: 'TLS' },
+    ])
+    expect([...started.targets].sort((a, b) => a.id.localeCompare(b.id))).toEqual([
+      { id: 't-protocol', text: 'Protocol' },
+      { id: 't-security', text: 'Security' },
+    ])
 
     const accepted = once(player, 'game-matching-submit-accepted')
     const summary = once(host, 'game-matching-results')

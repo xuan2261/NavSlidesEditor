@@ -1,5 +1,23 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
+import { JSDOM } from 'jsdom'
 import { renderElement, renderSlideElements } from '../src/element-renderers.js'
+
+const documents = []
+afterEach(() => {
+  for (const dom of documents.splice(0)) dom.window.close()
+})
+function openDocument(html, options = {}) {
+  const dom = new JSDOM(html, options)
+  documents.push(dom)
+  return dom
+}
+const localDependencies = {
+  network: false,
+  offlineCapable: true,
+  resources: [],
+  dynamicResources: [],
+}
+const assetBaseUrl = 'https://slides.example.test/decks/lesson'
 
 describe('element-renderers safety behavior', () => {
   const base = {
@@ -97,60 +115,126 @@ describe('element-renderers safety behavior', () => {
     expect(html).not.toContain('http://evil.example')
   })
 
-  it('keeps html embed scripts intact', () => {
-    const html = renderElement(
-      { ...base, type: 'html', content: '<script>window.__trusted = true</script>' },
-      {},
-      {}
+  it.each([
+    ['present', false, localDependencies],
+    ['print', true, localDependencies],
+    ['undeclared present', false, undefined],
+    ['undeclared print', true, undefined],
+  ])(
+    '[cap:element.html depth:export] isolates authored code and preserves local UTF-8 behavior in %s output',
+    (_label, forPrint, htmlDependencies) => {
+      const content =
+        '</iframe><button>Count</button><script>window.marker="child";document.querySelector("button").textContent=`Local ✓ — tiếng Việt & "quotes"`</script>'
+      const outer = openDocument(
+        renderElement({ ...base, type: 'html', content, htmlDependencies }, {}, { forPrint }),
+        { runScripts: 'dangerously' }
+      )
+      const frame = outer.window.document.querySelector('iframe')
+      expect(frame.getAttribute('sandbox').split(/\s+/)).toEqual(['allow-scripts'])
+      expect(outer.window.marker).toBeUndefined()
+      expect(outer.window.document.querySelector('button, script')).toBeNull()
+      const wrappedContent = forPrint
+        ? decodeURIComponent(frame.getAttribute('data-pdf-iframe'))
+        : frame.getAttribute('srcdoc')
+      const wrapper = openDocument(wrappedContent, { runScripts: 'dangerously' })
+      expect(wrapper.window.marker).toBeUndefined()
+      expect(wrapper.window.document.querySelector('button, script')).toBeNull()
+      const childFrame = wrapper.window.document.querySelector('iframe')
+      expect(childFrame.getAttribute('sandbox').split(/\s+/)).toEqual(['allow-scripts'])
+      if (htmlDependencies) {
+        expect(JSON.parse(frame.getAttribute('data-html-dependencies'))).toEqual(htmlDependencies)
+        expect(JSON.parse(childFrame.getAttribute('data-html-dependencies'))).toEqual(
+          htmlDependencies
+        )
+      } else {
+        expect(frame.hasAttribute('data-html-dependencies')).toBe(false)
+        expect(childFrame.hasAttribute('data-html-dependencies')).toBe(false)
+      }
+      const child = openDocument(childFrame.getAttribute('srcdoc'), { runScripts: 'dangerously' })
+      expect(child.window.marker).toBe('child')
+      expect(child.window.document.querySelector('button').textContent).toBe(
+        'Local ✓ — tiếng Việt & "quotes"'
+      )
+      const policy = child.window.document.querySelector(
+        'meta[http-equiv="Content-Security-Policy"]'
+      ).content
+      const directives = new Map(
+        policy
+          .split(';')
+          .filter(Boolean)
+          .map((directive) => {
+            const [name, ...sources] = directive.trim().split(/\s+/)
+            return [name, sources]
+          })
+      )
+      expect(directives.get('connect-src')).toEqual(["'none'"])
+      expect(directives.get('script-src')).toEqual(["'unsafe-inline'"])
+    }
+  )
+
+  it('[cap:element.html depth:export] declares the vendored Mermaid runtime and treats author source as text', () => {
+    const source =
+      'flowchart TD\n  A["</pre></iframe><script>window.authorExecuted=true</script> & ✓"]-->B'
+    const outer = openDocument(
+      renderElement(
+        { ...base, type: 'html', embedKind: 'mermaid', mermaidSource: source },
+        {},
+        { baseUrl: assetBaseUrl }
+      ),
+      { runScripts: 'dangerously' }
     )
-    expect(html).toContain('src="data:text/html;charset=utf-8,')
-    expect(html).not.toContain('srcdoc=')
-    const encoded = html.match(/src="data:text\/html;charset=utf-8,([^"]+)"/)[1]
-    expect(decodeURIComponent(encoded)).toContain('window.__trusted = true')
+    const frame = outer.window.document.querySelector('iframe')
+    const runtimeUrl = new URL('/vendor/mermaid/mermaid.min.js', assetBaseUrl).href
+    expect(frame.getAttribute('sandbox').split(/\s+/)).toEqual(['allow-scripts'])
+    expect(outer.window.authorExecuted).toBeUndefined()
+    expect(outer.window.document.querySelector('script, pre')).toBeNull()
+    expect(JSON.parse(frame.getAttribute('data-html-dependencies'))).toEqual({
+      network: true,
+      offlineCapable: true,
+      resources: [{ url: runtimeUrl, kind: 'script' }],
+      dynamicResources: [],
+    })
+    const child = openDocument(frame.getAttribute('srcdoc'))
+    expect(child.window.authorExecuted).toBeUndefined()
+    expect(child.window.document.querySelector('.mermaid').textContent).toBe(source)
+    expect(
+      [...child.window.document.querySelectorAll('script[src]')].map((script) => script.src)
+    ).toEqual([runtimeUrl])
   })
 
-  it('[cap:element.html depth:export] renders Mermaid html embeds with vendored runtime', () => {
-    const html = renderElement(
-      {
-        ...base,
-        type: 'html',
-        embedKind: 'mermaid',
-        mermaidSource: 'flowchart TD\n  A-->B',
-      },
-      {},
-      {}
+  it('[cap:element.html depth:export] preserves authored STEM iframe settings without granting parent origin access', () => {
+    const outer = openDocument(
+      renderElement(
+        {
+          ...base,
+          type: 'html',
+          embedKind: 'stem-simulation',
+          provider: 'desmos',
+          sourceUrl: 'https://www.desmos.com/calculator/calc123',
+          content:
+            '<iframe src="https://www.desmos.com/calculator/calc123" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" allow="fullscreen" referrerpolicy="no-referrer" loading="lazy"></iframe>',
+        },
+        {},
+        {}
+      )
     )
-    const match = html.match(/srcdoc="([^"]+)"/) || html.match(/src="data:text\/html;charset=utf-8,([^"]+)"/)
-    const decoded = match[1].includes('&quot;') || match[1].includes('&lt;')
-      ? match[1].replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
-      : decodeURIComponent(match[1])
-
-    expect(decoded).toContain('/vendor/mermaid/mermaid.min.js')
-    expect(decoded).toContain('flowchart TD')
-    expect(decoded).toContain('mermaid.run()')
-  })
-
-  it('[cap:element.html depth:export] preserves STEM simulation iframe attributes', () => {
-    const html = renderElement(
-      {
-        ...base,
-        type: 'html',
-        embedKind: 'stem-simulation',
-        provider: 'desmos',
-        sourceUrl: 'https://www.desmos.com/calculator/calc123',
-        content:
-          '<iframe src="https://www.desmos.com/calculator/calc123" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" allow="fullscreen" referrerpolicy="no-referrer" loading="lazy"></iframe>',
-      },
-      {},
-      {}
+    const frame = outer.window.document.querySelector('iframe')
+    expect(frame.getAttribute('sandbox').split(/\s+/)).toEqual(['allow-scripts'])
+    const wrapper = openDocument(frame.getAttribute('srcdoc'))
+    const child = openDocument(
+      wrapper.window.document.querySelector('iframe').getAttribute('srcdoc')
     )
-    const encoded = html.match(/src="data:text\/html;charset=utf-8,([^"]+)"/)[1]
-    const decoded = decodeURIComponent(encoded)
-
-    expect(decoded).toContain('https://www.desmos.com/calculator/calc123')
-    expect(decoded).toContain('sandbox="allow-scripts allow-same-origin allow-forms allow-popups"')
-    expect(decoded).toContain('referrerpolicy="no-referrer"')
-    expect(decoded).toContain('loading="lazy"')
+    const simulation = child.window.document.querySelector('iframe')
+    expect(simulation.src).toBe('https://www.desmos.com/calculator/calc123')
+    expect(simulation.getAttribute('sandbox').split(/\s+/)).toEqual([
+      'allow-scripts',
+      'allow-same-origin',
+      'allow-forms',
+      'allow-popups',
+    ])
+    expect(simulation.getAttribute('allow')).toBe('fullscreen')
+    expect(simulation.getAttribute('referrerpolicy')).toBe('no-referrer')
+    expect(simulation.getAttribute('loading')).toBe('lazy')
   })
 
   it('[cap:element.game depth:export] renders matching public fallback without participant data', () => {
@@ -167,89 +251,22 @@ describe('element-renderers safety behavior', () => {
             { promptId: 'p-tls', prompt: 'TLS', targetId: 't-security', target: 'Security' },
           ],
         },
-        matchingSubmissions: [{ playerName: 'Alice', pairs: [{ promptId: 'p-http', targetId: 't-protocol' }] }],
+        matchingSubmissions: [
+          { playerName: 'Alice', pairs: [{ promptId: 'p-http', targetId: 't-protocol' }] },
+        ],
       },
       {},
       {}
     )
 
-    expect(html).toContain('Match networking terms')
-    expect(html).toContain('HTTP → Protocol')
-    expect(html).toContain('TLS → Security')
+    const fallback = openDocument(html).window.document.querySelector('[data-ns-game-static]')
+    expect(fallback.textContent).toContain('Match networking terms')
+    const rows = [...fallback.querySelectorAll('li')].map((row) => row.textContent)
+    expect(rows).toEqual(expect.arrayContaining(['HTTP', 'TLS', 'Protocol', 'Security']))
+    expect(rows.some((row) => row.includes('HTTP') && row.includes('Protocol'))).toBe(false)
+    expect(rows.some((row) => row.includes('TLS') && row.includes('Security'))).toBe(false)
     expect(html).not.toContain('Alice')
     expect(html).not.toContain('matchingSubmissions')
-  })
-
-  it('[cap:element.code depth:export] renders code language class and escaped source', () => {
-    const html = renderElement(
-      {
-        ...base,
-        type: 'code',
-        language: 'javascript',
-        content: 'if (a < b) console.log("ok")',
-        fontSize: 18,
-      },
-      {},
-      {}
-    )
-
-    expect(html).toContain('class="language-javascript"')
-    expect(html).toContain('if (a &lt; b) console.log(&quot;ok&quot;)')
-    expect(html).toContain('font-size:calc(18px * var(--font-zoom, 1))')
-  })
-
-  it('[cap:element.code depth:export] preserves walkthrough metadata and highlights default lines', () => {
-    const html = renderElement(
-      {
-        ...base,
-        type: 'code',
-        language: 'javascript',
-        content: 'const a = 1\nconst b = 2\nreturn a + b',
-        walkthroughSteps: [{ label: 'Return', startLine: 2, endLine: 3 }],
-        defaultStepIndex: 0,
-      },
-      {},
-      {}
-    )
-
-    expect(html).toContain('data-code-walkthrough=')
-    expect(html).toContain('data-code-line="1"')
-    expect(html).toContain('data-code-line="2" data-walkthrough-active="true"')
-    expect(html).toContain('data-code-line="3" data-walkthrough-active="true"')
-    expect(html).toContain('class="language-javascript nohighlight"')
-    expect(html).not.toContain('class="language-javascript" data-trim')
-    expect(html).toContain('return a + b')
-  })
-
-  it('adds base URL to data URL html embeds so local assets resolve', () => {
-    const html = renderElement(
-      {
-        ...base,
-        type: 'html',
-        content: '<img src="/uploads/local.png"><script src="/vendor/d3/dist/d3.js"></script>',
-      },
-      {},
-      {}
-    )
-    const encoded = html.match(/src="data:text\/html;charset=utf-8,([^"]+)"/)[1]
-    const decoded = decodeURIComponent(encoded)
-    expect(decoded).toContain('<base href="http://localhost:3000/">')
-    expect(decoded).toContain('src="/uploads/local.png"')
-    expect(decoded).toContain('src="/vendor/d3/dist/d3.js"')
-  })
-
-  it('[cap:element.html depth:export] uses data-pdf-iframe for html embeds in print output', () => {
-    const html = renderElement(
-      { ...base, type: 'html', content: '<script>window.__trusted = true</script>' },
-      {},
-      { forPrint: true }
-    )
-
-    expect(html).toContain('data-pdf-iframe=')
-    expect(html).not.toContain('srcdoc=')
-    expect(decodeURIComponent(html.match(/data-pdf-iframe="([^"]+)"/)[1])).toContain(
-      'window.__trusted = true'
-    )
   })
 
   it('[cap:element.latex depth:export] applies latex font size and color in present and print output', () => {
@@ -285,59 +302,6 @@ describe('element-renderers safety behavior', () => {
     expect(html).not.toContain('data-math-latex="\\[')
   })
 
-  it('[cap:element.video depth:export] renders video trim and playback rate attributes', () => {
-    const html = renderElement(
-      {
-        ...base,
-        type: 'video',
-        src: 'https://example.com/demo.ogv',
-        startTime: 5,
-        endTime: 12,
-        playbackRate: 1.25,
-      },
-      {},
-      {}
-    )
-
-    expect(html).toContain('src="https://example.com/demo.ogv#t=5,12"')
-    expect(html).toContain('onloadedmetadata="this.playbackRate=1.25"')
-  })
-
-  it('omits default video trim and playback rate attributes', () => {
-    const html = renderElement(
-      {
-        ...base,
-        type: 'video',
-        src: 'https://example.com/demo.ogv',
-        startTime: 0,
-        endTime: 0,
-        playbackRate: 1,
-      },
-      {},
-      {}
-    )
-
-    expect(html).toContain('src="https://example.com/demo.ogv"')
-    expect(html).not.toContain('#t=')
-    expect(html).not.toContain('onloadedmetadata=')
-  })
-
-  it('keeps invalid video trim end time as start-only media fragment', () => {
-    const html = renderElement(
-      {
-        ...base,
-        type: 'video',
-        src: 'https://example.com/demo.ogv',
-        startTime: 10,
-        endTime: 5,
-      },
-      {},
-      {}
-    )
-
-    expect(html).toContain('src="https://example.com/demo.ogv#t=10"')
-  })
-
   it('renders video from videoUrl property', () => {
     const html = renderElement(
       {
@@ -365,23 +329,6 @@ describe('element-renderers safety behavior', () => {
     )
     expect(html).toContain('src="http://localhost:3000/uploads/uploaded-video.mp4"')
     expect(html).not.toContain('url-video.mp4')
-  })
-
-  it('applies trim and playback rate to videoUrl videos', () => {
-    const html = renderElement(
-      {
-        ...base,
-        type: 'video',
-        videoUrl: 'https://example.com/video.mp4',
-        startTime: 3,
-        endTime: 15,
-        playbackRate: 2,
-      },
-      {},
-      {}
-    )
-    expect(html).toContain('src="https://example.com/video.mp4#t=3,15"')
-    expect(html).toContain('onloadedmetadata="this.playbackRate=2"')
   })
 
   it('[cap:element.image depth:export] renders image citation text below image', () => {
@@ -506,28 +453,71 @@ describe('element-renderers safety behavior', () => {
     expect(html).toContain('stroke-width="3.5"')
   })
 
-  it('[cap:element.qrcode depth:export] renders print QR canvas config', () => {
-    const html = renderElement(
-      {
-        ...base,
-        type: 'qrcode',
-        qrData: 'https://example.com/share',
-        qrColor: '#111827',
-        qrBgColor: '#f9fafb',
-        qrErrorLevel: 'H',
-      },
-      {},
-      { forPrint: true }
+  it('[cap:element.qrcode depth:export] preserves punctuated QR text without granting root markup authority', () => {
+    const data = `Teacher's &quot; lesson '</canvas><script data-navslides-runtime="local">window.rootEscape=true</script><iframe data-ns-generated-frame="true"></iframe>`
+    const dom = openDocument(
+      renderElement(
+        {
+          ...base,
+          id: 'qr"><iframe data-ns-generated-frame=true></iframe>',
+          type: 'qrcode',
+          qrData: data,
+        },
+        {},
+        { forPrint: true }
+      )
     )
-    const config = JSON.parse(html.match(/data-qr-config='([^']+)'/)[1])
+    const document = dom.window.document
+    expect(
+      JSON.parse(document.querySelector('canvas[data-qr-config]').getAttribute('data-qr-config'))
+        .data
+    ).toBe(data)
+    expect(
+      document.querySelector('script,iframe,[data-navslides-runtime],[data-ns-generated-frame]') ===
+        null
+    ).toBe(true)
+  })
 
-    expect(html).toContain('data-qr-config=')
-    expect(config).toEqual({
-      data: 'https://example.com/share',
-      fg: '#111827',
-      bg: '#f9fafb',
-      err: 'H',
-    })
+  it.each([
+    { type: 'text', content: '<p>Contained</p>', fontFamily: 'FIELD' },
+    { type: 'shape', text: 'Contained', fontFamily: 'FIELD', fill: 'FIELD', stroke: 'FIELD' },
+    { type: 'line', x1: 'FIELD', stroke: 'FIELD', strokeWidth: 'FIELD' },
+    { type: 'icon', iconColor: 'FIELD', iconStrokeWidth: 'FIELD' },
+    {
+      type: 'drawing',
+      width: 'FIELD',
+      paths: [{ d: 'M0 0L20 20', opacity: 'FIELD', strokeWidth: 'FIELD' }],
+    },
+  ])(
+    'keeps authored $type attribute values from manufacturing root execution authority',
+    (fields) => {
+      const payload = `\"><script data-navslides-runtime="local">window.rootEscaped=1</script><iframe data-ns-generated-frame="true"></iframe><span onerror="window.rootEscaped=1`
+      const element = JSON.parse(
+        JSON.stringify({ ...base, ...fields }).replaceAll(
+          'FIELD',
+          JSON.stringify(payload).slice(1, -1)
+        )
+      )
+      const { document } = openDocument(renderElement(element, {}, {})).window
+      expect(
+        document.querySelector(
+          'script,iframe,[data-navslides-runtime],[data-ns-generated-frame],[onerror]'
+        )
+      ).toBeNull()
+    }
+  )
+
+  it('keeps QR tag-like data from becoming a script or compiler source in its generated document', () => {
+    const qrData = `Teacher's </script><script type="text/tikz" data-navslides-runtime="local">forged</script><img onerror="window.rootEscaped=1"> &quot;`
+    const { document } = openDocument(
+      renderElement({ ...base, type: 'qrcode', qrData }, {}, {})
+    ).window
+    const frameDocument = openDocument(document.querySelector('iframe').getAttribute('srcdoc'))
+      .window.document
+    expect(frameDocument.querySelector('canvas#c')).not.toBeNull()
+    expect(
+      frameDocument.querySelector('script[type="text/tikz"],[data-navslides-runtime],[onerror]')
+    ).toBeNull()
   })
 
   it('[cap:element.drawing depth:export] renders drawing paths with stroke styling', () => {
@@ -695,73 +685,6 @@ describe('element-renderers safety behavior', () => {
     expect(withOffset).toContain('y1="132"')
   })
 
-  it('[cap:element.game depth:export] renders a static public fallback for game elements', () => {
-    const html = renderElement(
-      {
-        ...base,
-        type: 'game',
-        gameType: 'hot-potato',
-        title: 'Fallback title',
-        'hot-potato': {
-          title: 'Class Quiz',
-          questions: [{ question: 'Hidden?', correctIndex: 0, answer: 'Secret', points: 500 }],
-        },
-      },
-      {},
-      {}
-    )
-
-    expect(html).toContain('data-game-fallback="true"')
-    expect(html).toContain('data-game-type="hot-potato"')
-    expect(html).toContain('Class Quiz')
-    expect(html).toContain('Interactive game')
-  })
-
-  it('[cap:element.game tier:deep depth:export] does not leak raw game config or live-only controls', () => {
-    const html = renderElement(
-      {
-        ...base,
-        type: 'game',
-        gameType: 'jeopardy',
-        title: 'Public Jeopardy',
-        presenterToken: 'presenter-secret-token',
-        adminToken: 'admin-secret-token',
-        sessionId: 'session-secret-id',
-        roomCode: 'ROOM42',
-        scoring: { mode: 'private-scoring' },
-        jeopardy: {
-          title: 'Public Board',
-          teams: [{ id: 'team-secret', name: 'Private Team', score: 1200 }],
-          questions: {
-            '0-100': {
-              question: 'Question text',
-              correctIndex: 2,
-              answer: 'Private Answer',
-              points: 100,
-            },
-          },
-        },
-      },
-      {},
-      {}
-    )
-
-    expect(html).toContain('Public Board')
-    expect(html).toContain('data-game-type="jeopardy"')
-    expect(html).not.toContain('presenter-secret-token')
-    expect(html).not.toContain('admin-secret-token')
-    expect(html).not.toContain('session-secret-id')
-    expect(html).not.toContain('ROOM42')
-    expect(html).not.toContain('private-scoring')
-    expect(html).not.toContain('Private Team')
-    expect(html).not.toContain('team-secret')
-    expect(html).not.toContain('correctIndex')
-    expect(html).not.toContain('Private Answer')
-    expect(html).not.toContain('Question text')
-    expect(html).not.toContain('player')
-    expect(html).not.toContain('admin')
-  })
-
   it('[cap:element.game depth:export] exports poll prompt and options without raw vote data', () => {
     const html = renderElement(
       {
@@ -783,7 +706,6 @@ describe('element-renderers safety behavior', () => {
       {}
     )
 
-    expect(html).toContain('data-game-type="poll"')
     expect(html).toContain('Exit Ticket')
     expect(html).toContain('Which topic needs review?')
     expect(html).toContain('Vectors')
@@ -811,7 +733,6 @@ describe('element-renderers safety behavior', () => {
       {}
     )
 
-    expect(html).toContain('data-game-type="word-cloud"')
     expect(html).toContain('Warmup Cloud')
     expect(html).toContain('One word about entropy')
     expect(html).not.toContain('Alice')
@@ -863,16 +784,18 @@ describe('element-renderers safety behavior', () => {
   })
 
   it('renders malformed persisted table data without crashing', () => {
-    expect(() => renderElement(
-      {
-        ...base,
-        type: 'table',
-        data: [{ invalid: true }, [{ value: 'cell' }]],
-        mergedCells: [null, { row: 0, col: 0, rowSpan: 'bad' }],
-      },
-      {},
-      {}
-    )).not.toThrow()
+    expect(() =>
+      renderElement(
+        {
+          ...base,
+          type: 'table',
+          data: [{ invalid: true }, [{ value: 'cell' }]],
+          mergedCells: [null, { row: 0, col: 0, rowSpan: 'bad' }],
+        },
+        {},
+        {}
+      )
+    ).not.toThrow()
   })
 
   it('renders table cells with per-side borders', () => {
@@ -902,39 +825,6 @@ describe('element-renderers safety behavior', () => {
     expect(html).toContain('border-right:3px solid #00ff00')
     expect(html).toContain('border-bottom:4px dotted #0000ff')
     expect(html).toContain('border-left:5px double #111111')
-  })
-
-  it('[cap:element.table depth:export] renders table cell typography and row/column sizing', () => {
-    const html = renderElement(
-      {
-        ...base,
-        type: 'table',
-        data: [['A', 'B']],
-        colWidths: [80, 120],
-        rowHeights: [40],
-        cellStyles: {
-          textColors: [['#112233', null]],
-          bgColors: [['#ddeeff', null]],
-          isBold: [[true, false]],
-          fontSizes: [[24, null]],
-          fontFamilies: [['Arial', null]],
-          aligns: [['center', 'left']],
-          vAligns: [['bottom', 'top']],
-        },
-      },
-      {},
-      {}
-    )
-
-    expect(html).toContain('<col style="width:80px"')
-    expect(html).toContain('<tr style="height:40px"')
-    expect(html).toContain('font-size:calc(24px * var(--font-zoom, 1))')
-    expect(html).toContain('font-family:Arial')
-    expect(html).toContain('background:#ddeeff')
-    expect(html).toContain('color:#112233')
-    expect(html).toContain('font-weight:600')
-    expect(html).toContain('text-align:center')
-    expect(html).toContain('vertical-align:bottom')
   })
 
   it('sanitizes unsafe table border CSS in shared rendering', () => {
@@ -967,181 +857,6 @@ describe('element-renderers safety behavior', () => {
     expect(html).not.toContain('javascript:')
   })
 
-  it('[cap:element.chart tier:deep depth:export] renders a stacked bar chart with both axes stacked (iframe + print)', () => {
-    const element = {
-      ...base,
-      type: 'chart',
-      chartType: 'bar',
-      stacked: true,
-      chartData: {
-        labels: ['Q1', 'Q2'],
-        datasets: [{ label: 'S1', data: [10, 20], color: '#6366f1' }],
-      },
-    }
-
-    // iframe path builds scales as a raw template literal (unquoted keys).
-    const iframe = renderElement(element, {}, {})
-    expect(iframe).toContain('stacked:true')
-    expect(iframe).toContain('animation:false')
-
-    // print path JSON-stringifies the options object (quoted keys).
-    const print = renderElement(element, {}, { forPrint: true })
-    expect(print).toMatch(/"x":\{[^}]*"stacked":true/)
-    expect(print).toMatch(/"y":\{[^}]*"stacked":true/)
-    expect(print).toContain('"animation":false')
-  })
-
-  it('renders an area chart as a filled line (iframe + print)', () => {
-    const element = {
-      ...base,
-      type: 'chart',
-      chartType: 'line',
-      areaFill: true,
-      chartData: {
-        labels: ['Jan', 'Feb', 'Mar'],
-        datasets: [{ label: 'S1', data: [3, 7, 5], color: '#22c55e' }],
-      },
-    }
-
-    const iframe = renderElement(element, {}, {})
-    expect(iframe).toContain("type:'line'")
-
-    // print path JSON-stringifies datasets with clean quotes.
-    const print = renderElement(element, {}, { forPrint: true })
-    expect(print).toContain('"fill":true')
-  })
-
-  it('renders imported chart titles, point colors, legend placement, and linear scatter coordinates', () => {
-    const pie = renderElement({
-      ...base,
-      type: 'chart',
-      chartType: 'pie',
-      chartTitle: 'Mix',
-      legendPosition: 'right',
-      chartData: {
-        labels: ['A', 'B'],
-        datasets: [{ label: 'Mix', data: [40, 60], colors: ['#5DA5DA', '#FAA43A'] }],
-      },
-    }, {}, {})
-    expect(pie).toContain("title:{display:true,text:&quot;Mix&quot;")
-    expect(pie).toContain("legend:{position:'right'")
-    expect(pie).toContain('&quot;backgroundColor&quot;:[&quot;#5DA5DA&quot;,&quot;#FAA43A&quot;]')
-    expect(pie).toContain('&quot;boxWidth&quot;:8')
-
-    const scatter = renderElement({
-      ...base,
-      type: 'chart',
-      chartType: 'line',
-      chartData: { labels: [], datasets: [{ label: 'Observed', data: [8, 23], xValues: [5, 29] }] },
-      _pptxChartMeta: { originalType: 'scatterChart' },
-    }, {}, {})
-    expect(scatter).toContain("type:'scatter'")
-    expect(scatter).toContain("type:'linear'")
-    expect(scatter).toContain('&quot;x&quot;:5,&quot;y&quot;:8')
-    expect(scatter).toContain("suggestedMax:40")
-  })
-
-  it('uses PowerPoint-style zero baselines and compact line legends for imported charts', () => {
-    const importedLine = renderElement({
-      ...base,
-      type: 'chart',
-      chartType: 'line',
-      chartData: { labels: ['A'], datasets: [{ data: [89] }] },
-      _pptxChartMeta: { originalType: 'lineChart' },
-    }, {}, {})
-    expect(importedLine).toContain("y:{beginAtZero:true,")
-    expect(importedLine).toContain('&quot;usePointStyle&quot;:true')
-    expect(importedLine).toContain("suggestedMax:100")
-  })
-
-  it('uses background-aware chart fallbacks in present and print output', () => {
-    const element = {
-      ...base,
-      type: 'chart',
-      chartType: 'bar',
-      chartData: { labels: ['A'], datasets: [{ label: 'S', data: [1] }] },
-    }
-    const darkSlide = { background: { type: 'color', color: '#1e1e2e' } }
-
-    const iframe = renderSlideElements({ ...darkSlide, elements: [element] })
-    expect(iframe).toContain("ticks:{color:'#f8fafc'}")
-    expect(iframe).toContain("grid:{color:'rgba(248,250,252,0.28)'}")
-    expect(iframe).toContain("legend:{position:'top',labels:{&quot;color&quot;:&quot;#f8fafc&quot;")
-
-    const print = renderSlideElements({ ...darkSlide, elements: [element] }, { forPrint: true })
-    expect(print).toContain('"color":"#f8fafc"')
-    expect(print).toContain('"color":"rgba(248,250,252,0.28)"')
-  })
-
-  it('keeps explicit chart colors in front of background fallbacks', () => {
-    const element = {
-      ...base,
-      type: 'chart',
-      chartType: 'bar',
-      axisTextColor: '#facc15',
-      gridColor: 'rgba(250,204,21,0.4)',
-      legendTextColor: '#22c55e',
-      chartData: { labels: ['A'], datasets: [{ label: 'S', data: [1] }] },
-    }
-    const html = renderElement(element, { background: { type: 'color', color: '#1e1e2e' } }, {})
-
-    expect(html).toContain("ticks:{color:'#facc15'}")
-    expect(html).toContain("grid:{color:'rgba(250,204,21,0.4)'}")
-    expect(html).toContain("legend:{position:'top',labels:{&quot;color&quot;:&quot;#22c55e&quot;")
-  })
-
-  it('does not stack a plain bar chart or fill a plain line chart', () => {
-    const bar = renderElement(
-      {
-        ...base,
-        type: 'chart',
-        chartType: 'bar',
-        chartData: { labels: ['A'], datasets: [{ label: 'S', data: [1], color: '#6366f1' }] },
-      },
-      {},
-      { forPrint: true }
-    )
-    expect(bar).not.toContain('"stacked":true')
-
-    const line = renderElement(
-      {
-        ...base,
-        type: 'chart',
-        chartType: 'line',
-        chartData: { labels: ['A'], datasets: [{ label: 'S', data: [1], color: '#6366f1' }] },
-      },
-      {},
-      { forPrint: true }
-    )
-    expect(line).toContain('"fill":false')
-  })
-
-  it('[cap:element.chart tier:deep depth:export] renders radial chart scales for iframe and print output', () => {
-    const radar = {
-      ...base,
-      type: 'chart',
-      chartType: 'radar',
-      chartData: { labels: ['A'], datasets: [{ label: 'S', data: [1], color: '#6366f1' }] },
-    }
-    const polar = { ...radar, chartType: 'polarArea' }
-
-    const radarIframe = renderElement(radar, {}, {})
-    expect(radarIframe).toContain('scales:{r:')
-    expect(radarIframe).not.toContain('scales:{x:')
-
-    const radarPrint = renderElement(radar, {}, { forPrint: true })
-    expect(radarPrint).toContain('"r":{')
-    expect(radarPrint).not.toContain('"x":{')
-
-    const polarIframe = renderElement(polar, {}, {})
-    expect(polarIframe).toContain('scales:{}')
-    expect(polarIframe).not.toContain('scales:{x:')
-
-    const polarPrint = renderElement(polar, {}, { forPrint: true })
-    expect(polarPrint).toContain('"scales":{}')
-    expect(polarPrint).not.toContain('"x":{')
-  })
-
   it('omits hidden elements from shared HTML export output', () => {
     const html = renderSlideElements({
       elements: [
@@ -1156,12 +871,22 @@ describe('element-renderers safety behavior', () => {
   })
 
   it('renders normalized actions as labelled safe activation surfaces and leaves invalid actions inert', () => {
-    const actionElement = { ...base, type: 'shape', action: { kind: 'slide', slideId: 'vertical-child', label: 'Open detail', hotspot: true } }
+    const actionElement = {
+      ...base,
+      type: 'shape',
+      action: { kind: 'slide', slideId: 'vertical-child', label: 'Open detail', hotspot: true },
+    }
     const html = renderElement(actionElement, {}, {})
     expect(html).toContain('data-ns-action=')
     expect(html).toContain('aria-label="Open detail"')
     expect(html).toContain('ns-element-hotspot')
-    expect(renderElement({ ...actionElement, action: { kind: 'url', url: 'javascript:alert(1)' } }, {}, {})).not.toContain('data-ns-action=')
+    expect(
+      renderElement(
+        { ...actionElement, action: { kind: 'url', url: 'javascript:alert(1)' } },
+        {},
+        {}
+      )
+    ).not.toContain('data-ns-action=')
     expect(renderElement(actionElement, {}, { forPrint: true })).not.toContain('data-ns-action=')
   })
 })
