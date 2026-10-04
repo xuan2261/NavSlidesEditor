@@ -15,13 +15,13 @@ Cook tạm dừng theo yêu cầu người dùng: lưu toàn bộ thay đổi h�
 
 ## Current state
 
-Main HEAD trước checkpoint: `8389b7f1f203137f8ddf771c7bcbc50f61d06936`; education HEAD trước checkpoint: `760eae26d9bdcdd22cb42dd5f1e0eab487e18fa3`. Lấy HEAD mới từ Git trước resume; các commits trong thao tác này là checkpoint, không qualification.
+Education source checkpoint: `c5b5e896d9f06859b21e19122f81c7613067c386` (`feat(education): checkpoint interactive learning implementation`). Coordinator checkpoint: `847c90b6e5f7f8d33ee2d89a433a0edb04d4f2fd`. Handoff/cleanup receipt được commit bổ sung trên main. Xác minh HEAD mới từ Git trước resume; tất cả là checkpoint, không qualification.
 
-Ba producer `author`, `timed`, `references` đã bị hủy theo yêu cầu. Bulk byte comparison với prepared source snapshot quan sát **không có file mới/khác do producer tạo ra**. Không có acceptance producer output để tích hợp hoặc claim PASS. Worktrees phụ được phép gỡ sau khi giữ sessions/dispatch contracts và checkpoint source; không gọi các slices đó là hoàn thành.
+Ba producer `author`, `timed`, `references` đã bị hủy theo yêu cầu. Bulk byte comparison với prepared source snapshot quan sát **không có file mới/khác do producer tạo ra**. Không có acceptance producer output để tích hợp hoặc claim PASS. Cả ba worktree phụ đã gỡ; sessions được giữ ở archive và branch refs không bị xóa. Đây là canceled slices, không phải acceptance đã hoàn thành.
 
-Git inventory trước cập nhật handoff: main có 6 modified + 313 untracked; education có 302 modified + 579 untracked. Main chứa coordinator reports và một thay đổi ribbon riêng; giữ độc lập, không ghi đè bằng education. Raw JSONL sessions được chuyển ngoài Git khi cleanup; source/tests/plans/docs hợp lệ được checkpoint.
+Trước cập nhật handoff, main có 6 modified + 313 untracked; education có 302 modified + 579 untracked. Source/tests/plans/docs hợp lệ đã checkpoint riêng theo worktree. Cleanup recovery quan sát main và education đều không còn staged/unstaged/untracked changes trước khi thêm receipt này. Đã chuyển 90 raw JSONL sessions ra ngoài Git, gỡ ba worktree phụ và xóa hai reproducible r10 caches.
 
-Cleanup receipt canonical: `C:/Work/NavSlidesEditor/plans/reports/education-pause-cleanup-20261004.json`. Nếu receipt chưa tồn tại hoặc có errors, cleanup chưa hoàn tất; không suy thành thành công từ phần kế hoạch dưới đây.
+Cleanup receipt canonical: `C:/Work/NavSlidesEditor/plans/reports/education-pause-cleanup-20261004.json`. Education `.tmp` hiện ở `D:/NavSlidesQualification/pause-checkpoint-20261004/education-scratch/.tmp`; source `.tmp` không còn. Original cleanup vượt 600 giây khi xử lý browser scratch và mất per-file receipt trong memory. Giữ nguyên phần browser scratch còn lại cùng bản copy chưa xác minh đầy đủ; **không được xóa một trong hai vì chỉ thấy folder tồn tại**. Đây là phần cleanup intentionally deferred để không mất evidence, không phải bug fix hoặc qualification.
 
 ## Decisions and rationale
 
@@ -37,6 +37,8 @@ Cleanup receipt canonical: `C:/Work/NavSlidesEditor/plans/reports/education-paus
 - Cập nhật pause state, branch/source pointers và checklist acceptance còn thiếu.
 - Scan nội dung checkpoint không gồm raw sessions bằng private-key/provider-key/credential-URL/credential-assignment patterns: không có finding. Đây không phải security audit toàn codebase.
 - Active feature hook là `lint-staged` với ESLint/Prettier; không có test command. Hook không bị bypass. Main configured `.husky/_` không có installed launcher tại lúc kiểm tra.
+- Feature commit hook ESLint/Prettier hoàn tất bình thường, không chạy tests. Hook có format source; historical unit/browser receipts không được đổi thành exact-current-source PASS.
+- Bounded recovery hoàn tất trong 8.51 giây; `errors: []`, chỉ còn main và education worktrees. Full browser-scratch archive verification chưa hoàn tất.
 
 ## Verification
 
@@ -67,6 +69,8 @@ Các acceptance sau **chưa được exercise đủ**, không nhất thiết là
 10. Fresh source/config/docs freeze trên D:, isolated production-mode Windows build, sequential exact-subject artifact lanes và final release gate.
 
 Underlying atomic-save latency/previous word-search launch timeout chưa có proved cause; không báo đã fix filesystem/storage chỉ vì rerun sau đó pass. Không dùng C: cho qualification stage/cache khi D: đã là approved scratch route.
+
+Browser scratch cleanup còn mở: xác minh archive/relocation trước khi bỏ source hoặc incomplete copy; giữ failed traces/fixtures. Không lặp lại full-copy cleanup không có progress receipt.
 
 ## Exact next actions
 
