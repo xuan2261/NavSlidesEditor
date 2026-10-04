@@ -59,7 +59,16 @@ function elementPayload(type) {
     line: { x1: 0, y1: 50, x2: 140, y2: 50, stroke: '#ffffff', arrowEnd: 'arrow' },
     svg: { content: '<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4"/></svg>' },
     timeline: { timelineStart: '2020', timelineEnd: '2026', events: [] },
-    game: { gameType: 'poll', poll: { prompt: 'Contract?', options: [] } },
+    game: {
+      gameType: 'poll',
+      poll: {
+        prompt: 'Contract?',
+        options: [
+          { id: 'option-a', text: 'Option A' },
+          { id: 'option-b', text: 'Option B' },
+        ],
+      },
+    },
   }
   return payloads[type]
 }
@@ -84,7 +93,15 @@ export function buildEditorContractPresentation() {
   const shape = elements.find((element) => element.type === 'shape')
   shape.action = { kind: 'next', label: 'Continue', hotspot: true }
   const video = elements.find((element) => element.type === 'video')
-  video.tracks = [{ kind: 'captions', src: '/uploads/contract-captions.vtt', srcLang: 'en', label: 'English', default: true }]
+  video.tracks = [
+    {
+      kind: 'captions',
+      src: '/uploads/contract-captions.vtt',
+      srcLang: 'en',
+      label: 'English',
+      default: true,
+    },
+  ]
   video.transcript = 'Contract video transcript'
   return {
     id: 'contract-presentation-0001',
@@ -94,24 +111,28 @@ export function buildEditorContractPresentation() {
     resolution: { width: 960, height: 540 },
     presenterTools: { slideMenu: true, chalkboard: true, themeToggle: true, fontZoom: true },
     fixtureReceipt: { revealVersion: BASELINE_REVEAL_VERSION },
-    layoutMasters: [{
-      id: 'contract-layout',
-      name: 'Contract Layout',
-      fixedElements: [{
-        id: 'contract-master-band',
-        type: 'shape',
-        shape: 'rect',
-        x: 0,
-        y: 0,
-        width: 960,
-        height: 36,
-        zIndex: 0,
-        fill: '#1f2937',
-        locked: true,
-      }],
-      placeholders: [],
-      safeArea: { x: 48, y: 32, width: 864, height: 476 },
-    }],
+    layoutMasters: [
+      {
+        id: 'contract-layout',
+        name: 'Contract Layout',
+        fixedElements: [
+          {
+            id: 'contract-master-band',
+            type: 'shape',
+            shape: 'rect',
+            x: 0,
+            y: 0,
+            width: 960,
+            height: 36,
+            zIndex: 0,
+            fill: '#1f2937',
+            locked: true,
+          },
+        ],
+        placeholders: [],
+        safeArea: { x: 48, y: 32, width: 864, height: 476 },
+      },
+    ],
     slides: [
       {
         id: 'contract-slide-parent',
@@ -134,7 +155,15 @@ export function buildEditorContractPresentation() {
                 id: 'contract-child-video',
                 src: '/uploads/child.mp4',
                 controls: true,
-                tracks: [{ kind: 'captions', src: '/uploads/child-captions.vtt', srcLang: 'en', label: 'English', default: true }],
+                tracks: [
+                  {
+                    kind: 'captions',
+                    src: '/uploads/child-captions.vtt',
+                    srcLang: 'en',
+                    label: 'English',
+                    default: true,
+                  },
+                ],
                 transcript: 'Child video transcript',
               },
               {
@@ -179,7 +208,10 @@ export function buildGeneratedHtmlContractFixtures() {
     vertical: base.slides[0].children[0],
     fragments: base.slides[0].elements.filter(({ fragment }) => fragment),
     notes: { parent: base.slides[0].speakerNotes, child: base.slides[0].children[0].speakerNotes },
-    highlight: { codeTheme: base.codeTheme, code: base.slides[0].elements.find(({ type }) => type === 'code') },
+    highlight: {
+      codeTheme: base.codeTheme,
+      code: base.slides[0].elements.find(({ type }) => type === 'code'),
+    },
     themes: { theme: base.theme, codeTheme: base.codeTheme },
     presenterTools: base.presenterTools,
     iframePreview: { preview: true, presentationId: base.id },

@@ -6,6 +6,8 @@ const IMAGE_FILTER_DEFAULTS = {
   filterContrast: 100,
   filterGrayscale: 0,
   filterSaturate: 100,
+  filterSepia: 0,
+  filterBlur: 0,
 }
 
 function hasPptxImageVisualEffects(element) {
@@ -46,7 +48,8 @@ function buildPptxImageOptions(source, element, bounds, resolution, layout) {
   }
   if (element.flipH) imageOptions.flipH = true
   if (element.flipV) imageOptions.flipV = true
-  if (!element.decorative && (element.alt || element.altText)) imageOptions.altText = element.alt || element.altText
+  if (!element.decorative && (element.alt || element.altText))
+    imageOptions.altText = element.alt || element.altText
 
   if (element.cropData) {
     const crop = element.cropData || {}
@@ -92,7 +95,8 @@ function buildPptxRasterImageOptions(data, element, bounds) {
   if (element.opacity != null && element.opacity !== 1) {
     imageOptions.transparency = Math.round((1 - element.opacity) * 100)
   }
-  if (!element.decorative && (element.alt || element.altText)) imageOptions.altText = element.alt || element.altText
+  if (!element.decorative && (element.alt || element.altText))
+    imageOptions.altText = element.alt || element.altText
 
   return imageOptions
 }
@@ -113,7 +117,8 @@ function getPptxImageSemanticWarning(element, slideNumber) {
   if (element?.type !== 'image') return null
   const semantics = []
   if (element.decorative === true) semantics.push('decorative status')
-  if (typeof element.longDescription === 'string' && element.longDescription.trim()) semantics.push('long description')
+  if (typeof element.longDescription === 'string' && element.longDescription.trim())
+    semantics.push('long description')
   return semantics.length
     ? `Slide ${slideNumber}: image ${semantics.join(' and ')} ${semantics.length === 1 ? 'is' : 'are'} not preserved in PPTX`
     : null

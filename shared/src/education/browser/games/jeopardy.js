@@ -1,0 +1,244 @@
+const { node, listen, button } = require('../dom.js')
+const { createQuizAnswerControls } = require('../quiz-answer-controls.js')
+const { describeAnswer } = require('../quiz-presenter.js')
+const { calculateWagerLimits } = require('../../games/jeopardy.js')
+const { createRoundGamesView } = require('./round-games-view.js')
+
+function presentJeopardy({ root, config, session, reset, clock }) {
+  const view = createRoundGamesView({ root, session, reset, clock }),
+    document = view.document
+  let scoreRows = [],
+    answers,
+    solution,
+    reveal,
+    correct,
+    incorrect
+  const commandFor = (state, type, extra = {}) => ({
+    type,
+    generation: state.generation,
+    turn: state.turn,
+    activeCellId: state.activeCellId,
+    ...extra,
+  })
+  const send = (command) => {
+    session.dispatch(command)
+    render(session.getState())
+  }
+  session.own(() => root.querySelector('[data-ns-game-ui]').replaceChildren())
+  listen(session, root, 'keydown', (event) => {
+    if (
+      event.target.closest?.('button,input,select,textarea,[role=button]') &&
+      [
+        'Enter',
+        ' ',
+        'ArrowLeft',
+        'ArrowRight',
+        'ArrowUp',
+        'ArrowDown',
+        'Home',
+        'End',
+        'PageUp',
+        'PageDown',
+      ].includes(event.key)
+    )
+      event.stopPropagation()
+  })
+  listen(session, root, 'click', (event) => {
+    if (event.target.closest?.('button,input,select,textarea,label')) event.stopPropagation()
+  })
+  function buildBoard(state) {
+    const teams = node(document, 'div', undefined, {
+      role: 'group',
+      'aria-label': 'Answering team',
+    })
+    for (const team of config.teams) {
+      const control = view.control(
+        team.name,
+        `team-${team.id}`,
+        () => send(commandFor(state, 'select-team', { teamId: team.id })),
+        teams
+      )
+      control.setAttribute('aria-pressed', String(team.id === state.activeTeamId))
+      control.disabled = state.phase === 'ended'
+    }
+    view.body.append(teams)
+    const board = node(document, 'div', undefined, { 'aria-label': 'Jeopardy board' })
+    board.style.cssText = 'display:flex;flex-wrap:wrap;gap:12px'
+    for (const category of config.categories) {
+      const column = node(document, 'div', undefined, {
+        role: 'region',
+        'aria-label': category.title,
+      })
+      column.append(node(document, 'h4', category.title))
+      for (const question of category.questions) {
+        const used = state.usedCellIds.includes(question.id)
+        const control = view.control(
+          `${category.title}: ${question.points} points${used ? ' — completed' : ''}`,
+          `cell-${question.id}`,
+          () => send(commandFor(state, 'select-cell', { cellId: question.id })),
+          column
+        )
+        control.dataset.nsCell = question.id
+        control.disabled = used || state.phase !== 'board' || !state.activeTeamId
+        control.style.cssText = 'display:block;min-height:44px;max-width:100%'
+      }
+      board.append(column)
+    }
+    view.body.append(board)
+  }
+  function buildWager(state) {
+    const limits = calculateWagerLimits(state.scores[state.activeTeamId], config.wagerLimit)
+    view.body.append(node(document, 'h4', 'Daily Double'))
+    const form = node(document, 'form'),
+      label = node(document, 'label', `Wager (${limits.min}–${limits.max}) `)
+    const input = node(document, 'input', undefined, {
+      type: 'number',
+      min: limits.min,
+      max: limits.max,
+      step: 1,
+      required: '',
+    })
+    input.value = String(state.currentWager)
+    label.append(input)
+    const submit = button(document, 'Start question', 'submit-wager')
+    submit.type = 'submit'
+    form.noValidate = true
+    form.append(label, submit)
+    listen(view.session, form, 'submit', (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+      const wager = Number(input.value)
+      if (
+        !input.value.trim() ||
+        !Number.isSafeInteger(wager) ||
+        wager < limits.min ||
+        wager > limits.max
+      ) {
+        view.feedback(`Enter a whole wager from ${limits.min} to ${limits.max}.`)
+        return
+      }
+      send(commandFor(state, 'submit-wager', { wager }))
+    })
+    view.body.append(form)
+  }
+  function buildQuestion(state) {
+    const question = state.activeQuestion
+    view.body.append(node(document, 'h4', question.prompt))
+    if (question.media && question.kind !== 'image-hotspot') {
+      const image = node(document, 'img', undefined, question.media)
+      image.style.cssText = 'max-width:100%;max-height:240px;object-fit:contain'
+      view.body.append(image)
+    }
+    view.body.append(
+      node(
+        document,
+        'p',
+        `${state.currentWager} points${state.isDailyDouble ? ' — Daily Double' : ''}. Enter or speak your answer; the host adjudicates.`
+      )
+    )
+    // A separate form keeps canonical radio groups independent between mounted blocks.
+    const form = node(document, 'form')
+    const controls = createQuizAnswerControls({ document, question, session: view.session })
+    answers = controls
+    view.session.own(() => {
+      controls.cancel?.()
+      controls.destroy?.()
+    })
+    form.append(controls.element)
+    listen(view.session, form, 'submit', (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+    })
+    view.body.append(form)
+    solution = node(document, 'div', undefined, { 'data-ns-answer': '' })
+    solution.append(node(document, 'p', `Answer: ${describeAnswer(question, question.answerKey)}`))
+    if (question.feedback.explanation)
+      solution.append(node(document, 'p', question.feedback.explanation))
+    view.body.append(solution)
+    reveal = view.control('Show answer', 'show-answer', () => send(commandFor(state, 'reveal')))
+    correct = view.control('Correct', 'correct', () =>
+      send(commandFor(state, 'adjudicate', { correct: true }))
+    )
+    incorrect = view.control('Incorrect', 'incorrect', () =>
+      send(commandFor(state, 'adjudicate', { correct: false }))
+    )
+  }
+  function render(state) {
+    if (
+      view.build(
+        JSON.stringify([
+          state.generation,
+          state.turn,
+          state.phase,
+          state.activeCellId,
+          state.activeTeamId,
+        ])
+      )
+    ) {
+      answers = undefined
+      view.body.append(
+        node(document, 'h3', config.title),
+        node(
+          document,
+          'small',
+          'Local one-device classroom — select the answering team. No phone connection is required.'
+        )
+      )
+      const scores = node(document, 'ul', undefined, { 'aria-label': 'Scores' })
+      scoreRows = config.teams.map((team) => {
+        const row = node(document, 'li')
+        scores.append(row)
+        return { team, row }
+      })
+      view.body.append(scores)
+      if (state.phase === 'board' || state.phase === 'ended') buildBoard(state)
+      else {
+        view.body.append(
+          node(
+            document,
+            'p',
+            `Answering team: ${config.teams.find((team) => team.id === state.activeTeamId)?.name || ''}`
+          )
+        )
+        if (state.phase === 'wager') buildWager(state)
+        if (state.phase === 'question') buildQuestion(state)
+        view.control('Complete cell without points', 'close-cell', () =>
+          send(commandFor(state, 'close-cell'))
+        )
+      }
+    }
+    for (const { team, row } of scoreRows)
+      row.textContent = `${team.name}: ${state.scores[team.id]}`
+    if (state.phase === 'question') {
+      if (answers.setDisabled) answers.setDisabled(state.expired || state.revealed)
+      else answers.element.disabled = state.expired || state.revealed
+      solution.hidden = !state.revealed
+      reveal.disabled = state.revealed
+      correct.hidden = incorrect.hidden = !state.revealed
+    }
+    const due = state.phase === 'question' ? state.deadline : null
+    view.timer(due)
+    view.schedule(state, due, commandFor(state, 'deadline'), render)
+    root.querySelector('[role="timer"]').hidden = !config.showTimer
+    const winner = config.teams.find((team) => team.id === state.winnerId)
+    view.feedback(
+      state.phase === 'ended'
+        ? winner
+          ? `${winner.name} wins!`
+          : 'Game complete.'
+        : !state.activeTeamId
+          ? 'Add an authored team to play.'
+          : state.phase === 'wager'
+            ? 'Choose a Daily Double wager.'
+            : state.revealed
+              ? 'Answer revealed. The host records Correct or Incorrect.'
+              : state.expired
+                ? 'Time expired. Show the answer, then record the result or complete without points.'
+                : state.phase === 'question'
+                  ? 'Question in progress.'
+                  : 'Select a team and an available cell.'
+    )
+  }
+  return { render, pause: () => answers?.cancel?.() }
+}
+module.exports = { presentJeopardy }

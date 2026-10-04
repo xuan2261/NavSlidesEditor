@@ -23,18 +23,6 @@ export const useEditorStore = create((set, get) => ({
   clipboard: null,
   setClipboard: (data) =>
     set({ clipboard: typeof data === 'function' ? data(get().clipboard) : data }),
-  copySelected: (elements, selectedIds) => {
-    const clones = elements
-      .filter((el) => selectedIds.includes(el.id))
-      .map((el) => ({ ...el, id: undefined }))
-    set({ clipboard: clones })
-  },
-  cutSelected: (elements, selectedIds) => {
-    const clones = elements
-      .filter((el) => selectedIds.includes(el.id))
-      .map((el) => ({ ...el, id: undefined }))
-    set({ clipboard: clones })
-  },
 
   // Cascade counter so repeated pastes of one clipboard fan out instead of
   // overlapping. Bumped after each paste, zeroed when a fresh copy/cut starts.
@@ -74,5 +62,4 @@ export const useEditorStore = create((set, get) => ({
   setShowFindReplace: (v) =>
     set({ showFindReplace: typeof v === 'function' ? v(get().showFindReplace) : v }),
   setViewMode: (v) => set({ viewMode: typeof v === 'function' ? v(get().viewMode) : v }),
-
 }))

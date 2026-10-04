@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react'
+import { gameInstanceKey } from 'revealjs-shared'
 
 /**
  * Subscribes to timer:sync and timer:ended events from the server.
- * Stores timer states in a ref so iframe consumers can read via window.__timerStates.
+ * Stores server timer state by effective slide/element identity.
  */
 export function useLiveTimerSync(socket, onTimerEnded, onTimerStatesChanged) {
   const timerStatesRef = useRef({})
@@ -23,18 +24,22 @@ export function useLiveTimerSync(socket, onTimerEnded, onTimerStatesChanged) {
 
     const isCurrentGeneration = () => generationRef.current === generation
     const handleSync = (data) => {
-      if (!isCurrentGeneration() || !data?.elementId) return
+      const key = gameInstanceKey(data)
+      if (!isCurrentGeneration() || !key) return
       timerStatesRef.current = {
         ...timerStatesRef.current,
-        [data.elementId]: data,
+        [key]: data,
       }
       onTimerStatesChangedRef.current?.(timerStatesRef.current)
     }
     const handleEnded = (data) => {
-      if (!isCurrentGeneration() || !data?.elementId) return
-      delete timerStatesRef.current[data.elementId]
-      onTimerStatesChangedRef.current?.(timerStatesRef.current)
-      onTimerEndedRef.current?.(data.elementId)
+      const key = gameInstanceKey(data)
+      if (!isCurrentGeneration() || !key || !Object.hasOwn(timerStatesRef.current, key)) return
+      const next = { ...timerStatesRef.current }
+      delete next[key]
+      timerStatesRef.current = next
+      onTimerStatesChangedRef.current?.(next)
+      onTimerEndedRef.current?.(data)
     }
 
     if (socket) {

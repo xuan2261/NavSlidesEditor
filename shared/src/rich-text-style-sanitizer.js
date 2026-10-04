@@ -1,5 +1,9 @@
 const { convertCssLengthToPx } = require('./css-length-conversion.js')
 
+function safeStyleText(css) {
+  return String(css).replace(/<\/style/gi, (closing) => `\\3c /${closing.slice(2)}`)
+}
+
 const SAFE_STYLE_PROPS = new Set([
   'color',
   'font-family',
@@ -25,7 +29,9 @@ function sanitizeRichTextStyle(value) {
     .filter(Boolean)
     .map((part) => {
       const [prop, ...rest] = part.split(':')
-      const propName = String(prop || '').trim().toLowerCase()
+      const propName = String(prop || '')
+        .trim()
+        .toLowerCase()
       const cssValue = rest.join(':').trim()
       if (!propName || !cssValue || !SAFE_STYLE_PROPS.has(propName)) return null
       if (/expression|javascript|import|behavior|binding/i.test(cssValue)) return null
@@ -46,4 +52,5 @@ function sanitizeStyleAttributes(html) {
 module.exports = {
   sanitizeRichTextStyle,
   sanitizeStyleAttributes,
+  safeStyleText,
 }

@@ -19,13 +19,12 @@ function slugify(str) {
     .replace(/(^-|-$)/g, '')
 }
 
-async function fetchProjectMediaBlob(url) {
+async function fetchProjectMediaBytes(url) {
   const fullUrl = url.startsWith('/') ? `${window.location.origin}${url}` : url
   const response = await fetch(fullUrl)
-  if (!response.ok) throw new Error(`Failed to fetch ${url}`)
-  return await response.blob()
+  if (!response.ok) throw new Error(`Failed to fetch ${url} (HTTP ${response.status})`)
+  return new Uint8Array(await response.arrayBuffer())
 }
-
 
 /** Remove editor/package authority before writing a portable project archive. */
 export function toProjectExportPresentation(presentation) {
@@ -41,24 +40,28 @@ async function collectProjectMediaFiles(mediaEntries) {
   const settledResults = await Promise.allSettled(
     mediaEntries.map(async (entry) => ({
       ...entry,
-      blob: await fetchProjectMediaBlob(entry.originalUrl),
+      bytes: await fetchProjectMediaBytes(entry.originalUrl),
     }))
   )
 
-  return settledResults.reduce(
-    (result, settledResult, index) => {
-      if (settledResult.status === 'fulfilled') {
-        result.included.push(settledResult.value)
-      } else {
-        result.skipped.push({
-          ...mediaEntries[index],
-          reason: getExportWarningMessage(settledResult.reason),
-        })
+  const included = []
+  const failures = []
+  settledResults.forEach((result, index) => {
+    if (result.status === 'fulfilled') included.push(result.value)
+    else failures.push({ ...mediaEntries[index], reason: getExportWarningMessage(result.reason) })
+  })
+  if (failures.length) {
+    throw Object.assign(
+      new Error(
+        `Project media attachment failed: ${failures.map((item) => `${item.originalUrl}: ${item.reason}`).join('; ')}`
+      ),
+      {
+        code: 'PROJECT_MEDIA_ATTACHMENT_FAILED',
+        failures,
       }
-      return result
-    },
-    { included: [], skipped: [] }
-  )
+    )
+  }
+  return included
 }
 
 /**
@@ -88,16 +91,12 @@ export async function exportProject(presentation) {
   const zip = new JSZip()
   zip.file('presentation.json', JSON.stringify(exportPresentation, null, 2))
 
-  const { included, skipped } = await collectProjectMediaFiles(mediaEntries)
-  included.forEach(({ blob, ...entry }) => {
-    zip.file(entry.archivePath, blob)
+  const included = await collectProjectMediaFiles(mediaEntries)
+  included.forEach(({ bytes, ...entry }) => {
+    zip.file(entry.archivePath, bytes)
   })
 
-  if (skipped.length > 0) {
-    console.warn('Project export skipped media files:', skipped)
-  }
-
-  const manifestMedia = included.map(({ blob: _blob, ...entry }) => entry)
+  const manifestMedia = included.map(({ bytes: _bytes, ...entry }) => entry)
   const manifest = {
     version: '1.1',
     title: exportPresentation?.title || 'Presentation',
@@ -105,17 +104,24 @@ export async function exportProject(presentation) {
     hasLocalMedia: manifestMedia.length > 0,
     mediaCount: manifestMedia.length,
     media: manifestMedia,
-    ...(skipped.length > 0 ? { skippedMedia: skipped } : {}),
   }
 
   zip.file('manifest.json', JSON.stringify(manifest, null, 2))
 
   try {
-    const html = generateRevealHTML(exportPresentation)
-    const offline = await generateOfflineHTML(html, { strictRequiredAssets: true })
+    const html = generateRevealHTML(exportPresentation, { portable: true })
+    const offline = await generateOfflineHTML(html, {
+      generatedDocument: true,
+      strictRequiredAssets: true,
+    })
     zip.file('presentation.html', offline)
-  } catch {
-    /* skip HTML generation */
+  } catch (cause) {
+    throw Object.assign(
+      new Error(`Project HTML attachment failed: ${getExportWarningMessage(cause)}`, { cause }),
+      {
+        code: 'PROJECT_HTML_ATTACHMENT_FAILED',
+      }
+    )
   }
 
   const zipBlob = await zip.generateAsync({

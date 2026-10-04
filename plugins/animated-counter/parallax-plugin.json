@@ -18,7 +18,13 @@
           "fontSize": 64,
           "label": "Progress"
         },
-        "sandbox": "sandbox.html"
+        "sandbox": "sandbox.html",
+        "htmlDependencies": {
+          "network": false,
+          "offlineCapable": true,
+          "resources": [],
+          "dynamicResources": []
+        }
       }
     ]
   }

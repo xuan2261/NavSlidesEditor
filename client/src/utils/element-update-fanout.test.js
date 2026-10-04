@@ -1,19 +1,34 @@
 import { describe, expect, it } from 'vitest'
 import { buildConnectorUpdateBatch, buildSelectionUpdates } from './element-update-fanout'
 import { createElement } from './element-factory'
-import { resolveGameConfig } from '../constants/game-element-types-constants'
+import { normalizeGameConfig } from 'revealjs-shared'
 
 describe('buildSelectionUpdates', () => {
   it('switches a persisted game subtype and retains its nested questions without changing other element types', () => {
     const game = createElement('game')
     const shape = createElement('shape')
-    const question = { id: 'question', question: 'Which?', options: ['A', 'B'], correctIndex: 1 }
+    const question = {
+      id: 'question',
+      kind: 'single-choice',
+      prompt: 'Which?',
+      points: 10,
+      timeLimit: 30,
+      options: [
+        { id: 'a', text: 'A' },
+        { id: 'b', text: 'B' },
+      ],
+      answerKey: { optionId: 'b' },
+      feedback: { correct: '', incorrect: '', explanation: '' },
+    }
     const updates = buildSelectionUpdates([game, shape], [game.id, shape.id], game.id, {
-      gameType: 'hot-potato', 'hot-potato': { questions: [question] },
+      gameType: 'hot-potato',
+      'hot-potato': { questions: [question] },
     })
-    const updatedGame = JSON.parse(JSON.stringify({ ...game, ...updates.find((patch) => patch.id === game.id) }))
+    const updatedGame = JSON.parse(
+      JSON.stringify({ ...game, ...updates.find((patch) => patch.id === game.id) })
+    )
     expect(updatedGame.gameType).toBe('hot-potato')
-    expect(resolveGameConfig(updatedGame).questions).toEqual([question])
+    expect(normalizeGameConfig(updatedGame).questions).toEqual([question])
     expect(updates.some((patch) => patch.id === shape.id)).toBe(false)
   })
 
@@ -183,20 +198,42 @@ describe('connector update fanout', () => {
       [
         { id: 'target', type: 'shape', x: 10, y: 20, width: 100, height: 40 },
         {
-          id: 'line', type: 'line', x: 0, y: 0, width: 300, height: 100,
-          x1: 0, y1: 50, x2: 300, y2: 50,
+          id: 'line',
+          type: 'line',
+          x: 0,
+          y: 0,
+          width: 300,
+          height: 100,
+          x1: 0,
+          y1: 50,
+          x2: 300,
+          y2: 50,
           connections: { start: { targetId: 'target', anchor: 'e' } },
         },
       ],
       [{ id: 'target', x: 40 }]
     )
 
-    expect(batch).toEqual([{ id: 'target', x: 40 }, { id: 'line', x1: 140, y1: 40 }])
+    expect(batch).toEqual([
+      { id: 'target', x: 40 },
+      { id: 'line', x1: 140, y1: 40 },
+    ])
   })
 })
 
 describe('line dimension edits', () => {
-  const line = { id: 'line', type: 'line', width: 100, height: 80, x1: 5, x2: 90, y1: 10, y2: 70, cx: 40, cy: 30 }
+  const line = {
+    id: 'line',
+    type: 'line',
+    width: 100,
+    height: 80,
+    x1: 5,
+    x2: 90,
+    y1: 10,
+    y2: 70,
+    cx: 40,
+    cy: 30,
+  }
 
   it('scales stored local endpoints and curve controls when numeric dimensions change', () => {
     expect(buildConnectorUpdateBatch([line], [{ id: 'line', width: 200, height: 40 }])).toEqual([
@@ -205,8 +242,8 @@ describe('line dimension edits', () => {
   })
 
   it('does not scale pointer-provided explicit coordinates a second time', () => {
-    expect(buildConnectorUpdateBatch([line], [{ id: 'line', width: 200, x1: 20, x2: 170, cx: 100 }])).toEqual([
-      { id: 'line', width: 200, x1: 20, x2: 170, cx: 100 },
-    ])
+    expect(
+      buildConnectorUpdateBatch([line], [{ id: 'line', width: 200, x1: 20, x2: 170, cx: 100 }])
+    ).toEqual([{ id: 'line', width: 200, x1: 20, x2: 170, cx: 100 }])
   })
 })

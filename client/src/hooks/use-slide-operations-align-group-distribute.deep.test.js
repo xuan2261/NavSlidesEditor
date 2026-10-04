@@ -10,8 +10,7 @@ function setupOps(initialElements, selectedIds) {
   const idxRef = { current: 0 }
   const editingRef = { current: null }
   const setPresentation = (updater) => {
-    state.presentation =
-      typeof updater === 'function' ? updater(state.presentation) : updater
+    state.presentation = typeof updater === 'function' ? updater(state.presentation) : updater
   }
   const { result } = renderHook(() =>
     useSlideOperations({
@@ -128,6 +127,17 @@ describe('[cap:canvas.group tier:deep] group / ungroup', () => {
     ]
     const { ops, els } = setupOps(elements, ['a', 'c'])
     act(() => ops.deleteSelectedElements())
+    expect(els()).toEqual(elements)
+  })
+
+  it.each(['hidden', 'locked'])('blocks alignment of a group with a %s sibling', (flag) => {
+    const elements = [
+      { ...THREE[0], groupId: 'g' },
+      { ...THREE[1], groupId: 'g', [flag]: true },
+      THREE[2],
+    ]
+    const { ops, els } = setupOps(elements, ['a', 'c'])
+    act(() => ops.alignElements('left'))
     expect(els()).toEqual(elements)
   })
 })

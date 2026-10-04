@@ -1,7 +1,10 @@
 const fs = require('node:fs')
 const path = require('node:path')
+const { execFileSync } = require('node:child_process')
 const { build } = require('esbuild')
 const { publishVendorAssets } = require('./vendor-publication')
+const { buildEducationRuntime } = require('./build-education-runtime')
+const { prepareTikzVendor } = require('./tikz-vendor-publication')
 const {
   REVEAL_REQUIRED_VENDOR_PATHS,
   REVEAL_RUNTIME_VERSION,
@@ -27,7 +30,6 @@ const localSpecs = [
   ['highlight.js/lib', 'highlight.js/lib'],
   ['d3/dist', 'd3/dist'],
   ['socket.io-client/dist', 'socket.io'],
-  ['@drgrice1/tikzjax/dist', 'tikzjax'],
   ['@fortawesome/fontawesome-free/css', 'font-awesome/css'],
   ['@fortawesome/fontawesome-free/webfonts', 'font-awesome/webfonts'],
   ['marked/lib/marked.umd.js', 'marked/marked.min.js'],
@@ -96,17 +98,28 @@ async function main() {
   fs.mkdirSync(generatedDir, { recursive: true })
 
   try {
+    execFileSync(process.execPath, [path.join(rootDir, 'plugins/animated-counter/build.mjs')], {
+      cwd: rootDir,
+      stdio: 'inherit',
+    })
     await buildQrCodeBundle(qrCodeBundle)
     const localItems = localSpecs.map(([sourceLabel, destination]) => ({
       source: getPackagePath(sourceLabel),
       sourceLabel,
       destination,
     }))
+    localItems.push(
+      prepareTikzVendor(
+        getPackagePath('@drgrice1/tikzjax/dist'),
+        path.join(generatedDir, 'tikzjax')
+      )
+    )
     localItems.push({
       source: qrCodeBundle,
       sourceLabel: 'generated qrcode browser bundle',
       destination: 'qrcode/qrcode.min.js',
     })
+    localItems.push(...(await buildEducationRuntime(path.join(generatedDir, 'education'))))
 
     const manifest = await publishVendorAssets({
       rootDir,

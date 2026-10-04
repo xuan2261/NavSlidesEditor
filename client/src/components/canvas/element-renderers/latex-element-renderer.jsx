@@ -16,7 +16,7 @@ function generateLatexIframeHtml(content, options = {}) {
 
   let bodyContent
   if (hasTikz) {
-    bodyContent = `<script type="text/tikz">${escapeScriptElementContent(content)}</script>`
+    bodyContent = `<script type="text/tikz" data-disable-cache="true">${escapeScriptElementContent(content)}</script>`
   } else {
     bodyContent = `<div id="math"></div>
     <script>

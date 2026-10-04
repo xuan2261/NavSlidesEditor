@@ -27,11 +27,16 @@ function validateEntries(entries, label) {
   for (const entry of entries) {
     const entryPath = normalizedManifestPath(entry?.path)
     if (exact.has(entryPath)) throw new Error(`Duplicate ${label} path: ${entryPath}`)
-    if (folded.has(entryPath.toLowerCase())) throw new Error(`${label} path collision: ${entryPath}`)
+    if (folded.has(entryPath.toLowerCase()))
+      throw new Error(`${label} path collision: ${entryPath}`)
     if (!Number.isSafeInteger(entry.bytes) || entry.bytes < 0 || !SHA256.test(entry.sha256 || '')) {
       throw new Error(`Invalid ${label} entry: ${entryPath}`)
     }
-    exactKeys(entry, label === 'lock' ? ['name', 'path', 'bytes', 'sha256'] : ['path', 'bytes', 'sha256'], `${label} entry`)
+    exactKeys(
+      entry,
+      label === 'lock' ? ['name', 'path', 'bytes', 'sha256'] : ['path', 'bytes', 'sha256'],
+      `${label} entry`
+    )
     if (label === 'lock' && !/^[a-z0-9][a-z0-9._-]*$/i.test(entry.name || '')) {
       throw new Error(`Invalid lock name: ${entry.name}`)
     }
@@ -61,7 +66,12 @@ function expectedLock(spec, baseDir) {
     }
   }
   const stat = fs.lstatSync(absolute)
-  return { name, path: normalizedManifestPath(relative), bytes: stat.size, sha256: sha256File(absolute) }
+  return {
+    name,
+    path: normalizedManifestPath(relative),
+    bytes: stat.size,
+    sha256: sha256File(absolute),
+  }
 }
 
 export function verifyManifest(options) {
@@ -70,15 +80,21 @@ export function verifyManifest(options) {
     throw new Error('Client manifest is a symbolic link or reparse point')
   }
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
-  if (manifest?.schemaVersion !== 1) throw new Error('Unsupported client manifest schema')
-  exactKeys(manifest, ['schemaVersion', 'subject', 'build', 'locks', 'files', 'artifact'], 'Manifest')
+  if (manifest?.schemaVersion !== 2)
+    throw new Error('Unsupported client manifest schema; rebuild with source input capture')
+  exactKeys(
+    manifest,
+    ['schemaVersion', 'subject', 'build', 'locks', 'files', 'artifact'],
+    'Manifest'
+  )
   exactKeys(manifest.subject, ['sha', 'dirty'], 'Subject')
-  exactKeys(manifest.build, ['command', 'node', 'npm', 'vite'], 'Build')
+  exactKeys(manifest.build, ['command', 'node', 'npm', 'vite', 'inputHash'], 'Build')
   exactKeys(manifest.artifact, ['files', 'bytes', 'identity'], 'Artifact')
   if (!SUBJECT.test(manifest.subject?.sha || '') || typeof manifest.subject?.dirty !== 'boolean') {
     throw new Error('Client manifest subject is invalid')
   }
-  if (manifest.subject.sha !== options.subject?.toLowerCase()) throw new Error('Subject SHA mismatch')
+  if (manifest.subject.sha !== options.subject?.toLowerCase())
+    throw new Error('Subject SHA mismatch')
   if (manifest.subject.dirty !== options.dirty) throw new Error('Dirty marker mismatch')
   if (manifest.build?.command !== options.buildCommand) throw new Error('Build command mismatch')
   for (const field of ['node', 'npm', 'vite']) {
@@ -86,12 +102,23 @@ export function verifyManifest(options) {
       throw new Error(`Build ${field} version is invalid`)
     }
   }
+  if (!SHA256.test(manifest.build?.inputHash || ''))
+    throw new Error('Compilation source input hash is invalid')
+  const expectedInputHash = options.expectedInputHash
+  if (
+    expectedInputHash !== undefined &&
+    (!SHA256.test(expectedInputHash) || manifest.build.inputHash !== expectedInputHash)
+  ) {
+    throw new Error('Compilation source input mismatch')
+  }
   validateEntries(manifest.files, 'artifact')
   validateEntries(manifest.locks, 'lock')
   const sortedFiles = [...manifest.files].sort((left, right) => compareText(left.path, right.path))
   const sortedLocks = [...manifest.locks].sort((left, right) => compareText(left.name, right.name))
-  if (JSON.stringify(sortedFiles) !== JSON.stringify(manifest.files)) throw new Error('Artifact paths are not sorted')
-  if (JSON.stringify(sortedLocks) !== JSON.stringify(manifest.locks)) throw new Error('Lock paths are not sorted')
+  if (JSON.stringify(sortedFiles) !== JSON.stringify(manifest.files))
+    throw new Error('Artifact paths are not sorted')
+  if (JSON.stringify(sortedLocks) !== JSON.stringify(manifest.locks))
+    throw new Error('Lock paths are not sorted')
   if (
     !Number.isSafeInteger(manifest.artifact?.files) ||
     !Number.isSafeInteger(manifest.artifact?.bytes) ||
@@ -99,7 +126,8 @@ export function verifyManifest(options) {
   ) {
     throw new Error('Artifact summary is invalid')
   }
-  if (identityFor(manifest) !== manifest.artifact.identity) throw new Error('Artifact identity mismatch')
+  if (identityFor(manifest) !== manifest.artifact.identity)
+    throw new Error('Artifact identity mismatch')
 
   const lockSpecs = options.locks?.length
     ? options.locks
@@ -107,7 +135,8 @@ export function verifyManifest(options) {
   const expectedLocks = lockSpecs
     .map((spec) => expectedLock(spec, options.baseDir))
     .sort((left, right) => compareText(left.name, right.name))
-  if (JSON.stringify(expectedLocks) !== JSON.stringify(manifest.locks)) throw new Error('Lock hash mismatch')
+  if (JSON.stringify(expectedLocks) !== JSON.stringify(manifest.locks))
+    throw new Error('Lock hash mismatch')
 
   const actualFiles = collectFiles(options.root)
   const declared = new Map(manifest.files.map((entry) => [entry.path, entry]))
@@ -116,7 +145,8 @@ export function verifyManifest(options) {
     const found = actual.get(entry.path)
     if (!found) throw new Error(`Artifact file missing: ${entry.path}`)
     if (found.bytes !== entry.bytes) throw new Error(`Client artifact size mismatch: ${entry.path}`)
-    if (found.sha256 !== entry.sha256) throw new Error(`Client artifact hash mismatch: ${entry.path}`)
+    if (found.sha256 !== entry.sha256)
+      throw new Error(`Client artifact hash mismatch: ${entry.path}`)
   }
   for (const entry of actualFiles) {
     if (!declared.has(entry.path)) throw new Error(`Artifact file extra: ${entry.path}`)
@@ -125,7 +155,12 @@ export function verifyManifest(options) {
   if (manifest.artifact.files !== actualFiles.length || manifest.artifact.bytes !== bytes) {
     throw new Error('Artifact summary mismatch')
   }
-  return { artifactIdentity: manifest.artifact.identity, files: actualFiles.length, bytes }
+  return {
+    artifactIdentity: manifest.artifact.identity,
+    inputHash: manifest.build.inputHash,
+    files: actualFiles.length,
+    bytes,
+  }
 }
 
 function parseArgs(args) {
@@ -135,7 +170,9 @@ function parseArgs(args) {
     const value = args[++index]
     if (!value) throw new Error(`Missing value for ${key}`)
     if (key === '--lock') values.locks.push(value)
-    else if (key.startsWith('--')) values[key.slice(2).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = value
+    else if (key === '--input-hash') values.expectedInputHash = value
+    else if (key.startsWith('--'))
+      values[key.slice(2).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = value
     else throw new Error(`Unknown argument: ${key}`)
   }
   values.dirty = values.dirty === 'true' ? true : values.dirty === 'false' ? false : values.dirty

@@ -15,14 +15,18 @@
  */
 /**
  * @typedef {Object} ElementAction
- * @property {'url'|'slide'|'next'|'previous'|'first'|'last'|'email'|'download'} kind
+ * @property {'url'|'slide'|'next'|'previous'|'first'|'last'|'email'|'download'|'show'|'hide'|'toggle'|'score-add'|'score-subtract'|'reset-slide'} kind
  * @property {string} [url] - Required only by URL, email, and download actions
  * @property {string} [slideId] - Required only by slide actions
  * @property {'same'|'new'} [target='same'] - Supported only by URL-like actions
  * @property {string} [label] - Accessible activation name
  * @property {boolean} [hotspot=false] - Transparent presentation activation surface
+ * @property {string} [targetElementId] - Visibility target in this effective slide only
+ * @property {string} [referenceError] - Persisted unresolved target diagnostic; activation blocked until an author chooses a target
+ * @property {string} [variableId] - Declared bounded deck variable for score actions
+ * @property {number} [amount] - Finite positive score delta, at most 1,000,000
+ * @property {boolean} [resetVariables=false] - Explicit whole-deck variable reset, not implicit in reset-slide
  */
-
 
 /**
  * Base element — properties shared by every element on the canvas.
@@ -40,6 +44,7 @@
  * @property {Object}      [shadow]       - Drop shadow config
  * @property {number}      [opacity=1]    - Element opacity 0-1
  * @property {ElementAction} [action] - Optional validated presentation action metadata
+ * @property {'visible'|'hidden'} [initialVisibility='visible'] - Runtime trigger visibility; separate from editor hidden/export omission
  */
 
 /**
@@ -321,6 +326,16 @@
  */
 
 /**
+ * Authoring-only bounded numeric declaration. Runtime values are never persisted.
+ * @typedef {Object} InteractionVariable
+ * @property {string} id - Unique declaration ID (at most 32 per deck)
+ * @property {string} name - Plain text name of at most 80 characters
+ * @property {number} initialValue - Finite initial value between min and max
+ * @property {number} min - Finite lower bound, at least -1,000,000,000
+ * @property {number} max - Finite upper bound, at most 1,000,000,000
+ */
+
+/**
  * A full presentation document.
  * @typedef {Object} Presentation
  * @property {string}          id
@@ -330,6 +345,7 @@
  * @property {Slide[]}         slides
  * @property {DesignTokens}    [designTokens]       - Deck-level design token set (merged over DEFAULT_TOKENS)
  * @property {LayoutMaster[]}      [layoutMasters] - Bounded optional reusable layout registry
+ * @property {InteractionVariable[]} [interactionVariables] - Authored bounded declarations; current scores belong to the document runtime
  * @property {FooterConfig}    [footer]
  * @property {PresenterTools}  [presenterTools]
  * @property {string}          [createdAt]  - ISO date string

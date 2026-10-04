@@ -17,7 +17,7 @@ vi.mock('../hooks/use-reveal-preview-frame', () => ({
 import AnimationPreviewModal from './AnimationPreviewModal.jsx'
 
 describe('AnimationPreviewModal', () => {
-  it('renders preview html for only the current slide with initial fragment state', () => {
+  it('renders an accessible preview containing only the current slide', () => {
     const presentation = {
       title: 'Demo Deck',
       theme: 'black',
@@ -57,10 +57,5 @@ describe('AnimationPreviewModal', () => {
     expect(previewFrameMock).toHaveBeenCalled()
     expect(previewFrameMock.mock.calls.at(-1)[0]).toContain('Second slide')
     expect(previewFrameMock.mock.calls.at(-1)[0]).not.toContain('First slide')
-    expect(previewFrameMock.mock.calls.at(-1)[1]).toEqual({
-      slideIndex: 0,
-      verticalIndex: 0,
-      fragmentIndex: 0,
-    })
   })
 })

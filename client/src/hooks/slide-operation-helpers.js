@@ -1,3 +1,11 @@
+import { clonePresetElements } from 'revealjs-shared/src/education/presets/clone.js'
+import {
+  remapInteractionReferences,
+  remapInteractionSlideReferences,
+} from 'revealjs-shared/src/education/interaction-references.js'
+import { resolveEffectiveElements } from 'revealjs-shared'
+import { isGameSubtype } from 'revealjs-shared/src/education/game-registry.js'
+
 export function clampSlideIndex(index, slideCount) {
   if (slideCount <= 0) return 0
   return Math.min(Math.max(index, 0), slideCount - 1)
@@ -9,28 +17,30 @@ function uniqueSortedIndices(indices, maxLength) {
     .sort((a, b) => a - b)
 }
 
-function cloneSlideWithNewIds(slide, createId) {
+export function cloneSlideWithNewIds(
+  slide,
+  createId = () => crypto.randomUUID(),
+  layoutMasters = [],
+  warnings = []
+) {
   const id = createId()
-  const elementIds = new Map()
-  const sourceElements = slide.elements || []
-  for (const element of sourceElements) elementIds.set(element.id, createId())
-  const remapEndpoint = (endpoint) =>
-    endpoint && elementIds.has(endpoint.targetId)
-      ? { ...endpoint, targetId: elementIds.get(endpoint.targetId) }
-      : endpoint
-  const elements = sourceElements.map((element) => ({
-    ...element,
-    id: elementIds.get(element.id),
-    ...(element.connections
-      ? {
-          connections: {
-            ...element.connections,
-            ...(element.connections.start ? { start: remapEndpoint(element.connections.start) } : {}),
-            ...(element.connections.end ? { end: remapEndpoint(element.connections.end) } : {}),
-          },
+  const effective = resolveEffectiveElements(slide, layoutMasters).elements
+  const byId = new Map(effective.map((element) => [element.id, element]))
+  const sourceElements = (slide.elements || []).map((element) =>
+    byId.get(element.id)?.action ? { ...element, action: byId.get(element.id).action } : element
+  )
+  const copied = sourceElements.length
+    ? clonePresetElements(
+        { elements: sourceElements },
+        {
+          createId,
+          destinationElements: effective,
+          preserveExternalTargets: true,
         }
-      : {}),
-  }))
+      )
+    : { elements: [], idMap: new Map() }
+  const elementIds = copied.idMap
+  const elements = copied.elements
   const overrides = slide.layoutOverrides
     ? {
         ...slide.layoutOverrides,
@@ -38,20 +48,55 @@ function cloneSlideWithNewIds(slide, createId) {
           ? { hiddenElementIds: [...slide.layoutOverrides.hiddenElementIds] }
           : {}),
         ...(slide.layoutOverrides.elementPatches
-          ? { elementPatches: Object.fromEntries(Object.entries(slide.layoutOverrides.elementPatches).map(([id, patch]) => [id, { ...patch }])) }
+          ? { elementPatches: structuredClone(slide.layoutOverrides.elementPatches) }
           : {}),
         ...(slide.layoutOverrides.placeholderBindings
-          ? { placeholderBindings: Object.fromEntries(Object.entries(slide.layoutOverrides.placeholderBindings).flatMap(([placeholderId, elementId]) => elementIds.has(elementId) ? [[placeholderId, elementIds.get(elementId)]] : [])) }
+          ? {
+              placeholderBindings: Object.fromEntries(
+                Object.entries(slide.layoutOverrides.placeholderBindings).flatMap(
+                  ([placeholderId, elementId]) =>
+                    elementIds.has(elementId) ? [[placeholderId, elementIds.get(elementId)]] : []
+                )
+              ),
+            }
           : {}),
       }
     : undefined
-  return {
-    ...slide,
+  const copy = {
+    ...structuredClone(slide),
     id,
     elements,
     ...(overrides ? { layoutOverrides: overrides } : {}),
-    children: (slide.children || []).map((child) => cloneSlideWithNewIds(child, createId)),
+    children: (slide.children || []).map((child) =>
+      cloneSlideWithNewIds(child, createId, layoutMasters, warnings)
+    ),
   }
+  const effectiveElements = (target) => resolveEffectiveElements(target, layoutMasters).elements
+  if (copy.layoutOverrides?.elementPatches) {
+    for (const [key, patch] of Object.entries(copy.layoutOverrides.elementPatches)) {
+      let authored = patch
+      if (Object.keys(patch).some(isGameSubtype)) {
+        const { action, ...config } = patch
+        const cloned = clonePresetElements(
+          { elements: [{ ...config, id: `layout-override:${key}` }] },
+          { createId, destinationElements: effectiveElements(copy), preserveExternalTargets: true }
+        )
+        const { id: _ownedId, ...ownedConfig } = cloned.elements[0]
+        authored = { ...ownedConfig, ...(action ? { action } : {}) }
+      }
+      const remapped = remapInteractionReferences([{ ...authored, id: key }], elementIds, {
+        destinationElements: effectiveElements(copy),
+      })
+      const { id: _patchId, ...next } = remapped.elements[0]
+      copy.layoutOverrides.elementPatches[key] = next
+      warnings.push(...remapped.warnings)
+    }
+  }
+  const remapped = remapInteractionSlideReferences({ ...copy, children: undefined }, new Map(), {
+    effectiveElements,
+  })
+  warnings.push(...remapped.warnings)
+  return { ...remapped.slide, children: copy.children }
 }
 
 /**
@@ -60,16 +105,23 @@ function cloneSlideWithNewIds(slide, createId) {
  * @param {() => string} [createId] - factory for new slide/element IDs (defaults to crypto.randomUUID)
  * @param {number} [currentSlideIndex] - for future undo/redo context tracking
  */
-export function duplicateSlidesAtIndices(slides, indices, createId = () => crypto.randomUUID(), _currentSlideIndex = 0) {
+export function duplicateSlidesAtIndices(
+  slides,
+  indices,
+  createId = () => crypto.randomUUID(),
+  _currentSlideIndex = 0,
+  layoutMasters = []
+) {
   const selected = uniqueSortedIndices(indices, slides.length)
   const selectedSet = new Set(selected)
   const duplicatedIndices = []
   const nextSlides = []
+  const warnings = []
 
   slides.forEach((slide, index) => {
     nextSlides.push(slide)
     if (selectedSet.has(index)) {
-      nextSlides.push(cloneSlideWithNewIds(slide, createId))
+      nextSlides.push(cloneSlideWithNewIds(slide, createId, layoutMasters, warnings))
       duplicatedIndices.push(nextSlides.length - 1)
     }
   })
@@ -77,6 +129,7 @@ export function duplicateSlidesAtIndices(slides, indices, createId = () => crypt
   return {
     slides: nextSlides,
     duplicatedIndices,
+    warnings,
     currentSlideIndex:
       duplicatedIndices.length > 0 ? duplicatedIndices[duplicatedIndices.length - 1] : 0,
   }

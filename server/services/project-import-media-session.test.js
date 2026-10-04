@@ -1,7 +1,6 @@
 import path from 'node:path'
 import os from 'node:os'
 import { createRequire } from 'node:module'
-import { fileURLToPath } from 'node:url'
 import fs from 'fs-extra'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const require = createRequire(import.meta.url)
@@ -9,11 +8,11 @@ const require = createRequire(import.meta.url)
 let root
 let sessions
 let storage
-const serverCachePrefix = fileURLToPath(new URL('../', import.meta.url))
 
 function resetCjsModules() {
+  const serverDir = `${path.resolve(path.dirname(require.resolve('./storage')), '..')}${path.sep}`
   for (const key of Object.keys(require.cache)) {
-    if (key.startsWith(serverCachePrefix)) {
+    if (key.startsWith(serverDir)) {
       delete require.cache[key]
     }
   }

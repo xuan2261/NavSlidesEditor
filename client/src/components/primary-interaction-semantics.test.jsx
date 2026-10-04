@@ -2,6 +2,8 @@ import React from 'react'
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+import { createDefaultGameConfig } from '../../../shared/src/education/game-defaults.js'
+import { createCanonicalQuestion } from '../../../shared/src/education/question-factory.js'
 
 vi.mock('./dashboard/TemplateSlideThumbnail', () => ({
   default: ({ index }) => <div>Thumbnail {index + 1}</div>,
@@ -44,8 +46,17 @@ describe('semantic primary interactions', () => {
   it('selects a team and opens a Jeopardy cell from the keyboard', async () => {
     const user = userEvent.setup()
     const categories = ['Math', 'Science', 'History', 'Art', 'Music'].map((name, index) => ({
-      name,
-      questions: [{ points: 100, question: `Question ${index + 1}`, answer: `Answer ${index + 1}` }],
+      id: `category-${index + 1}`,
+      title: name,
+      questions: [
+        createCanonicalQuestion({
+          id: `cell-${index + 1}`,
+          kind: 'fill-blank',
+          points: 100,
+          prompt: `Question ${index + 1}`,
+          answerKey: { accepted: [`Answer ${index + 1}`], caseSensitive: false },
+        }),
+      ],
     }))
     render(
       <GameElementRenderer
@@ -54,9 +65,12 @@ describe('semantic primary interactions', () => {
           type: 'game',
           gameType: 'jeopardy',
           gameStatus: 'running',
-          categories,
-          teams: [{ id: 'alpha', name: 'Alpha', color: '#f59e0b', score: 0 }],
-          showTimer: false,
+          jeopardy: {
+            ...createDefaultGameConfig('jeopardy'),
+            categories,
+            teams: [{ id: 'alpha', name: 'Alpha', color: '#f59e0b' }],
+            showTimer: false,
+          },
         }}
         isPresenting
       />

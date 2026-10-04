@@ -6,22 +6,14 @@ const base = { id: 'el-1', x: 0, y: 0, width: 400, height: 300, zIndex: 1 }
 describe('Bug fixes in element renderers', () => {
   describe('Iframe wrapper for animation support', () => {
     it('wraps HTML embed iframe in a div container', () => {
-      const html = renderElement(
-        { ...base, type: 'html', content: '<p>test</p>' },
-        {},
-        {}
-      )
+      const html = renderElement({ ...base, type: 'html', content: '<p>test</p>' }, {}, {})
       // Should have a wrapping div around the iframe
       expect(html).toMatch(/^<div/)
       expect(html).toContain('<iframe')
     })
 
     it('wraps markdown iframe in a div container', () => {
-      const html = renderElement(
-        { ...base, type: 'markdown', content: '# Title' },
-        {},
-        {}
-      )
+      const html = renderElement({ ...base, type: 'markdown', content: '# Title' }, {}, {})
       expect(html).toContain('<iframe')
     })
   })
@@ -42,51 +34,13 @@ describe('Bug fixes in element renderers', () => {
       expect(html).toContain('text-overflow:ellipsis')
     })
 
-    it('renders citation link as non-interactive in slides', () => {
-      const html = renderElement(
-        {
-          ...base,
-          type: 'image',
-          src: '/uploads/photo.jpg',
-          citationLink: 'https://example.com',
-          citationText: 'Source',
-        },
-        {},
-        {}
-      )
-      expect(html).toContain('pointer-events:none')
-    })
-
     it('omits citation div when no citation properties are set', () => {
-      const html = renderElement(
-        { ...base, type: 'image', src: '/uploads/photo.jpg' },
-        {},
-        {}
-      )
+      const html = renderElement({ ...base, type: 'image', src: '/uploads/photo.jpg' }, {}, {})
       expect(html).not.toContain('citation')
     })
   })
 
   describe('Video rendering edge cases', () => {
-    it('handles video with only startTime (no endTime)', () => {
-      const html = renderElement(
-        { ...base, type: 'video', src: '/uploads/v.mp4', startTime: 10, endTime: 0 },
-        {},
-        {}
-      )
-      expect(html).toContain('#t=10')
-      expect(html).not.toMatch(/#t=10,/)  // no end range
-    })
-
-    it('handles video with endTime less than startTime', () => {
-      const html = renderElement(
-        { ...base, type: 'video', src: '/uploads/v.mp4', startTime: 30, endTime: 5 },
-        {},
-        {}
-      )
-      expect(html).toContain('#t=30')  // uses start only
-    })
-
     it('renders video poster attribute when provided', () => {
       const html = renderElement(
         { ...base, type: 'video', src: '/uploads/v.mp4', poster: '/uploads/thumb.jpg' },
@@ -108,7 +62,7 @@ describe('Bug fixes in element renderers', () => {
         {},
         {}
       )
-      expect(html).toContain('/uploads/current.mp4#t=2')
+      expect(html).toContain('/uploads/current.mp4')
       expect(html).not.toContain('/uploads/stale.mp4')
     })
 

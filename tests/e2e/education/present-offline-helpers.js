@@ -1,0 +1,28 @@
+/**
+ * Triggers the normal editor Present control and captures the popup window.
+ * Returns { popup, url }.
+ */
+export async function launchPresentPopup(page) {
+  const popupPromise = page.waitForEvent('popup', { timeout: 15000 })
+  const presentTrigger = page.getByRole('button', { name: 'Present', exact: true }).first()
+  await presentTrigger.click()
+  const fromBeginningItem = page.getByRole('menuitem', { name: /From beginning/i })
+  await fromBeginningItem.click()
+
+  const popup = await popupPromise
+  await popup.waitForLoadState('domcontentloaded')
+  const url = popup.url()
+  return { popup, url }
+}
+
+export async function launchPresentSlidePopup(page, slideIndex) {
+  const { popup, url } = await launchPresentPopup(page)
+  try {
+    await popup.goto(`${url}#/${slideIndex}`)
+    await popup.waitForSelector('.reveal section.present', { timeout: 15000 })
+    return { popup, url }
+  } catch (error) {
+    await popup.close()
+    throw error
+  }
+}

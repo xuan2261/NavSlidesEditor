@@ -37,7 +37,6 @@ describe('PPTX element export policy', () => {
     })
     expect(getPptxElementExportPolicy('markdown').mode).toBe('client-fallback-raster')
     expect(getPptxElementExportPolicy('video').mode).toBe('media-cover')
-    expect(getPptxElementExportPolicy('game').mode).toBe('live-only-static')
   })
 
   it('uses chart-specific export strategies without changing generic chart policy', () => {
@@ -64,9 +63,9 @@ describe('PPTX element export policy', () => {
         src: 'https://example.test/movie.mp4',
       })
     ).toEqual(getPptxElementExportPolicy('video'))
-    expect(
-      getPptxElementExportStrategy({ type: 'audio', src: '/uploads/sound.ogg' })
-    ).toEqual(getPptxElementExportPolicy('audio'))
+    expect(getPptxElementExportStrategy({ type: 'audio', src: '/uploads/sound.ogg' })).toEqual(
+      getPptxElementExportPolicy('audio')
+    )
   })
 
   it('routes only safe filtered or rounded images through the server raster strategy', () => {

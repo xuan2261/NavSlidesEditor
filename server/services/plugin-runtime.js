@@ -2,6 +2,7 @@ const logger = require('./logger')
 const path = require('path')
 const fs = require('fs-extra')
 const { DATA_DIR } = require('./storage')
+const { validateHtmlDependencies } = require('revealjs-shared/src/education/html-sandbox-policy.js')
 
 const SAFE_SLUG_RE = /^[a-z0-9][a-z0-9-]{0,63}$/
 const SAFE_ELEMENT_TYPE_RE = /^[a-z0-9][a-z0-9-]{0,63}$/
@@ -22,12 +23,19 @@ function normalizeContributedElement(raw = {}) {
   const sandbox = raw.sandbox ? String(raw.sandbox) : null
   if (!SAFE_ELEMENT_TYPE_RE.test(type) || !raw.label) return null
   if (sandbox && (!SAFE_SANDBOX_RE.test(sandbox) || sandbox.includes('..'))) return null
+  let htmlDependencies
+  try {
+    htmlDependencies = validateHtmlDependencies(raw.htmlDependencies)
+  } catch {
+    return null
+  }
   return {
     type,
     label: String(raw.label),
     defaultSize: raw.defaultSize || { width: 360, height: 180 },
     defaultData: raw.defaultData || {},
     sandbox,
+    ...(htmlDependencies ? { htmlDependencies } : {}),
   }
 }
 
@@ -65,7 +73,9 @@ async function discoverInRoot(root) {
   if (!(await fs.pathExists(root))) return []
   const entries = await fs.readdir(root, { withFileTypes: true })
   const plugins = await Promise.all(
-    entries.filter((entry) => entry.isDirectory()).map((entry) => readPluginFromRoot(root, entry.name))
+    entries
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => readPluginFromRoot(root, entry.name))
   )
   return plugins.filter(Boolean)
 }
@@ -95,7 +105,9 @@ async function getPlugin(slug) {
 
 async function resolvePluginAssetPath(slug, assetPath) {
   if (!isSafeSlug(slug)) return { error: 'invalid' }
-  const plugin = await readPluginFromRoot(getUserPluginsDir(), slug) || await readPluginFromRoot(BUNDLED_PLUGINS_DIR, slug)
+  const plugin =
+    (await readPluginFromRoot(getUserPluginsDir(), slug)) ||
+    (await readPluginFromRoot(BUNDLED_PLUGINS_DIR, slug))
   if (!plugin) return null
   const distRoot = path.join(plugin.root, 'dist')
   const requested = path.resolve(distRoot, assetPath || '')

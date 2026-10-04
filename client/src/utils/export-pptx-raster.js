@@ -4,11 +4,13 @@ import QRCode from 'qrcode'
 import iconPaths from '../../../shared/data/icon-paths.json'
 import { createSvgDataUri, normalizeCssColor } from './export-pptx-core'
 import { sanitizeSvgContent } from './content-safety'
-import { classifyPptxPosterSource, resolveColorForTokens } from 'revealjs-shared'
+import { resolveColorForTokens, renderStaticGameSnapshot } from 'revealjs-shared'
+import { applySvgPaintOverrides } from 'revealjs-shared/src/svg-paint-overrides.js'
 import {
   renderHtmlDocumentToPngDataUri,
   renderHtmlToPngDataUri,
   renderIframeCanvasToPngDataUri,
+  renderImageToPngDataUri,
 } from './export-pptx-raster-capture'
 
 const LATEX_RASTER_SCALE = 3
@@ -114,7 +116,7 @@ async function fetchDataUriAsset(url) {
 }
 
 function safeInlineJs(js) {
-  return String(js || '').split('</script').join('<\\/script')
+  return String(js || '').replace(/<\//gi, '\\u003c/')
 }
 
 async function replaceCssUrls(css, stylesheetUrl) {
@@ -144,7 +146,7 @@ async function replaceCssUrls(css, stylesheetUrl) {
 }
 
 async function inlineCaptureAssets(html) {
-  let result = String(html || '').replace(/<\\\//g, '</')
+  let result = String(html || '')
 
   const scriptMatches = [
     ...result.matchAll(
@@ -155,10 +157,14 @@ async function inlineCaptureAssets(html) {
     const vendorPath = resolveKnownVendorPath(match[2])
     const js = vendorPath ? await fetchTextAsset(vendorPath) : null
     if (!js) continue
-    result = result.split(match[0]).join(`<script>/* ${vendorPath} */\n${safeInlineJs(js)}\n</script>`)
+    result = result
+      .split(match[0])
+      .join(`<script>/* ${vendorPath} */\n${safeInlineJs(js)}\n</script>`)
   }
 
-  const cssMatches = [...result.matchAll(/<link\b[^>]*\bhref=["']([^"']+\.css(?:\?[^"']*)?)["'][^>]*\/?>/gi)]
+  const cssMatches = [
+    ...result.matchAll(/<link\b[^>]*\bhref=["']([^"']+\.css(?:\?[^"']*)?)["'][^>]*\/?>/gi),
+  ]
   for (const match of cssMatches) {
     const vendorPath = resolveKnownVendorPath(match[1])
     const fetchUrl = vendorPath || match[1]
@@ -202,7 +208,7 @@ function buildLatexCaptureDocument(content) {
     ? `<link rel="stylesheet" type="text/css" href="${origin}/vendor/tikzjax/fonts.css"><script src="${origin}/vendor/tikzjax/tikzjax.js"></script>`
     : ''
   const bodyContent = hasTikz
-    ? `<script type="text/tikz">${content || ''}</script>`
+    ? `<script type="text/tikz" data-disable-cache="true">${safeInlineJs(content)}</script>`
     : `<div class="navslides-latex">${buildLatexRasterMarkup(content || '')}</div>`
 
   return `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="${katexCss}">${tikzAssets}<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:white}.navslides-latex{max-width:100%;max-height:100%;padding:8px}.katex{font-size:1.55em}svg{max-width:100%;max-height:100%}</style></head><body>${bodyContent}</body></html>`
@@ -262,7 +268,8 @@ function resolveRasterColor(value, elementType, field, designTokens, fallback) {
 
 function renderIconSvg(element, designTokens) {
   const rawName = element?.iconName || 'Star'
-  const iconKey = rawName.endsWith('Icon') && rawName !== 'ImageIcon' ? rawName.replace(/Icon$/, '') : rawName
+  const iconKey =
+    rawName.endsWith('Icon') && rawName !== 'ImageIcon' ? rawName.replace(/Icon$/, '') : rawName
   const path = iconPaths[iconKey] || iconPaths.Star || ''
   const stroke = element?.iconStrokeWidth || 2
   const color = resolveRasterColor(element?.iconColor, 'icon', 'iconColor', designTokens, '#ffffff')
@@ -277,8 +284,9 @@ function renderDrawingSvg(element, designTokens) {
   const paths = (element?.paths || [])
     .map((path) => {
       const stroke =
-        path.stroke || resolveRasterColor(element.strokeColor, 'drawing', 'strokeColor', designTokens, '#ffffff')
-      const strokeWidth = path.strokeWidth || element.strokeWidth || 3
+        path.stroke ||
+        resolveRasterColor(element.strokeColor, 'drawing', 'strokeColor', designTokens, '#ffffff')
+      const strokeWidth = path.strokeWidth ?? element.strokeWidth ?? 3
       const opacity = path.opacity ?? 1
       return `<path d="${escapeHtml(path.d || '')}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}" />`
     })
@@ -296,7 +304,9 @@ export async function renderGradientBackgroundDataUri(background, width, height)
   const cssStops = stops
     .map((stop) => `${stop.color || '#000000'} ${Math.round((Number(stop.offset) || 0) * 100)}%`)
     .join(', ')
-  const gradient = background?.gradient || (cssStops ? `linear-gradient(${Number(background?.angle) || 0}deg, ${cssStops})` : '')
+  const gradient =
+    background?.gradient ||
+    (cssStops ? `linear-gradient(${Number(background?.angle) || 0}deg, ${cssStops})` : '')
   return await renderHtmlToPngDataUri({
     html: '',
     width,
@@ -306,11 +316,49 @@ export async function renderGradientBackgroundDataUri(background, width, height)
   })
 }
 
-export async function renderElementFallbackDataUri(element, designTokens) {
+export async function renderElementFallbackDataUri(element, designTokens, options = {}) {
   const width = Math.max(1, Number(element?.width) || 1)
   const height = Math.max(1, Number(element?.height) || 1)
 
   switch (element?.type) {
+    case 'game': {
+      const snapshotHtml = renderStaticGameSnapshot(element, {
+        teacherReveal: options.teacherReveal === true,
+        designTokens,
+      })
+      if (
+        typeof document === 'undefined' ||
+        typeof Image === 'undefined' ||
+        typeof DOMParser === 'undefined'
+      )
+        throw new Error('Game snapshot capture requires a browser raster runtime')
+      const snapshotDocument = new DOMParser().parseFromString(snapshotHtml, 'text/html')
+      for (const image of snapshotDocument.querySelectorAll('img')) {
+        const source = image.getAttribute('src')
+        const data = /^data:image\//i.test(source) ? source : await fetchDataUriAsset(source)
+        if (!data)
+          throw new Error(`Authored game media could not be fetched: ${image.alt || source}`)
+        const decoded = new Image()
+        decoded.src = data
+        try {
+          await decoded.decode()
+        } catch {
+          throw new Error(`Authored game media failed to decode: ${image.alt || source}`)
+        }
+        image.setAttribute('src', data)
+      }
+      const result = await renderHtmlDocumentToPngDataUri(
+        `<html><head><style>html,body{margin:0;width:100%;height:100%;}</style></head><body>${snapshotDocument.body.innerHTML}</body></html>`,
+        width,
+        height,
+        { inlineAssets: inlineCaptureAssets }
+      )
+      if (!result)
+        throw new Error(
+          `Failed to capture authored game snapshot "${element.id || element.gameType}"`
+        )
+      return result
+    }
     case 'drawing':
       return createSvgDataUri(renderDrawingSvg(element, designTokens))
     case 'chart':
@@ -327,8 +375,7 @@ export async function renderElementFallbackDataUri(element, designTokens) {
         html,
         width,
         height,
-        style:
-          `padding:12px;color:${resolveRasterColor(element?.textColor, 'markdown', 'textColor', designTokens, '#ffffff')};font-family:system-ui,sans-serif;font-size:16px;line-height:1.5;background:transparent;`,
+        style: `padding:12px;color:${resolveRasterColor(element?.textColor, 'markdown', 'textColor', designTokens, '#ffffff')};font-family:system-ui,sans-serif;font-size:16px;line-height:1.5;background:transparent;`,
       })
     }
     case 'qrcode':
@@ -345,19 +392,24 @@ export async function renderElementFallbackDataUri(element, designTokens) {
       } catch {
         return null
       }
-    case 'svg':
-      return element?.content ? createSvgDataUri(sanitizeSvgContent(element.content)) : null
+    case 'svg': {
+      if (!element?.content) return null
+      const painted = applySvgPaintOverrides(element.content, {
+        fillOverride: element.fillOverride,
+        strokeOverride: element.strokeOverride,
+      })
+      const svg = sanitizeSvgContent(painted).replace(
+        /<svg\b([^>]*)>/i,
+        (_match, attributes) =>
+          `<svg${attributes.replace(/\s(?:width|height)\s*=\s*(?:"[^"]*"|'[^']*')/gi, '')} width="${width}" height="${height}">`
+      )
+      const raster = await renderImageToPngDataUri(createSvgDataUri(svg), width, height)
+      if (!raster) throw new Error(`Failed to capture authored SVG "${element.id || ''}"`)
+      return raster
+    }
     default:
       return null
   }
-}
-
-export function getMediaCoverSource(element) {
-  if (!element) return ''
-  if (element.type === 'video') {
-    return classifyPptxPosterSource(element.poster)?.source || ''
-  }
-  return ''
 }
 
 export function buildPptxPlaceholderLabel(element) {

@@ -5,6 +5,8 @@ import { createPluginElement, loadPlugins } from '../plugins'
 import { buildStemSimulationEmbed } from '../utils/stem-embed-presets'
 import { sanitizeSvgContent } from '../utils/content-safety'
 import { findTechnicalSymbol } from '../data/technical-symbol-packs'
+import { validateHtmlDependencies } from 'revealjs-shared/src/education/html-sandbox-policy.js'
+import { showError } from '../utils/app-feedback'
 
 const DEFAULT_HTML = `<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <style>* { box-sizing: border-box; margin: 0; } body { background: transparent; overflow: hidden; }</style>
@@ -62,6 +64,34 @@ export function useElementCreation({
   setLatexEditorState,
 }) {
   const [pluginTypes, setPluginTypes] = useState([])
+
+  const appendElements = useCallback(
+    (elements) => {
+      const target = getActiveSlide()
+      if (!target || target.locked) return null
+      if (
+        !Array.isArray(elements) ||
+        !elements.length ||
+        elements.some((element) => !element || typeof element.id !== 'string' || !element.id) ||
+        new Set(elements.map((element) => element.id)).size !== elements.length
+      ) {
+        throw new Error('An insertion bundle requires elements with unique, nonempty IDs.')
+      }
+      setPresentation((previous) =>
+        mapActiveSlide(previous, (slide) =>
+          slide.locked
+            ? slide
+            : {
+                ...slide,
+                elements: [...(slide.elements || []), ...elements],
+              }
+        )
+      )
+      setSelectedElementIds(elements.map((element) => element.id))
+      return elements
+    },
+    [getActiveSlide, mapActiveSlide, setPresentation, setSelectedElementIds]
+  )
 
   // Single appender for all factory-built elements (DRY: was duplicated three
   // times for addElement/addGameElement/addPluginElement). Routes through
@@ -171,9 +201,15 @@ export function useElementCreation({
   }, [])
 
   const addHtmlElement = useCallback(() => {
-    const newEl = addElement('html', { content: DEFAULT_HTML })
+    const htmlDependencies = {
+      network: true,
+      offlineCapable: false,
+      resources: [{ url: 'https://cdn.jsdelivr.net/npm/d3@7', kind: 'script' }],
+      dynamicResources: [],
+    }
+    const newEl = addElement('html', { content: DEFAULT_HTML, htmlDependencies })
     if (!newEl) return
-    setHtmlEditorState({ elementId: newEl.id, content: DEFAULT_HTML })
+    setHtmlEditorState({ elementId: newEl.id, content: DEFAULT_HTML, htmlDependencies })
   }, [addElement, setHtmlEditorState])
 
   const addMermaidElement = useCallback(() => {
@@ -216,32 +252,48 @@ export function useElementCreation({
           embedKind: 'mermaid',
           content: element.content || buildMermaidEmbedContent(element.mermaidSource),
           mermaidSource: element.mermaidSource || '',
+          htmlDependencies: element.htmlDependencies,
+          sourceMetadata: element.sourceMetadata,
         })
         return
       }
-      setHtmlEditorState({ elementId, content: element.content || '' })
+      setHtmlEditorState({
+        elementId,
+        content: element.content || '',
+        htmlDependencies: element.htmlDependencies,
+        sourceMetadata: element.sourceMetadata,
+      })
     },
     [getActiveSlide, setHtmlEditorState]
   )
 
-  const commitHtmlEdit = useCallback(() => {
-    if (!htmlEditorState) return
-    if (htmlEditorState.embedKind === 'mermaid') {
-      const mermaidSource = String(htmlEditorState.mermaidSource || '').slice(
-        0,
-        MERMAID_SOURCE_LIMIT
-      )
-      updateElement(htmlEditorState.elementId, {
-        embedKind: 'mermaid',
-        mermaidSource,
-        content: buildMermaidEmbedContent(mermaidSource),
-      })
-      setHtmlEditorState(null)
-      return
-    }
-    updateElement(htmlEditorState.elementId, { content: htmlEditorState.content })
-    setHtmlEditorState(null)
-  }, [htmlEditorState, updateElement, setHtmlEditorState])
+  const commitHtmlEdit = useCallback(
+    (nextState = htmlEditorState) => {
+      if (!nextState) return
+      try {
+        const original = getActiveSlide()?.elements?.find(
+          (element) => element.id === nextState.elementId
+        )
+        const htmlDependencies = validateHtmlDependencies(nextState.htmlDependencies)
+        const mermaid = nextState.embedKind === 'mermaid'
+        const source = mermaid
+          ? String(nextState.mermaidSource || '').slice(0, MERMAID_SOURCE_LIMIT)
+          : nextState.content
+        const previousSource = mermaid ? original?.mermaidSource : original?.content
+        const sourceMetadata = source === previousSource ? nextState.sourceMetadata : undefined
+        updateElement(nextState.elementId, {
+          ...(mermaid ? { embedKind: 'mermaid', mermaidSource: source } : {}),
+          content: mermaid ? buildMermaidEmbedContent(source) : source,
+          htmlDependencies,
+          sourceMetadata,
+        })
+        setHtmlEditorState(null)
+      } catch (error) {
+        showError(`HTML changes could not be applied: ${error.message}`)
+      }
+    },
+    [htmlEditorState, getActiveSlide, updateElement, setHtmlEditorState]
+  )
 
   const addCodeElement = useCallback(() => {
     const newEl = addElement('code')
@@ -400,6 +452,7 @@ export function useElementCreation({
   return {
     pluginTypes,
     addElement,
+    appendElements,
     addTextElement,
     addImageElement,
     addQrCodeElement,

@@ -40,7 +40,8 @@ function toUrl(provider, input) {
   if (!raw) throw new Error('Enter a simulation URL or ID.')
   if (!/^[a-z][a-z0-9+.-]*:/i.test(raw)) return new URL(PROVIDERS[provider].fromId(raw))
   const parsed = new URL(raw)
-  if (parsed.protocol !== 'https:') throw new Error('STEM simulation URLs must use HTTPS.')
+  if (parsed.protocol !== 'https:' || parsed.username || parsed.password)
+    throw new Error('STEM simulation URLs must use HTTPS without credentials.')
   return parsed
 }
 
@@ -52,7 +53,8 @@ export function buildStemSimulationEmbed(providerInput, sourceInput) {
 
   const label = PROVIDERS[provider].label
   const src = sourceUrl.toString()
-  const content = `<iframe src="${src}" title="${label} simulation" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" allow="fullscreen; clipboard-read; clipboard-write" referrerpolicy="no-referrer" loading="lazy" style="width:100%;height:100%;border:0;background:#fff;"></iframe>`
+  const safeSrc = src.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+  const content = `<iframe src="${safeSrc}" title="${label} simulation" sandbox="allow-scripts" referrerpolicy="no-referrer" loading="lazy" style="width:100%;height:100%;border:0;background:#fff;"></iframe>`
 
   return {
     type: 'html',
@@ -60,6 +62,12 @@ export function buildStemSimulationEmbed(providerInput, sourceInput) {
     provider,
     sourceUrl: src,
     content,
+    htmlDependencies: {
+      network: true,
+      offlineCapable: false,
+      resources: [{ url: src, kind: 'frame' }],
+      dynamicResources: [],
+    },
     width: 560,
     height: 360,
   }

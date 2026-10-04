@@ -1,3 +1,8 @@
+import { ELEMENT_DEFAULTS } from '../data/element-defaults.js'
+import { resolveVideoSrc } from './migrate-video-src.js'
+
+const readValue = (element, key) => (key === 'locked' ? Boolean(element.locked) : element[key])
+
 /**
  * Read-side multi-select mixing. For each requested key, decide whether the
  * selected elements share a single value or diverge. Pure; the write path
@@ -16,12 +21,22 @@ export function computeMixedValues(elements, ids, keys) {
   const primary = selected[0]
   const result = {}
   for (const key of keys || []) {
-    const value = primary ? primary[key] : undefined
+    const value = primary ? readValue(primary, key) : undefined
     let isMixed = false
     if (selected.length > 1) {
-      isMixed = selected.some((el) => el[key] !== value)
+      isMixed = selected.some((el) => readValue(el, key) !== value)
     }
     result[key] = { value, isMixed }
   }
   return result
+}
+
+export function computeMixedSource(elements, ids) {
+  const owners = (elements || [])
+    .filter((element) => Object.hasOwn(ELEMENT_DEFAULTS[element.type] || {}, 'src'))
+    .map((element) => ({
+      id: element.id,
+      src: element.type === 'video' ? resolveVideoSrc(element) : element.src || '',
+    }))
+  return computeMixedValues(owners, ids, ['src']).src
 }

@@ -1,519 +1,191 @@
-import React, { useState } from 'react'
-import { ColorPicker } from '../ui'
+import { useMemo, useState } from 'react'
 import {
-  GAME_TYPES,
-  resolveGameConfig,
-} from '../../constants/game-element-types-constants'
+  CANONICAL_GAME_TYPES,
+  GAME_CATALOG,
+  normalizeGameConfig,
+  validateGameConfig,
+} from 'revealjs-shared'
 import { GamePropertiesQuestionEditor } from './game-properties-question-editor'
+import { QuestionList } from './game-authoring-fields'
+import PickerAuthoring from './game-authoring-picker'
+import JeopardyAuthoring from './game-authoring-jeopardy'
+import TeamRoundsAuthoring from './game-authoring-team-rounds'
+import ResponsesAuthoring from './game-authoring-responses'
+import GameDisplayFields from './game-display-fields'
+import QuizProperties from './quiz-properties'
+import LuckyWheelProperties from './lucky-wheel-properties'
+import CountdownProperties from './countdown-properties'
+import ScoreboardProperties from './scoreboard-properties'
+import MemoryProperties from './memory-properties'
+import FlashcardsProperties from './flashcards-properties'
+import SortingProperties from './sorting-properties'
+import WordPuzzleProperties from './word-puzzle-properties'
 
-export const GAME_PROPERTY_CAPABILITIES = {
-  'name-picker': { confetti: true },
-  'hot-potato': { questions: true },
-  jeopardy: { teams: true, timer: true, timerVisibility: true },
-  'four-corners': { timer: true, timerVisibility: true },
-  'relay-race': { timer: true },
-  'trivia-champ': {},
-  scattergories: {},
-  poll: {},
-  'word-cloud': {},
-  matching: {},
-}
-
-const CONTROL_INPUT_CLASS =
-  'w-full min-h-8 rounded-md border border-border bg-card px-2 py-1 text-xs text-text-primary focus:border-focus focus:outline-none focus:ring-2 focus:ring-focus/25'
-
-export { resolveGameConfig }
-
-export default function GameProperties({ element, onUpdate, onDelete }) {
+export default function GameProperties({ element, onUpdate, onDelete, variables = [] }) {
   const [activeTab, setActiveTab] = useState('Content')
-  const [editingQuestion, setEditingQuestion] = useState(null) // null = add mode, obj = edit mode
-  const [showQuestionEditor, setShowQuestionEditor] = useState(false)
-
-  const gt = element.gameType || 'name-picker'
-  const gameConfig = resolveGameConfig(element, gt)
-  const capabilities = GAME_PROPERTY_CAPABILITIES[gt] || {}
+  const [editing, setEditing] = useState(null)
+  const gameType = element.gameType || 'name-picker'
+  const config = useMemo(() => normalizeGameConfig(element, gameType), [element, gameType])
+  const change = (partial) => onUpdate({ [gameType]: { ...config, ...partial } })
+  const editQuestion = (question, save) => setEditing({ question, save })
+  const props = { config, onChange: change, onEditQuestion: editQuestion, gameType, variables }
+  const validation = validateGameConfig(gameType, config)
   const tabs = ['Content', 'Display']
-
-  const handleUpdate = (changes) => {
-    onUpdate(changes)
-  }
-
-  const handleGameTypeChange = (e) => {
-    const newType = e.target.value
-    const nextConfig = resolveGameConfig({ [newType]: element[newType] }, newType)
-    setActiveTab('Content')
-    onUpdate({ gameType: newType, [newType]: nextConfig })
-  }
-
-  const handleItemsChange = (e) => {
-    const text = e.target.value
-    const items = text.split(',').map(s => s.trim()).filter(Boolean)
-    handleUpdate({ [gt]: { ...gameConfig, items } })
-  }
-
-  const handlePickerModeChange = (mode) => {
-    handleUpdate({ [gt]: { ...gameConfig, pickerMode: mode } })
-  }
-
-  const handleTimerChange = (e) => {
-    handleUpdate({ [gt]: { ...gameConfig, timerDuration: parseInt(e.target.value, 10) || 30 } })
-  }
-
-  const handleColorChange = (key) => (e) => handleUpdate({ [key]: e.target.value })
-
-  const handleConfettiToggle = (e) =>
-    handleUpdate({ [gt]: { ...gameConfig, showConfetti: e.target.checked } })
-  const handleTimerToggle = (e) =>
-    handleUpdate({ [gt]: { ...gameConfig, showTimer: e.target.checked } })
   return (
-    <div className="mb-2.5">
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-[11px] text-text-muted font-semibold">Game Settings</div>
+    <div className="mb-2.5 space-y-2.5">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] text-text-muted font-semibold">Game Settings</span>
         <button
+          type="button"
           onClick={onDelete}
           aria-label="Delete game"
-          className="text-[10px] text-red-400 hover:text-red-300 px-1.5 py-0.5 rounded border border-red-400/30 hover:border-red-400 transition-colors"
+          className="text-[10px] text-red-400"
         >
           Delete
         </button>
       </div>
-
-      <div className="mb-2">
-        <div className="text-[11px] text-text-muted mb-0.5">Game Type</div>
+      <label className="block text-[11px] text-text-muted">
+        Game Type
         <select
           aria-label="Game type"
-          value={gt}
-          onChange={handleGameTypeChange}
-          className={`${CONTROL_INPUT_CLASS} px-1.5 py-1`}
+          value={gameType}
+          className="w-full min-h-8 rounded border border-border bg-card text-text-primary"
+          onChange={(event) => {
+            const next = event.target.value
+            setActiveTab('Content')
+            setEditing(null)
+            onUpdate({ gameType: next, [next]: normalizeGameConfig(element, next) })
+          }}
         >
-          {GAME_TYPES.all.map(type => (
-            <option key={type} value={type}>{GAME_TYPES[type] || type}</option>
+          {CANONICAL_GAME_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {GAME_CATALOG[type].label}
+            </option>
           ))}
         </select>
-      </div>
-
-      <div className="flex border-b border-border mb-2" role="tablist" aria-label="Game property sections">
-        {tabs.map(tab => (
+      </label>
+      <div
+        role="tablist"
+        aria-label="Game property sections"
+        className="flex border-b border-border"
+      >
+        {tabs.map((tab) => (
           <button
             key={tab}
             type="button"
             role="tab"
             aria-selected={activeTab === tab}
             tabIndex={activeTab === tab ? 0 : -1}
-            onKeyDown={(event) => {
-              if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
-              event.preventDefault()
-              const currentIndex = tabs.indexOf(tab)
-              const offset = event.key === 'ArrowRight' ? 1 : -1
-              const nextIndex = (currentIndex + offset + tabs.length) % tabs.length
-              setActiveTab(tabs[nextIndex])
-              const tabElements = event.currentTarget.parentElement?.querySelectorAll('[role="tab"]')
-              tabElements?.[nextIndex]?.focus()
-            }}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 text-[11px] px-2 py-1.5 text-center transition-colors ${
-              activeTab === tab
-                ? 'text-accent border-b-2 border-accent font-semibold'
-                : 'text-text-muted hover:text-text-primary'
-            }`}
+            onKeyDown={(event) => {
+              if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return
+              event.preventDefault()
+              const next = tabs[(tabs.indexOf(tab) + 1) % tabs.length]
+              setActiveTab(next)
+              event.currentTarget.parentElement
+                .querySelectorAll('[role="tab"]')
+                [tabs.indexOf(next)]?.focus()
+            }}
+            className={`flex-1 px-2 py-1.5 text-[11px] ${activeTab === tab ? 'text-accent border-b-2 border-accent' : 'text-text-muted'}`}
           >
             {tab}
           </button>
         ))}
       </div>
-
       <div role="tabpanel" aria-label={`${activeTab} game properties`}>
-        {activeTab === 'Content' && (
-          <ContentTab
-            gt={gt} element={element} gameConfig={gameConfig}
-            capabilities={capabilities}
-            onUpdate={handleUpdate} onItemsChange={handleItemsChange}
-            onPickerModeChange={handlePickerModeChange} onTimerChange={handleTimerChange}
-            onOpenQuestionEditor={(question) => { setEditingQuestion(question); setShowQuestionEditor(true) }}
-          />
-        )}
-        {activeTab === 'Display' && (
-          <DisplayTab
-            element={element} gameConfig={gameConfig} onColorChange={handleColorChange}
-            capabilities={capabilities}
-            onConfettiToggle={handleConfettiToggle}
-            onTimerToggle={handleTimerToggle}
-          />
+        {activeTab === 'Display' ? (
+          <GameDisplayFields {...props} element={element} onUpdateElement={onUpdate} />
+        ) : (
+          <ContentFields {...props} />
         )}
       </div>
-
+      {!validation.isValid && (
+        <ul role="alert" className="text-xs text-red-400 space-y-1">
+          {validation.errors.map((error, index) => (
+            <li key={index}>
+              {error.path.join('.')}: {error.message}
+            </li>
+          ))}
+        </ul>
+      )}
       <GamePropertiesQuestionEditor
-        isOpen={showQuestionEditor}
-        question={editingQuestion}
-        onSave={(saved) => {
-          const questions = Array.isArray(gameConfig.questions) ? [...gameConfig.questions] : []
-          const idx = questions.findIndex(q => q.id === saved.id)
-          if (idx >= 0) {
-            questions[idx] = saved
-          } else {
-            questions.push(saved)
-          }
-          handleUpdate({ [gt]: { ...gameConfig, questions } })
-          setShowQuestionEditor(false)
-          setEditingQuestion(null)
+        isOpen={Boolean(editing)}
+        question={editing?.question}
+        onCancel={() => setEditing(null)}
+        onSave={(question) => {
+          editing.save(question)
+          setEditing(null)
         }}
-        onCancel={() => { setShowQuestionEditor(false); setEditingQuestion(null) }}
       />
     </div>
   )
 }
 
-function ContentTab({ gt, _element, gameConfig, capabilities, onUpdate, onItemsChange, onPickerModeChange, onTimerChange, onOpenQuestionEditor }) {
-  const hasTeams = capabilities.teams
-  const hasQuestions = capabilities.questions
-  const hasNameList = gt === 'name-picker'
-  const isPoll = gt === 'poll'
-  const isWordCloud = gt === 'word-cloud'
-  const isMatching = gt === 'matching'
-
-  return (
-    <div className="space-y-2.5">
-      {hasNameList && (
-        <div>
-          <div className="text-[11px] text-text-muted mb-0.5">Items (comma-separated)</div>
-          <textarea
-            aria-label="Name picker items"
-            className="w-full min-h-[60px] bg-hover border border-border text-text-primary px-2 py-1.5 rounded text-[11px] resize-y box-border"
-            value={(gameConfig.items || []).join(', ')}
-            onChange={onItemsChange}
-            placeholder="Alice, Bob, Charlie..."
+function ContentFields(props) {
+  const { gameType, config, onChange, onEditQuestion } = props
+  switch (gameType) {
+    case 'name-picker':
+      return <PickerAuthoring {...props} />
+    case 'jeopardy':
+      return <JeopardyAuthoring {...props} />
+    case 'hot-potato':
+      return (
+        <div className="space-y-2">
+          <QuestionList
+            questions={config.questions}
+            onChange={(questions) => onChange({ questions })}
+            onEditQuestion={onEditQuestion}
           />
-        </div>
-      )}
-
-      {gt === 'name-picker' && (
-        <div>
-          <div className="text-[11px] text-text-muted mb-0.5">Picker Mode</div>
-          <div className="flex gap-1">
-            {['wheel', 'dice', 'button'].map(mode => (
-              <button
-                key={mode}
-                type="button"
-                aria-pressed={(gameConfig.pickerMode || 'wheel') === mode}
-                aria-label={`${mode} picker mode`}
-                onClick={() => onPickerModeChange(mode)}
-                className={`text-[10px] px-2 py-1 rounded border transition-colors ${
-                  (gameConfig.pickerMode || 'wheel') === mode
-                    ? 'border-accent bg-accent/10 text-accent'
-                    : 'border-border text-text-muted hover:border-border/60'
-                }`}
-              >
-                {mode}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {hasTeams && (
-        <div>
-          <div className="text-[11px] text-text-muted mb-0.5">Teams</div>
-          <div className="space-y-1">
-            {(gameConfig.teams || []).map((team, i) => (
-              <div key={team.id || i} className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: team.color }} />
-                <span className="text-[11px] text-text-primary flex-1 truncate">{team.name}</span>
-                <span className="text-[10px] text-text-muted">{team.score ?? 0} pts</span>
-              </div>
-            ))}
-            <button
-              onClick={() => {
-                const newTeam = {
-                  id: `team-${Date.now()}`,
-                  name: `Team ${(gameConfig.teams || []).length + 1}`,
-                  color: '#888888',
-                  score: 0,
+          {['shuffleQuestions', 'allowLate', 'showLeaderboard'].map((key) => (
+            <label key={key} className="flex items-center gap-2 text-xs">
+              <input
+                type="checkbox"
+                aria-label={
+                  key === 'shuffleQuestions'
+                    ? 'Shuffle questions'
+                    : key === 'allowLate'
+                      ? 'Allow late answers'
+                      : 'Show leaderboard'
                 }
-                onUpdate({ [gt]: { ...gameConfig, teams: [...(gameConfig.teams || []), newTeam] } })
-              }}
-              className="text-[10px] text-accent hover:text-accent/80 px-1 py-0.5"
-            >
-              + Add Team
-            </button>
-          </div>
+                checked={config[key] === true}
+                onChange={(event) => onChange({ [key]: event.target.checked })}
+              />
+              {key === 'shuffleQuestions'
+                ? 'Shuffle questions'
+                : key === 'allowLate'
+                  ? 'Allow late answers'
+                  : 'Show leaderboard'}
+            </label>
+          ))}
         </div>
-      )}
-
-      {hasQuestions && (
-        <div>
-          <div className="flex items-center justify-between mb-0.5">
-            <div className="text-[11px] text-text-muted">
-              Questions ({Array.isArray(gameConfig.questions) ? gameConfig.questions.length : 0})
-            </div>
-            <button
-              onClick={() => onOpenQuestionEditor(null)}
-              className="text-[10px] text-accent hover:text-accent/80 px-1.5 py-0.5 border border-accent/40 rounded hover:border-accent transition-colors"
-            >
-              + Add
-            </button>
-          </div>
-          <div className="space-y-1 max-h-[120px] overflow-y-auto">
-            {(Array.isArray(gameConfig.questions) ? gameConfig.questions : []).map((q, i) => (
-              <div key={q.id || i} className="flex items-center gap-1.5 text-[10px] text-text-secondary bg-hover rounded px-2 py-1.5 group">
-                <span className="shrink-0 text-text-muted">Q{i + 1}:</span>
-                <span className="flex-1 truncate">{q.question || 'Untitled'}</span>
-                <span className="shrink-0 text-text-muted">{q.points ?? 10}pt</span>
-                <button
-                  onClick={() => onOpenQuestionEditor(q)}
-                  aria-label={`Edit question ${i + 1}`}
-                  className="shrink-0 text-text-muted hover:text-accent transition-colors text-[10px]"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => onUpdate({ [gt]: { ...gameConfig, questions: gameConfig.questions.filter(x => (x.id || i) !== (q.id || i)) } })}
-                  aria-label={`Delete question ${i + 1}`}
-                  className="shrink-0 text-text-muted hover:text-red-400 transition-colors text-[10px]"
-                >
-                  X
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {isPoll && (
-        <div className="space-y-2">
-          <div>
-            <div className="text-[11px] text-text-muted mb-0.5">Prompt</div>
-            <textarea
-              aria-label="Poll prompt"
-              className="w-full min-h-[56px] bg-hover border border-border text-text-primary px-2 py-1.5 rounded text-[11px] resize-y box-border"
-              value={gameConfig.prompt || ''}
-              onChange={(e) => onUpdate({ [gt]: { ...gameConfig, prompt: e.target.value } })}
-              placeholder="Ask a quick class poll..."
-            />
-          </div>
-          <div>
-            <div className="flex items-center justify-between mb-0.5">
-              <div className="text-[11px] text-text-muted">Options</div>
-              <button
-                type="button"
-                aria-label="Add poll option"
-                onClick={() => {
-                  const options = Array.isArray(gameConfig.options) ? gameConfig.options : []
-                  if (options.length >= 6) return
-                  onUpdate({
-                    [gt]: {
-                      ...gameConfig,
-                      options: [
-                        ...options,
-                        { id: `option-${Date.now()}`, text: `Option ${options.length + 1}` },
-                      ],
-                    },
-                  })
-                }}
-                disabled={(gameConfig.options || []).length >= 6}
-                className="text-[10px] text-accent hover:text-accent/80 disabled:text-text-muted px-1.5 py-0.5 border border-accent/40 rounded disabled:border-border"
-              >
-                + Add
-              </button>
-            </div>
-            <div className="space-y-1">
-              {(gameConfig.options || []).map((option, i) => (
-                <div key={option.id || i} className="flex gap-1">
-                  <input
-                    aria-label={`Poll option ${i + 1}`}
-                    className={`${CONTROL_INPUT_CLASS} flex-1 px-1.5 py-1 text-[11px]`}
-                    value={option.text || ''}
-                    onChange={(e) => {
-                      const options = [...(gameConfig.options || [])]
-                      options[i] = { ...option, text: e.target.value }
-                      onUpdate({ [gt]: { ...gameConfig, options } })
-                    }}
-                    placeholder={`Option ${i + 1}`}
-                  />
-                  <button
-                    type="button"
-                    aria-label={`Remove poll option ${i + 1}`}
-                    onClick={() => {
-                      const options = (gameConfig.options || []).filter((_, idx) => idx !== i)
-                      if (options.length < 2) return
-                      onUpdate({ [gt]: { ...gameConfig, options } })
-                    }}
-                    disabled={(gameConfig.options || []).length <= 2}
-                    className="text-[10px] text-text-muted hover:text-red-400 disabled:opacity-40 px-1"
-                  >
-                    X
-                  </button>
-                </div>
-              ))}
-            </div>
-            <div className="text-[9px] text-text-muted mt-1">Use 2–6 options. Votes are live aggregates only.</div>
-          </div>
-        </div>
-      )}
-
-      {isWordCloud && (
-        <div className="space-y-2">
-          <div>
-            <div className="text-[11px] text-text-muted mb-0.5">Prompt</div>
-            <textarea
-              aria-label="Word cloud prompt"
-              className="w-full min-h-[56px] bg-hover border border-border text-text-primary px-2 py-1.5 rounded text-[11px] resize-y box-border"
-              value={gameConfig.prompt || ''}
-              onChange={(e) => onUpdate({ [gt]: { ...gameConfig, prompt: e.target.value } })}
-              placeholder="Ask for words or short phrases..."
-            />
-          </div>
-          <div className="rounded border border-border bg-hover px-2 py-1.5 text-[10px] text-text-muted">
-            Submissions are limited to {gameConfig.maxPhraseLength || 40} characters and{' '}
-            {gameConfig.maxSubmissionsPerPlayer || 5} entries per player.
-          </div>
-        </div>
-      )}
-
-      {isMatching && (
-        <div className="space-y-2">
-          <div>
-            <div className="text-[11px] text-text-muted mb-0.5">Prompt</div>
-            <textarea
-              aria-label="Matching prompt"
-              className="w-full min-h-[56px] bg-hover border border-border text-text-primary px-2 py-1.5 rounded text-[11px] resize-y box-border"
-              value={gameConfig.prompt || ''}
-              onChange={(e) => onUpdate({ [gt]: { ...gameConfig, prompt: e.target.value } })}
-              placeholder="Ask learners to match items..."
-            />
-          </div>
-          <div>
-            <div className="flex items-center justify-between mb-0.5">
-              <div className="text-[11px] text-text-muted">Pairs</div>
-              <button
-                type="button"
-                aria-label="Add matching pair"
-                onClick={() => {
-                  const pairs = Array.isArray(gameConfig.pairs) ? gameConfig.pairs : []
-                  if (pairs.length >= 8) return
-                  const n = pairs.length + 1
-                  onUpdate({
-                    [gt]: {
-                      ...gameConfig,
-                      pairs: [
-                        ...pairs,
-                        {
-                          promptId: `prompt-${Date.now()}`,
-                          prompt: `Term ${n}`,
-                          targetId: `target-${Date.now()}`,
-                          target: `Definition ${n}`,
-                        },
-                      ],
-                    },
-                  })
-                }}
-                disabled={(gameConfig.pairs || []).length >= 8}
-                className="text-[10px] text-accent hover:text-accent/80 disabled:text-text-muted px-1.5 py-0.5 border border-accent/40 rounded disabled:border-border"
-              >
-                + Add
-              </button>
-            </div>
-            <div className="space-y-1">
-              {(gameConfig.pairs || []).map((pair, i) => (
-                <div key={pair.promptId || i} className="grid grid-cols-[1fr_1fr_auto] gap-1">
-                  <input
-                    aria-label={`Pair ${i + 1} prompt`}
-                    className={`${CONTROL_INPUT_CLASS} px-1.5 py-1 text-[11px]`}
-                    value={pair.prompt || ''}
-                    onChange={(e) => {
-                      const pairs = [...(gameConfig.pairs || [])]
-                      pairs[i] = { ...pair, prompt: e.target.value }
-                      onUpdate({ [gt]: { ...gameConfig, pairs } })
-                    }}
-                    placeholder={`Term ${i + 1}`}
-                  />
-                  <input
-                    aria-label={`Pair ${i + 1} target`}
-                    className={`${CONTROL_INPUT_CLASS} px-1.5 py-1 text-[11px]`}
-                    value={pair.target || ''}
-                    onChange={(e) => {
-                      const pairs = [...(gameConfig.pairs || [])]
-                      pairs[i] = { ...pair, target: e.target.value }
-                      onUpdate({ [gt]: { ...gameConfig, pairs } })
-                    }}
-                    placeholder={`Definition ${i + 1}`}
-                  />
-                  <button
-                    type="button"
-                    aria-label={`Remove matching pair ${i + 1}`}
-                    onClick={() => {
-                      const pairs = (gameConfig.pairs || []).filter((_, idx) => idx !== i)
-                      if (pairs.length < 2) return
-                      onUpdate({ [gt]: { ...gameConfig, pairs } })
-                    }}
-                    disabled={(gameConfig.pairs || []).length <= 2}
-                    className="text-[10px] text-text-muted hover:text-red-400 disabled:opacity-40 px-1"
-                  >
-                    X
-                  </button>
-                </div>
-              ))}
-            </div>
-            <div className="text-[9px] text-text-muted mt-1">Use 2–8 pairs. Players submit IDs only.</div>
-          </div>
-        </div>
-      )}
-
-      {capabilities.timer && <div>
-        <div className="text-[11px] text-text-muted mb-0.5">
-          Timer: <span className="text-text-primary font-medium">{gameConfig.timerDuration || 30}s</span>
-        </div>
-        <input
-          aria-label="Game timer duration"
-          type="range" min="5" max="120" step="5"
-          value={gameConfig.timerDuration || 30}
-          onChange={onTimerChange}
-          className="w-full h-1.5 bg-border rounded appearance-none cursor-pointer accent-accent"
-        />
-        <div className="flex justify-between text-[9px] text-text-muted mt-0.5">
-          <span>5s</span><span>120s</span>
-        </div>
-      </div>}
-    </div>
-  )
-}
-
-function DisplayTab({ element, gameConfig, capabilities, onColorChange, onConfettiToggle, onTimerToggle }) {
-  return (
-    <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <div className="text-[11px] text-text-muted mb-0.5">Background</div>
-          <ColorPicker
-            aria-label="Game background color"
-            value={element.backgroundColor || '#1a1a2e'}
-            onChange={onColorChange('backgroundColor')}
-            className="w-full h-7 border border-border rounded cursor-pointer"
-          />
-        </div>
-        <div>
-          <div className="text-[11px] text-text-muted mb-0.5">Accent</div>
-          <ColorPicker
-            aria-label="Game accent color"
-            value={element.accentColor || '#6366f1'}
-            onChange={onColorChange('accentColor')}
-            className="w-full h-7 border border-border rounded cursor-pointer"
-          />
-        </div>
-      </div>
-      {(capabilities.confetti || capabilities.timerVisibility) && <div className="space-y-1">
-        {[
-          capabilities.confetti && ['showConfetti', gameConfig.showConfetti !== false, onConfettiToggle, 'Confetti animation'],
-          capabilities.timerVisibility && ['showTimer', gameConfig.showTimer !== false, onTimerToggle, 'Show timer'],
-        ].filter(Boolean).map(([key, checked, onChange, label]) => (
-          <label key={key} className="flex items-center gap-1.5 cursor-pointer">
-            <input
-              type="checkbox" checked={checked} onChange={onChange}
-              className="w-3.5 h-3.5 accent-accent rounded"
-            />
-            <span className="text-[11px] text-text-primary">{label}</span>
-          </label>
-        ))}
-      </div>}
-    </div>
-  )
+      )
+    case 'four-corners':
+    case 'relay-race':
+    case 'trivia-champ':
+    case 'scattergories':
+      return <TeamRoundsAuthoring {...props} />
+    case 'poll':
+    case 'word-cloud':
+    case 'matching':
+      return <ResponsesAuthoring {...props} />
+    case 'quiz':
+      return <QuizProperties {...props} />
+    case 'lucky-wheel':
+      return <LuckyWheelProperties {...props} />
+    case 'countdown':
+      return <CountdownProperties {...props} />
+    case 'scoreboard':
+      return <ScoreboardProperties {...props} />
+    case 'memory':
+      return <MemoryProperties {...props} />
+    case 'flashcards':
+      return <FlashcardsProperties {...props} />
+    case 'sorting':
+      return <SortingProperties {...props} />
+    case 'crossword':
+    case 'word-search':
+      return <WordPuzzleProperties {...props} />
+    default:
+      throw new Error(`Unknown game subtype: ${gameType}`)
+  }
 }

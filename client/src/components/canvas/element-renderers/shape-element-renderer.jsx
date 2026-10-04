@@ -1,5 +1,10 @@
-import { buildSvgGradientData, gradientFallbackColor, resolveColorField, isTokenVar } from 'revealjs-shared'
-import { sanitizeRichTextHtml } from '../../../utils/content-safety'
+import {
+  buildSvgGradientData,
+  gradientFallbackColor,
+  resolveColorField,
+  isTokenVar,
+} from 'revealjs-shared'
+import { sanitizeRichTextHtml } from 'revealjs-shared/src/content-safety.js'
 
 function safeCssColor(value, fallback) {
   const color = typeof value === 'string' ? value.trim() : ''
@@ -18,7 +23,10 @@ function importedTextInsetStyles(element) {
   const side = (value, maxDimension) => {
     const raw = Number(value)
     if (!Number.isFinite(raw)) return null
-    const max = Math.min(Number.isFinite(maxDimension) && maxDimension >= 0 ? maxDimension / 2 : 96, 96)
+    const max = Math.min(
+      Number.isFinite(maxDimension) && maxDimension >= 0 ? maxDimension / 2 : 96,
+      96
+    )
     return `${Math.min(Math.round(Math.max(0, raw) * unitScale * 10) / 10, max)}px`
   }
   return {
@@ -103,7 +111,13 @@ export function ShapeRenderer({ element }) {
       case 'rounded-rect':
         return (
           <g {...gProps}>
-            <rect x={sw / 2} y={sw / 2} width={innerDimension(w, sw)} height={innerDimension(h, sw)} rx={Math.min(w, h) * 0.15} />
+            <rect
+              x={sw / 2}
+              y={sw / 2}
+              width={innerDimension(w, sw)}
+              height={innerDimension(h, sw)}
+              rx={Math.min(w, h) * 0.15}
+            />
           </g>
         )
       case 'circle':
@@ -191,13 +205,17 @@ export function ShapeRenderer({ element }) {
       case 'parallelogram':
         return (
           <g {...gProps}>
-            <polygon points={`${w * 0.2},${sw} ${w - sw},${sw} ${w * 0.8},${h - sw} ${sw},${h - sw}`} />
+            <polygon
+              points={`${w * 0.2},${sw} ${w - sw},${sw} ${w * 0.8},${h - sw} ${sw},${h - sw}`}
+            />
           </g>
         )
       case 'trapezoid':
         return (
           <g {...gProps}>
-            <polygon points={`${w * 0.2},${sw} ${w * 0.8},${sw} ${w - sw},${h - sw} ${sw},${h - sw}`} />
+            <polygon
+              points={`${w * 0.2},${sw} ${w * 0.8},${sw} ${w - sw},${h - sw} ${sw},${h - sw}`}
+            />
           </g>
         )
       case 'bracket': {
@@ -217,7 +235,12 @@ export function ShapeRenderer({ element }) {
       default:
         return (
           <g {...gProps}>
-            <rect x={sw / 2} y={sw / 2} width={innerDimension(w, sw)} height={innerDimension(h, sw)} />
+            <rect
+              x={sw / 2}
+              y={sw / 2}
+              width={innerDimension(w, sw)}
+              height={innerDimension(h, sw)}
+            />
           </g>
         )
     }
@@ -242,7 +265,11 @@ export function ShapeRenderer({ element }) {
               y2={gradientData.y2}
             >
               {gradientData.stops.map((stop, i) => (
-                <stop key={i} offset={stop.offset} stopColor={safeCssColor(stop.color, '#000000')} />
+                <stop
+                  key={i}
+                  offset={stop.offset}
+                  stopColor={safeCssColor(stop.color, '#000000')}
+                />
               ))}
             </linearGradient>
           </defs>
@@ -260,7 +287,10 @@ export function ShapeRenderer({ element }) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 textAlign: 'center',
-                color: safeCssColor(resolveColorField(element.textColor, 'shape', 'textColor'), '#ffffff'),
+                color: safeCssColor(
+                  resolveColorField(element.textColor, 'shape', 'textColor'),
+                  '#ffffff'
+                ),
                 fontSize: importedFontSize(element),
                 overflow: 'hidden',
                 ...importedTextWrapStyles(element),
@@ -269,17 +299,24 @@ export function ShapeRenderer({ element }) {
               dangerouslySetInnerHTML={{ __html: sanitizeRichTextHtml(element.textHtml) }}
             />
           </foreignObject>
-        ) : element.text && (
-          <text
-            x={w / 2}
-            y={h / 2}
-            dominantBaseline="middle"
-            textAnchor="middle"
-            fontSize={element.fontSize || 16}
-            style={{ fill: safeCssColor(resolveColorField(element.textColor, 'shape', 'textColor'), '#ffffff') }}
-          >
-            {element.text}
-          </text>
+        ) : (
+          element.text && (
+            <text
+              x={w / 2}
+              y={h / 2}
+              dominantBaseline="middle"
+              textAnchor="middle"
+              fontSize={element.fontSize || 16}
+              style={{
+                fill: safeCssColor(
+                  resolveColorField(element.textColor, 'shape', 'textColor'),
+                  '#ffffff'
+                ),
+              }}
+            >
+              {element.text}
+            </text>
+          )
         )}
       </svg>
     </div>

@@ -1,5 +1,5 @@
-import { useCallback, useRef } from 'react'
-import { exportPDF, downloadHTML, generateRevealHTML } from '../utils/generateHTML'
+import { useCallback, useRef, useState } from 'react'
+import { exportPDF, generateRevealHTML } from '../utils/generateHTML'
 import { generateOfflineHTML } from '../utils/offlineExport'
 import { exportProject } from '../utils/export-project'
 import {
@@ -51,13 +51,13 @@ function downloadBlob(blob, filename) {
  * same alert/console error UX as the inline closures.
  *
  * @param {Object} presentation current presentation snapshot
- * @returns {{onExportPDF, onExportPPTX, onExportHTML, onExportOffline,
- *   onExportProject, onOpenProject}}
+ * @returns {{onExportPDF, onExportPPTX, onExportHTML, onExportProject, onOpenProject}}
  */
 export function useExportActions(
   presentation,
   { beginExport, endExport, flushPendingSave, onAggregateGeneration } = {}
 ) {
+  const [staticExportTeacherReveal, onStaticExportTeacherRevealChange] = useState(false)
   const pptxCleanStateRef = useRef({ presentationId: null, fingerprint: '', locallyEdited: false })
   const cleanState = pptxCleanStateRef.current
   if (cleanState.presentationId !== presentation?.id) {
@@ -74,7 +74,13 @@ export function useExportActions(
     cleanState.locallyEdited = true
   }
 
-  const onExportPDF = useCallback(() => exportPDF(presentation), [presentation])
+  const onExportPDF = useCallback(
+    () =>
+      exportPDF(presentation, {
+        teacherReveal: staticExportTeacherReveal === true,
+      }),
+    [presentation, staticExportTeacherReveal]
+  )
 
   const onExportPPTX = useCallback(async () => {
     try {
@@ -111,7 +117,9 @@ export function useExportActions(
         }
       }
       const { exportToPptx } = await import('../utils/exportPptx')
-      const warnings = await exportToPptx(presentation)
+      const warnings = await exportToPptx(presentation, {
+        teacherReveal: staticExportTeacherReveal === true,
+      })
       globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__ = warnings.exportReport || null
       if (warnings.length)
         showNotice(`PPTX export completed with warnings:\n\n${warnings.join('\n')}`)
@@ -119,7 +127,7 @@ export function useExportActions(
       console.error('PPTX export failed:', err)
       showError('PPTX export failed: ' + err.message)
     }
-  }, [presentation, cleanState])
+  }, [presentation, cleanState, staticExportTeacherReveal])
 
   const onDownloadPptxOriginal = useCallback(async () => {
     try {
@@ -135,7 +143,9 @@ export function useExportActions(
   const onGenerateReconstructedPPTX = useCallback(async () => {
     try {
       const { exportToPptx } = await import('../utils/exportPptx')
-      const warnings = await exportToPptx(presentation)
+      const warnings = await exportToPptx(presentation, {
+        teacherReveal: staticExportTeacherReveal === true,
+      })
       globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__ = warnings.exportReport || null
       if (warnings.length)
         showNotice(`PPTX export completed with warnings:\n\n${warnings.join('\n')}`)
@@ -143,7 +153,7 @@ export function useExportActions(
       console.error('Reconstructed PPTX export failed:', err)
       showError('Reconstructed PPTX export failed: ' + err.message)
     }
-  }, [presentation])
+  }, [presentation, staticExportTeacherReveal])
 
   const onExportValidatedEditedRevision = useCallback(async () => {
     let exportToken = null
@@ -191,25 +201,19 @@ export function useExportActions(
 
   const onExportHTML = useCallback(async () => {
     try {
-      downloadHTML(presentation)
+      const html = generateRevealHTML(presentation, { portable: true })
+      const offline = await generateOfflineHTML(html, {
+        generatedDocument: true,
+        strictRequiredAssets: true,
+        baseUrl: window.location.href,
+      })
+      downloadBlob(
+        new Blob([offline], { type: 'text/html' }),
+        `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.html`
+      )
     } catch (err) {
       console.error('HTML export failed:', err)
       showError('HTML export failed: ' + err.message)
-    }
-  }, [presentation])
-
-  const onExportOffline = useCallback(async () => {
-    try {
-      const html = generateRevealHTML(presentation)
-      const offline = await generateOfflineHTML(html, { strictRequiredAssets: true })
-      const blob = new Blob([offline], { type: 'text/html' })
-      downloadBlob(
-        blob,
-        `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}_offline.html`
-      )
-    } catch (err) {
-      console.error('Offline export failed:', err)
-      showError('Offline export failed: ' + err.message)
     }
   }, [presentation])
 
@@ -263,7 +267,8 @@ export function useExportActions(
     onExportValidatedEditedRevision,
     onGenerateReconstructedPPTX,
     onExportHTML,
-    onExportOffline,
+    staticExportTeacherReveal,
+    onStaticExportTeacherRevealChange,
     onExportProject,
     onOpenProject,
   }

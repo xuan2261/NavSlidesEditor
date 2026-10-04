@@ -162,9 +162,9 @@ describe('release-state CLI', () => {
       'v1.17.0-rc.01',
       /invalid|version|semver/i,
     ],
-    ['published version reuse', { packageVersion: '1.16.2' }, 'v1.16.2', /newer than published/i],
+    ['reused published version', { packageVersion: '1.16.2' }, 'v1.16.2', /newer than published/i],
     [
-      'manifest drift',
+      'workspace manifest drift',
       { manifestVersions: { client: '1.18.0' } },
       `v${version}-rc.1`,
       /version|drift/i,
@@ -182,10 +182,10 @@ describe('release-state CLI', () => {
       `v${version}-rc.1`,
       /version|drift/i,
     ],
-  ])('rejects %s', (_case, options, releaseTag, error) => {
+  ])('rejects %s', (_label, options, releaseTag, pattern) => {
     const root = fixture(options)
     tag(root, releaseTag)
-    expectFailure(root, error)
+    expectFailure(root, pattern)
   })
 
   it('rejects tracked and untracked dirty worktrees', () => {

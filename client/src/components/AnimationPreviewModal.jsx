@@ -17,10 +17,15 @@ const DIALOG_DESCRIPTION_ID = 'animation-preview-description'
 const FOCUSABLE_SELECTOR =
   'button:not([disabled]), iframe, [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
-export default function AnimationPreviewModal({ presentation, slideIndex, slideLabel = slideIndex + 1, onClose }) {
+export default function AnimationPreviewModal({
+  presentation,
+  slideIndex,
+  slideLabel = slideIndex + 1,
+  onClose,
+}) {
   const previewPresentation = buildAnimationPreviewPresentation(presentation, slideIndex)
   const previewSlide = previewPresentation.slides[0]
-  const previewSteps = getAnimationPreviewSteps(previewSlide)
+  const previewSteps = getAnimationPreviewSteps(previewSlide, previewPresentation.layoutMasters)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const closeButtonRef = useRef(null)
@@ -129,7 +134,9 @@ export default function AnimationPreviewModal({ presentation, slideIndex, slideL
             </h2>
             <p id={DIALOG_DESCRIPTION_ID} className="text-xs text-text-muted">
               Slide {slideLabel} · Step {currentStepIndex} / {totalFragmentSteps}
-              {currentFragmentIndex > 0 ? ` · Fragment ${currentFragmentIndex}` : ' · Initial state'}
+              {currentFragmentIndex > 0
+                ? ` · Fragment ${currentFragmentIndex}`
+                : ' · Initial state'}
             </p>
           </div>
           <Button

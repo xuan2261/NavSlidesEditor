@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { resolveColorField } from 'revealjs-shared'
 import { TimelineExpandedDetails } from './timeline-expanded-details'
-import { buildTicks, getTimelineItems, getTimelineRange, parseDatePos } from './timeline-element-utils'
+import {
+  buildTicks,
+  getTimelineItems,
+  getTimelineRange,
+  parseDatePos,
+} from './timeline-element-utils'
 
 export default function TimelineElement({ element }) {
   const [expandedId, setExpandedId] = useState(null)
@@ -9,7 +14,8 @@ export default function TimelineElement({ element }) {
   const h = element.height || 400
   const spacing = element.tickSpacing || 'auto'
   const { startDate, endDate } = getTimelineRange(element)
-  const yearMode = ['year', '10year', '100year', '1000year'].includes(spacing) ||
+  const yearMode =
+    ['year', '10year', '100year', '1000year'].includes(spacing) ||
     (spacing === 'auto' && /^-?\d+$/.test(String(startDate)))
   const lineY = h * 0.5
   const pad = 30
@@ -19,7 +25,7 @@ export default function TimelineElement({ element }) {
   const fs = element.fontSize || 11
   const items = getTimelineItems(element)
 
-  const ticks = buildTicks(startDate, endDate, spacing, yearMode)
+  const ticks = buildTicks(startDate, endDate, spacing, yearMode, w - pad * 2, fs - 1)
   const datePos = (d) => parseDatePos(d, startDate, endDate, w, pad, yearMode)
   const itemDateLabel = (d) => (yearMode ? String(parseInt(d) || d) : d)
   const expandedItem = expandedId ? items.find((i) => i.id === expandedId) : null
@@ -46,7 +52,14 @@ export default function TimelineElement({ element }) {
           const x = datePos(t.date)
           return (
             <g key={i}>
-              <line x1={x} y1={lineY - 4} x2={x} y2={lineY + 4} stroke={lineColor} strokeWidth={1.5} />
+              <line
+                x1={x}
+                y1={lineY - 4}
+                x2={x}
+                y2={lineY + 4}
+                stroke={lineColor}
+                strokeWidth={1.5}
+              />
               <text
                 x={x}
                 y={lineY + 14}
@@ -106,21 +119,45 @@ export default function TimelineElement({ element }) {
                     let ty = cardY + fs
                     const elems = []
                     elems.push(
-                      <text key="l" x={x} y={ty} textAnchor="middle" fill={textColor} fontSize={fs} fontWeight={600}>
+                      <text
+                        key="l"
+                        x={x}
+                        y={ty}
+                        textAnchor="middle"
+                        fill={textColor}
+                        fontSize={fs}
+                        fontWeight={600}
+                      >
                         {item.label}
                       </text>
                     )
                     ty += fs + 2
                     if (item.description) {
                       elems.push(
-                        <text key="d" x={x} y={ty} textAnchor="middle" fill={textColor} fontSize={fs - 1} opacity={0.6}>
+                        <text
+                          key="d"
+                          x={x}
+                          y={ty}
+                          textAnchor="middle"
+                          fill={textColor}
+                          fontSize={fs - 1}
+                          opacity={0.6}
+                        >
                           {item.description}
                         </text>
                       )
                       ty += fs
                     }
                     elems.push(
-                      <text key="dt" x={x} y={ty} textAnchor="middle" fill={textColor} fontSize={fs - 2} opacity={0.35}>
+                      <text
+                        key="dt"
+                        x={x}
+                        y={ty}
+                        textAnchor="middle"
+                        fill={textColor}
+                        fontSize={fs - 2}
+                        opacity={0.35}
+                      >
                         {itemDateLabel(item.date)}
                       </text>
                     )
@@ -154,11 +191,25 @@ export default function TimelineElement({ element }) {
                       preserveAspectRatio="xMidYMid meet"
                     />
                   )}
-                  <text x={x} y={cardY + imgH + fs + 2} textAnchor="middle" fill={textColor} fontSize={fs} fontWeight={600}>
+                  <text
+                    x={x}
+                    y={cardY + imgH + fs + 2}
+                    textAnchor="middle"
+                    fill={textColor}
+                    fontSize={fs}
+                    fontWeight={600}
+                  >
                     {item.label}
                   </text>
                   {item.description && (
-                    <text x={x} y={cardY + imgH + fs * 2 + 4} textAnchor="middle" fill={textColor} fontSize={fs - 1} opacity={0.6}>
+                    <text
+                      x={x}
+                      y={cardY + imgH + fs * 2 + 4}
+                      textAnchor="middle"
+                      fill={textColor}
+                      fontSize={fs - 1}
+                      opacity={0.6}
+                    >
                       {item.description}
                     </text>
                   )}

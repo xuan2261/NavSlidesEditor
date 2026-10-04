@@ -1,3 +1,5 @@
+import { resolveMergedCells } from 'revealjs-shared'
+
 const TABLE_STYLE_KEYS = [
   'textColors',
   'bgColors',
@@ -10,12 +12,17 @@ const TABLE_STYLE_KEYS = [
 ]
 
 export function syncTableStyleMatrices(cellStyles = {}, rows, cols) {
-  return Object.fromEntries(TABLE_STYLE_KEYS.map((key) => [
-    key,
-    Array.from({ length: rows }, (_, rowIndex) =>
-      Array.from({ length: cols }, (_, colIndex) => cellStyles[key]?.[rowIndex]?.[colIndex] ?? null)
-    ),
-  ]))
+  return Object.fromEntries(
+    TABLE_STYLE_KEYS.map((key) => [
+      key,
+      Array.from({ length: rows }, (_, rowIndex) =>
+        Array.from(
+          { length: cols },
+          (_, colIndex) => cellStyles[key]?.[rowIndex]?.[colIndex] ?? null
+        )
+      ),
+    ])
+  )
 }
 
 /**
@@ -23,20 +30,13 @@ export function syncTableStyleMatrices(cellStyles = {}, rows, cols) {
  * Drop OOB / degenerate merges — do not wipe all merges on every shape change.
  */
 export function preserveValidMerges(mergedCells, rows, cols) {
-  const list = Array.isArray(mergedCells) ? mergedCells : []
-  const safeRows = Math.max(1, Number(rows) || 1)
-  const safeCols = Math.max(1, Number(cols) || 1)
-  const next = []
-  for (const merge of list) {
-    const row = Number(merge?.row)
-    const col = Number(merge?.col)
-    if (!Number.isFinite(row) || !Number.isFinite(col) || row < 0 || col < 0) continue
-    const rowSpan = Math.max(1, Number(merge?.rowSpan) || 1)
-    const colSpan = Math.max(1, Number(merge?.colSpan) || 1)
-    if (row + rowSpan > safeRows || col + colSpan > safeCols) continue
-    next.push({ row, col, rowSpan, colSpan })
-  }
-  return next
+  const { spans } = resolveMergedCells(mergedCells, { rowCount: rows, colCount: cols })
+  return [...spans]
+    .filter(([, span]) => span.rowSpan > 1 || span.colSpan > 1)
+    .map(([key, span]) => {
+      const [row, col] = key.split(':').map(Number)
+      return { row, col, ...span }
+    })
 }
 
 export function normalizeTableShape(update, current) {
@@ -54,10 +54,16 @@ export function normalizeTableShape(update, current) {
     ...update,
     cellStyles: syncTableStyleMatrices(current.cellStyles, rows, cols),
     ...(Array.isArray(current.colWidths) && {
-      colWidths: Array.from({ length: cols }, (_, index) => current.colWidths[index] ?? colFallback),
+      colWidths: Array.from(
+        { length: cols },
+        (_, index) => current.colWidths[index] ?? colFallback
+      ),
     }),
     ...(Array.isArray(current.rowHeights) && {
-      rowHeights: Array.from({ length: rows }, (_, index) => current.rowHeights[index] ?? rowFallback),
+      rowHeights: Array.from(
+        { length: rows },
+        (_, index) => current.rowHeights[index] ?? rowFallback
+      ),
     }),
     mergedCells: preserveValidMerges(current.mergedCells, rows, cols),
   }

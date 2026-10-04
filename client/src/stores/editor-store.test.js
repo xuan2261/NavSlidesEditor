@@ -36,21 +36,6 @@ describe('editor-store', () => {
     expect(useEditorStore.getState().editingElementId).toBeNull()
   })
 
-  it('copies selected elements without preserving IDs', () => {
-    const elements = [
-      { id: 'a', type: 'text', x: 10 },
-      { id: 'b', type: 'shape', x: 20 },
-      { id: 'c', type: 'image', x: 30 },
-    ]
-
-    useEditorStore.getState().copySelected(elements, ['b', 'c'])
-
-    expect(useEditorStore.getState().clipboard).toEqual([
-      { id: undefined, type: 'shape', x: 20 },
-      { id: undefined, type: 'image', x: 30 },
-    ])
-  })
-
   it('toggles canvas controls and manages persistent guides', () => {
     useEditorStore.getState().toggleGrid()
     useEditorStore.getState().setGridSize((size) => size + 8)
@@ -68,5 +53,4 @@ describe('editor-store', () => {
       guides: [{ axis: 'y', position: 80 }],
     })
   })
-
 })

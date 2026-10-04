@@ -1,5 +1,6 @@
 const path = require('path')
 const { defineConfig, devices } = require('@playwright/test')
+const { qualificationReporters } = require('./tests/e2e/education/desktop-runtime-config.cjs')
 const useDevServers = process.env.PLAYWRIGHT_USE_DEV_SERVERS === '1'
 const serverPort = process.env.PLAYWRIGHT_SERVER_PORT || (useDevServers ? '3002' : '3202')
 const clientPort = useDevServers ? process.env.PLAYWRIGHT_CLIENT_PORT || '5173' : serverPort
@@ -25,13 +26,26 @@ process.env.PLAYWRIGHT_TEST_BASE_URL = baseURL
 process.env.PLAYWRIGHT_API_BASE_URL = apiBaseUrl
 
 module.exports = defineConfig({
+  // Canonical qualification modules retain Node ESM semantics, including import.meta.
+  build: {
+    external: [
+      '**/scripts/feature-inventory/education-release-policy.mjs',
+      '**/scripts/feature-inventory/education-evidence-files.mjs',
+      '**/scripts/feature-inventory/education-evidence-ownership.mjs',
+      '**/scripts/feature-inventory/education-artifact-identities.mjs',
+      '**/scripts/feature-inventory/education-package-sources.mjs',
+      '**/scripts/feature-inventory/education-qualification-stage.mjs',
+    ],
+  },
   testDir: './tests/e2e',
   globalSetup: './tests/e2e/global-setup.js',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 2 : 4,
-  reporter: process.env.CI ? [['html', { open: 'never' }], ['github']] : 'html',
+  reporter: qualificationReporters(
+    process.env.CI ? [['html', { open: 'never' }], ['github']] : [['html']]
+  ),
   timeout: process.env.CI ? 60000 : 30000,
   use: {
     baseURL,
@@ -66,6 +80,7 @@ module.exports = defineConfig({
         /tests\/e2e\/visual(?:\/.*\.spec\.js$)/,
         /tests\/e2e\/visual-regression\.spec\.js$/,
         /tests\/e2e\/a11y\/tablet-touch-editor-interactions\.spec\.js$/,
+        /tests[\\/]e2e[\\/]education[\\/]desktop-runtime-release\.spec\.js$/,
         ...pptxImportSpecs,
       ],
       use: { ...devices['Desktop Chrome'] },

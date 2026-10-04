@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Type,
   Image as ImageIcon,
@@ -31,6 +32,7 @@ import {
   Sticker,
   Package,
   Link,
+  Library,
 } from 'lucide-react'
 import * as shared from 'revealjs-shared'
 import RibbonSection from './ribbon-section'
@@ -40,11 +42,11 @@ import RibbonFloatingOverlay from './ribbon-floating-overlay'
 import RibbonBigButton from './ribbon-big-button'
 import IconGallery from '../IconGallery'
 import { Button } from '../ui'
-import { GAME_TYPES } from '../../constants/game-element-types-constants'
 import PromptPopover from '../PromptPopover'
 import { api } from '../../utils/api'
 import { resolveUrlEntry } from '../../utils/url-safety'
 import StemSimulationPresetModal from '../stem-simulation-preset-modal'
+import BlockLibraryDialog from '../education/block-library-dialog'
 import { getTechnicalSymbolPacks } from '../../data/technical-symbol-packs'
 
 const { SHAPES = [], shapeSvgString = () => '' } = shared
@@ -177,19 +179,6 @@ function TechnicalSymbolGallery({ open, anchorRef, onSelect, onClose }) {
   )
 }
 
-const GAME_LABELS = {
-  'name-picker': 'Name Picker',
-  'hot-potato': 'Hot Potato',
-  jeopardy: 'Jeopardy',
-  'four-corners': 'Four Corners',
-  'relay-race': 'Relay Race',
-  'trivia-champ': 'Trivia',
-  scattergories: 'Scattergories',
-  poll: 'Live Poll',
-  'word-cloud': 'Word Cloud',
-  matching: 'Matching',
-}
-
 const isActivationKey = (event) => event.key === 'Enter' || event.key === ' '
 
 const handleKeyboardActivation = (event, action) => {
@@ -222,7 +211,7 @@ function GameGalleryDropdown({ open, anchorRef, onSelect, onClose }) {
     >
       <div className="text-[10px] font-semibold text-text-primary mb-1.5">Games</div>
       <div className="flex flex-col gap-0.5">
-        {GAME_TYPES.all.map((type, index) => (
+        {shared.CANONICAL_GAME_TYPES.map((type, index) => (
           <button
             key={type}
             ref={index === 0 ? firstGameButtonRef : undefined}
@@ -238,7 +227,7 @@ function GameGalleryDropdown({ open, anchorRef, onSelect, onClose }) {
             }
           >
             <Gamepad2 size={12} />
-            {GAME_LABELS[type] || type}
+            {shared.GAME_CATALOG[type].label}
           </button>
         ))}
       </div>
@@ -290,9 +279,7 @@ function TableSizePicker({ open, anchorRef, onSelect, onClose }) {
       className="bg-card border border-border rounded-lg p-2 shadow-xl"
     >
       <div>
-        <div className="text-[10px] text-text-muted mb-1">
-          {`${active.row}×${active.column}`}
-        </div>
+        <div className="text-[10px] text-text-muted mb-1">{`${active.row}×${active.column}`}</div>
         <div
           ref={gridRef}
           role="grid"
@@ -316,8 +303,8 @@ function TableSizePicker({ open, anchorRef, onSelect, onClose }) {
                   type="button"
                   tabIndex={-1}
                   className={`ribbon-table-picker-cell min-h-11 min-w-11 rounded-sm cursor-pointer ${
-                  r < active.row && c < active.column ? 'bg-primary' : 'bg-border'
-                }`}
+                    r < active.row && c < active.column ? 'bg-primary' : 'bg-border'
+                  }`}
                   onPointerEnter={() => {
                     setActive({ row: r + 1, column: c + 1 })
                   }}
@@ -378,6 +365,8 @@ export default function InsertTabContent({
   onAddHtml,
   onAddMermaid,
   onAddStemSimulation,
+  onInsertEducationPreset,
+  onLibraryVisibilityChange,
   onAddSvg,
   onAddDrawing,
   onAddDivider,
@@ -397,6 +386,7 @@ export default function InsertTabContent({
   const [showVideoPrompt, setShowVideoPrompt] = useState(false)
   const [showGameGallery, setShowGameGallery] = useState(false)
   const [showStemPreset, setShowStemPreset] = useState(false)
+  const [showBlockLibrary, setShowBlockLibrary] = useState(false)
   const [showTechnicalSymbols, setShowTechnicalSymbols] = useState(false)
   const [uploadError, setUploadError] = useState(null)
   const activeSlideIdRef = useRef(activeSlideId)
@@ -405,6 +395,15 @@ export default function InsertTabContent({
   const tableTriggerRef = useRef(null)
   const technicalSymbolTriggerRef = useRef(null)
   const advancedLauncherRef = useRef(null)
+
+  const openBlockLibrary = () => {
+    setShowBlockLibrary(true)
+    onLibraryVisibilityChange?.(true)
+  }
+  const closeBlockLibrary = () => {
+    onLibraryVisibilityChange?.(false)
+    setShowBlockLibrary(false)
+  }
 
   useLayoutEffect(() => {
     activeSlideIdRef.current = activeSlideId
@@ -495,6 +494,17 @@ export default function InsertTabContent({
       <span id="insert-help-games" className="sr-only">
         Open classroom games and plugin inserts, including live poll, word cloud, and matching.
       </span>
+      <RibbonSection label="Education" alwaysDirect className="border-r border-border px-1">
+        <RibbonBigButton
+          icon={Library}
+          label="Library"
+          title="Education Library"
+          aria-label="Education Library"
+          data-testid="ribbon-insert-library"
+          disabled={!onInsertEducationPreset}
+          onClick={openBlockLibrary}
+        />
+      </RibbonSection>
       <RibbonSection label="Basic" className="border-r border-border px-1">
         <div className="flex items-center gap-0.5">
           <RibbonBigButton
@@ -513,7 +523,9 @@ export default function InsertTabContent({
             aria-label="Picture"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() =>
-              handleFileUpload('image/*', (f, targetSlideId) => onAddImageUpload?.(f, targetSlideId))
+              handleFileUpload('image/*', (f, targetSlideId) =>
+                onAddImageUpload?.(f, targetSlideId)
+              )
             }
           />
           <Button
@@ -946,6 +958,11 @@ export default function InsertTabContent({
         </div>
       </RibbonSection>
 
+      {showBlockLibrary &&
+        createPortal(
+          <BlockLibraryDialog onInsert={onInsertEducationPreset} onClose={closeBlockLibrary} />,
+          document.body
+        )}
       {showVideoPrompt && (
         <PromptPopover
           title="Video URL"

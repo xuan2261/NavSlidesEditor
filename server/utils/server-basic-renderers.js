@@ -12,6 +12,7 @@ const {
   normalizeCssColor,
   resolveColorForTokens,
   resolveMergedCells,
+  resolveTableDimensions,
   toPptFontSize,
 } = require('revealjs-shared')
 const { normalizeServerImageSource } = require('./server-image-source')
@@ -27,7 +28,13 @@ function resolvePptxColor(value, elementType, field, tokens, fallbackValue) {
 
 function addTextElement(slide, element, bounds, designTokens) {
   const fontSize = effectiveFontSize(element)
-  const textColor = resolvePptxColor(element.textColor, 'text', 'textColor', designTokens, '#ffffff')
+  const textColor = resolvePptxColor(
+    element.textColor,
+    'text',
+    'textColor',
+    designTokens,
+    '#ffffff'
+  )
   const runs = htmlToPptTextRuns(element.content || '', {
     align: element.textAlign,
     color: textColor,
@@ -87,14 +94,21 @@ function addShapeElement(slide, element, bounds, designTokens) {
 
   if (shapeType === 'roundRect' && element.borderRadius) {
     const maxRadius = Math.min(bounds.w, bounds.h) / 2
-    shapeOptions.rectRadius = maxRadius > 0 ? Math.min(1, Number(element.borderRadius) / maxRadius) : 0
+    shapeOptions.rectRadius =
+      maxRadius > 0 ? Math.min(1, Number(element.borderRadius) / maxRadius) : 0
   }
 
   slide.addShape(shapeType || 'rect', shapeOptions)
 
   if (element.text || element.textHtml) {
     const fontSize = effectiveFontSize(element)
-    const resolvedTextColor = resolvePptxColor(element.textColor, 'shape', 'textColor', designTokens, '#ffffff')
+    const resolvedTextColor = resolvePptxColor(
+      element.textColor,
+      'shape',
+      'textColor',
+      designTokens,
+      '#ffffff'
+    )
     const textColor = normalizeCssColor(resolvedTextColor, DEFAULT_TEXT_COLOR)
     const textOptions = {
       ...bounds,
@@ -109,11 +123,11 @@ function addShapeElement(slide, element, bounds, designTokens) {
     }
     const runs = element.textHtml
       ? htmlToPptTextRuns(element.textHtml, {
-        align: element.textAlign || 'center',
-        color: resolvedTextColor,
-        fontFace: element.fontFamily,
-        fontSize,
-      })
+          align: element.textAlign || 'center',
+          color: resolvedTextColor,
+          fontFace: element.fontFamily,
+          fontSize,
+        })
       : []
     if (runs.length || element.text) slide.addText(runs.length ? runs : element.text, textOptions)
   }
@@ -138,7 +152,9 @@ function addLineElement(slide, element, bounds, resolution, layout, designTokens
     flipH: x2 < x1,
     flipV: y2 < y1,
     line: {
-      color: normalizeCssColor(resolvePptxColor(element.stroke, 'line', 'stroke', designTokens, '#ffffff')).color,
+      color: normalizeCssColor(
+        resolvePptxColor(element.stroke, 'line', 'stroke', designTokens, '#ffffff')
+      ).color,
       width: element.strokeWidth || 2,
       dashType: mapLineDashType(element.dashArray),
       beginArrowType: mapArrowType(element.arrowStart),
@@ -165,7 +181,13 @@ function addCodeElement(slide, element, bounds) {
 function addCalloutElement(slide, element, bounds, designTokens) {
   const fill = normalizeCssColor(element.calloutColor || '#ef4444')
   const text = normalizeCssColor(
-    resolvePptxColor(element.calloutTextColor, 'callout', 'calloutTextColor', designTokens, '#ffffff')
+    resolvePptxColor(
+      element.calloutTextColor,
+      'callout',
+      'calloutTextColor',
+      designTokens,
+      '#ffffff'
+    )
   )
   slide.addShape('ellipse', {
     ...bounds,
@@ -197,27 +219,39 @@ function addTableElement(slide, element, bounds, designTokens) {
   })
 
   const cellStyles = element.cellStyles || {}
-  const getCellStyle = (key, rowIndex, colIndex) => cellStyles[key] && cellStyles[key][rowIndex] && cellStyles[key][rowIndex][colIndex]
+  const getCellStyle = (key, rowIndex, colIndex) =>
+    cellStyles[key] && cellStyles[key][rowIndex] && cellStyles[key][rowIndex][colIndex]
   const mapVAlign = (value) => (value === 'middle' ? 'mid' : value || undefined)
   const safeFontFamily = (value) => {
     const family = typeof value === 'string' ? value.trim() : ''
     if (!family) return undefined
-    if ([...family].some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)) return undefined
+    if ([...family].some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127))
+      return undefined
     if (/[;:()\\/]/.test(family)) return undefined
-    if (/\/\*|\*\/|url|import|expression|javascript|behavior|binding/i.test(family)) return undefined
+    if (/\/\*|\*\/|url|import|expression|javascript|behavior|binding/i.test(family))
+      return undefined
     return /^[a-zA-Z0-9 _.-]+$/.test(family) ? family : undefined
   }
-  const scaleListToBounds = (values, total, bound) => {
-    if (!Array.isArray(values) || !values.length || !(total > 0) || !(bound > 0)) return undefined
-    if (!values.every((value) => Number.isFinite(Number(value)) && Number(value) > 0)) return undefined
-    return values.map((value) => Math.round(((Number(value) || 0) / total) * bound * 100) / 100)
-  }
-  const colTotal = Array.isArray(element.colWidths)
-    ? element.colWidths.reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0)
-    : 0
-  const rowTotal = Array.isArray(element.rowHeights)
-    ? element.rowHeights.reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0)
-    : 0
+  const colWidths = resolveTableDimensions(element.colWidths, bounds.w)
+  const rowHeights = resolveTableDimensions(element.rowHeights, bounds.h)
+  const padding = Number(element.cellPadding ?? 8)
+  const paddingPoints = (Number.isFinite(padding) ? Math.max(0, padding) : 8) * 0.75
+  // PptxGenJS table margins below one are inches; larger values are points.
+  const cellMargin = paddingPoints >= 1 ? paddingPoints : paddingPoints / 72
+  const tableTextColor = resolvePptxColor(
+    element.textColor,
+    'table',
+    'textColor',
+    designTokens,
+    '#ffffff'
+  )
+  const headerTextColor = resolvePptxColor(
+    element.headerTextColor,
+    'table',
+    'headerTextColor',
+    designTokens,
+    tableTextColor
+  )
 
   const rows = data.map((row, rowIndex) =>
     (Array.isArray(row) ? row : []).reduce((cells, cell, colIndex) => {
@@ -227,33 +261,56 @@ function addTableElement(slide, element, bounds, designTokens) {
       const fillColor = normalizeCssColor(
         getCellStyle('bgColors', rowIndex, colIndex) ||
           (element.headerRow && rowIndex === 0
-            ? resolvePptxColor(element.headerBgColor, 'table', 'headerBgColor', designTokens, '#6366f1')
-            : resolvePptxColor(element.cellBgColor, 'table', 'cellBgColor', designTokens, '#1e1e2e')),
+            ? resolvePptxColor(
+                element.headerBgColor,
+                'table',
+                'headerBgColor',
+                designTokens,
+                '#6366f1'
+              )
+            : resolvePptxColor(
+                element.cellBgColor,
+                'table',
+                'cellBgColor',
+                designTokens,
+                '#1e1e2e'
+              )),
         DEFAULT_BACKGROUND_COLOR
       )
       const textColor = normalizeCssColor(
         getCellStyle('textColors', rowIndex, colIndex) ||
-          resolvePptxColor(element.textColor, 'table', 'textColor', designTokens, '#ffffff'),
+          (element.headerRow && rowIndex === 0 ? headerTextColor : tableTextColor),
         DEFAULT_TEXT_COLOR
       )
       const cellFontSize = Number(getCellStyle('fontSizes', rowIndex, colIndex))
       const cellFontFamily = safeFontFamily(getCellStyle('fontFamilies', rowIndex, colIndex))
 
       cells.push({
-        text: cell || '',
+        text: String(cell ?? ''),
         options: {
           color: textColor.color,
-          fontSize: toPptFontSize(Number.isFinite(cellFontSize) && cellFontSize > 0 ? cellFontSize : element.fontSize || 12),
-          margin: 0.04,
+          fontSize: toPptFontSize(
+            Number.isFinite(cellFontSize) && cellFontSize > 0
+              ? cellFontSize
+              : element.fontSize || 12
+          ),
+          margin: cellMargin,
           fill: { color: fillColor.color, transparency: fillColor.transparency },
           border: {
             color: normalizeCssColor(element.borderColor || '#475569').color,
-            pt: element.borderWidth || 1,
+            pt: element.borderWidth ?? 1,
           },
           ...(cellFontFamily && { fontFace: cellFontFamily }),
-          ...(getCellStyle('isBold', rowIndex, colIndex) != null && { bold: Boolean(getCellStyle('isBold', rowIndex, colIndex)) }),
-          ...(getCellStyle('aligns', rowIndex, colIndex) && { align: getCellStyle('aligns', rowIndex, colIndex) }),
-          ...(getCellStyle('vAligns', rowIndex, colIndex) && { valign: mapVAlign(getCellStyle('vAligns', rowIndex, colIndex)) }),
+          bold:
+            getCellStyle('isBold', rowIndex, colIndex) != null
+              ? Boolean(getCellStyle('isBold', rowIndex, colIndex))
+              : Boolean(element.headerRow && rowIndex === 0 && (element.headerIsBold ?? true)),
+          ...(getCellStyle('aligns', rowIndex, colIndex) && {
+            align: getCellStyle('aligns', rowIndex, colIndex),
+          }),
+          ...(getCellStyle('vAligns', rowIndex, colIndex) && {
+            valign: mapVAlign(getCellStyle('vAligns', rowIndex, colIndex)),
+          }),
           ...(merge && merge.colSpan > 1 && { colspan: merge.colSpan }),
           ...(merge && merge.rowSpan > 1 && { rowspan: merge.rowSpan }),
         },
@@ -265,9 +322,9 @@ function addTableElement(slide, element, bounds, designTokens) {
 
   const tableOptions = {
     ...bounds,
-    margin: 0.04,
-    ...(colTotal > 0 && { colW: scaleListToBounds(element.colWidths, colTotal, bounds.w) }),
-    ...(rowTotal > 0 && { rowH: scaleListToBounds(element.rowHeights, rowTotal, bounds.h) }),
+    margin: cellMargin,
+    ...(colWidths && { colW: colWidths.map((value) => Math.round(value * 100) / 100) }),
+    ...(rowHeights && { rowH: rowHeights.map((value) => Math.round(value * 100) / 100) }),
   }
 
   if (rows.length) slide.addTable(rows, tableOptions)

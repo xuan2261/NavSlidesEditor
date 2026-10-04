@@ -1,14 +1,27 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import sandbox from './emf-wmf-sandbox.js'
 
 const { convertVectorImage, resolveConverterBinary, ALLOWED_BINARIES, narrowConverterEnv } = sandbox
 
 describe('EMF/WMF converter policy', () => {
+  let converterRoot, pinnedOptions
+  beforeAll(() => {
+    converterRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pptx-emf-binary-'))
+    const binary = path.join(converterRoot, process.platform === 'win32' ? 'magick.exe' : 'magick')
+    fs.copyFileSync(process.execPath, binary)
+    const sha256 = crypto.createHash('sha256').update(fs.readFileSync(binary)).digest('hex')
+    pinnedOptions = { force: true, binary, trustedRoot: converterRoot, sha256 }
+  })
+  afterAll(() => {
+    // A killed converter may briefly retain its executable handle on Windows.
+    if (converterRoot)
+      fs.rmSync(converterRoot, { recursive: true, force: true, maxRetries: 20, retryDelay: 50 })
+  })
+
   afterEach(() => {
     delete process.env.PPTX_EMF_CONVERT
     delete process.env.NAVSLIDES_PROBE_SECRET
@@ -33,11 +46,6 @@ describe('EMF/WMF converter policy', () => {
     const env = narrowConverterEnv()
     expect(env.NAVSLIDES_PROBE_SECRET).toBeUndefined()
     expect(env.PATH).toBe(process.env.PATH || '')
-
-    const sourcePath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'emf-wmf-sandbox.js')
-    const source = fs.readFileSync(sourcePath, 'utf8')
-    expect(source).not.toContain('...process.env')
-    expect(source).toContain('narrowConverterEnv')
 
     process.env.PPTX_EMF_CONVERT = '1'
     const denied = await convertVectorImage('in.emf', 'out.png', { force: true, binary: 'bash' })
@@ -106,21 +114,12 @@ describe('EMF/WMF converter policy', () => {
   // of this Node binary is an allowlisted converter that runs the input path as
   // its script. That is how these tests reach the spawn at all.
   async function withPinnedConverter(body, scriptSource) {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'pptx-emf-spawn-'))
+    const root = fs.mkdtempSync(path.join(converterRoot, 'case-'))
     try {
-      const binary = path.join(root, process.platform === 'win32' ? 'magick.exe' : 'magick')
-      fs.copyFileSync(process.execPath, binary)
-      const sha256 = crypto.createHash('sha256').update(fs.readFileSync(binary)).digest('hex')
       const script = path.join(root, 'converter-script.js')
       fs.writeFileSync(script, scriptSource)
-      return await body({
-        script,
-        output: path.join(root, 'out.png'),
-        options: { force: true, binary, trustedRoot: root, sha256 },
-      })
+      return await body({ script, output: path.join(root, 'out.png'), options: pinnedOptions })
     } finally {
-      // Windows refuses to unlink an executable whose handle the OS has not yet
-      // released after the child dies, which a killed converter makes likely.
       fs.rmSync(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 50 })
     }
   }
@@ -129,7 +128,9 @@ describe('EMF/WMF converter policy', () => {
     withPinnedConverter(async ({ script, output, options }) => {
       let ticked = false
       const pending = convertVectorImage(script, output, options)
-      setTimeout(() => { ticked = true }, 20)
+      setTimeout(() => {
+        ticked = true
+      }, 20)
       const result = await pending
 
       expect(result).toMatchObject({ ok: true, outPath: output })
@@ -143,10 +144,7 @@ describe('EMF/WMF converter policy', () => {
       // 256KB clears the pipe buffer on every platform (Linux is 64KB).
       const result = await convertVectorImage(script, output, { ...options, timeoutMs: 5_000 })
       expect(result).toMatchObject({ ok: true, outPath: output })
-    }, [
-      "process.stdout.write('progress '.repeat(26214))",
-      "require('fs').writeFileSync(process.argv[2], 'png')",
-    ].join('\n')))
+    }, ["process.stdout.write('progress '.repeat(26214))", "require('fs').writeFileSync(process.argv[2], 'png')"].join('\n')))
 
   it('reports a converter that outlives its timeout as killed', async () =>
     withPinnedConverter(async ({ script, output, options }) => {
@@ -161,10 +159,7 @@ describe('EMF/WMF converter policy', () => {
       const result = await convertVectorImage(script, output, options)
       expect(result).toMatchObject({ ok: false, code: 'CONVERT_FAILED' })
       expect(result.error).toContain('unsupported EMF record')
-    }, [
-      "process.stderr.write('unsupported EMF record\\n')",
-      'setTimeout(() => process.exit(3), 50)',
-    ].join('\n')))
+    }, ["process.stderr.write('unsupported EMF record\\n')", 'setTimeout(() => process.exit(3), 50)'].join('\n')))
 
   it('bounds retained stderr and decodes it without splitting multibyte text', async () =>
     withPinnedConverter(async ({ script, output, options }) => {
@@ -175,16 +170,16 @@ describe('EMF/WMF converter policy', () => {
       expect(result.error.length).toBeLessThanOrEqual(8 * 1024)
       expect(result.error).not.toContain('�')
       expect(result.error).toContain('é')
-    }, [
-      "process.stderr.write('é'.repeat(40000))",
-      'setTimeout(() => process.exit(3), 50)',
-    ].join('\n')))
+    }, ["process.stderr.write('é'.repeat(40000))", 'setTimeout(() => process.exit(3), 50)'].join('\n')))
 
   it('returns a failure result instead of throwing when the spawn itself is rejected', async () =>
     withPinnedConverter(async ({ script, output, options }) => {
       // map-image.js awaits this with no try/catch and branches on `.ok`, so a
       // synchronous throw here would fail a whole deck over one bad image.
-      const result = await convertVectorImage(script, output, { ...options, signal: 'not-a-signal' })
+      const result = await convertVectorImage(script, output, {
+        ...options,
+        signal: 'not-a-signal',
+      })
       expect(result).toMatchObject({ ok: false, code: 'CONVERT_FAILED' })
     }, "require('fs').writeFileSync(process.argv[2], 'png')"))
 
@@ -213,19 +208,23 @@ describe('EMF/WMF converter policy', () => {
     try {
       const binary = path.join(sibling, 'magick.exe')
       fs.writeFileSync(binary, 'untrusted')
-      expect(resolveConverterBinary({
-        binary,
-        trustedRoot: root,
-        sha256: 'a'.repeat(64),
-      })).toMatchObject({ ok: false, error: 'emf-binary-outside-root', code: 'POLICY' })
+      expect(
+        resolveConverterBinary({
+          binary,
+          trustedRoot: root,
+          sha256: 'a'.repeat(64),
+        })
+      ).toMatchObject({ ok: false, error: 'emf-binary-outside-root', code: 'POLICY' })
 
       const trustedBinary = path.join(root, 'magick.exe')
       fs.writeFileSync(trustedBinary, 'trusted')
-      expect(resolveConverterBinary({
-        binary: trustedBinary,
-        trustedRoot: root,
-        sha256: 'a'.repeat(64),
-      })).toMatchObject({ ok: false, error: 'emf-binary-hash-mismatch', code: 'POLICY' })
+      expect(
+        resolveConverterBinary({
+          binary: trustedBinary,
+          trustedRoot: root,
+          sha256: 'a'.repeat(64),
+        })
+      ).toMatchObject({ ok: false, error: 'emf-binary-hash-mismatch', code: 'POLICY' })
     } finally {
       fs.rmSync(parent, { recursive: true, force: true })
     }

@@ -4,15 +4,14 @@
  * Factory that dispatches to per-game-type sub-renderers in ./game-renderers/.
  * Compatible with renderToString (hooks only in lazy-loaded interactive sub-modules).
  *
- * Supports all game types from GAME_TYPES.
+ * Subtype metadata and authored config come from the shared education registry.
  *
  * Renders in two modes:
  *  - Edit mode  (isPresenting !== true): preview card with setup label
  *  - Present mode (isPresenting === true): live game UI with controls
  */
 import React from 'react'
-import { resolveGameConfig } from '../../../constants/game-element-types-constants.js'
-import { GAME_TYPE_LABELS } from './game-renderers/shared.jsx'
+import { normalizeGameConfig, GAME_CATALOG } from 'revealjs-shared'
 import { NamePickerRenderer, NamePickerInteractiveWrapper } from './game-renderers/name-picker.jsx'
 import { HotPotatoRenderer } from './game-renderers/hot-potato.jsx'
 import { JeopardyRenderer } from './game-renderers/jeopardy-renderer.jsx'
@@ -31,7 +30,7 @@ export function GameElementRenderer(props) {
   // subtype fields flat; render one resolved view while preserving the source shape.
   const sourceElement = props.element ?? props
   const gameType = sourceElement.gameType || 'name-picker'
-  const gameConfig = resolveGameConfig(sourceElement, gameType)
+  const gameConfig = normalizeGameConfig(sourceElement, gameType)
   const el = { ...sourceElement, ...gameConfig, [gameType]: gameConfig }
   const isPresenting = props.isPresenting === true
   const isRunning = el.gameStatus === 'running'
@@ -70,7 +69,7 @@ export function GameElementRenderer(props) {
     }
   }
 
-  const gameLabel = GAME_TYPE_LABELS[el.gameType] || el.gameType || 'Game'
+  const gameLabel = GAME_CATALOG[el.gameType]?.label || el.gameType || 'Game'
 
   return (
     <div
@@ -92,57 +91,65 @@ export function GameElementRenderer(props) {
       }}
     >
       {/* Top label */}
-      <div style={{
-        position: 'absolute',
-        top: 10,
-        left: 0,
-        right: 0,
-        textAlign: 'center',
-        fontSize: 11,
-        fontWeight: 700,
-        textTransform: 'uppercase',
-        letterSpacing: '0.1em',
-        color: accent,
-        pointerEvents: 'none',
-      }}>
+      <div
+        style={{
+          position: 'absolute',
+          top: 10,
+          left: 0,
+          right: 0,
+          textAlign: 'center',
+          fontSize: 11,
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+          color: accent,
+          pointerEvents: 'none',
+        }}
+      >
         Game: {gameLabel}
       </div>
 
       {/* Game content */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flex: 1,
-        padding: '28px 16px 32px',
-        width: '100%',
-        boxSizing: 'border-box',
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flex: 1,
+          padding: '28px 16px 32px',
+          width: '100%',
+          boxSizing: 'border-box',
+        }}
+      >
         {renderGameContent()}
       </div>
 
       {/* Setup placeholder — only shown in edit mode when status is setup */}
       {!isPresenting && el.gameStatus === 'setup' && (
-        <div style={{
-          position: 'absolute',
-          bottom: 10,
-          left: 0,
-          right: 0,
-          textAlign: 'center',
-          fontSize: 10,
-          color: 'rgba(255,255,255,0.4)',
-          fontStyle: 'italic',
-          pointerEvents: 'none',
-        }}>
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 10,
+            left: 0,
+            right: 0,
+            textAlign: 'center',
+            fontSize: 10,
+            color: 'rgba(255,255,255,0.4)',
+            fontStyle: 'italic',
+            pointerEvents: 'none',
+          }}
+        >
           Configure in properties panel
         </div>
       )}
 
       {/* Controls — only in presentation mode (name-picker has its own controls) */}
-      {isPresenting && (isRunning || !isEnded) && !['name-picker', 'poll', 'word-cloud'].includes(el.gameType) && (
-        <GameControls element={el} />
-      )}
+      {isPresenting &&
+        (isRunning || !isEnded) &&
+        !['name-picker', 'poll', 'word-cloud'].includes(el.gameType) && (
+          <GameControls element={el} />
+        )}
     </div>
   )
 }

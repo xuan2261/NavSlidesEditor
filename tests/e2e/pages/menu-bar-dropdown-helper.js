@@ -74,10 +74,6 @@ export class MenuBarDropdownHelper {
     await this.openFileMenuItem('Export PPTX')
   }
 
-  async exportOffline() {
-    await this.openFileMenuItem('Export Offline HTML')
-  }
-
   async exportProject() {
     await this.openFileMenuItem('Export Project')
   }

@@ -1,328 +1,212 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+// @vitest-environment node
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import request from 'supertest'
 import express from 'express'
 import { createRequire } from 'node:module'
-
 const require = createRequire(import.meta.url)
-const gamesRouter = require('./games-rest-api-handler.js')
-const GameEngine = require('../services/game-room-manager-singleton-service.js')
+const router = require('./games-rest-api-handler')
+const engine = require('../services/game-room-manager-singleton-service')
 const app = express()
 app.use(express.json())
-app.use('/api/games', gamesRouter)
-
-const createGame = (id, gameType = 'quiz', options = {}) =>
-  request(app).post('/api/games').send({ gameId: id, gameType, options })
-const joinGame = (id, actor) => request(app).post(`/api/games/${id}/join`).send(actor)
-const answer = (id, actor) => request(app).post(`/api/games/${id}/answer`).send(actor)
-function hostActor(host, overrides = {}) {
-  return {
-    socketId: host.socketId,
-    playerId: host.playerId,
+app.use('/api/games', router)
+let sequence = 0
+afterEach(() => {
+  vi.restoreAllMocks()
+  engine._reset()
+})
+async function provision(type = 'hot-potato', options = {}) {
+  const created = await request(app)
+    .post('/api/games')
+    .send({ gameId: 'room', gameType: type, options })
+  expect(created.status).toBe(200)
+  const host = {
+    socketId: 'host-socket',
+    playerId: 'host',
     playerName: 'Host',
     role: 'host',
-    sessionToken: host.sessionToken,
-    hostCapability: host.hostCapability,
-    ...overrides,
+    hostCapability: created.body.hostCapability,
   }
+  const joined = await request(app).post('/api/games/room/join').send(host)
+  const actor = { ...host, sessionToken: joined.body.sessionToken }
+  const learner = {
+    socketId: 'learner-socket',
+    playerId: 'learner',
+    playerName: 'Learner',
+    role: 'player',
+  }
+  const player = await request(app).post('/api/games/room/join').send(learner)
+  const playerActor = { ...learner, sessionToken: player.body.sessionToken }
+  function payload(fields = {}, who = actor) {
+    const room = engine.getRoom('room')
+    return {
+      ...who,
+      gameId: 'room',
+      roomInstanceId: room.roomInstanceId,
+      generation: room.generation,
+      roundId: room.roundId,
+      commandId: `rest-${++sequence}`,
+      ...fields,
+    }
+  }
+  const mutate = (action, fields = {}, who) =>
+    request(app).post(`/api/games/room/${action}`).send(payload(fields, who))
+  return { created, actor, playerActor, payload, mutate }
 }
-
-beforeEach(() => GameEngine._reset())
-
-describe('games REST API authorization', () => {
-  it('keeps generic creation as an unauthenticated local bootstrap boundary', async () => {
-    const created = await createGame('rest-create', 'name-picker', { items: ['A', 'B'] })
-    expect(created.status).toBe(200)
-    expect(created.body.hostCapability).toEqual(expect.any(String))
-
-    const room = GameEngine.getRoom('rest-create')
-    expect(room).toHaveProperty('hostCapabilityHash')
-    expect(room).not.toHaveProperty('hostCapability')
-    expect(room).not.toHaveProperty('pendingHostCapability')
-
-    const retried = await createGame('rest-create', 'name-picker', { items: ['C'] })
-    expect(retried.status).toBe(200)
-    expect(retried.body.hostCapability).toBe(created.body.hostCapability)
-
-    const joined = await joinGame('rest-create', {
-      socketId: 'rest-host-socket', playerId: 'rest-host', playerName: 'Host', role: 'host',
-      hostCapability: created.body.hostCapability,
-    })
-    expect(joined.status).toBe(200)
-
-    const existing = await createGame('rest-create', 'name-picker', { items: ['C'] })
-    expect(existing.status).toBe(200)
-    expect(existing.body.hostCapability).toBeUndefined()
-  })
-
-  it('rejects a host join without the server-issued capability', async () => {
-    const created = await createGame('rest-host-join')
-    const actor = {
-      socketId: 'host-socket', playerId: 'host-player', playerName: 'Host', role: 'host',
-      hostCapability: 'wrong-capability',
-    }
-    const rejected = await joinGame('rest-host-join', actor)
+describe('REST local provisioning authority', () => {
+  it('recovers only ownerless unclaimed authority and never reads owned pending capability', async () => {
+    const f = await provision('poll')
+    const claimed = await request(app).post('/api/games').send({ gameId: 'room', gameType: 'poll' })
+    expect(claimed.status).toBe(200)
+    expect(claimed.body.hostCapability).toBeUndefined()
+    const owner = { presentationId: 'deck', liveRoomCode: 'live', presentationGeneration: 1 }
+    engine.createRoom('owned', 'quiz', {}, owner)
+    const original = engine.peekHostCapability('owned'),
+      pending = vi.spyOn(engine, 'peekHostCapability')
+    const rejected = await request(app)
+      .post('/api/games')
+      .send({ gameId: 'owned', gameType: 'quiz', options: { title: 'attacker' } })
     expect(rejected.status).toBe(403)
-    expect(rejected.body.error).toBe('invalid-host-capability')
-
-    const joined = await joinGame('rest-host-join', {
-      ...actor, hostCapability: created.body.hostCapability,
-    })
-    expect(joined.status).toBe(200)
-    expect(joined.body.sessionToken).toEqual(expect.any(String))
+    expect(rejected.body).toEqual({ error: 'presenter-owned-room' })
+    expect(pending).not.toHaveBeenCalled()
+    expect(engine.getRoom('owned').owner).toEqual(owner)
+    pending.mockRestore()
+    expect(
+      engine.joinRoom('owned', 'presenter', 'Host', {
+        role: 'host',
+        socketId: 'trusted',
+        hostCapability: original,
+      }).ok
+    ).toBe(true)
+    expect(f.created.body.hostCapability).toBeTypeOf('string')
   })
-
-  it('recovers a host session when the initial session event was lost', async () => {
-    const id = 'rest-host-session-recovery'
-    const created = await createGame(id, 'name-picker', { items: ['A', 'B'] })
-    const first = await joinGame(id, {
-      socketId: 'host-socket-a', playerId: 'host-player', playerName: 'Host', role: 'host',
-      hostCapability: created.body.hostCapability,
-    })
-    expect(first.status).toBe(200)
-
-    const recovered = await joinGame(id, {
-      socketId: 'host-socket-b', playerId: 'host-player', playerName: 'Host', role: 'host',
-      hostCapability: created.body.hostCapability,
-    })
+  it('keeps create retry capability until claim and rejects malformed/local-only types', async () => {
+    const body = { gameId: 'retry', gameType: 'poll' }
+    const first = await request(app).post('/api/games').send(body),
+      second = await request(app)
+        .post('/api/games')
+        .send({ ...body, options: { prompt: 'Changed' } })
+    expect(second.body.hostCapability).toBe(first.body.hostCapability)
+    expect(engine.getRoom('retry').config.prompt).not.toBe('Changed')
+    expect(
+      (await request(app).post('/api/games').send({ gameId: 'bad', gameType: 'countdown' })).status
+    ).toBe(400)
+    expect(
+      (
+        await request(app)
+          .post('/api/games')
+          .send({ gameId: 'bad', gameType: 'quiz', options: { questions: [null] } })
+      ).status
+    ).toBe(400)
+  })
+  it('rejects wrong host capability and recovers a lost host session only with trusted capability', async () => {
+    const f = await provision()
+    const wrong = await request(app)
+      .post('/api/games/room/join')
+      .send({ ...f.actor, hostCapability: 'wrong' })
+    expect(wrong.status).toBe(403)
+    const recovered = await request(app)
+      .post('/api/games/room/join')
+      .send({ ...f.actor, socketId: 'new-host', sessionToken: undefined })
     expect(recovered.status).toBe(200)
-    expect(recovered.body.sessionToken).toEqual(expect.any(String))
-    expect(recovered.body.sessionToken).not.toBe(first.body.sessionToken)
-
-    const staleControl = await request(app).post(`/api/games/${id}/next`).send({
-      socketId: 'host-socket-a', playerId: 'host-player', sessionToken: first.body.sessionToken,
-      hostCapability: created.body.hostCapability,
-    })
-    expect(staleControl.status).toBe(403)
-
-    const recoveredControl = await request(app).post(`/api/games/${id}/next`).send({
-      socketId: 'host-socket-b', playerId: 'host-player', sessionToken: recovered.body.sessionToken,
-      hostCapability: created.body.hostCapability,
-    })
-    expect(recoveredControl.status).toBe(200)
+    expect(recovered.body.sessionToken).not.toBe(f.actor.sessionToken)
+    expect((await f.mutate('next')).status).toBe(403)
   })
-
-  it('keeps REST observers read-only and outside the player map', async () => {
-    const id = 'rest-observer'
-    const created = await createGame(id, 'quiz', {
-      questions: [{ id: 'q1', correctIndex: 0, points: 10 }],
+  it('exposes observer E without granting mutation or adding membership', async () => {
+    const f = await provision()
+    await f.mutate('next')
+    const observed = await request(app)
+      .post('/api/games/room/join')
+      .send({ role: 'observer', playerName: 'Observer', playerId: 'observer' })
+    expect(observed.body).toMatchObject({
+      isHost: false,
+      roomInstanceId: expect.any(String),
+      generation: 0,
+      roundId: 1,
     })
-    const host = await joinGame(id, {
-      socketId: 'observer-host-socket', playerId: 'observer-host', playerName: 'Host', role: 'host',
-      hostCapability: created.body.hostCapability,
-    })
-    expect(host.status).toBe(200)
-
-    const observed = await joinGame(id, {
-      role: 'observer', socketId: 'observer-socket', playerId: 'observer', playerName: 'Observer',
-    })
-    expect(observed.status).toBe(200)
-    expect(observed.body).toMatchObject({ role: 'observer', players: 1 })
     expect(observed.body.sessionToken).toBeUndefined()
-    expect(GameEngine.getRoom(id).players.has('observer')).toBe(false)
-
-    const attemptedAnswer = await answer(id, {
-      socketId: 'observer-socket', playerId: 'observer', sessionToken: 'fake-session',
-      questionId: 'q1', answerIndex: 0, timeSpentMs: 100,
-    })
-    expect(attemptedAnswer.status).toBe(404)
-    expect(GameEngine.getRoom(id).players.has('observer')).toBe(false)
+    expect(engine.getRoom('room').players.has('observer')).toBe(false)
+    expect(
+      (
+        await f.mutate(
+          'answer',
+          { questionId: 'question-1', attemptId: 'a', answerIndex: 0 },
+          { socketId: 'observer', playerId: 'observer', sessionToken: 'fake' }
+        )
+      ).status
+    ).toBe(403)
   })
-
-  it('rejects stale player sessions and old sockets after reconnect', async () => {
-    const id = 'rest-player-session'
-    await createGame(id, 'quiz', { questions: [{ id: 'q1', correctIndex: 0, points: 10 }] })
-    const first = await joinGame(id, {
-      socketId: 'player-socket-a', playerId: 'player-1', playerName: 'Player', role: 'player',
-    })
-    expect(first.status).toBe(200)
-
-    const invalid = await joinGame(id, {
-      socketId: 'player-socket-b', playerId: 'player-1', playerName: 'Player', role: 'player',
-      sessionToken: 'not-the-issued-token',
-    })
-    expect(invalid.status).toBe(403)
-    expect(invalid.body.error).toBe('invalid-player-session')
-
-    const rejoined = await joinGame(id, {
-      socketId: 'player-socket-b', playerId: 'player-1', playerName: 'Player', role: 'player',
-      sessionToken: first.body.sessionToken,
-    })
-    expect(rejoined.status).toBe(200)
-    GameEngine.nextQuestion(id)
-
-    const stale = await answer(id, {
-      socketId: 'player-socket-a', playerId: 'player-1', sessionToken: first.body.sessionToken,
-      questionId: 'q1', answerIndex: 0, timeSpentMs: 100,
-    })
-    expect(stale.status).toBe(403)
-    expect(stale.body.error).toBe('stale-player-session')
-  })
-
-  it('requires the player session and active socket for answers', async () => {
-    const id = 'rest-answer'
-    await createGame(id, 'quiz', { questions: [{ id: 'q1', correctIndex: 0, points: 10 }] })
-    const joined = await joinGame(id, {
-      socketId: 'answer-socket', playerId: 'answer-player', playerName: 'Player', role: 'player',
-    })
-    GameEngine.nextQuestion(id)
-    const rejected = await answer(id, {
-      socketId: 'answer-socket', playerId: 'answer-player', sessionToken: 'wrong-token',
-      questionId: 'q1', answerIndex: 0, timeSpentMs: 100,
-    })
-    expect(rejected.status).toBe(403)
-    expect(rejected.body.error).toBe('stale-player-session')
-
-    const accepted = await answer(id, {
-      socketId: 'answer-socket', playerId: 'answer-player', sessionToken: joined.body.sessionToken,
-      questionId: 'q1', answerIndex: 0, timeSpentMs: 100,
-    })
-    expect(accepted.status).toBe(200)
-    expect(accepted.body.correct).toBe(true)
-  })
-
-  it('requires REST answers to identify the active question', async () => {
-    const id = 'rest-question-binding'
-    const created = await createGame(id, 'quiz', {
-      questions: [
-        { id: 'q1', correctIndex: 0, points: 10 },
-        { id: 'q2', correctIndex: 1, points: 10 },
-      ],
-    })
-    const hostJoin = await joinGame(id, {
-      socketId: 'rest-question-host-socket',
-      playerId: 'rest-question-host',
-      playerName: 'Host',
-      role: 'host',
-      hostCapability: created.body.hostCapability,
-    })
-    const host = {
-      socketId: 'rest-question-host-socket',
-      playerId: 'rest-question-host',
-      sessionToken: hostJoin.body.sessionToken,
-      hostCapability: created.body.hostCapability,
+  it('binds answers to current E/question/session and once-only receipts without exposing keys', async () => {
+    const question = {
+      id: 'q',
+      question: 'Choose B',
+      options: ['A', 'B'],
+      correctIndex: 1,
+      points: 10,
     }
-    const playerJoin = await joinGame(id, {
-      socketId: 'rest-question-player-socket',
-      playerId: 'rest-question-player',
-      playerName: 'Player',
-      role: 'player',
-    })
-
-    expect((await request(app).post(`/api/games/${id}/next`).send(host)).status).toBe(200)
-    expect((await request(app).post(`/api/games/${id}/next`).send(host)).status).toBe(200)
-
-    const omitted = await answer(id, {
-      socketId: 'rest-question-player-socket',
-      playerId: 'rest-question-player',
-      sessionToken: playerJoin.body.sessionToken,
-      answerIndex: 1,
-      timeSpentMs: 100,
-    })
-    expect(omitted.status).toBe(400)
-    expect(omitted.body.error).toContain('questionId')
-    expect(GameEngine.getRoom(id).players.get('rest-question-player').score).toBe(0)
-
-    const stale = await answer(id, {
-      socketId: 'rest-question-player-socket',
-      playerId: 'rest-question-player',
-      sessionToken: playerJoin.body.sessionToken,
-      questionId: 'q1',
-      answerIndex: 0,
-      timeSpentMs: 100,
-    })
-    expect(stale.status).toBe(409)
-    expect(stale.body.error).toBe('stale-question')
-    expect(GameEngine.getRoom(id).players.get('rest-question-player').score).toBe(0)
-
-    const valid = await answer(id, {
-      socketId: 'rest-question-player-socket',
-      playerId: 'rest-question-player',
-      sessionToken: playerJoin.body.sessionToken,
-      questionId: 'q2',
-      answerIndex: 1,
-      timeSpentMs: 100,
-    })
-    expect(valid.status).toBe(200)
-    expect(valid.body.correct).toBe(true)
+    const f = await provision('hot-potato', { questions: [question] })
+    const next = await f.mutate('next')
+    expect(next.body.state.question.id).toBe('q')
+    expect(JSON.stringify(next.body.state)).not.toContain('answerKey')
+    expect(
+      (
+        await f.mutate(
+          'answer',
+          { questionId: 'old', attemptId: 'a', answerIndex: 1 },
+          f.playerActor
+        )
+      ).body.error
+    ).toBe('stale-question')
+    const payload = f.payload({ questionId: 'q', attemptId: 'a', answerIndex: 1 }, f.playerActor)
+    const accepted = await request(app).post('/api/games/room/answer').send(payload)
+    expect(accepted.body.result).toMatchObject({ correct: true, points: 10, totalScore: 10 })
+    const duplicate = await request(app).post('/api/games/room/answer').send(payload)
+    expect(duplicate.body.duplicate).toBe(true)
+    expect(
+      (
+        await request(app)
+          .post('/api/games/room/answer')
+          .send({ ...payload, answerIndex: 0 })
+      ).body.error
+    ).toBe('command-id-conflict')
+    const rejoin = await request(app)
+      .post('/api/games/room/join')
+      .send({ ...f.playerActor, socketId: 'new-learner' })
+    expect(rejoin.body.state.ownSubmission.result.totalScore).toBe(10)
+    expect(
+      (await f.mutate('answer', { questionId: 'q', attemptId: 'b', answerIndex: 1 }, f.playerActor))
+        .body.error
+    ).toBe('stale-player-session')
+    expect(
+      (
+        await f.mutate(
+          'answer',
+          { roomInstanceId: 'wrong', questionId: 'q', attemptId: 'b', answerIndex: 1 },
+          { ...f.playerActor, socketId: 'new-learner' }
+        )
+      ).body.error
+    ).toBe('stale-room-instance')
   })
-
-  it('restricts next, random, end, and delete to the active host context', async () => {
-    const id = 'rest-host-controls'
-    const created = await createGame(id, 'name-picker', { items: ['A', 'B'] })
-    const hostJoin = await joinGame(id, {
-      socketId: 'host-socket', playerId: 'host-player', playerName: 'Host', role: 'host',
-      hostCapability: created.body.hostCapability,
-    })
-    const host = {
-      socketId: 'host-socket', playerId: 'host-player', sessionToken: hostJoin.body.sessionToken,
-      hostCapability: created.body.hostCapability,
-    }
-    const player = await joinGame(id, {
-      socketId: 'player-socket', playerId: 'player-1', playerName: 'Player', role: 'player',
-    })
-    const forbidden = hostActor(host, {
-      socketId: 'player-socket', playerId: 'player-1', sessionToken: player.body.sessionToken,
-      hostCapability: 'wrong-capability',
-    })
-    for (const action of ['next', 'random', 'end']) {
-      const response = await request(app).post(`/api/games/${id}/${action}`).send(forbidden)
-      expect(response.status).toBe(403)
-    }
-    const forbiddenDelete = await request(app).delete(`/api/games/${id}`).send(forbidden)
-    expect(forbiddenDelete.status).toBe(403)
-
-    const next = await request(app).post(`/api/games/${id}/next`).send(hostActor(host))
-    expect(next.status).toBe(200)
-    const random = await request(app).post(`/api/games/${id}/random`).send(hostActor(host))
-    expect(random.status).toBe(200)
-    expect(random.body.winnerIndex).toBeGreaterThanOrEqual(0)
-    const ended = await request(app).post(`/api/games/${id}/end`).send(hostActor(host))
-    expect(ended.status).toBe(200)
-    expect(ended.body.status).toBe('finished')
-    const deleted = await request(app).delete(`/api/games/${id}`).send(hostActor(host))
-    expect(deleted.status).toBe(200)
-    expect(GameEngine.getRoom(id)).toBeUndefined()
+  it('requires host E for every mutation, final next ends and deletion removes room', async () => {
+    const f = await provision()
+    for (const action of ['next', 'random', 'end', 'reset'])
+      expect((await f.mutate(action, {}, f.playerActor)).status).toBe(403)
+    expect((await request(app).post('/api/games/room/next').send(f.actor)).status).toBe(400)
+    const old = f.payload()
+    await f.mutate('reset')
+    expect((await request(app).post('/api/games/room/next').send(old)).body.error).toBe(
+      'stale-generation'
+    )
+    expect((await f.mutate('next')).body.state.phase).toBe('active')
+    expect((await f.mutate('next')).body.state.status).toBe('finished')
+    expect(
+      (await request(app).delete('/api/games/room').send(f.payload({}, f.playerActor))).status
+    ).toBe(403)
+    expect((await request(app).delete('/api/games/room').send(f.payload())).body.deleted).toBe(true)
+    expect(engine.getRoom('room')).toBeUndefined()
   })
-
-  it('returns a finished state when REST next advances beyond the final question', async () => {
-    const id = 'rest-final-question'
-    const created = await createGame(id, 'quiz', {
-      questions: [{ id: 'q1', correctIndex: 0, points: 10 }],
-    })
-    const joined = await joinGame(id, {
-      socketId: 'rest-final-host-socket',
-      playerId: 'rest-final-host',
-      playerName: 'Host',
-      role: 'host',
-      hostCapability: created.body.hostCapability,
-    })
-    const actor = {
-      socketId: 'rest-final-host-socket',
-      playerId: 'rest-final-host',
-      sessionToken: joined.body.sessionToken,
-      hostCapability: created.body.hostCapability,
-    }
-
-    const first = await request(app).post(`/api/games/${id}/next`).send(actor)
-    expect(first.status).toBe(200)
-    expect(first.body.question.id).toBe('q1')
-
-    const finished = await request(app).post(`/api/games/${id}/next`).send(actor)
-    expect(finished.status).toBe(200)
-    expect(finished.body).toMatchObject({ currentQuestion: null, question: null, status: 'finished' })
-  })
-
-  it('keeps sessions and host capabilities out of leaderboard rows', async () => {
-    const id = 'rest-leaderboard'
-    const created = await createGame(id)
-    const joined = await joinGame(id, {
-      socketId: 'host-socket', playerId: 'host-player', playerName: 'Host', role: 'host',
-      hostCapability: created.body.hostCapability,
-    })
-    const leaderboard = await request(app).get(`/api/games/${id}/leaderboard`)
-    expect(leaderboard.status).toBe(200)
-    expect(leaderboard.body).toEqual([{ playerId: 'host-player', name: 'Host', score: 0 }])
-    expect(JSON.stringify(leaderboard.body)).not.toContain(joined.body.sessionToken)
-    expect(JSON.stringify(leaderboard.body)).not.toContain(created.body.hostCapability)
+  it('runs random through server-selected room-local state', async () => {
+    const f = await provision('name-picker', { items: ['A'], excludeAfterPick: true })
+    expect((await f.mutate('random')).body.result).toMatchObject({ winner: 'A', winnerIndex: 0 })
+    expect((await f.mutate('random')).body.result.winnerIndex).toBe(-1)
   })
 })

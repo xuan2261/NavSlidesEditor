@@ -4,15 +4,11 @@
 
 if (typeof window !== 'undefined') {
   if (!window.PointerEvent) {
-    class PointerEvent extends Event {
+    class PointerEvent extends window.MouseEvent {
       constructor(type, params = {}) {
         super(type, params)
-        this.button = params.button ?? 0
-        this.ctrlKey = params.ctrlKey ?? false
         this.pointerType = params.pointerType ?? 'mouse'
         this.pointerId = params.pointerId ?? 1
-        this.clientX = params.clientX ?? 0
-        this.clientY = params.clientY ?? 0
       }
     }
     window.PointerEvent = PointerEvent

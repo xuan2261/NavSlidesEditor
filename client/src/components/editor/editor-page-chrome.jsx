@@ -38,7 +38,8 @@ export function EditorPageHeader({ c }) {
             onExportPDF={c.onExportPDF}
             onExportPPTX={c.onExportPPTX}
             onExportHTML={c.onExportHTML}
-            onExportOffline={c.onExportOffline}
+            staticExportTeacherReveal={c.staticExportTeacherReveal}
+            onStaticExportTeacherRevealChange={c.onStaticExportTeacherRevealChange}
             onExportProject={c.onExportProject}
             onOpenProject={c.onOpenProject}
             onGithub={() => c.setShowGithubModal(true)}

@@ -11,12 +11,14 @@ import MiscProperties from './misc-properties'
 import TableProperties from './table-properties'
 import TimelineProperties from './timeline-properties'
 import GameProperties from './game-properties'
-import { GAME_TYPES, GAME_TYPE_DEFAULTS } from '../../constants/game-element-types-constants'
+import { CANONICAL_GAME_TYPES, createDefaultGameConfig } from 'revealjs-shared'
 
 const noop = vi.fn()
 
 function expectEveryControlNamed(container) {
-  const controls = [...container.querySelectorAll('button, input, select, textarea, [role="radio"], [role="tab"]')]
+  const controls = [
+    ...container.querySelectorAll('button, input, select, textarea, [role="radio"], [role="tab"]'),
+  ]
   const unnamed = controls.filter((control) => !computeAccessibleName(control).trim())
   expect(unnamed.map((control) => control.outerHTML)).toEqual([])
 }
@@ -44,13 +46,57 @@ describe('property control accessible names', () => {
     renderAndCheck(<ImageProperties element={{ type: 'image' }} onUpdate={noop} />)
     renderAndCheck(<MediaProperties element={{ type: 'video' }} onUpdate={noop} />)
     renderAndCheck(<MediaProperties element={{ type: 'audio' }} onUpdate={noop} />)
-    renderAndCheck(<ChartProperties element={{ type: 'chart', chartData: { labels: [], datasets: [{ label: 'A', data: [] }] } }} onUpdate={noop} />)
-    renderAndCheck(<CodeProperties element={{ type: 'code', walkthroughSteps: [{ label: 'Step 1', startLine: 1, endLine: 2 }] }} onUpdate={noop} onEditCode={noop} />)
-    renderAndCheck(<ShapeProperties element={base} elements={[base]} selectedElementIds={[base.id]} onUpdate={noop} />)
+    renderAndCheck(
+      <ChartProperties
+        element={{ type: 'chart', chartData: { labels: [], datasets: [{ label: 'A', data: [] }] } }}
+        onUpdate={noop}
+      />
+    )
+    renderAndCheck(
+      <CodeProperties
+        element={{
+          type: 'code',
+          walkthroughSteps: [{ label: 'Step 1', startLine: 1, endLine: 2 }],
+        }}
+        onUpdate={noop}
+        onEditCode={noop}
+      />
+    )
+    renderAndCheck(
+      <ShapeProperties
+        element={base}
+        elements={[base]}
+        selectedElementIds={[base.id]}
+        onUpdate={noop}
+      />
+    )
     const line = { ...base, id: 'line-1', type: 'line' }
-    renderAndCheck(<ShapeProperties element={line} elements={[line]} selectedElementIds={[line.id]} onUpdate={noop} />)
-    renderAndCheck(<TableProperties element={{ type: 'table', data: [['A', 'B'], ['C', 'D']] }} onUpdate={noop} />)
-    renderAndCheck(<TimelineProperties element={{ type: 'timeline', events: [{ id: 'event-1', date: '2025', title: 'Launch' }] }} onUpdate={noop} />)
+    renderAndCheck(
+      <ShapeProperties
+        element={line}
+        elements={[line]}
+        selectedElementIds={[line.id]}
+        onUpdate={noop}
+      />
+    )
+    renderAndCheck(
+      <TableProperties
+        element={{
+          type: 'table',
+          data: [
+            ['A', 'B'],
+            ['C', 'D'],
+          ],
+        }}
+        onUpdate={noop}
+      />
+    )
+    renderAndCheck(
+      <TimelineProperties
+        element={{ type: 'timeline', events: [{ id: 'event-1', date: '2025', title: 'Launch' }] }}
+        onUpdate={noop}
+      />
+    )
   })
 
   it('names controls for every miscellaneous property surface', () => {
@@ -79,14 +125,14 @@ describe('property control accessible names', () => {
   })
 
   it('names controls in both tabs for every game type', () => {
-    for (const gameType of GAME_TYPES.all) {
+    for (const gameType of CANONICAL_GAME_TYPES) {
       const view = render(
         <GameProperties
           element={{
             id: `game-${gameType}`,
             type: 'game',
             gameType,
-            [gameType]: GAME_TYPE_DEFAULTS[gameType],
+            [gameType]: createDefaultGameConfig(gameType),
           }}
           onUpdate={noop}
           onDelete={noop}

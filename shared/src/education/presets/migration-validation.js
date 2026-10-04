@@ -1,0 +1,31 @@
+function exactTargets(records, ids) {
+  if (!Array.isArray(records)) throw new Error('Template input must be a JSON array.')
+  return ids.map((id) => {
+    const matches = records.filter((record) => record?.id === id)
+    if (matches.length !== 1)
+      throw new Error(`${id}: expected exactly one checked-in target, found ${matches.length}.`)
+    const record = matches[0]
+    if (!Array.isArray(record.slides) || !record.slides.length)
+      throw new Error(`${id}: missing lesson slides; restore the audited builtin before migrating.`)
+    if (record.slides.some((slide) => !slide || !Array.isArray(slide.elements)))
+      throw new Error(`${id}: every lesson slide must contain an elements array.`)
+    if (
+      record.slides.some((slide) =>
+        slide.elements.some((element) => !element || typeof element.type !== 'string')
+      )
+    )
+      throw new Error(
+        `${id}: lesson elements must be typed objects; restore the complete audited lesson.`
+      )
+    return record
+  })
+}
+function assertValidGame(gameType, config, context) {
+  const { validateGameConfig } = require('../game-schema.js')
+  const validation = validateGameConfig(gameType, config)
+  if (!validation.isValid)
+    throw new Error(
+      `${context}: ${validation.errors.map((error) => `${error.path.join('.')}: ${error.message}`).join('; ')}`
+    )
+}
+module.exports = { exactTargets, assertValidGame }

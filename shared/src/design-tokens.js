@@ -9,6 +9,8 @@
  * so a deck rendered with no active theme looks byte-identical at paint time.
  */
 
+const { escapePlainText } = require('./content-safety.js')
+
 const DEFAULT_TOKENS = {
   colors: {
     bg: '#1e1e2e', // matches getBgPrintStyle / "none" background fallback
@@ -74,7 +76,7 @@ function isTokenVar(value) {
  */
 function svgPaint(name, value) {
   if (isTokenVar(value)) return { attr: '', style: `${name}:${value};` }
-  return { attr: ` ${name}="${value}"`, style: '' }
+  return { attr: ` ${name}="${escapePlainText(value)}"`, style: '' }
 }
 
 /**
@@ -110,7 +112,8 @@ function tokensToCssVars(tokens) {
     if (t.fonts.heading) parts.push(`--ns-font-heading:${t.fonts.heading}`)
     if (t.fonts.body) parts.push(`--ns-font-body:${t.fonts.body}`)
   }
-  if (t.radius != null) parts.push(`--ns-radius:${typeof t.radius === 'number' ? `${t.radius}px` : t.radius}`)
+  if (t.radius != null)
+    parts.push(`--ns-radius:${typeof t.radius === 'number' ? `${t.radius}px` : t.radius}`)
   return parts.length ? `${parts.join(';')};` : ''
 }
 
@@ -141,7 +144,8 @@ function tokensToStyleObject(tokens) {
     if (t.fonts.heading) obj['--ns-font-heading'] = t.fonts.heading
     if (t.fonts.body) obj['--ns-font-body'] = t.fonts.body
   }
-  if (t.radius != null) obj['--ns-radius'] = typeof t.radius === 'number' ? `${t.radius}px` : t.radius
+  if (t.radius != null)
+    obj['--ns-radius'] = typeof t.radius === 'number' ? `${t.radius}px` : t.radius
   return obj
 }
 
@@ -171,7 +175,10 @@ function presentationUsesTokens(presentation) {
   const slides = presentation.slides || []
   for (const slide of slides) {
     if (slide && slide.designTokens) return true
-    const groups = [slide && slide.elements, ...((slide && slide.children) || []).map((c) => c.elements)]
+    const groups = [
+      slide && slide.elements,
+      ...((slide && slide.children) || []).map((c) => c.elements),
+    ]
     for (const els of groups) {
       if (!Array.isArray(els)) continue
       for (const el of els) {

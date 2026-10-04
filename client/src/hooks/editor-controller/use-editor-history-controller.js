@@ -1,5 +1,4 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react'
-import { resolveActiveSlide } from '../../utils/active-slide-mapper'
 import { pushHistory } from '../../utils/history-stack'
 import { reconcileSelectionAfterHistory } from '../../utils/history-selection-reconciler'
 
@@ -10,8 +9,7 @@ export function useEditorHistoryController({
   setPresentation,
   setCurrentSlideIndex,
   setVerticalEdit,
-  currentSlideIndexRef,
-  verticalEditRef,
+  resolveHistorySlide,
   selectedElementIdsRef,
   editingElementIdRef,
   setSelectedElementIds,
@@ -40,6 +38,11 @@ export function useEditorHistoryController({
     historyRef.current = pushHistory(historyRef.current, pendingSnapshotRef.current)
     pendingSnapshotRef.current = null
   }, [])
+
+  const commitHistoryTransaction = useCallback(() => {
+    commitPendingSnapshot()
+    publishHistoryState()
+  }, [commitPendingSnapshot, publishHistoryState])
 
   const seedHistory = useCallback(
     (snapshot) => {
@@ -81,8 +84,7 @@ export function useEditorHistoryController({
         const parent = state?.slides?.find((slide) => slide.id === active.parentId)
         return !parent?.children || active.child >= parent.children.length ? null : active
       })
-      const index = Math.min(currentSlideIndexRef.current, (state?.slides?.length ?? 1) - 1)
-      const slide = resolveActiveSlide(state?.slides, index, verticalEditRef.current)
+      const slide = resolveHistorySlide(state)
       const result = reconcileSelectionAfterHistory(
         slide,
         selectedElementIdsRef.current,
@@ -98,15 +100,14 @@ export function useEditorHistoryController({
       settingContentRef.current = false
     },
     [
-      currentSlideIndexRef,
       editingElementIdRef,
       editor,
       selectedElementIdsRef,
+      resolveHistorySlide,
       setEditingElementId,
       setSelectedElementIds,
       setVerticalEdit,
       settingContentRef,
-      verticalEditRef,
     ]
   )
 
@@ -144,5 +145,12 @@ export function useEditorHistoryController({
     restore(state)
   }, [publishHistoryState, restore])
 
-  return { ...availability, handleRedo, handleUndo, hasChanges, seedHistory }
+  return {
+    ...availability,
+    commitHistoryTransaction,
+    handleRedo,
+    handleUndo,
+    hasChanges,
+    seedHistory,
+  }
 }

@@ -66,6 +66,7 @@ function AppRoutes() {
         <Route path="/remote/:roomCode" element={<RemoteControlPage />} />
         <Route path="/speaker/:roomCode" element={<SpeakerViewPage />} />
         <Route path="/player/:slideId/:elementId" element={<GamePlayerPage />} />
+        <Route path="/game/join" element={<GamePlayerPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>

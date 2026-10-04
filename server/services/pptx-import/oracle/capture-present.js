@@ -93,13 +93,13 @@ async function launchBrowser(chromium, signal, teardownTimeoutMs) {
   }
 }
 
-async function generatePresentHtml(presentation) {
+async function generatePresentHtml(presentation, options = {}) {
   const { generateRevealHTML } = require('revealjs-shared')
-  return generateRevealHTML(presentation)
+  return generateRevealHTML(presentation, { baseUrl: options.baseUrl || options.assetBaseUrl })
 }
 
-async function writePresentHtml(presentation, outFile) {
-  await fs.writeFile(outFile, await generatePresentHtml(presentation), 'utf8')
+async function writePresentHtml(presentation, outFile, options = {}) {
+  await fs.writeFile(outFile, await generatePresentHtml(presentation, options), 'utf8')
   return outFile
 }
 
@@ -233,7 +233,7 @@ async function capturePresentSlides(presentation, options = {}) {
     page = await abortable(options.signal, () =>
       browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: 1 })
     )
-    const html = await abortable(options.signal, () => generatePresentHtml(presentation))
+    const html = await abortable(options.signal, () => generatePresentHtml(presentation, options))
     const assetBaseUrl = new URL(options.assetBaseUrl).origin
     await abortable(options.signal, () => page.goto(`${assetBaseUrl}/`, { waitUntil: 'load' }))
     await abortable(options.signal, () =>

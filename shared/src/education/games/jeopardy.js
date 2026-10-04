@@ -1,0 +1,153 @@
+const { makeAwardKey, clampScore } = require('../game-score-policy.js')
+function createJeopardyState(config) {
+  return {
+    gameType: 'jeopardy',
+    phase: 'board',
+    scores: Object.fromEntries(config.teams.map((team) => [team.id, 0])),
+    usedCellIds: [],
+    activeTeamId: config.teams[0]?.id ?? null,
+    activeCellId: null,
+    activeQuestion: null,
+    isDailyDouble: false,
+    currentWager: 0,
+    revealed: false,
+    timerDuration: config.timerDuration,
+    showTimer: config.showTimer,
+    awardedKeys: [],
+    deadline: null,
+    expired: false,
+    turn: 0,
+    winnerId: null,
+  }
+}
+function calculateWagerLimits(teamScore, wagerLimit = 1000) {
+  const max = Math.max(teamScore, wagerLimit)
+  return { min: 0, max, defaultWager: Math.min(teamScore, wagerLimit) }
+}
+function reduceJeopardy(config, state, command, { now = Date.now } = {}) {
+  if (
+    !command ||
+    (command.generation !== undefined && command.generation !== state.generation) ||
+    (command.turn !== undefined && command.turn !== state.turn)
+  )
+    return state
+  if (command.type === 'select-team') {
+    if (
+      state.phase !== 'board' ||
+      !config.teams.some((team) => team.id === command.teamId) ||
+      command.teamId === state.activeTeamId
+    )
+      return state
+    return { ...state, activeTeamId: command.teamId }
+  }
+  if (command.type === 'select-cell') {
+    if (
+      state.phase !== 'board' ||
+      !state.activeTeamId ||
+      state.usedCellIds.includes(command.cellId)
+    )
+      return state
+    const question = config.categories
+      .flatMap((category) => category.questions)
+      .find((item) => item.id === command.cellId)
+    if (!question) return state
+    const dailyDouble = config.dailyDouble.includes(question.id)
+    const wager = dailyDouble
+      ? calculateWagerLimits(state.scores[state.activeTeamId], config.wagerLimit).defaultWager
+      : question.points
+    return {
+      ...state,
+      phase: dailyDouble ? 'wager' : 'question',
+      activeCellId: question.id,
+      activeQuestion: question,
+      isDailyDouble: dailyDouble,
+      currentWager: wager,
+      revealed: false,
+      expired: false,
+      turn: state.turn + 1,
+      deadline: !dailyDouble && config.showTimer ? now() + config.timerDuration * 1000 : null,
+    }
+  }
+  if (command.activeCellId !== undefined && command.activeCellId !== state.activeCellId)
+    return state
+  if (command.type === 'submit-wager') {
+    if (state.phase !== 'wager') return state
+    const limits = calculateWagerLimits(state.scores[state.activeTeamId], config.wagerLimit),
+      wager = command.wager
+    if (!Number.isSafeInteger(wager) || wager < limits.min || wager > limits.max) return state
+    return {
+      ...state,
+      phase: 'question',
+      currentWager: wager,
+      deadline: config.showTimer ? now() + config.timerDuration * 1000 : null,
+    }
+  }
+  if (state.phase !== 'question' && state.phase !== 'wager') return state
+  if (command.type === 'deadline') {
+    if (
+      state.phase !== 'question' ||
+      state.expired ||
+      state.deadline === null ||
+      now() < state.deadline
+    )
+      return state
+    return { ...state, expired: true, deadline: null }
+  }
+  if (command.type === 'reveal')
+    return state.phase === 'question' && !state.revealed
+      ? { ...state, revealed: true, deadline: null }
+      : state
+  if (command.type !== 'adjudicate' && command.type !== 'close-cell') return state
+  if (
+    command.type === 'adjudicate' &&
+    (state.phase !== 'question' || !state.revealed || typeof command.correct !== 'boolean')
+  )
+    return state
+  let scores = state.scores,
+    awardedKeys = state.awardedKeys
+  if (command.type === 'adjudicate') {
+    const key = makeAwardKey({
+      generation: state.generation ?? 0,
+      gameType: 'jeopardy',
+      contextId: JSON.stringify([state.activeCellId, state.activeTeamId]),
+      awardKind: 'adjudication',
+    })
+    if (awardedKeys.includes(key)) return state
+    const delta = command.correct
+      ? state.currentWager
+      : config.negativePoints
+        ? -state.currentWager
+        : 0
+    scores = {
+      ...scores,
+      [state.activeTeamId]: clampScore(scores[state.activeTeamId] + delta, 0, Infinity),
+    }
+    awardedKeys = [...awardedKeys, key]
+  }
+  const usedCellIds = [...state.usedCellIds, state.activeCellId]
+  const complete = config.categories.every((category) =>
+    category.questions.every((question) => usedCellIds.includes(question.id))
+  )
+  const winner = complete
+    ? config.teams.reduce(
+        (best, team) => (!best || scores[team.id] > scores[best.id] ? team : best),
+        null
+      )
+    : null
+  return {
+    ...state,
+    phase: complete ? 'ended' : 'board',
+    scores,
+    awardedKeys,
+    usedCellIds,
+    activeCellId: null,
+    activeQuestion: null,
+    currentWager: 0,
+    isDailyDouble: false,
+    revealed: false,
+    deadline: null,
+    expired: false,
+    winnerId: winner?.id ?? null,
+  }
+}
+module.exports = { createJeopardyState, reduceJeopardy, calculateWagerLimits }

@@ -1,38 +1,82 @@
 import React from 'react'
-import { act, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import PluginSandbox from './plugin-sandbox.jsx'
-
+afterEach(() => vi.unstubAllGlobals())
+const fetchDocument = () =>
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => ({ ok: true, text: async () => '<button>Counter</button>' }))
+  )
 describe('PluginSandbox', () => {
-  it('renders a loading state while sandbox fetch is pending', () => {
-    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
-    render(<PluginSandbox sandboxUrl="/api/plugins/p/assets/sandbox.html" />)
-
-    expect(screen.getByText('Loading plugin...')).toBeTruthy()
+  it('reports asset failures instead of silently loading a blank peer', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: false, status: 404 }))
+    )
+    render(<PluginSandbox sandboxUrl="/missing" />)
+    expect((await screen.findByRole('alert')).textContent).toMatch(/404/)
   })
-
-  it('renders an allow-scripts iframe after loading sandbox html', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: true, text: () => Promise.resolve('<html><head></head><body></body></html>') })))
-    render(<PluginSandbox sandboxUrl="/api/plugins/p/assets/sandbox.html" />)
-
-    const iframe = await screen.findByTitle('Plugin sandbox')
-    expect(iframe.getAttribute('sandbox')).toBe('allow-scripts')
-    expect(iframe.getAttribute('srcdoc')).toContain('navslides')
-  })
-
-  it('ignores unrelated messages and forwards sandbox data patches', async () => {
+  it('rejects tokenless/sibling/stale patches while preserving ready peer updates', async () => {
+    fetchDocument()
     const onDataUpdate = vi.fn()
-    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: true, text: () => Promise.resolve('<html></html>') })))
-    render(<PluginSandbox sandboxUrl="/api/plugins/p/assets/sandbox.html" onDataUpdate={onDataUpdate} />)
+    const { unmount } = render(
+      <PluginSandbox
+        sandboxUrl="/peer"
+        pluginData={{ value: 1 }}
+        width={360}
+        height={180}
+        onDataUpdate={onDataUpdate}
+      />
+    )
     const iframe = await screen.findByTitle('Plugin sandbox')
     const source = iframe.contentWindow
-
-    act(() => {
-      window.dispatchEvent(new MessageEvent('message', { source: window, data: { source: 'navslides-plugin', type: 'update-data', patch: { value: 1 } } }))
-      window.dispatchEvent(new MessageEvent('message', { source, data: { source: 'navslides-plugin', type: 'update-data', patch: { value: 2 } } }))
+    const send = vi.spyOn(source, 'postMessage')
+    fireEvent.load(iframe)
+    const init = send.mock.calls.at(-1)[0]
+    const message = (type, extra = {}) => ({
+      source: 'navslides-plugin',
+      type,
+      instanceToken: init.instanceToken,
+      documentToken: init.documentToken,
+      ...extra,
     })
-
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          source,
+          data: { source: 'navslides-plugin', type: 'update-data', patch: { value: 2 } },
+        })
+      )
+      window.dispatchEvent(new MessageEvent('message', { source: window, data: message('ready') }))
+      window.dispatchEvent(new MessageEvent('message', { source, data: message('ready') }))
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          source,
+          data: message('update-data', { patch: { value: 3 } }),
+        })
+      )
+    })
+    expect(onDataUpdate).toHaveBeenCalledWith({ value: 3 })
+    fireEvent.load(iframe)
+    act(() =>
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          source,
+          data: message('update-data', { patch: { value: 4 } }),
+        })
+      )
+    )
     expect(onDataUpdate).toHaveBeenCalledTimes(1)
-    expect(onDataUpdate).toHaveBeenCalledWith({ value: 2 })
+    unmount()
+    act(() =>
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          source,
+          data: message('update-data', { patch: { value: 5 } }),
+        })
+      )
+    )
+    expect(onDataUpdate).toHaveBeenCalledTimes(1)
   })
 })

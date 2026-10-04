@@ -1,21 +1,20 @@
 import express from 'express'
 import path from 'node:path'
 import os from 'node:os'
-import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 import fs from 'fs-extra'
 import JSZip from 'jszip'
 import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const require = createRequire(import.meta.url)
-const serverCachePrefix = fileURLToPath(new URL('../', import.meta.url))
 
 let root
 let app
 
 function resetCjsModules() {
+  const serverDir = `${path.resolve(path.dirname(require.resolve('../services/storage')), '..')}${path.sep}`
   for (const key of Object.keys(require.cache)) {
-    if (key.startsWith(serverCachePrefix)) {
+    if (key.startsWith(serverDir)) {
       delete require.cache[key]
     }
   }

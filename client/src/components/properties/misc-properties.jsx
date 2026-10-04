@@ -3,6 +3,8 @@ import { ColorPicker } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
 import IconGallery, { IconSvgPreview } from '../IconGallery'
 import GameProperties from './game-properties.jsx'
+import FocusedAuthoringTextInput from './focused-authoring-text-input'
+import DrawingPathProperties from './drawing-path-properties'
 
 const CONTROL_INPUT_CLASS =
   'w-full min-h-8 rounded-md border border-border bg-card px-2 py-1 text-xs text-text-primary focus:border-focus focus:outline-none focus:ring-2 focus:ring-focus/25'
@@ -71,11 +73,25 @@ function IconElementProperties({ element, onUpdate }) {
 /**
  * Misc element properties: callout, icon, qrcode, drawing, line/arrow, svg, html, latex, markdown, game.
  */
-export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml, onEditLatex }) {
+export default function MiscProperties({
+  element,
+  onUpdate,
+  onDelete,
+  onEditHtml,
+  onEditLatex,
+  variables,
+}) {
   const t = element.type
 
   if (t === 'game') {
-    return <GameProperties element={element} onUpdate={onUpdate} onDelete={onDelete} />
+    return (
+      <GameProperties
+        element={element}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+        variables={variables}
+      />
+    )
   }
 
   if (t === 'html')
@@ -88,9 +104,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
         >
           Edit HTML / D3 Code
         </button>
-        <p className="text-[11px] text-text-muted">
-          Double-click element to open code editor
-        </p>
+        <p className="text-[11px] text-text-muted">Double-click element to open code editor</p>
       </div>
     )
 
@@ -100,7 +114,9 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
         <div className="grid grid-cols-2 gap-2 mb-2">
           <div>
             <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
-            <input
+            <FocusedAuthoringTextInput
+              key={`${element.id}-latex-font`}
+              primitive="input"
               data-testid="prop-latex-font-size"
               aria-label="LaTeX font size"
               className={CONTROL_INPUT_CLASS}
@@ -133,18 +149,14 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
         >
           Edit LaTeX / TikZ
         </button>
-        <p className="text-[11px] text-text-muted">
-          Double-click element to open editor
-        </p>
+        <p className="text-[11px] text-text-muted">Double-click element to open editor</p>
       </div>
     )
 
   if (t === 'markdown')
     return (
       <div className="mb-2.5">
-        <div className="text-[11px] text-text-muted mb-1">
-          Markdown Content
-        </div>
+        <div className="text-[11px] text-text-muted mb-1">Markdown Content</div>
         <textarea
           data-testid="prop-markdown-content"
           aria-label="Markdown content"
@@ -166,7 +178,9 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
           </div>
           <div>
             <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
-            <input
+            <FocusedAuthoringTextInput
+              key={`${element.id}-markdown-font`}
+              primitive="input"
               data-testid="prop-markdown-font-size"
               aria-label="Markdown font size"
               className={CONTROL_INPUT_CLASS}
@@ -192,25 +206,30 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
           {[
             ['Number', 'calloutNumber', 1, 'number', { min: 1, max: 99 }],
             ['Font Size', 'fontSize', 16, 'number', { min: 8, max: 48 }],
-          ].map(([l, k, d, type, extra]) => (
-            <div key={k}>
-              <div className="text-[11px] text-text-muted mb-0.5">{l}</div>
-              <input
-                aria-label={`Callout ${l}`}
-                className={CONTROL_INPUT_CLASS}
-                type={type}
-                {...extra}
-                value={element[k] || d}
-                onChange={(e) => {
-                  const min = extra?.min ?? null
-                  const max = extra?.max ?? null
-                  const value = clampNumber(e.target.value, min, max, null)
-                  if (value === null) return
-                  onUpdate({ [k]: value })
-                }}
-              />
-            </div>
-          ))}
+          ].map(([l, k, d, type, extra]) => {
+            const Control = k === 'fontSize' ? FocusedAuthoringTextInput : 'input'
+            return (
+              <div key={k}>
+                <div className="text-[11px] text-text-muted mb-0.5">{l}</div>
+                <Control
+                  key={element.id}
+                  {...(k === 'fontSize' ? { primitive: 'input' } : {})}
+                  aria-label={`Callout ${l}`}
+                  className={CONTROL_INPUT_CLASS}
+                  type={type}
+                  {...extra}
+                  value={element[k] || d}
+                  onChange={(e) => {
+                    const min = extra?.min ?? null
+                    const max = extra?.max ?? null
+                    const value = clampNumber(e.target.value, min, max, null)
+                    if (value === null) return
+                    onUpdate({ [k]: value })
+                  }}
+                />
+              </div>
+            )
+          })}
           {[
             ['BG Color', 'calloutColor', '#ef4444'],
             ['Text Color', 'calloutTextColor', '#ffffff'],
@@ -234,9 +253,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
   if (t === 'qrcode')
     return (
       <div className="mb-2.5">
-        <div className="text-[11px] text-text-muted mb-1">
-          QR Data / URL
-        </div>
+        <div className="text-[11px] text-text-muted mb-1">QR Data / URL</div>
         <input
           aria-label="QR code data or URL"
           className={`${CONTROL_INPUT_CLASS} mb-2`}
@@ -261,9 +278,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
             </div>
           ))}
         </div>
-        <div className="text-[11px] text-text-muted mb-1">
-          Error Correction Level
-        </div>
+        <div className="text-[11px] text-text-muted mb-1">Error Correction Level</div>
         <select
           aria-label="QR code error correction level"
           className={`${CONTROL_INPUT_CLASS} mb-2 px-1.5 py-1`}
@@ -281,13 +296,13 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
   if (t === 'drawing')
     return (
       <div className="mb-2.5">
+        <DrawingPathProperties key={element.id} element={element} onUpdate={onUpdate} />
         <div className="grid grid-cols-[1fr_80px] gap-2 mb-2">
           <div>
-            <div className="text-[11px] text-text-muted mb-0.5">
-              Stroke Color
-            </div>
+            <div className="text-[11px] text-text-muted mb-0.5">Stroke Color</div>
             <ColorPicker
               aria-label="Drawing stroke color"
+              disabled={element.locked === true}
               value={element.strokeColor || '#ffffff'}
               onChange={(e) => onUpdate({ strokeColor: e.target.value })}
               className="w-full h-7 border border-border rounded cursor-pointer"
@@ -297,6 +312,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
             <div className="text-[11px] text-text-muted mb-0.5">Width</div>
             <input
               aria-label="Drawing stroke width"
+              disabled={element.locked === true}
               className={CONTROL_INPUT_CLASS}
               type="number"
               min="1"
@@ -310,9 +326,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
             />
           </div>
         </div>
-        <div className="text-[10px] text-text-muted">
-          {(element.paths || []).length} path(s)
-        </div>
+        <div className="text-[10px] text-text-muted">{(element.paths || []).length} path(s)</div>
       </div>
     )
 
@@ -321,9 +335,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
       <div className="mb-2.5">
         <div className="grid grid-cols-[1fr_80px] gap-2 mb-2">
           <div>
-            <div className="text-[11px] text-text-muted mb-0.5">
-              Stroke Color
-            </div>
+            <div className="text-[11px] text-text-muted mb-0.5">Stroke Color</div>
             <ColorPicker
               aria-label="Line stroke color"
               value={element.stroke || '#ffffff'}
@@ -371,9 +383,7 @@ export default function MiscProperties({ element, onUpdate, onDelete, onEditHtml
           ))}
         </div>
         <div className="mb-2">
-          <div className="text-[11px] text-text-muted mb-0.5">
-            Dash Pattern
-          </div>
+          <div className="text-[11px] text-text-muted mb-0.5">Dash Pattern</div>
           <select
             aria-label="Line dash pattern"
             className={`${CONTROL_INPUT_CLASS} px-1.5 py-1`}

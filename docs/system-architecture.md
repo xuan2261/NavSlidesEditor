@@ -27,17 +27,17 @@ Browser / Electron
 
 ### Route Map
 
-| Path | Page |
-| --- | --- |
-| `/` | `HomePage` |
-| `/editor/:id` | `EditorPage` |
-| `/template/:id` | `EditorPage` in template mode |
-| `/settings` | `SettingsPage` |
-| `/explore` | `ExplorePage` |
-| `/live/:roomCode` | `LiveViewPage` |
-| `/remote/:roomCode` | `RemoteControlPage` |
-| `/speaker/:roomCode` | `SpeakerViewPage` |
-| `/player/:slideId/:elementId` | `game-player-join-page.jsx` |
+| Path                          | Page                          |
+| ----------------------------- | ----------------------------- |
+| `/`                           | `HomePage`                    |
+| `/editor/:id`                 | `EditorPage`                  |
+| `/template/:id`               | `EditorPage` in template mode |
+| `/settings`                   | `SettingsPage`                |
+| `/explore`                    | `ExplorePage`                 |
+| `/live/:roomCode`             | `LiveViewPage`                |
+| `/remote/:roomCode`           | `RemoteControlPage`           |
+| `/speaker/:roomCode`          | `SpeakerViewPage`             |
+| `/player/:slideId/:elementId` | `game-player-join-page.jsx`   |
 
 ### State And Hooks
 
@@ -99,7 +99,7 @@ Browser / Electron
   The synchronous `localStorage` receipt covers the supported Chromium/Electron
   path, with IndexedDB as a quota/availability fallback. A reload loads the
   remote deck first and then requires an explicit `Recover Local Draft` or `Use
-  Remote` choice; no draft replaces remote content automatically. Drafts are
+Remote` choice; no draft replaces remote content automatically. Drafts are
   removed only after a matching committed response or explicit remote choice.
   Storage-disabled/private-browsing modes and a hard kill before an asynchronous
   IndexedDB fallback commits remain documented durability limits.
@@ -120,7 +120,7 @@ Browser / Electron
 - Layout sub-components live in `components/layout/` (`MainLayout`,
   `StatusBar`); shared UI primitives live in `components/ui/`
   (`Button`, `Select`, `Input`, `ColorPicker`).
-- Game elements render through `client/src/components/canvas/element-renderers/game-element-renderer.jsx` with a placeholder fallback while presenter/player flows use dedicated sockets and overlays.
+- Inert game previews belong to [`game-element-renderer.jsx`](../client/src/components/canvas/element-renderers/game-element-renderer.jsx); native Try uses [`native-game-try-adapter.jsx`](../client/src/components/education/native-game-try-adapter.jsx), not a second React play implementation.
 
 ### Phase 06–11 Editor Contracts
 
@@ -128,6 +128,21 @@ Browser / Electron
 - **Smart connectors** extend `line` with same-slide target IDs and anchor names. A pure resolver supplies finite effective endpoints to canvas, shared HTML, offline, and PPTX paths; deleted or unavailable targets retain last-resolved coordinates. PPTX writes the resolved ordinary line and warns that live attachment semantics are flattened.
 - **Layout masters** are a bounded presentation registry plus per-slide references and overrides. `resolveEffectiveSlide`/`resolveEffectiveElements` compose master fixed elements, bound placeholders, and slide-owned content with deterministic ordering. Master edit derives an unlocked authoring view while retaining persisted lock metadata; selection, clipboard, duplicate, select-all, media insertion, and batch mutations route to that master surface. Missing references fall back to slide-owned content with a warning; PPTX flattens resolved objects and does not preserve or synthesize native masters.
 - **Media accessibility** keeps image `alt`, decorative, and long-description metadata plus video/audio tracks, transcript, and audio-description metadata in the presentation model. Shared media URL policy governs tracks and archive/offline rewriting. Browser renderers expose those semantics; PPTX preserves image alt only where supported and warns for unsupported media semantics.
+
+### Standalone Education Runtime
+
+Generated decks and native Try share a DOM runtime so portable play does not depend on the React editor. [`mount.js`](../shared/src/education/browser/mount.js) owns instances; [`reveal-lifecycle.js`](../shared/src/education/browser/reveal-lifecycle.js) owns effective-slide lifetime. Supported play modes belong to [`game-registry.js`](../shared/src/education/game-registry.js), not this document.
+
+Native Try owns its document-visibility listener and removes it before destroying the mounted session. Focused Escape is consumed by the modal before an enclosing compact Inspector or workspace overlay can close; the existing document-level modal stack still handles Escape outside the focused modal.
+
+Live transport and authority remain server-owned. [`presenter-game-bootstrap.js`](../server/services/presenter-game-bootstrap.js) owns inherited-instance transport identities; [`game-public-projection.js`](../shared/src/education/game-public-projection.js) owns the audience boundary. Offline local decks contain answers and are not a secrecy boundary.
+
+Server consumers resolve shared modules through the installed `revealjs-shared`
+package, including its `src/` subpaths. Repository-relative `../shared` imports
+are not a production contract: packaged resources publish that package under
+`server/node_modules`, without a sibling repository `shared` directory.
+
+[`build-education-runtime.js`](../scripts/build-education-runtime.js), [`reveal-runtime-assets.js`](../shared/src/reveal-runtime-assets.js), and [`verify-runtime-closure.js`](../scripts/verify-runtime-closure.js) own bundled assets and publication qualification. Existing CSP restrictions remain authoritative; debugger evaluation is not proof that application code can evaluate strings.
 
 ### Canvas Decomposition
 
@@ -196,17 +211,16 @@ not a substitute for mutation guards. Presentation launch coordinates belong to
 `presentInWindow` in [`shared/src/htmlGenerator.js`](../shared/src/htmlGenerator.js),
 so beginning/current actions do not create separate slideshow implementations.
 
-
 ### Shortcut Registry
 
 User-defined keyboard shortcut overrides are stored in `localStorage` and merged with defaults at runtime.
 
-| Module | File | Purpose |
-| --- | --- | --- |
-| Definitions | `default-keyboard-shortcut-definitions-registry.js` | DEFAULT_SHORTCUTS (40+ shortcuts across 6 categories), scope-gated dispatch, getShortcuts(), getShortcutById() |
-| Normalization | `shortcut-normalizer.js` | normalizeKey(), isReservedChord(), isModifierKey() |
-| Persistence | `shortcut-local-storage-persistence.js` | loadOverrides(), saveOverride(), resetOverride(), resetAll(), detectConflict() |
-| UI | `SettingsPage.jsx` | Shortcut manager with record/conflict-warn/reset per shortcut |
+| Module        | File                                                | Purpose                                                                                                        |
+| ------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Definitions   | `default-keyboard-shortcut-definitions-registry.js` | DEFAULT_SHORTCUTS (40+ shortcuts across 6 categories), scope-gated dispatch, getShortcuts(), getShortcutById() |
+| Normalization | `shortcut-normalizer.js`                            | normalizeKey(), isReservedChord(), isModifierKey()                                                             |
+| Persistence   | `shortcut-local-storage-persistence.js`             | loadOverrides(), saveOverride(), resetOverride(), resetAll(), detectConflict()                                 |
+| UI            | `SettingsPage.jsx`                                  | Shortcut manager with record/conflict-warn/reset per shortcut                                                  |
 
 Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: `'editor'` (default), `'presentation'` (slideshow controls), `'presentation-game'` (game presenter). Shortcuts are grouped by category (clipboard, navigation, slideshow, game, annotation, editing, view) in the Settings UI.
 
@@ -236,23 +250,23 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: 
 
 ### Middleware
 
-| Middleware | Purpose |
-| --- | --- |
-| `validate.js` | Zod schema validation for mutation requests |
-| `schemas.js` | Shared Zod schema definitions |
-| `error-handler.js` | Centralized JSON error formatting |
+| Middleware         | Purpose                                     |
+| ------------------ | ------------------------------------------- |
+| `validate.js`      | Zod schema validation for mutation requests |
+| `schemas.js`       | Shared Zod schema definitions               |
+| `error-handler.js` | Centralized JSON error formatting           |
 
 ### Services
 
-| Service | Purpose |
-| --- | --- |
-| `storage.js` | File I/O abstraction with per-file locking |
-| `socket-handler.js` | Socket.IO event wiring |
-| `live-rooms.js` | In-memory room state, role tracking, and orphan-room cleanup |
-| `game-socket-handler.js` | Game Socket.IO wiring |
-| `plugin-runtime.js` | Bundled/user plugin manifest discovery and safe asset path resolution |
-| `presentation-finder.js` | Presentation lookup utility |
-| `ai-provider.js` | AI service integration |
+| Service                            | Purpose                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------ |
+| `storage.js`                       | File I/O abstraction with per-file locking                                     |
+| `socket-handler.js`                | Socket.IO event wiring                                                         |
+| `live-rooms.js`                    | In-memory room state, role tracking, and orphan-room cleanup                   |
+| `game-socket-handler.js`           | Game Socket.IO wiring                                                          |
+| `plugin-runtime.js`                | Bundled/user plugin manifest discovery and safe asset path resolution          |
+| `presentation-finder.js`           | Presentation lookup utility                                                    |
+| `ai-provider.js`                   | AI service integration                                                         |
 | `services/pptx-import/geometry.js` | Nullish-safe geometry normalization + affine transform helpers for PPTX import |
 
 ### Live Protocol
@@ -330,29 +344,31 @@ Registry schema: `{ id, label, category, defaultKey, scopes, guard? }`. Scopes: 
 `navigate` | `sync-state` | `control-navigate` | `presentation-meta` | `viewer-count`
 
 **Annotation events:**
-| Event | Direction | Payload |
-| --- | --- | --- |
-| `annotation:add` | presenter → server | `{ id, slideIndex, points, color, width, tool }` |
-| `annotation:remove` | presenter → server | `{ id, slideIndex }` |
-| `annotation:clear` | presenter → server | `{ slideIndex }` |
-| `annotation:removed` | server → room | `{ id, slideIndex }` |
-| `annotation:cleared` | server → room | `{ slideIndex }` |
-| `annotations:sync` | server → client | `{ slideIndex, annotations[] }` |
-| `presenter-disconnected` | server → room | — (bounded reconnect grace, presenterId = null) |
-| `presenter-left` | server → room | — (terminal presenter departure after grace) |
+
+| Event                    | Direction          | Payload                                          |
+| ------------------------ | ------------------ | ------------------------------------------------ |
+| `annotation:add`         | presenter → server | `{ id, slideIndex, points, color, width, tool }` |
+| `annotation:remove`      | presenter → server | `{ id, slideIndex }`                             |
+| `annotation:clear`       | presenter → server | `{ slideIndex }`                                 |
+| `annotation:removed`     | server → room      | `{ id, slideIndex }`                             |
+| `annotation:cleared`     | server → room      | `{ slideIndex }`                                 |
+| `annotations:sync`       | server → client    | `{ slideIndex, annotations[] }`                  |
+| `presenter-disconnected` | server → room      | — (bounded reconnect grace, presenterId = null)  |
+| `presenter-left`         | server → room      | — (terminal presenter departure after grace)     |
 
 Annotations are stored per `slideIndex` in room state and re-synced for the active slide on navigation/rejoin. `presenter-disconnected` marks the bounded reconnect window; only a presenter rejoin cancels it. If the presenter does not return before grace expires, the server emits `presenter-left` and removes the live room and socket mappings.
 
 **Timer events:**
-| Event | Direction | Payload |
-| --- | --- | --- |
-| `game-timer-start` | presenter → server | `{ elementId, endedAt }` |
-| `game-timer-pause` | presenter → server | `{ elementId, pausedAt }` |
-| `game-timer-resume` | presenter → server | `{ elementId }` |
-| `game-timer-adjust` | presenter → server | `{ elementId, delta }` |
-| `game-timer-stop` | presenter → server | `{ elementId }` |
-| `timer:sync` | server → room | `{ timers: { elementId, endedAt, pausedAt, duration } }` |
-| `timer:ended` | server → room | `{ elementId }` |
+
+| Event               | Direction          | Payload                                                  |
+| ------------------- | ------------------ | -------------------------------------------------------- |
+| `game-timer-start`  | presenter → server | `{ elementId, endedAt }`                                 |
+| `game-timer-pause`  | presenter → server | `{ elementId, pausedAt }`                                |
+| `game-timer-resume` | presenter → server | `{ elementId }`                                          |
+| `game-timer-adjust` | presenter → server | `{ elementId, delta }`                                   |
+| `game-timer-stop`   | presenter → server | `{ elementId }`                                          |
+| `timer:sync`        | server → room      | `{ timers: { elementId, endedAt, pausedAt, duration } }` |
+| `timer:ended`       | server → room      | `{ elementId }`                                          |
 
 Timer state is server-authoritative: server stores `endedAt` / `pausedAt`, clients compute remaining via `computeTimerRemaining(endedAt)`. `window.__timerStates` bridges timer state into reveal.js iframes. Input validation: delta capped at ±3600s, duration 1-7200s, elementId validated by regex + length check.
 
@@ -394,11 +410,11 @@ Phase 1 supports local trusted plugin packages only. The server scans
 `server/data/plugins/<slug>/parallax-plugin.json`, normalizes contributed
 element metadata, and exposes read-only routes:
 
-| Route | Purpose |
-| --- | --- |
-| `GET /api/plugins` | List normalized plugin manifests |
-| `GET /api/plugins/:slug` | Read one normalized plugin |
-| `GET /api/plugins/:slug/manifest` | Read one manifest |
+| Route                             | Purpose                              |
+| --------------------------------- | ------------------------------------ |
+| `GET /api/plugins`                | List normalized plugin manifests     |
+| `GET /api/plugins/:slug`          | Read one normalized plugin           |
+| `GET /api/plugins/:slug/manifest` | Read one manifest                    |
 | `GET /api/plugins/:slug/assets/*` | Serve files from plugin `dist/` only |
 
 Client registry modules in `client/src/plugins/` register contributed element
@@ -421,22 +437,22 @@ billing, and offline sandbox inlining are not part of Phase 1.
 
 ### Shared Modules
 
-| Module | Purpose |
-| --- | --- |
-| `htmlGenerator.js` | Reveal.js HTML and print HTML generation |
-| `reveal-runtime-assets.js` | Reveal.js 6.0.1 receipt and canonical manifest for `/vendor/reveal.js/dist` core, theme, plugin, vendor, and offline assets |
-| `live-presenter-runtime.js` | Generated live presenter navigation and live-room runtime |
-| `live-presenter-game-runtime.js` | Generated presenter game bootstrap, host sockets, and bounded cleanup |
-| `transition-settings.js` | Validated presentation/slide transition resolution shared by generation and preview |
-| `element-renderers.js` | Shared element rendering helpers |
-| `design-tokens.js` | `'auto'` → `var(--ns-*)` resolver shared by both render paths (`DEFAULT_TOKENS`, `AUTO_FIELD_MAP`, `resolveAutoColor`, `isTokenVar`) |
-| `theme-presets.js` | 39 token presets (`THEME_PRESETS`), 7 categories |
-| `fx/` | 8 canvas FX modules + registry; `buildFxRuntimeScript()` emits the inlined browser runtime |
-| `slideNotes.js` | Canonical notes normalization helpers |
-| `shapeUtils.js` | SVG shape/path helpers |
-| `index.js` | Canonical color palettes, gradient presets, and `isLightColor()` helper |
-| `presenterTools.js` | Presenter UI controls and scripts |
-| `types/presentation.js` | JSDoc data model for presentation objects |
+| Module                           | Purpose                                                                                                                              |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `htmlGenerator.js`               | Reveal.js HTML and print HTML generation                                                                                             |
+| `reveal-runtime-assets.js`       | Reveal.js 6.0.1 receipt and canonical manifest for `/vendor/reveal.js/dist` core, theme, plugin, vendor, and offline assets          |
+| `live-presenter-runtime.js`      | Generated live presenter navigation and live-room runtime                                                                            |
+| `live-presenter-game-runtime.js` | Generated presenter game bootstrap, host sockets, and bounded cleanup                                                                |
+| `transition-settings.js`         | Validated presentation/slide transition resolution shared by generation and preview                                                  |
+| `element-renderers.js`           | Shared element rendering helpers                                                                                                     |
+| `design-tokens.js`               | `'auto'` → `var(--ns-*)` resolver shared by both render paths (`DEFAULT_TOKENS`, `AUTO_FIELD_MAP`, `resolveAutoColor`, `isTokenVar`) |
+| `theme-presets.js`               | 39 token presets (`THEME_PRESETS`), 7 categories                                                                                     |
+| `fx/`                            | 8 canvas FX modules + registry; `buildFxRuntimeScript()` emits the inlined browser runtime                                           |
+| `slideNotes.js`                  | Canonical notes normalization helpers                                                                                                |
+| `shapeUtils.js`                  | SVG shape/path helpers                                                                                                               |
+| `index.js`                       | Canonical color palettes, gradient presets, and `isLightColor()` helper                                                              |
+| `presenterTools.js`              | Presenter UI controls and scripts                                                                                                    |
+| `types/presentation.js`          | JSDoc data model for presentation objects                                                                                            |
 
 ### Design Token Render Path
 
@@ -609,8 +625,9 @@ diverge:
 
 ### CDN Dependencies
 
-- Reveal.js is never loaded from a CDN: the 6.0.1 manifest owns the published `/vendor/reveal.js/dist` assets and the strict offline closure.
+- Reveal.js is never loaded from a CDN: the canonical manifest in `shared/src/reveal-runtime-assets.js` owns the published `/vendor/reveal.js/dist` assets and the strict offline closure.
 - Generated presentation HTML loads KaTeX, Chart.js, highlight.js, and TikZJax from local `/vendor` paths. CDN URLs remain only inside authored content (for example the D3 HTML-embed default); offline export maps the known ones to `/vendor` through `CDN_TO_VENDOR` in `client/src/utils/offlineExport.js`.
+- `scripts/tikz-vendor-publication.js` publishes the reproducible pinned TikZ entry/worker and resource manifest. `client/src/utils/portable-tikz-adapter.js` validates their hashes and closes the finite compiler inputs into a local worker. Disabled compiler caching is lazy and never reads IndexedDB; compiler failures do not substitute images or fetch undeclared packages.
 
 ## Security Model
 
@@ -621,10 +638,9 @@ diverge:
   and same-origin resource policy headers.
 - PPTX imports perform ZIP structure, entry-count, declared-size, bounded
   streamed-byte, and CRC32 checks before mapping package parts.
-- Content safety is targeted: text/markdown/svg/shape-text surfaces are
-  sanitized or escaped.
-- HTML embed remains trusted programmable content by product policy; script
-  execution is intentionally preserved in editor/present/export/share paths.
+- Text and shape rich markup use the shared parsed allowlist; authored styles, SVG attributes and stylesheet boundaries cannot manufacture root script/frame authority. Safe typography remains readable on generated and print surfaces.
+- HTML embeds retain authored script execution inside opaque `allow-scripts` sandboxes with declared dependencies. They do not gain same-origin parent access or native compiler authority from internal-looking DOM markers.
+- Portable Wasm permission is scoped to a generated root with a successfully validated native compiler and to that compiler's own frame. Every unrelated sibling and authored descendant explicitly stays Wasm-denied; compiler-free roots stay denied. No general JavaScript eval or outbound connection permission is added. The generated root still permits inline scripts and is not hash-protected.
 - Upload routes enforce MIME validation and rate limiting.
 - `/api/analytics/:id` is an owner/editor route protected by the operator's
   deployment authentication boundary. Share tokens do not authorize analytics;
@@ -649,6 +665,30 @@ diverge:
 - The live room contract and the export pipeline share the same notes
   normalization logic.
 - File-backed persistence is intentional; there is still no database layer.
+
+### Desktop Dependency and Installer Closure
+
+`scripts/prepare-electron.js` installs the isolated production lock before publishing
+`server/node_modules`. The declared local `image-size` replacement is materialized
+from `vendor-overrides/image-size-disabled` into an ordinary package directory;
+its manifest/lock identity, exact junction target and complete path/size/SHA-256
+inventory are checked before publication. Only that owned dependency is copied.
+Its image parser remains intentionally disabled. Version-tree equality alone is
+not byte provenance: packaged-source qualification also binds every installed
+replacement file to the frozen vendor inventory, and full-app link refusal remains.
+
+Windows x64 qualification forces the outer NSIS format using the package-owned
+`electron-winstaller` 5.4.0 full 7z executable/DLL pair; standalone builder 7za
+does not support NSIS. This obsolete 16.04 native parser is restricted to trusted
+locally built wrappers, not arbitrary installer uploads or an adversarial native
+parser boundary. It has no PATH/system-tool fallback or warning suppression.
+Only one bounded, positive-size `Copy` `$PLUGINSDIR/app-64.7z` member is extracted;
+blank sizes are allowed only for unextracted Deflate metadata and do not establish
+an expanded-byte bound for those members. Modern builder 7za still validates the
+complete inner app inventory and exact unpacked bytes. Source/installer mutation,
+links, traversal and ambiguous payloads remain refusals. Verifier or preparation
+changes require a new frozen subject and isolated stage; old artifacts are diagnostic
+evidence, never qualification of the changed subject.
 
 ### Feature-Coverage Matrix
 

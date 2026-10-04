@@ -103,11 +103,7 @@ export default function SelectionPane({
       cancelRename()
       return
     }
-    if (
-      e.altKey &&
-      !el.locked &&
-      (e.key === 'ArrowUp' || e.key === 'ArrowDown')
-    ) {
+    if (e.altKey && !el.locked && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
       const toIdx = idx + (e.key === 'ArrowUp' ? -1 : 1)
       if (toIdx >= 0 && toIdx < elements.length) {
         e.preventDefault()
@@ -173,7 +169,7 @@ export default function SelectionPane({
             tabIndex={0}
             aria-label={`${label}, ${typeLabel}${isLocked ? ', locked' : ''}${isHidden ? ', hidden' : ''}`}
             aria-selected={isSelected}
-            className={`selection-pane-item flex items-center gap-1 px-1 py-[3px] rounded text-xs cursor-pointer transition-colors ${isSelected ? 'bg-accent/15 border-l-2 border-accent' : 'bg-transparent border-l-2 border-transparent'} ${isHidden ? 'opacity-45' : 'opacity-100'}`}
+            className={`ui-coarse-target selection-pane-item flex items-center gap-1 px-1 py-[3px] rounded text-xs cursor-pointer transition-colors ${isSelected ? 'bg-accent/15 border-l-2 border-accent' : 'bg-transparent border-l-2 border-transparent'} ${isHidden ? 'opacity-45' : 'opacity-100'}`}
             draggable={!isLocked}
             onDragStart={(e) => handleDragStart(e, idx)}
             onDragOver={(e) => handleDragOver(e, idx)}
@@ -222,7 +218,7 @@ export default function SelectionPane({
               }}
               title={isHidden ? 'Show element' : 'Hide element'}
               aria-label={isHidden ? 'Show element' : 'Hide element'}
-              className={`flex items-center rounded-sm border-none bg-transparent px-0.5 py-px ${
+              className={`ui-coarse-target flex items-center justify-center rounded-sm border-none bg-transparent px-0.5 py-px ${
                 isHidden ? 'text-text-muted' : 'text-text-secondary'
               }`}
             >
@@ -238,7 +234,7 @@ export default function SelectionPane({
               }}
               title={isLocked ? 'Unlock element' : 'Lock element'}
               aria-label={isLocked ? 'Unlock element' : 'Lock element'}
-              className={`flex items-center rounded-sm border-none bg-transparent px-0.5 py-px ${
+              className={`ui-coarse-target flex items-center justify-center rounded-sm border-none bg-transparent px-0.5 py-px ${
                 isLocked ? 'text-accent' : 'text-text-muted'
               }`}
             >

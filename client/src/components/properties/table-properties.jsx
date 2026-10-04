@@ -1,27 +1,39 @@
 import { useState } from 'react'
 import { resolveMergedCells } from 'revealjs-shared'
-import { Button, Input, ColorPicker, Select } from '../../components/ui'
+import { Button, ColorPicker, Select } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
 import { clampTableCell, normalizeTableShape } from './table-properties-utils'
-export default function TableProperties({ element, onUpdate }) {
+import FocusedAuthoringTextInput from './focused-authoring-text-input'
+import TableLayoutControls from './table-layout-controls'
+import TableMergeControls from './table-merge-controls'
+export default function TableProperties({ element, onUpdate, elements, selectedElementIds }) {
   const data = element.data || [['']]
   const [selectedCell, setSelectedCell] = useState({ row: 0, col: 0 })
-  const { spans, covered } = resolveMergedCells(element.mergedCells)
+  const { spans, covered } = resolveMergedCells(element.mergedCells, {
+    rowCount: data.length,
+    colCount: Math.max(1, ...data.map((row) => (row || []).length)),
+  })
   const boundedCell = clampTableCell(selectedCell, data)
   const selectedMerge = covered.has(`${boundedCell.row}:${boundedCell.col}`)
-    ? [...spans].map(([key, span]) => {
-      const [row, col] = key.split(':').map(Number)
-      return { row, col, ...span }
-    }).find((merge) =>
-      boundedCell.row >= merge.row && boundedCell.row < merge.row + merge.rowSpan &&
-      boundedCell.col >= merge.col && boundedCell.col < merge.col + merge.colSpan
-    )
+    ? [...spans]
+        .map(([key, span]) => {
+          const [row, col] = key.split(':').map(Number)
+          return { row, col, ...span }
+        })
+        .find(
+          (merge) =>
+            boundedCell.row >= merge.row &&
+            boundedCell.row < merge.row + merge.rowSpan &&
+            boundedCell.col >= merge.col &&
+            boundedCell.col < merge.col + merge.colSpan
+        )
     : null
   const clampedCell = selectedMerge
     ? { row: selectedMerge.row, col: selectedMerge.col }
     : boundedCell
   const cellStyles = element.cellStyles || {}
-  const getCellStyle = (key, fallback) => cellStyles[key]?.[clampedCell.row]?.[clampedCell.col] ?? fallback
+  const getCellStyle = (key, fallback) =>
+    cellStyles[key]?.[clampedCell.row]?.[clampedCell.col] ?? fallback
   const updateCellStyle = (key, value) => {
     const next = { ...cellStyles, [key]: (cellStyles[key] || []).map((row) => [...(row || [])]) }
     while (next[key].length < data.length) next[key].push([])
@@ -49,7 +61,8 @@ export default function TableProperties({ element, onUpdate }) {
             '-Row',
             'prop-table-remove-row',
             () => {
-              if (data.length > 1) onUpdate(normalizeTableShape({ data: data.slice(0, -1) }, element))
+              if (data.length > 1)
+                onUpdate(normalizeTableShape({ data: data.slice(0, -1) }, element))
             },
           ],
           [
@@ -72,12 +85,14 @@ export default function TableProperties({ element, onUpdate }) {
             variant="secondary"
             key={label}
             className="flex-1 text-[11px] px-1.5 py-1 justify-center"
-            aria-label={{
-              '+Row': 'Add table row',
-              '-Row': 'Remove last table row',
-              '+Col': 'Add table column',
-              '-Col': 'Remove last table column',
-            }[label]}
+            aria-label={
+              {
+                '+Row': 'Add table row',
+                '-Row': 'Remove last table row',
+                '+Col': 'Add table column',
+                '-Col': 'Remove last table column',
+              }[label]
+            }
             onClick={fn}
           >
             {label}
@@ -122,13 +137,16 @@ export default function TableProperties({ element, onUpdate }) {
             onChange={(e) => onUpdate({ borderStyle: e.target.value })}
           >
             {['solid', 'dashed', 'dotted', 'double'].map((s) => (
-              <option key={s} value={s}>{s}</option>
+              <option key={s} value={s}>
+                {s}
+              </option>
             ))}
           </Select>
         </div>
         <div>
           <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
-          <Input
+          <FocusedAuthoringTextInput
+            key={`${element.id}-table-font`}
             data-testid="prop-table-font-size"
             aria-label="Table font size"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
@@ -144,6 +162,12 @@ export default function TableProperties({ element, onUpdate }) {
           />
         </div>
       </div>
+      <TableLayoutControls
+        element={element}
+        onUpdate={onUpdate}
+        elements={elements}
+        selectedElementIds={selectedElementIds}
+      />
       <div className="text-[11px] text-text-muted mb-1">Edit Cells</div>
       <div className="max-h-[200px] overflow-auto border border-border rounded">
         {data.map((row, ri) => (
@@ -156,7 +180,11 @@ export default function TableProperties({ element, onUpdate }) {
                 type="text"
                 value={covered.has(`${ri}:${ci}`) ? '' : String(cell ?? '')}
                 disabled={covered.has(`${ri}:${ci}`)}
-                title={covered.has(`${ri}:${ci}`) ? 'Covered by a merged cell; edit the leading cell instead' : undefined}
+                title={
+                  covered.has(`${ri}:${ci}`)
+                    ? 'Covered by a merged cell; edit the leading cell instead'
+                    : undefined
+                }
                 onFocus={() => setSelectedCell({ row: ri, col: ci })}
                 onChange={(e) => {
                   if (covered.has(`${ri}:${ci}`)) return
@@ -174,6 +202,12 @@ export default function TableProperties({ element, onUpdate }) {
       <div className="text-[11px] text-text-muted mt-2 mb-1">
         Selected Cell R{clampedCell.row + 1}C{clampedCell.col + 1}
       </div>
+      <TableMergeControls
+        element={element}
+        selectedCell={clampedCell}
+        onUpdate={onUpdate}
+        selectedElementIds={selectedElementIds}
+      />
       <div className="grid grid-cols-2 gap-2">
         <div>
           <div className="text-[11px] text-text-muted mb-0.5">Cell BG</div>

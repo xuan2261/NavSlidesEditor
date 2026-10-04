@@ -4,6 +4,7 @@ import { useSlideOperations } from '../hooks/use-slide-operations'
 import { createExitEditOnEscape } from '../hooks/tiptap-exit-edit-on-escape'
 import { useClipboard, createDuplicateOperation } from '../hooks/use-clipboard'
 import { useElementCreation } from '../hooks/use-element-creation'
+import { useBlockLibrary } from '../hooks/use-block-library'
 import { api } from '../utils/api'
 import { presentInWindow } from '../utils/generateHTML'
 import { useExportActions } from '../hooks/use-export-actions'
@@ -35,6 +36,8 @@ import { getElementForActiveSlideEdit, getGameElementForActiveSlide } from './ed
 import { useEditorLayoutController } from '../hooks/editor-controller/use-editor-layout-controller'
 import LayoutManagerModal from '../components/LayoutManagerModal'
 import { getEditorCommandAvailability } from '../utils/editor-command-availability'
+import { resolveHistoryAuthoringSlide } from '../utils/history-authoring-slide'
+import { effectiveSlideIdentity, resolveEffectiveSlide } from 'revealjs-shared'
 export { getSelectionIdsForActiveSlideElement }
 export { getElementForActiveSlideEdit, getGameElementForActiveSlide } from './editor-page-helpers'
 export default function EditorPage({ presentationId, isTemplate = false, onGoHome }) {
@@ -42,14 +45,22 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const [slidePosition, setAuthoringPosition] = useState({ index: 0, vertical: null })
   const currentSlideIndex = slidePosition.index
   const verticalEdit = slidePosition.vertical
-  const setCurrentSlideIndex = useCallback((next) => setAuthoringPosition((position) => {
-    const index = typeof next === 'function' ? next(position.index) : next
-    return index === position.index ? position : { index, vertical: null }
-  }), [])
-  const setVerticalEdit = useCallback((next) => setAuthoringPosition((position) => {
-    const vertical = typeof next === 'function' ? next(position.vertical) : next
-    return vertical === position.vertical ? position : { ...position, vertical }
-  }), [])
+  const setCurrentSlideIndex = useCallback(
+    (next) =>
+      setAuthoringPosition((position) => {
+        const index = typeof next === 'function' ? next(position.index) : next
+        return index === position.index ? position : { index, vertical: null }
+      }),
+    []
+  )
+  const setVerticalEdit = useCallback(
+    (next) =>
+      setAuthoringPosition((position) => {
+        const vertical = typeof next === 'function' ? next(position.vertical) : next
+        return vertical === position.vertical ? position : { ...position, vertical }
+      }),
+    []
+  )
 
   const selectedElementIds = useEditorStore((s) => s.selectedElementIds)
   const clipboard = useEditorStore((s) => s.clipboard)
@@ -152,24 +163,52 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     setVerticalEdit,
   })
   const {
-    availableLayouts, updateActiveLayout, detachActiveLayout, masterEdit,
-    updateMasterElement, deleteMasterElement, mapAuthoringTarget,
-    openLayoutManager, exitMasterEdit, layoutManagerProps,
+    availableLayouts,
+    updateActiveLayout,
+    detachActiveLayout,
+    masterEdit,
+    updateMasterElement,
+    deleteMasterElement,
+    mapAuthoringTarget,
+    openLayoutManager,
+    exitMasterEdit,
+    layoutManagerProps,
   } = useEditorLayoutController({ presentation, setPresentation, mapActive, setSelectedElementIds })
-  const authoringSlide = useMemo(() => masterEdit
-    ? { id: `master:${masterEdit.id}`, elements: masterEdit.fixedElements, background: masterEdit.background }
-    : activeSlide, [masterEdit, activeSlide])
+  const authoringSlide = useMemo(
+    () =>
+      masterEdit
+        ? {
+            id: `master:${masterEdit.id}`,
+            elements: masterEdit.fixedElements,
+            background: masterEdit.background,
+          }
+        : activeSlide,
+    [masterEdit, activeSlide]
+  )
   const authoringSlideRef = useRef(authoringSlide)
-  useLayoutEffect(() => { authoringSlideRef.current = authoringSlide }, [authoringSlide])
+  useLayoutEffect(() => {
+    authoringSlideRef.current = authoringSlide
+  }, [authoringSlide])
   const getAuthoringSlide = useCallback(() => authoringSlideRef.current, [])
   const {
-    editor, settingContent, clearContent: clearRichTextContent,
-    startEditingElement, stopEditingElement,
+    editor,
+    settingContent,
+    clearContent: clearRichTextContent,
+    startEditingElement,
+    stopEditingElement,
   } = useEditorRichTextController({
-    presentation, setPresentation, mapActive: mapAuthoringTarget,
-    activeSlideRef: authoringSlideRef, currentSlideIndexRef, editingElementId,
-    editingElementIdRef, setEditingElementId, setSelectedElementIds,
-    setActiveTab, getElement: getElementForActiveSlideEdit, exitEditOnEscape,
+    presentation,
+    setPresentation,
+    mapActive: mapAuthoringTarget,
+    activeSlideRef: authoringSlideRef,
+    currentSlideIndexRef,
+    editingElementId,
+    editingElementIdRef,
+    setEditingElementId,
+    setSelectedElementIds,
+    setActiveTab,
+    getElement: getElementForActiveSlideEdit,
+    exitEditOnEscape,
   })
   const insertLink = useCallback(() => {
     if (!editingElementId || !editor) {
@@ -190,21 +229,37 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     setSelectedElementIds,
     setVerticalEdit,
   })
-  const { canRedo, canUndo, handleRedo, handleUndo, hasChanges, seedHistory } =
-    useEditorHistoryController({
-      presentation,
-      setPresentation,
-      setCurrentSlideIndex,
-      setVerticalEdit,
-      currentSlideIndexRef,
-      verticalEditRef,
-      selectedElementIdsRef,
-      editingElementIdRef,
-      setSelectedElementIds,
-      setEditingElementId,
-      editor,
-      settingContent,
-    })
+  const resolveHistorySlide = useCallback(
+    (state) =>
+      resolveHistoryAuthoringSlide(state, {
+        presentationId: presentation?.id,
+        masterId: masterEdit?.id,
+        currentSlideIndex: currentSlideIndexRef.current,
+        verticalEdit: verticalEditRef.current,
+      }),
+    [presentation?.id, masterEdit?.id, currentSlideIndexRef, verticalEditRef]
+  )
+  const {
+    canRedo,
+    canUndo,
+    handleRedo,
+    handleUndo,
+    hasChanges,
+    seedHistory,
+    commitHistoryTransaction,
+  } = useEditorHistoryController({
+    presentation,
+    setPresentation,
+    setCurrentSlideIndex,
+    setVerticalEdit,
+    resolveHistorySlide,
+    selectedElementIdsRef,
+    editingElementIdRef,
+    setSelectedElementIds,
+    setEditingElementId,
+    editor,
+    settingContent,
+  })
   const {
     adoptGeneration,
     beginExport,
@@ -261,7 +316,9 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const navigateToSlide = (index, childIndex) => {
     exitMasterEdit()
     setCurrentSlideIndex(index)
-    setVerticalEdit(childIndex == null ? null : { parentId: presentation.slides[index].id, child: childIndex })
+    setVerticalEdit(
+      childIndex == null ? null : { parentId: presentation.slides[index].id, child: childIndex }
+    )
     setSelectedElementIds([])
     setEditingElementId(null)
     editingElementIdRef.current = null
@@ -280,6 +337,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   // ── Unified element creation (extracted to use-element-creation hook) ──
   const {
     pluginTypes,
+    appendElements,
     addTextElement,
     addImageElement,
     addQrCodeElement,
@@ -324,6 +382,18 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     setCodeEditorState,
     latexEditorState,
     setLatexEditorState,
+  })
+  const getLibraryDestinationElements = useCallback(() => {
+    const target = getAuthoringSlide()
+    return masterEdit
+      ? target?.elements || []
+      : resolveEffectiveSlide(target, presentation?.layoutMasters).slide.elements
+  }, [getAuthoringSlide, masterEdit, presentation?.layoutMasters])
+  const { insertPreset: onInsertEducationPreset } = useBlockLibrary({
+    getActiveSlide: getAuthoringSlide,
+    getDestinationElements: getLibraryDestinationElements,
+    appendElements,
+    commitHistoryTransaction,
   })
 
   const {
@@ -418,9 +488,20 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   // Sync slide position into the global StatusBar (which lives outside this
   // tree). total>0 also signals "editor active" so the status cluster shows.
   useEffect(() => {
-    setSlidePosition({ current: currentVerticalIndex?.parent ?? currentSlideIndex, total: presentation?.slides?.length ?? 0,
-      vertical: currentVerticalIndex?.child ?? null, masterName: masterEdit?.name ?? null })
-  }, [currentSlideIndex, currentVerticalIndex?.parent, currentVerticalIndex?.child, masterEdit?.name, presentation?.slides?.length, setSlidePosition])
+    setSlidePosition({
+      current: currentVerticalIndex?.parent ?? currentSlideIndex,
+      total: presentation?.slides?.length ?? 0,
+      vertical: currentVerticalIndex?.child ?? null,
+      masterName: masterEdit?.name ?? null,
+    })
+  }, [
+    currentSlideIndex,
+    currentVerticalIndex?.parent,
+    currentVerticalIndex?.child,
+    masterEdit?.name,
+    presentation?.slides?.length,
+    setSlidePosition,
+  ])
 
   // Register the Present action for the StatusBar; re-register when the
   // presentation changes, and clear on unmount.
@@ -433,10 +514,13 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     if (presentation) presentInWindow(presentation)
   }, [presentation])
   const startSlideshowCurrent = useCallback(() => {
-    if (presentation) presentInWindow(presentation, { startAt: {
-      h: currentVerticalIndex?.parent ?? currentSlideIndex,
-      v: currentVerticalIndex ? currentVerticalIndex.child + 1 : 0,
-    } })
+    if (presentation)
+      presentInWindow(presentation, {
+        startAt: {
+          h: currentVerticalIndex?.parent ?? currentSlideIndex,
+          v: currentVerticalIndex ? currentVerticalIndex.child + 1 : 0,
+        },
+      })
   }, [presentation, currentSlideIndex, currentVerticalIndex])
 
   // Reset slide position when leaving the editor so the cluster hides on Home.
@@ -445,9 +529,22 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   }, [setSlidePosition])
 
   // ── Command layer (Phase 1: clipboard + keyboard unified via useKeyboard/useClipboard) ──
+  const notifyInteractionWarnings = useCallback((warnings) => {
+    showNotice(
+      warnings.map((warning) => `${warning.sourceElementId}: ${warning.error}`).join('\n'),
+      {
+        title: 'Repair interaction targets',
+        testId: 'interaction-reference-notice',
+      }
+    )
+  }, [])
   const { performCopy, performPaste, performCut } = useClipboard({
     mapActiveSlide: mapAuthoringTarget,
     setPresentation,
+    getActiveSlide: getAuthoringSlide,
+    getDestinationElements: getLibraryDestinationElements,
+    getScopeId: () => JSON.stringify([presentation?.id, getAuthoringSlide()?.id]),
+    onInteractionWarnings: notifyInteractionWarnings,
   })
 
   const handleSelectAll = useCallback(() => {
@@ -479,11 +576,13 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     // Ctrl+C survives a Ctrl+D and the next paste still pastes the copied element.
     const { selectedElementIds: liveSelectedIds } = useEditorStore.getState()
     const slideEls = getAuthoringSlide()?.elements || []
-    const { toAdd } = createDuplicateOperation({
+    const { toAdd, warnings } = createDuplicateOperation({
       slideElements: slideEls,
       selectedElementIds: liveSelectedIds,
+      destinationElements: getLibraryDestinationElements(),
     })
     if (!toAdd.length) return
+    if (warnings.length) notifyInteractionWarnings(warnings)
     setPresentation((prev) =>
       mapAuthoringTarget(prev, (slide) => ({
         ...slide,
@@ -493,7 +592,14 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     // Move selection onto the new copies (matches PowerPoint/Keynote) so the
     // next nudge/format acts on the duplicates, not the originals.
     setSelectedElementIds(toAdd.map((el) => el.id))
-  }, [getAuthoringSlide, setPresentation, mapAuthoringTarget, setSelectedElementIds])
+  }, [
+    getAuthoringSlide,
+    getLibraryDestinationElements,
+    notifyInteractionWarnings,
+    setPresentation,
+    mapAuthoringTarget,
+    setSelectedElementIds,
+  ])
 
   // Media-library inserts follow the active vertical slide or master authoring surface.
   const insertMediaElement = useCallback(
@@ -531,15 +637,23 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     [getAuthoringSlide, setPresentation, mapAuthoringTarget]
   )
 
-  const openInspector = useCallback((section) => {
-    setRightPanelOpen(true)
-    setShowDesignIdeas(section === 'ideas')
-    setInspectorFocus((previous) => ({ section, request: (previous?.request || 0) + 1 }))
-    if (workspaceWidth < 1280) setActiveWorkspaceOverlay('inspector')
-  }, [setRightPanelOpen, setShowDesignIdeas, workspaceWidth])
+  const openInspector = useCallback(
+    (section) => {
+      setRightPanelOpen(true)
+      setShowDesignIdeas(section === 'ideas')
+      setInspectorFocus((previous) => ({ section, request: (previous?.request || 0) + 1 }))
+      if (workspaceWidth < 1280) setActiveWorkspaceOverlay('inspector')
+    },
+    [setRightPanelOpen, setShowDesignIdeas, workspaceWidth]
+  )
   const availability = getEditorCommandAvailability({
-    slide: authoringSlide, selectedElementIds, clipboard, canUndo, canRedo,
-    editingText: Boolean(editingElementId), masterEditing: Boolean(masterEdit),
+    slide: authoringSlide,
+    selectedElementIds,
+    clipboard,
+    canUndo,
+    canRedo,
+    editingText: Boolean(editingElementId),
+    masterEditing: Boolean(masterEdit),
   })
   const commands = useEditorCommandModel({
     openTemplateModal: () => setShowTemplateModal(true),
@@ -567,15 +681,23 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     timeline: () => setShowTimeline(true),
     speakerNotes: () => openInspector('notes'),
     selectionPane: () => openInspector('layers'),
-    slideSorter: () => setViewMode((value) => value === 'normal' ? 'sorter' : 'normal'),
+    slideSorter: () => setViewMode((value) => (value === 'normal' ? 'sorter' : 'normal')),
   })
-  // Detect active game type from the actual editable slide, including vertical children.
+  const gameSourceSlide = activeSlide || presentation?.slides?.[currentSlideIndex]
   const activeGameElement = getGameElementForActiveSlide(
     activeSlide,
     presentation?.slides?.[currentSlideIndex],
-    selectedElementId
+    selectedElementId,
+    presentation?.layoutMasters
   )
   const currentGameType = activeGameElement?.gameType || null
+  const effectiveGameSlideId = gameSourceSlide
+    ? effectiveSlideIdentity(
+        gameSourceSlide,
+        currentVerticalIndex?.parent ?? currentSlideIndex,
+        currentVerticalIndex ? currentVerticalIndex.child + 1 : 0
+      )
+    : null
   const {
     currentLiveRoomCode,
     currentLivePresenterToken,
@@ -589,6 +711,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     presentationId,
     setShowLiveModal,
     activeGameElement,
+    effectiveSlideId: effectiveGameSlideId,
     currentGameType,
   })
   const gameLeaderboardScores = useEditorGameLeaderboard(activeGameElement)
@@ -597,7 +720,8 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     onExportPDF,
     onExportPPTX,
     onExportHTML,
-    onExportOffline,
+    staticExportTeacherReveal,
+    onStaticExportTeacherRevealChange,
     onExportProject,
     onOpenProject,
     onDownloadPptxOriginal,
@@ -687,25 +811,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const compactOverlay = workspaceTier === 'wide' ? null : activeWorkspaceOverlay
 
   return (
-    <EditorShell
-      smallScreenGuard={
-        <div
-          data-testid="editor-small-screen-guard"
-          className="flex h-full flex-col items-center justify-center gap-3 bg-workspace px-6 text-center md:hidden"
-        >
-          <div className="text-base font-semibold text-text-primary">
-            Tablet or desktop required
-          </div>
-          <p className="max-w-[320px] text-sm leading-6 text-text-secondary">
-            Full slide editing needs a wider workspace. Use a tablet, desktop, or larger browser
-            window.
-          </p>
-          <Button variant="secondary" onClick={onGoHome}>
-            Back to presentations
-          </Button>
-        </div>
-      }
-    >
+    <EditorShell>
       <EditorPageHeader
         c={{
           isTemplate,
@@ -727,7 +833,8 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
           onExportPDF,
           onExportPPTX,
           onExportHTML,
-          onExportOffline,
+          staticExportTeacherReveal,
+          onStaticExportTeacherRevealChange,
           onExportProject,
           onOpenProject,
           setShowGithubModal,
@@ -793,12 +900,15 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
           onOpenDesignIdeas: () => openInspector('ideas'),
           onToggleInspector: () => {
             if (workspaceWidth < 1280) openInspector('properties')
-            else { setShowDesignIdeas(false); setRightPanelOpen(!rightPanelOpen) }
+            else {
+              setShowDesignIdeas(false)
+              setRightPanelOpen(!rightPanelOpen)
+            }
           },
           onToggleNavigator: () => {
             if (workspaceWidth < 1024) {
               useUIStore.getState().setLeftPanelOpen(true)
-              setActiveWorkspaceOverlay((value) => value === 'navigator' ? null : 'navigator')
+              setActiveWorkspaceOverlay((value) => (value === 'navigator' ? null : 'navigator'))
             } else useUIStore.getState().toggleLeftPanel()
           },
           setShowTemplateModal,
@@ -858,6 +968,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
           addHtmlElement,
           addMermaidElement,
           addStemSimulationElement,
+          onInsertEducationPreset,
           addCodeElement,
           addLatexElement,
           addMarkdownElement,

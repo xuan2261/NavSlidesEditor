@@ -1,0 +1,110 @@
+const { evaluateAnswer } = require('../answer-evaluator.js')
+const { isId } = require('../question-shape.js')
+const { shuffleCardIds } = require('../card-content.js')
+const { makeAwardKey } = require('../game-score-policy.js')
+
+function createHotPotatoState(config, { random = Math.random } = {}) {
+  const ids = config.questions.map((question) => question.id)
+  return {
+    gameType: 'hot-potato',
+    phase: 'ready',
+    questionIndex: -1,
+    currentQuestion: null,
+    questionOrder: config.shuffleQuestions ? shuffleCardIds(ids, random) : ids,
+    scores: {},
+    answeredPlayers: {},
+    leaderboard: [],
+    questionStartedAt: 0,
+    deadline: null,
+    deadlinePassed: false,
+    roundCount: ids.length,
+    awardedKeys: [],
+    error: null,
+  }
+}
+function computeSpeedBonus(basePoints, timeLimitSec, elapsedMs) {
+  if (timeLimitSec === null || timeLimitSec <= 0) return basePoints
+  const limit = timeLimitSec * 1000
+  return basePoints + Math.round((Math.max(0, limit - Math.max(0, elapsedMs)) / limit) * basePoints)
+}
+function reduceHotPotato(config, state, command, { now = Date.now } = {}) {
+  if (!command || (command.generation !== undefined && command.generation !== state.generation))
+    return state
+  const time = now()
+  if (command.type === 'start' || command.type === 'next-question') {
+    if (state.phase !== (command.type === 'start' ? 'ready' : 'review')) return state
+    const index = state.questionIndex + 1
+    const question = config.questions.find((item) => item.id === state.questionOrder[index])
+    if (!question)
+      return { ...state, phase: 'ended', currentQuestion: null, deadline: null, error: null }
+    return {
+      ...state,
+      phase: 'active',
+      questionIndex: index,
+      currentQuestion: question,
+      answeredPlayers: {},
+      questionStartedAt: time,
+      deadlinePassed: false,
+      error: null,
+      deadline: question.timeLimit === null ? null : time + question.timeLimit * 1000,
+    }
+  }
+  if (command.questionId !== undefined && command.questionId !== state.currentQuestion?.id)
+    return state
+  if (command.type === 'end')
+    return state.phase === 'ended' ? state : { ...state, phase: 'ended', deadline: null }
+  if (state.phase !== 'active') return state
+  if (command.type === 'reveal') return { ...state, phase: 'review', deadline: null, error: null }
+  if (command.type === 'deadline') {
+    if (state.deadline === null || time < state.deadline || state.deadlinePassed) return state
+    return { ...state, deadlinePassed: true, ...(config.allowLate ? {} : { phase: 'review' }) }
+  }
+  if (command.type !== 'submit-answer') return state
+  const playerId = command.playerId ?? 'local'
+  if (!isId(playerId) || Object.hasOwn(state.answeredPlayers, playerId)) return state
+  const question = state.currentQuestion,
+    elapsed = time - state.questionStartedAt
+  const late = state.deadline !== null && time >= state.deadline
+  if (late && !config.allowLate)
+    return {
+      ...state,
+      error: null,
+      answeredPlayers: {
+        ...state.answeredPlayers,
+        [playerId]: { correct: false, points: 0, late: true },
+      },
+    }
+  const evaluated = evaluateAnswer(question, command.answer)
+  if (!evaluated.valid) return { ...state, error: evaluated.error }
+  const key = makeAwardKey({
+    generation: state.generation ?? 0,
+    gameType: 'hot-potato',
+    contextId: JSON.stringify([question.id, playerId]),
+    awardKind: 'correct',
+  })
+  const points =
+    evaluated.correct && !state.awardedKeys.includes(key)
+      ? computeSpeedBonus(question.points, question.timeLimit, elapsed)
+      : 0
+  const scores = {
+    ...state.scores,
+    [playerId]: (Object.hasOwn(state.scores, playerId) ? state.scores[playerId] : 0) + points,
+  }
+  return {
+    ...state,
+    scores,
+    error: null,
+    leaderboard: Object.entries(scores)
+      .map(([id, score]) => ({ id, score }))
+      .sort((a, b) => b.score - a.score),
+    answeredPlayers: {
+      ...state.answeredPlayers,
+      [playerId]: { correct: evaluated.correct, points, late },
+    },
+    awardedKeys:
+      evaluated.correct && !state.awardedKeys.includes(key)
+        ? [...state.awardedKeys, key]
+        : state.awardedKeys,
+  }
+}
+module.exports = { createHotPotatoState, reduceHotPotato, computeSpeedBonus }

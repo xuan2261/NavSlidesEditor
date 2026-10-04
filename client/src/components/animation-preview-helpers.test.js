@@ -21,6 +21,53 @@ describe('animation preview helpers', () => {
     expect(getAnimationPreviewSteps(slide)).toEqual([0, 1, 3])
   })
 
+  it('keeps authored sparse labels while omitting hidden fragments and grouping shared orders', () => {
+    const slide = {
+      elements: [
+        { id: 'hidden', hidden: true, fragment: true, fragmentIndex: 1 },
+        { id: 'later-a', fragment: true, fragmentIndex: 5 },
+        { id: 'first', fragment: true, fragmentIndex: 2 },
+        { id: 'later-b', fragment: true, fragmentIndex: 5 },
+      ],
+    }
+
+    expect(getAnimationPreviewSteps(slide)).toEqual([0, 2, 5])
+  })
+
+  it('includes effective master groups after applying hidden-element overrides and patches', () => {
+    const element = (id, fragmentIndex, hidden = false) => ({
+      id,
+      type: 'shape',
+      x: 0,
+      y: 0,
+      width: 80,
+      height: 40,
+      fragment: true,
+      fragmentIndex,
+      hidden,
+    })
+    const masters = [
+      {
+        id: 'master',
+        name: 'Master',
+        placeholders: [],
+        fixedElements: [element('hidden', 1, true), element('excluded', 3), element('shown', 4)],
+      },
+    ]
+    const slide = {
+      layoutId: 'master',
+      elements: [element('owned', 5)],
+      layoutOverrides: {
+        hiddenElementIds: ['excluded'],
+        elementPatches: { shown: { fragmentIndex: 2 } },
+      },
+    }
+    const original = structuredClone({ slide, masters })
+
+    expect(getAnimationPreviewSteps(slide, masters)).toEqual([0, 2, 5])
+    expect({ slide, masters }).toEqual(original)
+  })
+
   it('advances and rewinds through sparse preview steps without inventing indices', () => {
     const steps = [0, 1, 3]
 

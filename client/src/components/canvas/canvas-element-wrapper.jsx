@@ -2,11 +2,20 @@ import { useRef, useEffect, useLayoutEffect } from 'react'
 import { EditorContent } from '@tiptap/react'
 import hljs from 'highlight.js'
 import katex from 'katex'
-import { normalizeImageAccessibility, normalizeMediaAccessibility, resolveColorField } from 'revealjs-shared'
-import { sanitizeRichTextHtml } from '../../utils/content-safety'
+import {
+  normalizeImageAccessibility,
+  normalizeMediaAccessibility,
+  resolveColorField,
+  MEDIA_CAPTION_STYLE,
+  MEDIA_CAPTION_TEXT_STYLE,
+} from 'revealjs-shared'
+import { buildSandboxFrameDocument } from 'revealjs-shared/src/education/html-sandbox-policy.js'
+import { attachMediaPlayback } from 'revealjs-shared/src/media-playback.js'
+import { sanitizeRichTextHtml } from 'revealjs-shared/src/content-safety.js'
 import { sanitizeMediaSrc } from '../../utils/url-safety'
 import { resolveVideoSrc } from '../../utils/migrate-video-src'
 import { getElementRenderer, CropOverlay } from './element-renderers/registry'
+import ImageCitation from './element-renderers/image-citation'
 import { HANDLE_STYLES } from './use-canvas-resize-rotate'
 import PluginSandbox from '../../plugins/plugin-sandbox'
 import { isPluginElementType } from '../../plugins'
@@ -15,28 +24,10 @@ import { getKeyboardNudgeStep } from '../../utils/keyboard-nudge'
 import { isInteractiveKeyboardTarget } from '../../utils/interactive-keyboard-target'
 import { applyMove } from './use-canvas-pointer-interaction'
 
-function getMediaFragmentSrc(src, startTime, endTime) {
-  if (!src) return src
-  const start = Number(startTime)
-  const end = Number(endTime)
-  const hasStart = Number.isFinite(start) && start > 0
-  const hasEnd = Number.isFinite(end) && end > 0
-  if (!hasStart && !hasEnd) return src
-  const rangeStart = hasStart ? start : 0
-  const rangeEnd = hasEnd && end > rangeStart ? `,${end}` : ''
-  return `${String(src).split('#')[0]}#t=${rangeStart}${rangeEnd}`
-}
-
-function getPlaybackRate(value) {
-  const rate = Number(value)
-  return Number.isFinite(rate) && rate > 0 ? rate : null
-}
-
 function isLinePathEvent(element, event) {
   if (element.type !== 'line') return true
   return event.target?.tagName?.toLowerCase() === 'path'
 }
-
 
 function getElementAccessibleName(element) {
   const typeLabel = `${String(element.type || 'slide')} element`
@@ -53,9 +44,10 @@ function getElementAccessibleName(element) {
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 60)
-  const connectionState = element.type === 'line' && element.connections
-    ? `connected ${[element.connections.start && 'start', element.connections.end && 'end'].filter(Boolean).join(' and ')}`
-    : ''
+  const connectionState =
+    element.type === 'line' && element.connections
+      ? `connected ${[element.connections.start && 'start', element.connections.end && 'end'].filter(Boolean).join(' and ')}`
+      : ''
   return [typeLabel, content && `"${content}"`, connectionState, element.locked && 'locked']
     .filter(Boolean)
     .join(', ')
@@ -174,12 +166,15 @@ export default function CanvasElement({
 }) {
   const contentRef = useRef(null)
   const wrapperRef = useRef(null)
-  useLayoutEffect(() => () => {
-    const wrapper = wrapperRef.current
-    if (wrapper && document.activeElement === wrapper) {
-      wrapper.closest('.slide-canvas')?.focus()
-    }
-  }, [])
+  useLayoutEffect(
+    () => () => {
+      const wrapper = wrapperRef.current
+      if (wrapper && document.activeElement === wrapper) {
+        wrapper.closest('.slide-canvas')?.focus()
+      }
+    },
+    []
+  )
   const videoRef = useRef(null)
 
   // Render KaTeX math in preview
@@ -200,9 +195,16 @@ export default function CanvasElement({
 
   useEffect(() => {
     if (element.type !== 'video' || !videoRef.current) return
-    const playbackRate = getPlaybackRate(element.playbackRate)
-    videoRef.current.playbackRate = playbackRate || 1
-  }, [element.playbackRate, element.type])
+    return attachMediaPlayback(videoRef.current, element)
+  }, [
+    element.src,
+    element.videoUrl,
+    element.startTime,
+    element.endTime,
+    element.loop,
+    element.playbackRate,
+    element.type,
+  ])
 
   const importedTextCanOverflow =
     element.type === 'text' && element?._pptxImportMeta?.textFit === 'wrap'
@@ -233,7 +235,15 @@ export default function CanvasElement({
             : 'grab',
     userSelect: isEditing ? 'text' : 'none',
     overflow:
-      isSelected || isEditing || isCropping || element.type === 'line' || importedTextCanOverflow
+      isSelected ||
+      isEditing ||
+      isCropping ||
+      element.type === 'line' ||
+      element.type === 'timeline' ||
+      importedTextCanOverflow ||
+      (element.type === 'image' && Boolean(element.citationText || element.citationLink)) ||
+      ((element.type === 'video' || element.type === 'audio') &&
+        Boolean(element.transcript || element.audioDescription))
         ? 'visible'
         : 'hidden',
     boxSizing: 'border-box',
@@ -328,7 +338,6 @@ export default function CanvasElement({
       return
     }
 
-
     const nudges = {
       ArrowUp: { x: 0, y: -1 },
       ArrowDown: { x: 0, y: 1 },
@@ -340,8 +349,10 @@ export default function CanvasElement({
       if (selectedElementCount > 1) return
       event.preventDefault()
       const step = getKeyboardNudgeStep(event.shiftKey)
-      onUpdateElement?.(element.id,
-        applyMove(element, nudge.x * step, nudge.y * step, Number(slideWidth), Number(slideHeight)))
+      onUpdateElement?.(
+        element.id,
+        applyMove(element, nudge.x * step, nudge.y * step, Number(slideWidth), Number(slideHeight))
+      )
     }
   }
   const cropDiagnostics = sourceCropData
@@ -436,9 +447,18 @@ export default function CanvasElement({
     userSelect: 'none',
   }
   const hotspotBadgeStyle = {
-    position: 'absolute', bottom: -20, left: 0, zIndex: 101, pointerEvents: 'none',
-    background: 'var(--accent)', color: 'white', fontSize: '9px', fontFamily: 'sans-serif',
-    padding: '1px 5px', borderRadius: 3, userSelect: 'none',
+    position: 'absolute',
+    bottom: -20,
+    left: 0,
+    zIndex: 101,
+    pointerEvents: 'none',
+    background: 'var(--accent)',
+    color: 'white',
+    fontSize: '9px',
+    fontFamily: 'sans-serif',
+    padding: '1px 5px',
+    borderRadius: 3,
+    userSelect: 'none',
   }
   const getResizeHandleStyle = (handleStyle) => ({
     position: 'absolute',
@@ -492,7 +512,11 @@ export default function CanvasElement({
       onKeyDown={handleKeyboardAction}
       onPointerDown={(e) => {
         if (e.button !== 0 || !isLinePathEvent(element, e)) return
-        if ((element.type === 'audio' || element.type === 'video') && e.target?.closest?.('audio,video')) return
+        if (
+          (element.type === 'audio' || element.type === 'video') &&
+          e.target?.closest?.('audio,video,.ns-media-transcript summary')
+        )
+          return
         if (isEditing) {
           e.stopPropagation()
           return
@@ -527,7 +551,9 @@ export default function CanvasElement({
         {element.type === 'image' &&
           (() => {
             const image = normalizeImageAccessibility(element)
-            const descriptionId = image.longDescription ? `image-description-${image.id}` : undefined
+            const descriptionId = image.longDescription
+              ? `image-description-${image.id}`
+              : undefined
             const imgFilter =
               [
                 element.filterBrightness != null && element.filterBrightness !== 100
@@ -540,51 +566,74 @@ export default function CanvasElement({
                 element.filterSaturate != null && element.filterSaturate !== 100
                   ? `saturate(${element.filterSaturate}%)`
                   : '',
+                element.filterSepia ? `sepia(${element.filterSepia}%)` : '',
+                element.filterBlur ? `blur(${element.filterBlur}px)` : '',
               ]
                 .filter(Boolean)
                 .join(' ') || undefined
             return (
-              <div style={imageWrapperStyle}>
-                <img
-                  src={sanitizeMediaSrc(image.src)}
-                  alt={image.decorative ? '' : image.alt}
-                  aria-describedby={descriptionId}
-                  style={
-                    element.imageW != null
-                      ? {
-                          position: 'absolute',
-                          left: element.imageOffsetX ?? 0,
-                          top: element.imageOffsetY ?? 0,
-                          width: element.imageW,
-                          height: element.imageH,
-                          objectFit: element.objectFit || 'contain',
-                          pointerEvents: 'none',
-                          filter: imgFilter,
-                          transform: imageFlipTransform,
-                        }
-                      : {
-                          width: '100%',
-                          height: '100%',
-                          objectFit: element.objectFit || 'contain',
-                          display: 'block',
-                          pointerEvents: 'none',
-                          filter: imgFilter,
-                          transform: imageFlipTransform,
-                        }
-                  }
-                  draggable={false}
-                />
-                {descriptionId && <span id={descriptionId} className="ns-image-long-description">{image.longDescription}</span>}
-                {isCropping && cropState && (
-                  <CropOverlay
-                    crop={cropState}
-                    elW={element.width}
-                    elH={element.height}
-                    onHandleDown={onCropHandleDown}
-                    onCommit={onCommitCrop}
+              <>
+                <div style={imageWrapperStyle}>
+                  <img
+                    src={sanitizeMediaSrc(image.src)}
+                    alt={image.decorative ? '' : image.alt}
+                    aria-describedby={descriptionId}
+                    style={
+                      element.imageW != null
+                        ? {
+                            position: 'absolute',
+                            left: element.imageOffsetX ?? 0,
+                            top: element.imageOffsetY ?? 0,
+                            width: element.imageW,
+                            height: element.imageH,
+                            objectFit: element.objectFit || 'contain',
+                            pointerEvents: 'none',
+                            filter: imgFilter,
+                            transform: imageFlipTransform,
+                          }
+                        : {
+                            width: '100%',
+                            height: '100%',
+                            objectFit: element.objectFit || 'contain',
+                            display: 'block',
+                            pointerEvents: 'none',
+                            filter: imgFilter,
+                            transform: imageFlipTransform,
+                          }
+                    }
+                    draggable={false}
                   />
-                )}
-              </div>
+                  {descriptionId && (
+                    <span
+                      id={descriptionId}
+                      className="ns-image-long-description"
+                      style={{
+                        position: 'absolute',
+                        width: 1,
+                        height: 1,
+                        padding: 0,
+                        border: 0,
+                        overflow: 'hidden',
+                        clip: 'rect(0,0,0,0)',
+                        clipPath: 'inset(50%)',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {image.longDescription}
+                    </span>
+                  )}
+                  {isCropping && cropState && (
+                    <CropOverlay
+                      crop={cropState}
+                      elW={element.width}
+                      elH={element.height}
+                      onHandleDown={onCropHandleDown}
+                      onCommit={onCommitCrop}
+                    />
+                  )}
+                </div>
+                <ImageCitation element={image} />
+              </>
             )
           })()}
         {element.type !== 'text' &&
@@ -620,15 +669,30 @@ export default function CanvasElement({
               )
             }
             if (element.type === 'html') {
-              const srcDoc =
-                element.embedKind === 'mermaid'
-                  ? buildMermaidEmbedContent(element.mermaidSource || element.content || '')
-                  : element.content || ''
+              const baseUrl = window.location.href
+              const isMermaid = element.embedKind === 'mermaid'
+              const dependencies = isMermaid
+                ? {
+                    network: true,
+                    offlineCapable: true,
+                    resources: [
+                      {
+                        url: new URL('/vendor/mermaid/mermaid.min.js', baseUrl).href,
+                        kind: 'script',
+                      },
+                    ],
+                    dynamicResources: [],
+                  }
+                : element.htmlDependencies
+              const content = isMermaid
+                ? buildMermaidEmbedContent(element.mermaidSource || element.content || '')
+                : element.content || ''
+              const srcDoc = buildSandboxFrameDocument(content, dependencies, { baseUrl })
               return (
                 <iframe
                   srcDoc={srcDoc}
                   style={htmlFrameStyle}
-                  sandbox="allow-scripts allow-same-origin"
+                  sandbox="allow-scripts"
                   title={element.embedKind === 'mermaid' ? 'Mermaid diagram preview' : 'HTML embed'}
                 />
               )
@@ -641,28 +705,81 @@ export default function CanvasElement({
               )
             if (element.type === 'video') {
               const media = normalizeMediaAccessibility(element)
-              const playbackRate = getPlaybackRate(media.playbackRate)
               const videoSrc = sanitizeMediaSrc(resolveVideoSrc(media))
               return (
                 <>
-                  <video ref={videoRef} src={getMediaFragmentSrc(videoSrc, media.startTime, media.endTime)} controls={media.controls !== false} autoPlay={media.autoplay || false} muted={media.muted || false} loop={media.loop || false} poster={sanitizeMediaSrc(media.poster) || undefined} style={videoStyle} onLoadedMetadata={(event) => { if (playbackRate && playbackRate !== 1) event.currentTarget.playbackRate = playbackRate }}>
-                    {media.tracks.map((track, index) => <track key={`${track.src}-${index}`} src={sanitizeMediaSrc(track.src)} kind={track.kind} srcLang={track.srcLang || undefined} label={track.label || undefined} default={track.default} />)}
+                  <video
+                    ref={videoRef}
+                    src={videoSrc}
+                    controls={media.controls !== false}
+                    autoPlay={media.autoplay || false}
+                    muted={media.muted || false}
+                    loop={media.loop || false}
+                    poster={sanitizeMediaSrc(media.poster) || undefined}
+                    style={videoStyle}
+                  >
+                    {media.tracks.map((track, index) => (
+                      <track
+                        key={`${track.src}-${index}`}
+                        src={track.src}
+                        kind={track.kind}
+                        srcLang={track.srcLang || undefined}
+                        label={track.label || undefined}
+                        default={track.default}
+                      />
+                    ))}
                   </video>
-                  {media.audioDescription && <p className="ns-media-audio-description">{media.audioDescription}</p>}
-                  {media.transcript && <details className="ns-media-transcript"><summary>Transcript</summary><p>{media.transcript}</p></details>}
+                  {media.audioDescription && (
+                    <p className="ns-media-audio-description" style={MEDIA_CAPTION_STYLE}>
+                      {media.audioDescription}
+                    </p>
+                  )}
+                  {media.transcript && (
+                    <details className="ns-media-transcript" style={MEDIA_CAPTION_STYLE}>
+                      <summary style={MEDIA_CAPTION_TEXT_STYLE}>Transcript</summary>
+                      <p style={MEDIA_CAPTION_TEXT_STYLE}>{media.transcript}</p>
+                    </details>
+                  )}
                 </>
               )
             }
             if (element.type === 'audio') {
               const media = normalizeMediaAccessibility(element)
               return (
-                <div style={audioWrapperStyle}>
-                  <audio src={sanitizeMediaSrc(media.src)} controls={media.controls !== false} autoPlay={media.autoplay || false} loop={media.loop || false} muted={media.muted || false} style={audioControlStyle}>
-                    {media.tracks.map((track, index) => <track key={`${track.src}-${index}`} src={sanitizeMediaSrc(track.src)} kind={track.kind} srcLang={track.srcLang || undefined} label={track.label || undefined} default={track.default} />)}
-                  </audio>
-                  {media.audioDescription && <p className="ns-media-audio-description">{media.audioDescription}</p>}
-                  {media.transcript && <details className="ns-media-transcript"><summary>Transcript</summary><p>{media.transcript}</p></details>}
-                </div>
+                <>
+                  <div style={audioWrapperStyle}>
+                    <audio
+                      src={sanitizeMediaSrc(media.src)}
+                      controls={media.controls !== false}
+                      autoPlay={media.autoplay || false}
+                      loop={media.loop || false}
+                      muted={media.muted || false}
+                      style={audioControlStyle}
+                    >
+                      {media.tracks.map((track, index) => (
+                        <track
+                          key={`${track.src}-${index}`}
+                          src={track.src}
+                          kind={track.kind}
+                          srcLang={track.srcLang || undefined}
+                          label={track.label || undefined}
+                          default={track.default}
+                        />
+                      ))}
+                    </audio>
+                  </div>
+                  {media.audioDescription && (
+                    <p className="ns-media-audio-description" style={MEDIA_CAPTION_STYLE}>
+                      {media.audioDescription}
+                    </p>
+                  )}
+                  {media.transcript && (
+                    <details className="ns-media-transcript" style={MEDIA_CAPTION_STYLE}>
+                      <summary style={MEDIA_CAPTION_TEXT_STYLE}>Transcript</summary>
+                      <p style={MEDIA_CAPTION_TEXT_STYLE}>{media.transcript}</p>
+                    </details>
+                  )}
+                </>
               )
             }
             if (Renderer) {
@@ -684,7 +801,9 @@ export default function CanvasElement({
                   />
                 )
               if (element.type === 'latex')
-                return <Renderer element={element} isSelected={isSelected} isDragging={isDragging} />
+                return (
+                  <Renderer element={element} isSelected={isSelected} isDragging={isDragging} />
+                )
               if (element.type === 'icon')
                 return <Renderer element={element} iconPaths={iconPaths} />
               return <Renderer element={element} />
@@ -694,7 +813,11 @@ export default function CanvasElement({
       </div>
       {/* These generated previews belong to the canvas gesture owner, not the iframe. */}
       {['chart', 'latex'].includes(element.type) && (
-        <div aria-hidden="true" data-canvas-preview-hit-area style={{ position: 'absolute', inset: 0, zIndex: 1 }} />
+        <div
+          aria-hidden="true"
+          data-canvas-preview-hit-area
+          style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+        />
       )}
       {element.fragment && <div style={fragmentBadgeStyle}>▶ {element.fragmentIndex ?? 1}</div>}
       {element.action?.hotspot && <div style={hotspotBadgeStyle}>Hotspot</div>}

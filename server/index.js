@@ -27,6 +27,7 @@ const {
   shutdownPackageStore,
 } = require('./services/pptx-import/package-store-runtime')
 const { stripControlChars } = require('./utils/strip-control-chars')
+const { getServingBaseUrl } = require('./utils/serving-origin')
 const { resolveListenHost, getExposureWarning } = require('./services/listen-host-policy')
 const { sanitizeSvgBuffer } = require('./services/svg-upload-sanitizer')
 const { createHealthState, READY_REASON_CODES } = require('./services/health-state')
@@ -237,13 +238,15 @@ app.use('/uploads', express.static(UPLOADS_DIR))
 if (fs.existsSync(socketIoClientDist)) {
   app.use('/vendor/socket.io', express.static(socketIoClientDist))
 }
-// LaTeX previews run in sandboxed srcdoc frames with opaque origins. Public
-// KaTeX font files must allow cross-origin font loads even on our own host.
+// Public KaTeX fonts and TikZ compiler assets serve opaque srcdoc frames without opening arbitrary assets or APIs.
 app.use(
   '/vendor',
   express.static(path.join(__dirname, 'vendor'), {
     setHeaders(res, filePath) {
-      if (/[/\\]katex[/\\]dist[/\\]fonts[/\\][^/\\]+\.(?:woff2?|ttf)$/i.test(filePath)) {
+      if (
+        /[/\\]katex[/\\]dist[/\\]fonts[/\\][^/\\]+\.(?:woff2?|ttf)$/i.test(filePath) ||
+        /[/\\]tikzjax[/\\]/i.test(filePath)
+      ) {
         res.setHeader('Access-Control-Allow-Origin', '*')
       }
     },
@@ -298,7 +301,7 @@ app.post('/api/presentations/:id/github/push', (req, res, next) => {
 // bcrypt moved to top-level imports
 
 // Helper for presentation viewer HTML payload (with server-side XSS sanitization)
-async function renderShareView(presentationId, res) {
+async function renderShareView(presentationId, req, res) {
   // Serve-guard (C2): a soft-deleted deck must not render even via a live share
   // token. The authoritative reader returns null for missing or trashed decks.
   const resolved = await readAuthoritativePresentation(presentationId)
@@ -315,7 +318,7 @@ async function renderShareView(presentationId, res) {
       .replace(/url\s*\(\s*['"]?\s*javascript/gi, 'url(/* blocked */')
   }
 
-  const html = generateRevealHTML(sanitized)
+  const html = generateRevealHTML(sanitized, { baseUrl: getServingBaseUrl(req) })
   res.setHeader('Content-Type', 'text/html')
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
   res.send(html)
@@ -405,7 +408,7 @@ app.get('/share/:token', async (req, res) => {
       await recordView(updatedTokenData.presentationId, req.params.token, req.get('referer') || '')
     } catch {}
 
-    await renderShareView(updatedTokenData.presentationId, res)
+    await renderShareView(updatedTokenData.presentationId, req, res)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -440,7 +443,7 @@ app.post('/share/:token', async (req, res) => {
       await recordView(updatedTokenData.presentationId, req.params.token, req.get('referer') || '')
     } catch {}
 
-    await renderShareView(updatedTokenData.presentationId, res)
+    await renderShareView(updatedTokenData.presentationId, req, res)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

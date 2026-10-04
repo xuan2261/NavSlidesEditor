@@ -1,9 +1,11 @@
 const { findServeablePresentation } = require('./presentation-finder')
 const { normalizePptxImportedPresentationForRead } = require('./presentation-normalization')
 const { getReadablePackageStore } = require('./pptx-import/package-store-runtime')
-const { resolveEditedExportContext } = require('./pptx-import/validated-edited-export-context')
+const {
+  resolveEditorProjectionContext,
+  verifyEditorPackageBytes,
+} = require('./pptx-import/package-authority-snapshot')
 const { mergeCompatibilityPresentation } = require('./pptx-import/compatibility-view')
-const { hashRecord } = require('./pptx-import/package-store/schemas')
 
 function authorityError(reasonCode) {
   return Object.assign(new Error(reasonCode), {
@@ -17,36 +19,32 @@ function hasPresentationOwnedRevision(state, presentationId, revisionId) {
   return Boolean(
     revision &&
     state.blobs?.some((blob) => blob.sha256 === revision.blobSha256) &&
-    state.owners?.some((owner) =>
-      owner.ownerType === 'presentation' &&
-      owner.ownerId === presentationId &&
-      owner.revisionId === revisionId
+    state.owners?.some(
+      (owner) =>
+        owner.ownerType === 'presentation' &&
+        owner.ownerId === presentationId &&
+        owner.revisionId === revisionId
     )
   )
 }
 
 function isOriginalOnlyHead(state, head) {
-  const hasProjectedResult = state.mutationResults?.some((result) =>
-    result.presentationId === head.presentationId &&
-    result.packageRevisionId === head.packageRevisionId &&
-    result.projection && result.sourceMap
+  const hasProjectedResult = state.mutationResults?.some(
+    (result) =>
+      result.presentationId === head.presentationId &&
+      result.packageRevisionId === head.packageRevisionId &&
+      result.projection &&
+      result.sourceMap
   )
-  return !hasProjectedResult &&
+  return (
+    !hasProjectedResult &&
     head.pendingJournalHash === undefined &&
     head.journalRevisionId == null &&
     head.packageRevisionId === head.originalRevisionId &&
     head.projectionRevisionId === null &&
     head.sourceMapRevisionId === null &&
     hasPresentationOwnedRevision(state, head.presentationId, head.originalRevisionId)
-}
-
-function hasConsistentAuthorityPointers(head, context) {
-  return context.sourceMap &&
-    head.projectionRevisionId === hashRecord(context.after) &&
-    head.sourceMapRevisionId === hashRecord(context.sourceMap) &&
-    (context.pendingJournalHash === undefined
-      ? head.journalRevisionId == null
-      : head.journalRevisionId === context.pendingJournalHash)
+  )
 }
 
 function resolvePackageBackedReadFromState(
@@ -86,7 +84,7 @@ function resolvePackageBackedReadFromState(
     return { presentation, generation: head.generation }
   }
 
-  const context = resolveEditedExportContext(state, presentationId)
+  const context = resolveEditorProjectionContext(state, presentationId)
   if (!context.ok) {
     if (!allowIncompleteAuthority && !isOriginalOnlyHead(state, head)) {
       throw authorityError(context.reasonCode)
@@ -96,31 +94,24 @@ function resolvePackageBackedReadFromState(
     presentation.pptxAggregateHead = structuredClone(head)
     return { presentation, generation: head.generation }
   }
-  if (!hasConsistentAuthorityPointers(head, context)) {
-    throw authorityError('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
-  }
 
-  const presentation = mergeCompatibilityPresentation(
-    compatibilityPresentation,
-    context.after
-  )
+  const presentation = mergeCompatibilityPresentation(compatibilityPresentation, context.after)
   presentation.id = presentationId
   presentation.pptxAggregateHead = structuredClone(head)
   return { presentation, generation: head.generation }
 }
 
-async function resolvePackageBackedRead(
-  presentationId,
-  compatibilityPresentation,
-  options = {}
-) {
+async function resolvePackageBackedRead(presentationId, compatibilityPresentation, options = {}) {
   const store = await getReadablePackageStore()
-  return resolvePackageBackedReadFromState(
+  const resolved = resolvePackageBackedReadFromState(
     store.getState(),
     presentationId,
     compatibilityPresentation,
     options
   )
+  if (resolved.generation !== null)
+    await verifyEditorPackageBytes(store, resolved.presentation.pptxAggregateHead)
+  return resolved
 }
 
 async function readAuthoritativePresentation(
@@ -132,11 +123,9 @@ async function readAuthoritativePresentation(
   const compatibilityPresentation = normalize
     ? normalizePptxImportedPresentationForRead(storedPresentation)
     : storedPresentation
-  return resolvePackageBackedRead(
-    presentationId,
-    compatibilityPresentation,
-    { allowIncompleteAuthority }
-  )
+  return resolvePackageBackedRead(presentationId, compatibilityPresentation, {
+    allowIncompleteAuthority,
+  })
 }
 
 const BULK_QUARANTINE_CODES = new Set([
@@ -155,8 +144,8 @@ async function readAuthoritativePresentations(
   storedPresentations,
   { normalize = true, collectQuarantine = null } = {}
 ) {
-  const serveable = (storedPresentations || []).filter((presentation) =>
-    presentation && !presentation.deletedAt
+  const serveable = (storedPresentations || []).filter(
+    (presentation) => presentation && !presentation.deletedAt
   )
   if (!serveable.length) return []
   const store = await getReadablePackageStore()
@@ -167,13 +156,14 @@ async function readAuthoritativePresentations(
       ? normalizePptxImportedPresentationForRead(storedPresentation)
       : storedPresentation
     try {
-      results.push(
-        resolvePackageBackedReadFromState(
-          state,
-          storedPresentation.id,
-          compatibilityPresentation
-        )
+      const resolved = resolvePackageBackedReadFromState(
+        state,
+        storedPresentation.id,
+        compatibilityPresentation
       )
+      if (resolved.generation !== null)
+        await verifyEditorPackageBytes(store, resolved.presentation.pptxAggregateHead)
+      results.push(resolved)
     } catch (err) {
       if (BULK_QUARANTINE_CODES.has(err?.code)) {
         if (Array.isArray(collectQuarantine)) {

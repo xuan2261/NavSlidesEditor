@@ -1,0 +1,150 @@
+const { isSafeMediaSrc } = require('../content-safety.js')
+
+const QUESTION_KINDS = Object.freeze([
+  'single-choice',
+  'multi-choice',
+  'true-false',
+  'fill-blank',
+  'ordering',
+  'matching',
+  'image-hotspot',
+])
+const PUBLIC_FIELDS = Object.freeze([
+  'id',
+  'kind',
+  'prompt',
+  'media',
+  'points',
+  'timeLimit',
+  'options',
+])
+const isRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value)
+const isId = (value) => typeof value === 'string' && value.trim().length > 0
+const addError = (errors, path, message) => errors.push({ path, message })
+const result = (errors) => ({ isValid: errors.length === 0, errors })
+
+function checkKeys(value, allowed, path, errors) {
+  if (!isRecord(value)) {
+    addError(errors, path, 'Expected an object.')
+    return false
+  }
+  for (const key of Object.keys(value)) {
+    if (!allowed.includes(key))
+      addError(errors, [...path, key], `Unexpected field "${key}"; remove it.`)
+  }
+  return true
+}
+
+function validateMedia(media, path, errors) {
+  if (!checkKeys(media, ['src', 'alt'], path, errors)) return
+  if (
+    typeof media.src !== 'string' ||
+    !isSafeMediaSrc(media.src) ||
+    (/^data:/i.test(media.src.trim()) && !/^data:image\//i.test(media.src.trim()))
+  ) {
+    addError(errors, [...path, 'src'], 'Use a safe image URL; data URLs must contain an image.')
+  }
+  if (typeof media.alt !== 'string')
+    addError(errors, [...path, 'alt'], 'Provide media alt text as a string.')
+}
+
+function validateItems(items, path, errors, allowMedia = true) {
+  if (!Array.isArray(items) || items.length === 0) {
+    addError(errors, path, 'Provide at least one item with a stable ID and text.')
+    return
+  }
+  const seen = new Set()
+  for (const [index, item] of items.entries()) {
+    const at = [...path, index]
+    if (!checkKeys(item, allowMedia ? ['id', 'text', 'media'] : ['id', 'text'], at, errors))
+      continue
+    if (!isId(item.id)) addError(errors, [...at, 'id'], 'Provide a nonempty stable item ID.')
+    else if (seen.has(item.id))
+      addError(errors, [...at, 'id'], `Duplicate item ID "${item.id}"; assign a unique ID.`)
+    else seen.add(item.id)
+    if (typeof item.text !== 'string')
+      addError(errors, [...at, 'text'], 'Provide item text as a string.')
+    if (allowMedia && item.media !== undefined) validateMedia(item.media, [...at, 'media'], errors)
+  }
+}
+
+function validateQuestionShape(question, errors, privateShape = false) {
+  const fields = privateShape ? [...PUBLIC_FIELDS, 'answerKey', 'feedback'] : PUBLIC_FIELDS
+  if (!checkKeys(question, fields, [], errors)) return
+  if (!isId(question.id)) addError(errors, ['id'], 'Provide a nonempty stable question ID.')
+  if (!QUESTION_KINDS.includes(question.kind))
+    addError(errors, ['kind'], 'Choose a supported question kind.')
+  if (typeof question.prompt !== 'string' || !question.prompt.trim()) {
+    addError(errors, ['prompt'], 'Enter a question prompt before saving.')
+  }
+  if (!Number.isFinite(question.points) || question.points < 0)
+    addError(errors, ['points'], 'Points must be finite and at least zero.')
+  if (
+    question.timeLimit !== null &&
+    (!Number.isFinite(question.timeLimit) || question.timeLimit < 5 || question.timeLimit > 300)
+  ) {
+    addError(
+      errors,
+      ['timeLimit'],
+      'Time limit must be null or a finite number from 5 to 300 seconds.'
+    )
+  }
+  if (question.media !== undefined) validateMedia(question.media, ['media'], errors)
+  if (['single-choice', 'multi-choice', 'ordering', 'image-hotspot'].includes(question.kind)) {
+    validateItems(question.options, ['options'], errors, question.kind !== 'image-hotspot')
+  } else if (question.kind === 'matching') {
+    if (checkKeys(question.options, ['left', 'right'], ['options'], errors)) {
+      validateItems(question.options.left, ['options', 'left'], errors)
+      validateItems(question.options.right, ['options', 'right'], errors)
+      if (
+        Array.isArray(question.options.left) &&
+        Array.isArray(question.options.right) &&
+        question.options.left.length !== question.options.right.length
+      ) {
+        addError(errors, ['options'], 'Matching sides must contain the same number of items.')
+      }
+      if (Array.isArray(question.options.left) && Array.isArray(question.options.right)) {
+        const leftIds = new Set(question.options.left.map((item) => item?.id))
+        question.options.right.forEach((item, index) => {
+          if (leftIds.has(item?.id))
+            addError(
+              errors,
+              ['options', 'right', index, 'id'],
+              'Matching item IDs must be unique across both sides.'
+            )
+        })
+      }
+    }
+  } else if (question.options !== undefined)
+    addError(errors, ['options'], 'This question kind does not use options.')
+  if (question.kind === 'image-hotspot' && question.media === undefined)
+    addError(errors, ['media'], 'Provide the hotspot image and its alt text.')
+}
+
+function cloneValue(value) {
+  if (Array.isArray(value)) return value.map(cloneValue)
+  if (!isRecord(value)) return value
+  return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, cloneValue(child)]))
+}
+
+function validationError(label, errors) {
+  const error = new Error(
+    `${label}: ${errors.map((item) => `${item.path.join('.') || 'question'}: ${item.message}`).join('; ')}`
+  )
+  error.errors = errors
+  return error
+}
+
+module.exports = {
+  QUESTION_KINDS,
+  PUBLIC_FIELDS,
+  isRecord,
+  isId,
+  addError,
+  result,
+  checkKeys,
+  validateMedia,
+  validateQuestionShape,
+  cloneValue,
+  validationError,
+}

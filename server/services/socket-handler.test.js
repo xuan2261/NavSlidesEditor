@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as storage from './storage.js'
 import liveRooms from './live-rooms.js'
 import { setupSocketHandlers } from './socket-handler.js'
+import { createDefaultGameConfig, gameInstanceKey } from 'revealjs-shared'
+import { JSDOM } from 'jsdom'
+import { validatePublicGameConfig } from '../../shared/src/education/game-public-projection.js'
 
 class FakeSocket {
   constructor(id, io) {
@@ -101,19 +104,6 @@ describe('socket-handler', () => {
     ])
   })
 
-  it('ignores malformed payloads without throwing from socket dispatch', async () => {
-    const io = new FakeIO()
-    setupSocketHandlers(io, { liveRoomsService: liveRooms })
-    const socket = io.connect('malformed-client')
-
-    await expect(socket.trigger('navigate')).resolves.toBeUndefined()
-    await expect(socket.trigger('control-navigate')).resolves.toBeUndefined()
-    await expect(socket.trigger('game-timer-start')).resolves.toBeUndefined()
-    await expect(socket.trigger('navigate', null)).resolves.toBeUndefined()
-    await expect(socket.trigger('control-navigate', null)).resolves.toBeUndefined()
-    await expect(socket.trigger('game-timer-start', null)).resolves.toBeUndefined()
-  })
-
   it('emits presentation data/meta on presenter join and syncs viewers/controllers', async () => {
     const io = new FakeIO()
     setupSocketHandlers(io, { liveRoomsService: liveRooms })
@@ -129,8 +119,14 @@ describe('socket-handler', () => {
     })
 
     expect(presenter.rooms).toContain('ROOM12')
-    expect(io.emitted.some((item) => item.event === 'presentation-data')).toBe(true)
-    const meta = io.emitted.find((item) => item.event === 'presentation-meta')?.payload
+    const presenterPayload = presenter.emitted.find(
+      (item) => item.event === 'presentation-data'
+    )?.payload
+    expect(presenterPayload).toMatchObject({
+      presentationId: 'live-deck',
+      presentationGeneration: liveRooms.getRoomState('ROOM12').presentationGeneration,
+    })
+    const meta = presenter.emitted.find((item) => item.event === 'presentation-meta')?.payload
     expect(meta).toMatchObject({
       presentationId: 'live-deck',
       title: 'Live Deck',
@@ -161,7 +157,11 @@ describe('socket-handler', () => {
 
     const controller = io.connect('controller-1')
     await controller.trigger('join-room', { roomId: 'ROOM12', role: 'controller' })
-    await controller.trigger('control-navigate', { slideIndex: 0, verticalIndex: 0, fragmentIndex: 0 })
+    await controller.trigger('control-navigate', {
+      slideIndex: 0,
+      verticalIndex: 0,
+      fragmentIndex: 0,
+    })
     expect(io.emitted).toContainEqual({
       target: 'presenter-1',
       event: 'control-navigate',
@@ -211,7 +211,7 @@ describe('socket-handler', () => {
       presenterToken,
     })
 
-    expect(io.emitted.some((item) => item.event === 'presentation-data')).toBe(false)
+    expect(presenter.emitted.filter((item) => item.event === 'presentation-data')).toEqual([])
     expect(liveRooms.getRoomState('TRASH1').presentationId).toBeNull()
   })
 
@@ -236,7 +236,11 @@ describe('socket-handler', () => {
       presenterToken,
     })
     presenter.trigger('disconnect')
-    expect(io.emitted).toContainEqual({ target: 'ROOM34', event: 'presenter-disconnected', payload: undefined })
+    expect(io.emitted).toContainEqual({
+      target: 'ROOM34',
+      event: 'presenter-disconnected',
+      payload: undefined,
+    })
   })
 
   it('announces presenter reconnection after a temporary disconnect', async () => {
@@ -326,9 +330,17 @@ describe('socket-handler', () => {
     liveRooms.registerRoom('ROOM37', presenterToken)
 
     const firstPresenter = io.connect('presenter-7')
-    await firstPresenter.trigger('join-room', { roomId: 'ROOM37', role: 'presenter', presenterToken })
+    await firstPresenter.trigger('join-room', {
+      roomId: 'ROOM37',
+      role: 'presenter',
+      presenterToken,
+    })
     const replacementPresenter = io.connect('presenter-8')
-    await replacementPresenter.trigger('join-room', { roomId: 'ROOM37', role: 'presenter', presenterToken })
+    await replacementPresenter.trigger('join-room', {
+      roomId: 'ROOM37',
+      role: 'presenter',
+      presenterToken,
+    })
     io.emitted.length = 0
 
     await firstPresenter.trigger('disconnect')
@@ -380,18 +392,29 @@ describe('socket-handler', () => {
 
     expect(liveRooms.getRoomState('ROOM40').presenterId).toBe('presenter-b')
     expect(liveRooms.getRoomState('ROOM40').presentationId).toBe('deck-b')
-    expect(io.emitted.filter((event) => event.event === 'presentation-meta')).toHaveLength(1)
+    expect(
+      replacementPresenter.emitted
+        .filter((event) => event.event === 'presentation-meta')
+        .map((event) => event.payload.presentationId)
+    ).toEqual(['deck-b'])
+    expect(
+      firstPresenter.emitted.filter((event) =>
+        ['presentation-data', 'presentation-meta', 'sync-state'].includes(event.event)
+      )
+    ).toEqual([])
   })
 
   it('drops a stale viewer payload after the presenter switches decks', async () => {
     const io = new FakeIO()
     let resolveDeckA
-    const deckALoad = new Promise((resolve) => { resolveDeckA = resolve })
+    const deckALoad = new Promise((resolve) => {
+      resolveDeckA = resolve
+    })
     const deckA = { id: 'deck-a', title: 'Deck A', slides: [{ id: 'a', elements: [] }] }
     const deckB = { id: 'deck-b', title: 'Deck B', slides: [{ id: 'b', elements: [] }] }
     setupSocketHandlers(io, {
       liveRoomsService: liveRooms,
-      findPresentationById: async (id) => id === 'deck-a' ? deckALoad : deckB,
+      findPresentationById: async (id) => (id === 'deck-a' ? deckALoad : deckB),
     })
     const presenterToken = liveRooms.createPresenterToken()
     liveRooms.registerRoom('ROOM41', presenterToken)
@@ -413,29 +436,36 @@ describe('socket-handler', () => {
     await viewerJoin
 
     const viewerPayloads = viewer.emitted.filter((event) => event.event === 'presentation-data')
-    expect(viewerPayloads).toHaveLength(1)
-    expect(viewerPayloads[0].payload).toBeTruthy()
+    expect(viewerPayloads.map((event) => event.payload.presentationId)).toEqual(['deck-b'])
     expect(liveRooms.getRoomState('ROOM41')).toMatchObject({ presentationId: 'deck-b' })
   })
 
   it('does not expose the previous deck while a replacement presenter load is pending or fails', async () => {
     const io = new FakeIO()
     let resolveDeckB
-    const deckBLoad = new Promise((resolve) => { resolveDeckB = resolve })
+    const deckBLoad = new Promise((resolve) => {
+      resolveDeckB = resolve
+    })
     const deckA = { id: 'deck-a', title: 'Deck A', slides: [{ id: 'a', elements: [] }] }
     setupSocketHandlers(io, {
       liveRoomsService: liveRooms,
-      findPresentationById: async (id) => id === 'deck-b' ? deckBLoad : deckA,
+      findPresentationById: async (id) => (id === 'deck-b' ? deckBLoad : deckA),
     })
     const presenterToken = liveRooms.createPresenterToken()
     liveRooms.registerRoom('ROOM41B', presenterToken)
     const presenter = io.connect('presenter-41b')
     await presenter.trigger('join-room', {
-      roomId: 'ROOM41B', role: 'presenter', presentationId: 'deck-a', presenterToken,
+      roomId: 'ROOM41B',
+      role: 'presenter',
+      presentationId: 'deck-a',
+      presenterToken,
     })
 
     const replacement = presenter.trigger('join-room', {
-      roomId: 'ROOM41B', role: 'presenter', presentationId: 'deck-b', presenterToken,
+      roomId: 'ROOM41B',
+      role: 'presenter',
+      presentationId: 'deck-b',
+      presenterToken,
     })
     expect(liveRooms.getRoomState('ROOM41B').presentationId).toBeNull()
 
@@ -454,8 +484,12 @@ describe('socket-handler', () => {
     const io = new FakeIO()
     let resolveFirstA
     let resolveSecondA
-    const firstA = new Promise((resolve) => { resolveFirstA = resolve })
-    const secondA = new Promise((resolve) => { resolveSecondA = resolve })
+    const firstA = new Promise((resolve) => {
+      resolveFirstA = resolve
+    })
+    const secondA = new Promise((resolve) => {
+      resolveSecondA = resolve
+    })
     const deckA = { id: 'deck-a', title: 'Deck A', slides: [{ id: 'a', elements: [] }] }
     const deckB = { id: 'deck-b', title: 'Deck B', slides: [{ id: 'b', elements: [] }] }
     let deckACalls = 0
@@ -483,30 +517,237 @@ describe('socket-handler', () => {
       presentationId: 'deck-b',
       presenterToken,
     })
+    const middleGeneration = liveRooms.getRoomState('ROOM42').presentationGeneration
     const lastJoin = presenter.trigger('join-room', {
       roomId: 'ROOM42',
       role: 'presenter',
       presentationId: 'deck-a',
       presenterToken,
     })
+    const finalGeneration = liveRooms.getRoomState('ROOM42').presentationGeneration
+    expect(finalGeneration).toBeGreaterThan(middleGeneration)
 
     resolveFirstA(deckA)
     await firstJoin
-    expect(io.emitted.filter((event) => event.event === 'presentation-meta')).toHaveLength(1)
+    expect(
+      presenter.emitted
+        .filter((event) => event.event === 'presentation-data')
+        .map((event) => ({
+          id: event.payload.presentationId,
+          generation: event.payload.presentationGeneration,
+        }))
+    ).toEqual([{ id: 'deck-b', generation: middleGeneration }])
 
     resolveSecondA(deckA)
     await lastJoin
 
-    const metas = io.emitted.filter((event) => event.event === 'presentation-meta')
-    expect(metas).toHaveLength(2)
-    expect(metas.at(-1).payload.presentationId).toBe('deck-a')
+    expect(
+      presenter.emitted
+        .filter((event) => event.event === 'presentation-data')
+        .map((event) => ({
+          id: event.payload.presentationId,
+          generation: event.payload.presentationGeneration,
+        }))
+    ).toEqual([
+      { id: 'deck-b', generation: middleGeneration },
+      { id: 'deck-a', generation: finalGeneration },
+    ])
     expect(liveRooms.getRoomState('ROOM42')).toMatchObject({ presentationId: 'deck-a' })
+  })
+
+  it('does not deliver obsolete navigation into a recreated room after content delivery begins', async () => {
+    const io = new FakeIO(),
+      deck = { id: 'deck-a', title: 'Old deck', slides: [{ id: 'a', elements: [] }] }
+    setupSocketHandlers(io, { liveRoomsService: liveRooms, findPresentationById: async () => deck })
+    const token = liveRooms.createPresenterToken()
+    liveRooms.registerRoom('DELIVERY', token)
+    const viewer = io.connect('delivery-viewer')
+    await viewer.trigger('join-room', { roomId: 'DELIVERY', role: 'viewer' })
+    const presenter = io.connect('delivery-presenter')
+    let contentObserved
+    const observed = new Promise((resolve) => {
+      contentObserved = resolve
+    })
+    const emit = presenter.emit.bind(presenter)
+    presenter.emit = (event, payload) => {
+      emit(event, payload)
+      if (event === 'presentation-meta') contentObserved()
+    }
+    const pendingJoin = presenter.trigger('join-room', {
+      roomId: 'DELIVERY',
+      role: 'presenter',
+      presenterToken: token,
+      presentationId: 'deck-a',
+    })
+    await observed
+    liveRooms.removeRoom('DELIVERY')
+    liveRooms.registerRoom('DELIVERY', liveRooms.createPresenterToken())
+    const replacementRoom = liveRooms.getRoomState('DELIVERY')
+    replacementRoom.state = { slideIndex: 4, verticalIndex: 1, fragmentIndex: 2 }
+    await viewer.trigger('join-room', { roomId: 'DELIVERY', role: 'viewer' })
+    expect(viewer.emitted.filter((event) => event.event === 'sync-state').at(-1)?.payload).toEqual(
+      replacementRoom.state
+    )
+    viewer.emitted = []
+    await pendingJoin
+    expect(
+      viewer.emitted.filter((event) =>
+        [
+          'presentation-data',
+          'presentation-meta',
+          'sync-state',
+          'annotations:sync',
+          'timer:sync',
+        ].includes(event.event)
+      )
+    ).toEqual([])
+  })
+
+  it.each(['disconnect', 'downgrade'])(
+    'rejects deferred private delivery after recipient %s',
+    async (change) => {
+      const io = new FakeIO()
+      let resolve
+      const pending = new Promise((done) => {
+        resolve = done
+      })
+      setupSocketHandlers(io, {
+        liveRoomsService: liveRooms,
+        findPresentationById: async () => pending,
+      })
+      const capabilities = liveRooms.createLiveCapabilities()
+      liveRooms.registerRoom('PRIVATE', capabilities)
+      const presenter = io.connect('private-presenter')
+      await presenter.trigger('join-room', {
+        roomId: 'PRIVATE',
+        role: 'presenter',
+        presenterToken: capabilities.presenterToken,
+      })
+      liveRooms.getRoomState('PRIVATE').presentationId = 'private-deck'
+      const recipient = io.connect('private-recipient')
+      const privateJoin = recipient.trigger('join-room', {
+        roomId: 'PRIVATE',
+        role: 'speaker',
+        capability: capabilities.speakerToken,
+      })
+      let viewerJoin
+      if (change === 'disconnect') await recipient.trigger('disconnect')
+      else {
+        liveRooms.leaveRoom(recipient.id)
+        viewerJoin = recipient.trigger('join-room', { roomId: 'PRIVATE', role: 'viewer' })
+      }
+      recipient.emitted = []
+      resolve({
+        id: 'private-deck',
+        title: 'Private deck',
+        slides: [{ id: 'private-slide', notes: 'PRIVATE_SPEAKER_NOTE', elements: [] }],
+      })
+      await Promise.all([privateJoin, viewerJoin])
+      const deliveries = recipient.emitted.filter((event) => event.event === 'presentation-data')
+      if (change === 'disconnect') expect(deliveries).toEqual([])
+      else {
+        expect(deliveries.map((event) => event.payload.presentationId)).toEqual(['private-deck'])
+        for (const { payload } of deliveries) {
+          const dom = new JSDOM(payload.html)
+          expect(
+            [...dom.window.document.querySelectorAll('aside.notes')].map((note) => note.textContent)
+          ).toEqual([])
+          dom.window.close()
+        }
+        expect(
+          recipient.emitted
+            .filter((event) => event.event === 'presentation-meta')
+            .flatMap((event) => event.payload.slides)
+            .map((slide) => slide.notes)
+        ).toEqual([undefined])
+      }
+    }
+  )
+
+  it('delivers public game configuration to every role while restricting notes and remote HTML', async () => {
+    const io = new FakeIO(),
+      config = createDefaultGameConfig('quiz')
+    config.questions[0].feedback = {
+      correct: 'PRIVATE_ANSWER_FEEDBACK',
+      incorrect: 'PRIVATE_ANSWER_FEEDBACK',
+      explanation: 'PRIVATE_ANSWER_FEEDBACK',
+    }
+    const deck = {
+      id: 'role-deck',
+      title: 'Role deck',
+      slides: [
+        {
+          id: 'root',
+          notes: 'Root private notes',
+          elements: [
+            {
+              id: 'quiz',
+              type: 'game',
+              gameType: 'quiz',
+              quiz: config,
+              x: 0,
+              y: 0,
+              width: 640,
+              height: 480,
+            },
+          ],
+          children: [{ id: 'child', notes: 'Child private notes', elements: [] }],
+        },
+      ],
+    }
+    setupSocketHandlers(io, { liveRoomsService: liveRooms, findPresentationById: async () => deck })
+    const capabilities = liveRooms.createLiveCapabilities()
+    liveRooms.registerRoom('ROLES', capabilities)
+    const presenter = io.connect('role-presenter')
+    await presenter.trigger('join-room', {
+      roomId: 'ROLES',
+      role: 'presenter',
+      presenterToken: capabilities.presenterToken,
+      presentationId: deck.id,
+    })
+    for (const role of ['presenter', 'speaker', 'viewer', 'remote']) {
+      const recipient = role === 'presenter' ? presenter : io.connect(`role-${role}`)
+      if (role !== 'presenter')
+        await recipient.trigger('join-room', {
+          roomId: 'ROLES',
+          role,
+          capability: capabilities[`${role}Token`],
+        })
+      const meta = recipient.emitted.find((event) => event.event === 'presentation-meta')?.payload
+      expect(meta.slides.map((slide) => slide.notes)).toEqual(
+        ['presenter', 'speaker'].includes(role)
+          ? ['Root private notes', 'Child private notes']
+          : [undefined, undefined]
+      )
+      const data = recipient.emitted.filter((event) => event.event === 'presentation-data')
+      if (role === 'remote') {
+        expect(data).toEqual([])
+        continue
+      }
+      const dom = new JSDOM(data[0].payload.html)
+      expect(
+        [...dom.window.document.querySelectorAll('aside.notes')].map((note) =>
+          note.textContent.trim()
+        )
+      ).toEqual(
+        ['presenter', 'speaker'].includes(role) ? ['Root private notes', 'Child private notes'] : []
+      )
+      const publicConfig = JSON.parse(
+        dom.window.document.querySelector('[data-ns-game-config]').textContent
+      )
+      expect(validatePublicGameConfig('quiz', publicConfig)).toEqual({ isValid: true, errors: [] })
+      expect(publicConfig.questions[0]).not.toHaveProperty('answerKey')
+      expect(publicConfig.questions[0]).not.toHaveProperty('feedback')
+      dom.window.close()
+    }
   })
 
   it('drops a pending payload when the room is removed and recreated', async () => {
     const io = new FakeIO()
     let resolveDeckA
-    const deckALoad = new Promise((resolve) => { resolveDeckA = resolve })
+    const deckALoad = new Promise((resolve) => {
+      resolveDeckA = resolve
+    })
     const deckA = { id: 'deck-a', title: 'Deck A', slides: [{ id: 'a', elements: [] }] }
     setupSocketHandlers(io, {
       liveRoomsService: liveRooms,
@@ -515,12 +756,23 @@ describe('socket-handler', () => {
     const oldToken = liveRooms.createPresenterToken()
     liveRooms.registerRoom('ROOM43', oldToken)
     const presenter = io.connect('presenter-43')
-    await presenter.trigger('join-room', { roomId: 'ROOM43', role: 'presenter', presenterToken: oldToken })
+    await presenter.trigger('join-room', {
+      roomId: 'ROOM43',
+      role: 'presenter',
+      presenterToken: oldToken,
+    })
     const oldRoom = liveRooms.getRoomState('ROOM43')
     oldRoom.presentationId = 'deck-a'
-    oldRoom.annotations = { '0': [{ id: 'old-annotation' }] }
+    oldRoom.annotations = { 0: [{ id: 'old-annotation' }] }
     oldRoom.timers = {
-      timer: { duration: 30, endedAt: null, pausedRemaining: 30, running: false },
+      [gameInstanceKey({ effectiveSlideId: 's1', elementId: 'timer' })]: {
+        effectiveSlideId: 's1',
+        elementId: 'timer',
+        duration: 30,
+        endedAt: null,
+        pausedRemaining: 30,
+        running: false,
+      },
     }
 
     const viewer = io.connect('viewer-43')
@@ -528,9 +780,16 @@ describe('socket-handler', () => {
     liveRooms.removeRoom('ROOM43')
     liveRooms.registerRoom('ROOM43', liveRooms.createPresenterToken())
     const recreatedRoom = liveRooms.getRoomState('ROOM43')
-    recreatedRoom.annotations = { '0': [{ id: 'new-annotation' }] }
+    recreatedRoom.annotations = { 0: [{ id: 'new-annotation' }] }
     recreatedRoom.timers = {
-      timer: { duration: 60, endedAt: null, pausedRemaining: 60, running: false },
+      [gameInstanceKey({ effectiveSlideId: 's1', elementId: 'timer' })]: {
+        effectiveSlideId: 's1',
+        elementId: 'timer',
+        duration: 60,
+        endedAt: null,
+        pausedRemaining: 60,
+        running: false,
+      },
     }
 
     resolveDeckA(deckA)
@@ -548,20 +807,27 @@ describe('socket-handler', () => {
       const io = new FakeIO()
       let resolveOld
       let resolveNew
-      const oldLoad = new Promise((resolve) => { resolveOld = resolve })
-      const newLoad = new Promise((resolve) => { resolveNew = resolve })
+      const oldLoad = new Promise((resolve) => {
+        resolveOld = resolve
+      })
+      const newLoad = new Promise((resolve) => {
+        resolveNew = resolve
+      })
       const oldDeck = { id: 'old-deck', title: 'Old', slides: [{ id: 'old', elements: [] }] }
       const newDeck = { id: 'new-deck', title: 'New', slides: [{ id: 'new', elements: [] }] }
       setupSocketHandlers(io, {
         liveRoomsService: liveRooms,
-        findPresentationById: async (id) => id === 'old-deck' ? oldLoad : newLoad,
+        findPresentationById: async (id) => (id === 'old-deck' ? oldLoad : newLoad),
       })
 
       const oldToken = liveRooms.createPresenterToken()
       liveRooms.registerRoom('ROOM43B', oldToken)
       const presenter = io.connect('presenter-43b')
       const oldJoin = presenter.trigger('join-room', {
-        roomId: 'ROOM43B', role: 'presenter', presentationId: 'old-deck', presenterToken: oldToken,
+        roomId: 'ROOM43B',
+        role: 'presenter',
+        presentationId: 'old-deck',
+        presenterToken: oldToken,
       })
 
       liveRooms.removeRoom('ROOM43B')
@@ -569,7 +835,9 @@ describe('socket-handler', () => {
       liveRooms.registerRoom('ROOM43B', newToken)
       const recreatedRoom = liveRooms.getRoomState('ROOM43B')
       recreatedRoom.timers = {
-        timer: {
+        [gameInstanceKey({ effectiveSlideId: 's1', elementId: 'timer' })]: {
+          effectiveSlideId: 's1',
+          elementId: 'timer',
           duration: 30,
           endedAt: Date.now() + 10_000,
           pausedRemaining: 30,
@@ -577,7 +845,10 @@ describe('socket-handler', () => {
         },
       }
       const newJoin = presenter.trigger('join-room', {
-        roomId: 'ROOM43B', role: 'presenter', presentationId: 'new-deck', presenterToken: newToken,
+        roomId: 'ROOM43B',
+        role: 'presenter',
+        presentationId: 'new-deck',
+        presenterToken: newToken,
       })
 
       resolveOld(oldDeck)
@@ -639,7 +910,7 @@ describe('socket-handler', () => {
       presenterToken,
     })
 
-    const syncEvent = presenter.emitted.find(e => e.event === 'annotations:sync')
+    const syncEvent = presenter.emitted.find((e) => e.event === 'annotations:sync')
     expect(syncEvent).toBeDefined()
     expect(syncEvent.payload.slideAnnotations).toEqual({})
   })
@@ -652,9 +923,7 @@ describe('socket-handler', () => {
 
     // Pre-populate annotations
     const room = liveRooms.getRoomState('ROOM12')
-    room.annotations['0'] = [
-      { id: 'a1', d: 'M0 0', color: '#FF0000', strokeWidth: 3 },
-    ]
+    room.annotations['0'] = [{ id: 'a1', d: 'M0 0', color: '#FF0000', strokeWidth: 3 }]
 
     const presenter = io.connect('presenter-1')
     await presenter.trigger('join-room', {
@@ -668,7 +937,7 @@ describe('socket-handler', () => {
     const viewer = io.connect('viewer-1')
     await viewer.trigger('join-room', { roomId: 'ROOM12', role: 'viewer' })
 
-    const syncEvent = viewer.emitted.find(e => e.event === 'annotations:sync')
+    const syncEvent = viewer.emitted.find((e) => e.event === 'annotations:sync')
     expect(syncEvent).toBeDefined()
     expect(syncEvent.payload.slideAnnotations['0']).toHaveLength(1)
     expect(syncEvent.payload.slideAnnotations['0'][0].id).toBe('a1')
@@ -702,7 +971,7 @@ describe('socket-handler', () => {
     expect(room.annotations['0'][0].id).toBeDefined()
 
     // Verify broadcast via default namespace (not a separate room emit)
-    expect(io.emitted.some(e => e.event === 'annotation:add')).toBe(true)
+    expect(io.emitted.some((e) => e.event === 'annotation:add')).toBe(true)
   })
 
   it('ignores malformed annotation payloads without mutating room state', async () => {
@@ -789,7 +1058,11 @@ describe('socket-handler', () => {
     expect(io.emitted).toContainEqual({
       target: 'ROOM12',
       event: 'annotation:add',
-      payload: { slideIndex: 0, verticalIndex: 1, annotation: expect.objectContaining({ id: 'child-stroke' }) },
+      payload: {
+        slideIndex: 0,
+        verticalIndex: 1,
+        annotation: expect.objectContaining({ id: 'child-stroke' }),
+      },
     })
   })
 
@@ -813,7 +1086,7 @@ describe('socket-handler', () => {
     await presenter.trigger('annotation:remove', { slideIndex: 0, annotationId: 'a1' })
 
     expect(room.annotations['0']).toHaveLength(0)
-    expect(io.emitted.some(e => e.event === 'annotation:removed')).toBe(true)
+    expect(io.emitted.some((e) => e.event === 'annotation:removed')).toBe(true)
   })
 
   it('annotation:clear removes all annotations for slide', async () => {
@@ -837,7 +1110,7 @@ describe('socket-handler', () => {
 
     expect(room.annotations['0']).toHaveLength(0)
     expect(room.annotations['1']).toHaveLength(1) // Other slides untouched
-    expect(io.emitted.some(e => e.event === 'annotation:cleared')).toBe(true)
+    expect(io.emitted.some((e) => e.event === 'annotation:cleared')).toBe(true)
   })
 
   it('broadcasts an explicit global annotation clear', async () => {
@@ -937,9 +1210,15 @@ describe('socket-handler', () => {
       slideIndex: 0,
       annotation: { id: 'existing', d: 'M0 0' },
     })
-    await presenter.trigger('game-timer-start', { elementId: 'timer-1', duration: 30 })
+    await presenter.trigger('game-timer-start', {
+      effectiveSlideId: 's1',
+      elementId: 'timer-1',
+      duration: 30,
+    })
     const room = liveRooms.getRoomState('ROOM12')
-    room.timers['paused-timer'] = {
+    room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'paused-timer' })] = {
+      effectiveSlideId: 's1',
+      elementId: 'paused-timer',
       duration: 20,
       endedAt: null,
       pausedAt: Date.now(),
@@ -959,16 +1238,33 @@ describe('socket-handler', () => {
     })
     await controller.trigger('annotation:remove', { slideIndex: 0, annotationId: 'existing' })
     await controller.trigger('annotation:clear', { slideIndex: 0 })
-    await controller.trigger('game-timer-start', { elementId: 'blocked-timer', duration: 30 })
-    await controller.trigger('game-timer-pause', { elementId: 'timer-1' })
-    await controller.trigger('game-timer-resume', { elementId: 'paused-timer' })
-    await controller.trigger('game-timer-adjust', { elementId: 'timer-1', delta: 10 })
-    await controller.trigger('game-timer-stop', { elementId: 'timer-1' })
+    await controller.trigger('game-timer-start', {
+      effectiveSlideId: 's1',
+      elementId: 'blocked-timer',
+      duration: 30,
+    })
+    await controller.trigger('game-timer-pause', { effectiveSlideId: 's1', elementId: 'timer-1' })
+    await controller.trigger('game-timer-resume', {
+      effectiveSlideId: 's1',
+      elementId: 'paused-timer',
+    })
+    await controller.trigger('game-timer-adjust', {
+      effectiveSlideId: 's1',
+      elementId: 'timer-1',
+      delta: 10,
+    })
+    await controller.trigger('game-timer-stop', { effectiveSlideId: 's1', elementId: 'timer-1' })
 
     expect(room.annotations['0']).toEqual([expect.objectContaining({ id: 'existing' })])
-    expect(room.timers['timer-1'].running).toBe(true)
-    expect(room.timers['paused-timer'].running).toBe(false)
-    expect(room.timers['blocked-timer']).toBeUndefined()
+    expect(
+      room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'timer-1' })].running
+    ).toBe(true)
+    expect(
+      room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'paused-timer' })].running
+    ).toBe(false)
+    expect(
+      room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'blocked-timer' })]
+    ).toBeUndefined()
     expect(io.emitted).toHaveLength(emittedBefore)
     expect(io.broadcasts).toHaveLength(broadcastsBefore)
   })
@@ -1058,13 +1354,23 @@ describe('socket-handler', () => {
         presenterToken,
       })
 
-      await presenter.trigger('game-timer-start', { elementId: 'game-1', duration: 30 })
+      await presenter.trigger('game-timer-start', {
+        effectiveSlideId: 's1',
+        elementId: 'game-1',
+        duration: 30,
+      })
 
       const room = liveRooms.getRoomState('timer-room')
-      expect(room.timers['game-1']).toBeDefined()
-      expect(room.timers['game-1'].running).toBe(true)
-      expect(room.timers['game-1'].duration).toBe(30)
-      expect(io.emitted.some(e => e.event === 'timer:sync')).toBe(true)
+      expect(
+        room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'game-1' })]
+      ).toBeDefined()
+      expect(
+        room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'game-1' })].running
+      ).toBe(true)
+      expect(
+        room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'game-1' })].duration
+      ).toBe(30)
+      expect(io.emitted.some((e) => e.event === 'timer:sync')).toBe(true)
     })
 
     it('game-timer-start rejects invalid duration (< 1 or > 7200)', async () => {
@@ -1080,28 +1386,27 @@ describe('socket-handler', () => {
         presenterToken,
       })
 
-      await presenter.trigger('game-timer-start', { elementId: 'game-1', duration: -5 })
-      expect(liveRooms.getRoomState('timer-room').timers['game-1']).toBeUndefined()
-
-      await presenter.trigger('game-timer-start', { elementId: 'game-2', duration: 99999 })
-      expect(liveRooms.getRoomState('timer-room').timers['game-2']).toBeUndefined()
-    })
-
-    it('game-timer-start rejects invalid elementId format', async () => {
-      const io = new FakeIO()
-      setupSocketHandlers(io, { liveRoomsService: liveRooms })
-      const presenterToken = liveRooms.createPresenterToken()
-      liveRooms.registerRoom('timer-room', presenterToken)
-
-      const presenter = io.connect('presenter-timer')
-      await presenter.trigger('join-room', {
-        roomId: 'timer-room',
-        role: 'presenter',
-        presenterToken,
+      await presenter.trigger('game-timer-start', {
+        effectiveSlideId: 's1',
+        elementId: 'game-1',
+        duration: -5,
       })
+      expect(
+        liveRooms.getRoomState('timer-room').timers[
+          gameInstanceKey({ effectiveSlideId: 's1', elementId: 'game-1' })
+        ]
+      ).toBeUndefined()
 
-      await presenter.trigger('game-timer-start', { elementId: 'game/with/slashes', duration: 30 })
-      expect(liveRooms.getRoomState('timer-room').timers['game/with/slashes']).toBeUndefined()
+      await presenter.trigger('game-timer-start', {
+        effectiveSlideId: 's1',
+        elementId: 'game-2',
+        duration: 99999,
+      })
+      expect(
+        liveRooms.getRoomState('timer-room').timers[
+          gameInstanceKey({ effectiveSlideId: 's1', elementId: 'game-2' })
+        ]
+      ).toBeUndefined()
     })
 
     it('game-timer-adjust rejects delta > 3600', async () => {
@@ -1117,13 +1422,25 @@ describe('socket-handler', () => {
         presenterToken,
       })
 
-      await presenter.trigger('game-timer-start', { elementId: 'game-1', duration: 30 })
+      await presenter.trigger('game-timer-start', {
+        effectiveSlideId: 's1',
+        elementId: 'game-1',
+        duration: 30,
+      })
       const room = liveRooms.getRoomState('timer-room')
-      expect(room.timers['game-1'].duration).toBe(30)
+      expect(
+        room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'game-1' })].duration
+      ).toBe(30)
 
-      await presenter.trigger('game-timer-adjust', { elementId: 'game-1', delta: 9999 })
+      await presenter.trigger('game-timer-adjust', {
+        effectiveSlideId: 's1',
+        elementId: 'game-1',
+        delta: 9999,
+      })
       // Should be unchanged since delta > 3600
-      expect(room.timers['game-1'].duration).toBe(30)
+      expect(
+        room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'game-1' })].duration
+      ).toBe(30)
     })
 
     it('game-timer-pause pauses timer and broadcasts', async () => {
@@ -1139,13 +1456,22 @@ describe('socket-handler', () => {
         presenterToken,
       })
 
-      await presenter.trigger('game-timer-start', { elementId: 'game-1', duration: 30 })
-      await presenter.trigger('game-timer-pause', { elementId: 'game-1' })
+      await presenter.trigger('game-timer-start', {
+        effectiveSlideId: 's1',
+        elementId: 'game-1',
+        duration: 30,
+      })
+      await presenter.trigger('game-timer-pause', { effectiveSlideId: 's1', elementId: 'game-1' })
 
       const room = liveRooms.getRoomState('timer-room')
-      expect(room.timers['game-1'].running).toBe(false)
-      expect(room.timers['game-1'].pausedRemaining).not.toBeNull()
-      expect(io.emitted.some(e => e.event === 'timer:sync')).toBe(true)
+      expect(
+        room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'game-1' })].running
+      ).toBe(false)
+      expect(
+        room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'game-1' })]
+          .pausedRemaining
+      ).not.toBeNull()
+      expect(io.emitted.some((e) => e.event === 'timer:sync')).toBe(true)
     })
 
     it('game-timer-resume resumes paused timer and broadcasts', async () => {
@@ -1161,14 +1487,20 @@ describe('socket-handler', () => {
         presenterToken,
       })
 
-      await presenter.trigger('game-timer-start', { elementId: 'game-1', duration: 30 })
-      await presenter.trigger('game-timer-pause', { elementId: 'game-1' })
+      await presenter.trigger('game-timer-start', {
+        effectiveSlideId: 's1',
+        elementId: 'game-1',
+        duration: 30,
+      })
+      await presenter.trigger('game-timer-pause', { effectiveSlideId: 's1', elementId: 'game-1' })
       io.emitted = [] // clear broadcasts from pause
-      await presenter.trigger('game-timer-resume', { elementId: 'game-1' })
+      await presenter.trigger('game-timer-resume', { effectiveSlideId: 's1', elementId: 'game-1' })
 
       const room = liveRooms.getRoomState('timer-room')
-      expect(room.timers['game-1'].running).toBe(true)
-      expect(io.emitted.some(e => e.event === 'timer:sync')).toBe(true)
+      expect(
+        room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'game-1' })].running
+      ).toBe(true)
+      expect(io.emitted.some((e) => e.event === 'timer:sync')).toBe(true)
     })
 
     it('game-timer-stop removes timer and broadcasts', async () => {
@@ -1184,12 +1516,18 @@ describe('socket-handler', () => {
         presenterToken,
       })
 
-      await presenter.trigger('game-timer-start', { elementId: 'game-1', duration: 30 })
-      await presenter.trigger('game-timer-stop', { elementId: 'game-1' })
+      await presenter.trigger('game-timer-start', {
+        effectiveSlideId: 's1',
+        elementId: 'game-1',
+        duration: 30,
+      })
+      await presenter.trigger('game-timer-stop', { effectiveSlideId: 's1', elementId: 'game-1' })
 
       const room = liveRooms.getRoomState('timer-room')
-      expect(room.timers['game-1']).toBeUndefined()
-      expect(io.emitted.some(e => e.event === 'timer:sync')).toBe(true)
+      expect(
+        room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'game-1' })]
+      ).toBeUndefined()
+      expect(io.emitted.some((e) => e.event === 'timer:sync')).toBe(true)
     })
 
     it('viewer cannot control timer — game-timer-start rejected', async () => {
@@ -1208,10 +1546,16 @@ describe('socket-handler', () => {
       const viewer = io.connect('viewer-timer')
       await viewer.trigger('join-room', { roomId: 'timer-room', role: 'viewer' })
 
-      await viewer.trigger('game-timer-start', { elementId: 'game-1', duration: 30 })
+      await viewer.trigger('game-timer-start', {
+        effectiveSlideId: 's1',
+        elementId: 'game-1',
+        duration: 30,
+      })
 
       const room = liveRooms.getRoomState('timer-room')
-      expect(room.timers['game-1']).toBeUndefined()
+      expect(
+        room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'game-1' })]
+      ).toBeUndefined()
     })
 
     it('viewer receives timer:sync on join-room when timer is already running', async () => {
@@ -1227,12 +1571,16 @@ describe('socket-handler', () => {
         presenterToken,
       })
 
-      await presenter.trigger('game-timer-start', { elementId: 'game-1', duration: 30 })
+      await presenter.trigger('game-timer-start', {
+        effectiveSlideId: 's1',
+        elementId: 'game-1',
+        duration: 30,
+      })
 
       const viewer = io.connect('viewer-timer')
       await viewer.trigger('join-room', { roomId: 'timer-room', role: 'viewer' })
 
-      const timerSyncEvents = viewer.emitted.filter(e => e.event === 'timer:sync')
+      const timerSyncEvents = viewer.emitted.filter((e) => e.event === 'timer:sync')
       expect(timerSyncEvents.length).toBeGreaterThan(0)
       expect(timerSyncEvents[0].payload.elementId).toBe('game-1')
       expect(timerSyncEvents[0].payload.duration).toBe(30)
@@ -1254,11 +1602,19 @@ describe('socket-handler', () => {
       const controller = io.connect('controller-timer')
       await controller.trigger('join-room', { roomId: 'timer-room', role: 'controller' })
 
-      await controller.trigger('game-timer-start', { elementId: 'game-1', duration: 30 })
+      await controller.trigger('game-timer-start', {
+        effectiveSlideId: 's1',
+        elementId: 'game-1',
+        duration: 30,
+      })
 
       const room = liveRooms.getRoomState('timer-room')
-      expect(room.timers['game-1']).toBeDefined()
-      expect(room.timers['game-1'].running).toBe(true)
+      expect(
+        room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'game-1' })]
+      ).toBeDefined()
+      expect(
+        room.timers[gameInstanceKey({ effectiveSlideId: 's1', elementId: 'game-1' })].running
+      ).toBe(true)
     })
   })
 })

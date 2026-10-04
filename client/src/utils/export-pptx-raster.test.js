@@ -1,92 +1,12 @@
+// @vitest-environment node
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Buffer } from 'node:buffer'
 import QRCode from 'qrcode'
-import { buildLatexRasterMarkup, renderElementFallbackDataUri } from './export-pptx-raster'
+import { build } from 'esbuild'
+import { chromium } from 'playwright'
+import { renderElementFallbackDataUri } from './export-pptx-raster'
 
 describe('export-pptx-raster', () => {
-  function mockHtmlCaptureEnvironment() {
-    const iframe = document.createElement('iframe')
-    const createElement = document.createElement.bind(document)
-    const appendChild = document.body.appendChild.bind(document.body)
-
-    vi.spyOn(document, 'createElement').mockImplementation((tag, options) =>
-      tag === 'iframe' ? iframe : createElement(tag, options)
-    )
-    // Snapshot rendering is a browser-only boundary; deliver its message through the real window.
-    vi.spyOn(document.body, 'appendChild').mockImplementation((node) => {
-      const result = appendChild(node)
-      const captureId = node.srcdoc.match(/const CAPTURE_ID="([^"]+)"/)?.[1]
-      setTimeout(() => {
-        window.dispatchEvent(
-          new MessageEvent('message', {
-            data: {
-              __navslidesPptxCapture: true,
-              id: captureId,
-              kind: 'png',
-              payload: 'data:image/png;base64,abc123',
-            },
-            source: node.contentWindow,
-          })
-        )
-      }, 0)
-      return result
-    })
-
-    return iframe
-  }
-
-  afterEach(() => {
-    document.querySelectorAll('iframe').forEach((iframe) => iframe.remove())
-    vi.restoreAllMocks()
-  })
-
-  it('captures scripted html embeds through iframe snapshot instead of returning null', async () => {
-    const iframe = mockHtmlCaptureEnvironment()
-
-    const result = await renderElementFallbackDataUri({
-      type: 'html',
-      content: '<script>window.__chart = true</script><div id="viz"></div>',
-      width: 480,
-      height: 270,
-    })
-
-    expect(result).toBe('data:image/png;base64,abc123')
-    expect(iframe.getAttribute('sandbox')).toBe('allow-scripts')
-    expect(iframe.isConnected).toBe(false)
-    expect(iframe.srcdoc).toContain('<script>window.__chart = true</script>')
-  })
-
-  it('injects the PPTX capture runtime into full html documents without nesting a second document', async () => {
-    const iframe = mockHtmlCaptureEnvironment()
-    const fullDocument =
-      '<!doctype html><html><head><style>body{margin:0}</style></head><body><div id="viz">Hello</div></body></html>'
-
-    const result = await renderElementFallbackDataUri({
-      type: 'html',
-      content: fullDocument,
-      width: 640,
-      height: 360,
-    })
-
-    expect(result).toBe('data:image/png;base64,abc123')
-    expect(iframe.srcdoc.match(/<!doctype html>/gi)).toHaveLength(1)
-    expect(iframe.srcdoc).not.toContain('<body><!doctype html>')
-    expect(iframe.srcdoc).toContain('<div id="viz">Hello</div>')
-    expect(iframe.srcdoc.indexOf('<script data-navslides-pptx-capture="true">')).toBeLessThan(
-      iframe.srcdoc.indexOf('<div id="viz">Hello</div>')
-    )
-    expect(iframe.srcdoc.indexOf('<script data-navslides-pptx-capture="true">')).toBeLessThan(
-      iframe.srcdoc.indexOf('</body>')
-    )
-  })
-
-  it('builds latex raster markup without embedded MathML annotation text', () => {
-    const html = buildLatexRasterMarkup('E=mc^2')
-
-    expect(html).toContain('katex-html')
-    expect(html).not.toContain('katex-mathml')
-    expect(html).not.toContain('<annotation')
-  })
+  afterEach(() => vi.restoreAllMocks())
 
   it('returns no QR raster when QR generation rejects so the caller can insert a placeholder', async () => {
     vi.spyOn(QRCode, 'toDataURL').mockRejectedValueOnce(new Error('QR payload is too large'))
@@ -101,19 +21,82 @@ describe('export-pptx-raster', () => {
     ).resolves.toBeNull()
   })
 
-  it('[cap:element.svg depth:export] sanitizes SVG fallback data URIs for PPTX', async () => {
-    const result = await renderElementFallbackDataUri({
-      type: 'svg',
-      content:
-        '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script><rect onload="evil()" width="10" height="10"/></svg>',
-      width: 100,
-      height: 100,
+  it('[cap:element.svg depth:export] preserves authored SVG paint and data-SVG video posters in real PNG captures', async () => {
+    const bundle = await build({
+      stdin: {
+        contents:
+          'export { renderElementFallbackDataUri } from "./export-pptx-raster.js"; export { resolveClientPptxPoster } from "./export-pptx-media.js";',
+        resolveDir: __dirname,
+      },
+      bundle: true,
+      platform: 'browser',
+      format: 'iife',
+      globalName: 'PptxCapture',
+      write: false,
     })
-    const svg = Buffer.from(result.split(',')[1], 'base64').toString('utf8')
-
-    expect(svg).toContain('<svg')
-    expect(svg).toContain('<rect')
-    expect(svg).not.toContain('<script')
-    expect(svg).not.toContain('onload')
-  })
+    const browser = await chromium.launch({ headless: true })
+    try {
+      const page = await browser.newPage()
+      await page.setContent('<html><body></body></html>')
+      await page.addScriptTag({ content: bundle.outputFiles[0].text })
+      const observed = await page.evaluate(async () => {
+        const svg =
+          '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80" viewBox="0 0 120 80"><rect width="120" height="80"/><script>window.compromised=true</script></svg>'
+        const painted = await PptxCapture.renderElementFallbackDataUri({
+          type: 'svg',
+          content: svg,
+          width: 240,
+          height: 160,
+          fillOverride: '#2563eb',
+        })
+        const poster = await PptxCapture.resolveClientPptxPoster(
+          'data:image/svg+xml;base64,' + btoa(svg.replace('<rect ', '<rect fill="#2563eb" '))
+        )
+        window.parentProbe = 'protected'
+        const html = await PptxCapture.renderElementFallbackDataUri({
+          type: 'html',
+          width: 120,
+          height: 80,
+          content:
+            '<!doctype html><html><body><svg xmlns="http://www.w3.org/2000/svg" width="120" height="80"><rect width="120" height="80" fill="#ff0000"/></svg><script>try{parent.parentProbe="compromised"}catch{document.querySelector("rect").setAttribute("fill","#2563eb")}</script></body></html>',
+        })
+        const pixels = async (source) => {
+          const image = new Image()
+          image.src = source
+          await image.decode()
+          const canvas = document.createElement('canvas')
+          canvas.width = image.naturalWidth
+          canvas.height = image.naturalHeight
+          const context = canvas.getContext('2d')
+          context.drawImage(image, 0, 0)
+          const bytes = context.getImageData(0, 0, canvas.width, canvas.height).data
+          let blue = 0
+          for (let index = 0; index < bytes.length; index += 4)
+            if (
+              bytes[index] === 37 &&
+              bytes[index + 1] === 99 &&
+              bytes[index + 2] === 235 &&
+              bytes[index + 3] > 0
+            )
+              blue++
+          return { width: canvas.width, height: canvas.height, blue }
+        }
+        return {
+          painted: await pixels(painted),
+          poster: await pixels(poster),
+          html: await pixels(html),
+          parentProbe: window.parentProbe,
+          compromised: window.compromised === true,
+        }
+      })
+      expect(observed.painted).toMatchObject({ width: 480, height: 320 })
+      expect(observed.painted.blue).toBeGreaterThan(10000)
+      expect(observed.poster.blue).toBeGreaterThan(10000)
+      expect(observed.html.blue).toBeGreaterThan(10000)
+      expect(observed.parentProbe).toBe('protected')
+      expect(observed.compromised).toBe(false)
+    } finally {
+      await browser.close()
+    }
+  }, 30000)
 })

@@ -37,24 +37,37 @@ const malformedElements = [
   ['code', { language: 17 }, 'language'],
 ]
 
+const variable = (id = 'score') => ({ id, name: 'Score', min: 0, initialValue: 0, max: 10 })
+
 for (const format of ['zip', 'json']) {
   describe(`${format} project preflight renderer field validation`, () => {
     for (const location of ['parent', 'child']) {
-      it.each(malformedElements)(`rejects malformed %s on ${location} before admission`, async (type, fields, field) => {
-        const slide = { id: 's1', elements: [{ id: 'e1', type, ...fields }] }
-        const slides = location === 'child' ? [{ id: 'parent', elements: [], children: [slide] }] : [slide]
-        const prefix = location === 'child' ? 'slides[0].children[0]' : 'slides[0]'
-        await expect(admitProject(format, { title: 'Deck', slides })).rejects.toMatchObject({
-          code: 'PROJECT_PRESENTATION_INVALID',
-          status: 400,
-          message: expect.stringContaining(`${prefix}.elements[0].${field}`),
-        })
-      })
+      it.each(malformedElements)(
+        `rejects malformed %s on ${location} before admission`,
+        async (type, fields, field) => {
+          const slide = { id: 's1', elements: [{ id: 'e1', type, ...fields }] }
+          const slides =
+            location === 'child' ? [{ id: 'parent', elements: [], children: [slide] }] : [slide]
+          const prefix = location === 'child' ? 'slides[0].children[0]' : 'slides[0]'
+          await expect(admitProject(format, { title: 'Deck', slides })).rejects.toMatchObject({
+            code: 'PROJECT_PRESENTATION_INVALID',
+            status: 400,
+            message: expect.stringContaining(`${prefix}.elements[0].${field}`),
+          })
+        }
+      )
     }
 
     it('preserves valid content and admits optional empty fields', async () => {
       const elements = [
-        { id: 't1', type: 'table', data: [['Name', 'Value'], ['Count', 17]] },
+        {
+          id: 't1',
+          type: 'table',
+          data: [
+            ['Name', 'Value'],
+            ['Count', 17],
+          ],
+        },
         { id: 'm1', type: 'markdown', content: '```js\nconst t = **literal**\n```' },
         { id: 'c1', type: 'code', language: 'unknown-language' },
         { id: 't2', type: 'table', data: null },
@@ -67,6 +80,67 @@ for (const format of ['zip', 'json']) {
       }
       const result = await admitProject(format, presentation)
       expect(result.presentation).toEqual(presentation)
+    })
+
+    it('admits and round-trips bounded declarations through project preflight', async () => {
+      const presentation = {
+        title: 'Variables',
+        interactionVariables: Array.from({ length: 32 }, (_, i) => variable(`v${i}`)),
+        slides: [{ id: 'slide', elements: [] }],
+      }
+      expect((await admitProject(format, presentation)).presentation.interactionVariables).toEqual(
+        presentation.interactionVariables
+      )
+    })
+
+    it.each([
+      ['overflow', Array.from({ length: 33 }, (_, i) => variable(`v${i}`))],
+      ['duplicate', [variable(), variable()]],
+      ['nonfinite JSON representation', [{ ...variable(), initialValue: null }]],
+      ['reversed bounds', [{ ...variable(), max: -1 }]],
+    ])(
+      'rejects %s variable declarations before publishing imported content',
+      async (_label, interactionVariables) => {
+        await expect(
+          admitProject(format, { title: 'Invalid', interactionVariables, slides: [] })
+        ).rejects.toMatchObject({
+          code: 'PROJECT_PRESENTATION_INVALID',
+          status: 400,
+          message: expect.stringContaining('interactionVariables'),
+        })
+      }
+    )
+
+    it('rejects unknown variable references in inherited child actions', async () => {
+      const presentation = {
+        title: 'Invalid binding',
+        interactionVariables: [variable()],
+        layoutMasters: [
+          {
+            id: 'layout',
+            name: 'Layout',
+            placeholders: [],
+            fixedElements: [
+              {
+                id: 'source',
+                type: 'shape',
+                action: { kind: 'score-add', variableId: 'missing', amount: 1 },
+              },
+            ],
+          },
+        ],
+        slides: [
+          {
+            id: 'parent',
+            elements: [],
+            children: [{ id: 'child', layoutId: 'layout', elements: [] }],
+          },
+        ],
+      }
+      await expect(admitProject(format, presentation)).rejects.toMatchObject({
+        code: 'PROJECT_PRESENTATION_INVALID',
+        message: expect.stringContaining('variableId'),
+      })
     })
   })
 }

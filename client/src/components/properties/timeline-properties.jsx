@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import { Button, Input, Select, ColorPicker } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
 import { getSafeMidpointDate } from './timeline-date-utils'
+import FocusedAuthoringTextInput from './focused-authoring-text-input'
 
 export default function TimelineProperties({ element, onUpdate }) {
   const [rangeError, setRangeError] = useState(null)
@@ -9,20 +10,20 @@ export default function TimelineProperties({ element, onUpdate }) {
   const spacing = element.tickSpacing || 'auto'
   const startDate = element.timelineStart ?? element.startDate ?? '2000'
   const endDate = element.timelineEnd ?? element.endDate ?? '2025'
-  const yearMode = ['year', '10year', '100year', '1000year'].includes(spacing) ||
+  const yearMode =
+    ['year', '10year', '100year', '1000year'].includes(spacing) ||
     (spacing === 'auto' && /^-?\d+$/.test(String(startDate)))
   const items = (element.events || element.items || []).map((item) => ({
     ...item,
     title: item.title ?? item.label ?? '',
     imageUrl: item.imageUrl ?? item.image ?? '',
-    connectorOffset: item.connectorOffset ?? item.connectorLength ?? element.connectorOffset ?? 0,
+    connectorOffset: item.connectorLength ?? item.connectorOffset ?? element.connectorOffset ?? 0,
   }))
 
   const updateRange = (changes) => {
-    const invalidKey = ['timelineStart', 'timelineEnd'].find((key) =>
-      key in changes && !yearMode && (
-        !changes[key] || !Number.isFinite(Date.parse(changes[key]))
-      )
+    const invalidKey = ['timelineStart', 'timelineEnd'].find(
+      (key) =>
+        key in changes && !yearMode && (!changes[key] || !Number.isFinite(Date.parse(changes[key])))
     )
     if (invalidKey) {
       setRangeError(invalidKey)
@@ -37,7 +38,10 @@ export default function TimelineProperties({ element, onUpdate }) {
 
   const updateItems = (nextItems) => {
     onUpdate({
-      events: nextItems,
+      events: nextItems.map((item) => ({
+        ...item,
+        connectorLength: item.connectorOffset ?? item.connectorLength ?? 0,
+      })),
       items: nextItems.map((item) => ({
         ...item,
         label: item.title ?? item.label ?? '',
@@ -64,16 +68,16 @@ export default function TimelineProperties({ element, onUpdate }) {
       ? String(Math.round((startYear + endYear) / 2))
       : getSafeMidpointDate(startDate, endDate)
     updateItems([
-        ...items,
-        {
-          id: crypto.randomUUID(),
-          date: midDate,
-          title: 'New Event',
-          description: '',
-          imageUrl: '',
-          side: items.length % 2 === 0 ? 'top' : 'bottom',
-        },
-      ])
+      ...items,
+      {
+        id: crypto.randomUUID(),
+        date: midDate,
+        title: 'New Event',
+        description: '',
+        imageUrl: '',
+        side: items.length % 2 === 0 ? 'top' : 'bottom',
+      },
+    ])
   }
 
   return (
@@ -96,16 +100,16 @@ export default function TimelineProperties({ element, onUpdate }) {
 
       <div className="grid grid-cols-2 gap-2 mb-2">
         <div>
-          <div className="text-[11px] text-text-muted mb-1">
-            Start{yearMode ? ' (year)' : ''}
-          </div>
+          <div className="text-[11px] text-text-muted mb-1">Start{yearMode ? ' (year)' : ''}</div>
           {yearMode ? (
             <Input
               aria-label="Timeline start year"
               type="number"
               className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs"
               value={parseInt(startDate) || 0}
-              onChange={(e) => updateRange({ timelineStart: String(parseInt(e.target.value) || 0) })}
+              onChange={(e) =>
+                updateRange({ timelineStart: String(parseInt(e.target.value) || 0) })
+              }
             />
           ) : (
             <Input
@@ -121,9 +125,7 @@ export default function TimelineProperties({ element, onUpdate }) {
           )}
         </div>
         <div>
-          <div className="text-[11px] text-text-muted mb-1">
-            End{yearMode ? ' (year)' : ''}
-          </div>
+          <div className="text-[11px] text-text-muted mb-1">End{yearMode ? ' (year)' : ''}</div>
           {yearMode ? (
             <Input
               aria-label="Timeline end year"
@@ -183,7 +185,8 @@ export default function TimelineProperties({ element, onUpdate }) {
       </div>
 
       <div className="text-[11px] text-text-muted mb-1">Font Size</div>
-      <Input
+      <FocusedAuthoringTextInput
+        key={`${element.id}-timeline-font`}
         aria-label="Timeline font size"
         type="number"
         min={8}
@@ -226,8 +229,8 @@ export default function TimelineProperties({ element, onUpdate }) {
               aria-label={`Timeline event ${idx + 1} year`}
               type="number"
               className="w-full bg-card border border-border text-text-primary px-2 py-1 rounded-sm text-[11px] mb-1"
-            value={parseInt(item.date) || 0}
-            onChange={(e) => updateItem(idx, { date: String(parseInt(e.target.value) || 0) })}
+              value={parseInt(item.date) || 0}
+              onChange={(e) => updateItem(idx, { date: String(parseInt(e.target.value) || 0) })}
               placeholder="Year"
             />
           ) : (

@@ -32,13 +32,12 @@ export default function CommonElementControls({
     'height',
     'rotation',
     'opacity',
+    'locked',
   ])
   // Blank a numeric field + show "—" when the selection diverges on that key;
   // editing still writes (the apply path fans the value to all selected).
   const numProps = (key, fallback) =>
-    mixed[key]?.isMixed
-      ? { value: '', placeholder: '—' }
-      : { value: fallback }
+    mixed[key]?.isMixed ? { value: '', placeholder: '—' } : { value: fallback }
 
   return (
     <>
@@ -141,6 +140,10 @@ export default function CommonElementControls({
         <input
           data-testid="prop-lock-toggle"
           type="checkbox"
+          aria-checked={mixed.locked?.isMixed ? 'mixed' : Boolean(element.locked)}
+          ref={(node) => {
+            if (node) node.indeterminate = Boolean(mixed.locked?.isMixed)
+          }}
           checked={element.locked || false}
           onChange={(e) => onUpdate({ locked: e.target.checked })}
           className="accent-accent"
@@ -197,7 +200,9 @@ export default function CommonElementControls({
                 onChange={(e) => onUpdate({ fragmentAnimation: e.target.value })}
               >
                 {FRAGMENT_ANIMATION_TYPES.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
                 ))}
               </Select>
             </div>
