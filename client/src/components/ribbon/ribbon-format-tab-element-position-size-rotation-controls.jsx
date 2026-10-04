@@ -154,15 +154,17 @@ function TableControls({ element, onUpdateElement }) {
   )
 }
 
-function VideoControls({ element, onUpdateElement }) {
+function VideoControls({ element, onUpdateElement, mixed }) {
+  const isMixed = mixed?.src?.isMixed
   return (
     <RibbonSection label="Source" className="border-r border-border">
       <input
         type="text"
         className="w-32 h-7 rounded border border-border bg-secondary px-1.5 text-[11px] text-text-primary focus:border-accent focus:outline-none"
-        value={element.src || ''}
+        value={isMixed ? '' : element.src || ''}
+        data-mixed={isMixed ? 'true' : undefined}
         onChange={(e) => onUpdateElement?.({ src: e.target.value })}
-        placeholder="Video URL"
+        placeholder={isMixed ? '—' : 'Video URL'}
         aria-label="Source URL"
       />
     </RibbonSection>
@@ -186,7 +188,7 @@ function CodeControls({ element, onUpdateElement }) {
   )
 }
 
-function ContextualControls({ selectedElement, onUpdateElement }) {
+function ContextualControls({ selectedElement, onUpdateElement, mixed }) {
   if (!selectedElement) return null
 
   switch (selectedElement.type) {
@@ -201,7 +203,7 @@ function ContextualControls({ selectedElement, onUpdateElement }) {
       return <TableControls element={selectedElement} onUpdateElement={onUpdateElement} />
     case 'video':
     case 'audio':
-      return <VideoControls element={selectedElement} onUpdateElement={onUpdateElement} />
+      return <VideoControls element={selectedElement} onUpdateElement={onUpdateElement} mixed={mixed} />
     case 'code':
       return <CodeControls element={selectedElement} onUpdateElement={onUpdateElement} />
     default:
@@ -264,7 +266,7 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, onU
   return (
     <RibbonTabContentRow>
       <fieldset className="contents" disabled={Boolean(availability.arrange)} title={availability.arrange || undefined}>
-      <ContextualControls selectedElement={selectedElement} onUpdateElement={onUpdateElement} />
+      <ContextualControls selectedElement={selectedElement} onUpdateElement={onUpdateElement} mixed={mixed} />
       <RibbonSection label="Action" className="border-r border-border">
         <ActionControls element={selectedElement} onUpdate={onUpdateElement} presentation={presentation} compact />
       </RibbonSection>
