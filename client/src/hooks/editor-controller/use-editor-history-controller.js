@@ -1,22 +1,26 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { pushHistory } from '../../utils/history-stack'
 import { reconcileSelectionAfterHistory } from '../../utils/history-selection-reconciler'
+import { resolveHistoryAuthoringSlide } from '../../utils/history-authoring-slide'
 
 const clone = (value) => JSON.parse(JSON.stringify(value))
 
 export function useEditorHistoryController({
   presentation,
+  authoringTarget,
   setPresentation,
   setCurrentSlideIndex,
   setVerticalEdit,
   resolveHistorySlide,
+  currentSlideIndexRef,
+  verticalEditRef,
   selectedElementIdsRef,
   editingElementIdRef,
   setSelectedElementIds,
   setEditingElementId,
-  editor,
-  settingContent: settingContentRef,
+  resetContent,
 }) {
+  const masterTargetId = authoringTarget?.kind === 'master' ? authoringTarget.id : null
   const historyRef = useRef([])
   const redoStackRef = useRef([])
   const pendingSnapshotRef = useRef(null)
@@ -84,30 +88,41 @@ export function useEditorHistoryController({
         const parent = state?.slides?.find((slide) => slide.id === active.parentId)
         return !parent?.children || active.child >= parent.children.length ? null : active
       })
-      const slide = resolveHistorySlide(state)
+      const slide = resolveHistorySlide
+        ? resolveHistorySlide(state)
+        : resolveHistoryAuthoringSlide(state, {
+            presentationId: presentation?.id,
+            masterId: masterTargetId,
+            currentSlideIndex: currentSlideIndexRef.current,
+            verticalEdit: verticalEditRef.current,
+          })
       const result = reconcileSelectionAfterHistory(
         slide,
         selectedElementIdsRef.current,
         editingElementIdRef.current
       )
       setSelectedElementIds(result.selectedIds)
-      if (!result.editingCleared) return
-      setEditingElementId(result.editingId)
-      editingElementIdRef.current = result.editingId
-      if (!editor || editor.isDestroyed) return
-      settingContentRef.current = true
-      editor.commands.setContent('', false)
-      settingContentRef.current = false
+      if (result.editingCleared) {
+        setEditingElementId(result.editingId)
+        editingElementIdRef.current = result.editingId
+        resetContent('')
+      } else if (result.editingId) {
+        const restoredElement = slide.elements.find((element) => element.id === result.editingId)
+        resetContent(restoredElement.content || '')
+      }
     },
     [
       editingElementIdRef,
-      editor,
+      masterTargetId,
       selectedElementIdsRef,
       resolveHistorySlide,
       setEditingElementId,
       setSelectedElementIds,
       setVerticalEdit,
-      settingContentRef,
+      resetContent,
+      currentSlideIndexRef,
+      verticalEditRef,
+      presentation?.id,
     ]
   )
 

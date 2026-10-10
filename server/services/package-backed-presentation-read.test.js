@@ -2,6 +2,7 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import JSZip from 'jszip'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 const { hashRecord } = await import('./pptx-import/package-store/schemas.js')
@@ -42,6 +43,28 @@ async function seedOriginal({ mutateHead } = {}) {
     await storage.withPresentations((presentations) => {
       presentations[0].pptxAggregateHead = head
     })
+  })
+}
+
+async function seedProjectedImport() {
+  const zip = new JSZip()
+  zip.file('[Content_Types].xml', '<Types />')
+  zip.file('ppt/presentation.xml', '<p:presentation />')
+  const bytes = await zip.generateAsync({ type: 'nodebuffer' })
+  const projection = { id: 'deck-reader', title: 'Canonical import', slides: [] }
+  return withStore(async (store) => {
+    const result = await store.commitImport(bytes, {
+      jobId: 'reader-projection-job',
+      presentationId: projection.id,
+      projection,
+      sourceMap: { entries: {} },
+      compatibilityPresentation: projection,
+    })
+    const { applyCompatibilityWrites } = await import('./pptx-import/compatibility-view.js')
+    await storage.withPresentations((rows) => {
+      applyCompatibilityWrites(rows, store.getState().compatibilityOutbox)
+    })
+    return { bytes, head: result.head }
   })
 }
 
@@ -244,5 +267,46 @@ describe('package-backed presentation reader authority boundary', () => {
         code: 'PRESENTATION_PACKAGE_HEAD_MISSING',
         status: 422,
       })
+  })
+  it.each(['missing-head', 'wrong-generation', 'same-generation-wrong-hash'])(
+    'P07-14: rejects a persisted %s before canonical authority can mask it',
+    async (mismatch) => {
+      const { head, bytes } = await seedProjectedImport()
+      await storage.withPresentations((rows) => {
+        if (mismatch === 'missing-head') delete rows[0].pptxAggregateHead
+        else if (mismatch === 'wrong-generation') rows[0].pptxAggregateHead.generation += 1
+        else rows[0].pptxAggregateHead.sourceMapRevisionId = '0'.repeat(64)
+      })
+      const raw = (await storage.readPresentations())[0]
+      expect(raw.pptxAggregateHead).not.toEqual(head)
+
+      await expect(readAuthoritativePresentation('deck-reader', { normalize: false }))
+        .rejects.toMatchObject({ code: 'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE', status: 422 })
+      const { readAuthoritativePresentations } = await import('./package-backed-presentation-read.js')
+      const quarantine = []
+      const listed = await readAuthoritativePresentations([
+        raw,
+        { id: 'healthy-plain', title: 'Healthy', slides: [] },
+      ], { normalize: false, collectQuarantine: quarantine })
+      expect(listed.map(({ presentation }) => presentation.id)).toEqual(['healthy-plain'])
+      expect(quarantine).toEqual([
+        expect.objectContaining({ id: 'deck-reader', code: 'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE' }),
+      ])
+      expect((await storage.readPresentations())[0]).toEqual(raw)
+      await withStore(async (store) => {
+        expect(await store.readOriginal(head.originalRevisionId)).toEqual(bytes)
+      })
+    }
+  )
+
+  it('P07-12: exposes an exactly projected import through both list and direct readers', async () => {
+    const { head } = await seedProjectedImport()
+    const { readAuthoritativePresentations } = await import('./package-backed-presentation-read.js')
+    const opened = await readAuthoritativePresentation('deck-reader', { normalize: false })
+    const listed = await readAuthoritativePresentations(await storage.readPresentations(), {
+      normalize: false,
+    })
+    expect(opened.presentation).toMatchObject({ title: 'Canonical import', pptxAggregateHead: head })
+    expect(listed).toEqual([opened])
   })
 })

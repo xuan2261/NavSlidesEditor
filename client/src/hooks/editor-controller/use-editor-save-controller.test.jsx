@@ -1,10 +1,11 @@
-import { act, renderHook } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, cleanup, renderHook } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '../../utils/api'
 import { usePresentationStore } from '../../stores/presentation-store'
 import { useEditorSaveController } from './use-editor-save-controller'
 import {
   clearEditorDraft,
+  createEditorDraft,
   writeEditorDraft,
 } from '../../utils/editor-draft-store'
 
@@ -21,16 +22,17 @@ vi.mock('../use-editor-save-queue', () => ({
 
 vi.mock('../../utils/editor-draft-store', () => ({
   clearEditorDraft: vi.fn().mockResolvedValue(true),
-  createEditorDraft: vi.fn(({ snapshot, isTemplate, attemptId }) => ({
-    key: `${isTemplate ? 'template' : 'presentation'}:${snapshot.id}`,
-    id: snapshot.id,
-    isTemplate,
-    snapshot,
-    idempotencyKey: snapshot.idempotencyKey || null,
-    attemptId,
-  })),
+  createEditorDraft: vi.fn((args) => draftRecord(args)),
   writeEditorDraft: vi.fn().mockResolvedValue(true),
 }))
+
+function draftRecord({ snapshot, isTemplate, attemptId }) {
+  return {
+    key: `${isTemplate ? 'template' : 'presentation'}:${snapshot.id}`,
+    id: snapshot.id, isTemplate, snapshot,
+    idempotencyKey: snapshot.idempotencyKey || null, attemptId,
+  }
+}
 
 const snapshot = (title) => ({
   id: 'deck-1',
@@ -47,9 +49,23 @@ const settle = () =>
 
 describe('useEditorSaveController route ownership', () => {
   beforeEach(() => {
+    vi.useFakeTimers()
+    localStorage.clear()
+    vi.stubGlobal('indexedDB', undefined)
     vi.clearAllMocks()
+    api.updatePresentation.mockReset()
+    api.updateTemplate.mockReset()
+    clearEditorDraft.mockReset().mockResolvedValue(true)
+    createEditorDraft.mockReset().mockImplementation(draftRecord)
     writeEditorDraft.mockReset().mockResolvedValue(true)
     usePresentationStore.setState({ saveConflict: null })
+  })
+
+  afterEach(() => {
+    cleanup()
+    vi.clearAllTimers()
+    vi.useRealTimers()
+    vi.unstubAllGlobals()
   })
 
   it('defers a queued edit during a slow validated export and rebases it to R1', async () => {
@@ -365,5 +381,61 @@ describe('useEditorSaveController route ownership', () => {
     expect(api.updatePresentation.mock.calls[1][1].title).toBe('Will Fail')
     expect(api.updatePresentation.mock.calls[1][1].idempotencyKey).toBe(failedKey)
     expect(api.updatePresentation.mock.calls[2][1].title).toBe('Second Try')
+  })
+
+  it('keeps a queued successor visibly saving and recoverable after the older response', async () => {
+    const drafts = await vi.importActual('../../utils/editor-draft-store')
+    createEditorDraft.mockImplementationOnce(drafts.createEditorDraft).mockImplementationOnce(drafts.createEditorDraft)
+    writeEditorDraft.mockImplementationOnce(drafts.writeEditorDraft).mockImplementationOnce(drafts.writeEditorDraft)
+    clearEditorDraft.mockImplementationOnce(drafts.clearEditorDraft).mockImplementationOnce(drafts.clearEditorDraft)
+    let resolveA
+    let resolveB
+    let committed
+    api.updatePresentation
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveA = resolve }))
+      .mockImplementationOnce((_id, body) => new Promise((resolve) => {
+        resolveB = () => { committed = JSON.parse(JSON.stringify(body)); resolve({ aggregateGeneration: 3 }) }
+      }))
+    const { result } = renderHook(() => useEditorSaveController({ isTemplate: false }))
+    act(() => result.current.scheduleSave(snapshot('A'), 0))
+    await settle()
+    act(() => result.current.scheduleSave(snapshot('Newer B'), 1500))
+    await act(async () => { resolveA({ aggregateGeneration: 2 }); await Promise.resolve() })
+    expect((await drafts.readEditorDraft('deck-1')).snapshot.title).toBe('Newer B')
+    expect(result.current.saveStatus).toBe('saving')
+    expect(result.current.saving).toBe(true)
+    await act(async () => { resolveB(); await result.current.flushAndWait() })
+    expect(committed).toMatchObject({ title: 'Newer B', aggregateGeneration: 2 })
+    expect(await drafts.readEditorDraft('deck-1')).toBeNull()
+    expect(result.current.saving).toBe(false)
+    expect(result.current.saveStatus).toBe('saved')
+  })
+
+  it('does not adopt a prior-route success generation into a same-id reopened deck', async () => {
+    let resolveOld
+    let committed
+    api.updatePresentation
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveOld = resolve }))
+      .mockImplementationOnce((_id, body) => {
+        committed = JSON.parse(JSON.stringify(body))
+        return Promise.resolve({ aggregateGeneration: 8 })
+      })
+    const { result } = renderHook(() => useEditorSaveController({ isTemplate: false }))
+    act(() => result.current.scheduleSave(snapshot('Old route'), 0))
+    await settle()
+    act(() => {
+      result.current.resetForRoute()
+      usePresentationStore.setState({ presentation: { ...snapshot('Reopened route'), aggregateGeneration: 7 } })
+      result.current.adoptGeneration(7)
+      result.current.scheduleSave({ ...snapshot('Reopened edit'), aggregateGeneration: 7 }, 0)
+    })
+    await act(async () => {
+      resolveOld({ aggregateGeneration: 99 })
+      await result.current.flushAndWait()
+    })
+    expect(committed).toMatchObject({ id: 'deck-1', title: 'Reopened edit', aggregateGeneration: 7 })
+    expect(usePresentationStore.getState().presentation.aggregateGeneration).toBe(8)
+    expect(usePresentationStore.getState().saveConflict).toBeNull()
+    expect(result.current.saveStatus).toBe('saved')
   })
 })

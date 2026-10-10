@@ -12,6 +12,8 @@ const { createMatrixAuthoritySubjects, validateMatrixAuthoritySubjects } = requi
 const { canonicalReasonCodes, reasonCodeSubject } = require('./reason-code-contract')
 const { isValidIdempotencyKey } = require('./request-limits')
 const { MUTATION_OPERATIONS } = require('./mutation-operation-scope')
+const { getTrustedImportMetadata } = require('./trusted-import-metadata')
+const { resolveEditedExportContext } = require('./validated-edited-export-context')
 
 const OPERATION = MUTATION_OPERATIONS.VALIDATED_EDITED_EXPORT
 const exportFlights = new WeakMap()
@@ -27,12 +29,13 @@ function blocked(reasonCode) { return reasoned(422, reasonCode) }
 function conflict(currentGeneration) {
   return reasoned(409, 'STALE_GENERATION', { conflict: frozen({ type: 'STALE_GENERATION', currentGeneration }) })
 }
-function queueCompatibilityProjection(next, presentation, head, updatedAt) {
+function queueCompatibilityProjection(next, presentation, head, updatedAt, trustedImportMetadata) {
   if (!presentation) return
   queueCompatibilityUpsert(next, {
     presentationId: head.presentationId,
     generation: head.generation,
     ...(updatedAt ? { updatedAt } : {}),
+    ...(trustedImportMetadata ? { trustedImportMetadata } : {}),
     presentation: {
       ...presentation,
       id: head.presentationId,
@@ -77,22 +80,25 @@ function isLegacyValidatedResult(result) {
 }
 function idempotencyResult(state, request, hash) {
   const head = headFor(state, request.presentationId)
-  const prior = state.mutationResults.find((item) =>
+  const candidates = state.mutationResults.filter((item) =>
     (item.operation === OPERATION || isLegacyValidatedResult(item)) &&
     item.presentationId === request.presentationId &&
     item.idempotencyKey === request.idempotencyKey)
+  const current = candidates.filter((item) => head &&
+    item.packageRevisionId === head.packageRevisionId && item.generation === head.generation)
+  const matchesRequest = (item) => item.requestHash === hash || Boolean(
+    isLegacyValidatedResult(item) && item.requestIdentity &&
+    item.requestIdentity.expectedGeneration === request.expectedGeneration &&
+    item.requestIdentity.baseRevisionId === (request.baseRevisionId || null) &&
+    item.requestIdentity.snapshotHash === hashRecord(request.after))
+  const prior = current.find(matchesRequest) || current.at(-1) || candidates.at(-1)
   if (!prior) return null
-  const legacyReplay = isLegacyValidatedResult(prior) && prior.requestIdentity &&
-    prior.requestIdentity.expectedGeneration === request.expectedGeneration &&
-    prior.requestIdentity.baseRevisionId === (request.baseRevisionId || null) &&
-    prior.requestIdentity.snapshotHash === hashRecord(request.after)
   const currentBinding = head && prior.packageRevisionId === head.packageRevisionId &&
     prior.generation === head.generation
   if (!currentBinding && head && request.expectedGeneration !== head.generation) {
     return conflict(head.generation)
   }
-  const sameRequest = prior.requestHash === hash || legacyReplay
-  if (!sameRequest) return reasoned(409, 'IDEMPOTENCY_KEY_CONFLICT')
+  if (!matchesRequest(prior)) return reasoned(409, 'IDEMPOTENCY_KEY_CONFLICT')
   if (!currentBinding) return conflict(head?.generation || 1)
   return prior
 }
@@ -169,21 +175,33 @@ async function executeLocked(dependencies, request) {
   if (request.budgets !== undefined) journalOptions.budgets = request.budgets
   try { journal = deriveCanonicalPlainTextJournal(before, request.after, journalOptions) } catch { return blocked('CANONICAL_TEXT_JOURNAL_INVALID') }
   const current = revisionFor(initial, head.packageRevisionId); const bytes = await store.readBlob(current.blobSha256)
+  const trustedImportMetadata = getTrustedImportMetadata(initial, head)
   if (!journal.operations.length) {
     if (request.pendingEdit === true) return blocked('CANONICAL_TEXT_JOURNAL_INVALID')
-    const result = { schemaVersion: RECORD_SCHEMA_VERSION, operation: OPERATION, presentationId: request.presentationId, idempotencyKey: request.idempotencyKey, requestHash: hash, requestIdentity: { expectedGeneration: request.expectedGeneration, baseRevisionId: request.baseRevisionId || null, snapshotHash: hashRecord(request.after) }, generation: head.generation, packageRevisionId: head.packageRevisionId, operationIds: [], projection: before, sourceMap, journal, state: 'committed' }
+    // Reconciliation changes projection generation, not committed package lineage.
+    // Keep the selected package journal; the empty request journal is not authority.
+    let selectedJournal = null
+    if (head.packageRevisionId !== head.originalRevisionId) {
+      const context = resolveEditedExportContext(initial, request.presentationId)
+      if (!context.ok || !context.committedJournalHash) return blocked('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
+      selectedJournal = initial.mutationResults.find((item) =>
+        item.presentationId === request.presentationId &&
+        item.packageRevisionId === head.packageRevisionId && item.state === 'committed' &&
+        item.journal?.journalHash === context.committedJournalHash)?.journal
+      if (!selectedJournal) return blocked('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
+    }
+    const result = { schemaVersion: RECORD_SCHEMA_VERSION, operation: OPERATION, presentationId: request.presentationId, idempotencyKey: request.idempotencyKey, requestHash: hash, requestIdentity: { expectedGeneration: request.expectedGeneration, baseRevisionId: request.baseRevisionId || null, snapshotHash: hashRecord(request.after) }, generation: head.generation, packageRevisionId: head.packageRevisionId, operationIds: [], projection: before, sourceMap, ...(selectedJournal ? { journal: structuredClone(selectedJournal) } : {}), state: 'committed' }
+    if (trustedImportMetadata) result.trustedImportMetadata = trustedImportMetadata
     await store.mutate((next) => {
       const nextHead = headFor(next, request.presentationId)
       assertTargetHeadUnchanged(nextHead, head, initial.matrixAuthorityEpoch)
       if (request.pendingEdit !== true && request.pendingJournalHash &&
           nextHead.pendingJournalHash === request.pendingJournalHash) {
         delete nextHead.pendingJournalHash
-        if (nextHead.packageRevisionId === nextHead.originalRevisionId) {
-          nextHead.journalRevisionId = null
-        }
+        nextHead.journalRevisionId = selectedJournal?.journalHash ?? null
       }
       next.mutationResults.push(result)
-      queueCompatibilityProjection(next, request.compatibilityPresentation, nextHead)
+      queueCompatibilityProjection(next, request.compatibilityPresentation, nextHead, undefined, result.trustedImportMetadata)
     })
     return frozen({ ok: true, idempotent: false, noOp: true, generation: head.generation, revisionId: head.packageRevisionId, bytes })
   }
@@ -218,6 +236,7 @@ async function executeLocked(dependencies, request) {
   ]))
   const successorMap = rebindSourceMap(sourceMap, { presentationId: request.presentationId, revisionId: revision.id, packageGeneration: generation }, touchedHashes)
   const result = { schemaVersion: RECORD_SCHEMA_VERSION, operation: OPERATION, presentationId: request.presentationId, idempotencyKey: request.idempotencyKey, requestHash: hash, requestIdentity: { expectedGeneration: request.expectedGeneration, baseRevisionId: request.baseRevisionId || null, snapshotHash: hashRecord(request.after) }, generation, packageRevisionId: revision.id, operationIds: journal.operations.map((operation) => operation.operationId), projection, sourceMap: successorMap, journal, state: 'committed' }
+  if (trustedImportMetadata) result.trustedImportMetadata = trustedImportMetadata
   const updatedAt = new Date().toISOString()
   await store.mutate((next) => {
     const nextHead = headFor(next, request.presentationId)
@@ -246,7 +265,8 @@ async function executeLocked(dependencies, request) {
       next,
       request.compatibilityPresentation,
       next.heads.find((item) => item.presentationId === request.presentationId),
-      updatedAt
+      updatedAt,
+      result.trustedImportMetadata
     )
   }, { ...request.faults })
   return frozen({ ok: true, idempotent: false, generation, revisionId: revision.id, bytes: applied.output })

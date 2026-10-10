@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test'
 
 const TRIGGER_SELECTOR = {
-  File: '[aria-label="File menu"]',
+  File: '[data-testid="ribbon-file-menu-trigger"]',
   AI: '[aria-label="AI"]',
   Share: '[aria-label="Share"]',
 }
@@ -14,7 +14,8 @@ export class MenuBarDropdownHelper {
   async openMenuItem(triggerName, itemLabel, { exact = false } = {}) {
     const trigger = TRIGGER_SELECTOR[triggerName]
     if (!trigger) throw new Error(`Unknown menu trigger "${triggerName}"`)
-    await this.page.locator(trigger).click()
+    const button = this.page.locator(trigger)
+    if (await button.getAttribute('aria-expanded') !== 'true') await button.click()
     const menuitem = this.page.getByRole('menuitem', { name: itemLabel, exact })
     await menuitem.first().click()
   }

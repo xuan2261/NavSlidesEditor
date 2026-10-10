@@ -176,6 +176,14 @@ export const api = {
       return r.blob()
     })
   },
+  /** Download the full server-owned project archive, fenced to its saved generation. */
+  downloadProjectArchive: (id, expectedGeneration) =>
+    fetch(`${BASE}/presentations/${id}/project-archive`, {
+      headers: { 'If-Pptx-Generation': String(expectedGeneration) },
+    }).then(async (response) => {
+      if (!response.ok) await handleResponse(response)
+      return response.blob()
+    }),
   getPptxFidelity: (id) =>
     fetch(`${BASE}/presentations/${id}/pptx-fidelity`).then(handleResponse),
   downloadValidatedEditedPptx: (id, generation, idempotencyKey) =>

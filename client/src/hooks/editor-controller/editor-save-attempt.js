@@ -75,6 +75,7 @@ export async function persistEditorSave({
 }) {
   const { snapshot, attemptId, draftId, draftUpdatedAt, draftWritePromise, routeEpoch } = entry
   entry.localValidationRejected = false
+  let persisted = false
   try {
     const draftStored = await (draftWritePromise || true)
     if (!draftStored) {
@@ -116,6 +117,7 @@ export async function persistEditorSave({
       setLastSavedAt(new Date())
       scheduleStatusReset()
     }
+    persisted = true
     return true
   } catch (error) {
     const successor =
@@ -132,7 +134,9 @@ export async function persistEditorSave({
     return false
   } finally {
     const successor =
-      queueRef.current?.routeEpoch === routeEpoch && queueRef.current?.snapshot?.id === snapshot.id
-    if ((attemptId === attemptRef.current || successor) && mountedRef.current) setSaving(false)
+      queueRef.current?.routeEpoch === routeEpoch &&
+      queueRef.current?.snapshot?.id === snapshot.id
+    if ((attemptId === attemptRef.current || successor) && mountedRef.current &&
+        (!persisted || !successor)) setSaving(false)
   }
 }

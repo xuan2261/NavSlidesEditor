@@ -1,10 +1,12 @@
-import { act, renderHook } from '@testing-library/react'
-import { useState } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { act, cleanup, renderHook } from '@testing-library/react'
+import { useLayoutEffect, useRef, useState } from 'react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useEditorLayoutController } from './use-editor-layout-controller'
 import { createInteractionSlideState, executeInteractionAction } from 'revealjs-shared'
+import { useEditorHistoryController } from './use-editor-history-controller'
 
 const initialPresentation = {
+  id: 'master-deck',
   slides: [{ id: 'slide-1', elements: [] }],
   layoutMasters: [
     {
@@ -19,7 +21,13 @@ const initialPresentation = {
 }
 
 function useHarness(initial = initialPresentation) {
-  const [presentation, setPresentation] = useState(initial)
+  const [presentation, setPresentation] = useState(null)
+  const [selectedIds, setSelectedElementIds] = useState([])
+  const selectedElementIdsRef = useRef([])
+  selectedElementIdsRef.current = selectedIds
+  const currentSlideIndexRef = useRef(0)
+  const verticalEditRef = useRef(null)
+  const editingElementIdRef = useRef(null)
   const controller = useEditorLayoutController({
     presentation,
     setPresentation,
@@ -27,10 +35,25 @@ function useHarness(initial = initialPresentation) {
       ...previous,
       slides: previous.slides.map((slide, index) => (index === 0 ? transform(slide) : slide)),
     }),
-    setSelectedElementIds: vi.fn(),
+    setSelectedElementIds,
   })
-  return { presentation, ...controller }
+  const history = useEditorHistoryController({
+    presentation, setPresentation, selectedElementIdsRef, currentSlideIndexRef,
+    verticalEditRef, editingElementIdRef, resetContent: vi.fn(),
+    authoringTarget: controller.masterEdit ? { kind: 'master', id: controller.masterEdit.id } : null,
+    setSelectedElementIds, setCurrentSlideIndex: () => {},
+    setVerticalEdit: () => {}, setEditingElementId: () => {},
+  })
+  useLayoutEffect(() => {
+    const loaded = structuredClone(initial)
+    history.seedHistory(loaded)
+    setPresentation(loaded)
+  }, [history.seedHistory, initial])
+  return { presentation, setPresentation, selectedIds, setSelectedElementIds, history, ...controller }
 }
+
+beforeEach(() => vi.useFakeTimers())
+afterEach(() => { cleanup(); vi.clearAllTimers(); vi.useRealTimers() })
 
 describe('useEditorLayoutController master authoring surface', () => {
   it('exposes fixed master elements as editable while retaining their stored lock contract', () => {
@@ -101,5 +124,71 @@ describe('useEditorLayoutController master authoring surface', () => {
     } finally {
       window.removeEventListener('navslides:feedback', listener)
     }
+  })
+
+  it('persists an authoring mutation without unlocking stored master elements or changing the local slide', () => {
+    const { result } = renderHook(useHarness)
+    act(() => result.current.openLayoutManager())
+    act(() => result.current.layoutManagerProps.onEditMaster('layout-1'))
+    act(() => result.current.setPresentation((previous) => result.current.mapAuthoringTarget(previous, (slide) => ({
+      ...slide, elements: slide.elements.map((element) => ({ ...element, x: 42 })),
+    }))))
+    expect(result.current.presentation.layoutMasters[0].fixedElements[0]).toMatchObject({ id: 'band', x: 42, locked: true })
+    expect(result.current.masterEdit.fixedElements[0]).toMatchObject({ x: 42, locked: false })
+    expect(result.current.presentation.slides[0].elements).toEqual([])
+    act(() => result.current.history.handleUndo())
+    expect(result.current.presentation.layoutMasters[0].fixedElements[0]).toEqual(initialPresentation.layoutMasters[0].fixedElements[0])
+    act(() => result.current.history.handleRedo())
+    expect(result.current.presentation.layoutMasters[0].fixedElements[0]).toMatchObject({ x: 42, locked: true })
+  })
+
+  it('keeps a surviving selected master target through document undo and redo', () => {
+    const { result } = renderHook(useHarness)
+    act(() => result.current.openLayoutManager())
+    act(() => result.current.layoutManagerProps.onEditMaster('layout-1'))
+    act(() => result.current.setSelectedElementIds(['band']))
+    act(() => result.current.updateMasterElement('band', { x: 99 }))
+    act(() => result.current.history.handleUndo())
+    expect(result.current.masterEdit.id).toBe('layout-1')
+    expect(result.current.masterEdit.fixedElements[0].x).toBe(initialPresentation.layoutMasters[0].fixedElements[0].x)
+    expect(result.current.selectedIds).toEqual(['band'])
+    expect(result.current.presentation.slides[0].elements).toEqual([])
+    act(() => result.current.history.handleRedo())
+    expect(result.current.masterEdit.fixedElements[0].x).toBe(99)
+    expect(result.current.selectedIds).toEqual(['band'])
+  })
+
+  it('drops a deleted selection and restores the master content without resurrecting stale selection', () => {
+    const { result } = renderHook(useHarness)
+    act(() => result.current.openLayoutManager())
+    act(() => result.current.layoutManagerProps.onEditMaster('layout-1'))
+    act(() => result.current.setSelectedElementIds(['band']))
+    act(() => result.current.deleteMasterElement('band'))
+    expect(result.current.selectedIds).toEqual([])
+    act(() => result.current.history.handleUndo())
+    expect(result.current.masterEdit.fixedElements[0].id).toBe('band')
+    expect(result.current.selectedIds).toEqual([])
+    act(() => result.current.history.handleRedo())
+    expect(result.current.masterEdit.fixedElements).toEqual([])
+    expect(result.current.presentation.slides[0].elements).toEqual([])
+  })
+
+  it('clears a removed master target without selecting a same-id local element on redo', () => {
+    const { result } = renderHook(useHarness)
+    act(() => result.current.openLayoutManager())
+    act(() => result.current.layoutManagerProps.onEditMaster('layout-1'))
+    act(() => result.current.setPresentation((previous) => ({
+      ...previous,
+      layoutMasters: [],
+      slides: [{ ...previous.slides[0], elements: [{ id: 'band', type: 'text', content: '<p>Local collision</p>' }] }],
+    })))
+    expect(result.current.masterEdit).toBeNull()
+    act(() => result.current.history.handleUndo())
+    expect(result.current.masterEdit.id).toBe('layout-1')
+    act(() => result.current.setSelectedElementIds(['band']))
+    act(() => result.current.history.handleRedo())
+    expect(result.current.masterEdit).toBeNull()
+    expect(result.current.selectedIds).toEqual([])
+    expect(result.current.presentation.slides[0].elements[0].content).toBe('<p>Local collision</p>')
   })
 })

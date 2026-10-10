@@ -6,6 +6,7 @@ const { createSourceMap } = require('./source-map')
 const { deriveMutationJournal } = require('./mutation-journal')
 const { validateMatrixAuthoritySubjects } = require('./canonical-feature-matrix')
 const { MUTATION_OPERATIONS: OPERATIONS } = require('./mutation-operation-scope')
+const { isNoOpExportReceipt, hasValidCommittedJournal } = require('./editor-projection-journal-authority')
 const {
   resolveImmutableOriginalRevisionBytes,
   resolvePackageRevisionBytes,
@@ -188,21 +189,38 @@ function resolveEditorProjectionContext(state, presentationId) {
       hashRecord(createSourceMap(result.sourceMap)) === hashRecord(result.sourceMap)
     const pending = head.pendingJournalHash !== undefined
     const candidates = scoped.filter((result) => result.generation === head.generation)
-    if (candidates.length !== 1) return failed()
-    const current = candidates[0]
+    const receipts = !pending ? candidates.filter(isNoOpExportReceipt) : []
+    let authorities = candidates.filter((result) => !receipts.includes(result))
+    // Portable import may collapse historical generations. A reconciled pending
+    // row is superseded only by the matching committed package authority.
+    if (receipts.length && authorities.some((result) => result.state === 'committed')) {
+      authorities = authorities.filter((result) => !(result.state === 'pending-edited-export' &&
+        editorResultAllowed(result) && validIdentity(result) &&
+        hashRecord(result.projection) === head.projectionRevisionId &&
+        hashRecord(result.sourceMap) === head.sourceMapRevisionId))
+    }
+    if (authorities.length !== 1) return failed()
+    const current = authorities[0]
+    if (receipts.some((result) =>
+      !validIdentity(result) ||
+      hashRecord(result.projection) !== head.projectionRevisionId ||
+      hashRecord(result.sourceMap) !== head.sourceMapRevisionId ||
+      !hasValidCommittedJournal(result, head.journalRevisionId)
+    )) return failed()
     if (
       !editorResultAllowed(current) ||
       !validIdentity(current) ||
-      current.state !== (pending ? 'pending-edited-export' : 'committed') ||
+      (current.state !== (pending ? 'pending-edited-export' : 'committed') &&
+        !(receipts.length && current.state === 'pending-edited-export')) ||
       hashRecord(current.projection) !== head.projectionRevisionId ||
       hashRecord(current.sourceMap) !== head.sourceMapRevisionId
     )
       return failed()
-    if (pending) {
+    if (pending || current.state === 'pending-edited-export') {
       if (
-        head.journalRevisionId !== head.pendingJournalHash ||
+        (pending && head.journalRevisionId !== head.pendingJournalHash) ||
         current.journal?.baseRevisionId !== head.packageRevisionId ||
-        current.journal.journalHash !== head.pendingJournalHash
+        (pending && current.journal.journalHash !== head.pendingJournalHash)
       )
         return failed()
       const anchors = results.filter(
@@ -212,7 +230,8 @@ function resolveEditorProjectionContext(state, presentationId) {
           validIdentity(result)
       )
       const previous = results.filter(
-        (result) => result.generation === head.generation - 1 && validIdentity(result)
+        (result) => result.generation === head.generation - 1 && validIdentity(result) &&
+          !isNoOpExportReceipt(result)
       )
       if (!anchors.length || previous.length !== 1) return failed()
       const expected = deriveMutationJournal(previous[0].projection, current.projection, {
@@ -227,33 +246,7 @@ function resolveEditorProjectionContext(state, presentationId) {
       )
         return failed()
     } else {
-      if (
-        (head.journalRevisionId ?? null) !== (current.journal?.journalHash ?? null) ||
-        (current.operation === OPERATIONS.VALIDATED_EDITED_EXPORT && !current.journal)
-      )
-        return failed()
-      if (current.journal) {
-        const { journal } = current
-        const subjects = Object.fromEntries(
-          [
-            'featureMatrixSchemaVersion',
-            'featureMatrixVersion',
-            'featureMatrixHash',
-            'matrixAuthoritySubject',
-            'reasonCodeSubject',
-          ].map((key) => [key, journal[key]])
-        )
-        const payload = journal.metadata
-          ? { operations: journal.operations, metadata: journal.metadata, subjects }
-          : { ...subjects, operations: journal.operations }
-        if (
-          !Array.isArray(journal.operations) ||
-          hashRecord(payload) !== journal.journalHash ||
-          hashRecord(journal.operations.map((item) => item.operationId)) !==
-            hashRecord(current.operationIds)
-        )
-          return failed()
-      }
+      if (!hasValidCommittedJournal(current, head.journalRevisionId)) return failed()
     }
     return {
       ok: true,

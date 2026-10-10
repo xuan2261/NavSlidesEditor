@@ -1,16 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import {
-  ArrowDown,
-  ArrowDownRight,
-  ArrowUp,
-  Copy,
-  LayoutTemplate,
-  Lock,
-  Plus,
-  Trash2,
-  Unlock,
-  Wand2,
-} from 'lucide-react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { ArrowDown, ArrowDownRight, ArrowUp, Copy, LayoutTemplate, Lock, Plus, Trash2, Unlock, Wand2 } from 'lucide-react'
 import { Button } from './ui/Button'
 import { SlideNavigatorItem } from './slide-panel/slide-navigator-item'
 
@@ -55,7 +44,7 @@ export default function SlidePanel(props) {
   const buttonsRef = useRef([])
   const originRef = useRef(null)
   const menuRef = useRef(null)
-  const ids = slides.map(slideId)
+  const ids = useMemo(() => slides.map(slideId), [slides])
   const effectiveSelectedIds = ids.some((id) => selectedIds.has(id))
     ? selectedIds
     : new Set([ids[currentIndex]])
@@ -77,7 +66,7 @@ export default function SlidePanel(props) {
     menuRef.current.querySelector('[role="menuitem"]:not(:disabled)')?.focus()
   }, [ctxMenu])
 
-  function activate(event, index) {
+  const activate = useCallback((event, index) => {
     const id = ids[index]
     activatedIdRef.current = id
     setSelectedIds((previous) => {
@@ -93,19 +82,10 @@ export default function SlidePanel(props) {
       return new Set([id])
     })
     onSelect(index)
-  }
+  }, [ids, onSelect])
 
-  function keyDown(event, index) {
-    const destination =
-      event.key === 'ArrowDown'
-        ? Math.min(index + 1, slides.length - 1)
-        : event.key === 'ArrowUp'
-          ? Math.max(index - 1, 0)
-          : event.key === 'Home'
-            ? 0
-            : event.key === 'End'
-              ? slides.length - 1
-              : null
+  const keyDown = useCallback((event, index) => {
+    const destination = event.key === 'ArrowDown' ? Math.min(index + 1, slides.length - 1) : event.key === 'ArrowUp' ? Math.max(index - 1, 0) : event.key === 'Home' ? 0 : event.key === 'End' ? slides.length - 1 : null
     if (destination !== null) {
       event.preventDefault()
       setFocusIndex(destination)
@@ -124,7 +104,62 @@ export default function SlidePanel(props) {
         event.currentTarget.getBoundingClientRect()
       setCtxMenu({ x: rect.left + 12, y: rect.top + 12, index })
     }
-  }
+  }, [slides.length, activate])
+
+  const handleFocus = useCallback((index) => {
+    setFocusIndex(index)
+    setActiveActionIndex(index)
+  }, [])
+
+  const handleContextMenu = useCallback((event, index) => {
+    event.preventDefault()
+    originRef.current = buttonsRef.current[index]
+    setCtxMenu({ x: event.clientX, y: event.clientY, index })
+  }, [])
+
+  const handleChildContextMenu = useCallback((event, index, childIndex) => {
+    event.preventDefault()
+    event.stopPropagation()
+    originRef.current = event.currentTarget
+    const rect = event.currentTarget.getBoundingClientRect()
+    setCtxMenu({
+      index,
+      childIndex,
+      x: event.type === 'contextmenu' ? event.clientX : rect.left + 12,
+      y: event.type === 'contextmenu' ? event.clientY : rect.top + 12,
+    })
+  }, [])
+
+  const handleDragStart = useCallback((event, index) => {
+    dragIndexRef.current = index
+  }, [])
+
+  const handleDragOver = useCallback((event, index) => {
+    event.preventDefault()
+    setDragOverIndex(index)
+  }, [])
+
+  const handleDragLeave = useCallback(() => {
+    setDragOverIndex(null)
+  }, [])
+
+  const handleDrop = useCallback((event, index) => {
+    event.preventDefault()
+    if (dragIndexRef.current !== null && dragIndexRef.current !== index) {
+      onMove(dragIndexRef.current, index)
+    }
+    dragIndexRef.current = null
+    setDragOverIndex(null)
+  }, [onMove])
+
+  const handleDragEnd = useCallback(() => {
+    dragIndexRef.current = null
+    setDragOverIndex(null)
+  }, [])
+
+  const handleButtonRef = useCallback((node, index) => {
+    buttonsRef.current[index] = node
+  }, [])
 
   function closeMenu(restore = false) {
     setCtxMenu(null)
@@ -157,53 +192,19 @@ export default function SlidePanel(props) {
               layoutMasters={layoutMasters}
               currentVerticalIndex={currentVerticalIndex}
               onSelectVertical={onSelectVertical}
-              onActivate={(event) => activate(event, index)}
-              onFocus={() => {
-                setFocusIndex(index)
-                setActiveActionIndex(index)
-              }}
-              onKeyDown={(event) => keyDown(event, index)}
-              onContextMenu={(event) => {
-                event.preventDefault()
-                originRef.current = buttonsRef.current[index]
-                setCtxMenu({ x: event.clientX, y: event.clientY, index })
-              }}
-              onChildContextMenu={(event, childIndex) => {
-                event.preventDefault()
-                event.stopPropagation()
-                originRef.current = event.currentTarget
-                const rect = event.currentTarget.getBoundingClientRect()
-                setCtxMenu({
-                  index,
-                  childIndex,
-                  x: event.type === 'contextmenu' ? event.clientX : rect.left + 12,
-                  y: event.type === 'contextmenu' ? event.clientY : rect.top + 12,
-                })
-              }}
+              onActivate={activate}
+              onFocus={handleFocus}
+              onKeyDown={keyDown}
+              onContextMenu={handleContextMenu}
+              onChildContextMenu={handleChildContextMenu}
               onDuplicate={onDuplicate}
               onDelete={onDelete}
-              onDragStart={() => {
-                dragIndexRef.current = index
-              }}
-              onDragOver={(event) => {
-                event.preventDefault()
-                setDragOverIndex(index)
-              }}
-              onDragLeave={() => setDragOverIndex(null)}
-              onDrop={(event) => {
-                event.preventDefault()
-                if (dragIndexRef.current !== null && dragIndexRef.current !== index)
-                  onMove(dragIndexRef.current, index)
-                dragIndexRef.current = null
-                setDragOverIndex(null)
-              }}
-              onDragEnd={() => {
-                dragIndexRef.current = null
-                setDragOverIndex(null)
-              }}
-              buttonRef={(node) => {
-                buttonsRef.current[index] = node
-              }}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onDragEnd={handleDragEnd}
+              buttonRef={handleButtonRef}
             />
           ))}
         </ul>

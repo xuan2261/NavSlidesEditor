@@ -95,9 +95,11 @@ function resolveEditedExportContext(state, presentationId) {
     .filter(isCommittedAuthority)
   const committed = committedResults
     .filter((result) => pending
-      ? result.generation === head.generation - 1 &&
-        result.sourceMap?.packageGeneration === head.generation - 1
-      : matchesHeadAuthority(result, head))
+      ? Number.isSafeInteger(result.generation) && result.generation >= 1 &&
+        result.generation < head.generation &&
+        result.sourceMap?.packageGeneration === result.generation
+      : matchesHeadAuthority(result, head) &&
+        (result.journal?.journalHash ?? null) === (head.journalRevisionId ?? null))
     .at(-1)
   if (!committed) return failed('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
   const after = pending?.projection || committed.projection
@@ -109,9 +111,6 @@ function resolveEditedExportContext(state, presentationId) {
     return failed('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
   }
   try {
-    if (pending && hasNonTextChanges(committed.projection, after)) {
-      return failed('CANONICAL_TEXT_JOURNAL_INVALID')
-    }
     return Object.freeze({
       ok: true,
       head,
@@ -119,8 +118,10 @@ function resolveEditedExportContext(state, presentationId) {
       after,
       sourceMap,
       pendingJournalHash: head.pendingJournalHash,
+      committedJournalHash: committed.journal?.journalHash ?? null,
       textTransports: serverTextTransports(after),
       pendingEdit: Boolean(pending && hashRecord(committed.projection) !== hashRecord(after)),
+      textExportEligible: !pending || !hasNonTextChanges(committed.projection, after),
     })
   } catch {
     return failed('CANONICAL_TEXT_JOURNAL_INVALID')
@@ -129,12 +130,18 @@ function resolveEditedExportContext(state, presentationId) {
 
 function replayRequest(state, request) {
   const head = state?.heads?.find((item) => item.presentationId === request.presentationId)
-  const prior = (state?.mutationResults || []).find((result) =>
+  const prior = (state?.mutationResults || []).filter((result) =>
     (result.operation === MUTATION_OPERATIONS.VALIDATED_EDITED_EXPORT ||
       isLegacyValidatedResult(result)) &&
     result.presentationId === request.presentationId &&
-    result.idempotencyKey === request.idempotencyKey
-  )
+    result.idempotencyKey === request.idempotencyKey &&
+    result.state === 'committed' && head &&
+    result.packageRevisionId === head.packageRevisionId &&
+    result.generation === head.generation &&
+    (result.requestIdentity
+      ? result.requestIdentity.expectedGeneration === request.expectedGeneration
+      : result.generation === request.expectedGeneration + 1)
+  ).at(-1)
   const baseRevisionId = prior?.requestIdentity?.baseRevisionId
   const expectedGenerationMatches = prior?.requestIdentity
     ? prior.requestIdentity.expectedGeneration === request.expectedGeneration
@@ -154,7 +161,9 @@ function replayRequest(state, request) {
       baseRevisionId: baseRevisionId || undefined,
       after: prior.projection,
       textTransports: serverTextTransports(prior.projection),
-      pendingEdit: Array.isArray(prior.journal?.operations) && prior.journal.operations.length > 0,
+      pendingEdit: Array.isArray(prior.operationIds)
+        ? prior.operationIds.length > 0
+        : Array.isArray(prior.journal?.operations) && prior.journal.operations.length > 0,
       compatibilityPresentation: prior.projection,
     })
   } catch {

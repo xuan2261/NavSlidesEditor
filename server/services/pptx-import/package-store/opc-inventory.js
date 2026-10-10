@@ -143,7 +143,8 @@ async function buildOpcInventory(source, limits = {}) {
       if (external) securityFlags.add('external-relationship')
       if (!external && normalizedTarget.startsWith('../')) securityFlags.add('relationship-traversal')
       relationships.push({
-        id: value.Id, source: sourcePart, target: value.Target, normalizedTarget, type: value.Type,
+        ...(value.Id !== undefined ? { id: value.Id } : {}),
+        source: sourcePart, target: value.Target, normalizedTarget, type: value.Type,
         targetMode: external ? 'External' : 'Internal', external,
         dangling: !external && !extracted.has(normalizedTarget),
       })

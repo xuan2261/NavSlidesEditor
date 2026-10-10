@@ -16,12 +16,14 @@ const mocks = vi.hoisted(() => ({
     rollbackProjectImport: vi.fn(),
   },
   showError: vi.fn(),
+  confirmUser: vi.fn(),
 }))
 
 vi.mock('../utils/api', () => ({ api: mocks.api }))
 vi.mock('../utils/app-feedback', () => ({
   showError: mocks.showError,
   showNotice: vi.fn(),
+  confirmUser: mocks.confirmUser,
 }))
 vi.mock('../components/dashboard/TemplatePreview', () => ({ default: () => null }))
 vi.mock('../components/SlideThumbnail', () => ({ default: () => <div /> }))
@@ -88,5 +90,23 @@ describe('HomePage atomic project import lifecycle', () => {
       'session-pending', 'cap'
     ))
     resolveMedia({ placed: 1 })
+  })
+
+  it('P10 waits for explicit trusted-author acknowledgement before retrying server admission', async () => {
+    mocks.api.preflightProjectImport.mockRejectedValueOnce(Object.assign(
+      new Error('Acknowledgement required'), { code: 'ACTIVE_CONTENT_ACK_REQUIRED', activeContent: ['html'] }
+    )).mockResolvedValueOnce({ sessionId: 'session-ack', capability: 'cap', mediaCount: 0,
+      trustedAuthorActiveContentAcknowledged: true })
+    mocks.api.publishProjectImport.mockResolvedValue({ status: 'committed', presentationId: 'deck-ack' })
+    const { onOpen } = renderHome()
+    await screen.findByText('Import Project')
+    fireEvent.change(projectInput(), { target: { files: [new File(['PK'], 'package.navslides')] } })
+    await waitFor(() => expect(mocks.confirmUser).toHaveBeenCalled())
+    expect(onOpen).not.toHaveBeenCalled()
+    expect(mocks.api.publishProjectImport).not.toHaveBeenCalled()
+    expect(mocks.api.preflightProjectImport).toHaveBeenCalledTimes(1)
+    mocks.confirmUser.mock.calls[0][1]()
+    await waitFor(() => expect(onOpen).toHaveBeenCalledWith('deck-ack'))
+    expect(mocks.api.preflightProjectImport.mock.calls[1][1].trustedAuthorActiveContentAcknowledged).toBe(true)
   })
 })

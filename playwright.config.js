@@ -138,7 +138,6 @@ module.exports = defineConfig({
     // into Vite plus the API server with PLAYWRIGHT_USE_DEV_SERVERS=1.
     command: useDevServers ? 'npm run dev' : 'npm start',
     env: {
-      ...process.env,
       DATA_DIR: dataDir,
       PORT: serverPort,
       PLAYWRIGHT_API_BASE_URL: apiBaseUrl,

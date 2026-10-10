@@ -1,13 +1,5 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import {
-  DEFAULT_TOKENS,
-  mergeTokens,
-  resolveColorField,
-  resolveColorForTokens,
-  resolveConnectorGeometry,
-  resolveEffectiveSlide,
-  tokensToStyleObject,
-} from 'revealjs-shared'
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { DEFAULT_TOKENS, mergeTokens, resolveColorField, resolveColorForTokens, resolveConnectorGeometry, resolveEffectiveSlide, tokensToStyleObject } from 'revealjs-shared'
 import { markdownToHtml } from '../../utils/markdown-utils'
 import { sanitizeMediaSrc } from '../../utils/url-safety'
 import { CalloutRenderer } from '../canvas/element-renderers/callout-element-renderer'
@@ -251,16 +243,7 @@ function SafeElement({ element, tokens }) {
   )
 }
 
-export function SlideThumbnailPreview({
-  slide,
-  width,
-  height,
-  resolution,
-  designTokens,
-  layoutMasters,
-  className = '',
-  'data-testid': testId,
-}) {
+export const SlideThumbnailPreview = memo(function SlideThumbnailPreview({ slide, width, height, resolution, designTokens, layoutMasters, className = '', 'data-testid': testId }) {
   const sourceWidth = width || resolution?.width || 960
   const sourceHeight = height || resolution?.height || 540
   const hostRef = useRef(null)
@@ -334,4 +317,4 @@ export function SlideThumbnailPreview({
       </div>
     </div>
   )
-}
+})

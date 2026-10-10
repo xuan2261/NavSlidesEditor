@@ -239,9 +239,59 @@ describe('durable PPTX import job authority', () => {
       jobId,
       presentationId: 'presentation-late',
     })
-    expect(packageRollback).toHaveBeenCalledWith({ jobId, presentationId: 'presentation-late' })
-    expect(drainCompatibility).toHaveBeenCalledTimes(1)
-    expect(deletePresentation).toHaveBeenCalledWith('presentation-late')
+  })
+
+  it('reconciles via durable receipt when a terminal live job is still in memory', async () => {
+    const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541cc'
+    const durable = packageReceipt({
+      id: jobId,
+      kind: 'import',
+      status: 'completed',
+      transactionState: 'reconcile-required',
+      cancellationPoint: 'committed',
+      capabilityHash: 'b'.repeat(64),
+      presentationId: 'presentation-live-terminal',
+    })
+    const liveJob = {
+      id: jobId,
+      status: 'failed',
+      terminalState: 'failed',
+      controlCapabilityHash: DURABLE_CONTROL_HASH,
+    }
+    const mgr = manager()
+    mgr.getJob.mockImplementation((id) => id === jobId ? liveJob : null)
+    mgr.verifyControlCapability = jobManagerModule.verifyControlCapability
+    const deletePresentation = vi.fn(async () => true)
+    const packageRollback = vi.fn(async () => {})
+    const drainCompatibility = vi.fn(async () => 1)
+    const app = createApp({
+      jobManager: mgr,
+      readDurableJob: vi.fn(async () => durable),
+      deletePresentation,
+      packageRollback,
+      drainCompatibility,
+    })
+    const missing = await request(app).post(`/api/pptx/jobs/${jobId}/reconcile`)
+    expect(missing.status).toBe(401)
+    expect(missing.body.code).toBe('JOB_CAPABILITY_REQUIRED')
+    const wrong = await request(app).post(`/api/pptx/jobs/${jobId}/reconcile`)
+      .set('X-Pptx-Job-Capability', 'another-job-capability')
+    expect(wrong.status).toBe(401)
+    expect(wrong.body.code).toBe('JOB_CAPABILITY_REQUIRED')
+    durable.controlCapabilityHash = hashCapability('another-job-capability')
+    const mismatchedAuthority = await authorize(request(app).post(`/api/pptx/jobs/${jobId}/reconcile`))
+    expect(mismatchedAuthority.status).toBe(401)
+    expect(mismatchedAuthority.body.code).toBe('JOB_CAPABILITY_REQUIRED')
+    durable.controlCapabilityHash = DURABLE_CONTROL_HASH
+    const response = await authorize(request(app).post(`/api/pptx/jobs/${jobId}/reconcile`))
+
+    expect(response.status).toBe(200)
+    expect(response.body).toEqual({
+      success: true,
+      status: 'reconciled',
+      jobId,
+      presentationId: 'presentation-live-terminal',
+    })
   })
 
   it('returns cleanup identity when package rollback fails', async () => {

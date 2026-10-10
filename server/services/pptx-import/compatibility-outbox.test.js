@@ -99,6 +99,26 @@ describe('package compatibility outbox', () => {
     await store.releaseWriter()
   })
 
+  it('P07-03: a mismatched captured payload cannot acknowledge the queued publication', async () => {
+    const store = await createStore()
+    try {
+      await store.mutate((next) => {
+        queueCompatibilityUpsert(next, {
+          presentationId: 'deck-1',
+          generation: 2,
+          presentation: { id: 'deck-1', title: 'Current publication', slides: [] },
+        })
+      })
+      const queued = snapshotCompatibilityOutbox(store)
+      const captured = structuredClone(queued)
+      captured[0].presentation.title = 'Different applied payload'
+      await acknowledgeCompatibilityOutbox(store, captured)
+      expect(store.getState().compatibilityOutbox).toEqual(queued)
+    } finally {
+      await store.releaseWriter()
+    }
+  })
+
   it('preserves server-owned metadata when applying a canonical package projection', () => {
     const presentations = [{
       id: 'deck-1',

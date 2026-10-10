@@ -5,7 +5,11 @@ const {
   resolveEditorProjectionContext,
   verifyEditorPackageBytes,
 } = require('./pptx-import/package-authority-snapshot')
-const { mergeCompatibilityPresentation } = require('./pptx-import/compatibility-view')
+const {
+  hasExactCompatibilityHead,
+  mergeCompatibilityPresentation,
+} = require('./pptx-import/compatibility-view')
+const { getTrustedImportMetadata, decorateTrustedImportMetadata } = require('./pptx-import/trusted-import-metadata')
 
 function authorityError(reasonCode) {
   return Object.assign(new Error(reasonCode), {
@@ -64,6 +68,19 @@ function resolvePackageBackedReadFromState(
     }
   }
 
+  // Only a durable successor publication can authorize reading past a stale view.
+  const publicationPending = compatibilityPresentation?.pptxAggregateHead?.generation < head.generation &&
+    [
+      ...(state.compatibilityOutbox || []),
+      ...(state.compatibilityDeadLetter || []).map((entry) => entry.write),
+    ].some((write) => write?.operation === 'upsert' &&
+      write.presentationId === presentationId &&
+      hasExactCompatibilityHead(write.presentation, head))
+  if (!hasExactCompatibilityHead(compatibilityPresentation, head) && !publicationPending &&
+      (compatibilityPresentation?.pptxAggregateHead || !isOriginalOnlyHead(state, head))) {
+    throw authorityError('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
+  }
+
   const originalAvailable = hasPresentationOwnedRevision(
     state,
     presentationId,
@@ -95,7 +112,10 @@ function resolvePackageBackedReadFromState(
     return { presentation, generation: head.generation }
   }
 
-  const presentation = mergeCompatibilityPresentation(compatibilityPresentation, context.after)
+  const presentation = decorateTrustedImportMetadata(
+    mergeCompatibilityPresentation(compatibilityPresentation, context.after),
+    getTrustedImportMetadata(state, head)
+  )
   presentation.id = presentationId
   presentation.pptxAggregateHead = structuredClone(head)
   return { presentation, generation: head.generation }
@@ -186,4 +206,5 @@ module.exports = {
   readAuthoritativePresentation,
   readAuthoritativePresentations,
   resolvePackageBackedRead,
+  resolvePackageBackedReadFromState,
 }

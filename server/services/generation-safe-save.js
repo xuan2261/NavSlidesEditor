@@ -11,6 +11,7 @@ const { validateMatrixAuthoritySubjects } = require('./pptx-import/canonical-fea
 const { canonicalReasonCodes, reasonCodeSubject } = require('./pptx-import/reason-code-contract')
 const { isValidIdempotencyKey } = require('./pptx-import/request-limits')
 const { MUTATION_OPERATIONS } = require('./pptx-import/mutation-operation-scope')
+const { getTrustedImportMetadata, decorateTrustedImportMetadata } = require('./pptx-import/trusted-import-metadata')
 
 const OPERATION = MUTATION_OPERATIONS.PROJECTION_SAVE
 
@@ -65,11 +66,12 @@ function denied(status, reasonCode, extra = {}) {
   }
 }
 
-function queueCompatibilityProjection(next, presentation, head, updatedAt) {
+function queueCompatibilityProjection(next, presentation, head, updatedAt, trustedImportMetadata) {
   queueCompatibilityUpsert(next, {
     presentationId: head.presentationId,
     generation: head.generation,
     ...(updatedAt ? { updatedAt } : {}),
+    ...(trustedImportMetadata === undefined ? {} : { trustedImportMetadata }),
     presentation: {
       ...presentation,
       id: head.presentationId,
@@ -112,7 +114,10 @@ async function savePackageProjection({
     const canonicalAfter = canonicalEditableSnapshot(
       normalizePresentationGames({ ...stored, ...after, id: presentationId })
     )
-    const compatibility = compatibilityPresentation(stored, canonicalAfter, presentationId)
+    const trustedImportMetadata = getTrustedImportMetadata(state, head)
+    const compatibility = decorateTrustedImportMetadata(
+      compatibilityPresentation(stored, canonicalAfter, presentationId), trustedImportMetadata
+    )
     const sourceMap = authority?.sourceMap
     // A normal save only publishes the canonical projection and pending journal.
     // Only the validated edited-export workflow may materialize a successor package revision.
@@ -202,6 +207,7 @@ async function savePackageProjection({
       projection: canonicalAfter,
       sourceMap: successorSourceMap,
       journal,
+      ...(trustedImportMetadata === undefined ? {} : { trustedImportMetadata }),
       // This state is server-owned and deliberately not a validated package outcome.
       state: 'pending-edited-export',
     }
@@ -221,7 +227,7 @@ async function savePackageProjection({
       nextHead.fencingEpoch = store.fencingEpoch
       nextHead.matrixAuthorityEpoch = next.matrixAuthorityEpoch
       next.mutationResults.push(result)
-      queueCompatibilityProjection(next, compatibility, nextHead, updatedAt)
+      queueCompatibilityProjection(next, compatibility, nextHead, updatedAt, trustedImportMetadata)
     })
     return {
       ok: true,

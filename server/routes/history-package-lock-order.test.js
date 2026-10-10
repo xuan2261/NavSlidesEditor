@@ -96,10 +96,11 @@ describe('package-backed history lock order', () => {
     ])
     await packageRuntime.initializePackageStore({ rootDir: storage.DATA_DIR })
     await packageRuntime.withPackageStore(async (store) => {
-      packageHead = await store.commitOriginal(Buffer.from('history-package'), {
+      await store.commitOriginal(Buffer.from('history-package'), {
         ownerType: 'presentation',
         ownerId: 'deck-1',
       })
+      packageHead = structuredClone(store.getState().heads.find((head) => head.presentationId === 'deck-1'))
     })
     await storage.withPresentations((presentations) => {
       presentations[0].pptxAggregateHead = packageHead
@@ -118,7 +119,9 @@ describe('package-backed history lock order', () => {
       .post('/api/presentations/deck-1/snapshot')
       .send({ name: 'Package-backed' })
 
-    expect(snapshot.status).toBe(200)
+    expect(snapshot.status, JSON.stringify({
+      code: snapshot.body.code, error: snapshot.body.error, reason: snapshot.body.reason,
+    })).toBe(200)
 
     await storage.writePresentations([
       {
@@ -182,4 +185,58 @@ describe('package-backed history lock order', () => {
       expect(store.getState().owners.filter((owner) => owner.ownerType === 'history')).toHaveLength(1)
     })
   })
+  it('P08-10: an overlapping snapshot waits for restore and preserves its reversible package ownership', async () => {
+    let enterRestore
+    let releaseRestore
+    let queueSnapshot
+    const entered = new Promise((resolve) => { enterRestore = resolve })
+    const release = new Promise((resolve) => { releaseRestore = resolve })
+    const queued = new Promise((resolve) => { queueSnapshot = resolve })
+    const app = express()
+    app.use(express.json())
+    app.use('/api/presentations', (req, _res, next) => {
+      if (req.body?.name === 'overlapping') queueSnapshot()
+      next()
+    }, historyRouter)
+    app.use((error, _req, res, _next) => {
+      res.status(error.status || 500).json({ error: error.message, code: error.code })
+    })
+    const target = await request(app).post('/api/presentations/deck-1/snapshot').send({ name: 'target' })
+    expect(target.status).toBe(200)
+    beforeRetainHead = async () => { enterRestore(); await release }
+    const restoring = request(app).post(`/api/presentations/deck-1/restore/${target.body.id}`)
+      .then((response) => response)
+    let concurrent
+    try {
+      await entered
+      concurrent = request(app).post('/api/presentations/deck-1/snapshot')
+        .send({ name: 'overlapping' }).then((response) => response)
+      await queued
+      releaseRestore()
+      const [restored, snapshot] = await Promise.all([restoring, concurrent])
+      expect(restored.status).toBe(200)
+      expect(snapshot.status).toBe(200)
+      expect((await storage.readPresentations())[0])
+        .toMatchObject({ title: 'Original', pptxAggregateHead: { generation: 2 } })
+      const dir = path.join(storage.HISTORY_DIR, 'deck-1')
+      const files = (await fs.readdir(dir)).filter((file) => file.endsWith('.json'))
+      expect(files).toHaveLength(3)
+      const store = packageRuntime.getPackageStore()
+      for (const file of files) {
+        const saved = JSON.parse(await fs.readFile(path.join(dir, file), 'utf8'))
+        expect(saved.packageBacked).toBe(true)
+        expect(store.getState().owners).toContainEqual(expect.objectContaining({
+          ownerType: 'history', ownerId: `deck-1:${saved.id}`,
+          revisionId: saved.data.pptxAggregateHead.originalRevisionId,
+        }))
+        expect(await store.readOriginal(saved.data.pptxAggregateHead.originalRevisionId))
+          .toEqual(Buffer.from('history-package'))
+      }
+      const latest = JSON.parse(await fs.readFile(path.join(dir, `${snapshot.body.id}.json`), 'utf8'))
+      expect(latest.data.pptxAggregateHead.generation).toBe(2)
+    } finally {
+      releaseRestore()
+      await Promise.allSettled([restoring, concurrent].filter(Boolean))
+    }
+  }, 5_000)
 })

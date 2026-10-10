@@ -1,5 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { pathToFileURL } from 'node:url'
+import { assertLinuxLeafEvidence } from './release-evidence-producer.mjs'
+import { assertWindowsLeafEvidence } from './windows-verification-evidence.mjs'
 import {
   SHA256,
   assertCommon,
@@ -35,7 +37,7 @@ export function createHostReceipt(input) {
     ...(input.parentReceiptHash ? { parentReceiptHash: input.parentReceiptHash } : {}),
     gates: input.gates,
     artifacts: input.artifacts ?? {},
-    ...(input.securityAdvisory ? { securityAdvisory: input.securityAdvisory } : {}),
+    ...(input.evidence ? { evidence: input.evidence } : {}),
   }
   assertCommon(receipt)
   if (receipt.qualificationId !== createQualificationId(receipt)) {
@@ -102,29 +104,16 @@ export function createGreenShaRoot(input) {
   if (linux.qualificationId !== createQualificationId(linux)) {
     throw new Error('Linux qualificationId mismatch')
   }
+  assertLinuxLeafEvidence(linux)
+  if (policy.targets?.windows?.selected !== true || policy.targets?.['linux-ci']?.selected !== true) {
+    throw new Error('Linux and Windows are mandatory release targets')
+  }
   const linuxTarget = policy.targets['linux-ci']
   if (linuxTarget && linuxTarget.selected !== true) {
     throw new Error('linux-ci must be selected')
   }
   for (const gate of linuxTarget?.requiredGates ?? []) {
     if (!linux.gates[gate]) throw new Error(`linux-ci missing required gate ${gate}`)
-  }
-  const advisoryPolicy = policy.containerSecurityAdvisory
-  if (advisoryPolicy) {
-    if (
-      advisoryPolicy.mode !== 'user-risk-accepted' ||
-      advisoryPolicy.securityPassClaim !== false
-    ) {
-      throw new Error('invalid container security advisory policy')
-    }
-    const advisory = linux.securityAdvisory
-    if (!advisory || !['risk-accepted', 'passed'].includes(advisory.status)) {
-      throw new Error('container security advisory evidence is required')
-    }
-    assertHex(advisory.receiptHash, SHA256, 'container security advisory receipt hash')
-    if (linux.gates['container-scan-advisory'] !== advisory.receiptHash) {
-      throw new Error('container security advisory receipt hash mismatch')
-    }
   }
   const linuxHash = hashReceipt(linux)
   const common = linux
@@ -140,26 +129,35 @@ export function createGreenShaRoot(input) {
     if (receipt.status !== expectedStatus) throw new Error(`${host} must be ${expectedStatus}`)
     for (const gate of target.requiredGates ?? []) {
       if (!receipt.gates[gate]) throw new Error(`${host} missing required gate ${gate}`)
+      assertHex(receipt.gates[gate], SHA256, `${host}.gates.${gate}`)
     }
   }
+  const expectedKinds = policy.targets.windows.publicArtifacts
+  if (!Array.isArray(expectedKinds) || canonicalJson([...expectedKinds].sort()) !== canonicalJson(['nsis-exe', 'portable-exe'])) {
+    throw new Error('Windows NSIS and portable artifact policy is required')
+  }
+  const artifacts = input.windowsReceipt.artifacts
+  if (expectedKinds.length && (Object.keys(artifacts).length !== expectedKinds.length ||
+      expectedKinds.some((kind) => !artifacts[kind]))) throw new Error('Windows artifact kind set is incomplete')
+  for (const kind of expectedKinds) {
+    assertHex(artifacts[kind].sha256, SHA256, `windows.${kind}.sha256`)
+    assertHex(artifacts[kind].evidenceHash, SHA256, `windows.${kind}.evidenceHash`)
+    if (!artifacts[kind].path?.endsWith('.exe')) throw new Error('Windows artifact path is invalid')
+  }
+  const producerRuns = [linux.evidence.run.id, input.windowsReceipt.evidence?.office?.producer?.run?.id,
+    input.windowsReceipt.evidence?.fidelity?.producer?.run?.id]
+  if (new Set(producerRuns).size !== 3) throw new Error('CI/OfficeCLI/PowerPoint producer run IDs must be distinct')
+  assertWindowsLeafEvidence(input.windowsReceipt, input.windowsAttestationPolicy)
   return {
     schemaVersion: linux.schemaVersion,
     policyVersion: linux.policyVersion,
+    policyDigest: hashReceipt(policy),
     qualificationId: linux.qualificationId,
     status: 'passed',
     subjectSha: linux.subjectSha,
     clientDigest: linux.clientDigest,
     lockHashes: linux.lockHashes,
-    ...(advisoryPolicy
-      ? {
-          containerSecurityAdvisory: {
-            mode: advisoryPolicy.mode,
-            status: linux.securityAdvisory.status,
-            receiptHash: linux.securityAdvisory.receiptHash,
-            securityPassClaim: false,
-          },
-        }
-      : {}),
+    artifacts: input.windowsReceipt.artifacts,
     ...(input.releaseTag ? { releaseTag: input.releaseTag } : {}),
     ...(input.workflow ? { workflow: input.workflow } : {}),
     children: Object.fromEntries(
@@ -183,6 +181,7 @@ async function main() {
     const load = async (path) => JSON.parse(await readFile(path, 'utf8'))
     result = createGreenShaRoot({
       policy: await load(input.policy),
+      windowsAttestationPolicy: { repository: process.env.GITHUB_REPOSITORY, ref: process.env.GITHUB_REF },
       linuxReceipt: await load(input.linuxReceipt),
       windowsReceipt: await load(input.windowsReceipt),
       linuxDesktopReceipt: await load(input.linuxDesktopReceipt),

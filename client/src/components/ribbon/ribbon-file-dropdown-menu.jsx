@@ -68,6 +68,9 @@ export default function FileDropdown({
 }) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef(null)
+  const fidelityActions = Object.fromEntries(Object.entries(pptxActions || {}).map(([key, action]) => [
+    key, (...args) => { closeMenu(); return action(...args) },
+  ]))
   const itemRefs = useRef([])
   const menuItems = MENU_GROUPS.flatMap((group) => group.items)
 
@@ -226,7 +229,7 @@ export default function FileDropdown({
             <div className="p-2">
               <PptxFidelityPanel
                 contract={pptxFidelity}
-                actions={pptxActions}
+                actions={fidelityActions}
                 busy={pptxBusy}
                 onReload={onReloadPptxFidelity}
               />

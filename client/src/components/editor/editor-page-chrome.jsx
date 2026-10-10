@@ -92,6 +92,7 @@ export function EditorPageOverlays({ c }) {
         setCurrentSlideIndex={c.setCurrentSlideIndex}
         navigateToSlide={c.navigateToSlide}
         setPresentation={c.setPresentation}
+        restorePresentation={c.restorePresentation}
         htmlEditorState={c.htmlEditorState}
         setHtmlEditorState={c.setHtmlEditorState}
         commitHtmlEdit={c.commitHtmlEdit}

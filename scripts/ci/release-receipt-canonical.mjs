@@ -52,3 +52,11 @@ export function assertCommon(receipt, expected = receipt) {
     }
   }
 }
+
+export function windowsWorkflowIdentity(policy) {
+  if (!/^[\w.-]+\/[\w.-]+$/.test(policy?.repository ?? '') ||
+      !/^refs\/(?:heads|tags)\/[^\s@]+$/.test(policy?.ref ?? '')) {
+    throw new Error('Windows attestation workflow policy requires repository and approved full ref')
+  }
+  return `https://github.com/${policy.repository}/.github/workflows/reusable-windows-qualification.yml@${policy.ref}`
+}

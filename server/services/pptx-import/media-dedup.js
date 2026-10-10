@@ -3,6 +3,7 @@ const fs = require('fs-extra')
 const path = require('path')
 const uuidv4 = () => require('node:crypto').randomUUID()
 const { withUploadHashes } = require('../storage')
+const ownership = require('../media-placement-ownership')
 const IMPORT_BUCKET = 'pptx-import'
 
 function hashBuffer(buffer) {
@@ -16,18 +17,59 @@ function findHashEntry(hashes, hash) {
   return null
 }
 
-function createMediaTransaction({ hashScope = null } = {}) {
+function createJobMediaTransaction(jobId) {
+  const stages = new Set()
+  let accepting = true
+  let closed = false
+  let stageFailure = null
+  let uploadsRoot = null
+  return {
+    place(buffer, ext, uploadsDir, metadata) {
+      if (!accepting) throw new Error('PPTX media transaction is already closed')
+      const root = path.resolve(uploadsDir)
+      if (uploadsRoot && uploadsRoot !== root) throw new TypeError('PPTX media transaction changed its uploads root')
+      uploadsRoot = root
+      const operation = ownership.placeMedia({
+        ownerId: jobId, scope: IMPORT_BUCKET, uploadsDir, bytes: buffer,
+        originalName: metadata.originalName || `asset.${ext}`,
+        mimeType: metadata.mimeType, sourceKey: metadata.archivePath,
+        signal: metadata.signal, mediaBudget: metadata.mediaBudget,
+      })
+      stages.add(operation)
+      operation.then(() => stages.delete(operation), (error) => {
+        stages.delete(operation)
+        stageFailure ||= error
+      })
+      return operation
+    },
+    async commit(presentationId) {
+      if (closed) return
+      accepting = false
+      await Promise.all([...stages])
+      if (stageFailure) throw stageFailure
+      if (uploadsRoot) await ownership.commitOwner(jobId, presentationId, { scope: IMPORT_BUCKET })
+      closed = true
+    },
+    async rollback() {
+      if (closed) return
+      accepting = false
+      await Promise.allSettled([...stages])
+      if (uploadsRoot) await ownership.rollbackOwner(jobId, { scope: IMPORT_BUCKET, uploadsDir: uploadsRoot })
+      closed = true
+    },
+  }
+}
+
+function createMediaTransaction({ jobId, hashScope = null } = {}) {
+  if (!hashScope) {
+    if (typeof jobId !== 'string' || !jobId) throw new TypeError('Shared PPTX media requires its jobId')
+    return createJobMediaTransaction(jobId)
+  }
+  if (jobId != null || typeof hashScope !== 'object' || Array.isArray(hashScope)) {
+    throw new TypeError('Isolated media transactions require only a local hash scope')
+  }
   const records = []
   let closed = false
-  const rollbackHashes = async (hashes) => {
-    for (const record of records) {
-      const entry = hashes[record.bucket]?.[record.hash]
-      if (entry?.filename === record.filename) delete hashes[record.bucket][record.hash]
-      if (hashes[record.bucket] && Object.keys(hashes[record.bucket]).length === 0) {
-        delete hashes[record.bucket]
-      }
-    }
-  }
   return {
     hashScope,
     record(record) {
@@ -40,10 +82,15 @@ function createMediaTransaction({ hashScope = null } = {}) {
     },
     async rollback() {
       if (closed) return
+      for (const record of records) {
+        const entry = hashScope[record.bucket]?.[record.hash]
+        if (entry?.filename === record.filename) delete hashScope[record.bucket][record.hash]
+        if (hashScope[record.bucket] && Object.keys(hashScope[record.bucket]).length === 0) delete hashScope[record.bucket]
+      }
+      await Promise.all(records.map((record) => fs.unlink(record.filePath).catch((error) => {
+        if (error.code !== 'ENOENT') throw error
+      })))
       closed = true
-      if (hashScope) await rollbackHashes(hashScope)
-      else await withUploadHashes(rollbackHashes)
-      await Promise.all(records.map((record) => fs.unlink(record.filePath).catch(() => {})))
       records.length = 0
     },
   }
@@ -51,6 +98,11 @@ function createMediaTransaction({ hashScope = null } = {}) {
 
 async function persistDedupedBuffer(buffer, ext, uploadsDir, metadata = {}) {
   metadata.signal?.throwIfAborted?.()
+  if (metadata.transaction?.place) {
+    const placed = await metadata.transaction.place(buffer, ext, uploadsDir, metadata)
+    if (placed.budgetExceeded) return { budgetExceeded: true, url: null }
+    return { url: `/uploads/${placed.filename}`, deduped: placed.deduped }
+  }
   const hash = hashBuffer(buffer)
   let createdFilePath = null
   try {

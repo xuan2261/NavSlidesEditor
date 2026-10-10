@@ -123,6 +123,7 @@ async function editedExportAvailability(presentation, options = productionCompos
     const state = store.getState()
     const context = resolveEditedExportContext(state, presentation.id)
     if (!context.ok) return unavailable(context.reasonCode)
+    if (!context.textExportEligible) return unavailable('CANONICAL_TEXT_JOURNAL_INVALID')
     if (context.pendingJournalHash && context.pendingEdit === false) {
       return {
         available: true,
@@ -160,6 +161,7 @@ async function executeValidatedEditedExport(request, options = productionComposi
   const replay = replayRequest(state, request)
   const context = replay ? null : resolveEditedExportContext(state, request.presentationId)
   if (!replay && !context.ok) return blocked(context.reasonCode)
+  if (!replay && !context.textExportEligible) return blocked('CANONICAL_TEXT_JOURNAL_INVALID')
   const validators = createQualifiedValidators(options)
   const service = createMutationTransactionService({
     store,

@@ -5,7 +5,7 @@ import schemas from './package-store/schemas.js'
 import journalModule from './mutation-journal.js'
 import matrix from './canonical-feature-matrix.js'
 import sourceMaps from './source-map.js'
-import exportContext from './validated-edited-export-context.js'
+import editedExport from '../validated-edited-export.js'
 
 const { hashRecord } = schemas
 function fixture() {
@@ -70,7 +70,7 @@ function fixture() {
 }
 
 describe('editor projection authority distinct from native export eligibility', () => {
-  it('reads successive accepted metadata saves anchored to the imported package without qualifying native export', () => {
+  it('reads successive accepted metadata saves anchored to the imported package without qualifying native export', async () => {
     const state = fixture()
     const result = authority.resolveEditorProjectionContext(state, 'deck')
     expect(result).toMatchObject({
@@ -79,7 +79,12 @@ describe('editor projection authority distinct from native export eligibility', 
     })
     expect(result.after).toEqual(state.mutationResults[2].projection)
     expect(result.sourceMap).toEqual(state.mutationResults[2].sourceMap)
-    expect(exportContext.resolveEditedExportContext(state, 'deck').ok).toBe(false)
+    const refused = await editedExport.executeValidatedEditedExport({
+      presentationId: 'deck', expectedGeneration: 3, idempotencyKey: 'metadata-export',
+    }, { store: { getState: () => state } })
+    expect(refused).toMatchObject({
+      ok: false, status: 422, blockReason: 'CANONICAL_TEXT_JOURNAL_INVALID',
+    })
   })
 
   it('reads the head-bound committed import projection without borrowing pending editor state', () => {

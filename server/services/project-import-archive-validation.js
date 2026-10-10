@@ -31,7 +31,7 @@ function importError(code, message, status = 400, details = {}) {
   return Object.assign(new Error(message), { code, status, ...details })
 }
 
-function assertArchivePath(name, limits) {
+function assertArchivePath(name, limits, { packageBacked = false } = {}) {
   const depth = name.split('/').filter(Boolean).length - 1
   if (name.length > limits.maxPathLength) {
     throw importError('PROJECT_ARCHIVE_PATH_LIMIT', 'Archive path is too long', 413)
@@ -39,11 +39,14 @@ function assertArchivePath(name, limits) {
   if (depth > limits.maxNesting) {
     throw importError('PROJECT_ARCHIVE_NESTING_LIMIT', 'Archive nesting is too deep', 413)
   }
-  const allowed = ['manifest.json', 'presentation.json', 'presentation.html'].includes(name)
-  if (!allowed && !/^media\/[^/]+$/u.test(name)) {
+  const packageEntry = packageBacked && (name === 'package/manifest.json' || /^package\/blobs\/[a-f0-9]{64}$/u.test(name))
+  const allowed = ['manifest.json', 'presentation.json', ...(packageBacked ? [] : ['presentation.html'])].includes(name)
+  if (!allowed && !packageEntry && !/^media\/[^/]+$/u.test(name)) {
     throw importError('PROJECT_ARCHIVE_ENTRY_REJECTED', 'Archive contains an unexpected entry')
   }
-  if (name.startsWith('media/') && !SAFE_MEDIA_EXTENSIONS.has(path.extname(name).toLowerCase())) {
+  const extension = path.extname(name).toLowerCase()
+  if (name.startsWith('media/') && !SAFE_MEDIA_EXTENSIONS.has(extension) &&
+      !(packageBacked && ['.emf', '.wmf'].includes(extension))) {
     throw importError('PROJECT_MEDIA_TYPE_REJECTED', 'Archive media type is not allowed')
   }
 }
@@ -97,16 +100,19 @@ function activeContentInventory(presentation) {
   const inventory = new Set()
   if (presentation?.customCSS) inventory.add('custom-css')
   if (presentation?.customJS || presentation?.customScript) inventory.add('custom-javascript')
-  const visit = (slides) =>
-    (slides || []).forEach((slide) => {
-      ;(slide?.elements || []).forEach((element) => {
-        if (element?.type === 'html' && String(element.content || element.html || '').trim()) {
-          inventory.add('html-element')
-        }
-      })
-      visit(slide?.children)
-    })
+  const visitElements = (elements) => (elements || []).forEach((element) => {
+    if (element?.type === 'html' && String(element.content || element.html || '').trim()) inventory.add('html-element')
+    visitElements(element?.elements || element?.children)
+  })
+  const visit = (slides) => (slides || []).forEach((slide) => {
+    visitElements(slide?.elements)
+    visitElements(slide?.fixedElements)
+    visitElements(Object.values(slide?.layoutOverrides?.elementPatches || {}))
+    visit(slide?.children)
+  })
+  if (presentation) visit([presentation])
   visit(presentation?.slides)
+  visit(presentation?.layoutMasters)
   return [...inventory].sort()
 }
 

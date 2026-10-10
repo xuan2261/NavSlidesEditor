@@ -5,7 +5,8 @@ const {
   acknowledgeCompatibilityOutbox,
   snapshotCompatibilityOutbox,
 } = require('./compatibility-outbox')
-const { applyCompatibilityWrites } = require('./compatibility-view')
+const { applyCompatibilityWrites, hasExactCompatibilityHead } = require('./compatibility-view')
+const { hashRecord } = require('./package-store/schemas')
 
 let activeStore = null
 let activeRoot = null
@@ -39,14 +40,7 @@ async function initializePackageStore({ rootDir }) {
     .then(async (store) => {
       await store.acquireWriter()
       activeStore = store
-      try {
-        await drainPackageCompatibilityOutbox()
-        return store
-      } catch (error) {
-        activeStore = null
-        await store.releaseWriter().catch(() => {})
-        throw error
-      }
+      return store
     })
     .catch((error) => {
       activeRoot = null
@@ -104,28 +98,56 @@ async function withPackageStore(action) {
   }
 }
 
-/**
- * Drain outbox with per-record isolation: a poisoned write is dead-lettered and
- * does not prevent acknowledging healthy writes or taking the store offline.
- */
-async function drainPackageCompatibilityOutbox() {
+function isCapturedWriteCurrent(store, write) {
+  const state = store.getState()
+  const queued = state.compatibilityOutbox.find((record) => record.id === write.id)
+  if (!queued || hashRecord(queued) !== hashRecord(write)) return false
+  const head = state.heads.find((item) => item.presentationId === write.presentationId)
+  if (write.operation === 'remove') return !head
+  return hasExactCompatibilityHead(write.presentation, head)
+}
+
+async function withCompatibilityDrain(action) {
+  if (typeof action !== 'function') throw new TypeError('Compatibility drain action is required')
   const previous = compatibilityDrainTail
   let release
   compatibilityDrainTail = new Promise((resolve) => { release = resolve })
   await previous
   try {
-    const writes = await withPackageStore((store) => snapshotCompatibilityOutbox(store))
+    return await action()
+  } finally {
+    release()
+  }
+}
+
+/** Isolate poisoned writes without acquiring package serialization under JSON locks. */
+async function drainPackageCompatibilityOutbox({ signal } = {}) {
+  return withCompatibilityDrain(async () => {
+    signal?.throwIfAborted()
+    const writes = await withPackageStore((store) => {
+      signal?.throwIfAborted()
+      return snapshotCompatibilityOutbox(store)
+    })
     if (!writes.length) return 0
 
     const applied = []
+    const obsolete = []
     const poisoned = []
     for (const write of writes) {
+      signal?.throwIfAborted()
       try {
-        await withPresentations((presentations) => {
+        const didApply = await withPresentations((presentations) => {
+          signal?.throwIfAborted()
+          // Do not reacquire package serialization while holding the JSON lock.
+          // Publication may have been invalidated while this replay waited here.
+          if (!isCapturedWriteCurrent(getPackageStore(), write)) return false
           applyCompatibilityWrites(presentations, [write])
-        })
-        applied.push(write)
+          return true
+        }, { signal })
+        if (didApply) applied.push(write)
+        else obsolete.push(write)
       } catch (error) {
+        if (signal?.aborted) throw error
         // Preserve full write for repair/replay; only attach bounded error metadata.
         poisoned.push({
           write: structuredClone(write),
@@ -138,11 +160,15 @@ async function drainPackageCompatibilityOutbox() {
       }
     }
 
-    if (applied.length) {
-      await withPackageStore((store) => acknowledgeCompatibilityOutbox(store, applied))
+    if (applied.length || obsolete.length) {
+      await withPackageStore((store) => {
+        signal?.throwIfAborted()
+        return acknowledgeCompatibilityOutbox(store, [...applied, ...obsolete], { signal })
+      })
     }
     if (poisoned.length) {
       await withPackageStore(async (store) => {
+        signal?.throwIfAborted()
         await store.mutate((next) => {
           if (!Array.isArray(next.compatibilityDeadLetter)) next.compatibilityDeadLetter = []
           for (const item of poisoned) {
@@ -154,13 +180,11 @@ async function drainPackageCompatibilityOutbox() {
           next.compatibilityOutbox = (next.compatibilityOutbox || []).filter(
             (record) => !poisonedIds.has(record.id)
           )
-        })
+        }, { signal })
       })
     }
     return applied.length
-  } finally {
-    release()
-  }
+  })
 }
 
 async function shutdownPackageStore() {
@@ -191,4 +215,5 @@ module.exports = {
   initializePackageStore,
   shutdownPackageStore,
   withPackageStore,
+  withCompatibilityDrain,
 }

@@ -1,3 +1,12 @@
+const { hashRecord } = require('./package-store/schemas')
+const { validateTrustedImportMetadata, decorateTrustedImportMetadata } = require('./trusted-import-metadata')
+
+function hasExactCompatibilityHead(presentation, head) {
+  const rawHead = presentation?.pptxAggregateHead
+  return Boolean(rawHead && head && presentation.id === head.presentationId &&
+    hashRecord(rawHead) === hashRecord(head))
+}
+
 function currentGeneration(presentation) {
   const generation = presentation?.pptxAggregateHead?.generation
   return Number.isSafeInteger(generation) ? generation : null
@@ -83,6 +92,9 @@ function mergeCompatibilityPresentation(existing, incoming) {
 
 function applyCompatibilityWrites(presentations, writes) {
   for (const write of writes) {
+    const trusted = write.trustedImportMetadata === undefined ? undefined : validateTrustedImportMetadata(
+      write.trustedImportMetadata, write.presentation?.pptxAggregateHead?.originalRevisionId
+    )
     const index = presentations.findIndex((item) => item.id === write.presentationId)
     const existing = index === -1 ? null : presentations[index]
     if (isStaleWrite(existing, write)) continue
@@ -90,16 +102,29 @@ function applyCompatibilityWrites(presentations, writes) {
       if (index !== -1 && !isStaleWrite(existing, write)) presentations.splice(index, 1)
       continue
     }
+    // Original-only aggregates have no canonical projection to republish.
+    // Refresh an existing publication without inventing a presentation row.
+    if (write.headOnly === true) {
+      if (index !== -1) presentations[index] = {
+        ...existing,
+        pptxAggregateHead: structuredClone(write.presentation.pptxAggregateHead),
+      }
+      continue
+    }
     if (index === -1) {
-      const next = structuredClone(write.presentation)
+      const next = decorateTrustedImportMetadata(write.presentation, trusted)
       if (typeof write.updatedAt === 'string') next.updatedAt = write.updatedAt
       presentations.push(next)
     } else {
-      const next = mergeCompatibilityPresentation(existing, write.presentation)
+      const next = decorateTrustedImportMetadata(mergeCompatibilityPresentation(existing, write.presentation), trusted)
       if (typeof write.updatedAt === 'string') next.updatedAt = write.updatedAt
       presentations[index] = next
     }
   }
 }
 
-module.exports = { applyCompatibilityWrites, mergeCompatibilityPresentation }
+module.exports = {
+  applyCompatibilityWrites,
+  hasExactCompatibilityHead,
+  mergeCompatibilityPresentation,
+}

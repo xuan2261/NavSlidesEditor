@@ -1,15 +1,26 @@
 import fs from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import request from 'supertest'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import desktopCsp from '../electron/content-security-policy.js'
 
+const require = createRequire(import.meta.url)
+const serverCachePrefix = fileURLToPath(new URL('./', import.meta.url))
 const savedEnv = Object.fromEntries(
   ['NODE_ENV', 'SLIDES_DATA_DIR', 'SLIDES_UPLOADS_DIR'].map((key) => [key, process.env[key]])
 )
 let root
 let app
+
+function resetServerCache() {
+  vi.resetModules()
+  for (const key of Object.keys(require.cache)) {
+    if (key.startsWith(serverCachePrefix)) delete require.cache[key]
+  }
+}
 
 beforeAll(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), 'navslides-static-assets-'))
@@ -17,14 +28,16 @@ beforeAll(async () => {
   process.env.SLIDES_UPLOADS_DIR = path.join(root, 'uploads')
   await fs.mkdir(process.env.SLIDES_DATA_DIR, { recursive: true })
   await fs.mkdir(process.env.SLIDES_UPLOADS_DIR, { recursive: true })
-  vi.resetModules()
+  resetServerCache()
   process.env.NODE_ENV = 'production'
+  require('./services/storage').initDataFiles()
   const imported = await import('./index.js')
   app = imported.app || imported.default?.app
+  ;(imported.healthState || imported.default?.healthState)?.markReady()
 })
 
 afterAll(async () => {
-  vi.resetModules()
+  resetServerCache()
   for (const [key, value] of Object.entries(savedEnv)) {
     if (value === undefined) delete process.env[key]
     else process.env[key] = value

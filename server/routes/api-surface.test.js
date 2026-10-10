@@ -49,6 +49,7 @@ describe('API surface routes', () => {
 
     const updateRes = await request(app)
       .put('/api/settings')
+      .set('If-Match', `"${getRes.body.settingsRevision}"`)
       .send({ ai: { provider: 'gemini', apiKey: '***configured***' } })
     expect(updateRes.status).toBe(200)
     expect(updateRes.body.ai.apiKey).toBe('***configured***')
