@@ -1,6 +1,6 @@
 # Building from Source
 
-How to run NavSlides Editor locally for development. Requires **Node.js >=22.22.2, >=24.15.0, or >=26** and npm. CI and container builds pin Node.js 22.23.3.
+How to run NavSlides Editor locally for development. Requires **Node.js >=22.22.2, >=24.15.0, or >=26** and npm. CI and the Debian Trixie Slim container image pin Node.js 22.23.3. [`runtime-versions.json`](https://github.com/xuan2261/NavSlidesEditor/blob/master/runtime-versions.json) owns these pins, not qualification or release status.
 
 ## Clone and install
 

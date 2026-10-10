@@ -1,0 +1,132 @@
+{
+  "reviewDate": "2026-10-08",
+  "phase": "A",
+  "reviewMode": "Read-only current host source review; only this JSON written",
+  "hostRoot": "C:/Work/JeikCode",
+  "blockingFindings": [],
+  "sourceFilesReviewed": [
+    "C:/Work/JeikCode/crates/jeikcode-capabilities/src/tools/task.rs",
+    "C:/Work/JeikCode/crates/jeikcode-capabilities/src/tools/task_offline_acceptance.rs",
+    "C:/Work/JeikCode/crates/jeikcode-coding/src/provider_factory.rs",
+    "C:/Work/JeikCode/crates/jeikcode-coding/src/provider_factory_offline_acceptance.rs",
+    "C:/Work/JeikCode/crates/jeikcode-coding/src/parts.rs",
+    "C:/Work/JeikCode/crates/jeikcode-coding/src/runtime.rs",
+    "C:/Work/JeikCode/crates/jeikcode-coding/src/config.rs",
+    "C:/Work/JeikCode/crates/jeikcode-kernel/src/agent.rs",
+    "C:/Work/JeikCode/crates/jeikcode-config/src/config/mod.rs"
+  ],
+  "reviewCoverage": {
+    "scope": "Routing implementation, related acceptance tests, production injection, and actual receiving kernel runner sections; not an exhaustive whole-file or whole-worktree audit",
+    "task": "Directly read task.rs lines 280-789 and 1070-1439, including binding validation, schema/parser, admission, child construction, local request observer, terminal receipts, aggregation, and focused tests. Initial broad read was condensed; unrelated sections are not certified.",
+    "providerFactory": "Directly read production dispatch and routing sections at lines 55-449 and tests at 451-617, including both additional acceptance files in full.",
+    "productionInjection": "Read parts.rs task registration/tier closures/resolver injection and session binding sections; runtime startup installation and provider-reassembly handle preservation sections; config registry propagation/default sections.",
+    "actualReceiver": "Read kernel Agent::spawn provider/options transfer at lines 1090-1167 and actual request dispatch at 2340-2424. This is not a mock-only runner review.",
+    "registry": "Read Config::resolve_model at lines 1111-1159 and catalog method search context. No user configuration or credentials were read."
+  },
+  "checks": [
+    {
+      "name": "Unknown resolution precedes backend construction",
+      "result": "pass_in_reviewed_source",
+      "evidence": "TaskModelRouting::resolve performs qualified-ID validation, exact logical_models lookup, account/preset checks, resolution, nonempty API-model check and endpoint selection before factory.build. Unknown IDs never enter a difficulty fallback. Invalid registry test asserts zero factory calls."
+    },
+    {
+      "name": "Request/provider/API-model/tool-mode binding",
+      "result": "pass_in_reviewed_source",
+      "evidence": "TaskTool checks registry ID equality, account prefix equality, nonempty API model and provider.model_name equality before tools or child spawn. The bound provider and ChatOptions are moved into Agent::builder. Kernel spawn transfers both into RunningAgent; request dispatch clones those options and calls that provider. Explicit resolver resets coordinator sampling/tool-choice overrides to defaults, preserving model max_tokens and reasoning_effort. Kernel assigns retry ownership and runs normal option hooks; no alternate provider selection occurs at the reviewed boundary."
+    },
+    {
+      "name": "Immutable task snapshot and unchanged parent",
+      "result": "pass_in_reviewed_source",
+      "evidence": "Resolve clones one locked factory/base/registry generation, derives a cloned child config, and explicitly replaces endpoint/key. Existing tasks own their provider/options across refresh. Current queued/running acceptance test covers old API model, credentials and session retained while a later resolution sees refreshed values. Parent model/key/protocol and sampling invariance are asserted."
+    },
+    {
+      "name": "Empty and qualified IDs",
+      "result": "pass_in_reviewed_source",
+      "evidence": "Empty, bare, whitespace and URL-like IDs fail before provider construction; null/nonstrings fail batch parsing before any resolution. Qualified IDs are exact catalog keys, not aliases or defaults. Validator allows slash within the model suffix, but catalog existence and matching account remain mandatory; this is not permissive unknown-ID fallback."
+    },
+    {
+      "name": "Legacy difficulty behavior",
+      "result": "pass_in_reviewed_source",
+      "evidence": "Omitted model_id still selects capable only for difficulty hard and fast otherwise; production tier/host closures are unchanged. Explicit selection never executes either closure. Tests exercise both omitted paths and hard explicit override. Worker scope/risk admission remains before explicit resolution."
+    },
+    {
+      "name": "Truthful error and completion receipts",
+      "result": "pass_for_local_request_boundary",
+      "evidence": "Admission receipts have null effective_api_model; only ObservedTaskProvider::chat_stream marks provider_called. Unknown/construction failures retain null resolved/effective identities, emit task_error and do not fabricate success. Provider failures retain binding and attempted API model with remote_serving_identity null. Cancellation before request leaves effective model null; cancellation during stream retains attempted identity. Terminal progress and task result/error both carry route JSON. Status provider_called means attempted local provider invocation, not successful HTTP transmission or successful inference."
+    },
+    {
+      "name": "Pinned failures do not silently fallback",
+      "result": "pass_in_reviewed_source",
+      "evidence": "Resolution/build/binding failures continue into rejected task blocks rather than legacy branches. Runtime provider failures use the already-bound child provider. Current offline tests cover open/midstream/429 failures, same-provider retry, authentication construction failure, and cancellation. Normal same-provider retries remain intentional; this is not no-retry certification."
+    },
+    {
+      "name": "Actual receiving runner",
+      "result": "source_chain_verified",
+      "evidence": "Production parts registration supplies cfg.task_model_routing to TaskTool. TaskTool constructs a genuine kernel Agent and run_child_to_completion calls child.spawn, sends SendMessage and consumes real AgentEvents. Kernel RunningAgent receives that provider and ChatOptions and dispatches chat_stream. Registry-to-runner tests use fake providers with the real child lifecycle, not a substitute runner implementation."
+    }
+  ],
+  "verification": {
+    "provenance": "Final execution results supplied by Main in the review request; not independently rerun or log-validated in this read-only review",
+    "finalResults": {
+      "toolsTaskPassed": 38,
+      "providerFactoryPassed": 7,
+      "offlineJeikcodeCheckExitCode": 0,
+      "offlineTuixCheckExitCode": 0
+    },
+    "earlierResults": {
+      "perTaskModelPassed": 11,
+      "note": "Earlier result only; overlapping filters are not summed as unique tests."
+    },
+    "currentAdditionalTestsRead": [
+      "per_task_model_open_midstream_and_429_receipts_are_local_not_remote",
+      "per_task_model_same_provider_retry_keeps_binding_and_policy",
+      "per_task_model_cancel_during_stream_retains_attempted_binding",
+      "explicit_model_id_null_and_nonstrings_reject_mixed_batch_before_resolution",
+      "per_task_model_running_and_queued_bindings_survive_refresh_and_session_change",
+      "explicit_model_id_empty_api_and_factory_auth_failure_are_safe"
+    ],
+    "commandsExecutedByReviewer": false,
+    "providerCallsMadeByReviewer": false,
+    "note": "The earlier execution report predates these final counts and additional tests; its old missing-429/auth/queued-refresh claims are not repeated as current gaps."
+  },
+  "limits": {
+    "receiptServingIdentity": "Remote serving identity and gateway behavior are unobserved. A local chat_stream entry does not establish the gateway's actual serving model, credential acceptance, outbound HTTP completion, or absence of remote fallback.",
+    "activation": "New API/schema/routing implementation is NOT_ACTIVE in the installed/running host for purposes of this review; no binary replacement, deployment or live API probe occurred.",
+    "tuiConsumer": "TUI consumer verification is check-only, using Main's reported offline tuix check exit 0. No live TUI receipt parsing/rendering or frontend end-to-end invocation was observed; TUI consumer source was not reviewed here.",
+    "sourceScope": "No blanket all-source-clean claim. Only the listed source paths and stated sections were reviewed; provider adapter transports, host authentication implementations, unrelated dirty assets and frontend consumers were not exhaustively audited.",
+    "panicAccounting": "Existing outer JoinSet errors are discarded, and run_child_to_completion ignores the inner kernel task join result. Panic/crash receipt completeness is not certified; source comments also identify panic=abort behavior. This is a pre-existing runner limitation, not evidence of a new explicit-route fallback bug.",
+    "snapshotScope": "Factory/base/registry are cloned atomically as one generation; session ID uses a separate mutex. Tests establish binding retention across later refresh/session changes, not atomic registry-plus-session selection under simultaneous mutation.",
+    "errorDiagnostics": "Explicit outcome.error is replaced by a generic safe diagnostic. This does not certify arbitrary model text or child tool output as secret-free.",
+    "restrictionsHonored": "No source changes, shell commands, user config/secrets reads, D-drive access, installations, or provider/API calls; only the requested JSON was written."
+  },
+  "missingOfflineTests": [
+    {
+      "case": "Production parts/runtime assembly dispatch integration",
+      "gap": "Reviewed tests directly construct TaskTool with the real resolver and kernel runner. No dedicated test was identified that obtains task from production prepare/assemble registration and dispatches through that assembled parent.",
+      "severity": "nonblocking_source_injection_verified"
+    },
+    {
+      "case": "Concurrent resolve versus generation/session update stress",
+      "gap": "Queued/running retention is tested, but simultaneous resolver admission during generation and separate session-ID mutation is not stress-tested.",
+      "severity": "nonblocking_concurrency_boundary_limit"
+    },
+    {
+      "case": "Kernel task panic or event-channel closure without TurnComplete",
+      "gap": "No targeted offline test was identified for truthful task_error/receipt accounting when the actual child kernel task terminates unexpectedly rather than delivering its terminal event.",
+      "severity": "preexisting_runner_limit"
+    },
+    {
+      "case": "Absent explicit account credential with credential-bearing parent",
+      "gap": "Code uses resolved.api_key.unwrap_or_default rather than parent key, but no targeted missing-key test was identified for this branch.",
+      "severity": "nonblocking_source_branch_verified"
+    }
+  ],
+  "unresolvedReviewItems": [],
+  "verdict": {
+    "status": "NO_BLOCKING_ROUTING_BUG_FOUND_IN_REVIEWED_SOURCE",
+    "boundedConclusion": "Current Phase A source supports fail-closed explicit task routing, bound provider/options delivery into the actual kernel runner, immutable per-task selection, preserved omitted-ID difficulty behavior and truthful local-attempt receipts. Main's reported final offline results are consistent with the current tests read. This is a bounded source/offline review, not activation approval, live frontend verification, gateway serving certification or an exhaustive whole-source clean bill.",
+    "phaseAUnconditionallyComplete": false,
+    "liveActivationApprovedByThisReview": false,
+    "genericAcceptanceCriteriaPromotedToBlockers": false
+  }
+}

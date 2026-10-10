@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working on code
 
 ## Project Overview
 
-**NavSlides Editor** — a self-hostable WYSIWYG presentation editor powered by reveal.js. Built as an npm workspace monorepo with 4 packages: `client` (React/Vite), `server` (Express), `shared` (pure Node.js utilities), and `electron` (desktop shell).
+**NavSlides Editor** — a self-hostable WYSIWYG presentation editor powered by reveal.js. The npm workspaces declared in `package.json` are `server` (Express), `client` (React/Vite), `shared` (pure Node.js utilities), and `website` (VitePress documentation). Electron desktop packaging is separate and is not an npm workspace.
 
 ## Commands
 
@@ -85,6 +85,7 @@ NavSlidesEditor/
 │       ├── presenterTools.js     # Presenter mode utilities
 │       ├── content-safety.js     # Content validation
 │       └── shared-*.js           # PPTX, color, text utilities
+├── website/          # VitePress documentation workspace
 └── electron/         # Desktop Electron shell, embeds the server
 ```
 

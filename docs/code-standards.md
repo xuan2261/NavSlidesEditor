@@ -326,15 +326,15 @@ slides.
 
 Server reads and writes JSON files via `fs-extra`.
 
-| File                 | Initial value                                                         |
-| -------------------- | --------------------------------------------------------------------- |
-| `presentations.json` | `[]`                                                                  |
-| `templates.json`     | `[]`                                                                  |
-| `share-tokens.json`  | `{}`                                                                  |
-| `github-config.json` | `{ token: '', owner: '', repo: '' }`                                  |
-| `settings.json`      | `{ aiApiKey: '', defaultTheme: 'black', defaultTransition: 'slide' }` |
-| `analytics.json`     | `{}`                                                                  |
-| `media.json`         | `[]`                                                                  |
+| File | Initial value |
+| --- | --- |
+| `presentations.json` | `[]` |
+| `templates.json` | `[]` |
+| `share-tokens.json` | `{}` |
+| `github-config.json` | `{ token: '', owner: '', repo: '' }` |
+| `settings.json` | Defaults owned by [`initDataFiles()`](../server/services/storage.js); legacy files remain supported by the Settings revision reader. |
+| `analytics.json` | `{}` |
+| `media.json` | `[]` |
 
 `storage.js` wraps each file in an in-memory lock queue so concurrent requests
 do not race. There is still no database layer and no cross-file transaction

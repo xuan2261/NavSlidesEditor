@@ -91,11 +91,11 @@ Design presets apply a coordinated color palette, font stack, and default elemen
 
 ## Export & Sharing
 
-- **Standalone HTML** — a single `.html` file that plays reveal.js from CDN
-- **Offline HTML** — all CDN assets inlined; works without internet access
+- **Standard HTML** — references the manifest-owned local runtime; see [runtime and offline limits](/features/export#html-export-standalone)
+- **Offline HTML** — embeds required local runtime assets; external content is not universally available offline
 - **PDF** — print-ready via browser print dialog with all fragments expanded
-- **PPTX** — PowerPoint-compatible export
-- **Shareable link** — generate a URL to share a read-only or editable view
+- **PPTX** — [Original, validated Edited, and Reconstructed modes](/features/pptx-import-export) with distinct fidelity limits
+- **Shareable link** — view-only URL with optional name, password, and expiration
 - **GitHub push** — commit your presentation directly to a GitHub repository
 
 See [Export & Sharing](/features/export) for details.

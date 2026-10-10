@@ -226,13 +226,21 @@ Set via shell, `.env` file (manually), or Docker environment config.
 
 ### Health and supported topology
 
-- `GET /health/live` returns `200` when the HTTP process is serving. It does not
-  inspect dependencies.
-- `GET /health/ready` returns `200` only after package-store initialization and
-  writer ownership, writable data/uploads probes, and startup recovery. It
-  returns `503` during startup, shutdown, or durable recovery degradation.
-- Responses contain only schema version, status, bounded reason codes, and
-  uptime. They do not expose paths, filenames, tokens, hashes, or error text.
+Health endpoints and HTTP mutation admission are owned by
+[`server/index.js`](../server/index.js); the bounded response contract is owned by
+[`health-state.js`](../server/services/health-state.js). Startup recovery and its
+deadline/sticky degraded decision are owned by `recoverStartupState()` in
+[`health-state-readiness.js`](../server/services/health-state-readiness.js).
+Degraded readiness is not permission to discard uncertain intent: mutations must
+remain blocked. Read/download paths still require their own valid authority;
+liveness is not proof that every retained presentation can be opened.
+
+Before readiness is decided, startup expires pending project-import admissions
+through the existing session-lock and media-ownership recovery routine. Safe
+expiration revokes admission and removes only proven session-owned staged media;
+unreadable ledgers or uncertain upload ownership keep readiness and mutation
+admission degraded. Do not sweep user uploads or retained winner media to clear
+that decision. This is not destructive garbage collection or power-loss proof.
 
 Only one NavSlides server process may use a deployment's persistent roots.
 `NAVSLIDES_WORKERS`, `WEB_CONCURRENCY`, `PM2_INSTANCES`, `INSTANCE_COUNT`, and
@@ -336,10 +344,54 @@ their atomic replacement candidates are created or tightened to owner-only
 same files to the account running NavSlides. The application does not claim that
 `chmod 0600` provides a Windows ACL guarantee.
 
+### Durable recovery runbook
+
+Use this route when readiness reports durable recovery uncertainty after an
+interrupted import or when a session/media ownership ledger cannot be read.
+Recovery must preserve evidence rather than make the service appear healthy.
+
+1. Before repair, stop the affected application through its authorized operator
+   and back up the **entire configured data and uploads roots together**, not
+   just presentation JSON. Keep the retained package state, blobs, history,
+   session/media ledgers and staging intents. Protect the copy like live data.
+2. Inspect retained authority and the exact job/session/media intent before
+   choosing a repair. The owners are
+   [`package-store-runtime.js`](../server/services/pptx-import/package-store-runtime.js),
+   [`project-import-media-session-store.js`](../server/services/project-import-media-session-store.js),
+   [`project-import-media-session-recovery.js`](../server/services/project-import-media-session-recovery.js),
+   and [`health-state-readiness.js`](../server/services/health-state-readiness.js).
+   Package collection is an [audit-only owner](../server/services/pptx-import/package-store/collector.js),
+   not authorization to delete an unreferenced-looking blob.
+3. Repair only an evidenced prerequisite, then restart to retry the retained
+   intent. Stop if package authority or media ownership remains ambiguous.
+   **Never reset a corrupt ledger to an empty/default ledger, delete shared or
+   winner media, or remove retained originals, snapshots or template blobs.**
+   Do not introduce an unauthenticated repair endpoint, automatic destructive
+   rollback or destructive garbage collection to clear readiness.
+4. Exercise the backup in separate roots before touching the live copy. After
+   restart, verify readiness and the presentation's authoritative head/job
+   identity, immutable Original SHA-256 and referenced/shared media hashes;
+   opening a list or receiving a healthy response alone is insufficient. The
+   executable HTTP and copied-root verification owner is
+   [`recovery-http-smoke.cjs`](../server/recovery-http-smoke.cjs), with startup
+   regression coverage in
+   [`index-project-recovery.test.js`](../server/index-project-recovery.test.js).
+
+This runbook is an operator safety route, not permission to modify a user's
+server or data. Obtain the applicable operational authorization first.
+
 ### Backup and Restore (Docker)
 
 Backups contain credentials, share tokens, author content, package originals,
 history, and media. Store them with the same care as the live volumes.
+
+The executable owners are
+[`backup-docker-volumes.ps1`](../scripts/backup-docker-volumes.ps1) and
+[`restore-docker-volumes.ps1`](../scripts/restore-docker-volumes.ps1).
+Their Docker procedure is separate from the source copied-root HTTP recovery
+smoke. That smoke covers Windows process termination with a controlled importer,
+not power-loss durability or native source lineage; neither procedure pointer
+establishes Docker, Linux, Office or release qualification.
 
 ```powershell
 # Captures pre-state, stops only a running service, archives both volumes,
@@ -352,13 +404,11 @@ docker compose build
 npm run restore:docker -- -BackupDirectory .\backups\navslides-20260925
 ```
 
-The backup script never calls `docker compose down -v`. A backup/snapshot error
-and a restart error are retained and reported separately; either fails the
-command. Restore verifies both archive hashes before extraction, refuses a
-running service or non-empty target volume, starts the service, waits for
-readiness, and checks presentations JSON, package originals, history, settings,
-and uploaded-media retrieval. Remove the drill project only after verifying it;
-do not point restore at volumes containing data you need.
+Keep restore drills isolated from volumes containing data you need; remove the
+drill only after verifying its result. Follow the script owners for archive and
+basic restore checks, and the [durable recovery runbook](#durable-recovery-runbook)
+for package-head, Original and media identity verification. Do not delete live
+volumes or relax readiness to force a drill to pass.
 
 ---
 
@@ -426,19 +476,29 @@ The repository includes GitHub Actions workflows for validation and release qual
 
 ### Release
 
-The published version remains **v1.16.2**; **v1.17.0** is an untagged candidate
-(`package.json` and workspace manifests own the product version; `runtime-versions.json`
-owns runtime pins). The [release target policy](../config/release-target-policy.json)
-selects an exact prebuilt Docker image and subject-bound receipts as the release
-deliverable, **not** a publicly distributed Windows EXE. The selected physical
-PPTX gates are **G0/G1/G2/G4**: native edited-PPTX and exact-source direct
-OfficeCLI evidence remain mandatory. Windows privately qualifies the unpacked
-runtime and physical OfficeCLI G1, not executable-artifact G3. PowerPoint G5 is
-**not selected** for v1.17.0; the [visual-evidence runbook](pptx-visual-evidence-runbook.md)
-remains a future/diagnostic route, not release proof. Importer-corpus results,
-browser/editor visuals and local diagnostic COM screenshots neither satisfy G5
-nor qualify PowerPoint fidelity. Missing _selected_ physical receipts block
-qualification; absent G3/G5 evidence is neither a release block nor a pass.
+- Main CI builds the client once as `client-dist-v1-<full-sha>`. Playwright,
+  load, Docker, and Windows Electron consumers download and verify those exact
+  bytes before use.
+- `Build & Release Electron` accepts only an existing `v<package.version>` or
+  `v<package.version>-rc.N` tag whose target is the exact successful main-CI
+  subject. Manual dispatch is rerun/recovery by existing tag name only.
+- Windows signing, draft staging, and final publication use separate protected
+  environments. Missing physical Office/PowerPoint receipts, signing identity,
+  trusted RFC 3161 timestamp, post-download verification, or attestation blocks
+  publication. There is no unsigned public fallback.
+- Windows attestation workflow identity is owned by
+  [`windowsWorkflowIdentity`](../scripts/ci/release-receipt-canonical.mjs) in
+  `release-receipt-canonical.mjs`. The runtime entry point in
+  [`release-receipts.mjs`](../scripts/ci/release-receipts.mjs) supplies mandatory
+  `windowsAttestationPolicy` from trusted `GITHUB_REPOSITORY` and `GITHUB_REF`
+  context, using full `refs/heads/...` or `refs/tags/...` refs. Missing required
+  policy fails closed; never derive approved identity from root or leaf receipt
+  claims. This is an independent trust boundary, not a grant of new permissions.
+- Policy-version labels are not approval authority. The canonical policy binding
+  is owned by [`createGreenShaRoot`](../scripts/ci/release-receipts.mjs). Changed
+  trusted target policy or a legacy unbound root requires explicit requalification,
+  not relabeling old evidence.
+- Linux and macOS Electron packages exist as local `electron-builder` scripts but are not part of the current release workflow.
 
 The operator accepts reported Trivy **HIGH/CRITICAL** findings as an advisory
 risk for **private, single-user self-hosting only**. Preserve the raw

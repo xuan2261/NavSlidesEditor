@@ -23,7 +23,7 @@ Khác với việc chỉnh sửa trực tiếp các tệp Markdown hay HTML reve
 - **Điều hướng slide** — slide dọc (slide con) hạng nhất, slide có thể sắp xếp lại, ghi chú người trình bày
 - **Giao diện & mẫu thiết kế** — 11 giao diện reveal.js dựng sẵn cùng 39 mẫu thiết kế (preset) dựa trên token trải khắp 7 nhóm
 - **Chuỗi chân trang** — chân trang tiến độ theo từng phần tự động cho các bài thuyết trình học thuật
-- **Tùy chọn xuất** — HTML độc lập, HTML ngoại tuyến (nhúng CDN), PDF, PPTX, liên kết chia sẻ, đẩy lên GitHub
+- **Tùy chọn xuất** — [HTML thông thường và HTML ngoại tuyến với phạm vi giới hạn](/vi/features/export), PDF, [ba chế độ PPTX](/vi/features/pptx-import-export), liên kết chia sẻ chỉ xem, đẩy lên GitHub
 - **Đồng bộ đám mây** — Proton Drive, S3, Google Drive hoặc bất kỳ remote rclone nào
 
 ## Chọn phương thức cài đặt
@@ -32,7 +32,7 @@ NavSlides Editor có thể chạy theo ba cách:
 
 | Phương thức | Phù hợp nhất cho |
 |--------|----------|
-| **Docker** (khuyến nghị) | Máy chủ, thiết lập chạy liên tục, nhóm làm việc |
+| **Docker** (khuyến nghị) | Triển khai riêng, chạy liên tục cho một người vận hành |
 | **Ứng dụng desktop** | Một người dùng, ngoại tuyến, tệp cục bộ |
 | **Node.js từ mã nguồn** | Phát triển, tùy biến |
 

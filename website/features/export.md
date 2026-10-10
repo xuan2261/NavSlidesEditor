@@ -4,7 +4,7 @@ NavSlides Editor supports multiple export formats so you can share your presenta
 
 ## HTML export (standalone)
 
-The default HTML export produces a **self-contained `.html` file** that loads reveal.js and other assets from a CDN.
+Standard HTML export creates a `.html` file that references the manifest-owned local `/vendor/` runtime, not a CDN. It is not a fully self-contained offline file.
 
 - Open your presentation in the editor.
 - Click **File → Export → HTML**.
@@ -12,19 +12,19 @@ The default HTML export produces a **self-contained `.html` file** that loads re
 - Open the file in any browser to present.
 
 ::: tip
-Standalone HTML is the smallest file format because assets are fetched from a CDN at runtime. Use it when you expect an internet connection.
+Keep the referenced local runtime and media reachable when opening standard HTML. See [Export Fidelity and Known Limitations](https://github.com/xuan2261/NavSlidesEditor/blob/master/docs/export-fidelity-and-limits.md#revealjs-runtime-contract) for the runtime owner and asset requirements.
 :::
 
 ## Offline HTML
 
-Offline HTML inlines all external CSS, JavaScript, and font assets so the file works **without any internet connection**.
+Offline HTML inlines the required published local runtime assets and fails closed if a required asset is missing. This does not make arbitrary external iframes, scripts, media, or services available offline.
 
 - Click **File → Export → Offline HTML**.
-- The export process downloads all CDN assets and inlines them — this may take a few seconds.
-- The resulting file is self-contained and can be copied to a USB drive or shared by email.
+- The export process embeds the required local runtime assets.
+- Save the resulting file for offline delivery; check any external content separately.
 
 ::: tip
-Use offline HTML when presenting at a conference venue where Wi-Fi may be unreliable, or when distributing slides to students.
+Use offline HTML for unreliable Wi-Fi, but test the exported deck on the presentation machine. External embeds, AI providers, and cloud sync still require their respective resources or network services.
 :::
 
 ## PDF
@@ -42,18 +42,14 @@ PDF export relies on the browser's print engine. Complex layouts, custom fonts, 
 
 ## PPTX (PowerPoint)
 
-Export a **PowerPoint-compatible `.pptx` file** for editing in Microsoft Office, Google Slides, or LibreOffice Impress.
-
-- Click **File → Export → PPTX**.
-- Text, images, and basic shapes are exported as editable PowerPoint elements.
-- Complex elements (LaTeX blocks, charts) are rasterized as images in the PPTX.
+See [PPTX Import & Export](/features/pptx-import-export) to choose between **Download Original**, **Export Validated Edited Revision**, and **Generate Reconstructed PPTX**. These modes have different recovery, validation, and editability limits; a generated file is not evidence of qualified Microsoft Office or Google Slides editing fidelity.
 
 ## Shareable links
 
-Generate a **shareable URL** that others can open to view (or edit) your presentation directly in their browser — no installation required.
+Generate a **view-only URL** that others can open in their browser. Share links do not grant collaborative editing access.
 
 - Click **Share → Get Link**.
-- Choose **View only** or **Editable**.
+- Optionally name the link and set a password or expiration.
 - Copy and share the URL.
 
 ::: tip
