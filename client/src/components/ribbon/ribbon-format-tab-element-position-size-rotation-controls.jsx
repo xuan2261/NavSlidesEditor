@@ -249,6 +249,7 @@ export default function FormatTabContent({
   onUpdateElements,
   onAlignElements,
   elements,
+  slide,
   selectedElementIds,
   slideWidth,
   presentation,
@@ -327,7 +328,7 @@ export default function FormatTabContent({
             element={selectedElement}
             onUpdate={onUpdateElement}
             presentation={presentation}
-            slide={{ elements: elements || [selectedElement] }}
+            slide={slide || { elements: elements || [selectedElement] }}
             compact
           />
         </RibbonSection>

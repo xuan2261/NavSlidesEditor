@@ -4,7 +4,9 @@
  */
 export async function launchPresentPopup(page) {
   const popupPromise = page.waitForEvent('popup', { timeout: 15000 })
-  const presentTrigger = page.getByRole('button', { name: 'Present', exact: true }).first()
+  const presentTrigger = page
+    .getByRole('button', { name: 'Present', exact: true })
+    .and(page.locator('[aria-haspopup="menu"]'))
   await presentTrigger.click()
   const fromBeginningItem = page.getByRole('menuitem', { name: /From beginning/i })
   await fromBeginningItem.click()

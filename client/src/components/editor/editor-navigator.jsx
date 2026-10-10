@@ -2,9 +2,12 @@ import { applyLayout, changeLayout, detachLayout } from 'revealjs-shared'
 import SlidePanel from '../SlidePanel'
 
 function withLayoutMaster(presentation, layouts, layoutId) {
-  if ((presentation.layoutMasters || []).some((layout) => layout.id === layoutId)) return presentation
+  if ((presentation.layoutMasters || []).some((layout) => layout.id === layoutId))
+    return presentation
   const layout = layouts.find((candidate) => candidate.id === layoutId)
-  return layout ? { ...presentation, layoutMasters: [...(presentation.layoutMasters || []), layout] } : presentation
+  return layout
+    ? { ...presentation, layoutMasters: [...(presentation.layoutMasters || []), layout] }
+    : presentation
 }
 
 export default function EditorNavigator({ visible, overlay, onCloseOverlay, c }) {
@@ -20,9 +23,7 @@ export default function EditorNavigator({ visible, overlay, onCloseOverlay, c })
         event.stopPropagation()
       }}
       className={
-        overlay
-          ? 'absolute inset-y-0 left-0 z-40 shadow-xl'
-          : 'flex h-full min-h-0 shrink-0'
+        overlay ? 'absolute inset-y-0 left-0 z-40 shadow-xl' : 'flex h-full min-h-0 shrink-0'
       }
     >
       <SlidePanel
@@ -35,11 +36,41 @@ export default function EditorNavigator({ visible, overlay, onCloseOverlay, c })
         onAdd={() => c.setShowTemplateModal(true)}
         onAddFromTemplate={() => c.setShowTemplateGallery(true)}
         layoutOptions={c.availableLayouts}
-        onApplyLayout={(layoutId, index) => c.setPresentation((previous) => { const next = withLayoutMaster(previous, c.availableLayouts, layoutId); return { ...next, slides: next.slides.map((slide, candidate) => candidate === index ? applyLayout(slide, next.layoutMasters, layoutId).slide : slide) } })}
-        onChangeLayout={(layoutId, index) => c.setPresentation((previous) => { const next = withLayoutMaster(previous, c.availableLayouts, layoutId); return { ...next, slides: next.slides.map((slide, candidate) => candidate === index ? changeLayout(slide, next.layoutMasters, layoutId).slide : slide) } })}
-        onDetachLayout={(index) => c.setPresentation((previous) => ({ ...previous, slides: previous.slides.map((slide, candidate) => candidate === index ? detachLayout(slide, c.availableLayouts).slide : slide) }))}
+        onApplyLayout={(layoutId, index) =>
+          c.setPresentation((previous) => {
+            const next = withLayoutMaster(previous, c.availableLayouts, layoutId)
+            return {
+              ...next,
+              slides: next.slides.map((slide, candidate) =>
+                candidate === index ? applyLayout(slide, next.layoutMasters, layoutId).slide : slide
+              ),
+            }
+          })
+        }
+        onChangeLayout={(layoutId, index) =>
+          c.setPresentation((previous) => {
+            const next = withLayoutMaster(previous, c.availableLayouts, layoutId)
+            return {
+              ...next,
+              slides: next.slides.map((slide, candidate) =>
+                candidate === index
+                  ? changeLayout(slide, next.layoutMasters, layoutId).slide
+                  : slide
+              ),
+            }
+          })
+        }
+        onDetachLayout={(index) =>
+          c.setPresentation((previous) => ({
+            ...previous,
+            slides: previous.slides.map((slide, candidate) =>
+              candidate === index ? detachLayout(slide, c.availableLayouts).slide : slide
+            ),
+          }))
+        }
         onDelete={c.deleteSlide}
         onDuplicate={c.duplicateSlide}
+        onDuplicateChild={c.duplicateChildSlide}
         onDeleteSelected={c.deleteSlides}
         onDuplicateSelected={c.duplicateSlides}
         onMove={c.moveSlide}

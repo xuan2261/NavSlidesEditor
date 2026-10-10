@@ -180,7 +180,7 @@ describe('Library authoring integration', () => {
     const controls = (element) => (
       <ActionControls
         element={element}
-        slide={effective()}
+        slide={result.current.presentation.slides[0]}
         presentation={result.current.presentation}
         onUpdate={(changes) => result.current.updateElements([{ id: element.id, ...changes }])}
       />
