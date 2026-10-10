@@ -23,6 +23,10 @@ export async function freshPortable(browser, file, { initScripts = [] } = {}) {
     httpAttempts.push(route.request().url())
     return route.abort('blockedbyclient')
   })
+  await context.routeWebSocket(/.*/, (socket) => {
+    socketAttempts.push(socket.url())
+    return socket.close({ code: 1008, reason: 'blockedbyclient' })
+  })
   await context.addInitScript(() => {
     window.__releaseSockets = []
     const NativeSocket = window.WebSocket

@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { normalizeElementAction } from 'revealjs-shared'
+import { useEffect, useMemo, useRef } from 'react'
+import { normalizeElementAction, resolveEffectiveElements } from 'revealjs-shared'
 import { Button, Input, Select } from '../../components/ui'
 
 const KINDS = [
@@ -79,7 +79,12 @@ export default function ActionControls({
     ? 'w-28 h-7 rounded border border-border bg-secondary px-1 text-[11px]'
     : 'w-full bg-card border border-border text-text-primary px-2 py-1.5 rounded-sm text-xs'
   const slides = slideChoices(presentation)
-  const targets = (slide?.elements || []).filter((target) => !target.hidden)
+  const targets = useMemo(() => {
+    const elements = slide?.layoutId
+      ? resolveEffectiveElements(slide, presentation?.layoutMasters).elements
+      : slide?.elements || []
+    return elements.filter((target) => !target.hidden)
+  }, [slide, presentation?.layoutMasters])
   const variables = presentation?.interactionVariables || []
   const missingTarget =
     slide &&

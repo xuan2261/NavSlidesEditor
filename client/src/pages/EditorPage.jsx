@@ -410,6 +410,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     duplicateSlides,
     moveSlide,
     addChildSlide,
+    duplicateChildSlide,
   } = useSlideOperations({
     presentation,
     setPresentation,
@@ -938,6 +939,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
           gridSize,
           moveSlide,
           addChildSlide,
+          duplicateChildSlide,
           updateCurrentSlide,
           updateElement: masterEdit ? updateMasterElement : updateElement,
           updateElements,
