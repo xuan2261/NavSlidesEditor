@@ -1,0 +1,286 @@
+{
+  "transcript": "C:\\Users\\Z10PAD8C_Xuan2261\\.omp\\agent\\sessions\\--C--Work-NavSlidesEditor--\\2026-10-04T11-03-27-941Z_01a10695-43c5-7000-80a5-281eb32934b4\\Settled09RejectionCounsel.jsonl",
+  "transcriptLine": 140,
+  "timestamp": "2026-10-05T09:30:14.885Z",
+  "toolCallId": "call_TYABKMLaS8bfP7lPE2zW8NGj|fc_01c07934fdcbefde016ac36d0f2cb487d0bd0c72c1ff5fd496",
+  "provenance": "AUTHENTIC_ORIGINAL_AUTHORITY_YIELD_NOT_RECONSTRUCTED_D_FILE",
+  "data": {
+    "decision": "NO-GO — settle Correction09 as REJECTED / REPAIR_REQUIRED / FAILED_DELIVERY_NOT_ADMITTED. No admission, execution, caller migration or continuation of09 is authorized.",
+    "tl_dr": "Both independent salvage audits reject the same preserved partial09 subject. Five concrete source defects, two explicitly unresolved chronology obligations, and the separate absent genuine Native09 receipt prevent admission; the completed Evidence09 receipt cannot cure any of them. Main should finish the combined settlement and pause substantive work; proceeding requires explicit authorization for exactly one new independently bounded substantive correction across both partitions, not a retry or receipt-only recovery.",
+    "reframed_problem": {
+      "outcome": "Preserve the actual settled09 result, distinguish usable local source improvements from executable correctness and complete delivery, and define a complete but bounded possible replacement attempt.",
+      "constraints": "Counsel only; Main retains all decisions. Exactly-one substantive09 authority is exhausted. Both read-only salvage reviews are terminal. Frozen09, prior subjects and canonical source remain unchanged; all qualification flags remain false and all54 acceptance cells unexecuted.",
+      "non_goals": "No source repair, retry/resume09, producer dispatch, deadline rearm, receipt reconstruction, runtime verification, Phase2 cutover or gate override.",
+      "acceptance": "The settlement must retain all12 original Native findings, all3 original Evidence findings, all six08 checks, the five current concrete defects, both additional unresolved chronology obligations, credited behavior, genuine delivery requirements and every later54-cell obligation."
+    },
+    "subject_and_evidence": {
+      "exact_subject": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-09-partial",
+      "reports_read_completely": [
+        "pending-substrate-09-settled-rejection-counsel-brief.md",
+        "pending-substrate-09-native-salvage-audit.json",
+        "pending-substrate-09-evidence-salvage-audit.json",
+        "pending-substrate-09-terminal-failure-counsel.json",
+        "pending-substrate-08-settled-rejection-counsel.json",
+        "pending-substrate-08-native-salvage-audit.json",
+        "pending-substrate-08-evidence-salvage-audit.json",
+        "pending-substrate-07-native-admission.json",
+        "pending-substrate-07-evidence-admission.json",
+        "pending-substrate-07-settled-rejection-counsel.json"
+      ],
+      "authorities_read": "Complete09 dispatch, producer and salvage contracts; complete08 subject authority; original Native/identity authorities; complete09 scope preservation, partial freeze, terminal settlement and terminal-evidence preservation records; complete genuine Evidence09 receipt. Current blockers and relevant preservation/consumer/production sections were read directly from frozen09. The linked Reveal dispatcher was also read, with the dependency limitation below.",
+      "dual_review_result": "Both independently report REPAIR_REQUIRED, admission=false, runtimeExecuted=false, zero admitted/executed acceptance cells. Their reports state inspection of all26 helpers and all12 immutable callers; this counsel does not pretend to be a new full source admission.",
+      "preservation_evidence": "Coordinator records report4325 baseline regular inputs compared,4326 binary copies hash-verified,4316 baseline inputs unchanged, exactly9 allowed helpers changed, no missing/unexpected changes, and only the genuine Evidence09 receipt added. All12 caller bytes remain immutable and all26 helpers strictly below200 physical lines. These are read preservation observations, not measurements rerun by counsel.",
+      "terminal_evidence": "The terminal settlement records Native09 exit1 after992.32s from transport stream_error, explicitly not timeout, with no genuine Native09 receipt. Evidence09 completed with a genuine receipt. The preservation record reports complete outputs634/635 copied with matching SHA256 and originals retained. No failure was rerun."
+    },
+    "source_defects": [
+      {
+        "id": "09-S1",
+        "priority": "P1",
+        "owner": "Native",
+        "source": "tests/e2e/education/pending-round-lifecycle-observation-browser.js:129-174; observation.js:12-18",
+        "mechanism": "evaluateActionCandidates has no closing function brace after its root.evaluate call and before the next export. An export declaration therefore occurs inside an unfinished function body, blocking ESM parsing and the observation/controls/clock/witness/surface import graph.",
+        "required_repair": "Restore the correct function boundary without changing evaluation or public contracts. This is a source-proven syntax blocker, not an executed import failure."
+      },
+      {
+        "id": "09-S2",
+        "priority": "P1",
+        "owner": "Native",
+        "source": "tests/e2e/education/pending-round-lifecycle-native-history.js:75-109; observation.js:103-135; witness.js:31-76",
+        "mechanism": "completePacket uses undeclared serializable after marking the event completed. Neither completed native packet storage nor the native-action diagnostic is published, and the document bubbling path cannot recover an event already marked completed.",
+        "required_repair": "Restore the actual packet copy before removing its live DOM root and publish BOTH __nsRecordedPackets evidence and the native-action recorder diagnostic. Preserve complete capture/post snapshots, lifecycle-only projections and uncertainty bounds; do not remove diagnostics or weaken continuity."
+      },
+      {
+        "id": "09-S3",
+        "priority": "P2",
+        "owner": "Native",
+        "source": "tests/e2e/education/pending-round-lifecycle-observation-errors.js:32-45; observation.js:105-130; observation-browser.js:146-159",
+        "mechanism": "Without an exact matched packet, the fallback consumes only the first sequence-eligible candidate. Genuine later relevant candidate state/UI siblings remain raw-only when outer rejection or no-match failure terminates extraction.",
+        "required_repair": "Preserve the normal exact-match acceptance path. On the fallback/rejection path, ingest every relevant cursor-eligible packet's genuine siblings in recorded packet sequence and capture-before-post/state-before-UI order before the outer gate can throw. Retain raw evidence and exact occurrence normalization; do not manufacture failures or broaden packet acceptance."
+      },
+      {
+        "id": "09-S4",
+        "priority": "P2",
+        "owner": "Evidence",
+        "source": "tests/e2e/education/pending-round-lifecycle-error-exposure.js:39-54,95-101,169-174; error-ledger.js:98-115",
+        "mechanism": "Recursive recording exposes an occurrence's serialization into a retained caller array. Wrapper reconciliation replaces that serialization object, and later identity-based refresh appends the replacement too. Internal occurrence deduplication survives, but caller-visible diagnostics contain two ledger-created records for one occurrence.",
+        "required_repair": "Keep one stable ledger-owned exposed serialization identity per occurrence, reconciling it without replacing or truncating caller arrays/objects. Preserve identity-based deduplication across unrelated numeric order collisions and complete late-error exposure."
+      },
+      {
+        "id": "09-S5",
+        "priority": "P2",
+        "owner": "Evidence",
+        "source": "tests/e2e/education/pending-round-lifecycle-error-exposure.js:89-101; error-ledger.js:11-16",
+        "mechanism": "Reconciliation assigns the authoritative wrapper phase to the entry, then serializeError chooses err.phase over that phase. Entries and serialized/exposed diagnostics disagree for a genuine Error carrying an intrinsic different phase.",
+        "required_repair": "Make authoritative occurrence-wrapper phase survive serialization and reconciliation, with frameUrl/metadata retained, while preserving the actual Error reference and caller wrapper unchanged. Do not fix this by mutating the Error's phase or dropping provenance."
+      }
+    ],
+    "unresolved_chronology_obligations": [
+      {
+        "id": "09-C1",
+        "classification": "Unresolved original Native chronology obligation, additional to the five enumerated findings",
+        "source": "tests/e2e/education/pending-round-lifecycle-observation-errors.js:25-45,67-73; observation-browser.js:146-158; native-history.js:95-106",
+        "assessment": "Already captured native packet getter failures precede a newly detected extraction store-integrity/not-ready failure. The consumer records the outer recorder/not-ready categories first, making the later failure primary and ordering earlier packet siblings after it. Recording snapshots before the subsequent Node document exception is locally repaired, but that narrower repair does not establish complete actual-arrival chronology.",
+        "required_repair": "Retain every independent error, but ingest previously observed packet siblings before a genuinely later extraction store/not-ready occurrence. Respect actual source observation order for other paths too; an earlier recorder-setup failure must not be blindly moved behind later snapshots. Propagate the earliest applicable common-ledger normalized Error, not a category-selected wrapper. Do not invent timestamps or apply a universal packet-first/recorder-first category sort."
+      },
+      {
+        "id": "09-C2",
+        "classification": "Unresolved original E06-01-C chronological ingestion obligation, additional to the five enumerated findings",
+        "source": "tests/e2e/education/pending-round-lifecycle-error-exposure.js:7-23,35-54,73-105; error-ledger.js:94-106",
+        "assessment": "For secondaryFailures=[b] and caller errorLedger=[{error:a,phase:'a'},{error:b,phase:'b'}], metadata pre-scan does not ingest occurrences. The secondary loop records b first and the ledger loop later records a, producing primary,b,a instead of the established caller-ledger a,b chronology. Later metadata reconciliation cannot repair that occurrence order.",
+        "required_repair": "Ingest established genuine caller-ledger occurrences in their established order before later secondary-only occurrences and subsequent frame/source/attachment arrivals, with shared-reference deduplication and authoritative wrapper data. Preserve caller arrays/objects and unrelated serialized diagnostics. Never sort independent caller/common-ledger numeric order namespaces into fictional global chronology."
+      }
+    ],
+    "delivery_blockers": {
+      "native": "The genuine Native09 completion receipt is absent after terminal transport failure. This remains independently fatal to combined admission even if every source defect were repaired.",
+      "evidence": "The genuine Evidence09 receipt establishes delivered claims for that partition, not source correctness. Its blanket closure statements are contradicted by current source and both audits. Its substituted E06-02..05 titles must not redefine the original governing obligations, and its abbreviated deferred-caller list does not replace the full authority.",
+      "authority": "Unused09 deadline time, transport text requesting retry, complete preservation and salvage conclusions confer no further producer or repair authority. No coordinator audit, transcript summary or sibling receipt can stand in for genuine Native delivery."
+    },
+    "original_finding_preservation": {
+      "native_all12_in_original_order": [
+        {
+          "finding": "1. N06-N02: Keep Start diagnostics out of lifecycle continuity",
+          "disposition": "Lifecycle-only filtering is locally retained at native-history.js:47-69 and observation-browser.js:89-98. Both diagnostic delivery outputs are currently blocked by09-S2; end-to-end preservation is not established."
+        },
+        {
+          "finding": "2. Declare firstExpiredSample before polling",
+          "disposition": "Locally preserved at witness.js:98-146, including the original last-running/first-expired result; no expiry was executed."
+        },
+        {
+          "finding": "3. N06-N02: Capture-to-post history before Start adoption",
+          "disposition": "Comparator import, complete prefix/length gates and first-running validation-before-promotion are locally repaired at witness.js:8-15,44-76. Syntax and packet delivery still block the normal path."
+        },
+        {
+          "finding": "4. N06-N03: Actual recorder bookkeeping health",
+          "disposition": "Independent complete private retained-store content/time/detail checks are locally repaired at native-observation.js:24-26,47-73,89-110, with consumer gates traced in both full audits. Initialized healthy emptiness remains valid; projected root sequences need not be contiguous."
+        },
+        {
+          "finding": "5. N06-N03: Complete retained history content",
+          "disposition": "Locally repaired at history-domain.js:24-53, including mandatory sequence, type, bounds, event.time, visibility and detail. Preserve private full-store protection before all projections, not only witness baseline comparison."
+        },
+        {
+          "finding": "6. Boundary-drained lifecycle mutations",
+          "disposition": "Locally retained by native-history.js:6-40,55,79,114 and activity-interval.js:23-35: include by trigger lower bound and preserve later delivery upper bound."
+        },
+        {
+          "finding": "7. N06-N05: All normalized snapshot failures",
+          "disposition": "Partial / REPAIR_REQUIRED. Selected snapshot ordering and normalized return are retained;09-S3 and09-C1 still prevent complete retention/chronology."
+        },
+        {
+          "finding": "8. N06-N05: Actual recorder cause chain",
+          "disposition": "Locally retained at native-observation.js:36-44,120-122 and error-ledger.js:11-64; preserve recursive real causes, stacks and observed domain."
+        },
+        {
+          "finding": "9. N06-N01: Navigation poll raw document first",
+          "disposition": "Locally retained at navigation.js:85-103: complete offending slide/URL/documentId/timeOrigin is staged before binding validation."
+        },
+        {
+          "finding": "10. N06-N07: Production keyboard eligibility",
+          "disposition": "Listed focus exclusions and configured/focused-deck policy are locally retained at navigation.js:37-69 and frozen production guards. Do not claim complete external dispatcher or runtime actionability certification."
+        },
+        {
+          "finding": "11. Exact null command matching",
+          "disposition": "Locally retained at observation-domain.js:60-69. Null input/change commands are exact, not wildcards."
+        },
+        {
+          "finding": "12. Reject disconnected current nodes",
+          "disposition": "Locally retained at observation-domain.js:41-58 using observation-browser.js:136-144; no runtime rejection was exercised."
+        }
+      ],
+      "evidence_all3": [
+        {
+          "finding": "E06-01-A: Sole actual Error with empty secondaryFailures",
+          "disposition": "Precise own-keys/reference case locally retained at error-ledger.js:108-115,138-146. Keep it unchanged through new reconciliation repairs."
+        },
+        {
+          "finding": "E06-01-B: Identity rather than numeric-order deduplication",
+          "disposition": "Original numeric-collision fix remains local, but complete exposure is regressed by09-S4. Repeated and late exposure must remain duplicate-free without caller-array replacement."
+        },
+        {
+          "finding": "E06-01-C: Genuine caller-errorLedger ingestion",
+          "disposition": "Partial / REPAIR_REQUIRED. Genuine reference inclusion and serialized-only errorLedger/allErrors exclusion are locally improved;09-S5,09-S4 and09-C2 remain. Wrapper pre-scan is not full chronological ingestion."
+        }
+      ],
+      "six08_checks": [
+        {
+          "check": "Native08-1: Bound witness assertHistoryPrefix import",
+          "status": "Locally repaired; retain import and real comparator consumer."
+        },
+        {
+          "check": "Native08-2: Complete private content/time integrity and event.time prefix",
+          "status": "Locally repaired; retain all consumer gates, independently copied content, legitimate emptiness and sequence-domain distinctions."
+        },
+        {
+          "check": "Native08-3: Browser snapshot before later Node document exception",
+          "status": "Exact defect locally repaired at observation-errors.js:12-23,34-68.09-C1 remains a distinct broader chronology obligation."
+        },
+        {
+          "check": "Native08-4: Candidate siblings retained despite outer rejection",
+          "status": "Partial; matched path improved, fallback still09-S3. Close the full original meaning."
+        },
+        {
+          "check": "Evidence08-1: Serialized diagnostics excluded from occurrences",
+          "status": "Locally repaired for caller errorLedger/allErrors. Preserve those diagnostic objects unchanged; do not inflate the credit to arbitrary unrelated ingestion paths."
+        },
+        {
+          "check": "Evidence08-2: Authoritative shared-reference phase/metadata",
+          "status": "Partial; metadata pre-scan improves simple cases, but09-S4/09-S5 prevent complete preservation."
+        }
+      ],
+      "other_credited_behavior": [
+        "N06-N04 finite positive bounded remaining intervals and finite activity operands; N06-N06 computed/layout CSS visibility and correlated raw timing; N06-N08 original subject identities and historical mappings.",
+        "E06-02 means chronological frame-error arrival dispatch, evidenced at release-portable-inspection.js:20-33 and release-surfaces.js:78-82—not merely strict success keys.",
+        "E06-03 means actual Node Error identity with separate sidecar metadata, evidenced at release-portable-inspection.js:25-30 and error-ledger.js:38-45,87-98—not popup cleanup.",
+        "E06-04 means state-before-UI observation/dispatch within snapshots, evidenced at native-snapshot.js:55-78 and live-root-observation.js:119-123—not tuple validation or complete cross-category chronology.",
+        "E06-05 means recursive rootInstanceId/timeOrigin/cause normalization, serialization and primary-record propagation, evidenced at error-ledger.js:11-64 and evidence.js:166-179—not UI-getter installation.",
+        "Raw-before-validation staging, exact root/document matching, strict portable success keys {protocol,httpAttempts,socketAttempts,errors}, actual Page-containing callback context, early portable handle transfer, no-sink consumers, setup/navigation/live/close ownership and late source/attachment/final common-ledger connections remain locally credited by both audits. The new exposure defects still limit complete diagnostics; none of this is acceptance."
+      ]
+    },
+    "source_and_dependency_limits": [
+      "Static source reasoning proves the brace and undeclared-binding mechanisms; it is not an observed09 module/browser failure. Local improvements cannot overcome an unusable combined import/action path.",
+      "The Native audit did not independently certify the external Reveal controller through hash-frozen regular files. The Evidence audit inspected its source through the preserved dependency junction; counsel also read the relevant linked dispatcher. An unchanged junction target is not a recursive dependency-byte freeze or proof of unchanged contents.",
+      "The linked Reveal dispatcher has additional guards beyond the listed focus/config exclusions, including notes focus, modifiers, overlay and paused-deck behavior. The listed original exclusions are credited; full policy equivalence and runtime focus/actionability remain unqualified. Do not invent a new independently confirmed defect or blanket closure from that limited credit.",
+      "The live collector's unchanged document-first error ingestion at live-evidence.js:31-42 is not claimed repaired by09 or promoted here into an additional new09 finding. Preserve the audits' exact credit boundaries.",
+      "The counsel read reported full-input preservation and terminal-copy hashes, but did not recompute hashes/counts or rerun failures. The complete per-file manifest remains preserved coordinator evidence.",
+      "Current helper-only improvements and54 independent declarations do not establish complete caller migration, admitted cells, actual native timing, full production state/UI or acceptance PASS."
+    ],
+    "permitted_settlement_actions_for_main": [
+      {
+        "order": 1,
+        "action": "Use the existing completed preservation and both terminal audits to finish one combined09 settlement. Record the five defects and both chronology obligations explicitly, separate from missing Native delivery. Update the prior settlement's PENDING_STATIC_SALVAGE_ONLY state to settled rejection without rewriting original producer/job evidence."
+      },
+      {
+        "order": 2,
+        "action": "Retain timed-resume4, frozen partial09, original/copy terminal evidence634/635, genuine Evidence09 receipt, complete audit outputs, all authorities and full-input hashes unchanged. No additional verification is needed to confirm reported failures."
+      },
+      {
+        "order": 3,
+        "action": "Keep admission/sourceReady/qualification/passClaimed/runtimeExecuted false and admitted/executed acceptance counts zero. Keep gap4 unresolved and dependent gaps blocked; issue the exact bounded authorization decision below or pause. This is Main's settlement-record ownership, not permission for counsel or Main to repair source."
+      }
+    ],
+    "prohibited_actions": [
+      "No retry/resume09,07 or08; no new substantive job, receipt-only continuation, deadline rearm/extension, automatic next correction, provider/model substitution or fallback/retry.",
+      "No coordinator helper/source edits, cross-partition writes, new helpers,12 caller edits, production/config/package/dependency/policy/assertion/timeout changes, or canonical integration.",
+      "No shell/git commands, module imports/syntax checks, module/boundary/browser smokes, Playwright or other tests, builds, compilation, lint, formatters, browser execution or nested agents under this settled09 authority.",
+      "No fabricated/reconstructed Native receipt; no renaming old receipts into a new correction, Evidence-for-Native substitution, altered original finding titles, filtering genuine failures, invented timing, relaxed continuity or sorting unrelated numeric order namespaces.",
+      "No ADMIT/PASS/sourceReady/qualification claim from salvage, receipt presence, preservation or previous historical success; no merge/push/deploy or evidence deletion."
+    ],
+    "recommended_path_and_alternatives": {
+      "default_now": "Finish settlement and pause substantive work. Reachable read-only salvage is complete; another redundant audit or runtime probe is not a substitute for the missing authorization.",
+      "preferred_if_user_authorizes_more": "Exactly one new separately identified substantive correction, for example Correction10, seeded from verified frozen partial09, with Native15 and Evidence11 ownership. Both partitions require real corrections. Retain credited bytes where correct and require genuine complete delivery for the new combined subject.",
+      "tradeoff": "This preserves verified local improvements and narrow ownership, but costs a new bounded attempt and may regress repaired seams. Full finding-by-finding preservation and dual combined-subject review remain necessary; no likelihood of success is asserted.",
+      "pause_alternative": "Retain09 rejected with all evidence and false/zero flags. This is a complete honest settlement, not source completion or qualification.",
+      "rejected_alternative": "Receipt-only Native recovery or a brace-only patch cannot close the packet, exposure and chronology defects in both partitions. Running09 to demonstrate already source-proven failures is prohibited and adds no authority."
+    },
+    "precise_new_user_authorization_needed": {
+      "needed": true,
+      "currently_granted": false,
+      "proposed_authorization_text": "Authorize exactly one new independently bounded substantive correction, separately identified from settled09, seeded from verified frozen partial09 in a new isolated workspace. Use only local8045/gemini-3.8-flash-high, one Native15 job and one Evidence11 job, each with producer45m and host2760s, retries/fallback disabled and no deadline extension or automatic later attempt. Repair all five settled09 source defects and both remaining chronology obligations, retain and reassess all12 original Native findings, all3 original Evidence findings, all six08 checks and every credited invariant, and deliver genuine complete receipts for both new partitions. Keep all12 Phase2 callers, canonical source, prior subjects, production/config/dependencies and existing acceptance/policy/timeouts immutable; no new helpers or cross-partition writes, and every helper strictly below200 physical lines. Hold execution until both writers terminate, both genuine deliveries are complete, full-input preservation and one new combined freeze exist, and two independent normal source gates return GO. Only then may Main perform the established gated module/literal, focused boundary and real helper-browser progression on the new admitted subject. This does not authorize09 execution, Phase2 migration, full54 execution, automatic repair after another failure, or bypass any escalation gate.",
+      "scope_details": [
+        "Native must restore the browser function boundary, actual serializable packet and both outputs, full fallback sibling retention and actual packet-versus-later-extraction chronology. Evidence must repair stable exposed serialization identity, authoritative phase and complete preattached occurrence chronology. No receipt-only interpretation is permitted.",
+        "Each new receipt must truthfully distinguish source repair from execution, enumerate real changed files/symbols, retain complete original finding identities/bodies, explain all current defects/chronology dispositions and full deferred obligations, preserve NC11/RPC17/original9 and both historical snapshots verbatim, and make no PASS claim. Old09 receipts remain historical and are never relabeled.",
+        "Main must preserve every input and dependency-link limitation, freeze one combined source after both writers stop, and obtain both full-partition source GO verdicts including imported seams. A new number does not erase prior failures or relax attempt/escalation limits.",
+        "The existing focused proofs must include parse/action publication, real Start through original first-expiry crossover, complete recorder integrity and drained-boundary uncertainty, multiple fallback packets with outer rejection, actual chronology, all E06-01 exposure cases together, original E06-02..05 behavior and real portable/no-sink ownership. Those are future conditional gates, not permission to run anything now.",
+        "If any producer fails, required receipt is absent, scope preservation fails or a source/runtime gate rejects, stop under the established failure/counsel protocol. No automatic extra correction or retry is authorized."
+      ]
+    },
+    "later_acceptance_obligations_unchanged": {
+      "status": "REQUIRED_UNEXECUTED — all54 cells, no representative-canary substitution",
+      "matrix": "All18 rows independently across present/share/file: six leave-return rows (Quiz, Hot Potato, Jeopardy, Relay, Trivia question, Trivia round); seven reset rows (Quiz, Hot Potato, Jeopardy, Relay deadline, Relay baton, Trivia question, Trivia round); five isolation rows (Quiz, Hot Potato, Jeopardy, Relay, Trivia).",
+      "deferred_caller_scope": [
+        "Clean complete12-caller migration only after separately applicable authority and helper gates: mandatory sink/root-manifest/document binding forwarding, actual Page context, all action results/activity intervals, startRecord and measured expiry consumption, no old signature aliases/shims.",
+        "Independent complete initial/pending/hidden/returned/terminal owner context and native UI, measured consumed return and original expiry bounds, exact originally pending work at native Pass/Reset and crossing that due.",
+        "Strict native Reset+5000 Quiz deadline/checkpoint/new-expiry proof without old tBefore/tAfter or arbitrary800ms slack; exact canonical terminal shape and complete reset controls/UI.",
+        "Genuine full Relay peer settlement, complete first-timeout identity/team/question/lane/UI and uncertainty policy; full independent peer validation before freezing and invariance across Reset/old due.",
+        "Complete Trivia question/round expiry and native Next identity/history/score/award/deadline/UI, independently bounded next-question policy; no relabeling R16 as LOC.",
+        "Every cell's complete idle/running/expired witness state/UI, actual native Start+4000 deadline and last-running/first-expired interval, preserved root/document continuity and exact raw failure samples before assertions.",
+        "Present/share/file earliest lifecycle setup, correct document/root identity/cardinality, actual native visibility/focus/geometry/control routing, complete live diagnostics/PNG, portable before/after enforcement, source GET equality and independently authored saved config, failure-safe setup/close/attachment finalization.",
+        "Preserve original NC01–NC11, RPC01–RPC17, original1–original9 and both historical mapping snapshots; retain all state/evidence SE obligations under their original meanings. Historical statuses are not current closure.",
+        "Keep ordered gaps5–9 required and blocked until their established prerequisites close. Original7 remains exact Hot Potato speed-bonus, original8 Scattergories NFC duplicate/unique control, original9 full Trivia scoring policy matrix in their unchanged required other slices."
+      ]
+    },
+    "success_metrics": [
+      "09 is definitively settled unadmitted with five concrete defects, two separately named chronology obligations and missing Native delivery, without narrowing the original scopes.",
+      "All preserved source/terminal/receipt/authority evidence remains unchanged; no unauthorized edits, retry, command, execution or qualification claim occurs.",
+      "Any later attempt has explicit new bounded substantive authority, genuine complete receipts, full-input preservation and dual combined-source GO before conditional Main execution.",
+      "Helper admission, if later achieved, remains distinct from complete Phase2 source readiness and all54 actual acceptance cells with other-slice and ordered-gap obligations."
+    ],
+    "assumptions": [
+      {
+        "assumption": "The reported freeze, preservation and terminal status records remain authoritative and unchanged; counsel did not rerun them.",
+        "confidence": "high",
+        "would_change_answer": "An intervening source/dependency mutation would invalidate reuse of that subject's evidence and require distinct preservation, never reinterpretation of09 as admitted."
+      },
+      {
+        "assumption": "No materially new user authorization beyond exactly-one Correction09 is present in the supplied authority.",
+        "confidence": "high",
+        "would_change_answer": "Explicit authorization matching the new bounded substantive scope could permit a distinct attempt, but would not authorize retrying or admitting09."
+      },
+      {
+        "assumption": "Future corrections can preserve the existing cross-partition API contracts and15/11 ownership.",
+        "confidence": "medium",
+        "would_change_answer": "A demonstrated need to change ownership/signatures requires explicit contract resolution; neither writer may silently modify sibling files or immutable callers."
+      }
+    ],
+    "execution_disclosure": "Read-only same-session-model Kongming counsel; no Fable/Astra tier claim. No files written, source edits, commands, builds, lint, tests, formatters, imports, browser execution, hash/count rechecks or nested agents. Main retains every settlement, authorization, implementation and verification decision."
+  }
+}

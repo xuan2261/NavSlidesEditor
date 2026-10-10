@@ -1,0 +1,137 @@
+{
+  "reportKind": "READ_ONLY_EVIDENCE_ACCESS_DIAGNOSTIC",
+  "date": "2026-10-07",
+  "observedLocalTime": "2026-10-07T18:55:53.3932018+07:00",
+  "authorization": "User explicitly selected A: diagnose evidence access read-only; no filesystem repair or producer continuation.",
+  "verdict": "D_STORAGE_ACCESS_FAILURE_CORRELATED_WITH_PHYSICAL_DISK1_IO_WARNINGS",
+  "rootCauseEstablished": false,
+  "dataLossEstablished": false,
+  "observations": {
+    "evidenceDirectory": "D:/NavSlidesQualification/edu-resume-261004",
+    "directoryMetadataReadable": true,
+    "directoryEnumeration": "Incorrect function",
+    "directArtifactProbe": "Get-Item of pending-substrate-11-terminal-failure-counsel.json reported path not found while directory enumeration failed; this does not prove absence.",
+    "acl": "Read succeeded; observed inherited Allow Modify/Synchronize and FullControl entries. This does not prove effective access to all payloads but does not support an AccessDenied diagnosis.",
+    "logicalD": {
+      "fileSystem": "NTFS",
+      "driveType": 3,
+      "reportedSizeBytes": 2048405794816,
+      "reportedFreeBytes": 276978450432
+    },
+    "cimAssociation": {
+      "logicalDrive": "D:",
+      "partition": "Disk #1, Partition #0",
+      "diskIndex": 1,
+      "reportedPartitionSizeBytes": 2048405798912,
+      "meaning": "Win32 CIM association maps D: to disk1; storage-provider enumeration differs. Association metadata alone is not a successful physical read."
+    },
+    "win32DiskDrive": {
+      "index": 1,
+      "model": "SAMSUNG MZVLB2T0HMLB-00000",
+      "reportedSizeBytes": 0,
+      "reportedStatus": "OK",
+      "interface": "SCSI",
+      "meaning": "Zero reported size conflicts with logical/partition capacity. Status OK is not a health certification and does not negate Event51."
+    },
+    "storageProvider": {
+      "getPartitionD": "No MSFT_Partition object with DriveLetter D was found.",
+      "getDiskCount": 1,
+      "onlyReportedDisk": 0,
+      "onlyReportedModel": "SAMSUNG MZVLB256HBHQ-00000",
+      "onlyReportedSizeBytes": 256060514304,
+      "onlyReportedStatus": "Healthy/Online",
+      "meaning": "Disk1 is absent from Get-Disk even though Win32 logical/partition metadata still describes D:."
+    },
+    "diskEvents": [
+      {
+        "time": "2026-10-07T18:55:11.9319459+07:00",
+        "recordId": 4967878,
+        "provider": "disk",
+        "eventId": 51,
+        "message": "An error was detected on device \\Device\\Harddisk1\\DR1 during a paging operation."
+      },
+      {
+        "time": "2026-10-07T18:55:11.9309747+07:00",
+        "recordId": 4967877,
+        "provider": "disk",
+        "eventId": 51,
+        "message": "An error was detected on device \\Device\\Harddisk1\\DR1 during a paging operation."
+      },
+      {
+        "time": "2026-10-07T18:55:11.9309747+07:00",
+        "recordId": 4967876,
+        "provider": "disk",
+        "eventId": 51,
+        "message": "An error was detected on device \\Device\\Harddisk1\\DR1 during a paging operation."
+      }
+    ],
+    "event51Meaning": "Correlated storage I/O warnings for mapped disk1. Paging operation wording does not establish a pagefile failure, bad sectors, failed SSD, data loss or a specific repair.",
+    "fsutilProbeLimit": "Combined read-only fsutil call returned only VOLUME_INFO and CLIXML stderr; later subcommands and completion were not established. No dirty-bit/reparse/file-ID result is claimed for this diagnostic. Later Get-Process query reported no fsutil rows; completion/exit of the original probe was not recovered."
+  },
+  "analysis": {
+    "supported": "Problem is not adequately explained as dedicated-tool directory-scan semantics alone: native enumeration fails and storage metadata/events independently show disk1 access anomalies.",
+    "hypothesesNotProven": [
+      "NVMe/device/controller connection instability or failure",
+      "storage driver/provider inconsistency or device availability problem",
+      "filesystem damage or stale logical-volume metadata"
+    ],
+    "missing": [
+      "Successful direct payload read from frozen11 evidence",
+      "Trustworthy complete device-health/SMART evidence",
+      "Verified backup/image of affected volume",
+      "Physical inspection and recovery assessment"
+    ],
+    "stopReason": "Additional directory scans, broad reads or health scans could create more I/O on a suspect device without advancing authorized settlement. Bounded metadata probes sufficiently identify the operational blocker; do not claim a completed repair."
+  },
+  "skillsApplied": [
+    "fable-think",
+    "ak-agentkit",
+    "ak-advise",
+    "fable-debug",
+    "fable-code",
+    "ak-ask",
+    "fable-verify"
+  ],
+  "nextRecommendation": {
+    "priority": "Preserve evidence and recover stable read access before substantive producer continuation.",
+    "operatorActionsNotExecuted": [
+      "Avoid unnecessary writes and scans on D:; arrange a storage/recovery assessment of disk1 and its NVMe/controller connection.",
+      "If evidence is valuable and no verified backup exists, consult a recovery specialist before firmware, repair, reboot/remount or intensive health scans. Prefer assessed read-only imaging to another healthy medium, only with explicit scope and destination approval.",
+      "If a preexisting verified backup/image exists, provide a read-only accessible copy with original provenance. Do not recreate missing receipts or overwrite original evidence.",
+      "After stable access, verify original frozen subject identity and obtain genuinely missing primary owner bodies, then rerun only the bounded read-only audit gaps under appropriate authority.",
+      "Choose and authorize producer retry/resume11 or a correction separately; retain local8045/gemini-3.8-flash-high, NF-A4 exclusion and all stop gates."
+    ],
+    "notAuthorized": [
+      "CHKDSK or filesystem repair",
+      "format/initialize/partition or permission changes",
+      "firmware updates/device resets/remount/reboot",
+      "imaging/copying evidence to an unapproved destination",
+      "retry/resume11 or Correction12 dispatch",
+      "source repairs or receipt reconstruction",
+      "caller cutover/smoke/qualification",
+      "merge/commit/push/deploy"
+    ]
+  },
+  "preservation": {
+    "DWritten": false,
+    "evidenceRecreatedOrOverwritten": false,
+    "sourceEdited": false,
+    "originalReportsEdited": false,
+    "producerInvoked": false,
+    "producerPin": "local8045/gemini-3.8-flash-high",
+    "NF_A4": "EXCLUDED_SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+    "declaredAcceptanceCells": 54,
+    "admittedAcceptanceCells": 0,
+    "executedAcceptanceCells": 0,
+    "gitBaseline": {
+      "coordinatorBranch": "main",
+      "coordinatorHEAD": "aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+      "educationBranch": "feat/education-gemini38-cook-261001",
+      "educationHEAD": "c5b5e896d9f06859b21e19122f81c7613067c386",
+      "existingModifiedPaths": 12,
+      "existingUntrackedPathsExcludingSessionReports": 9,
+      "stagedPaths": 0,
+      "limit": "Path/status baseline and observed write scope, not an initial byte-hash proof."
+    }
+  }
+}

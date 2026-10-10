@@ -66,6 +66,32 @@ describe('Plugins API', () => {
           { type: 'Bad Type', label: 'Bad Type', sandbox: 'sandbox.html' },
           { type: 'safe-type', label: 'Bad Sandbox', sandbox: '../secret.html' },
           { type: 'safe-counter', label: 'Safe Counter', sandbox: 'nested/sandbox.html' },
+          {
+            type: 'undeclared-fields',
+            label: 'Unsafe declaration',
+            sandbox: 'sandbox.html',
+            htmlDependencies: {
+              network: false,
+              offlineCapable: true,
+              resources: [],
+              dynamicResources: [],
+              authority: 'invented',
+            },
+          },
+          {
+            type: 'oversized-declaration',
+            label: 'Too many dependencies',
+            sandbox: 'sandbox.html',
+            htmlDependencies: {
+              network: false,
+              offlineCapable: true,
+              resources: Array.from({ length: 257 }, (_, i) => ({
+                url: `asset${i}.png`,
+                kind: 'image',
+              })),
+              dynamicResources: [],
+            },
+          },
         ],
       },
     })
@@ -75,7 +101,13 @@ describe('Plugins API', () => {
 
       expect(res.status).toBe(200)
       expect(res.body.contributes.elements).toEqual([
-        { type: 'safe-counter', label: 'Safe Counter', defaultSize: { width: 360, height: 180 }, defaultData: {}, sandbox: 'nested/sandbox.html' },
+        {
+          type: 'safe-counter',
+          label: 'Safe Counter',
+          defaultSize: { width: 360, height: 180 },
+          defaultData: {},
+          sandbox: 'nested/sandbox.html',
+        },
       ])
     } finally {
       await fs.remove(pluginDir)

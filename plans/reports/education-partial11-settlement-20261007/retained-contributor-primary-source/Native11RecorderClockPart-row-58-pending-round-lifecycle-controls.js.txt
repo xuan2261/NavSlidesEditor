@@ -1,0 +1,171 @@
+import { expect } from '@playwright/test'
+import {
+  assertEvidenceSink,
+  readCorrelatedStateAndTime,
+} from './pending-round-lifecycle-observation.js'
+import {
+  executeAction,
+  stageButtonGuard,
+} from './pending-round-lifecycle-native-action.js'
+
+export const getRoot = (page, slideId, elementId) =>
+  page.locator(`[data-ns-effective-slide-id="${slideId}"] [data-ns-game][data-ns-element-id="${elementId}"]`)
+
+export const getGameState = async (root, evidence) => {
+  assertEvidenceSink(evidence)
+  const sample = await readCorrelatedStateAndTime(root, evidence, 'gameState')
+  return sample.state
+}
+
+export { navigateSlide } from './pending-round-lifecycle-navigation.js'
+
+export async function observeQuizActive(root, { timed = false, optionId = 'release-single-choice/option-1' } = {}, evidence) {
+  assertEvidenceSink(evidence)
+  const sample = await readCorrelatedStateAndTime(root, evidence, 'observeQuizActive')
+  const guard = await root.evaluate((node, optId) => {
+    const submitBtn = node.querySelector('button[type="submit"]') || Array.from(node.querySelectorAll('button')).find(b => b.textContent?.trim() === 'Submit answer')
+    const optInput = node.querySelector(`input[value="${optId}"]`)
+    return {
+      submitEnabled: Boolean(submitBtn && !submitBtn.disabled),
+      optionEnabled: Boolean(optInput && !optInput.disabled),
+    }
+  }, optionId)
+  evidence.stage('observeQuizActiveGuard', guard)
+  await expect(root.getByRole('button', { name: 'Submit answer', exact: true })).toBeEnabled()
+  await expect(root.locator(`input[value="${optionId}"]`)).toBeEnabled()
+  const state = sample.state
+  expect(state).not.toBeNull()
+  expect(state.status).toBe('active')
+  if (timed) expect(state.deadline).toBeGreaterThan(0)
+  else expect(state.deadline).toBeNull()
+  return state
+}
+
+export async function answerQuizQuestion(root, optionId = 'release-single-choice/option-1', evidence) {
+  assertEvidenceSink(evidence)
+  const option = root.locator(`input[value="${optionId}"]`)
+  const submitBtn = root.getByRole('button', { name: 'Submit answer', exact: true })
+  const checkBracket = await executeAction(root, () => option.check(), { type: 'change' }, evidence, 'quizOptionCheck')
+  const submitBracket = await executeAction(root, () => submitBtn.click(), { command: 'submit', type: 'submit' }, evidence, 'quizAnswerSubmit')
+  return { state: submitBracket.stateAfter, actionBracket: submitBracket, actionRecords: [checkBracket, submitBracket] }
+}
+
+export async function startHotPotatoRound(root, playerId = 'p1', name = 'Player 1', { timed = true } = {}, evidence) {
+  assertEvidenceSink(evidence)
+  const idInput = root.getByRole('textbox', { name: 'Participant ID', exact: true })
+  const nameInput = root.getByRole('textbox', { name: 'Participant name', exact: true })
+  const idBracket = await executeAction(root, () => idInput.fill(playerId), { type: 'input' }, evidence, 'hpFillId')
+  const nameBracket = await executeAction(root, () => nameInput.fill(name), { type: 'input' }, evidence, 'hpFillName')
+  const addParticipantBracket = await executeAction(root, () => root.locator('button[data-ns-command="add-participant"]').click(), { command: 'add-participant', type: 'submit' }, evidence, 'hpAddParticipantAction')
+  const actionBracket = await executeAction(root, () => root.locator('button[data-ns-command="start"]').click(), { command: 'start', type: 'click' }, evidence, 'hpStartAction')
+  const state = actionBracket.stateAfter
+  expect(state).not.toBeNull()
+  expect(state.phase).toBe('active')
+  if (timed) expect(state.deadline).not.toBeNull()
+  else expect(state.deadline).toBeNull()
+  return {
+    state, actionBracket, addParticipantBracket,
+    actionRecords: [idBracket, nameBracket, addParticipantBracket, actionBracket],
+    startBracket: [actionBracket.tCapture, actionBracket.tBubble],
+  }
+}
+
+export async function answerHotPotatoQuestion(root, optionId = 'question-1-option-1', evidence) {
+  assertEvidenceSink(evidence)
+  const option = root.locator(`input[value="${optionId}"]`)
+  const checkBracket = await executeAction(root, () => option.check(), { type: 'change' }, evidence, 'hpOptionCheck')
+  const submitBtn = root.locator('button[data-ns-command="submit-answer"]')
+  const actionBracket = await executeAction(root, () => submitBtn.click(), { command: 'submit-answer', type: 'submit' }, evidence, 'hpSubmitAnswer')
+  return { state: actionBracket.stateAfter, actionBracket, actionRecords: [checkBracket, actionBracket] }
+}
+
+export async function revealHotPotatoAnswers(root, evidence) {
+  assertEvidenceSink(evidence)
+  const revealBtn = root.locator('button[data-ns-command="reveal"]')
+  await stageButtonGuard(root, 'button[data-ns-command="reveal"]', 'hpRevealGuard', evidence)
+  await expect(revealBtn).toBeVisible()
+  const actionBracket = await executeAction(root, () => revealBtn.click(), { command: 'reveal', type: 'click' }, evidence, 'hpReveal')
+  return { state: actionBracket.stateAfter, actionBracket, actionRecords: [actionBracket] }
+}
+
+export async function selectJeopardyCell(root, teamId = 'team-1', cellId = 'cell-100', { timed = true } = {}, evidence) {
+  assertEvidenceSink(evidence)
+  const teamBracket = await executeAction(root, () => root.locator(`button[data-ns-command="team-${teamId}"]`).click(), { command: `team-${teamId}`, type: 'click' }, evidence, 'jeopardyTeamSelect')
+  const actionBracket = await executeAction(root, () => root.locator(`button[data-ns-cell="${cellId}"]`).click(), { command: `cell-${cellId}`, type: 'click' }, evidence, 'jeopardySelectCellAction')
+  const state = actionBracket.stateAfter
+  expect(state).not.toBeNull()
+  expect(state.phase).toBe('question')
+  expect(state.activeTeamId).toBe(teamId)
+  expect(state.activeCellId).toBe(cellId)
+  if (timed) expect(state.deadline).not.toBeNull()
+  else expect(state.deadline).toBeNull()
+  return {
+    state, actionBracket,
+    actionRecords: [teamBracket, actionBracket],
+    selectBracket: [actionBracket.tCapture, actionBracket.tBubble],
+  }
+}
+
+export async function adjudicateJeopardy(root, correct = true, evidence) {
+  assertEvidenceSink(evidence)
+  const showBracket = await executeAction(root, () => root.locator('button[data-ns-command="show-answer"]').click(), { command: 'show-answer', type: 'click' }, evidence, 'jeopardyShowAnswer')
+  const cmd = correct ? 'correct' : 'incorrect'
+  const actionBracket = await executeAction(root, () => root.locator(`button[data-ns-command="${cmd}"]`).click(), { command: cmd, type: 'click' }, evidence, `jeopardyAdjudicate_${cmd}`)
+  return { state: actionBracket.stateAfter, actionBracket, actionRecords: [showBracket, actionBracket] }
+}
+
+export async function startRelayRound(root, evidence) {
+  assertEvidenceSink(evidence)
+  const startBtn = root.locator('button[data-ns-command="start"]')
+  const actionBracket = await executeAction(root, () => startBtn.click(), { command: 'start', type: 'click' }, evidence, 'relayStartAction')
+  const state = actionBracket.stateAfter
+  expect(state).not.toBeNull()
+  expect(state.phase).toBe('active')
+  expect(state.activeTeamId).toBe('team-1')
+  expect(state.deadline).not.toBeNull()
+  return { state, actionBracket, actionRecords: [actionBracket], startBracket: [actionBracket.tCapture, actionBracket.tBubble] }
+}
+export async function passRelayBaton(root, evidence) {
+  assertEvidenceSink(evidence)
+  const actionBracket = await executeAction(root, () => root.locator('button[data-ns-command="pass"]').click(), { command: 'pass', type: 'click' }, evidence, 'relayPassAction')
+  return { state: actionBracket.stateAfter, actionBracket, actionRecords: [actionBracket], passBracket: [actionBracket.tCapture, actionBracket.tBubble] }
+}
+
+export async function startTriviaRound(root, evidence) {
+  assertEvidenceSink(evidence)
+  const startBtn = root.locator('button[data-ns-command="start"]')
+  const actionBracket = await executeAction(root, () => startBtn.click(), { command: 'start', type: 'click' }, evidence, 'triviaStartAction')
+  const state = actionBracket.stateAfter
+  expect(state).not.toBeNull()
+  expect(state.phase).toBe('active')
+  expect(state.deadline).not.toBeNull()
+  return { state, actionBracket, actionRecords: [actionBracket], startBracket: [actionBracket.tCapture, actionBracket.tBubble] }
+}
+export async function buzzTriviaTeam(root, teamId = 'team-2', evidence) {
+  assertEvidenceSink(evidence)
+  const actionBracket = await executeAction(root, () => root.locator(`button[data-ns-command="buzz-${teamId}"]`).click(), { command: `buzz-${teamId}`, type: 'click' }, evidence, `triviaBuzz_${teamId}`)
+  return { state: actionBracket.stateAfter, actionBracket, actionRecords: [actionBracket] }
+}
+export async function answerTriviaOption(root, optionId = 'question-1-option-1', evidence) {
+  assertEvidenceSink(evidence)
+  const option = root.locator(`input[value="${optionId}"]`)
+  const checkBracket = await executeAction(root, () => option.check(), { type: 'change' }, evidence, 'triviaOptionCheck')
+  const submitBtn = root.locator('form button[type="submit"]')
+  const actionBracket = await executeAction(root, () => submitBtn.click(), { command: 'submit', type: 'submit' }, evidence, 'triviaSubmitAnswer')
+  return { state: actionBracket.stateAfter, actionBracket, actionRecords: [checkBracket, actionBracket] }
+}
+export async function clickTriviaNext(root, evidence) {
+  assertEvidenceSink(evidence)
+  const actionBracket = await executeAction(root, () => root.locator('button[data-ns-command="next"]').click(), { command: 'next', type: 'click' }, evidence, 'triviaNextAction')
+  return { state: actionBracket.stateAfter, actionBracket, actionRecords: [actionBracket], nextBracket: [actionBracket.tCapture, actionBracket.tBubble] }
+}
+
+export async function resetGame(root, evidence) {
+  assertEvidenceSink(evidence)
+  const btn = root.locator('button[data-ns-command="reset"], button[data-ns-command="quiz-reset"]')
+  const guard = await stageButtonGuard(root, 'button[data-ns-command="reset"], button[data-ns-command="quiz-reset"]', 'resetGameGuard', evidence)
+  await expect(btn).toBeVisible()
+  const cmd = guard.buttonCommand
+  const actionBracket = await executeAction(root, () => btn.click(), { command: cmd, type: 'click' }, evidence, 'resetGameAction')
+  return { state: actionBracket.stateAfter, actionBracket, actionRecords: [actionBracket] }
+}

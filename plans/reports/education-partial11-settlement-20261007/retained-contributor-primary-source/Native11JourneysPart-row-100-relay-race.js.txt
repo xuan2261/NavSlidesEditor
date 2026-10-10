@@ -1,0 +1,96 @@
+const { node, listen } = require('../dom.js')
+const { createQuizAnswerControls } = require('../quiz-answer-controls.js')
+const { createRoundGamesView } = require('./round-games-view.js')
+
+function presentRelayRace({ root, config, session, reset, clock }) {
+  const view = createRoundGamesView({ root, session, reset, clock }),
+    document = view.document
+  let lanes = [],
+    form,
+    questionTitle,
+    answers = null
+  const commandFor = (state, type, extra = {}) => ({
+    type,
+    generation: state.generation,
+    turn: state.turn,
+    questionId: state.questionId,
+    ...extra,
+  })
+  const send = (command) => {
+    session.dispatch(command)
+    render(session.getState())
+  }
+  function render(state) {
+    const key = JSON.stringify([state.generation, state.turn, state.phase])
+    if (view.build(key)) {
+      answers = null
+      view.body.append(node(document, 'h3', config.title))
+      const track = node(document, 'ol', undefined, { 'aria-label': 'Team lanes' })
+      lanes = config.teams.map((team) => {
+        const row = node(document, 'li'),
+          label = node(document, 'span')
+        const progress = node(document, 'progress', undefined, {
+          max: String(config.questionsPerRound),
+          'aria-label': `${team.name} position`,
+        })
+        progress.style.width = '100%'
+        row.append(label, progress)
+        track.append(row)
+        return { team, label, progress }
+      })
+      view.body.append(track)
+      form = null
+      if (state.phase === 'setup')
+        view.control('Start race', 'start', () => send(commandFor(state, 'start')))
+      if (state.phase === 'active') {
+        const question = config.questions.find((question) => question.id === state.questionId)
+        questionTitle = node(document, 'h4', question.prompt)
+        view.body.append(questionTitle)
+        if (question.media && question.kind !== 'image-hotspot') {
+          const image = node(document, 'img', undefined, question.media)
+          image.style.maxWidth = '100%'
+          view.body.append(image)
+        }
+        form = node(document, 'form')
+        answers = createQuizAnswerControls({ document, question, session: view.session })
+        const submit = node(document, 'button', 'Submit answer', { type: 'submit' })
+        form.append(answers.element, submit)
+        listen(view.session, form, 'submit', (event) => {
+          event.preventDefault()
+          send(
+            commandFor(state, 'answer', { teamId: state.activeTeamId, answer: answers.getAnswer() })
+          )
+        })
+        view.body.append(form)
+        view.control('Pass baton', 'pass', () => send(commandFor(state, 'pass')))
+      }
+    }
+    for (const lane of lanes) {
+      lane.progress.value = state.positions[lane.team.id]
+      lane.label.textContent = `${lane.team.name}: ${state.positions[lane.team.id]}/${config.questionsPerRound}${state.activeTeamId === lane.team.id && state.phase !== 'ended' ? ' — baton' : ''}`
+    }
+    const due =
+      state.phase === 'active' ? state.deadline : state.phase === 'waiting' ? state.batonDue : null
+    view.timer(state.phase === 'active' ? state.deadline : null)
+    view.schedule(
+      state,
+      due,
+      commandFor(state, state.phase === 'waiting' ? 'baton' : 'deadline'),
+      render
+    )
+    const winner = config.teams.find((team) => team.id === state.winnerId),
+      active = config.teams.find((team) => team.id === state.activeTeamId)
+    view.feedback(
+      state.error ||
+        (state.phase === 'ended'
+          ? `${winner.name} wins!`
+          : state.phase === 'waiting'
+            ? `${state.correct ? 'Correct' : 'Wrong or passed'} — passing baton.`
+            : state.phase === 'active'
+              ? `${active.name}: answer the question.`
+              : 'Ready to race.')
+    )
+  }
+  return { render, pause: () => answers?.cancel() }
+}
+module.exports = { presentRelayRace }

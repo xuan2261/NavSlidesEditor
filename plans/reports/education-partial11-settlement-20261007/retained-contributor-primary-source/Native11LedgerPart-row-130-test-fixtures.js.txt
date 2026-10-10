@@ -1,0 +1,15 @@
+export async function apiGetPresentation(request, id) {
+  assertLoopback()
+  const res = await withApiRetry(() =>
+    request.get(`${API_BASE}/presentations/${id}`, {
+      headers: { connection: 'close' },
+    })
+  )
+  if (!res.ok()) {
+    throw new Error(`Failed to fetch presentation ${id}: ${res.status()} ${await res.text()}`)
+  }
+  return res.json()
+}
+
+
+[Showing lines 89-101 of 187. Use :102 to continue]

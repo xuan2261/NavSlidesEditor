@@ -1,0 +1,106 @@
+import { expect } from '@playwright/test'
+
+export const JEOPARDY_KEYS = [
+  'gameType',
+  'phase',
+  'scores',
+  'usedCellIds',
+  'activeTeamId',
+  'activeCellId',
+  'activeQuestion',
+  'isDailyDouble',
+  'currentWager',
+  'revealed',
+  'timerDuration',
+  'showTimer',
+  'awardedKeys',
+  'deadline',
+  'expired',
+  'turn',
+  'winnerId',
+  'generation',
+  'runtimeMode',
+]
+
+export function assertJeopardyKeys(state) {
+  expect(Object.keys(state).sort()).toEqual([...JEOPARDY_KEYS].sort())
+}
+
+export function assertJeopardyInitialOrReset(state, expectedConfig, generation = 0) {
+  assertJeopardyKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(generation)
+  expect(state.gameType).toBe('jeopardy')
+  expect(state.phase).toBe('board')
+  expect(state.scores).toEqual(Object.fromEntries(expectedConfig.teams.map((t) => [t.id, 0])))
+  expect(state.usedCellIds).toEqual([])
+  expect(state.activeTeamId).toBe(expectedConfig.teams[0]?.id ?? 'team-1')
+  expect(state.activeCellId).toBeNull()
+  expect(state.activeQuestion).toBeNull()
+  expect(state.isDailyDouble).toBe(false)
+  expect(state.currentWager).toBe(0)
+  expect(state.revealed).toBe(false)
+  expect(state.timerDuration).toBe(expectedConfig.timerDuration)
+  expect(state.showTimer).toBe(expectedConfig.showTimer)
+  expect(state.awardedKeys).toEqual([])
+  expect(state.deadline).toBeNull()
+  expect(state.expired).toBe(false)
+  expect(state.turn).toBe(0)
+  expect(state.winnerId).toBeNull()
+}
+
+export function assertJeopardyActive(state, expectedConfig, generation = 0, deadlineBounds = null) {
+  assertJeopardyKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(generation)
+  expect(state.gameType).toBe('jeopardy')
+  expect(state.phase).toBe('question')
+  expect(state.activeTeamId).toBe('team-1')
+  expect(state.activeCellId).toBe('cell-100')
+  expect(state.isDailyDouble).toBe(false)
+  expect(state.currentWager).toBe(100)
+  expect(state.revealed).toBe(false)
+  expect(state.expired).toBe(false)
+  expect(state.turn).toBe(1)
+  expect(state.winnerId).toBeNull()
+  if (deadlineBounds) {
+    expect(typeof state.deadline).toBe('number')
+    expect(state.deadline).toBeGreaterThanOrEqual(deadlineBounds.min)
+    expect(state.deadline).toBeLessThanOrEqual(deadlineBounds.max)
+  }
+}
+
+export function assertJeopardyPeerSettled(state) {
+  assertJeopardyKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(0)
+  expect(state.gameType).toBe('jeopardy')
+  expect(state.phase).toBe('board')
+  expect(state.scores).toEqual({ 'team-1': 0, 'team-2': 200 })
+  expect(state.usedCellIds).toEqual(['cell-200'])
+  expect(state.activeTeamId).toBe('team-2')
+  expect(state.activeCellId).toBeNull()
+  expect(state.activeQuestion).toBeNull()
+  expect(state.isDailyDouble).toBe(false)
+  expect(state.currentWager).toBe(0)
+  expect(state.revealed).toBe(false)
+  expect(state.timerDuration).toBe(30)
+  expect(state.showTimer).toBe(false)
+  expect(state.awardedKeys).toEqual(['0:jeopardy:["cell-200","team-2"]:adjudication'])
+  expect(state.deadline).toBeNull()
+  expect(state.expired).toBe(false)
+  expect(state.turn).toBe(1)
+  expect(state.winnerId).toBeNull()
+}
+
+export async function assertJeopardyPeerUI(root) {
+  const scores = root.locator('ul[aria-label="Scores"] > li')
+  await expect(scores.filter({ hasText: 'Red: 200' })).toBeVisible()
+  await expect(scores.filter({ hasText: 'Blue: 0' })).toBeVisible()
+}
+
+export async function assertJeopardyResetUI(root) {
+  const scores = root.locator('ul[aria-label="Scores"] > li')
+  await expect(scores.filter({ hasText: 'Blue: 0' })).toBeVisible()
+  await expect(scores.filter({ hasText: 'Red: 0' })).toBeVisible()
+}

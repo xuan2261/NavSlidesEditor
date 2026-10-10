@@ -1,0 +1,317 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>3-Phase Phasor</title>
+    <style>
+      :root {
+        --bg: #0a1525;
+        --primary: #48bfe3;
+        --text: #d0eeff;
+        --glass: rgba(10, 25, 50, 0.6);
+        --border: rgba(72, 191, 227, 0.2);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 12px;
+        overflow: hidden;
+      }
+      h3 {
+        font-size: 1.1rem;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+        text-shadow: 0 0 10px rgba(72, 191, 227, 0.5);
+      }
+      .main {
+        display: flex;
+        gap: 16px;
+        width: 100%;
+        max-width: 920px;
+        height: 380px;
+        background: var(--glass);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        backdrop-filter: blur(10px);
+      }
+      .canvas-wrap {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      canvas {
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.3);
+      }
+      .panel {
+        width: 200px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 12px;
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .panel h4 {
+        text-align: center;
+        color: var(--primary);
+        font-size: 0.85rem;
+        margin-bottom: 2px;
+      }
+      .slider-group label {
+        font-size: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .slider-group label span {
+        color: var(--primary);
+        font-weight: bold;
+      }
+      input[type='range'] {
+        width: 100%;
+        accent-color: var(--primary);
+        height: 5px;
+      }
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 3px 6px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        background: rgba(0, 0, 0, 0.2);
+      }
+      .info-row .val {
+        font-family: monospace;
+        font-weight: bold;
+      }
+      .controls {
+        display: flex;
+        gap: 6px;
+      }
+      button {
+        flex: 1;
+        background: rgba(72, 191, 227, 0.1);
+        border: 1px solid rgba(72, 191, 227, 0.3);
+        color: var(--text);
+        padding: 4px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        cursor: pointer;
+      }
+      button:hover {
+        background: rgba(72, 191, 227, 0.25);
+      }
+      button.active {
+        background: var(--primary);
+        color: var(--bg);
+        font-weight: bold;
+      }
+      .phase-a {
+        color: #ff6b6b;
+      }
+      .phase-b {
+        color: #ffd93d;
+      }
+      .phase-c {
+        color: #4ecdc4;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>3-Phase Rotating Phasor Diagram</h3>
+    <div class="main">
+      <div class="canvas-wrap"><canvas id="phasor" width="340" height="340"></canvas></div>
+      <div class="canvas-wrap"><canvas id="wave" width="340" height="340"></canvas></div>
+      <div class="panel">
+        <h4>Controls</h4>
+        <div class="slider-group">
+          <label>Speed <span id="sv">1.0</span>x</label
+          ><input type="range" id="speed" min="0.1" max="3" step="0.1" value="1" />
+        </div>
+        <div class="slider-group">
+          <label>V<sub>m</sub> <span id="vv">220</span> V</label
+          ><input type="range" id="amp" min="50" max="380" value="220" />
+        </div>
+        <div class="controls">
+          <button id="btnPlay" class="active" onclick="togglePlay()">▶ Play</button>
+          <button onclick="resetPhase()">↺ Reset</button>
+        </div>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 3px 0"></div>
+        <h4>Instantaneous Values</h4>
+        <div class="info-row">
+          <span class="phase-a">V<sub>a</sub></span
+          ><span class="val phase-a" id="va">—</span>
+        </div>
+        <div class="info-row">
+          <span class="phase-b">V<sub>b</sub></span
+          ><span class="val phase-b" id="vb">—</span>
+        </div>
+        <div class="info-row">
+          <span class="phase-c">V<sub>c</sub></span
+          ><span class="val phase-c" id="vc">—</span>
+        </div>
+        <div class="info-row">
+          <span>ΣV</span><span class="val" id="vsum" style="color: var(--primary)">—</span>
+        </div>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 3px 0"></div>
+        <div class="info-row">
+          <span>V<sub>line</sub></span
+          ><span class="val" style="color: var(--primary)" id="vline">—</span>
+        </div>
+        <div class="info-row">
+          <span>ωt</span><span class="val" style="color: var(--primary)" id="wt">—</span>
+        </div>
+      </div>
+    </div>
+    <script>
+      const pc = document.getElementById('phasor'),
+        pctx = pc.getContext('2d')
+      const wc = document.getElementById('wave'),
+        wctx = wc.getContext('2d')
+      let angle = 0,
+        playing = true,
+        history = []
+      function togglePlay() {
+        playing = !playing
+        document.getElementById('btnPlay').textContent = playing ? '⏸ Pause' : '▶ Play'
+        document.getElementById('btnPlay').classList.toggle('active', playing)
+      }
+      function resetPhase() {
+        angle = 0
+        history = []
+      }
+      function drawPhasor() {
+        const Vm = +document.getElementById('amp').value
+        document.getElementById('sv').textContent = (+document.getElementById('speed')
+          .value).toFixed(1)
+        document.getElementById('vv').textContent = Vm
+        const cx = 170,
+          cy = 170,
+          r = (Vm / 380) * 130
+        pctx.clearRect(0, 0, 340, 340)
+        // Grid circles
+        ;[0.25, 0.5, 0.75, 1].forEach((f) => {
+          pctx.strokeStyle = 'rgba(255,255,255,0.06)'
+          pctx.lineWidth = 1
+          pctx.beginPath()
+          pctx.arc(cx, cy, ((r * f) / 0.75) * 0.75, 0, Math.PI * 2)
+          pctx.stroke()
+        })
+        // Axes
+        pctx.strokeStyle = 'rgba(255,255,255,0.15)'
+        pctx.lineWidth = 1
+        pctx.beginPath()
+        pctx.moveTo(20, cy)
+        pctx.lineTo(320, cy)
+        pctx.stroke()
+        pctx.beginPath()
+        pctx.moveTo(cx, 20)
+        pctx.lineTo(cx, 320)
+        pctx.stroke()
+        // Phases
+        const phases = [
+          { a: angle, color: '#ff6b6b', label: 'A' },
+          { a: angle - (2 * Math.PI) / 3, color: '#ffd93d', label: 'B' },
+          { a: angle + (2 * Math.PI) / 3, color: '#4ecdc4', label: 'C' },
+        ]
+        phases.forEach((p) => {
+          const ex = cx + r * Math.cos(p.a),
+            ey = cy - r * Math.sin(p.a)
+          // Trail
+          pctx.strokeStyle = p.color + '40'
+          pctx.lineWidth = 1
+          pctx.beginPath()
+          pctx.arc(cx, cy, r, 0, Math.PI * 2)
+          pctx.stroke()
+          // Arrow
+          pctx.strokeStyle = p.color
+          pctx.lineWidth = 3
+          pctx.beginPath()
+          pctx.moveTo(cx, cy)
+          pctx.lineTo(ex, ey)
+          pctx.stroke()
+          // Arrowhead
+          const aa = Math.atan2(cy - ey, ex - cx)
+          pctx.fillStyle = p.color
+          pctx.beginPath()
+          pctx.moveTo(ex, ey)
+          pctx.lineTo(ex - 10 * Math.cos(aa - 0.4), ey + 10 * Math.sin(aa - 0.4))
+          pctx.lineTo(ex - 10 * Math.cos(aa + 0.4), ey + 10 * Math.sin(aa + 0.4))
+          pctx.fill()
+          // Dot
+          pctx.beginPath()
+          pctx.arc(ex, ey, 4, 0, Math.PI * 2)
+          pctx.fill()
+          // Label
+          pctx.fillStyle = p.color
+          pctx.font = 'bold 13px sans-serif'
+          pctx.fillText(p.label, ex + (ex > cx ? 8 : -16), ey + (ey > cy ? 18 : -8))
+        })
+        // Values
+        const va = Vm * Math.sin(angle),
+          vb = Vm * Math.sin(angle - (2 * Math.PI) / 3),
+          vc_val = Vm * Math.sin(angle + (2 * Math.PI) / 3)
+        document.getElementById('va').textContent = va.toFixed(1) + ' V'
+        document.getElementById('vb').textContent = vb.toFixed(1) + ' V'
+        document.getElementById('vc').textContent = vc_val.toFixed(1) + ' V'
+        document.getElementById('vsum').textContent = (va + vb + vc_val).toFixed(2) + ' V'
+        document.getElementById('vline').textContent = (Vm * Math.sqrt(3)).toFixed(0) + ' V'
+        document.getElementById('wt').textContent =
+          (((angle * 180) / Math.PI) % 360).toFixed(0) + '°'
+        // Waveform
+        history.push({ a: va / Vm, b: vb / Vm, c: vc_val / Vm })
+        if (history.length > 300) history.shift()
+        wctx.clearRect(0, 0, 340, 340)
+        wctx.strokeStyle = 'rgba(255,255,255,0.1)'
+        wctx.lineWidth = 1
+        ;[85, 170, 255].forEach((y) => {
+          wctx.beginPath()
+          wctx.moveTo(0, y)
+          wctx.lineTo(340, y)
+          wctx.stroke()
+        })
+        const colors = ['#ff6b6b', '#ffd93d', '#4ecdc4']
+        ;['a', 'b', 'c'].forEach((ph, pi) => {
+          wctx.strokeStyle = colors[pi]
+          wctx.lineWidth = 2
+          wctx.beginPath()
+          history.forEach((h, i) => {
+            const x = 340 - history.length + i,
+              y = 170 - h[ph] * 120
+            i === 0 ? wctx.moveTo(x, y) : wctx.lineTo(x, y)
+          })
+          wctx.stroke()
+        })
+        wctx.fillStyle = 'rgba(255,255,255,0.3)'
+        wctx.font = '10px sans-serif'
+        wctx.fillText('Time →', 280, 335)
+      }
+      function animate() {
+        if (playing) {
+          const spd = +document.getElementById('speed').value
+          angle += 0.03 * spd
+        }
+        drawPhasor()
+        requestAnimationFrame(animate)
+      }
+      animate()
+    </script>
+  </body>
+</html>

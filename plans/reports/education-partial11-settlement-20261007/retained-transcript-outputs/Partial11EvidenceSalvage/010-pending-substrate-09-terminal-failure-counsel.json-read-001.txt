@@ -1,0 +1,120 @@
+{
+  "tl_dr": "NO-GO for Correction09 admission or runtime execution. Proceed with full-input partial preservation and two independent read-only salvage audits, then settle the combined rejection/blocker. The transport failure does not authorize a retry, receipt-only continuation, or another producer; any substantive completion requires a new explicit user authorization after reachable static work is finished.",
+  "decision": {
+    "correction09": "FAILED_DELIVERY / NOT_ADMITTED",
+    "partial_preservation": "GO for coordinator preservation only; not source repair or admission.",
+    "independent_static_salvage": "GO after the combined partial09 freeze and scope-preservation record exist; audit15 Native and11 Evidence helpers against that exact subject.",
+    "runtime_and_phase2": "NO-GO. Keep sourceReady, qualification, passClaimed and runtimeExecuted false; executedAcceptanceCells=0, all54 cells unexecuted.",
+    "authority_boundary": "Exactly one independently bounded Correction09 was authorized. Its Native job has terminated unsuccessfully; unused deadline time and the stream's 'please retry' text confer no further authority."
+  },
+  "reframed_problem": "Determine what can be preserved and established statically after interrupted producer delivery, without confusing surviving edits or the completed Evidence receipt with a complete, admissible helper substrate. The source repair obligations remain intact; the missing Native receipt is an additional delivery blocker, not a replacement for reviewing those obligations.",
+  "evidence": [
+    {
+      "source": "pending-substrate-09-terminal-failure-counsel-brief.md; artifact://634:raw:1029-1030",
+      "finding": "The brief records Native09 exit1 after992.32s, not a timeout. The retained terminal message independently shows stopReason=error and 'Stream interrupted before completion' at create_openai_sse_stream_with_anchor, streaming.rs:334, with response-body stream_error. This establishes the termination mechanism, not the correctness or completeness of the surviving source."
+    },
+    {
+      "source": "Glob of timed-resume4/.tmp/acceptance-producer-pending-substrate-09-*.json; timed-resume4/.tmp/acceptance-producer-pending-substrate-09-evidence.json:1-15",
+      "finding": "Only the Evidence09 receipt exists. It identifies correction9 and the Evidence partition, declares two changed files, and keeps readiness/runtime/qualification flags false and acceptance counts zero. Its source-closure and preservation statements are producer claims requiring independent review."
+    },
+    {
+      "source": "pending-substrate-09-dispatch-authority.json, partitions, phase2ImmutableFiles and userAuthorization; pending-substrate-09-owned-jobs.json",
+      "finding": "Authority pins local8045/gemini-3.8-flash-high,45m producer/2760s host bounds, retry=false and fallback=false,15/11 disjoint existing-helper ownership with no allowed new helpers,12 immutable callers, and read-only canonical/prior07/08 subjects."
+    },
+    {
+      "source": "pending-substrate-09-seed.json:1-5; pending-substrate-09-input-baseline.json; pending-substrate-08-scope-preservation.json:1-9,130-156",
+      "finding": "The09 seed record reports4325 verified regular inputs. A per-file baseline exists. The08 preservation record demonstrates the prior full-input comparison/copy-hash approach, including additions/missing files, caller preservation and dependency-link identity; it is precedent, not verification of current09 preservation."
+    },
+    {
+      "source": "pending-substrate-08-settled-rejection-counsel.json, combined_salvage_findings; pending-substrate-09-native-source-gate-prompt.md; pending-substrate-09-evidence-source-gate-prompt.md",
+      "finding": "The required scope remains all12 original Native and3 original Evidence findings, the six additional08 defects, preserved repairs, and imported cross-partition seams. Both prepared prompts explicitly require genuine completed receipts for normal admission; missing receipts cannot be coordinator-filled."
+    }
+  ],
+  "allowed_next_actions": [
+    {
+      "order": 1,
+      "action": "Preserve timed-resume4, both terminal artifacts634/635, owned-job/dispatch records, the genuine Evidence09 receipt and session evidence unchanged. Record Native09 as a terminal transport failure with absent receipt. Do not rewrite the historical job launch record to suggest successful completion."
+    },
+    {
+      "order": 2,
+      "action": "Main may create a distinct partial09 preservation subject using the established binary-copy/hash-freeze method. Compare every one of the4325 baseline regular inputs, enumerate current additions and missing inputs, and record original/current/frozen hashes. Only the26 owned helpers may differ; verify all12 caller bytes, every other baseline input, and dependency-link identity. Account separately for genuine generated receipts. A38-file helper/caller manifest alone is insufficient to establish full-input scope preservation. Preserve and report any anomaly rather than silently dropping, repairing or reverting it."
+    },
+    {
+      "order": 3,
+      "action": "Record all26 helpers' physical line counts against the existing strict <200 limit and create the combined freeze/scope manifest. Mark the subject PARTIAL_SALVAGE_NOT_ADMISSION, with all qualification flags false and acceptance execution zero. Copy the genuine Evidence receipt without manufacturing the absent Native counterpart. A coordinator preservation record is not a producer receipt."
+    },
+    {
+      "order": 4,
+      "action": "Dispatch independent read-only salvage reviewers, not substantive producers, against the same frozen partial09 subject: Native owns15 helpers and Evidence owns11. Clearly designate salvage-only review instead of treating the prepared completed-receipt admission prompts as satisfiable. Require finding-by-finding source evidence for full original12/3, all six08 defects, previously credited behavior, new blockers, immutable-caller contract compatibility and cross-partition imports. Inspect unchanged helpers too; do not limit review to claimed changed files."
+    },
+    {
+      "order": 5,
+      "action": "The six08 checks must explicitly cover the witness assertHistoryPrefix import; complete private retained-store content/time integrity before every consumer; browser-snapshot-before-Node-document failure chronology; candidate sibling-error retention despite outer rejection; exclusion of serialized diagnostic objects from occurrence ingestion; and authoritative wrapper phase/metadata for shared genuine Error references. Prior08 findings establish what must be checked, not that those defects necessarily remain in09."
+    },
+    {
+      "order": 6,
+      "action": "Collect separate SOURCE_REVIEW_CLEAN or REPAIR_REQUIRED salvage dispositions, with admission=false, precise file/line/symbol evidence, preservation findings and limitations. A clean Native static review cannot erase its delivery blocker; a clean Evidence review cannot admit the combined substrate. If either reviewer cannot establish an obligation, record the specific unresolved evidence rather than a speculative closure."
+    },
+    {
+      "order": 7,
+      "action": "Write the combined09 rejection/settlement record after both reviews: observed terminal status, receipt inventory, full-input preservation result, each source disposition, exact remaining repairs, and the separate missing Native-delivery prerequisite. Close09 as an unadmitted attempt, preserve it read-only, leave gap4 unresolved and later dependent work blocked, then present the bounded user decision below."
+    }
+  ],
+  "forbidden_actions": [
+    "Retrying/resuming Native09 or07/08, rearming deadlines, relaunching a producer, silently selecting a later correction, switching models/providers, or enabling fallback/retry.",
+    "Receipt-only dispatch, reconstructing a Native receipt from transcript reasoning or coordinator audits, editing/renaming an old receipt into09, or allowing Evidence09's receipt to stand in for Native delivery.",
+    "Coordinator helper/source repairs, cross-partition writes, new helpers, changes to the12 Phase2 callers, or mutation of canonical/prior07/08 subjects.",
+    "Module/import smoke, focused boundary proof, browser smoke, Playwright acceptance execution, builds, lint, formatting or other runtime verification on unadmitted09. Both writers stopping removes the concurrent-writer barrier only; it does not satisfy receipt/source gates.",
+    "Treating partial source preservation, producer closure claims, or salvage source cleanliness as ADMIT, sourceReady, qualification, completed gap4, or any executed acceptance coverage.",
+    "Weakening assertions, changing scoring/physics/policy/timeouts or original subject meanings, deleting retained failure evidence, or merge/push/deploy."
+  ],
+  "evidence_limits": [
+    "This counsel reviews the brief, authorities, receipt inventory and retained terminal evidence. It does not perform the proposed15/11 source audits, current4325-input comparison, new freeze or runtime verification.",
+    "The completed Evidence job and existing receipt establish delivery of that partition, not independently verified source correctness or full-input preservation.",
+    "Transport failure is not a source verdict: do not infer either that all Native repairs landed or that every08 defect remains. Surviving partial edits require the complete salvage audit.",
+    "Even if both salvage audits find no source blocker, combined delivery remains incomplete because the genuine Native09 receipt is absent. Independent review cannot substitute for that required producer deliverable.",
+    "Helper source review does not close deferred caller obligations or qualify any of the54 acceptance cells. Original7 Hot Potato bonus, original8 Scatter NFC duplicate/unique scoring and original9 full Trivia scoring remain required in their established other slices."
+  ],
+  "missing_prerequisite": {
+    "current": "Complete genuine Native producer delivery is absent, and independent09 source/preservation results have not yet been established. Those are distinct blockers.",
+    "reachable_without_new_substantive_authority": "Partial preservation, independent static salvage and combined settlement are reachable now.",
+    "not_reachable_under_current_authority": "Any further producer completion or source repair. Exactly-one Correction09 authorization is exhausted; counsel cannot extend it."
+  },
+  "required_later_authorization": {
+    "timing": "Only after full preservation and both salvage reviews settle the exact09 blocker set.",
+    "recommended_decision": "Explicitly authorize exactly one new, separately identified, independently bounded substantive correction, such as Correction10, seeded from the verified frozen partial09 subject. Otherwise retain the settled unadmitted09 and stop substantive work.",
+    "conditions": [
+      "Identify the new subject/workspace and the settled09 repair list. Preserve complete original12 Native/3 Evidence obligations, all six08 checks and all credited behavior; authorize actual source completion/repair of every remaining or new source-proven blocker, not a receipt-only run.",
+      "Explicitly specify Native15/Evidence11 disjoint ownership and genuine complete delivery receipts for the new subject. A source-clean Evidence partition need not be gratuitously rewritten, but its preserved bytes and applicable evidence must be independently established for the new combined subject; do not silently relabel Evidence09 claims.",
+      "Retain sole substantive producer local8045/gemini-3.8-flash-high,45m producer/2760s host limits per authorized job, retry/fallback disabled, no deadline extension and no automatic later attempt. The new correction label does not bypass any applicable attempt or escalation gate.",
+      "Keep all12 Phase2 callers, canonical worktree and prior subjects immutable; no new helpers, policy/assertion/timeout changes, merge, push or deploy.",
+      "Require both jobs terminal, complete genuine deliveries, full-input scope preservation and a combined new freeze, then two independent normal source-gate GO verdicts before Main's established module/boundary/helper-browser progression. Those later checks remain conditional gates, not current09 permission; any failure preserves the stop/counsel boundary.",
+      "Phase2 cutover and full qualification remain separately gated by the governing workflow. No helper-level success authorizes immediate caller mutation or claims54-cell execution."
+    ]
+  },
+  "success_metrics": [
+    "Full-input partial09 preservation is evidenced, or exact preservation anomalies are recorded without laundering them.",
+    "Both independent salvage audits cover all assigned findings and preservation obligations on one immutable subject, with source-backed dispositions and no runtime claims.",
+    "The combined settlement separates source defects/unresolved obligations from missing delivery and preserves false flags/zero execution.",
+    "No extra producer, receipt fabrication, source mutation, runtime check or qualification claim occurs before its applicable authority and gates."
+  ],
+  "assumptions": [
+    {
+      "assumption": "Both writers are actually terminal, as the supplied brief reports from delivered wait results; counsel did not rerun status checks.",
+      "confidence": "high",
+      "would_change_answer": "A writer still active would block preservation/freeze and reviewer dispatch until its actual terminal result."
+    },
+    {
+      "assumption": "The proposed preservation algorithm is used only to copy/hash/archive the partial subject and produce coordinator evidence, not to repair or normalize source.",
+      "confidence": "high",
+      "would_change_answer": "Any source mutation, omitted unexpected change or overwritten historical receipt would invalidate that preservation path."
+    },
+    {
+      "assumption": "Future producer partition scope is finalized from the completed salvage findings; current evidence does not establish which09 source defects remain.",
+      "confidence": "high",
+      "would_change_answer": "Source-backed salvage findings determine the exact repair list and whether Evidence needs further substantive edits."
+    }
+  ],
+  "concise_recommendation": "Preserve all inputs, audit both full partitions independently, and settle09 rejected with separate source and delivery blockers. Then seek one explicit new bounded substantive correction covering the actual missing source repairs and genuine delivery—not a retry disguised as receipt recovery.",
+  "execution_disclosure": "Read-only same-session-model counsel in omp; no Fable/Astra tier claim. No source edits, shell commands, builds, lint, tests, formatting, browser operations or new runtime verification were performed."
+}

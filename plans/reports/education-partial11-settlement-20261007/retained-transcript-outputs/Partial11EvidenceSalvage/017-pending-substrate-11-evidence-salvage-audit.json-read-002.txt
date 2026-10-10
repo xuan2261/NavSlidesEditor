@@ -1,0 +1,239 @@
+      },
+      {
+        "file": "tests/e2e/education/release-portable-inspection.js",
+        "ranges": [
+          "1-75"
+        ],
+        "reportedPhysicalLines": 55,
+        "completeBody": true,
+        "eofReturned": true
+      }
+    ],
+    "callerFiles": [
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js",
+        "ranges": [
+          "1-220"
+        ],
+        "completeBody": true,
+        "eofReturned": true,
+        "exactPhysicalLineCount": null
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-cases.js",
+        "ranges": [
+          "1-220"
+        ],
+        "completeBody": true,
+        "eofReturned": true,
+        "exactPhysicalLineCount": null
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-fixtures.js",
+        "ranges": [
+          "1-220"
+        ],
+        "completeBody": true,
+        "eofReturned": true,
+        "exactPhysicalLineCount": null
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-leave-return.js",
+        "ranges": [
+          "1-220"
+        ],
+        "completeBody": true,
+        "eofReturned": true,
+        "exactPhysicalLineCount": null
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-reset.js",
+        "ranges": [
+          "1-200"
+        ],
+        "completeBody": true,
+        "eofReturned": true,
+        "exactPhysicalLineCount": null
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-isolation.js",
+        "ranges": [
+          "1-200"
+        ],
+        "completeBody": true,
+        "eofReturned": true,
+        "exactPhysicalLineCount": null
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-state.js",
+        "ranges": [
+          "1-170"
+        ],
+        "completeBody": true,
+        "eofReturned": true,
+        "exactPhysicalLineCount": null
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-quiz-state.js",
+        "ranges": [
+          "1-150"
+        ],
+        "completeBody": true,
+        "eofReturned": true,
+        "exactPhysicalLineCount": null
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-hot-potato-state.js",
+        "ranges": [
+          "1-150"
+        ],
+        "completeBody": true,
+        "eofReturned": true,
+        "exactPhysicalLineCount": null
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-jeopardy-state.js",
+        "ranges": [
+          "1-150"
+        ],
+        "completeBody": true,
+        "eofReturned": true,
+        "exactPhysicalLineCount": null
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-relay-state.js",
+        "ranges": [
+          "1-170"
+        ],
+        "completeBody": true,
+        "eofReturned": true,
+        "exactPhysicalLineCount": null
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-trivia-state.js",
+        "ranges": [
+          "1-220"
+        ],
+        "completeBody": true,
+        "eofReturned": true,
+        "exactPhysicalLineCount": null
+      }
+    ],
+    "requiredOwners": [
+      {
+        "file": "shared/src/education/runtime-session.js",
+        "ranges": [
+          "1-210"
+        ],
+        "completeBody": true,
+        "eofReturned": true
+      },
+      {
+        "file": "shared/src/education/browser/reveal-lifecycle.js",
+        "ranges": [
+          "1-220"
+        ],
+        "completeBody": true,
+        "eofReturned": true
+      },
+      {
+        "file": "shared/src/education/browser/mount.js",
+        "ranges": [
+          "1-190"
+        ],
+        "completeBody": true,
+        "eofReturned": true
+      },
+      {
+        "file": "shared/src/education/browser/local-activity.js",
+        "ranges": [
+          "1-200"
+        ],
+        "completeBody": true,
+        "eofReturned": true
+      },
+      {
+        "file": "tests/e2e/education/release-content-fields.js",
+        "ranges": [
+          "1-210"
+        ],
+        "completeBody": true,
+        "eofReturned": true
+      },
+      {
+        "file": "tests/e2e/fixtures/test-fixtures.js",
+        "ranges": [
+          "1-220"
+        ],
+        "completeBody": "HISTORY_REPORTS_FULL_RETURN_BUT_TRANSCRIPT_TEXT_ELIDED",
+        "eofReturned": "HISTORY_REPORTED",
+        "independentlyRecoverableCompleteRead": false
+      },
+      {
+        "file": "tests/e2e/education/release-game-fixtures.js",
+        "ranges": [
+          "1-220"
+        ],
+        "completeBody": "HISTORY_REPORTS_FULL_RETURN_BUT_TRANSCRIPT_TEXT_ELIDED",
+        "eofReturned": "HISTORY_REPORTED",
+        "independentlyRecoverableCompleteRead": false
+      },
+      {
+        "file": "node_modules/reveal.js/js/controllers/keyboard.js",
+        "ranges": [
+          "1-220",
+          "221-440"
+        ],
+        "completeBody": "HISTORY_ELIDED; NOT_INDEPENDENTLY_REACQUIRED",
+        "eofReturned": "HISTORY_REPORTED_TOTAL415",
+        "independentlyRecoverableCompleteRead": false,
+        "dependencyOutsideRecursiveFreeze": true
+      },
+      {
+        "file": "htmlGenerator owner",
+        "ranges": [],
+        "completeBody": false,
+        "eofReturned": false,
+        "limitation": "Not recoverably read through complete body in this resumed audit."
+      }
+    ],
+    "governingDocuments": {
+      "completedRecoverableReads": [
+        "pending-substrate-11-evidence-salvage-prompt.md:1-12,13-37,38-85",
+        "pending-substrate-11-helper-caller-manifest.json:1-165,166-315",
+        "pending-substrate-08-subject-authority.json:1-170,171-340",
+        "pending-substrate-09-settled-rejection-counsel.json:1-150,151-295"
+      ],
+      "historicalReadsWithArchiveOmissionsNotCreditedComplete": [
+        "pending-substrate-11-terminal-failure-counsel.json",
+        "pending-substrate-11-dispatch-authority.json",
+        "pending-substrate-11-scope-counsel.json",
+        "pending-substrate-11-native-prompt.md",
+        "pending-substrate-11-evidence-prompt.md",
+        "pending-substrate-07-native-admission.json",
+        "pending-substrate-07-evidence-admission.json",
+        "pending-substrate-08-native-salvage-audit.json",
+        "pending-substrate-08-evidence-salvage-audit.json",
+        "pending-substrate-09-native-salvage-audit.json",
+        "pending-substrate-09-evidence-salvage-audit.json",
+        "pending-substrate-11-scope-preservation.json",
+        "pending-substrate-11-receipt-audit.json",
+        "pending-substrate-candidate-11-partial/.tmp/acceptance-producer-pending-substrate-11-evidence.json"
+      ],
+      "notRecoverablyCompleted": [
+        "pending-substrate-10-native-completion-settlement.json",
+        "pending-substrate-10-evidence-salvage-audit.json"
+      ],
+      "abortedCalls": "The final parallel reread batch for original07/both08/both09 reports returned 'Tool was not executed because the run was aborted'. None of those calls is credited as a successful read."
+    }
+  },
+  "limitations": [
+    "Static source inspection only; no source execution, shell/eval/import/compile/check/test/build/lint/format/browser/git/installation, edits, hash measurements or nested agents.",
+    "The exact subject hash and preservation counts are supplied Main facts, not measurements by this reviewer.",
+    "All26 helper and all12 caller bodies were recoverably read, but exact caller line counts, complete required-owner coverage and complete governing-report/receipt reads remain unfinished. This is not a fully compliant final salvage audit.",
+    "Canonical original finding bodies and both mapping snapshots were not reproduced verbatim; recoverable dispositions are bounded source observations rather than complete original-obligation certification.",
+    "External node_modules junction is outside the recursive freeze; historical dispatcher inspection does not certify immutable dependency bytes.",
+    "New findings are current changed-helper obligation failures. Exact patch-introduction comparison was not read, so no claim of diff-proven introduction is made.",
+    "No automatic correction, receipt reconstruction, normal admission or runtime progression follows this result. Main retains all preservation and settlement ownership."
+  ]
+}

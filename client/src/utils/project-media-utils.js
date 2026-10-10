@@ -1,3 +1,5 @@
+import { collectGameMediaReferences, rewriteGameMediaUrls } from 'revealjs-shared'
+
 const LOCAL_UPLOAD_PATTERNS = [/^\/uploads\//i, /^https?:\/\/[^/]+\/uploads\//i]
 
 function sanitizeFilename(name) {
@@ -34,73 +36,49 @@ export function getMediaFilename(url) {
   }
 }
 
-function addMediaEntry(target, seen, url, meta, localOnly) {
-  if (!url) return
-  if (localOnly && !isLocalProjectMediaUrl(url)) return
-  if (seen.has(url)) return
-  seen.add(url)
-  target.push({ originalUrl: url, ...meta })
-}
-
-function eachSlide(presentation, visit) {
-  for (const [slideIndex, slide] of (presentation?.slides || []).entries()) {
-    visit(slide, slideIndex, null)
-    for (const [childIndex, child] of (slide?.children || []).entries()) visit(child, slideIndex, childIndex)
-  }
-}
-
 export function collectProjectMediaEntries(presentation, { localOnly = false } = {}) {
-  const entries = []
-  const seen = new Set()
-
-  eachSlide(presentation, (slide, slideIndex, childIndex) => {
-    const location = childIndex === null ? { slideIndex } : { slideIndex, childIndex }
-    addMediaEntry(entries, seen, getBackgroundImageUrl(slide), { kind: 'background', ...location }, localOnly)
-    for (const element of slide?.elements || []) {
-      const meta = { ...location, elementId: element?.id || null }
-      addMediaEntry(entries, seen, element?.src, { kind: 'src', ...meta }, localOnly)
-      addMediaEntry(entries, seen, element?.poster, { kind: 'poster', ...meta }, localOnly)
-      for (const track of element?.tracks || []) {
-        addMediaEntry(entries, seen, track?.src, { kind: 'track', ...meta }, localOnly)
-      }
+  const entries = new Map()
+  for (const { url, path, kind } of collectGameMediaReferences(presentation)) {
+    if (localOnly && !isLocalProjectMediaUrl(url)) continue
+    if (!entries.has(url)) {
+      const location =
+        path[0] === 'slides'
+          ? { slideIndex: path[1], ...(path[2] === 'children' ? { childIndex: path[3] } : {}) }
+          : { layoutMasterIndex: path[1] }
+      const elementAt = path.lastIndexOf('elements')
+      const element =
+        elementAt < 0
+          ? null
+          : path.slice(0, elementAt + 2).reduce((at, key) => at?.[key], presentation)
+      entries.set(url, {
+        originalUrl: url,
+        kind,
+        ...location,
+        elementId: element?.id || null,
+        references: [],
+      })
     }
-  })
-
-  return entries
+    entries.get(url).references.push({ path, kind })
+  }
+  return [...entries.values()]
 }
 
 export function buildArchiveMediaManifestEntries(presentation) {
+  const paths = new Set()
   return collectProjectMediaEntries(presentation, { localOnly: true }).map((entry) => {
     const filename = getMediaFilename(entry.originalUrl)
-    return {
-      originalUrl: entry.originalUrl,
-      archivePath: `media/${hashString(entry.originalUrl)}-${filename}`,
-      filename,
-    }
+    const prefix = hashString(entry.originalUrl)
+    let archivePath = `media/${prefix}-${filename}`
+    let collision = 1
+    while (paths.has(archivePath.toLowerCase()))
+      archivePath = `media/${prefix}-${++collision}-${filename}`
+    paths.add(archivePath.toLowerCase())
+    return { originalUrl: entry.originalUrl, archivePath, filename, references: entry.references }
   })
 }
 
 export function rewriteProjectMediaUrls(presentation, urlMap) {
-  const clone = JSON.parse(JSON.stringify(presentation))
-  eachSlide(clone, (slide) => {
-    for (const element of slide?.elements || []) {
-      if (element.src && urlMap[element.src]) element.src = urlMap[element.src]
-      if (element.poster && urlMap[element.poster]) element.poster = urlMap[element.poster]
-      if (Array.isArray(element.tracks)) {
-        element.tracks.forEach((track) => {
-          if (track?.src && urlMap[track.src]) track.src = urlMap[track.src]
-        })
-      }
-    }
-    if (slide?.background?.type === 'image') {
-      const current = getBackgroundImageUrl(slide)
-      if (current && urlMap[current]) {
-        slide.background.image = urlMap[current]
-        delete slide.background.src
-      }
-    }
-  })
-  return clone
+  return rewriteGameMediaUrls(presentation, urlMap)
 }
 
 export function buildLegacyArchiveEntries(presentation, archiveFiles) {

@@ -1,0 +1,176 @@
+import { expect } from '@playwright/test'
+import { assertEvidenceSink } from './pending-round-lifecycle-observation.js'
+
+export async function navigateSlide(page, direction, targetSlideId, evidence) {
+  assertEvidenceSink(evidence, true)
+  try {
+    const docDomain = await page.evaluate(() => ({
+      url: window.location.href,
+      documentId: window.__nsDocumentId || null,
+      timeOrigin: performance.timeOrigin,
+    }))
+    evidence.stage('navigateSlideDocDomain', docDomain)
+    evidence.assertDocumentIdentity({
+      url: docDomain.url,
+      documentId: docDomain.documentId,
+      timeOrigin: docDomain.timeOrigin,
+    })
+
+    const initialDoc = await page.evaluate(() => ({
+      slideId: window.Reveal?.getCurrentSlide()?.dataset?.nsEffectiveSlideId || null,
+      url: window.location.href,
+      documentId: window.__nsDocumentId || null,
+      timeOrigin: performance.timeOrigin,
+    }))
+    evidence.stage('navigateSlideStart_raw', initialDoc)
+    evidence.stage('navigateSlideStart', { direction, targetSlideId, currentSlideId: initialDoc.slideId, initialDoc })
+    evidence.assertDocumentIdentity({
+      url: initialDoc.url,
+      documentId: initialDoc.documentId,
+      timeOrigin: initialDoc.timeOrigin,
+    })
+    if (initialDoc.slideId === targetSlideId) return
+
+    const control = page.locator(`.reveal .controls .navigate-${direction}`)
+    const isControlVisible = await control.isVisible()
+    const isControlEnabled = await control.isEnabled()
+    evidence.stage('navigateSlideControl', {
+      direction,
+      targetSlideId,
+      controlVisible: isControlVisible,
+      controlEnabled: isControlEnabled,
+    })
+
+    if (isControlVisible && isControlEnabled) {
+      await control.click()
+    } else {
+      const key = direction === 'down' ? 'ArrowDown' : direction === 'up' ? 'ArrowUp' : 'ArrowRight'
+      const keyCode = direction === 'down' ? 40 : direction === 'up' ? 38 : 39
+      const focusInfo = await page.evaluate(({ keyName, code }) => {
+        const active = document.activeElement
+        const tag = active?.tagName || null
+        const isInput = Boolean(tag && /input|textarea/i.test(tag))
+        const isCE = Boolean(active?.isContentEditable === true || active?.getAttribute?.('contenteditable') === 'true')
+        const isNotes = Boolean(active?.className && /speaker-notes/i.test(String(active.className)))
+        const inGame = Boolean(active?.closest?.('[data-ns-game]'))
+        const inAction = Boolean(active?.closest?.('[data-ns-action]'))
+        const reveal = window.Reveal
+        let keyboardBound = true
+        let revealConditionPassed = true
+        let focusedDeckPassed = true
+        let overlayOpen = false
+        let overlayBlocksKey = false
+        let paused = false
+        let pausedBlocksKey = false
+        let customBindingOverrides = false
+        if (reveal) {
+          const cfg = reveal.getConfig ? reveal.getConfig() : null
+          keyboardBound = Boolean(cfg?.keyboard)
+          if (cfg) {
+            const priorCondition = cfg.keyboardCondition
+            if (priorCondition === 'focused') {
+              focusedDeckPassed = Boolean(reveal.isFocused?.())
+              revealConditionPassed = focusedDeckPassed
+            } else if (typeof priorCondition === 'function') {
+              try {
+                revealConditionPassed = priorCondition({ target: active }) !== false
+              } catch {
+                revealConditionPassed = false
+              }
+            }
+            paused = Boolean(reveal.isPaused?.())
+            if (paused) {
+              const resumeKeyCodes = [66, 86, 190, 191, 112]
+              if (typeof cfg.keyboard === 'object' && cfg.keyboard) {
+                for (const k in cfg.keyboard) {
+                  if (cfg.keyboard[k] === 'togglePause') resumeKeyCodes.push(parseInt(k, 10))
+                }
+              }
+              if (!resumeKeyCodes.includes(code)) pausedBlocksKey = true
+            }
+            if (typeof cfg.keyboard === 'object' && cfg.keyboard) {
+              for (const k in cfg.keyboard) {
+                if (parseInt(k, 10) === code) {
+                  customBindingOverrides = true
+                  break
+                }
+              }
+            }
+          }
+          overlayOpen = Boolean(reveal.isOverlayOpen?.())
+          if (overlayOpen && !['Escape', 'f', 'c', 'b', '.'].includes(keyName)) {
+            overlayBlocksKey = true
+          }
+          if (!customBindingOverrides) {
+            const registeredBindings = reveal.getBindings?.() || reveal.keyboard?.getBindings?.() || null
+            if (registeredBindings && typeof registeredBindings === 'object') {
+              for (const k in registeredBindings) {
+                if (parseInt(k, 10) === code) {
+                  customBindingOverrides = true
+                  break
+                }
+              }
+            }
+          }
+        }
+        const keyboardEligible = keyboardBound && !isInput && !isCE && !isNotes && !inGame && !inAction &&
+          revealConditionPassed && !overlayBlocksKey && !pausedBlocksKey && !customBindingOverrides
+        return {
+          tagName: tag,
+          className: active?.className || null,
+          isInput: isInput || isCE || isNotes,
+          inGameRoot: inGame,
+          inActionRoot: inAction,
+          keyboardBound,
+          revealConditionPassed,
+          focusedDeckPassed,
+          overlayOpen,
+          overlayBlocksKey,
+          paused,
+          pausedBlocksKey,
+          customBindingOverrides,
+          keyboardEligible,
+        }
+      }, { keyName: key, code: keyCode })
+      evidence.stage('navigateSlideKeyboard', {
+        direction,
+        targetSlideId,
+        key,
+        controlVisible: isControlVisible,
+        controlEnabled: isControlEnabled,
+        focusInfo,
+      })
+      await page.keyboard.press(key)
+    }
+
+    let pollCount = 0
+    const current = async () => {
+      pollCount++
+      const pollDoc = await page.evaluate(() => ({
+        slideId: window.Reveal?.getCurrentSlide()?.dataset?.nsEffectiveSlideId || null,
+        url: window.location.href,
+        documentId: window.__nsDocumentId || null,
+        timeOrigin: performance.timeOrigin,
+      }))
+      evidence.stage(`navigateSlidePoll_${pollCount}_raw`, pollDoc)
+      evidence.stage('navigateSlidePoll', {
+        direction,
+        targetSlideId,
+        currentSlideId: pollDoc.slideId,
+        pollDoc,
+      })
+      evidence.assertDocumentIdentity({
+        url: pollDoc.url,
+        documentId: pollDoc.documentId,
+        timeOrigin: pollDoc.timeOrigin,
+      })
+      return pollDoc.slideId
+    }
+
+    await expect.poll(current).toBe(targetSlideId)
+    evidence.stage('navigateSlideEnd', { direction, targetSlideId, currentSlideId: targetSlideId })
+  } catch (err) {
+    evidence.recordError('navigateSlide', err)
+    throw err
+  }
+}

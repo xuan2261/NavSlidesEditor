@@ -1,0 +1,147 @@
+const {
+  getPresenterToolsHead,
+  getPresenterToolsScripts,
+  getPresenterToolsPlugins,
+  getPresenterToolsConfig,
+  getPresenterToolsBody,
+  getPresenterToolsInlineJS,
+} = require('./presenterTools.js')
+const { renderSlideElements, escapeHtml, absoluteSrc } = require('./element-renderers.js')
+const { getSlideNotes } = require('./slideNotes.js')
+const {
+  DEFAULT_TOKENS,
+  tokensToCssVars,
+  mergeTokens,
+  presentationUsesTokens,
+} = require('./design-tokens.js')
+const { getFxModule, buildFxRuntimeScript } = require('./fx/index.js')
+const { resolveChartBackground } = require('./chart-colors.js')
+const { buildLivePresenterRuntime } = require('./live-presenter-runtime.js')
+const { attachMediaPlayback } = require('./media-playback.js')
+const { attachMediaPlaybackRoot } = require('./media-playback-root.js')
+const {
+  normalizeTransition,
+  normalizeTransitionDirection,
+  normalizeTransitionDuration,
+  normalizeTransitionSpeed,
+} = require('./transition-settings.js')
+const {
+  REVEAL_ASSET_PATHS,
+  EDUCATION_ASSET_PATHS,
+  REVEAL_RUNTIME_VERSION,
+  revealThemePath,
+} = require('./reveal-runtime-assets.js')
+const { resolveEffectiveSlide } = require('./slide-layouts.js')
+const { normalizeElementAction } = require('./element-actions.js')
+const { collectEffectiveGameDescriptors } = require('./education/effective-game-descriptors.js')
+const { effectiveSlideIdentity } = require('./education/effective-slide-identity.js')
+const { generatedRuntimeMetadata } = require('./education/generated-runtime-metadata.js')
+const { INTERACTION_ACTION_KINDS } = require('./education/interaction-actions.js')
+const { safeStyleText } = require('./rich-text-style-sanitizer.js')
+
+function resolveSlideForRender(slide, presentation) {
+  return resolveEffectiveSlide(slide, presentation?.layoutMasters).slide
+}
+function resolvePresentationForRender(presentation) {
+  return {
+    ...presentation,
+    slides: (presentation?.slides || []).map((slide) => {
+      const resolved = resolveSlideForRender(slide, presentation)
+      return {
+        ...resolved,
+        ...(slide.children
+          ? { children: slide.children.map((child) => resolveSlideForRender(child, presentation)) }
+          : {}),
+      }
+    }),
+  }
+}
+
+function formatGradientCss(bg) {
+  if (!bg || bg.type !== 'gradient') return ''
+  if (bg.gradient) return bg.gradient
+  const stops = Array.isArray(bg.stops) ? bg.stops : []
+  if (!stops.length) return ''
+  const angle = Number(bg.angle) || 0
+  const cssStops = stops
+    .map((stop) => {
+      // Stop offsets follow the 0-1 convention used everywhere else (shapeUtils,
+      // export-pptx-raster, the canvas gradient renderer). Convert to a CSS percent.
+      const offset = Number(stop.offset)
+      const percent = Number.isFinite(offset) ? Math.round(offset * 100) : 0
+      return `${stop.color || '#000000'} ${percent}%`
+    })
+    .join(', ')
+  return `linear-gradient(${angle}deg, ${cssStops})`
+}
+
+function getSlideTransitionAttrs(slide) {
+  if (!slide) return ''
+  const attrs = []
+  const transition = normalizeTransition(slide.transition, null)
+  const direction = normalizeTransitionDirection(slide.transitionDirection)
+  const duration = normalizeTransitionDuration(slide.transitionDuration)
+  if (transition) attrs.push(`data-transition="${escapeHtml(transition)}"`)
+  if (slide.transitionDirection && direction !== 'default') {
+    attrs.push(`data-transition-direction="${escapeHtml(direction)}"`)
+  }
+  if (duration !== null) attrs.push(`data-transition-duration="${duration}"`)
+  return attrs.length ? ` ${attrs.join(' ')}` : ''
+}
+
+function getSlideTransitionStyle(slide) {
+  const duration = normalizeTransitionDuration(slide?.transitionDuration)
+  return duration === null ? '' : `transition-duration:${duration}ms;`
+}
+
+const TRANSITION_METADATA_CSS = `    /* Reveal does not consume NavSlides direction/duration metadata. These
+       selectors make the application-level settings operative for slide moves. */
+    .reveal .slides section[data-transition-direction="left"].future { transform: translate3d(100%, 0, 0) !important; }
+    .reveal .slides section[data-transition-direction="left"].past { transform: translate3d(-100%, 0, 0) !important; }
+    .reveal .slides section[data-transition-direction="right"].future { transform: translate3d(-100%, 0, 0) !important; }
+    .reveal .slides section[data-transition-direction="right"].past { transform: translate3d(100%, 0, 0) !important; }
+    .reveal .slides section[data-transition-direction="up"].future { transform: translate3d(0, 100%, 0) !important; }
+    .reveal .slides section[data-transition-direction="up"].past { transform: translate3d(0, -100%, 0) !important; }
+    .reveal .slides section[data-transition-direction="down"].future { transform: translate3d(0, -100%, 0) !important; }
+    .reveal .slides section[data-transition-direction="down"].past { transform: translate3d(0, 100%, 0) !important; }
+    /* Duration is emitted inline on each section so Reveal's transition
+       shorthand cannot replace the configured millisecond value. */
+    .reveal .slides section[data-transition-duration] { transition-property: transform, opacity !important; }
+`
+
+function presentationUsesTransitionMetadata(presentation) {
+  return (presentation?.slides || []).some((slide) =>
+    [slide, ...(slide?.children || [])].some(
+      (section) =>
+        normalizeTransitionDirection(section?.transitionDirection) !== 'default' ||
+        normalizeTransitionDuration(section?.transitionDuration) !== null
+    )
+  )
+}
+function presentationUsesActions(presentation) {
+  return (presentation?.slides || []).some((slide) =>
+    [slide, ...(slide?.children || [])].some((section) =>
+      (section?.elements || []).some(
+        (element) => normalizeElementAction(element?.action).action != null
+      )
+    )
+  )
+}
+
+function getSectionBackgroundStyle(background, usesTokens) {
+  return usesTokens && (!background || background.type === 'none') ? 'background:var(--ns-bg);' : ''
+}
+
+function getPresentChartBackground(slide, deckTokens, usesTokens) {
+  const slideTokens = mergeTokens(deckTokens, slide?.designTokens)
+  const fallbackColor =
+    slide?.background?.type === 'fx' ? '#0d0221' : usesTokens ? slideTokens.colors?.bg : '#000000'
+  return resolveChartBackground(slide?.background, fallbackColor)
+}
+
+function getPrintChartBackground(slide, deckTokens) {
+  const slideTokens = mergeTokens(deckTokens, slide?.designTokens)
+  return resolveChartBackground(slide?.background, slideTokens.colors?.bg || '#1e1e2e', {
+    preferFallback: true,
+
+[Showing lines 1-145 of 822. Use :146 to continue]

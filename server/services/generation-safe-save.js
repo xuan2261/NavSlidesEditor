@@ -1,10 +1,9 @@
+const { normalizePresentationGames } = require('revealjs-shared')
+const { getReadablePackageStore, withPackageStore } = require('./pptx-import/package-store-runtime')
 const {
-  getReadablePackageStore,
-  withPackageStore,
-} = require('./pptx-import/package-store-runtime')
-const { canonicalEditableSnapshot, deriveMutationJournal } = require(
-  './pptx-import/mutation-journal'
-)
+  canonicalEditableSnapshot,
+  deriveMutationJournal,
+} = require('./pptx-import/mutation-journal')
 const { hashRecord, RECORD_SCHEMA_VERSION } = require('./pptx-import/package-store/schemas')
 const { rebindSourceMap } = require('./pptx-import/source-map')
 const { queueCompatibilityUpsert } = require('./pptx-import/compatibility-outbox')
@@ -20,17 +19,28 @@ function currentHead(state, presentationId) {
   return head ? structuredClone(head) : null
 }
 function currentAuthority(state, head) {
-  return [...state.mutationResults].reverse().find((result) =>
-    result.presentationId === head.presentationId && result.packageRevisionId === head.packageRevisionId &&
-    result.sourceMap && result.projection
-  ) || null
+  return (
+    [...state.mutationResults]
+      .reverse()
+      .find(
+        (result) =>
+          result.presentationId === head.presentationId &&
+          result.packageRevisionId === head.packageRevisionId &&
+          result.sourceMap &&
+          result.projection
+      ) || null
+  )
 }
 
 function isLegacyProjectionSaveResult(result) {
-  return result?.operation === undefined &&
+  return (
+    result?.operation === undefined &&
     result.state === 'pending-edited-export' &&
-    result.projection && result.sourceMap && result.journal &&
+    result.projection &&
+    result.sourceMap &&
+    result.journal &&
     Array.isArray(result.operationIds)
+  )
 }
 
 function compatibilityPresentation(stored, projection, presentationId) {
@@ -69,7 +79,12 @@ function queueCompatibilityProjection(next, presentation, head, updatedAt) {
 }
 
 async function savePackageProjection({
-  presentationId, expectedGeneration, baseRevisionId, idempotencyKey, after, loadStored,
+  presentationId,
+  expectedGeneration,
+  baseRevisionId,
+  idempotencyKey,
+  after,
+  loadStored,
 }) {
   return withPackageStore(async (store) => {
     const state = store.getState()
@@ -84,23 +99,36 @@ async function savePackageProjection({
     if (!isValidIdempotencyKey(idempotencyKey)) {
       return denied(400, 'INVALID_IDEMPOTENCY_KEY')
     }
-    if (baseRevisionId !== undefined &&
-        (typeof baseRevisionId !== 'string' || !baseRevisionId.trim() || baseRevisionId.length > 200)) {
+    if (
+      baseRevisionId !== undefined &&
+      (typeof baseRevisionId !== 'string' || !baseRevisionId.trim() || baseRevisionId.length > 200)
+    ) {
       return denied(400, 'INVALID_BASE_REVISION')
     }
     const authority = currentAuthority(state, head)
-    const stored = authority?.projection || await loadStored()
+    const stored = authority?.projection || (await loadStored())
     if (!stored) return denied(404, 'NOT_FOUND')
     const canonicalBefore = canonicalEditableSnapshot(stored)
-    const canonicalAfter = canonicalEditableSnapshot({ ...stored, ...after, id: presentationId })
+    const canonicalAfter = canonicalEditableSnapshot(
+      normalizePresentationGames({ ...stored, ...after, id: presentationId })
+    )
     const compatibility = compatibilityPresentation(stored, canonicalAfter, presentationId)
     const sourceMap = authority?.sourceMap
     // A normal save only publishes the canonical projection and pending journal.
     // Only the validated edited-export workflow may materialize a successor package revision.
-    const requestHash = hashRecord({ operation: OPERATION, presentationId, expectedGeneration, baseRevisionId: baseRevisionId || null, after })
-    const prior = state.mutationResults.find((item) =>
-      (item.operation === OPERATION || isLegacyProjectionSaveResult(item)) &&
-      item.presentationId === presentationId && item.idempotencyKey === idempotencyKey)
+    const requestHash = hashRecord({
+      operation: OPERATION,
+      presentationId,
+      expectedGeneration,
+      baseRevisionId: baseRevisionId || null,
+      after,
+    })
+    const prior = state.mutationResults.find(
+      (item) =>
+        (item.operation === OPERATION || isLegacyProjectionSaveResult(item)) &&
+        item.presentationId === presentationId &&
+        item.idempotencyKey === idempotencyKey
+    )
     if (prior) {
       const replay = prior.requestIdentity
         ? prior.requestIdentity.expectedGeneration === expectedGeneration &&
@@ -109,24 +137,38 @@ async function savePackageProjection({
         : isLegacyProjectionSaveResult(prior) &&
           expectedGeneration === prior.generation - 1 &&
           (baseRevisionId === undefined || baseRevisionId === prior.packageRevisionId) &&
-          (!prior.journal?.baseRevisionId || prior.journal.baseRevisionId === prior.packageRevisionId) &&
+          (!prior.journal?.baseRevisionId ||
+            prior.journal.baseRevisionId === prior.packageRevisionId) &&
           hashRecord(canonicalAfter) === hashRecord(prior.projection)
       const sameRequest = prior.requestHash === requestHash || replay
       if (!sameRequest) return denied(409, 'IDEMPOTENCY_KEY_CONFLICT')
-      if (prior.packageRevisionId !== head.packageRevisionId || prior.generation !== head.generation) {
+      if (
+        prior.packageRevisionId !== head.packageRevisionId ||
+        prior.generation !== head.generation
+      ) {
         return denied(409, 'STALE_GENERATION', { currentGeneration: head.generation })
       }
-      return { ok: true, packageBacked: true, idempotent: true, generation: prior.generation,
+      return {
+        ok: true,
+        packageBacked: true,
+        idempotent: true,
+        generation: prior.generation,
         aggregateHead: currentHead(store.getState(), presentationId),
-        projection: prior.projection, projectionHash: hashRecord(prior.projection) }
+        projection: prior.projection,
+        projectionHash: hashRecord(prior.projection),
+      }
     }
     if (head.generation !== expectedGeneration) {
       return denied(409, 'STALE_GENERATION', { currentGeneration: head.generation })
     }
-    if (head.matrixAuthorityEpoch !== state.matrixAuthorityEpoch ||
+    if (
+      head.matrixAuthorityEpoch !== state.matrixAuthorityEpoch ||
       !validateMatrixAuthoritySubjects(
-        head.matrixAuthoritySubjects, undefined, state.matrixAuthorityEpoch
-      ).authorized) {
+        head.matrixAuthoritySubjects,
+        undefined,
+        state.matrixAuthorityEpoch
+      ).authorized
+    ) {
       return denied(422, 'STALE_MATRIX_AUTHORITY')
     }
     if (baseRevisionId !== undefined && baseRevisionId !== head.packageRevisionId) {
@@ -143,7 +185,9 @@ async function savePackageProjection({
     })
     const generation = head.generation + 1
     const successorSourceMap = rebindSourceMap(sourceMap, {
-      presentationId, revisionId: head.packageRevisionId, packageGeneration: generation,
+      presentationId,
+      revisionId: head.packageRevisionId,
+      packageGeneration: generation,
     })
     const updatedAt = new Date().toISOString()
     const result = {
@@ -180,8 +224,12 @@ async function savePackageProjection({
       queueCompatibilityProjection(next, compatibility, nextHead, updatedAt)
     })
     return {
-      ok: true, packageBacked: true, idempotent: false,
-      generation, aggregateHead: currentHead(store.getState(), presentationId), projection: canonicalAfter,
+      ok: true,
+      packageBacked: true,
+      idempotent: false,
+      generation,
+      aggregateHead: currentHead(store.getState(), presentationId),
+      projection: canonicalAfter,
       projectionHash: hashRecord(canonicalAfter),
     }
   })

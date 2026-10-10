@@ -7,6 +7,7 @@ const {
   createIsolatedManifest,
   validateIsolatedLock,
 } = require('./electron-server-dependencies')
+const { materializeImageSize } = require('./electron-local-image-size')
 
 const root = path.join(__dirname, '..')
 const serverDir = path.join(root, 'server')
@@ -49,7 +50,8 @@ function verifyCriticalModules(nodeModulesDir) {
   const missing = criticalModules.filter(
     (moduleName) => !fs.existsSync(path.join(nodeModulesDir, moduleName, 'package.json'))
   )
-  if (missing.length) throw new Error(`Missing critical Electron server modules: ${missing.join(', ')}`)
+  if (missing.length)
+    throw new Error(`Missing critical Electron server modules: ${missing.join(', ')}`)
 }
 
 function publishNodeModules(stagedNodeModules) {
@@ -93,6 +95,7 @@ function prepareElectronDependencies() {
     })
 
     const stagedNodeModules = path.join(temporaryDir, 'node_modules')
+    materializeImageSize(root, isolatedManifest, isolatedLock)
     const targetShared = path.join(stagedNodeModules, 'revealjs-shared')
     removePath(targetShared)
     copyShared(sharedDir, targetShared)

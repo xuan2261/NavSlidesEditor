@@ -1,0 +1,208 @@
+      "read_manifest": "Each report lists every required helper and caller with covered ranges through its actual extent, plus cross-partition and production/dependency files and the symbols/branches relied upon. A grep hit, declaration-only read, title-only obligation list or prior audit is not current full-read evidence."
+    },
+    "obligations": {
+      "native_original12_in_original_order": [
+        {
+          "index": 1,
+          "title": "N06-N02: Keep Start diagnostics out of lifecycle continuity",
+          "requirement": "Consistent lifecycle-only projections while retaining both packet publication and native-action diagnostics."
+        },
+        {
+          "index": 2,
+          "title": "Declare firstExpiredSample before the witness polling callback",
+          "requirement": "Actual bound accumulator and complete last-running/first-expired result, not an undeclared assignment."
+        },
+        {
+          "index": 3,
+          "title": "N06-N02: Validate capture-to-post history before adopting Start",
+          "requirement": "Independent complete capture/post histories, valid prefix/length checks and first-running validation before baseline promotion; no missing-history empty fallback."
+        },
+        {
+          "index": 4,
+          "title": "N06-N03: Bind history health to actual recorder bookkeeping",
+          "requirement": "Independent private lifecycle-store identity/count/sequence/content health before every consumer; distinguish legitimate initialized emptiness from missing/replaced/truncated storage."
+        },
+        {
+          "index": 5,
+          "title": "N06-N03: Compare complete retained history content",
+          "requirement": "Mandatory recorder sequence and complete ordered time/bounds/type/visibility/detail/domain content, including event.time."
+        },
+        {
+          "index": 6,
+          "title": "Retain lifecycle mutations drained at native action boundaries",
+          "requirement": "Retain all actually observed boundary-drained mutations and their later delivery upper bounds; do not filter or clamp away uncertainty."
+        },
+        {
+          "index": 7,
+          "title": "N06-N05: Normalize and retain all observed snapshot failures",
+          "requirement": "All genuine state/UI, capture/post, recorder and document occurrences reach the common ledger in actual observation order; propagate the earliest applicable normalized Error."
+        },
+        {
+          "index": 8,
+          "title": "N06-N05: Preserve the recorder exception's actual cause chain",
+          "requirement": "Real recursive causes, phase/origin/stack and observed domain survive normalization and later recorder failures."
+        },
+        {
+          "index": 9,
+          "title": "N06-N01: Stage each navigation poll's actual document first",
+          "requirement": "Raw slide/URL/documentId/timeOrigin from the actual poll are staged before binding validation can throw."
+        },
+        {
+          "index": 10,
+          "title": "N06-N07: Match keyboard eligibility to production dispatch",
+          "requirement": "Actual configuration/focus/production dispatch discriminators, without forcing focus or altering routing policy."
+        },
+        {
+          "index": 11,
+          "title": "Preserve exact null commands when matching native packets",
+          "requirement": "Exact command and tuple/document/type matching; null is not a wildcard."
+        },
+        {
+          "index": 12,
+          "title": "Reject disconnected current nodes during action extraction",
+          "requirement": "Actual connected-current-root rejection before accepting packet/root identity."
+        }
+      ],
+      "evidence_original3": [
+        {
+          "id": "E06-01-A",
+          "requirement": "A sole actual Error with an existing empty secondaryFailures array preserves its exact reference and own keys; no synthetic multi-error exposure."
+        },
+        {
+          "id": "E06-01-B",
+          "requirement": "Identity-based, not unrelated numeric-order-based, deduplication; retain caller arrays/objects and complete duplicate-free repeated/late exposure."
+        },
+        {
+          "id": "E06-01-C",
+          "requirement": "Ingest genuine caller-errorLedger occurrences in established chronology with authoritative wrappers and provenance; preserve serialized-only diagnostics and exclude ledger-owned exposures."
+        }
+      ],
+      "audit08_all6": [
+        {
+          "id": "Native08-1",
+          "requirement": "Actual assertHistoryPrefix import/binding at both Start continuity calls."
+        },
+        {
+          "id": "Native08-2",
+          "requirement": "Independent complete private retained-store content/time integrity, including event.time, diagnostics and other roots, before passive/cursor/correlated/capture/post/clock consumers; preserve healthy emptiness and projected/full sequence distinctions."
+        },
+        {
+          "id": "Native08-3",
+          "requirement": "Already observed browser snapshot failures precede the genuinely later Node document-binding exception, which is independently retained."
+        },
+        {
+          "id": "Native08-4",
+          "requirement": "Relevant candidate packet siblings reach the normalized ledger despite outer health/document rejection; raw staging and success-only matching are insufficient."
+        },
+        {
+          "id": "Evidence08-1",
+          "requirement": "Serialized-only caller diagnostic objects remain unchanged and never become fabricated occurrences."
+        },
+        {
+          "id": "Evidence08-2",
+          "requirement": "Already-ingested shared genuine references retain authoritative wrapper phase/metadata without duplicate occurrences, serialization identity churn or caller-object mutation."
+        }
+      ],
+      "settled09_all5": [
+        {
+          "id": "09-S1",
+          "owner": "Native",
+          "requirement": "Correct evaluateActionCandidates function boundary before the next export; preserve evaluation and public contracts."
+        },
+        {
+          "id": "09-S2",
+          "owner": "Native",
+          "requirement": "Construct the complete serializable packet before removing its live root; publish BOTH recorded packet evidence and native-action diagnostics with complete capture/post snapshots, lifecycle projections and uncertainty."
+        },
+        {
+          "id": "09-S3",
+          "owner": "Native",
+          "requirement": "On rejection/no-match fallback, ingest EVERY genuinely relevant cursor-eligible packet's independent siblings in actual packet/capture/post/state/UI order while preserving exact successful matching and raw evidence."
+        },
+        {
+          "id": "09-S4",
+          "owner": "Evidence",
+          "requirement": "One stable ledger-owned exposed serialization object per occurrence across recursive ingestion, reconciliation and late exposure, without replacing/truncating caller arrays or conflating numeric namespaces."
+        },
+        {
+          "id": "09-S5",
+          "owner": "Evidence",
+          "requirement": "Authoritative occurrence-wrapper phase survives initial serialization and reconciliation despite conflicting intrinsic Error.phase; retain sidecar provenance without mutating the Error or caller wrapper."
+        }
+      ],
+      "chronology_all2": [
+        {
+          "id": "09-C1",
+          "owner": "Native",
+          "requirement": "Already captured packet getter errors precede genuinely later extraction store/not-ready/document failures; genuinely earlier setup/listener recorder errors retain their earlier positions. No universal packet-first/recorder-first category order or invented timing; throw the earliest applicable normalized Error."
+        },
+        {
+          "id": "09-C2",
+          "owner": "Evidence",
+          "requirement": "Established caller errorLedger a,b order precedes secondary-only and later frame/source/attachment arrivals. Metadata pre-scan is not occurrence ingestion; shared-reference dedupe and authoritative wrappers must preserve actual order without sorting unrelated numeric namespaces."
+        }
+      ],
+      "current11_all6": [
+        {
+          "id": "S10-C1",
+          "owner": "Native",
+          "requirement": "Trace actual observation-site order across setup, earlier listener/store failures, capture state/UI getters, capture health, bubble health, post state/UI getters, pre-existing recorder errors forwarded by cursor/correlated reads and newly detected extraction failures. Internal witnesses must carry domain/provenance and survive forwarding; packet sequence alone or boundary timestamps are insufficient. Preserve all matched/fallback siblings and later independent Node validation."
+        },
+        {
+          "id": "NF-A2",
+          "owner": "Native",
+          "requirement": "Later record() store/readiness failure must not overwrite the first actual recorder error or its recursive setup/store cause chain; forwarded diagnostics are not fabricated new occurrences."
+        },
+        {
+          "id": "NF-A3",
+          "owner": "Native",
+          "requirement": "stageButtonGuard stages raw evidence and normalizes both already observed state/UI getter failures before later document validation. Retain the later document failure and propagate the earliest applicable common-ledger normalized Error without changing exported signatures or controls callers."
+        },
+        {
+          "id": "N10B-01",
+          "owner": "Native",
+          "requirement": "Capture keyboard truthiness, strict keyboardCondition === false semantics, focused-deck policy, input/textarea/contenteditable/speaker-notes exclusions, overlay behavior, paused/resume-key rules for the actual key, and configured/registered custom-binding precedence. A matching custom binding consumes system-arrow dispatch even if its value is useless; never invoke callbacks to discover effects or force focus/unpause/close overlays."
+        },
+        {
+          "id": "N10B-02",
+          "owner": "Native",
+          "requirement": "Initial slideId and actual URL/documentId/timeOrigin are read atomically, staged and validated BEFORE the already-target early return. Preserve corrected poll staging and validation."
+        },
+        {
+          "id": "S10-C2",
+          "owner": "Evidence",
+          "requirement": "Phase-less wrappers cannot downgrade an explicitly authoritative recorded phase via intrinsic Error.phase or ingestion fallback. Explicit valid wrapper phase reconciliation and metadata enrichment remain supported without turning metadata into phase authority. Apply consistently to errorLedger, shared-reference secondaryFailures and allErrors while preserving actual Error identity, stable serialization, genuine chronology and late exposure."
+        }
+      ],
+      "credited_invariants": [
+        {
+          "group": "Native",
+          "requirement": "Retain N06-N04 finite strictly positive bounded remaining/activity operands; N06-N06 actual computed/layout CSS visibility and correlated raw timing; independent full-store checks before projection; valid projected sequence gaps; copied histories; boundary uncertainty; first-running-before-promotion and complete original first-expiry crossover; raw-before-validation root/document evidence; exact tuple/null-command/current connected-root checks; actual enabled/focus/geometry observations."
+        },
+        {
+          "group": "Evidence E06-02..05",
+          "requirement": "Original meanings remain chronological frame-error arrival dispatch; actual Node Error identity plus separate sidecar metadata; state-before-UI observation/dispatch; recursive rootInstanceId/timeOrigin/cause normalization, serialization and primary propagation. Do not substitute success-key, popup, tuple or UI-installation meanings."
+        },
+        {
+          "group": "Ownership and finalization",
+          "requirement": "Preserve actual Page-containing callback context, early portable-handle ownership transfer, no-sink consumers, exact portable success keys {protocol,httpAttempts,socketAttempts,errors}, setup/navigation/live/close ownership and complete late frame/source/attachment/final ledger exposure, including attachment failure."
+        },
+        {
+          "group": "Identity and scope",
+          "requirement": "Preserve canonical NC01-NC11, RPC-01-RPC-17, original-1-original-9 and both historical mapping snapshots verbatim from08 subject authority. Historical SOURCE_CORRECTED credit is never current11 certification. Preserve15/11 contracts, no new helpers/signature changes/shims, all12 immutable callers and Main's strict physical-line observations."
+        }
+      ],
+      "NF_A4": {
+        "id": "NF-A4",
+        "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+        "required_action": "Carry the complete excludedScopeCandidate body from11 dispatch authority verbatim, including its mechanism and unresolved applicability, separately from the six required repairs.",
+        "boundary": "Separate action-packet-store integrity is excluded from required Correction11 repairs. Do not silently fix, waive, disprove, promote to a seventh required repair, or declare complete packet-store integrity. Static salvage may explain its relationship to authorized obligations, but cannot settle product scope or grant authority. If it blocks a bounded conclusion, report that specific unresolved boundary and stop progression."
+      }
+    },
+    "deferred54_and_later_scope": {
+      "status": "REQUIRED_UNEXECUTED; no statically admitted or executed cell.",
+      "surfaces": [
+        "present",
+        "share",
+
+[Showing lines 205-410 of 541. Use :411 to continue]

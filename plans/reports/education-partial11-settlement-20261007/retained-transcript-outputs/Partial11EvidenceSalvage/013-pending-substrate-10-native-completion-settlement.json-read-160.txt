@@ -1,0 +1,132 @@
+          "1-113 complete (EOF 113)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-ui-evidence.js",
+        "coverage": [
+          "1-152 complete (EOF; line 151 closes the template, 152 is empty)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+        "coverage": [
+          "1-150 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "coverage": [
+          "1-172 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-evidence.js",
+        "coverage": [
+          "1-198 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+        "coverage": [
+          "1-125 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+        "coverage": [
+          "1-112 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+        "coverage": [
+          "1-192 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-live-root-observation.js",
+        "coverage": [
+          "1-163 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/release-surfaces.js",
+        "coverage": [
+          "1-192 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/present-offline-helpers.js",
+        "coverage": [
+          "1-29 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/release-portable-inspection.js",
+        "coverage": [
+          "1-55 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js",
+        "coverage": [
+          "1-87 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-cases.js",
+        "coverage": [
+          "1-200 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-fixtures.js",
+        "coverage": [
+          "1-140 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-leave-return.js",
+        "coverage": [
+          "1-137 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-reset.js",
+        "coverage": [
+          "1-110 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-isolation.js",
+        "coverage": [
+          "1-124 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-state.js",
+        "coverage": [
+          "1-98 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-quiz-state.js",
+        "coverage": [
+          "1-105 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-hot-potato-state.js",
+        "coverage": [
+          "1-118 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-jeopardy-state.js",
+        "coverage": [
+          "1-100 (complete body)"
+        ]
+      },
+      {
+
+[Showing lines 111-240 of 723. Use :241 to continue]

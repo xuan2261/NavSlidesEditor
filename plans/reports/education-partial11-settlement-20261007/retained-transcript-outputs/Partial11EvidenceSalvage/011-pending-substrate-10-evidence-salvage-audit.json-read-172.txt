@@ -1,0 +1,6 @@
+{
+  "verdict": "REPAIR_REQUIRED",
+  "scope": {
+    "mode": "INDEPENDENT_READ_ONLY_STATIC_SALVAGE",
+
+[Showing lines 1-4 of 1203. Use :5 to continue]

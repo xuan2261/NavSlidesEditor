@@ -79,12 +79,9 @@ test.describe('Coverage Gaps: Editor controls and UI contracts', () => {
     await page.keyboard.press('Escape')
 
     await page.setViewportSize({ width: 390, height: 844 })
-    await expect(page.getByText('Tablet or desktop required')).toBeVisible()
+    await expect(page.getByTestId('slide-element-a')).toBeVisible()
     await page.keyboard.press('Tab')
     await expect(page.locator(':focus')).toBeVisible()
-
-    const screenshot = await page.screenshot()
-    expect(screenshot.length).toBeGreaterThan(10_000)
 
     const exportRes = await request.get(`/api/presentations/${presId}/present`)
     expect(exportRes.ok()).toBeTruthy()

@@ -1,0 +1,649 @@
+[
+  {
+    "transcript": "C:\\Users\\Z10PAD8C_Xuan2261\\.omp\\agent\\sessions\\--C--Work-NavSlidesEditor--\\2026-10-04T11-03-27-941Z_01a10695-43c5-7000-80a5-281eb32934b4\\Native11ObservationPart.jsonl",
+    "transcriptLine": 206,
+    "timestamp": "2026-10-06T03:19:02.846Z",
+    "toolCallId": "call_diorpBZlF3yM7NSoS1eGEYqD|fc_025a033001e0a5f3016ac467a6746487d0bab1eccde3ec2188",
+    "data": {
+      "component": "Native11 coverage continuation — observation and navigation",
+      "auditRole": "Non-overlapping primary coverage component of the existing Native11 salvage audit; not another independent opinion, substantive producer, admission decision, or whole-audit verdict.",
+      "exactSubject": {
+        "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+        "recordedFullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+        "identityBasis": "Existing preservation authority only; no hash, count, or freeze remeasurement.",
+        "sourcePrefix": "tests/e2e/education/"
+      },
+      "flags": {
+        "admission": false,
+        "sourceReady": false,
+        "qualification": false,
+        "passClaimed": false,
+        "runtimeExecuted": false,
+        "declaredCells": 54,
+        "staticallyAdmittedCells": 0,
+        "executedAcceptanceCells": 0
+      },
+      "primaryCoverageComplete": true,
+      "readEvidence": {
+        "method": "Personal read-tool inspection of explicit bounded :raw ranges, with grep only for source anchors and discovery. Full primary bodies and primary owner bodies were read without declaration elisions. Ranges extending past the last content line reached EOF. Last-content anchors are source locations, not newly measured physical-line totals. Tool outputs are retained in this component's conversation; selectors below identify the complete attributable source outputs for integration rereading.",
+        "primaryFiles": [
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-observation.js",
+            "requestedReads": ["1-210:raw"],
+            "completeContentRange": "1-152",
+            "lastContentLine": 152,
+            "eofReached": true
+          },
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+            "requestedReads": ["1-210:raw"],
+            "completeContentRange": "1-175",
+            "lastContentLine": 175,
+            "eofReached": true
+          },
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+            "requestedReads": ["1-230:raw"],
+            "completeContentRange": "1-187",
+            "lastContentLine": 187,
+            "eofReached": true
+          },
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+            "requestedReads": ["1-210:raw"],
+            "completeContentRange": "1-93",
+            "lastContentLine": 93,
+            "eofReached": true
+          },
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-native-action.js",
+            "requestedReads": ["1-210:raw"],
+            "completeContentRange": "1-84",
+            "lastContentLine": 84,
+            "eofReached": true
+          },
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+            "requestedReads": ["1-220:raw"],
+            "completeContentRange": "1-176",
+            "lastContentLine": 176,
+            "eofReached": true
+          }
+        ],
+        "primaryOwners": [
+          {
+            "path": "shared/src/education/browser/reveal-lifecycle.js",
+            "requestedReads": ["1-240:raw"],
+            "completeContentRange": "1-145",
+            "eofReached": true,
+            "loadBearingBodies": "Complete attachRevealLifecycle, including prior keyboard-condition capture, education focus wrapper, configure, event subscriptions, reconciliation, and destroy restoration."
+          },
+          {
+            "path": "node_modules/reveal.js/js/controllers/keyboard.js",
+            "requestedReads": ["1-220:raw", "221-440:raw"],
+            "completeContentRange": "1-415",
+            "eofReached": true,
+            "externalLinkedDependency": true,
+            "loadBearingBodies": "Complete constructor, configure, bind/unbind, add/remove key binding, triggerKey, shortcut/binding getters, and complete onDocumentKeyDown dispatch."
+          },
+          {
+            "path": "shared/src/htmlGenerator.js",
+            "requestedReads": [
+              "1-216:raw",
+              "217-400:raw",
+              "401-563:raw",
+              "564-740:raw",
+              "741-850:raw"
+            ],
+            "completeContentRange": "1-822",
+            "eofReached": true,
+            "loadBearingBodies": "Complete file, including full generateRevealHTML body at 217-489, keyboardCondition at 462-466, plugin/config construction, actual Reveal.initialize at 474, helper definitions and exports. No generator omission remains."
+          }
+        ],
+        "supplementaryCrossingBodies": [
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+            "requestedReads": ["1-205:raw"],
+            "completeContentRange": "1-163",
+            "eofReached": true
+          },
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-native-snapshot.js",
+            "requestedReads": ["1-210:raw"],
+            "completeContentRange": "1-106",
+            "eofReached": true
+          },
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-native-history.js",
+            "requestedReads": ["1-210:raw"],
+            "completeContentRange": "1-185",
+            "eofReached": true
+          },
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+            "requestedReads": ["1-200:raw"],
+            "completeContentRange": "1-150",
+            "eofReached": true
+          },
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+            "requestedReads": ["1-210:raw"],
+            "completeContentRange": "1-171",
+            "eofReached": true
+          },
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-evidence.js",
+            "requestedReads": ["1-210:raw"],
+            "completeContentRange": "1-198",
+            "eofReached": true
+          },
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+            "requestedReads": ["1-210:raw"],
+            "completeContentRange": "1-143",
+            "eofReached": true
+          },
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-controls.js",
+            "requestedReads": ["1-210:raw"],
+            "completeContentRange": "1-171",
+            "eofReached": true
+          },
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-history-domain.js",
+            "requestedReads": ["1-210:raw"],
+            "completeContentRange": "1-53",
+            "eofReached": true
+          },
+          {
+            "path": "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+            "requestedReads": ["1-210:raw"],
+            "completeContentRange": "1-120",
+            "eofReached": true
+          },
+          {
+            "path": "shared/src/reveal-runtime-assets.js",
+            "requestedReads": ["1-210:raw"],
+            "completeContentRange": "1-67",
+            "eofReached": true
+          },
+          {
+            "path": "shared/src/presenterTools.js",
+            "requestedReads": ["126-227:raw"],
+            "fullRelevantBodies": "getPresenterToolsScripts, getPresenterToolsPlugins, getPresenterToolsConfig",
+            "wholeFileRead": false,
+            "disclosure": "Additional generator helper owner. Its complete configuration body emits menu/chalkboard/customcontrols settings; the menu's keyboard:true is nested, not a top-level replacement of the generated keyboardCondition. Unrelated head/body/inline-JS bodies were not claimed read."
+          },
+          {
+            "path": "node_modules/reveal.js/js/index.ts",
+            "requestedReads": ["1-150:raw"],
+            "completeContentRange": "1-74",
+            "eofReached": true,
+            "externalLinkedDependency": true,
+            "loadBearingBodies": "Complete singleton wrapper: Object.assign(Reveal, new Deck(...)) receives the returned public API, not the internal keyboard controller."
+          },
+          {
+            "path": "node_modules/reveal.js/js/reveal.js",
+            "requestedReads": [
+              "1-145:raw",
+              "584-636:raw",
+              "2705-2745:raw",
+              "2740-2770:raw",
+              "2790-2895:raw",
+              "2890-2910:raw",
+              "2920-2967:raw",
+              "2940-3010:raw"
+            ],
+            "completeRelevantBodies": "Constructor context and controller construction; complete addEventListeners/removeEventListeners; complete public API object covered by the union of 2738-2940; complete internal Util.extend and return API through EOF at 2973.",
+            "wholeFileRead": false,
+            "externalLinkedDependency": true
+          },
+          {
+            "path": "node_modules/playwright-core/lib/coreBundle.js",
+            "requestedReads": [
+              "12028-12098:raw",
+              "57767-57769:raw",
+              "57797-57803:raw",
+              "58354-58375:raw",
+              "58399-58401:raw",
+              "60407-60417:raw",
+              "61716-61719:raw"
+            ],
+            "completeRelevantBodies": "parseSerializedValue/innerParseSerializedValue, parseResult, JSHandle.evaluate, Locator._withElement, Locator.evaluate, Frame.evaluate and Page.evaluate.",
+            "wholeFileRead": false,
+            "externalLinkedDependency": true,
+            "disclosure": "Large bundled external helper owner, inspected only at complete load-bearing parser/evaluation methods. No bundle-wide read or frozen-dependency assertion."
+          }
+        ],
+        "governingDocuments": [
+          {
+            "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-native-coverage-continuation-counsel.json",
+            "reads": ["initial structured read", "1-240", "157-180:raw", "181-194:raw"],
+            "eofReached": true,
+            "coverage": "Complete 235-line document; the truncated deferred-scope line was explicitly expanded."
+          },
+          {
+            "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-native-salvage-prompt.md",
+            "reads": ["1-240:raw"],
+            "eofReached": true,
+            "coverage": "Complete prompt."
+          },
+          {
+            "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-dispatch-authority.json",
+            "reads": ["1-240:raw", "241-280:raw"],
+            "eofReached": true,
+            "coverage": "Complete 257-line document, including all six findings, both chronology bodies, semantic contract and complete excluded NF-A4 body."
+          },
+          {
+            "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-terminal-failure-counsel.json",
+            "reads": ["1-180:raw", "181-360:raw", "361-560:raw"],
+            "eofReached": true,
+            "coverage": "Complete 541-line counsel."
+          },
+          {
+            "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-07-native-admission.json",
+            "reads": ["1-58:raw", "59-114:raw"],
+            "coverage": "All twelve complete original finding bodies, titles and source locations. The report's final closing line was not needed for these bodies; no whole-document EOF claim."
+          },
+          {
+            "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-07-evidence-admission.json",
+            "reads": ["1-95:raw"],
+            "eofReached": true,
+            "coverage": "Complete original three ledger finding bodies and report."
+          },
+          {
+            "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-08-native-salvage-audit.json",
+            "reads": ["1-19:raw", "20-48:raw"],
+            "coverage": "All four complete Native08 finding bodies; no whole-document EOF claim."
+          },
+          {
+            "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-08-evidence-salvage-audit.json",
+            "reads": ["1-75:raw"],
+            "eofReached": true,
+            "coverage": "Both complete Evidence08 finding bodies and report."
+          },
+          {
+            "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-09-native-salvage-audit.json",
+            "reads": ["4-49:raw"],
+            "coverage": "All five complete settled09 finding bodies, titles and historical source locations. Chronology09 bodies were read in full in the dispatch authority; no whole-document EOF claim."
+          }
+        ],
+        "otherAuthorityOwnership": "The integration owner retains the prompt's complete broader governing-document, canonical mapping, receipt and full38-file obligations. This component does not represent grep discovery of the10 settlement, another audit's manifest, or historical credits as personal full source/authority coverage."
+      },
+      "perObligation": [
+        {
+          "id": "S10-C1",
+          "disposition": "REPAIR_REQUIRED_COMPONENT_EVIDENCE",
+          "sourceBackedCredits": [
+            "native-snapshot.js:23-54,57-79 allocates obsOrder when serializing getter failures and observes state before UI.",
+            "native-observation.js:36-46,81-91,130-133 witnesses setup/listener recorder envelopes at their browser creation sites, while preserving documentId/timeOrigin/URL.",
+            "native-history.js:114-154 reads capture state/UI before capture health; :75-95 drains/checks bubble health before post state/UI. Packet sequence is allocated only after capture getters/health and is not used as their time witness.",
+            "observation-browser.js:59-64,85-87,149-151 forwards an existing recorder envelope with its existing order; newly detected health failures allocate a new order.",
+            "observation-errors.js:27-32,63-87 uses those numeric witnesses to interleave ordinary same-document recorder/getter failures, rather than always placing recorder:store after getters.",
+            "Node document validation is captured without immediate recording at observation-errors.js:12-23, then recorded last at :77-88. evidence.js:85-90 confirms assertDocumentIdentity itself does not record into the ledger."
+          ],
+          "remainingMechanisms": [
+            "A forwarded browser recorder occurrence becomes a distinct Node envelope on each Playwright evaluate result. The common ledger deduplicates only reference identity and therefore records it again; there is no document-scoped occurrence identity crossing.",
+            "When a matched packet is passed, other cursor-eligible candidates are omitted even if the outer extraction/current-root gate subsequently rejects. Complete fallback coverage exists only when no matched packet is supplied.",
+            "recorderReady's order is fabricated as recorderError.obsOrder + 0.01, or a fixed category rank, rather than witnessed at its observation site.",
+            "The numerical sort does not validate that all compared envelopes belong to the same document/timeOrigin namespace. See the separately bounded domain analysis; no mixed-document execution is asserted."
+          ],
+          "evidence": [
+            "observation-errors.js:25-32,43-60,77-87",
+            "observation.js:103-118",
+            "observation-browser.js:59-64,149-159",
+            "error-ledger.js:77-102",
+            "node_modules/playwright-core/lib/coreBundle.js:12028-12098,57767-57769,57797-57802,60407-60413"
+          ]
+        },
+        {
+          "id": "NF-A3",
+          "disposition": "SOURCE_CORRECTED_LOCAL",
+          "evidence": [
+            "native-action.js:19-69 captures complete raw guard and getter envelopes.",
+            "native-action.js:70-84 stages raw, calls the common normalization helper with the actual document domain, validates document identity, and records/rethrows the returned failure.",
+            "observation-errors.js:71-88 records state/UI siblings before the captured document exception, and :90-92 throws the earliest normalized return.",
+            "controls.js:82-89 and163-171 are actual reveal/reset consumers with unchanged stageButtonGuard signature."
+          ],
+          "mechanism": "For a guard with both state and UI errors plus a later document mismatch, both getter occurrences and the mismatch are recorded before the helper throws. State precedes UI under the snapshot witness; the document occurrence is last. The catch re-records the same normalized Error reference, which the ledger deduplicates. The separate cross-evaluation occurrence problem remains under S10-C1, not a claim that guard siblings are still absent."
+        },
+        {
+          "id": "N10B-01",
+          "disposition": "REPAIR_REQUIRED_COMPONENT_EVIDENCE",
+          "sourceBackedCredits": [
+            "navigation.js:47-54 observes the actual arrow/keyCode and input/textarea/contenteditable/speaker-notes exclusions.",
+            "navigation.js:67-73 includes keyboard truthiness and focused-deck handling; strict !== false replaces Boolean coercion for the function return.",
+            "navigation.js:81-103 captures paused/resume codes and overlay arrow rejection.",
+            "navigation.js:90-98 detects configured binding keys independently of whether their values perform useful navigation, matching keyboard.js:209-231.",
+            "reveal-lifecycle.js:73-83 supplies game/action exclusions and prior-condition delegation; htmlGenerator.js:462-466 supplies summary/video/audio exclusions."
+          ],
+          "remainingMechanisms": [
+            "navigation.js:76 invokes the configured condition with a synthetic {target: active} during diagnostic evaluation. This violates the retained no-condition-callback probing contract, and is not the actual event later supplied by production keyboard.js:146.",
+            "navigation.js:105 probes public reveal.getBindings and reveal.keyboard.getBindings, but neither is exposed by the inspected Reveal public API. The actual registered bindings reside in the private keyboard controller and are consumed by keyboard.js:234-257, so this discriminator cannot observe registered-arrow overrides through the inspected API."
+          ],
+          "dependencyQualification": "The API/dispatcher mismatch is source-proven against the required linked owners read here. htmlGenerator serves /vendor/reveal.js/dist/reveal.js. The recursively frozen subject did not yield that dist asset in targeted searches. No equivalence of a deployed/generated dist bundle to the external linked source, or immutable dependency identity, is claimed."
+        },
+        {
+          "id": "N10B-02",
+          "disposition": "SOURCE_CORRECTED_LOCAL",
+          "evidence": [
+            "navigation.js:19-24 reads initial slideId, URL, documentId and timeOrigin atomically.",
+            "navigation.js:25-31 stages raw/full contextual evidence and validates before :32 already-at-target return.",
+            "navigation.js:145-166 preserves the atomic poll read and raw staging before document validation.",
+            "navigation.js:173-175 records failure."
+          ],
+          "mechanism": "A replacement document cannot be accepted solely because its initial slide ID matches the target: the actual deciding observation is validated before the return. No navigation or polling was executed."
+        },
+        {
+          "id": "NF-A2",
+          "disposition": "SOURCE_CORRECTED_LOCAL_SUPPORTING_CROSSING",
+          "evidence": [
+            "native-observation.js:81-91 changes readiness but assigns a recorder:store envelope only if no previous recorder error exists.",
+            "native-observation.js:36-46 and130-133 preserve the recursive setup cause and actual observed domain.",
+            "native-history.js:81-83,135-137 and observation-browser.js:9-11,85-87,149-151 retain an existing recorder error."
+          ],
+          "mechanism": "Later record() replacement/missing-store failures no longer overwrite the first setup/store envelope. Preservation of its browser reference is source-confirmed. Repeated Node materialization of that preserved browser occurrence is a separate unresolved S10-C1 crossing, not evidence that the browser preservation fix failed."
+        },
+        {
+          "id": "S10-C2",
+          "disposition": "SOURCE_CORRECTED_LOCAL_SUPPORTING_CROSSING",
+          "evidence": [
+            "error-exposure.js:7-21 separates explicit wrapper phase from intrinsic/fallback phase.",
+            "error-exposure.js:34-53 reconciles phase only from a nonempty explicit string and enriches metadata independently, updating the existing serialization object.",
+            "error-exposure.js:69-81,84-103,106-122 applies that distinction in errorLedger, shared secondaryFailures and allErrors reconciliation.",
+            "error-ledger.js:11-17 makes supplied authoritative phase survive serialization."
+          ],
+          "mechanism": "All three existing-occurrence exposure branches preserve an explicitly recorded phase against phase-less wrappers, including wrappers with metadata. Actual Error references and caller wrappers remain unchanged by phase reconciliation. This local crossing credit does not replace the Evidence component's full independent obligations."
+        },
+        {
+          "ids": ["Native08-3", "N07-07 browser-before-document portion"],
+          "disposition": "SOURCE_CORRECTED_LOCAL",
+          "evidence": [
+            "observation.js:45-51,63-69,82-88,105-115 stages raw observations before normalization.",
+            "observation-errors.js:12-23 captures the later identity error without recording it; :71-88 ingests getter failures before that identity occurrence.",
+            "evidence.js:85-90 validates without implicit ledger insertion."
+          ],
+          "remainingBoundary": "All-sibling completeness and repeated browser occurrence identity are separately defective; this narrower document-last repair is not full chronology closure."
+        },
+        {
+          "ids": ["Native08-4", "09-S3", "N07-07 complete sibling portion"],
+          "disposition": "PARTIAL_REPAIR_REQUIRED_COMPONENT_EVIDENCE",
+          "evidence": [
+            "observation-errors.js:56-67 processes every sequence-eligible candidate when no packet argument is supplied.",
+            "observation.js:107,113-118 passes the exact matched packet when one exists.",
+            "observation-errors.js:52-55 then ignores raw.candidates."
+          ],
+          "mechanism": "No-match fallback now covers all eligible packets, but a matched packet plus a later outer/current-node rejection still leaves other genuine candidate siblings raw-only. Exact-match success selection is not itself widened or rejected by this observation."
+        },
+        {
+          "id": "09-C1",
+          "disposition": "PARTIAL_REPAIR_REQUIRED_COMPONENT_EVIDENCE",
+          "evidence": [
+            "Actual getter/recorder observation orders are now generated at the browser sites cited under S10-C1.",
+            "observation-errors.js:81-88 interleaves them for one coherent document-local batch and places Node validation last."
+          ],
+          "remainingBoundary": "Forwarded occurrence duplication, invented readiness positioning, and matched-rejection sibling omission prevent complete chronology closure."
+        },
+        {
+          "id": "09-C2",
+          "disposition": "SOURCE_CORRECTED_LOCAL_SUPPORTING_CROSSING",
+          "evidence": [
+            "error-exposure.js:69-81 ingests genuine caller errorLedger entries before :84-103 secondary-only entries and :106-122 allErrors entries.",
+            "error-ledger.js:100-111 assigns occurrence order at actual ingestion; no numeric caller-order sort exists."
+          ],
+          "mechanism": "For the authority's caller-ledger a,b example, genuine entries are ingested in array order before later secondary-only occurrences. This credit concerns Node genuine-reference chronology, not deduplication of independently deserialized browser envelopes."
+        },
+        {
+          "ids": ["09-S1", "09-S2"],
+          "disposition": "SOURCE_CORRECTED_LOCAL_SUPPORTING_CROSSING",
+          "evidence": [
+            "observation-browser.js:161-164 closes evaluateActionCandidates before the next export.",
+            "native-history.js:107-110 declares the serializable copy before deleting its root and publishes both the packet and native-action diagnostic."
+          ],
+          "qualification": "Static body inspection only; no parser/import/publication execution."
+        },
+        {
+          "ids": ["N07-09", "N07-10", "N07-11", "N07-12"],
+          "dispositionById": {
+            "N07-09": "SOURCE_CORRECTED_LOCAL for poll raw-document staging.",
+            "N07-10": "PARTIAL_REPAIR_REQUIRED under N10B-01.",
+            "N07-11": "SOURCE_CORRECTED_LOCAL for exact null command.",
+            "N07-12": "SOURCE_CORRECTED_LOCAL for connected-current-root rejection."
+          },
+          "evidence": [
+            "navigation.js:145-166",
+            "observation-domain.js:60-70 requires sequence, rootInstanceId, elementId/slideId/gameType, documentId/timeOrigin, hash-stripped URL, event type and exact command; only undefined cursor command is normalized to null.",
+            "observation-domain.js:41-58 rejects disconnected current nodes before identity/tuple/document/URL acceptance.",
+            "observation-browser.js:135-144 supplies the actual current-node discriminators.",
+            "observation.js:118 consumes current-node agreement before constructing/returning a bracket."
+          ]
+        },
+        {
+          "ids": ["N07-01", "N07-04", "N07-05", "N07-06", "Native08-2"],
+          "disposition": "SOURCE_PRESERVED_LOCAL_PRODUCER_AND_READER_EVIDENCE",
+          "evidence": [
+            "native-observation.js:24-34,49-78,94-121 retains private independent event content and checks identity, count, sequence/type, tMin/tMax/time, visibility, domain and complete detail before reader projection.",
+            "native-history.js:49-66 and observation-browser.js:89-98 exclude diagnostics from root/document lifecycle projections.",
+            "native-history.js:7,39,55,79,115 retains boundary-drained mutations with the later delivery upper bound and filters on tMin rather than truncating tMax.",
+            "native-snapshot.js:86-100 and history-domain.js:9-22 use the compatible tMin pair rule.",
+            "history-domain.js:24-53 checks mandatory eventSeq and complete time/detail history prefix content."
+          ],
+          "boundary": "Complete witness baseline adoption, first-running promotion, finite activity bounds and expiry crossover belong to their assigned integration/control/witness owners. No whole-witness conclusion is made here."
+        },
+        {
+          "ids": ["N07-08", "E06-05"],
+          "disposition": "SOURCE_PRESERVED_LOCAL_RECURSIVE_PROVENANCE",
+          "evidence": [
+            "native-snapshot.js:23-54 and native-observation.js:36-46 retain real recursive causes, origin, phase, stack and observed domain.",
+            "error-ledger.js:50-69 recursively materializes causes with rootInstanceId/timeOrigin; :11-48 recursively serializes them.",
+            "evidence.js:167-178 retains primary rootInstanceId/timeOrigin in measured records."
+          ],
+          "boundary": "First browser recorder occurrence preservation is credited under NF-A2; identity after repeated evaluate serialization remains a separate defect."
+        },
+        {
+          "ids": [
+            "E06-01-A",
+            "E06-01-B",
+            "E06-01-C",
+            "Evidence08-1",
+            "Evidence08-2",
+            "09-S4",
+            "09-S5"
+          ],
+          "disposition": "SOURCE_PRESERVED_LOCAL_NODE_REFERENCE_AND_EXPOSURE_EVIDENCE",
+          "evidence": [
+            "error-ledger.js:93-102 preserves actual Node Error reference and assigns ledger occurrence order by ingestion.",
+            "error-ledger.js:139-146 returns a sole Error without multi-error exposure.",
+            "error-exposure.js:23-32,69-122 accepts actual Error references, not serialized-only diagnostics.",
+            "error-exposure.js:34-53 updates one stable serialized identity.",
+            "error-exposure.js:133-169 preserves caller arrays and appends using reference identity, without numeric-order deduplication.",
+            "error-ledger.js:11-17 and error-exposure.js:34-53 preserve authoritative wrapper phase."
+          ],
+          "boundary": "These credits apply to genuine shared Node references. They do not establish identity of the same browser error forwarded in separate evaluate responses."
+        }
+      ],
+      "consumerDefects": [
+        {
+          "id": "OBS-NAV-C1",
+          "retainedObligations": ["S10-C1", "09-C1", "N07-07"],
+          "priority": 2,
+          "confidence": 0.99,
+          "title": "Preserve browser occurrence identity across repeated evaluate results",
+          "primaryAnchor": {
+            "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+            "lines": "25-32"
+          },
+          "evidence": [
+            "observation-browser.js:59-64 and149-159 repeatedly return the existing window.__nsLifecycleRecorderError.",
+            "Playwright coreBundle.js:12028-12030 creates a new deserialization reference map per result; :12079-12083 creates a new object for an object value. JSHandle/Frame evaluate returns parseResult for each response at :57800-57801 and60411-60412.",
+            "error-ledger.js:84-102 only deduplicates matching object references and WeakMap keys; it has no browser occurrence-domain/order key, and materializeEnvelope at :50-69 does not retain obsOrder.",
+            "evidence.js:101-105 directly forwards to that ledger. collectLivePageDiagnostics at live-evidence.js:71-74 performs a later readPassiveEvents using the same sink."
+          ],
+          "mechanism": "After an initial cursor/correlated/extraction read forwards a retained recorder failure, later live/passive collection can forward that same browser occurrence again. Separate evaluate responses reconstruct distinct envelope objects, so the ledger creates another normalized Error and another occurrence/order despite identical document-local obsOrder. Same-call Set deduplication and Node Error reference deduplication cannot repair this boundary. This is a static consumer trace, not a measured run or invented output.",
+          "requiredRepairBoundary": "Preserve internal occurrence identity across browser serialization and Node ingestion using the actual document/timeOrigin namespace and a genuine observation-site occurrence witness. Do not deduplicate unrelated Node Errors or unrelated documents solely by numeric order; do not change public signatures."
+        },
+        {
+          "id": "OBS-NAV-C2",
+          "retainedObligations": ["Native08-4", "09-S3", "S10-C1"],
+          "priority": 2,
+          "confidence": 0.98,
+          "title": "Retain every relevant sibling on matched-packet rejection paths",
+          "primaryAnchor": {
+            "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+            "lines": "51-60"
+          },
+          "evidence": [
+            "observation.js:107 selects a matched packet and :113-118 normalizes using that packet before checking current-node agreement.",
+            "observation-errors.js:52-55 processes only the supplied packet; the all-candidate loop is reachable only in the else branch.",
+            "observation-domain.js:43-57 supplies connected-root/domain rejection after this normalization gate."
+          ],
+          "mechanism": "If a sequence-eligible packet exactly matches the cursor, additional eligible packets contain genuine getter failures, and the current root is subsequently found disconnected or another outer extraction condition rejects, the additional packets are never normalized. The raw candidate array remains staged, but the rejection terminates the path before their genuine sibling errors reach the ledger. Processing all candidates on the no-match branch fixes only part of the retained rejection-path obligation.",
+          "requiredRepairBoundary": "Keep exact successful packet acceptance unchanged; ensure every relevant cursor-eligible packet's genuine siblings are normalized before an outer rejection can terminate extraction."
+        },
+        {
+          "id": "OBS-NAV-C3",
+          "retainedObligations": ["N10B-01", "N07-10"],
+          "priority": 2,
+          "confidence": 0.99,
+          "title": "Do not probe configured keyboard conditions by invoking them",
+          "primaryAnchor": {
+            "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+            "lines": "74-79"
+          },
+          "evidence": [
+            "navigation.js:76 calls priorCondition({target: active}) before the actual keyboard.press at :143.",
+            "reveal-lifecycle.js:75-82 delegates its wrapper to an arbitrary priorCondition.",
+            "keyboard.js:146 supplies the real KeyboardEvent to production condition dispatch."
+          ],
+          "mechanism": "The diagnostic read executes the configured condition callback once with an incomplete synthetic event before production executes it for the real key. A key-dependent condition does not receive the pressed key/keyCode/modifiers during this probe; a condition with effects is executed during observation. This is a retained no-probing contract violation and remaining eligibility mismatch, not a claim that the condition call was newly introduced in Correction11.",
+          "requiredRepairBoundary": "Use read-only owner-backed discriminators; do not call condition or binding callbacks to discover effects, force focus, or mutate keyboard policy."
+        },
+        {
+          "id": "OBS-NAV-C4",
+          "retainedObligations": ["N10B-01"],
+          "priority": 2,
+          "confidence": 0.99,
+          "title": "Use actual exposed evidence for registered keyboard binding precedence",
+          "primaryAnchor": {
+            "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+            "lines": "104-112"
+          },
+          "evidence": [
+            "keyboard.js:72-88 stores registered bindings privately; :234-257 consumes them before system arrow dispatch.",
+            "reveal.js:2899-2906 exposes add/remove/trigger methods, but its complete public API lacks getBindings and keyboard.",
+            "reveal.js:2940-2973 attaches keyboard only to internal Reveal and returns API.",
+            "index.ts:47-52 assigns that returned API to the window singleton."
+          ],
+          "mechanism": "With a registered binding for the pressed arrow and no configured keyboard-object override, the inspected dispatcher consumes the registered branch even for an ineffective callback value. The navigation probe cannot see the private binding map through either queried public property, so customBindingOverrides remains false and the diagnostic can report system-arrow eligibility incorrectly.",
+          "requiredRepairBoundary": "Resolve a read-only, actually available owner-backed registration discriminator without invoking callbacks or treating absence of a nonexistent getter as evidence that no registration exists.",
+          "qualification": "Proven against the inspected external linked source/API. Runtime dist equivalence remains explicitly unestablished."
+        }
+      ],
+      "observationOrderDomainAnalysis": {
+        "evidence": [
+          "observation-errors.js:31 and81-83 compares naked numeric orders without checking documentId/timeOrigin.",
+          "Browser envelope producers carry documentId, timeOrigin and URL, but those fields are not used to establish the comparator namespace.",
+          "observation-browser.js:146-147 filters all public packets only by sequence; fallback normalization occurs before final current-node/document rejection."
+        ],
+        "conclusion": "The normalization consumer has no explicit defense against mixing numeric observation orders from different document/timeOrigin domains. Ordinary intact initialization creates a document-local packet/error collection, and the read source alone does not establish that an ordinary untampered extraction batch naturally mixes documents. Therefore no observed cross-document ordering result or independent mixed-document defect is fabricated. Heterogeneous/corrupted packet inputs cannot be certified as meaningfully globally sortable, and action-packet replacement remains the excluded NF-A4 boundary.",
+        "inventedReadinessWitness": {
+          "evidence": "observation-errors.js:43-48",
+          "observation": "recorderReady receives recorderError.obsOrder + 0.01, or a category rank, without any browser readiness observation witness. This does not constitute actual observation-site chronology. Its exact placement relative to getter failures is source-assigned, not measured or documented by an observation site.",
+          "disposition": "Retained S10-C1 witness contract not fully satisfied; no fabricated runtime ordering output."
+        },
+        "orderNamespaceSeparation": "No comparison of performance.now clocks across timeOrigin domains was executed. Ledger order, stageTrace order, packet sequence and browser obsOrder are distinct source namespaces; their numbers are not treated as a common timeline."
+      },
+      "exactMatchingAndCardinality": {
+        "sourceEvidence": [
+          "observation-domain.js:60-70 retains exact null-command and tuple/root/document/type/hash-stripped URL matching.",
+          "observation-domain.js:41-58 separately validates the actual connected current node.",
+          "native-action.js:7-17 captures a cursor, invokes the actual caller action, then extracts the bracket without signature changes.",
+          "controls.js:11-12 defines the root locator; actual action consumers use Playwright locators.",
+          "Playwright Locator._withElement at coreBundle.js:58354-58367 resolves the evaluation root with strict:true.",
+          "evidence-domain.js:41-78 provides exact root tuple multiset/cardinality matching."
+        ],
+        "limits": "extractActionBracket uses candidates.find, not a uniqueness count of exact matching packets. This component does not infer an exactly-one-packet guarantee from that first match or from cursor.sequence. Locator strict root resolution and complete surface-manifest cardinality are distinct obligations; the surface component/integration owner must carry their end-to-end proof. No new cardinality repair is inferred solely from the absence of a packet-count assertion."
+      },
+      "incomingOutgoingSeams": [
+        {
+          "seam": "Browser recorder/snapshot/history → Node observation normalizer → common ledger",
+          "evidence": "native-observation.js:36-46,81-91; native-snapshot.js:23-79; native-history.js:75-154; observation-errors.js:25-88; evidence.js:101-105; error-ledger.js:77-111",
+          "integrationRequirement": "Carry browser domain/order/occurrence identity through serialization. Current shared Node-reference deduplication is correct but insufficient for repeated browser envelope forwarding."
+        },
+        {
+          "seam": "Exact packet selection → outer rejection → sibling collection",
+          "evidence": "observation.js:103-131; observation-errors.js:51-67; observation-domain.js:41-70",
+          "integrationRequirement": "Account separately for nominal exact success, no-match fallback and matched-but-rejected extraction; the latter still drops other candidates' normalized siblings."
+        },
+        {
+          "seam": "Guard raw stage → snapshot failure normalization → document validation → Reset/Reveal consumer",
+          "evidence": "native-action.js:70-84; observation-errors.js:71-92; controls.js:82-89,163-171",
+          "integrationRequirement": "Retain the local NF-A3 credit and unchanged exports; do not mistake later ledger/serialization issues for absence of guard ingestion."
+        },
+        {
+          "seam": "Education keyboard wrapper/generated prior condition → linked dispatcher → navigation diagnostics",
+          "evidence": "reveal-lifecycle.js:73-83; htmlGenerator.js:453-474; keyboard.js:140-257; reveal.js public/internal API; index.ts:47-52; navigation.js:47-143",
+          "integrationRequirement": "Preserve strict-false, focus, input/notes, keyboard, overlay/paused and configured-binding improvements while retaining callback-probing and inaccessible registered-binding defects. Do not certify dist equivalence from this external source read."
+        },
+        {
+          "seam": "Navigation initial/poll document → bound evidence identity",
+          "evidence": "navigation.js:19-32,145-166; evidence.js:75-90; evidence-domain.js:102-143",
+          "integrationRequirement": "Preserve actual atomic raw evidence before early return/validation. Planned URL and bound documentId/timeOrigin checks are real consumers, not inferred from the producer."
+        },
+        {
+          "seam": "Native packet/history → Start/clock/witness consumers",
+          "evidence": "native-history.js:47-69,75-110,132-168; observation-domain.js:108-187; history-domain.js:24-53",
+          "integrationRequirement": "Other assigned owners must supply full Start promotion, activity operand validation, capture/post equality and first-expiry crossover proofs. This component confirms publication/projection and raw bracket construction only."
+        },
+        {
+          "seam": "Late live collection/finalization → repeated prior browser errors",
+          "evidence": "live-evidence.js:59-113; evidence.js:112-137,139-194",
+          "integrationRequirement": "Later readPassiveEvents can deserialize the retained recorder envelope again. All late paths must retain genuine occurrences without fabricating another occurrence for a forwarded recorder diagnostic."
+        },
+        {
+          "seam": "Live-root error/document ordering owned by the Evidence collection component",
+          "evidence": "live-evidence.js:31-44 records document identity before iterating rootErrors.",
+          "integrationRequirement": "This source crossing differs from the document-last local observation normalizer. Integration must reconcile it with the separately assigned live-root/Evidence obligations using that component's actual producer/consumer evidence; this is not labeled a new Correction11 defect here."
+        }
+      ],
+      "NF_A4Scope": {
+        "currentDisposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+        "separateFromRequiredSixRepairs": true,
+        "currentSourceEvidence": [
+          "observation-browser.js:36-37 obtains cursor sequence from the public packet array.",
+          "observation-browser.js:146-151 obtains candidates from the public packet array while checking only lifecycle-store health.",
+          "native-history.js:107-110 places the original serializable object both in the public packet array and retained native-action detail; lifecycle private JSON equality detects in-place mutation of that original object, not replacement of the separate public packet array/element."
+        ],
+        "recordedExcludedScopeCandidateVerbatim": {
+          "consumerVisibleMechanism": "evaluateActionCandidates returns candidates from the public, replaceable window.__nsRecordedPackets (:146-147). storeHealth (:148) checks only the lifecycle store. In-place mutation of an original packet is detected, because that packet object is also the retained native-action detail. Replacing the array, or replacing an element with a forged object, leaves the retained and private stores untouched, so health stays true. extractActionBracket (observation.js:107-131) then builds the action bracket from the forged packet: rootEventsBefore/After, stateAfter and tCapture/tBubble, which witness.js:44-63 adopts as the Start baseline. This is the same public-store replacement model as N07-04, applied to the packet store.",
+          "lineEnd": 158,
+          "title": "Bind returned action packets to the integrity-checked native-action records",
+          "confidence": 0.6,
+          "id": "NF-A4",
+          "lineStart": 146,
+          "repairNeeded": "Inside evaluateActionCandidates, derive candidates from, or verify each one against, the closure-retained native-action entries. For example, expose a private read of native-action details by sequence, or verify that each candidate is identical to the retained entry's detail and matches its private JSON clone. Report a recorder:store error when they diverge. evaluatePreActionCursor's lastSeq source (:36-37) needs the same binding.",
+          "priority": 2,
+          "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+          "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+          "scopeDecision": "Original N07-04/N07-05 explicitly cover lifecycle store integrity. Extending identical checks to separately replaceable action-packet storage is not automatically a required cutover; no new repair scope authorized."
+        },
+        "nonWaiver": "No repair, waiver, disproof, seventh required finding, or complete action-packet-store integrity claim. Recorded witness consequences above are preserved authority text; this component did not claim a personal witness-body read."
+      },
+      "preservedDeferredAndDeliveryBoundaries": {
+        "missingNativeReceipt": "The genuine Native11 receipt remains absent and independently fatal to admission. This component and integration completion cannot manufacture or substitute it.",
+        "historicalReports": "Original15, Native08 four/Evidence08 two, settled09 five and both chronology obligations, and current11 six retain their original identities and governing bodies. Historical closure labels are not current certification.",
+        "outsidePrimaryObligationOwnership": "N07-02, the complete N07-03 Start adoption proof, Native08-1 actual witness import consumption, finite-positive clock/witness operands, complete independent state/UI journeys, canonical mappings and receipt completeness remain assigned to other continuation components/the integration owner, not waived or silently marked clean here.",
+        "deferredCells": "All18 independently required present/share/file rows remain54 REQUIRED_UNEXECUTED cells. Full initial/pending/hidden/returned/reset/terminal/peer state AND UI; actual Pass/Reset/Start and pending due/uncertainty; consumed original expiry; native Quiz Reset+5000 without800ms slack; Relay settled-peer/full first-timeout invariance without extra Pass/sleep/retry/fallback; Trivia expiry/nativeNext identity/history/scores/awards/deadline/UI; every-cell idle/running/expired Start+4000 witness; earliest lifecycle setup, exact cardinality/focus/geometry, live PNG/diagnostics, portable before/after enforcement and source/config equality, failure-safe setup/close/attachments remain required and unexecuted.",
+        "laterGaps": "Original7 Hot Potato exact speed bonus, original8 Scatter NFC duplicate/unique controls and original9 complete Trivia scoring remain unchanged required other slices. Gap4 is not closed; dependent gaps5-9 are unchanged."
+      },
+      "limitations": [
+        "No whole-audit source verdict is issued.",
+        "External node_modules was inspected through the subject's linked path; it is not recursively frozen. This applies to both Reveal and the supplementary Playwright bundle.",
+        "No frozen Reveal dist asset was found in targeted vendor-dist and recursive reveal.js asset searches. Required linked source/API bodies were still inspected; no runtime dispatcher equivalence is inferred.",
+        "No mixed-domain runtime result, serialization result, navigation success/failure, callback effect, packet publication, syntax/import outcome, or acceptance-cell outcome was executed or invented.",
+        "No shells, git, eval/imports, checks, tests, builds, lint/format, browser actions, callback execution, installation, source/receipt writes, hash/count measurements or nested agents were used. Governing broader-document and full38 integration coverage remains the accountable integration owner's obligation."
+      ]
+    },
+    "notIndependentCompleteAudit": true
+  }
+]

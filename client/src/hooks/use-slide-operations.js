@@ -1,7 +1,11 @@
 import { useCallback, useMemo } from 'react'
 import { useEditorStore } from '../stores/editor-store'
 import { SLIDE_TEMPLATES } from '../data/slide-templates'
-import { deleteSlidesAtIndices, duplicateSlidesAtIndices } from './slide-operation-helpers'
+import {
+  cloneSlideWithNewIds,
+  deleteSlidesAtIndices,
+  duplicateSlidesAtIndices,
+} from './slide-operation-helpers'
 import { invalidatePptxFitMetaForUpdates } from '../utils/pptx-import-meta'
 import { getRotatedAABB } from '../components/canvas/use-canvas-resize-rotate'
 import {
@@ -14,22 +18,7 @@ import {
   buildConnectorUpdateBatch,
   isPureUnlockUpdate,
 } from '../utils/element-update-fanout'
-
-function remapConnectorTargets(element, idRemap) {
-  if (!element.connections) return element
-  const remap = (endpoint) =>
-    endpoint && idRemap.has(endpoint.targetId)
-      ? { ...endpoint, targetId: idRemap.get(endpoint.targetId) }
-      : endpoint
-  return {
-    ...element,
-    connections: {
-      ...element.connections,
-      ...(element.connections.start ? { start: remap(element.connections.start) } : {}),
-      ...(element.connections.end ? { end: remap(element.connections.end) } : {}),
-    },
-  }
-}
+import { showNotice } from '../utils/app-feedback'
 
 /**
  * Hook encapsulating multi-element operations (align, group, delete-selected)
@@ -76,24 +65,34 @@ export function useSlideOperations({
     (updates) => {
       setPresentation((prev) => {
         if (!prev) return prev
-        return mapActive(prev, (s) => {
-          if (s.locked) return s
-          const requested = (updates || []).filter(({ id, ...partial }) => {
-            const element = (s.elements || []).find((candidate) => candidate.id === id)
-            return element && (!element.locked || isPureUnlockUpdate(partial))
-          })
-          if (!requested.length) return s
-          const batch = buildConnectorUpdateBatch(s.elements || [], requested)
-          const byId = new Map(batch.map(({ id, ...partial }) => [id, partial]))
-          return {
-            ...s,
-            elements: (s.elements || []).map((el) =>
-              byId.has(el.id)
-                ? { ...el, ...invalidatePptxFitMetaForUpdates(el, byId.get(el.id)) }
-                : el
-            ),
-          }
-        })
+        const lockIntents = updates?.some((update) => Object.hasOwn(update, 'locked')) ? [] : null
+        return mapActive(
+          prev,
+          (s) => {
+            if (s.locked) return s
+            const requested = (updates || []).filter(({ id, ...partial }) => {
+              const element = (s.elements || []).find((candidate) => candidate.id === id)
+              return element && (!element.locked || isPureUnlockUpdate(partial))
+            })
+            if (!requested.length) return s
+            if (lockIntents) {
+              for (const update of requested) {
+                if (Object.hasOwn(update, 'locked')) lockIntents.push(update)
+              }
+            }
+            const batch = buildConnectorUpdateBatch(s.elements || [], requested)
+            const byId = new Map(batch.map(({ id, ...partial }) => [id, partial]))
+            return {
+              ...s,
+              elements: (s.elements || []).map((el) =>
+                byId.has(el.id)
+                  ? { ...el, ...invalidatePptxFitMetaForUpdates(el, byId.get(el.id)) }
+                  : el
+              ),
+            }
+          },
+          lockIntents
+        )
       })
     },
     [setPresentation, mapActive]
@@ -109,9 +108,7 @@ export function useSlideOperations({
           return {
             ...slide,
             elements: (slide.elements || []).map((element) =>
-              zById[element.id] === undefined
-                ? element
-                : { ...element, zIndex: zById[element.id] }
+              zById[element.id] === undefined ? element : { ...element, zIndex: zById[element.id] }
             ),
           }
         })
@@ -208,7 +205,7 @@ export function useSlideOperations({
       setPresentation((prev) => {
         if (!prev) return prev
         const slide = activeSlideOf()
-        if (slide?.locked) return prev
+        if (slide?.locked || hasBlockedGroupMutation(slide, ids)) return prev
         // Locked elements are protected from bulk moves (matching
         // deleteSelectedElements). Re-check the count AFTER filtering: a
         // selection of one free + one locked leaves a lone survivor, which
@@ -287,7 +284,9 @@ export function useSlideOperations({
           }
         }
         return mapActive(prev, (sl) => {
-          const elements = (sl.elements || []).map((el) => (upd[el.id] ? { ...el, ...upd[el.id] } : el))
+          const elements = (sl.elements || []).map((el) =>
+            upd[el.id] ? { ...el, ...upd[el.id] } : el
+          )
           return { ...sl, elements: applyConnectorDependentPatches(elements) }
         })
       })
@@ -345,7 +344,11 @@ export function useSlideOperations({
   const deleteSlide = useCallback(
     (index) => {
       if (!presentation || presentation.slides.length <= 1) return
-      const result = deleteSlidesAtIndices(presentation.slides, [index], currentSlideIndexRef.current)
+      const result = deleteSlidesAtIndices(
+        presentation.slides,
+        [index],
+        currentSlideIndexRef.current
+      )
       if (result.slides === presentation.slides) return
       setPresentation((prev) => ({ ...prev, slides: result.slides }))
       setCurrentSlideIndex(result.currentSlideIndex)
@@ -356,7 +359,18 @@ export function useSlideOperations({
   const duplicateSlide = useCallback(
     (index) => {
       if (!presentation) return
-      const result = duplicateSlidesAtIndices(presentation.slides, [index])
+      const result = duplicateSlidesAtIndices(
+        presentation.slides,
+        [index],
+        undefined,
+        0,
+        presentation.layoutMasters
+      )
+      if (result.warnings.length)
+        showNotice(result.warnings.map((warning) => warning.error).join('\n'), {
+          title: 'Repair interaction targets',
+          testId: 'interaction-reference-notice',
+        })
       setPresentation((prev) => ({ ...prev, slides: result.slides }))
       setCurrentSlideIndex(result.currentSlideIndex)
     },
@@ -366,7 +380,18 @@ export function useSlideOperations({
   const duplicateSlides = useCallback(
     (indices) => {
       if (!presentation) return
-      const result = duplicateSlidesAtIndices(presentation.slides, indices)
+      const result = duplicateSlidesAtIndices(
+        presentation.slides,
+        indices,
+        undefined,
+        0,
+        presentation.layoutMasters
+      )
+      if (result.warnings.length)
+        showNotice(result.warnings.map((warning) => warning.error).join('\n'), {
+          title: 'Repair interaction targets',
+          testId: 'interaction-reference-notice',
+        })
       setPresentation((prev) => ({ ...prev, slides: result.slides }))
       setCurrentSlideIndex(result.currentSlideIndex)
     },
@@ -376,7 +401,11 @@ export function useSlideOperations({
   const deleteSlides = useCallback(
     (indices) => {
       if (!presentation) return
-      const result = deleteSlidesAtIndices(presentation.slides, indices, currentSlideIndexRef.current)
+      const result = deleteSlidesAtIndices(
+        presentation.slides,
+        indices,
+        currentSlideIndexRef.current
+      )
       if (result.slides === presentation.slides) return
       setPresentation((prev) => ({ ...prev, slides: result.slides }))
       setCurrentSlideIndex(result.currentSlideIndex)
@@ -431,15 +460,13 @@ export function useSlideOperations({
         const parent = prev.slides[parentIndex]
         const child = parent?.children?.[childIndex]
         if (!child) return prev
-        const sourceElements = child.elements || []
-        const idRemap = new Map(sourceElements.map((element) => [element.id, crypto.randomUUID()]))
-        const dup = {
-          ...child,
-          id: crypto.randomUUID(),
-          elements: sourceElements.map((element) =>
-            remapConnectorTargets({ ...element, id: idRemap.get(element.id) }, idRemap)
-          ),
-        }
+        const warnings = []
+        const dup = cloneSlideWithNewIds(child, undefined, prev.layoutMasters, warnings)
+        if (warnings.length)
+          showNotice(warnings.map((warning) => warning.error).join('\n'), {
+            title: 'Repair interaction targets',
+            testId: 'interaction-reference-notice',
+          })
         return {
           ...prev,
           slides: prev.slides.map((slide, index) => {

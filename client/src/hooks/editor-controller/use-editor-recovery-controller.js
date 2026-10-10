@@ -35,7 +35,7 @@ export function useEditorRecoveryController({
   const recoverLocalDraft = useCallback(() => {
     const draft = saveRecovery
     if (!draft?.snapshot || draft.id !== presentationId) return
-    const recovered = migratePresentation(draft.snapshot)
+    const recovered = migratePresentation(draft.snapshot, { draft: true })
     if (recovered.id !== presentationId) return
     resetEditorInteraction()
     adoptGeneration(recovered.aggregateGeneration)

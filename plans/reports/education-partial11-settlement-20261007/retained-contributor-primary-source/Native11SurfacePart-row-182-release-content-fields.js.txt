@@ -1,0 +1,58 @@
+  expect(persisted).toMatchObject(patch)
+  return { target, persisted }
+}
+export async function fieldEvidence(
+  testInfo,
+  page,
+  type,
+  fields,
+  expected,
+  observed,
+  artifacts = []
+) {
+  for (const field of fields)
+    await observe(
+      testInfo,
+      page,
+      { element: type, surface: 'editor' },
+      `field:${field}`,
+      expected,
+      observed,
+      artifacts
+    )
+}
+export async function withPresent(page, inspect) {
+  const { popup } = await launchPresentPopup(page)
+  try {
+    await popup.waitForFunction(() => window.Reveal?.isReady())
+    return await inspect(popup)
+  } finally {
+    await popup.close()
+  }
+}
+export async function withPortable(page, browser, testInfo, filename, inspect, options = {}) {
+  const file = await downloadArtifact(page, testInfo, 'Export HTML', filename)
+  const portable = await freshPortable(browser, file, options)
+  try {
+    const observed = await inspect(portable.page, file)
+    return { file, observed, network: await portable.inspectNetwork() }
+  } finally {
+    await portable.context.close()
+  }
+}
+export async function renderedStyle(node, properties) {
+  return node.evaluate(
+    (element, keys) => Object.fromEntries(keys.map((key) => [key, getComputedStyle(element)[key]])),
+    properties
+  )
+}
+export async function reachable(node) {
+  await expect(node).toBeVisible()
+  expect(
+    await node.evaluate((element) => {
+      const r = element.getBoundingClientRect()
+      const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+      return hit === element || element.contains(hit)
+    })
+  ).toBe(true)
+}

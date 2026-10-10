@@ -64,33 +64,39 @@ function RibbonActionDropdown({ label, icon: Icon, items }) {
           ariaLabel={`${label} menu`}
           dataRibbonPopup={`${label.toLowerCase()}-menu`}
         >
-            {items.map((item, index) => {
-              const ItemIcon = item.icon
-              return (
-                <button
-                  key={item.label}
-                  ref={(node) => { itemRefs.current[index] = node }}
-                  className="ui-coarse-target dropdown-item flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-[11px] text-text-primary transition-colors hover:bg-secondary"
-                  role="menuitem"
-                  onClick={() => runItem(item)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Tab') {
-                      setOpen(false)
-                      triggerRef.current?.focus()
-                      return
-                    }
-                    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return
-                    e.preventDefault()
-                    const next = e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1
-                      : (index + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length
-                    itemRefs.current[next]?.focus({ preventScroll: true })
-                  }}
-                >
-                  <ItemIcon size={14} className="text-text-muted" />
-                  {item.label}
-                </button>
-              )
-            })}
+          {items.map((item, index) => {
+            const ItemIcon = item.icon
+            return (
+              <button
+                key={item.label}
+                ref={(node) => {
+                  itemRefs.current[index] = node
+                }}
+                className="ui-coarse-target dropdown-item flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-[11px] text-text-primary transition-colors hover:bg-secondary"
+                role="menuitem"
+                onClick={() => runItem(item)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Tab') {
+                    setOpen(false)
+                    triggerRef.current?.focus()
+                    return
+                  }
+                  if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return
+                  e.preventDefault()
+                  const next =
+                    e.key === 'Home'
+                      ? 0
+                      : e.key === 'End'
+                        ? items.length - 1
+                        : (index + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length
+                  itemRefs.current[next]?.focus({ preventScroll: true })
+                }}
+              >
+                <ItemIcon size={14} className="text-text-muted" />
+                {item.label}
+              </button>
+            )
+          })}
         </RibbonFloatingOverlay>
       )}
     </div>
@@ -103,7 +109,8 @@ export default function RibbonHeaderBar({
   onExportPDF,
   onExportPPTX,
   onExportHTML,
-  onExportOffline,
+  staticExportTeacherReveal,
+  onStaticExportTeacherRevealChange,
   onExportProject,
   onGithub,
   onSync,
@@ -126,14 +133,14 @@ export default function RibbonHeaderBar({
   const formatContext = useUIStore((s) => s.formatContext)
   const lastNonContextualTab = useUIStore((s) => s.lastNonContextualTab)
 
-  const effectiveTab = resolveRibbonActiveTab(
-    activeTab,
-    formatContext,
-    lastNonContextualTab
-  )
+  const effectiveTab = resolveRibbonActiveTab(activeTab, formatContext, lastNonContextualTab)
 
   return (
-    <Tabs.Root value={effectiveTab} onValueChange={setActiveTab} className="flex min-w-0 flex-1 overflow-hidden">
+    <Tabs.Root
+      value={effectiveTab}
+      onValueChange={setActiveTab}
+      className="flex min-w-0 flex-1 overflow-hidden"
+    >
       <div className="flex w-full min-w-0 flex-1 items-center overflow-hidden border-b border-border bg-secondary">
         <FileDropdown
           onSave={onSave}
@@ -141,7 +148,8 @@ export default function RibbonHeaderBar({
           onExportPDF={onExportPDF}
           onExportPPTX={onExportPPTX}
           onExportHTML={onExportHTML}
-          onExportOffline={onExportOffline}
+          staticExportTeacherReveal={staticExportTeacherReveal}
+          onStaticExportTeacherRevealChange={onStaticExportTeacherRevealChange}
           onExportProject={onExportProject}
           onGithub={onGithub}
           onSync={onSync}

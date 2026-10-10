@@ -51,19 +51,87 @@ describe('presenter game bootstrap route', () => {
     expect(presentationsRouter.isCurrentPresenterBootstrap(expected, replacement)).toBe(false)
   })
 
+  it('returns an actionable permanent rejection when authored question kinds are unsupported live', async () => {
+    const created = await request(app)
+      .post('/api/presentations')
+      .send({
+        title: 'Unsupported live question kind',
+        slides: [
+          {
+            elements: [
+              {
+                id: 'typed-live',
+                type: 'game',
+                gameType: 'hot-potato',
+                'hot-potato': {
+                  questions: [
+                    {
+                      id: 'typed-question',
+                      kind: 'multi-choice',
+                      prompt: 'Select A',
+                      points: 10,
+                      timeLimit: 30,
+                      options: [
+                        { id: 'a', text: 'A' },
+                        { id: 'b', text: 'B' },
+                      ],
+                      answerKey: { optionIds: ['a'] },
+                      feedback: { correct: '', incorrect: '', explanation: '' },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      })
+    expect(created.status).toBe(201)
+    const id = created.body.id
+    const roomCode = liveRooms.generateRoomCode()
+    const presenterToken = liveRooms.createPresenterToken()
+    liveRooms.registerRoom(roomCode, presenterToken)
+    liveRooms.joinRoom(roomCode, 'typed-presenter', 'presenter', { presenterToken })
+    liveRooms.getRoomState(roomCode).presentationId = id
+    try {
+      const response = await request(app)
+        .post(`/api/presentations/${id}/present/game-bootstrap`)
+        .send({ roomCode, presenterToken })
+      expect(response.status).toBe(400)
+      expect(response.body).toMatchObject({
+        error: 'invalid-game-config',
+        message: expect.stringMatching(/single-choice.*offline/i),
+      })
+      expect(GameEngine.getRoom('typed-live')).toBeUndefined()
+    } finally {
+      liveRooms.removeRoom(roomCode)
+      await request(app).delete(`/api/presentations/${id}/permanent`)
+    }
+  })
+
   it('authenticates the live presenter and creates authoritative game rooms', async () => {
-    const created = await request(app).post('/api/presentations').send({
-      title: `Game bootstrap ${Date.now()}`,
-      slides: [{ elements: [{
-        id: 'bootstrap-game',
-        type: 'game',
-        gameType: 'poll',
-        poll: {
-          prompt: 'Authoritative question',
-          options: [{ id: 'yes', text: 'Yes' }],
-        },
-      }] }],
-    })
+    const created = await request(app)
+      .post('/api/presentations')
+      .send({
+        title: `Game bootstrap ${Date.now()}`,
+        slides: [
+          {
+            elements: [
+              {
+                id: 'bootstrap-game',
+                type: 'game',
+                gameType: 'poll',
+                poll: {
+                  prompt: 'Authoritative question',
+                  options: [
+                    { id: 'yes', text: 'Yes' },
+                    { id: 'no', text: 'No' },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      })
     expect(created.status).toBe(201)
     const id = created.body.id
     const roomCode = liveRooms.generateRoomCode()
@@ -82,29 +150,47 @@ describe('presenter game bootstrap route', () => {
       expect(response.headers['cache-control']).toContain('no-store')
       expect(response.body.games).toHaveLength(1)
       expect(typeof response.body.games[0].hostCapability).toBe('string')
-      expect(GameEngine.getRoom('bootstrap-game').poll.prompt).toBe('Authoritative question')
-      expect(GameEngine.getRoom('bootstrap-game').owner).toEqual({
+      const gameId = response.body.games[0].transportGameId
+      expect(response.body.games[0]).toMatchObject({
+        elementId: 'bootstrap-game',
+        effectiveSlideId: expect.any(String),
+      })
+      expect(GameEngine.getRoom(gameId).owner).toEqual({
         presentationId: id,
         liveRoomCode: roomCode,
         presentationGeneration: room.presentationGeneration,
       })
-      expect(GameEngine.getRoom('bootstrap-game')).not.toHaveProperty('hostCapability')
+      expect(GameEngine.getRoom(gameId)).not.toHaveProperty('hostCapability')
     } finally {
       liveRooms.removeRoom(roomCode)
       await request(app).delete(`/api/presentations/${id}/permanent`)
     }
   })
 
-  it('reclaims an empty claimed game room when the presenter starts a new live room', async () => {
-    const created = await request(app).post('/api/presentations').send({
-      title: `Game bootstrap restart ${Date.now()}`,
-      slides: [{ elements: [{
-        id: 'restart-game',
-        type: 'game',
-        gameType: 'poll',
-        poll: { prompt: 'Restart question', options: [{ id: 'yes', text: 'Yes' }] },
-      }] }],
-    })
+  it('allocates an independent game room when the presenter starts a new live room', async () => {
+    const created = await request(app)
+      .post('/api/presentations')
+      .send({
+        title: `Game bootstrap restart ${Date.now()}`,
+        slides: [
+          {
+            elements: [
+              {
+                id: 'restart-game',
+                type: 'game',
+                gameType: 'poll',
+                poll: {
+                  prompt: 'Restart question',
+                  options: [
+                    { id: 'yes', text: 'Yes' },
+                    { id: 'no', text: 'No' },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      })
     expect(created.status).toBe(201)
     const id = created.body.id
     const firstRoomCode = liveRooms.generateRoomCode()
@@ -119,15 +205,15 @@ describe('presenter game bootstrap route', () => {
       .post(`/api/presentations/${id}/present/game-bootstrap`)
       .send({ roomCode: firstRoomCode, presenterToken: firstPresenterToken })
     expect(firstBootstrap.status).toBe(200)
-    const hostCapability = firstBootstrap.body.games[0].hostCapability
-    const hostJoin = GameEngine.joinRoom('restart-game', 'presenter-host-old', 'Presenter', {
+    const { hostCapability, transportGameId: firstGameId } = firstBootstrap.body.games[0]
+    const hostJoin = GameEngine.joinRoom(firstGameId, 'presenter-host-old', 'Presenter', {
       socketId: 'game-host-socket-1',
       role: 'host',
       hostCapability,
       requireSession: true,
     })
     expect(hostJoin.ok).toBe(true)
-    GameEngine.disconnectRoom('restart-game', 'presenter-host-old', 'game-host-socket-1')
+    GameEngine.disconnectRoom(firstGameId, 'presenter-host-old', 'game-host-socket-1')
     liveRooms.removeRoom(firstRoomCode)
 
     const secondRoomCode = liveRooms.generateRoomCode()
@@ -144,7 +230,11 @@ describe('presenter game bootstrap route', () => {
         .send({ roomCode: secondRoomCode, presenterToken: secondPresenterToken })
 
       expect(secondBootstrap.status).toBe(200)
-      expect(GameEngine.getRoom('restart-game').owner).toEqual({
+      const secondGameId = secondBootstrap.body.games[0].transportGameId
+      expect(secondGameId).not.toBe(firstGameId)
+      expect(GameEngine.getRoom(firstGameId).owner.liveRoomCode).toBe(firstRoomCode)
+      expect(GameEngine.getRoom(firstGameId).hostPlayerId).toBe('presenter-host-old')
+      expect(GameEngine.getRoom(secondGameId).owner).toEqual({
         presentationId: id,
         liveRoomCode: secondRoomCode,
         presentationGeneration: 1,
@@ -155,25 +245,53 @@ describe('presenter game bootstrap route', () => {
     }
   })
 
-  it('rejects disconnected claimed room reuse by a different presentation', async () => {
-    const first = await request(app).post('/api/presentations').send({
-      title: `Game bootstrap owner isolation A ${Date.now()}`,
-      slides: [{ elements: [{
-        id: 'cross-presentation-game',
-        type: 'game',
-        gameType: 'poll',
-        poll: { prompt: 'Deck A', options: [{ id: 'a', text: 'A' }] },
-      }] }],
-    })
-    const second = await request(app).post('/api/presentations').send({
-      title: `Game bootstrap owner isolation B ${Date.now()}`,
-      slides: [{ elements: [{
-        id: 'cross-presentation-game',
-        type: 'game',
-        gameType: 'poll',
-        poll: { prompt: 'Deck B', options: [{ id: 'b', text: 'B' }] },
-      }] }],
-    })
+  it('isolates disconnected claimed rooms from another presentation without raw-ID conflict', async () => {
+    const first = await request(app)
+      .post('/api/presentations')
+      .send({
+        title: `Game bootstrap owner isolation A ${Date.now()}`,
+        slides: [
+          {
+            elements: [
+              {
+                id: 'cross-presentation-game',
+                type: 'game',
+                gameType: 'poll',
+                poll: {
+                  prompt: 'Deck A',
+                  options: [
+                    { id: 'a', text: 'A' },
+                    { id: 'other-a', text: 'Other' },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      })
+    const second = await request(app)
+      .post('/api/presentations')
+      .send({
+        title: `Game bootstrap owner isolation B ${Date.now()}`,
+        slides: [
+          {
+            elements: [
+              {
+                id: 'cross-presentation-game',
+                type: 'game',
+                gameType: 'poll',
+                poll: {
+                  prompt: 'Deck B',
+                  options: [
+                    { id: 'b', text: 'B' },
+                    { id: 'other-b', text: 'Other' },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      })
     expect(first.status).toBe(201)
     expect(second.status).toBe(201)
 
@@ -189,14 +307,15 @@ describe('presenter game bootstrap route', () => {
       .send({ roomCode: firstRoomCode, presenterToken: firstPresenterToken })
     expect(firstBootstrap.status).toBe(200)
 
-    const hostJoin = GameEngine.joinRoom('cross-presentation-game', 'presenter-host-a', 'Presenter', {
+    const firstGameId = firstBootstrap.body.games[0].transportGameId
+    const hostJoin = GameEngine.joinRoom(firstGameId, 'presenter-host-a', 'Presenter', {
       socketId: 'game-host-socket-a',
       role: 'host',
       hostCapability: firstBootstrap.body.games[0].hostCapability,
       requireSession: true,
     })
     expect(hostJoin.ok).toBe(true)
-    GameEngine.disconnectRoom('cross-presentation-game', 'presenter-host-a', 'game-host-socket-a')
+    GameEngine.disconnectRoom(firstGameId, 'presenter-host-a', 'game-host-socket-a')
     liveRooms.removeRoom(firstRoomCode)
 
     const secondRoomCode = liveRooms.generateRoomCode()
@@ -212,9 +331,11 @@ describe('presenter game bootstrap route', () => {
         .post(`/api/presentations/${second.body.id}/present/game-bootstrap`)
         .send({ roomCode: secondRoomCode, presenterToken: secondPresenterToken })
 
-      expect(secondBootstrap.status).toBe(409)
-      expect(secondBootstrap.body.error).toBe('game-room-conflict')
-      expect(GameEngine.getRoom('cross-presentation-game').owner.presentationId).toBe(first.body.id)
+      expect(secondBootstrap.status).toBe(200)
+      const secondGameId = secondBootstrap.body.games[0].transportGameId
+      expect(secondGameId).not.toBe(firstGameId)
+      expect(GameEngine.getRoom(firstGameId).owner.presentationId).toBe(first.body.id)
+      expect(GameEngine.getRoom(secondGameId).owner.presentationId).toBe(second.body.id)
     } finally {
       liveRooms.removeRoom(secondRoomCode)
       await request(app).delete(`/api/presentations/${first.body.id}/permanent`)
@@ -223,10 +344,14 @@ describe('presenter game bootstrap route', () => {
   })
 
   it('rejects invalid presenter credentials and a deck that is not ready', async () => {
-    const created = await request(app).post('/api/presentations').send({
-      title: `Game bootstrap auth ${Date.now()}`,
-      slides: [{ elements: [{ id: 'bootstrap-auth-game', type: 'game', gameType: 'name-picker' }] }],
-    })
+    const created = await request(app)
+      .post('/api/presentations')
+      .send({
+        title: `Game bootstrap auth ${Date.now()}`,
+        slides: [
+          { elements: [{ id: 'bootstrap-auth-game', type: 'game', gameType: 'name-picker' }] },
+        ],
+      })
     expect(created.status).toBe(201)
     const id = created.body.id
     const roomCode = liveRooms.generateRoomCode()

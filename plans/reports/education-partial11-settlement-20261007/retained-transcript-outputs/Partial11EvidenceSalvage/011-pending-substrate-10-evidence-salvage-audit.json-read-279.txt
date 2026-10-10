@@ -1,0 +1,112 @@
+      "mechanism": "For caller errorLedger=[{error:a,phase:'a'},{error:b,phase:'b'}] and secondaryFailures=[b], the ledger traversal records a then b before secondary traversal. b deduplicates rather than moving ahead of a. Later frame/source/attachment occurrences follow that established sequence. Caller objects, arrays and serialized-only diagnostics survive, and unrelated numeric order namespaces are never sorted into a fictional common chronology."
+    }
+  ],
+  "preservationDispositions": [
+    {
+      "id": "N06-N04",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-witness-domain.js:31-46,107-126",
+        "pending-round-lifecycle-clock.js:46-59",
+        "pending-round-lifecycle-activity-interval.js:3-16,46-65,74-102"
+      ],
+      "mechanism": "Initial and polled running remainingMs must be finite, positive and <=4000. Due/remaining intervals and their operands remain finite and ordered. Deadline bounds are derived from actual activity brackets, without fabricated allowance."
+    },
+    {
+      "id": "N06-N06",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-native-action.js:21-73"
+      ],
+      "mechanism": "Button guards observe actual state, command, disabled state, inherited computed display/visibility and layout visibility in the same raw timing interval; the raw guard is staged before document validation."
+    },
+    {
+      "id": "N06-N08 / canonical authority",
+      "disposition": "AUTHORITY_RETAINED_NOT_QUALIFICATION",
+      "evidence": [
+        "pending-substrate-08-subject-authority.json",
+        "pending-substrate-10-terminal-failure-counsel.json:93-172"
+      ],
+      "mechanism": "NC01..11, RPC01..17, original1..9 and both historical mapping snapshots retain their governing meanings. Historical SOURCE_CORRECTED labels are not current acceptance closure. Original7 exact Hot Potato speed-bonus, original8 Scattergories NFC duplicate/unique control and original9 full Trivia scoring remain separate required other slices."
+    },
+    {
+      "id": "E06-02",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "release-portable-inspection.js:20-33,40-54",
+        "release-surfaces.js:78-82"
+      ],
+      "mechanism": "Each actual frame rejection is recorded in its catch before the next awaited frame; pageerror is forwarded synchronously at arrival. The original obligation is chronological dispatch, not merely success keys. Successful inspection still asserts empty attempt/error arrays and returns exactly {protocol,httpAttempts,socketAttempts,errors}."
+    },
+    {
+      "id": "E06-03",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "release-portable-inspection.js:25-30",
+        "pending-round-lifecycle-error-ledger.js:23-48,51-72,87-102"
+      ],
+      "mechanism": "An actual Node frame Error is retained and frameUrl is passed separately as metadata. Serialization exposes the sidecar without assigning frameUrl onto the original Error or replacing that Error. The original obligation is Error identity/sidecar separation, not popup cleanup."
+    },
+    {
+      "id": "E06-04",
+      "disposition": "SOURCE_PRESERVED_WITH_SEPARATE_CHRONOLOGY_BLOCKER",
+      "evidence": [
+        "pending-round-lifecycle-native-snapshot.js:55-78",
+        "pending-round-lifecycle-live-root-observation.js:119-123",
+        "pending-round-lifecycle-observation-errors.js:47-79"
+      ],
+      "mechanism": "State is observed before UI. Live-root errors and native snapshot siblings are dispatched state-before-UI, and native capture precedes post-handler siblings. These local invariants do not establish chronology relative to an intervening recorder failure; S10-C1 remains separate. The original obligation is not renamed as tuple validation."
+    },
+    {
+      "id": "E06-05",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-native-snapshot.js:23-51",
+        "pending-round-lifecycle-error-ledger.js:11-72,87-117",
+        "pending-round-lifecycle-evidence.js:166-179"
+      ],
+      "mechanism": "Recursive browser causes retain rootInstanceId/timeOrigin, element/slide/game/document/URL, phase, stack and origin through materialization and serialization. Browser envelope/original-normalized identity deduplicates; actual Node references survive. Primary measured evidence propagates rootInstanceId/timeOrigin. The original obligation is not renamed as UI getter installation."
+    },
+    {
+      "id": "Real surface callback and ownership",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-surfaces.js:40-84,88-123,125-188",
+        "pending-round-lifecycle-acceptance.spec.js:63-81",
+        "present-offline-helpers.js:5-15"
+      ],
+      "mechanism": "visitSurface passes a real context object containing the actual Page; the immutable acceptance callback consumes context.page. Present installs the context init script before popup creation, observes the popup early, binds the actual document and collects live evidence before close. Share follows the same setup/binding/live/close ownership. File receives and stashes the actual early portable handle before navigation and performs before/after inspection, live collection and context close even on failure. No obsolete Page-first signature is demanded."
+    },
+    {
+      "id": "Portable setup/navigation/close and no-sink",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "release-surfaces.js:18-141,169-179",
+        "release-portable-inspection.js:20-54",
+        "release-content-fields.js:133-141"
+      ],
+      "mechanism": "freshPortable supports absent evidence. Setup/navigation failures retain actual Errors and close failures; the early callback receives the real handle and owns subsequent cleanup. The no-callback navigation-failure path closes its context. Generic no-sink withPortable and generated-surface consumers inspect the real handle and close in finally. Frame rejection without a sink throws the original first frame Error. Strict inspection keys are unchanged."
+    },
+    {
+      "id": "Raw staging, document identity and root tuples",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-observation.js:45-51,63-69,82-88,104-115,143-146",
+        "pending-round-lifecycle-navigation.js:85-103",
+        "pending-round-lifecycle-live-evidence.js:28-46",
+        "pending-round-lifecycle-evidence-domain.js:9-79,103-143"
+      ],
+      "mechanism": "Mapped raw observations survive validation failure. Authored root manifests require exact three-key entries and unique tuples; observed cardinality and 1:1 tuple matching are enforced. Planned URL and bound documentId/timeOrigin/URL are checked without replacing the binding."
+    },
+    {
+      "id": "Late exposures and finalization",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:125-171",
+        "pending-round-lifecycle-error-ledger.js:114-147",
+        "pending-round-lifecycle-evidence.js:112-192",
+        "tests/e2e/fixtures/test-fixtures.js:89-100"
+      ],
+      "mechanism": "Live diagnostics and screenshot/PNG attachment failures are independently recorded. Source GET/comparison and missing-baseline failures are retained. Measured JSON attachment failure is added before the final common-ledger throw; all exposed multi-error arrays are refreshed on later arrivals with stable serialization identities. Sole-error finalization remains mutation-free. API GET actually rejects failed responses; it is not a fake successful fallback."
+
+[Showing lines 331-440 of 1203. Use :441 to continue]

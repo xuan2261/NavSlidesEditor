@@ -1,0 +1,128 @@
+    {
+      "id": "N10B-01",
+      "disposition": "REPAIR_REQUIRED",
+      "evidence": [
+        "pending-round-lifecycle-navigation.js:47-139",
+        "shared/src/education/browser/reveal-lifecycle.js:76-89"
+      ],
+      "assessment": "Keyboard truthiness, strict condition-false comparison, notes/input/contenteditable focus, overlay/paused state and configured/registered bindings are inspected. Nevertheless production callbacks are invoked during supposedly passive inspection and the eligibility result is not enforced. Exact external dispatcher equivalence is not certified."
+    },
+    {
+      "id": "N10B-02",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "evidence": [
+        "pending-round-lifecycle-navigation.js:19-32,142-167"
+      ],
+      "assessment": "The initial slide ID and URL/documentId/timeOrigin are obtained atomically, staged raw and validated before the already-target early return. Poll observations preserve the corresponding raw-stage-before-validation ordering."
+    },
+    {
+      "id": "S10-C2",
+      "disposition": "INSPECTED_RECONCILIATION_MECHANISM_LOCALLY_CORRECTED_NOT_FULLY_QUALIFIED",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:7-20,34-53,69-122",
+        "pending-round-lifecycle-error-ledger.js:11-16,98-115"
+      ],
+      "assessment": "All three genuine caller exposure paths reconcile existing entries only with an explicit valid wrapper phase or metadata; reconcileEntry changes phase only for an explicit nonempty string and mutates the existing serialized object with Object.assign. A phase-less wrapper carrying only metadata therefore does not downgrade an established phase. Canonical original-body disposition and complete receipt verification were interrupted."
+    }
+  ],
+  "originalFindingDispositions15": {
+    "complete": false,
+    "limitation": "The original report reread batch was aborted. Archived excerpts contain elided original bodies; full canonical identities/bodies cannot honestly be reproduced from those excerpts.",
+    "recoverableNativeDispositions": [
+      {
+        "identity": "N06-N02: Keep Start diagnostics out of lifecycle continuity",
+        "evidence": [
+          "pending-round-lifecycle-native-history.js:47-67,108-111",
+          "pending-round-lifecycle-observation-browser.js:91-103"
+        ],
+        "disposition": "Lifecycle-only projections and BOTH packet/native-action diagnostic outputs are retained locally."
+      },
+      {
+        "identity": "Declare firstExpiredSample before polling",
+        "evidence": [
+          "pending-round-lifecycle-witness.js:95-147"
+        ],
+        "disposition": "The declaration and returned last-running/first-expired observations are retained."
+      },
+      {
+        "identity": "N06-N02: Validate capture-to-post history before adopting Start",
+        "evidence": [
+          "pending-round-lifecycle-witness.js:8-15,44-76"
+        ],
+        "disposition": "Comparator import, full prefix/length checks and first-running validation before baseline promotion are retained."
+      },
+      {
+        "identity": "N06-N03: Bind history health to actual recorder bookkeeping",
+        "evidence": [
+          "pending-round-lifecycle-native-observation.js:24-26,48-77",
+          "pending-round-lifecycle-observation-browser.js:5-11,61-66,82-103,147-153",
+          "pending-round-lifecycle-native-history.js:54-56,80-104,133-150"
+        ],
+        "disposition": "Private copied event health and consumer gating locally retained; initialized empty history remains healthy."
+      },
+      {
+        "identity": "N06-N03: Compare complete retained history content",
+        "evidence": [
+          "pending-round-lifecycle-native-observation.js:57-74",
+          "pending-round-lifecycle-history-domain.js:24-53"
+        ],
+        "disposition": "Event sequence/type/bounds/time/visibility/domain/detail private checks retained; projected-root sequence gaps are not rejected."
+      },
+      {
+        "identity": "Retain lifecycle mutations drained at native action boundaries",
+        "evidence": [
+          "pending-round-lifecycle-native-history.js:6-40,55,79,116",
+          "pending-round-lifecycle-activity-interval.js:23-35"
+        ],
+        "disposition": "Trigger-lower-bound selection preserves delivery upper bounds; no boundary clamp introduced."
+      },
+      {
+        "identity": "N06-N05: Normalize and retain all observed snapshot failures",
+        "evidence": [
+          "pending-round-lifecycle-observation-errors.js:25-90",
+          "pending-round-lifecycle-native-snapshot.js:23-81"
+        ],
+        "disposition": "Partial; all selected/fallback sibling fields route to normalization, but chronology/primitive limitations prevent full closure."
+      },
+      {
+        "identity": "N06-N05: Preserve the recorder exception's actual cause chain",
+        "evidence": [
+          "pending-round-lifecycle-native-observation.js:36-46,130-138",
+          "pending-round-lifecycle-error-ledger.js:11-64"
+        ],
+        "disposition": "Actual recursive setup causes and domain/stack metadata retained locally."
+      },
+      {
+        "identity": "N06-N01: Stage each navigation observation before document validation",
+        "evidence": [
+          "pending-round-lifecycle-navigation.js:19-32,145-166"
+        ],
+        "disposition": "Locally corrected for initial and poll observations."
+      },
+      {
+        "identity": "N06-N07: Production keyboard eligibility",
+        "evidence": [
+          "pending-round-lifecycle-navigation.js:47-139"
+        ],
+        "disposition": "REPAIR_REQUIRED; callback invocation and unenforced eligibility remain."
+      },
+      {
+        "identity": "Exact null command matching",
+        "evidence": [
+          "pending-round-lifecycle-observation-domain.js:59-69"
+        ],
+        "disposition": "Null command matching remains exact."
+      },
+      {
+        "identity": "Reject disconnected current nodes during action extraction",
+        "evidence": [
+          "pending-round-lifecycle-observation-domain.js:40-57",
+          "pending-round-lifecycle-observation-browser.js:134-145"
+        ],
+        "disposition": "Explicit current-node connectedness rejection retained."
+      }
+    ],
+    "recoverableEvidenceDispositions": [
+      {
+
+[Showing lines 135-260 of 1018. Use :261 to continue]

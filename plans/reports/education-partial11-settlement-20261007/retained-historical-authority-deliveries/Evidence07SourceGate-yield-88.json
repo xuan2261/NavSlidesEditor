@@ -1,0 +1,16 @@
+{
+  "transcript": "C:\\Users\\Z10PAD8C_Xuan2261\\.omp\\agent\\sessions\\--C--Work-NavSlidesEditor--\\2026-10-04T11-03-27-941Z_01a10695-43c5-7000-80a5-281eb32934b4\\Evidence07SourceGate.jsonl",
+  "transcriptLine": 88,
+  "timestamp": "2026-10-05T03:18:21.525Z",
+  "toolCallId": "call_xnn8hS6UUFJVzpIqHAEkOMQe|fc_0df96fbe8e4c41d5016ac316afe74487d08ea8c1bae97a1f96",
+  "provenance": "AUTHENTIC_HISTORICAL_YIELD_NOT_CURRENT_SOURCE_PASS",
+  "data": {
+    "body": "E06-01 remains open. ingestPreexistingErrors marks every caller-owned secondaryFailures array, including an empty array, in callerOwnedSecondaryArrays. Consequently, recording one actual Error whose existing secondaryFailures is [] and then calling produceThrow bypasses the sole-entry return and calls refreshLedgerExposure, which adds allErrors and errorLedger properties despite there being no secondary occurrence. This changes the original Error's own keys in the accumulator's finalization path and regresses correction06's unconditional single-entry return. Return the original Error without exposure mutation whenever the ledger contains exactly one occurrence; an existing empty caller array is not evidence of multiple failures.",
+    "confidence": 1,
+    "file_path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+    "line_end": 144,
+    "line_start": 140,
+    "priority": 2,
+    "title": "E06-01 Leave sole Errors with empty caller arrays unchanged"
+  }
+}

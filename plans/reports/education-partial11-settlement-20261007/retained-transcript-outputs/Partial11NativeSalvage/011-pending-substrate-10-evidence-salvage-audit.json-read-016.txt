@@ -1,0 +1,192 @@
+    {
+      "id": "E06-03",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "release-portable-inspection.js:25-30",
+        "pending-round-lifecycle-error-ledger.js:23-48,51-72,87-102"
+      ],
+      "mechanism": "An actual Node frame Error is retained and frameUrl is passed separately as metadata. Serialization exposes the sidecar without assigning frameUrl onto the original Error or replacing that Error. The original obligation is Error identity/sidecar separation, not popup cleanup."
+    },
+    {
+      "id": "E06-04",
+      "disposition": "SOURCE_PRESERVED_WITH_SEPARATE_CHRONOLOGY_BLOCKER",
+      "evidence": [
+        "pending-round-lifecycle-native-snapshot.js:55-78",
+        "pending-round-lifecycle-live-root-observation.js:119-123",
+        "pending-round-lifecycle-observation-errors.js:47-79"
+      ],
+      "mechanism": "State is observed before UI. Live-root errors and native snapshot siblings are dispatched state-before-UI, and native capture precedes post-handler siblings. These local invariants do not establish chronology relative to an intervening recorder failure; S10-C1 remains separate. The original obligation is not renamed as tuple validation."
+    },
+    {
+      "id": "E06-05",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-native-snapshot.js:23-51",
+        "pending-round-lifecycle-error-ledger.js:11-72,87-117",
+        "pending-round-lifecycle-evidence.js:166-179"
+      ],
+      "mechanism": "Recursive browser causes retain rootInstanceId/timeOrigin, element/slide/game/document/URL, phase, stack and origin through materialization and serialization. Browser envelope/original-normalized identity deduplicates; actual Node references survive. Primary measured evidence propagates rootInstanceId/timeOrigin. The original obligation is not renamed as UI getter installation."
+    },
+    {
+      "id": "Real surface callback and ownership",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-surfaces.js:40-84,88-123,125-188",
+        "pending-round-lifecycle-acceptance.spec.js:63-81",
+        "present-offline-helpers.js:5-15"
+      ],
+      "mechanism": "visitSurface passes a real context object containing the actual Page; the immutable acceptance callback consumes context.page. Present installs the context init script before popup creation, observes the popup early, binds the actual document and collects live evidence before close. Share follows the same setup/binding/live/close ownership. File receives and stashes the actual early portable handle before navigation and performs before/after inspection, live collection and context close even on failure. No obsolete Page-first signature is demanded."
+    },
+    {
+      "id": "Portable setup/navigation/close and no-sink",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "release-surfaces.js:18-141,169-179",
+        "release-portable-inspection.js:20-54",
+        "release-content-fields.js:133-141"
+      ],
+      "mechanism": "freshPortable supports absent evidence. Setup/navigation failures retain actual Errors and close failures; the early callback receives the real handle and owns subsequent cleanup. The no-callback navigation-failure path closes its context. Generic no-sink withPortable and generated-surface consumers inspect the real handle and close in finally. Frame rejection without a sink throws the original first frame Error. Strict inspection keys are unchanged."
+    },
+    {
+      "id": "Raw staging, document identity and root tuples",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-observation.js:45-51,63-69,82-88,104-115,143-146",
+        "pending-round-lifecycle-navigation.js:85-103",
+        "pending-round-lifecycle-live-evidence.js:28-46",
+        "pending-round-lifecycle-evidence-domain.js:9-79,103-143"
+      ],
+      "mechanism": "Mapped raw observations survive validation failure. Authored root manifests require exact three-key entries and unique tuples; observed cardinality and 1:1 tuple matching are enforced. Planned URL and bound documentId/timeOrigin/URL are checked without replacing the binding."
+    },
+    {
+      "id": "Late exposures and finalization",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:125-171",
+        "pending-round-lifecycle-error-ledger.js:114-147",
+        "pending-round-lifecycle-evidence.js:112-192",
+        "tests/e2e/fixtures/test-fixtures.js:89-100"
+      ],
+      "mechanism": "Live diagnostics and screenshot/PNG attachment failures are independently recorded. Source GET/comparison and missing-baseline failures are retained. Measured JSON attachment failure is added before the final common-ledger throw; all exposed multi-error arrays are refreshed on later arrivals with stable serialization identities. Sole-error finalization remains mutation-free. API GET actually rejects failed responses; it is not a fake successful fallback."
+    },
+    {
+      "id": "Full-input and immutable-consumer preservation",
+      "disposition": "COORDINATOR_REPORTED_PRESERVED",
+      "evidence": [
+        "pending-substrate-10-partial-freeze.json:1-80",
+        "pending-substrate-10-scope-preservation.json:1-364"
+      ],
+      "mechanism": "Main records 4326 baseline inputs, 4327 verified copies, 4320 unchanged baseline inputs, exactly six allowed helper changes, no missing/unexpected changes, one genuine Evidence10 receipt addition, all12 callers unchanged and all26 helpers below200 physical lines. This reviewer read the recorded inventory and source; no hash/count/copy check was repeated."
+    }
+  ],
+  "newFindings": [
+    {
+      "id": "S10-C1",
+      "title": "Preserve action-boundary recorder failures before later getter failures",
+      "priority": 2,
+      "confidence": 0.97,
+      "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+      "lineStart": 81,
+      "lineEnd": 83,
+      "body": "The new non-setup branch places every recorder error after all packet getter errors. That is correct for a store error first discovered during extraction, but completePacket in native-history.js:80-82 can first discover and retain a StoreIntegrityError before its post-handler snapshot at :95. If an action handler corrupts retained store content without replacing the array and the subsequent post-handler state/UI getter also fails, extraction returns that already-observed recorder error plus the later stateAfterError/uiAfterError. This consumer records the later getter first and only then the recorder failure, so the ledger and thrown primary contradict actual observation chronology. The same-array corruption is a source-supported integrity path handled by the private-content health checker, not an assumed runtime result.",
+      "consumerMechanism": [
+        "native-history.js:75-100 performs bubbling health detection before post-handler getter observation",
+        "native-observation.js:47-75 detects same-array content/count corruption, while record() at :77-116 does not replace the retained recorder error for that same-array case",
+        "observation-browser.js:146-159 returns the persistent recorder error and completed packet collection",
+        "observation.js:104-115 passes the matched packet and outer result to this dispatcher",
+        "observation-errors.js:47-60 records packet post-handler getter siblings before :81-83 records the non-setup recorder error",
+        "error-ledger.js:102-128 assigns serialization order and primary by ingestion order; observation-errors.js:91-93 throws its earliest normalized return"
+      ],
+      "repairNeeded": "Retain actual recorder-failure observation position/provenance at native capture/post-handler boundaries and carry it with the packet/error seam. Replay genuine capture getters, an intervening recorder failure and post-handler getters in their observed order, while retaining an earlier setup failure and a genuinely later extraction failure in their correct positions. Do not use a universal setup-versus-all-other category sort, fabricate timestamps, discard independent errors, mutate original Errors or broaden packet acceptance.",
+      "verification": "Static source deduction only; no corruption probe, module import or browser execution was performed."
+    }
+  ],
+  "deliveryBlockers": [
+    {
+      "id": "NATIVE10_GENUINE_DELIVERY_ABSENT",
+      "classification": "INDEPENDENT_DELIVERY_BLOCKER",
+      "evidence": [
+        "pending-substrate-10-terminal-delivery.json:1-78",
+        "pending-substrate-10-terminal-failure-counsel.json:27-45",
+        "pending-substrate-10-scope-preservation.json:340-364"
+      ],
+      "facts": "Both writers actually stopped. Native10 ended with transport stream_error/exit1 after1308.7s and has no genuine completion receipt. Evidence10 completed after819.01s and has a genuine receipt. The absent Native receipt remains fatal to ordinary admission even if source review were clean. No receipt was reconstructed, fabricated or substituted."
+    },
+    {
+      "id": "EVIDENCE10_RECEIPT_SCOPE_LIMITATIONS",
+      "classification": "DELIVERED_RECEIPT_LIMITATION_NOT_AUTOMATIC_SOURCE_DEFECT",
+      "evidence": [
+        ".tmp/acceptance-producer-pending-substrate-10-evidence.json:1-404",
+        "pending-substrate-10-terminal-failure-counsel.json:80-92",
+        "pending-substrate-08-subject-authority.json:1-187",
+        "pending-substrate-07-evidence-admission.json"
+      ],
+      "facts": [
+        "The genuine Evidence receipt was read fully and remains producer claims, not source or runtime proof.",
+        "Its E06-02..05 titles substitute narrower meanings: success keys, popup cleanup, tuple validation and UI getter installation. The governing meanings remain chronological frame dispatch, actual Error/sidecar separation, state-before-UI ordering and recursive provenance/cause propagation.",
+        "Its E06-01-B/C bodies abbreviate the original07 obligations and cannot amend them.",
+        "NC03 shortens the full preconsumption/checkpoint provenance obligation; NC05 substitutes a generic boundary-crossing statement for crossing the exact originally pending due; NC06 changes the cited canonical policy owner; NC09 substitutes a different SE16 paraphrase; NC10 changes the timing-failure explanation. These differ from canonical bodies and do not authorize scope changes.",
+        "NC11, RPC01..17, original1..9 and the current/prior mapping snapshots remain the preserved canonical identities as reported by governing counsel. The aggregate NC=false does not mean NC11 was changed.",
+        "The receipt's three generic deferral sentences do not contain the complete caller,54-cell and later-slice obligations. Its normal dual-gate/run statements confer no execution permission after failed delivery."
+      ]
+    }
+  ],
+  "deferredCallerObligations": {
+    "status": "REQUIRED_UNEXECUTED_AND_IMMUTABLE_UNDER_THIS_SALVAGE",
+    "notNewHelperPatchFindings": "Unchanged caller mismatches are compatibility obligations, not demands for unauthorized caller edits or newly introduced partial10 findings.",
+    "cleanCutover": "After separately applicable authority and complete helper proofs only: migrate all12 callers together, forwarding mandatory evidence sinks, authored root manifests, actual Page contexts and document bindings; consume every relevant actionRecords/actionBracket/activityInterval, witness startRecord and measured expiry result; remove obsolete signatures and tBefore/tAfter/activityNow assumptions without aliases or shims.",
+    "canonicalAuthority": {
+      "source": "pending-substrate-08-subject-authority.json; complete original07 reports and settled09/counsel10 remain governing",
+      "NC01": "Forward the actual surface Page and diagnostics through the real callback contract.",
+      "NC02": "Install earliest Present observations before document creation and distinguish a missing recorder from legitimate observed emptiness.",
+      "NC03": "Establish each root's activity-clock alignment and retained lifecycle provenance before deadline arithmetic, preconsumption and checkpoint bounds.",
+      "NC04": "Validate complete independent original pending context through hidden/return, measure consumed remaining allowance and bound that original identity's expiry.",
+      "NC05": "Retain actual same-domain Pass/Reset brackets, require positive originally pending work at the native Reset boundary and measure crossing that exact old due.",
+      "NC06": "Bound new Quiz due independently to native Reset+5000; prove after-old/before-new checkpoint and bounded new expiry with exact new-generation identity and canonical terminal shape, without arbitrary800ms slack.",
+      "NC07": "Await genuine Relay peer baton settlement with complete independent identity, both lane positions and native UI before freezing the peer; no extra Pass, fixed sleep, retry or winner fallback.",
+      "NC08": "Validate the full first Relay timeout/pending-baton/settled transition, exact generation/team/question/turn/positions/correct/batonDue/deadline and native status/lane UI.",
+      "NC09": "Validate complete Trivia question/round expiry and native Next identity, indices, history, scores, awards, retained due relationships, startedAt and independently bounded next-question policy plus native UI. R16 remains this obligation.",
+      "NC10": "Each cell consumes complete idle/running/expired witness state/UI, actual Start+4000 deadline bounds, same-root/document continuity and measured last-running/first-expired crossover.",
+      "NC11": "Stage every temporal/root/document/failure sample before the assertion that can reject it, including intermediate polls and missed timing windows.",
+      "RPC01Through17": "All seventeen canonical RPC identities and historical dispositions remain required under their original mappings; none is closed by this salvage or renamed as a line-count/receipt check.",
+      "original1Through9": "All nine original identities retain their original scope. Original7/8/9 remain independent required later slices.",
+      "mappingSnapshots": "Preserve originalCurrentMappingSnapshot and originalPriorMappingSnapshot verbatim as authority records; historical credited source labels are not current admission, qualification or PASS."
+    },
+    "currentConsumerEvidence": [
+      "pending-round-lifecycle-acceptance.spec.js:63-81 consumes context.page but does not supply the authored expected-root manifest before visitSurface",
+      "pending-round-lifecycle-cases.js:9-199 wrappers omit sink forwarding and discard parts of returned action evidence",
+      "pending-round-lifecycle-leave-return.js:33-144 omits sinks on observation/navigation/state calls and calls waitForWitnessExpiry using the obsolete two-argument form",
+      "pending-round-lifecycle-reset.js:33-110 consumes obsolete tBefore/tAfter/activityNow and retains an800ms deadline allowance",
+      "pending-round-lifecycle-isolation.js:34-120 retains the same obsolete timing/result contracts and incomplete witness consumption",
+      "pending-round-lifecycle-state.js and all five immutable game-state modules define local state/UI predicates, not complete independently bounded journey acceptance"
+    ],
+    "stateAndUI": "Complete independent initial/pending/hidden/returned/reset/terminal/peer owner context and native UI are required. Generation equality and eventual scalar expiry are insufficient. Preserve original first-expiry identity, consumed return and old-due invariance.",
+    "surfaceAndFailureEvidence": "Present/share/file need earliest lifecycle setup, exact root/document cardinality and identity, actual visibility/focus/geometry/control routing, live diagnostics/PNG, portable before/after enforcement, source GET equality against independently authored saved configuration, and failure-safe setup/navigation/close/attachment finalization.",
+    "acceptanceMatrix": {
+      "surfaces": [
+        "present",
+        "share",
+        "file"
+      ],
+      "leaveReturnRows": [
+        "Quiz",
+        "Hot Potato",
+        "Jeopardy",
+        "Relay",
+        "Trivia question",
+        "Trivia round"
+      ],
+      "resetRows": [
+        "Quiz",
+        "Hot Potato",
+        "Jeopardy",
+        "Relay deadline",
+        "Relay baton",
+        "Trivia question",
+        "Trivia round"
+      ],
+      "isolationRows": [
+        "Quiz",
+        "Hot Potato",
+
+[Showing lines 371-560 of 1203. Use :561 to continue]

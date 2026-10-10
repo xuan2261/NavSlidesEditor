@@ -1,0 +1,309 @@
+{
+  "reportKind": "NATIVE11_RECEIPT_AUDIT_FULL_READ_COVERAGE_ADDENDUM",
+  "logicalAudit": "Partial11NativeSalvage",
+  "mode": "STATIC_RETAINED_EVIDENCE_FAILURE_SETTLEMENT_NOT_ADMISSION",
+  "verdict": "REPAIR_REQUIRED",
+  "scope": "Close only the previously available required receipt-audit full-read omission in native11-coverage-final-report.json; preserve that report unchanged and all unrelated limitations.",
+  "method": "Worker-only direct full reading of three authentic retained raw artifact outputs and bounded index provenance. Not a whole-Main transcript review, fresh D read, source gate, receipt recreation, independent authority comparison, hash/count measurement or runtime certification.",
+  "originalPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-receipt-audit.json",
+  "fullRead": true,
+  "originalLinesRead": "1-538",
+  "actualEOFLine": 538,
+  "EOFObserved": true,
+  "EOFMarker": "Line537 conclusion followed by line538 final object closing brace.",
+  "coverage": {
+    "retainedRoot": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/plans/reports/education-partial11-settlement-20261007/retained-transcript-outputs/Partial11NativeSalvage",
+    "indexPath": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/plans/reports/education-partial11-settlement-20261007/retained-transcript-outputs/Partial11NativeSalvage/index.json",
+    "indexLinesInspected": "5659-5719",
+    "transcript": "C:/Users/Z10PAD8C_Xuan2261/.omp/agent/sessions/--C--Work-NavSlidesEditor--/2026-10-04T11-03-27-941Z_01a10695-43c5-7000-80a5-281eb32934b4/Partial11NativeSalvage.jsonl",
+    "provenanceKind": "AUTHENTIC_RETAINED_TOOL_OUTPUT_NOT_LIVE_SOURCE_OR_RECEIPT",
+    "reads": [
+      {
+        "retainedPath": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/plans/reports/education-partial11-settlement-20261007/retained-transcript-outputs/Partial11NativeSalvage/028-pending-substrate-11-receipt-audit.json-read-014.txt",
+        "requestedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-receipt-audit.json:1-210:raw",
+        "originalRange": "1-210",
+        "retainedContentRange": "1-210",
+        "transcriptLine": 5851,
+        "timestamp": "2026-10-06T03:44:25.254Z",
+        "toolCallId": "call_XmEzovhv0DZxfJQc784EmeM4|fc_00885e8cfe4ca9da016ac46e517fb487d083f02fe2054e327d",
+        "boundary": "Starts with the opening object; ends at originalCurrentMappingSnapshot opening. Continuation footer is range pagination, not missing content."
+      },
+      {
+        "retainedPath": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/plans/reports/education-partial11-settlement-20261007/retained-transcript-outputs/Partial11NativeSalvage/028-pending-substrate-11-receipt-audit.json-read-015.txt",
+        "requestedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-receipt-audit.json:211-430:raw",
+        "originalRange": "211-430",
+        "retainedContentRange": "1-220",
+        "transcriptLine": 5852,
+        "timestamp": "2026-10-06T03:44:25.255Z",
+        "toolCallId": "call_HQogvWsqEMqKh9GjyhIGT2Ov|fc_00885e8cfe4ca9da016ac46e517fc087d0add73f12b139eb27",
+        "boundary": "Continues originalCurrentMappingSnapshot fields; contains all RC11-01..08, preservationComparison, preservedImprovements and limitations through closing limitations array."
+      },
+      {
+        "retainedPath": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/plans/reports/education-partial11-settlement-20261007/retained-transcript-outputs/Partial11NativeSalvage/028-pending-substrate-11-receipt-audit.json-read-016.txt",
+        "requestedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-receipt-audit.json:431-550:raw",
+        "originalRange": "431-538",
+        "retainedContentRange": "1-108",
+        "transcriptLine": 5865,
+        "timestamp": "2026-10-06T03:44:37.982Z",
+        "toolCallId": "call_V1C0aVkByBmm0GpjDNLZe6LB|fc_04a84d10c8c9584e016ac46e5e1c3087d09c578482025b6305",
+        "boundary": "Starts readEvidence; includes all eleven recorded reads, conclusion and final closing brace. Requested end550 exceeds actual EOF538; lines539-550 do not exist in this output."
+      }
+    ],
+    "gaps": [],
+    "genuineTruncationObserved": false,
+    "additionalExpansionRequired": false,
+    "readEvidenceAttribution": "The audit's own readEvidence claims describe its earlier receipt/authority/report reads, not fresh reads by this worker; separate report receipt logs were not needed for this full-read closure."
+  },
+  "directContent": {
+    "reviewKind": "FAILURE_SETTLEMENT_RECEIPT_COMPLETENESS_AUDIT_ONLY",
+    "subject": {
+      "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+      "subjectIdentityFromMain": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+      "receipt": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/.tmp/acceptance-producer-pending-substrate-11-evidence.json",
+      "identityRemeasured": false
+    },
+    "receiptCompletenessDecision": "GENUINE_EVIDENCE_DELIVERY_PRESENT_BUT_REQUIREMENTS_NOT_FULLY_SATISFIED",
+    "genuineEvidence11ReceiptPresent": true,
+    "genuineNative11ReceiptPresent": false,
+    "combinedDeliveryComplete": false,
+    "producerIdentity": "local8045/gemini-3.8-flash-high; evidence partition; correction11; matches dispatch according to audit",
+    "discrepancies": [
+      {
+        "id": "RC11-01",
+        "category": "ORIGINAL_BODY_FIDELITY",
+        "auditLines": "231-270",
+        "receiptLines": [109, 131, 164, 175],
+        "requirement": "Full original Native07 finding bodies under producer prompt line15.",
+        "changes": [
+          {
+            "id": "N07-01",
+            "authorityLine": 6,
+            "originalEnding": "keeping action diagnostics separate from pause/resume continuity.",
+            "receiptEnding": "keeping action diagnostics out of continuity."
+          },
+          {
+            "id": "N07-03",
+            "authorityLine": 24,
+            "originalEnding": "before constructing startRecord; retain legitimate observed empty histories without substituting them for missing provenance.",
+            "receiptEnding": "before constructing startRecord."
+          },
+          {
+            "id": "N07-06",
+            "authorityLine": 51,
+            "originalEnding": "while retaining its uncertainty interval instead of dropping drained events because delivery completed later.",
+            "receiptEnding": "while retaining its unbounded later upper bounds, matching pause-pair collection."
+          },
+          {
+            "id": "N07-07",
+            "authorityLine": 60,
+            "originalEnding": "propagate the earliest normalized returned occurrence rather than the domain wrapper.",
+            "receiptEnding": "propagate the earliest applicable normalized Error."
+          }
+        ],
+        "interpretation": "Four rewritten/shortened historical bodies; receipt fidelity discrepancy, not a fresh source finding. All twelve Native original identities, titles, order, ranges, priorities and confidences remain present; the other eight bodies are unchanged."
+      },
+      {
+        "id": "RC11-02",
+        "category": "ORIGINAL_PATH_PROVENANCE",
+        "auditLines": "271-296",
+        "receiptPath": "$.assignedOriginalFindings.{native,evidence}[*].file_path",
+        "receiptLines": [66, 78, 90, 104, 115, 126, 137, 148, 159, 170, 181, 192, 203, 214, 225],
+        "actual": "All fifteen paths are relative tests/e2e/education/... rather than governing D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/... paths.",
+        "interpretation": "Suffixes and old line ranges survive, but historical subject-root provenance and separation from current source locations do not."
+      },
+      {
+        "id": "RC11-03",
+        "category": "CURRENT_EVIDENCE_COMPLETENESS",
+        "auditLines": "297-305",
+        "receiptLines": "100-233",
+        "actual": "All Native originals have historical bodies/locations and dispositions, without precise current source evidence.",
+        "SOURCE_CORRECTED_LOCAL": [
+          "N07-01",
+          "N07-02",
+          "N07-03",
+          "N07-04",
+          "N07-05",
+          "N07-06",
+          "N07-09",
+          "N07-11",
+          "N07-12"
+        ],
+        "PARTIAL_REPAIR_REQUIRED": ["N07-07", "N07-08", "N07-10"],
+        "interpretation": "These are producer assertions, neither verified repairs nor proof of current defects; sibling assertions cannot replace the absent Native11 receipt."
+      },
+      {
+        "id": "RC11-04",
+        "category": "08_09_CHRONOLOGY_CURRENT_RECORD_COMPLETENESS",
+        "auditLines": "306-322",
+        "receiptLines": "235-367",
+        "actual": "All6+5+2+6 identities are enumerated, but complete governing obligation records are not delivered.",
+        "omissions": [
+          "Native08-1..4 omit full bodies, source ranges and precise current evidence and shorten original titles; Evidence08-1..2 omit bodies/ranges despite current claims.",
+          "09-S1..3 omit locations, mechanisms, full repairs and current evidence;09-S2 loses BOTH packet-storage and native-action diagnostic publication.09-S4/S5 omit original ranges/full repair constraints.",
+          "09-C1 omits actual-arrival chronology, earlier setup versus later extraction and no fixed category sorting;09-C2 omits shared-reference, authoritative-wrapper and caller-object preservation and independent numeric-order namespaces.",
+          "S10-C1/NF-A2/NF-A3/N10B-01/N10B-02 omit source paths/ranges and full consumer mechanisms/repairs; NATIVE_PARTITION_OWNED means ownership, not completion. S10-C2 separately has a file/range, mechanism and repair claim."
+        ],
+        "interpretation": "Delivery detail incomplete; omitted mechanisms are not newly observed source defects."
+      },
+      {
+        "id": "RC11-05",
+        "category": "DEFERRED_SCOPE_COMPLETENESS",
+        "auditLines": "323-342",
+        "receiptLines": "401-418",
+        "actual": "Twelve immutable callers and aggregate REQUIRED_UNEXECUTED scope remain, but detailed later acceptance obligations are incomplete; canonical NC/historical mappings supply only some detail.",
+        "missingExplicitObligations": [
+          "Clean twelve-caller sink/root-manifest/document forwarding and real Page callback/signature cutover; consume action results, intervals, startRecord and measured expiry; no aliases/shims.",
+          "Exact18 rows: six leave-return (Quiz, Hot Potato, Jeopardy, Relay, Trivia question, Trivia round), seven reset (Quiz, Hot Potato, Jeopardy, Relay deadline, Relay baton, Trivia question, Trivia round), five isolation (Quiz, Hot Potato, Jeopardy, Relay, Trivia), each on present/share/file.",
+          "Independent full initial/pending/hidden/returned/reset/terminal/peer state and native UI, consumed-return/original-expiry bounds, original pending work at native Pass/Reset and exact due crossing.",
+          "Strict Reset+5000 Quiz due, after-old/before-new checkpoint/new expiry without arbitrary800ms slack, canonical terminal shape and complete reset controls/UI.",
+          "Full Relay peer settlement and first-timeout identity/team/question/lane/UI invariance; no extra Pass, fixed sleep, retry or arbitrary winner fallback.",
+          "Full Trivia question/round expiry and native Next identity/history/scores/awards/deadline/UI, with independently bounded next-question timing policy.",
+          "Every cell idle/running/expired witness state/UI, native Start+4000 bounds, original crossover interval and exact raw failure samples before assertions.",
+          "Earliest present/share/file setup, exact root/document cardinality, focus/geometry/control routing, complete PNG/diagnostics, portable before/after network enforcement, source GET/config equality and failure-safe finalization.",
+          "Ordered gaps5..9 unchanged; explicit later original7 Hot Potato speed-bonus, original8 Scattergories NFC duplicate/unique control, original9 full Trivia scoring policy matrix."
+        ]
+      },
+      {
+        "id": "RC11-06",
+        "category": "EXCLUDED_SCOPE_RECORD_COMPLETENESS",
+        "auditLines": "343-353",
+        "receiptLines": "393-400",
+        "authorityLines": "210-222",
+        "actual": "NF-A4 remains excluded and unresolved, not repaired, waived, disproved or source-clean. Claim of verbatim mechanism retention is unsatisfied.",
+        "missingMechanism": "Replacement of __nsRecordedPackets or an element by a forged packet while lifecycle-store health remains true can let extraction/witness adopt its bracket/baseline; corresponding lastSeq binding seam, file/range and public-packet-store versus retained-native-action distinction are omitted.",
+        "interpretation": "Scope-record deficiency only; no source applicability resolution."
+      },
+      {
+        "id": "RC11-07",
+        "category": "PRESERVATION_RECORD_MISMATCH",
+        "auditLines": "354-369",
+        "receiptLines": "31",
+        "receiptPath": "$.exactOwnedChanges.lineCounts['tests/e2e/education/pending-round-lifecycle-error-ledger.js']",
+        "claimed": 160,
+        "mainMeasured": 150,
+        "interpretation": "Inaccurate against Main preservation record; both below200, so no helper line-limit violation follows. No independent count measurement or receipt modification."
+      },
+      {
+        "id": "RC11-08",
+        "category": "INDEPENDENT_COMBINED_DELIVERY_BLOCKER",
+        "auditLines": "370-386",
+        "receiptLines": ["2-4", "328-365"],
+        "actual": "Only genuine Evidence11 receipt delivered. Main reports Native11 terminal exit1 after807.30s from stream_error, no genuine Native11 receipt; sole preservation addition is Evidence11 receipt.",
+        "interpretation": "Missing Native11 delivery independently blocks admission even if every claim/repair were correct. Evidence ownership entries, Main preservation, terminal transcripts and this existing audit cannot reconstruct or substitute for a genuine Native11 receipt. Failure not rerun."
+      }
+    ],
+    "canonicalMappingChecks": {
+      "authorityPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-08-subject-authority.json",
+      "attribution": "MATCH results are the existing audit's read-only comparison, not a new comparison by this worker.",
+      "NC": {
+        "receiptLines": "421-488",
+        "authorityLines": "3-70",
+        "entries": 11,
+        "result": "MATCH",
+        "detail": "IDs, titles, full bodies and REQUIRED_UNEXECUTED dispositions retained."
+      },
+      "RPC": {
+        "receiptLines": "489-507",
+        "authorityLines": "71-89",
+        "entries": 17,
+        "result": "MATCH"
+      },
+      "original": {
+        "receiptLines": "508-518",
+        "authorityLines": "90-100",
+        "entries": 9,
+        "result": "MATCH"
+      },
+      "originalCurrentMappingSnapshot": {
+        "receiptLines": "519-555",
+        "authorityLines": "101-137",
+        "entries": 35,
+        "result": "MATCH",
+        "contents": "R01..R18 and RPC-01..RPC-17"
+      },
+      "originalPriorMappingSnapshot": {
+        "receiptLines": "556-603",
+        "authorityLines": "138-184",
+        "entries": 45,
+        "result": "MATCH",
+        "contents": "POC-01..POC-17, PBR-01..PBR-10, TIMED-01..TIMED-09 and original-1..original-9"
+      },
+      "mappingDiscrepancies": [],
+      "historicalSeparation": "SOURCE_CORRECTED, OPEN, PARTIAL and older SE references are immutable historical labels, NOT current closure (receipt line420). R16 retains original Trivia expiry/Next subject, R17 readable splitting, R18 receipt/closure accuracy; original-7/8/9 retain later-slice meanings. No renaming or invented aliases/titles.",
+      "originalE06Meanings": [
+        {
+          "id": "E06-02",
+          "meaning": "Chronological frame-error arrival dispatch",
+          "receiptLines": "369-372"
+        },
+        {
+          "id": "E06-03",
+          "meaning": "Actual Node Error identity with separate sidecar metadata",
+          "receiptLines": "373-376"
+        },
+        {
+          "id": "E06-04",
+          "meaning": "State-before-UI observation and dispatch within snapshots",
+          "receiptLines": "377-380"
+        },
+        {
+          "id": "E06-05",
+          "meaning": "Recursive rootInstanceId/timeOrigin/cause normalization and propagation",
+          "receiptLines": "381-384"
+        }
+      ],
+      "titlePolicy": "Original canonical identities/titles are retained by reference to the audit's canonical checks, not replaced with inferred aliases. The four E06 meanings above are copied directly; historical preservation claims are not independently established current behavior."
+    },
+    "preservationComparison": {
+      "basis": "Existing Main preservation record, not independently remeasured bytes/counts.",
+      "observations": [
+        "One Evidence helper modification, pending-round-lifecycle-error-exposure.js; ten listed preserved Evidence helpers unmodified.",
+        "Ten of eleven Evidence line claims agree; RC11-07 separates the ledger mismatch.",
+        "Main records4327 baseline regular files retained,4328 total, one genuine Evidence11 receipt addition, no deletions/unexpected additions.",
+        "Eight authorized helpers changed: one Evidence and seven Native. Partition-specific one-file receipt list is not a combined one-change claim.",
+        "Twelve callers byte-immutable according to Main hashes;26 helpers below200 lines; false/zero flags and54 declarations retained."
+      ],
+      "notEstablished": "Semantics, public interfaces, runtime/error mutation behavior or acceptance. External node_modules junction is not recursively frozen; receipt workingRoot is its original workspace, not itself a discrepancy."
+    },
+    "preservedImprovements": "Genuine pinned Evidence11 receipt; twelve Native and three Evidence original identities/titles, all three Evidence original bodies intact (E06-01-A/B/C); separately enumerated08/09/chronology/current identities; explicit S10-C2 phase authority/enrichment and errorLedger/secondaryFailures/allErrors reconciliation claim; stable serialization identity, caller chronology, identity-based deduplication, serialized-only exclusion and sole-Error preservation claims; five canonical fields intact; original E06 meanings restored; NF-A4 unresolved/excluded;54 REQUIRED_UNEXECUTED cells, twelve callers, three surfaces and no-canary/no-execution limits retained. These are preserved claims and evidence delivery improvements, not source repair certification.",
+    "conclusion": "Existing audit credits substantial genuine Evidence11 delivery and preserved mappings but identifies incomplete receipt requirements and independent missing Native11 delivery. No current source correctness, blanket clean status or qualification is claimed."
+  },
+  "closure": {
+    "previousReport": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/plans/reports/education-partial11-settlement-20261007/native11-coverage-final-report.json",
+    "previousLimitationLine": 204,
+    "previousLimitation": "Incorporated receipt-audit log coverage is not full; direct genuine receipt and governing comparison establishes RC11-01..08 without borrowing that audit as a complete read.",
+    "status": "CLOSED_PREVIOUSLY_AVAILABLE_FULL_READ_OMISSION_ONLY",
+    "oldReportPreserved": true,
+    "otherLimitationsRemain": true,
+    "substantiveRepairOrDeliveryBlockersClosed": false,
+    "wholeMainCoverageClaimed": false
+  },
+  "limitations": [
+    "Only this retained audit and bounded provenance index were directly read for this addendum. Its earlier full-read claims are attributed, not adopted as fresh worker reads of those authorities.",
+    "No changed source/caller inspection, fresh D access, shell commands, hashes/counts, tests, imports, builds, source fixes or receipt modification.",
+    "Historical07/08/09 findings do not become current Correction11 source defects; producer dispositions remain unverified claims.",
+    "No retry/resume11, correction12, timeout change, caller cutover or canonical integration authorized; missing genuine Native11 receipt cannot be synthesized from this addendum."
+  ],
+  "admission": false,
+  "sourceReady": false,
+  "qualification": false,
+  "passClaimed": false,
+  "runtimeExecuted": false,
+  "declaredCells": 54,
+  "staticallyAdmittedCells": 0,
+  "executedAcceptanceCells": 0,
+  "producerInvoked": false,
+  "producerRetried": false,
+  "correction12Dispatched": false,
+  "callerCutoverPerformed": false,
+  "canonicalIntegrationPerformed": false,
+  "smokePerformed": false,
+  "testsPerformed": false,
+  "commandsPerformed": false,
+  "hashesRemeasured": false,
+  "importsPerformed": false,
+  "sourceOrReceiptModified": false,
+  "filesWritten": [
+    "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/plans/reports/education-partial11-settlement-20261007/native11-receipt-audit-coverage-addendum.json"
+  ]
+}

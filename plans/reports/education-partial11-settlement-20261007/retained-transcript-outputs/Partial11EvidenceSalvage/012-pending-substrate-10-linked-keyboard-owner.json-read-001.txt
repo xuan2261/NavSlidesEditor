@@ -1,0 +1,20 @@
+{
+  "relativePath": "node_modules/reveal.js/js/controllers/keyboard.js",
+  "junctionTarget": "C:\\Work\\worktrees\\NavSlidesEditor-education-gemini38-cook-261001\\node_modules",
+  "sha256": "ef2e12980b2003d9894c78d89ed53c5131564621d29e2018d60e7da0c8983285",
+  "readSections": [
+    "140-243",
+    "360-414"
+  ],
+  "observedPolicyGuards": [
+    "keyboardCondition callback/focused",
+    "active input/textarea/contenteditable/notes",
+    "modifier eligibility",
+    "overlay state",
+    "paused deck/resume keys",
+    "custom keyboard/bindings precedence"
+  ],
+  "recursiveDependencyFreeze": false,
+  "qualification": false,
+  "sourceReady": false
+}

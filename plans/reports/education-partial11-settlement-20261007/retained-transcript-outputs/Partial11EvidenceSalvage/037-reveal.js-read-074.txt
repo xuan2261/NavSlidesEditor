@@ -1,0 +1,22 @@
+		progress,
+		controls,
+		location,
+		overview,
+		keyboard,
+		fragments,
+		backgrounds,
+		slideContent,
+		slideNumber,
+
+		onUserInput,
+		closeOverlay: overlay.close.bind( overlay ),
+		updateSlidesVisibility,
+		layoutSlideContents,
+		transformSlides,
+		cueAutoSlide,
+		cancelAutoSlide
+	} );
+
+	return API;
+
+};

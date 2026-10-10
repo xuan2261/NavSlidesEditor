@@ -1,0 +1,312 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>P vs PI vs PID</title>
+    <style>
+      :root {
+        --bg: #1a0a0a;
+        --primary: #ff4757;
+        --text: #ffd5d0;
+        --glass: rgba(40, 15, 15, 0.6);
+        --border: rgba(255, 71, 87, 0.2);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 12px;
+        overflow: hidden;
+      }
+      h3 {
+        font-size: 1.1rem;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+        text-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+      }
+      .main {
+        width: 100%;
+        max-width: 920px;
+        height: 380px;
+        background: var(--glass);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        backdrop-filter: blur(10px);
+        display: flex;
+        flex-direction: column;
+      }
+      .top {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+      .param {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.8rem;
+      }
+      .param label {
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .param input {
+        width: 60px;
+        background: rgba(255, 71, 87, 0.1);
+        border: 1px solid var(--primary);
+        color: var(--text);
+        padding: 3px 6px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        text-align: center;
+      }
+      .param input:focus {
+        outline: none;
+        box-shadow: 0 0 6px rgba(255, 71, 87, 0.4);
+      }
+      button {
+        background: rgba(255, 71, 87, 0.15);
+        border: 1px solid var(--primary);
+        color: var(--text);
+        padding: 5px 14px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      button:hover {
+        background: rgba(255, 71, 87, 0.3);
+      }
+      .chart-wrap {
+        flex: 1;
+        position: relative;
+      }
+      canvas {
+        width: 100%;
+        height: 100%;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.3);
+      }
+      .legend {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        margin-top: 8px;
+      }
+      .legend span {
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .legend span::before {
+        content: '';
+        width: 20px;
+        height: 3px;
+        border-radius: 2px;
+      }
+      .leg-p::before {
+        background: #ff6b6b;
+      }
+      .leg-pi::before {
+        background: #ffd93d;
+      }
+      .leg-pid::before {
+        background: #00ff87;
+      }
+      .leg-sp::before {
+        background: rgba(255, 255, 255, 0.3);
+        border-top: 2px dashed rgba(255, 255, 255, 0.3);
+        height: 0;
+      }
+      .metrics {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 4px;
+        flex-wrap: wrap;
+      }
+      .metric {
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <h3>P vs PI vs PID — Step Response Comparison</h3>
+    <div class="main">
+      <div class="top">
+        <div class="param"><label>Kp</label><input id="kp" value="2.0" /></div>
+        <div class="param"><label>Ki</label><input id="ki" value="1.0" /></div>
+        <div class="param"><label>Kd</label><input id="kd" value="0.5" /></div>
+        <button onclick="simulate()">Simulate</button>
+        <button
+          onclick="
+            document.getElementById('kp').value = '2.0'
+            document.getElementById('ki').value = '1.0'
+            document.getElementById('kd').value = '0.5'
+            simulate()
+          "
+        >
+          Reset
+        </button>
+      </div>
+      <div class="chart-wrap"><canvas id="cv"></canvas></div>
+      <div class="legend">
+        <span class="leg-p">P only</span><span class="leg-pi">PI</span>
+        <span class="leg-pid">PID</span><span class="leg-sp">Setpoint</span>
+      </div>
+      <div class="metrics" id="metrics"></div>
+    </div>
+    <script>
+      const cv = document.getElementById('cv'),
+        ctx = cv.getContext('2d')
+      function resize() {
+        cv.width = cv.parentElement.clientWidth
+        cv.height = cv.parentElement.clientHeight
+      }
+      window.addEventListener('resize', () => {
+        resize()
+        simulate()
+      })
+      function simPID(Kp, Ki, Kd, dt, steps) {
+        let y = 0,
+          dy = 0,
+          integral = 0,
+          prev_e = 0,
+          out = []
+        for (let i = 0; i < steps; i++) {
+          const sp = 1,
+            e = sp - y
+          integral += e * dt
+          const de = (e - prev_e) / dt
+          prev_e = e
+          const u = Kp * e + Ki * integral + Kd * de
+          const ddy = u - 2 * dy - y
+          dy += ddy * dt
+          y += dy * dt
+          out.push(Math.max(-0.5, Math.min(2, y)))
+        }
+        return out
+      }
+      function simulate() {
+        resize()
+        const Kp = parseFloat(document.getElementById('kp').value) || 0
+        const Ki = parseFloat(document.getElementById('ki').value) || 0
+        const Kd = parseFloat(document.getElementById('kd').value) || 0
+        const dt = 0.02,
+          steps = 500
+        const pData = simPID(Kp, 0, 0, dt, steps)
+        const piData = simPID(Kp, Ki, 0, dt, steps)
+        const pidData = simPID(Kp, Ki, Kd, dt, steps)
+        const W = cv.width,
+          H = cv.height,
+          px = 40,
+          py = 20,
+          gw = W - px - 20,
+          gh = H - py - 30
+        ctx.clearRect(0, 0, W, H)
+        // Grid
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)'
+        ctx.lineWidth = 1
+        for (let i = 0; i <= 10; i++) {
+          const x = px + (gw * i) / 10
+          ctx.beginPath()
+          ctx.moveTo(x, py)
+          ctx.lineTo(x, py + gh)
+          ctx.stroke()
+        }
+        for (let i = 0; i <= 8; i++) {
+          const y = py + (gh * i) / 8
+          ctx.beginPath()
+          ctx.moveTo(px, y)
+          ctx.lineTo(px + gw, y)
+          ctx.stroke()
+        }
+        // Setpoint
+        const spY = py + gh * (1 - 1 / 2)
+        ctx.setLineDash([6, 4])
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)'
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        ctx.moveTo(px, spY)
+        ctx.lineTo(px + gw, spY)
+        ctx.stroke()
+        ctx.setLineDash([])
+        ctx.fillStyle = 'rgba(255,255,255,0.4)'
+        ctx.font = '11px sans-serif'
+        ctx.fillText('SP=1', px + gw + 2, spY + 4)
+        // Axes labels
+        ctx.fillStyle = 'rgba(255,255,255,0.4)'
+        ctx.font = '10px sans-serif'
+        for (let i = 0; i <= 5; i++) {
+          const t = ((steps * dt * i) / 5).toFixed(0)
+          ctx.fillText(t + 's', px + (gw * i) / 5 - 8, py + gh + 15)
+        }
+        for (let v = 0; v <= 2; v += 0.5) {
+          const y2 = py + gh * (1 - v / 2)
+          ctx.fillText(v.toFixed(1), px - 30, y2 + 4)
+        }
+        // Draw curves
+        function drawCurve(data, color) {
+          ctx.strokeStyle = color
+          ctx.lineWidth = 2.5
+          ctx.beginPath()
+          data.forEach((v, i) => {
+            const x = px + (gw * i) / steps,
+              y = py + gh * (1 - v / 2)
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
+          })
+          ctx.stroke()
+        }
+        drawCurve(pData, '#ff6b6b')
+        drawCurve(piData, '#ffd93d')
+        drawCurve(pidData, '#00ff87')
+        // Metrics
+        function getMetrics(data, label) {
+          const ss = data[data.length - 1],
+            os = Math.max(...data),
+            rise = data.findIndex((v) => v >= 0.9)
+          return (
+            label +
+            ': SS=' +
+            (1 - ss).toFixed(3) +
+            ' OS=' +
+            ((os - 1) * 100).toFixed(1) +
+            '% Rise=' +
+            (rise * 0.02).toFixed(2) +
+            's'
+          )
+        }
+        document.getElementById('metrics').innerHTML =
+          '<span class="metric" style="color:#ff6b6b">' +
+          getMetrics(pData, 'P') +
+          '</span>' +
+          '<span class="metric" style="color:#ffd93d">' +
+          getMetrics(piData, 'PI') +
+          '</span>' +
+          '<span class="metric" style="color:#00ff87">' +
+          getMetrics(pidData, 'PID') +
+          '</span>'
+      }
+      simulate()
+    </script>
+  </body>
+</html>

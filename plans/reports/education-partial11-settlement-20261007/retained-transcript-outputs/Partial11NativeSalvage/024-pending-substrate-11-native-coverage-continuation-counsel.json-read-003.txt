@@ -1,0 +1,122 @@
+{
+  "decision": {
+    "same_native_audit_coverage_continuation": "PERMITTED as completion of the already authorized read-only failure-settlement audit, subject to the coverage and independence contract below.",
+    "fresh_explicit_user_authorization_required_for_this_continuation": false,
+    "reason": "The Native review returned incomplete evidence; it did not complete the authorized audit or establish a user-directed scope stop. Completing its outstanding reads and source traces does not retry the failed substantive producer, recover its receipt, launch another correction or open an execution gate.",
+    "third_independent_opinion_authorized": false,
+    "new_substantive_attempt_authorized": false,
+    "current_source_verdict": "UNRESOLVED; no source correctness conclusion is added by this counsel.",
+    "admission": false,
+    "sourceReady": false,
+    "qualification": false,
+    "passClaimed": false,
+    "runtimeExecuted": false,
+    "declaredCells": 54,
+    "staticallyAdmittedCells": 0,
+    "executedAcceptanceCells": 0
+  },
+  "authority_evidence": [
+    {
+      "source": "pending-substrate-11-scope-counsel.json:81-88",
+      "operative_boundary": "Failure closes forward progression, source repair, receipt reconstruction and execution; permitted read-only salvage remains failure settlement, and Main must finish reachable authorized preservation/settlement. New explicit authorization is required for further substantive repair or another substantive attempt, not completion of outstanding authorized review coverage."
+    },
+    {
+      "source": "pending-substrate-11-terminal-failure-counsel.json:99-126,129-205,480-495,510-514",
+      "operative_boundary": "The existing decision permits two independent salvage reports and distinguishes them from production. The complete read manifest, every obligation and current-subject evidence are required; incomplete coverage must remain UNRESOLVED. Its later-authorization boundary explicitly states needed_for_current_read_only_salvage=false and needed_for_any_source_repair_or_substantive_completion=true."
+    },
+    {
+      "source": "pending-substrate-11-native-salvage-prompt.md:1-13 and Deliver JSON section",
+      "operative_boundary": "The Native audit is read-only settlement and requires all26 full helper bodies, all12 full caller bodies, relevant owners, expanded omissions and exact ranges/EOF evidence. A returned incomplete report does not satisfy or amend that assignment. The prepared prompt is stricter than a Native-partition-only read, and that full26/full12 requirement must be preserved."
+    },
+    {
+      "source": "pending-substrate-11-native-salvage-audit.json:431-733,735-744",
+      "operative_boundary": "The report has no certified complete38-file source coverage, no certified owner ranges and incomplete governing-document evidence. It explicitly says it is not a required complete independent salvage audit. Empty currentSourceEvidence and newFindings arrays establish neither defects nor cleanliness."
+    },
+    {
+      "source": "pending-substrate-11-native-salvage-provenance-supplement.json:4-25",
+      "operative_boundary": "The preserved supplement corrects the original user-stop attribution, retains all incomplete coverage limits and certified ranges unchanged, reports no new reads and states originalReportSatisfiesRequiredCompleteIndependentSalvageAudit=false and acceptanceNarrowedByUser=false. The original report therefore cannot be treated as a user-authorized scope reduction."
+    }
+  ],
+  "interpretation_limits": {
+    "what_is_express": "Read-only salvage is permitted, full coverage is required, substantive attempts/execution are prohibited, and the supplement establishes that no user scope narrowing occurred.",
+    "what_is_interpreted": "The documents do not expressly prescribe continuation slices. Bounded decomposition under one accountable Native audit owner is an execution method for the existing review obligation, not additional product scope or a new substantive authorization. This permission is limited to completing that same outstanding evidence and integration.",
+    "not_a_blank_check": "Calling work a continuation does not authorize a changed subject, extra independent opinions, normal admission, source repair, receipt production or repeated attempts to obtain a preferred verdict.",
+    "no_nested_agents": "Main may commission the bounded read-only continuation slices and the integration owner. Slice reviewers and the integration owner must not spawn nested agents; the existing reviewer-side prohibition remains intact."
+  },
+  "recommended_contract": {
+    "audit_identity": "Retain one logical Native11 salvage audit on pending-substrate-candidate-11-partial, with the original report and provenance supplement as immutable prior stages. Name the new outputs continuation components and one Native11 integrated salvage completion report. They do not count as third or additional independent opinions.",
+    "subject": {
+      "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+      "recordedFullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+      "identity_evidence": "Use Main's existing preservation record without remeasurement. Do not change or normalize source or receipts.",
+      "dependency_limit": "The linked node_modules keyboard owner is external to the recursive freeze. Attribute actual reads and disclose that limitation; do not claim immutable external contents or runtime dispatcher equivalence."
+    },
+    "ownership": "Main records a finite coverage assignment before dispatch. One integration owner is accountable for the entire Native-perspective audit, source-backed dispositions and cross-component seams. Each slice has a bounded, non-overlapping primary file list; contributors return evidence, not separate overall verdicts.",
+    "coverage_starting_point": "Treat all38 mandatory source files and all required owner/governing evidence as uncertified for this audit unless attributable complete outputs are actually available. Archived requests alone and another independent audit's manifest are not certified source reads. Do not invent recovered ranges or rerun a known failure.",
+    "mandatory_governing_documents": "Retain the complete governing-document and genuine Evidence11 receipt reading obligations from the Native salvage prompt and full_salvage_contract.authority_read_coverage. The original report does not establish all of these as complete. Assign their missing reads explicitly rather than presuming the authority-reading step satisfied the entire contract.",
+    "suggested_non_overlapping_primary_slices": [
+      {
+        "slice": "Native recorder and history",
+        "sourcePrefix": "tests/e2e/education/",
+        "files": [
+          "pending-round-lifecycle-native-observation.js",
+          "pending-round-lifecycle-native-snapshot.js",
+          "pending-round-lifecycle-native-history.js",
+          "pending-round-lifecycle-history-domain.js",
+          "pending-round-lifecycle-activity-interval.js"
+        ],
+        "focus": "Private lifecycle-store integrity, copied history/projections, both publication outputs, drained-boundary uncertainty, actual observation-site order and first recorder occurrence/cause."
+      },
+      {
+        "slice": "Native observation and navigation",
+        "sourcePrefix": "tests/e2e/education/",
+        "files": [
+          "pending-round-lifecycle-observation.js",
+          "pending-round-lifecycle-observation-browser.js",
+          "pending-round-lifecycle-observation-domain.js",
+          "pending-round-lifecycle-observation-errors.js",
+          "pending-round-lifecycle-native-action.js",
+          "pending-round-lifecycle-navigation.js"
+        ],
+        "focus": "All read/extraction/button seams, exact packet matching, sibling retention, chronological normalization, raw document staging and navigation dispatch/early-return evidence."
+      },
+      {
+        "slice": "Native controls, clock and witness",
+        "sourcePrefix": "tests/e2e/education/",
+        "files": [
+          "pending-round-lifecycle-clock.js",
+          "pending-round-lifecycle-controls.js",
+          "pending-round-lifecycle-witness.js",
+          "pending-round-lifecycle-witness-domain.js"
+        ],
+        "focus": "Actual consumers, exported bindings/signatures, Start baseline, finite bounds, complete first-expiry crossover and control/native-root compatibility."
+      },
+      {
+        "slice": "Evidence ledger and collection",
+        "sourcePrefix": "tests/e2e/education/",
+        "files": [
+          "pending-round-lifecycle-ui-evidence.js",
+          "pending-round-lifecycle-error-ledger.js",
+          "pending-round-lifecycle-error-exposure.js",
+          "pending-round-lifecycle-live-evidence.js",
+          "pending-round-lifecycle-live-root-observation.js",
+          "pending-round-lifecycle-evidence.js"
+        ],
+        "focus": "Identity, phase authority across all exposures, genuine caller-ledger chronology, serialized-only exclusion, recursive provenance, stable serialization and late finalization."
+      },
+      {
+        "slice": "Evidence surfaces and ownership",
+        "sourcePrefix": "tests/e2e/education/",
+        "files": [
+          "pending-round-lifecycle-surfaces.js",
+          "pending-round-lifecycle-evidence-domain.js",
+          "release-surfaces.js",
+          "present-offline-helpers.js",
+          "release-portable-inspection.js"
+        ],
+        "focus": "Real Page context, root/document evidence, early handle transfer, no-sink consumers, strict success shape, frame arrival and failure-safe cleanup."
+      },
+      {
+        "slice": "Immutable journeys and declarations",
+
+[Showing lines 1-120 of 235. Use :121 to continue]

@@ -1,0 +1,99 @@
+    recordArrival('portable:setup', setupError)
+    if (context) {
+      try {
+        await context.close()
+      } catch (closeError) {
+        if (!setupError.secondaryFailures) setupError.secondaryFailures = []
+        setupError.secondaryFailures.push(closeError)
+        recordArrival('portable:close', closeError)
+      }
+    }
+    throw setupError
+  }
+
+  if (typeof onPageCreated === 'function') {
+    await onPageCreated(handle)
+    try {
+      await handle.page.goto(pathToFileURL(file).href)
+      await handle.page.waitForFunction(() => window.Reveal?.isReady())
+      return handle
+    } catch (navError) {
+      handle.diagnostics = rawDiagnostics()
+      recordArrival('portable:navigation', navError)
+      throw navError
+    }
+  }
+
+  try {
+    await handle.page.goto(pathToFileURL(file).href)
+    await handle.page.waitForFunction(() => window.Reveal?.isReady())
+    return handle
+  } catch (error) {
+    handle.diagnostics = rawDiagnostics()
+    recordArrival('portable:navigation', error)
+    try {
+      await context.close()
+    } catch (closeError) {
+      if (!error.secondaryFailures) error.secondaryFailures = []
+      error.secondaryFailures.push(closeError)
+      recordArrival('portable:close', closeError)
+    }
+    throw error
+  }
+}
+
+export async function visitGeneratedSurfaces(
+  { page, request, browser, id, testInfo, surfaces = ['present', 'share', 'file'] },
+  visit
+) {
+  if (surfaces.includes('present')) {
+    const { popup } = await launchPresentPopup(page)
+    try {
+      await popup.waitForFunction(() => window.Reveal?.isReady())
+      await visit(popup, 'present', [])
+    } finally {
+      await popup.close()
+    }
+  }
+  if (surfaces.includes('share')) {
+    const share = await apiCreateShareLink(request, id)
+    const sharePage = await page.context().newPage()
+    try {
+      await sharePage.goto(`/share/${share.token}`)
+      await sharePage.waitForFunction(() => window.Reveal?.isReady())
+      await visit(sharePage, 'share', [])
+    } finally {
+      await sharePage.close()
+    }
+  }
+  if (surfaces.includes('file')) {
+    const file = await downloadArtifact(page, testInfo, 'Export HTML', 'portable.html')
+    const portable = await freshPortable(browser, file)
+    try {
+      const network = await portable.inspectNetwork()
+      await visit(portable.page, 'file', [file], network)
+      return await portable.inspectNetwork()
+    } finally {
+      await portable.context.close()
+    }
+  }
+}
+
+export async function selectGeneratedSlide(page, index) {
+  await page.evaluate((index) => window.Reveal.slide(index), index)
+  await expect(page.locator('.reveal .slides section.present').last()).toBeVisible()
+}
+
+export async function findFrame(page, selector) {
+  let selected
+  await expect.poll(async () => {
+    for (const frame of page.frames()) {
+      if (await frame.locator(selector).count()) {
+        selected = frame
+        return true
+      }
+    }
+    return false
+  }).toBe(true)
+  return selected
+}

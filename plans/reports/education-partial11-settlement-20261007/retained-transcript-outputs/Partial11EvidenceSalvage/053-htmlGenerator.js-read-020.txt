@@ -1,0 +1,112 @@
+    throw new Error('Invalid education view')
+  const presentationTransition = normalizeTransition(presentation.transition, 'slide')
+  const transitionSpeed = normalizeTransitionSpeed(presentation.transitionSpeed)
+  const transitionSpeedConfig =
+    presentation.transitionSpeed == null ? '' : `\n      transitionSpeed: '${transitionSpeed}',`
+  const showFooter = presentation.showFooter || false
+  const showPageNumbers = presentation.showPageNumbers || false
+  const pageNumberFormat = presentation.pageNumberFormat || 'c/t'
+  const codeTheme = presentation.codeTheme || 'monokai'
+  const footerFontSize = Number(presentation.footerFontSize) || 14
+  const footerFontFamily = presentation.footerFontFamily || '-apple-system,sans-serif'
+  const footerColor = presentation.footerColor || 'rgba(255,255,255,0.65)'
+  const showPresentGrid = presentation.showPresentGrid || false
+  const presentGridSize = Number(presentation.gridSize) || 40
+  const footerMode = presentation.footerMode || 'basic'
+  const sequenceSections = presentation.sequenceSections || []
+  const footerInactiveColor = presentation.footerInactiveColor || 'rgba(255,255,255,0.25)'
+  const resW = Number(presentation.resolution?.width) || 960
+  const resH = Number(presentation.resolution?.height) || 540
+  const presenterTools = {
+    ...presentation.presenterTools,
+    _baseWidth: resW,
+    _baseHeight: resH,
+  }
+  // Compute page numbers: only count slides where showPageNumber !== false
+  const resolvedPresentation = resolvePresentationForRender(presentation)
+  const totalNumberedSlides = (presentation.slides || []).filter(
+    (s) => s.showPageNumber !== false
+  ).length
+  let pageCounter = 0
+
+  const usesTokens = presentationUsesTokens(resolvedPresentation)
+  const deckTokens = mergeTokens(DEFAULT_TOKENS, presentation.designTokens)
+  const tokenInfo = usesTokens ? buildTokenStyleBlock(resolvedPresentation) : null
+  const slideOverrideIdx = tokenInfo?.slideOverrideIdx
+  const fxRuntimeScript = presentationUsesFx(presentation) ? buildFxRuntimeScript() : ''
+  const educationDescriptors = collectEffectiveGameDescriptors(presentation)
+  const hasGameElements = educationDescriptors.length > 0
+  const gameConfigsBySlide = new Map()
+  for (const descriptor of educationDescriptors) {
+    if (!gameConfigsBySlide.has(descriptor.effectiveSlideId))
+      gameConfigsBySlide.set(descriptor.effectiveSlideId, new Map())
+    gameConfigsBySlide.get(descriptor.effectiveSlideId).set(descriptor.elementId, descriptor.config)
+  }
+  const transitionMetadataCss = presentationUsesTransitionMetadata(presentation)
+    ? TRANSITION_METADATA_CSS
+    : ''
+  const hasActions = presentationUsesActions(resolvedPresentation)
+  const runtimeMetadata = generatedRuntimeMetadata(resolvedPresentation)
+  const hasEducationRuntime =
+    hasGameElements ||
+    hasActions ||
+    runtimeMetadata.hasPlugins ||
+    runtimeMetadata.hasInitialVisibility
+  const hasMediaElements = resolvedPresentation.slides.some((slide) =>
+    [slide, ...(slide.children || [])].some((section) =>
+      section.elements?.some((element) => element.type === 'video' || element.type === 'audio')
+    )
+  )
+
+  const slidesHtml = presentation.slides
+    .map((sourceSlide, slideIndex) => {
+      const slide = resolveSlideForRender(sourceSlide, presentation)
+      const effectiveSlideId = effectiveSlideIdentity(slide, slideIndex)
+      const bgAttrs = getBackgroundAttrs(slide.background)
+      const slideIdxAttr =
+        slideOverrideIdx && slideOverrideIdx.has(String(slideIndex))
+          ? ` data-slide-idx="${slideIndex}"`
+          : ''
+      const autoAnimateAttr = slide.autoAnimate ? ' data-auto-animate' : ''
+      const transitionAttrs = getSlideTransitionAttrs(slide)
+      const slideNotes = includeSpeakerNotes ? getSlideNotes(slide) : ''
+      const notes = slideNotes ? `<aside class="notes">${escapeHtml(slideNotes)}</aside>` : ''
+
+      const elementsHtml = renderSlideElements(slide, {
+        forPrint: false,
+        baseUrl: options.baseUrl,
+        educationView,
+        gameConfigs: gameConfigsBySlide.get(effectiveSlideId),
+        slideBackground: getPresentChartBackground(slide, deckTokens, usesTokens),
+      })
+
+      // Page numbering: increment counter only for slides with showPageNumber !== false
+      const slideHasPageNum = slide.showPageNumber !== false
+      if (slideHasPageNum) pageCounter++
+      const pageLabel =
+        showPageNumbers && slideHasPageNum
+          ? pageNumberFormat === 'c/t'
+            ? `${pageCounter} / ${totalNumberedSlides}`
+            : `${pageCounter}`
+          : ''
+
+      let footerHtml = ''
+      if (footerMode === 'sequence' && sequenceSections.length > 0 && showFooter) {
+        const activeIdx = slide.activeSection
+        const seqSpans = sequenceSections
+          .map((sec, i) => {
+            const isActive = activeIdx === i
+            const color = isActive ? footerColor || 'rgba(255,255,255,0.9)' : footerInactiveColor
+            const weight = isActive ? 'font-weight:700;' : 'font-weight:400;'
+            return `<span style="${escapeHtml(`color:${color};${weight}`)}">${escapeHtml(sec || `Section ${i + 1}`)}</span>`
+          })
+          .join('')
+        const pageSpan = pageLabel
+          ? `<span style="margin-left:12px;flex-shrink:0;">${pageLabel}</span>`
+          : ''
+        footerHtml = `      <div class="reveal-footer" style="position:absolute;bottom:6px;left:16px;right:16px;z-index:900;display:flex;justify-content:center;align-items:center;pointer-events:none;box-sizing:border-box;"><div style="display:flex;flex:1;justify-content:space-evenly;align-items:center;">${seqSpans}</div>${pageSpan}</div>`
+      } else {
+        const sectionLabel = showFooter && slide.section ? escapeHtml(slide.section) : ''
+        footerHtml =
+
+[Showing lines 221-330 of 822. Use :331 to continue]

@@ -1,0 +1,162 @@
+        "owner": "Evidence",
+        "title": "Caller-ledger [a, b] arrival chronology before secondary-only entries",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "disposition": "SOURCE_CORRECTED_LOCAL",
+        "evidence": "actualRef.errorLedger is traversed before secondaryFailures, ensuring caller-ledger [a, b] sequence is preserved in common ledger before secondary-only occurrences."
+      }
+    ],
+    "new11Findings": [
+      {
+        "id": "S10-C1",
+        "owner": "Native",
+        "title": "Order non-setup recorder errors by actual browser observation, not category",
+        "disposition": "NATIVE_PARTITION_OWNED"
+      },
+      {
+        "id": "NF-A2",
+        "owner": "Native",
+        "title": "Do not overwrite an existing recorder error in record()",
+        "disposition": "NATIVE_PARTITION_OWNED"
+      },
+      {
+        "id": "NF-A3",
+        "owner": "Native",
+        "title": "Normalize button-guard snapshot failures before document validation",
+        "disposition": "NATIVE_PARTITION_OWNED"
+      },
+      {
+        "id": "N10B-01",
+        "owner": "Native",
+        "title": "Capture remaining Reveal dispatcher guards in keyboardEligible",
+        "disposition": "NATIVE_PARTITION_OWNED"
+      },
+      {
+        "id": "N10B-02",
+        "owner": "Native",
+        "title": "Bind the initial slide read to its observed document before early return",
+        "disposition": "NATIVE_PARTITION_OWNED"
+      },
+      {
+        "id": "S10-C2",
+        "owner": "Evidence",
+        "title": "Prevent phase-less caller errorLedger items from overwriting authoritative recorded phases",
+        "disposition": "SOURCE_CORRECTED_LOCAL",
+        "evidence": "Repaired in error-exposure.js:7-124. Phase-less wrappers and wrappers with intrinsic Error.phase cannot clobber an already-recorded explicit phase during reconciliation."
+      }
+    ]
+  },
+  "preservedInvariants": {
+    "E06-02": {
+      "definition": "Chronological frame arrival dispatch",
+      "evidence": "release-portable-inspection.js:20-33 and release-surfaces.js:80-82,100-110 dispatch frame evaluation and pageerror events at arrival into common ledger."
+    },
+    "E06-03": {
+      "definition": "Actual Node Error identity with separate sidecar metadata",
+      "evidence": "release-portable-inspection.js:25-31 and error-ledger.js:87-103 pass raw Error instances without mutation, storing frameUrl and diagnostics in sidecar metadata."
+    },
+    "E06-04": {
+      "definition": "State-before-UI observation and dispatch within snapshots",
+      "evidence": "live-root-observation.js:119-124 and live-evidence.js:38-43 record stateError before uiError."
+    },
+    "E06-05": {
+      "definition": "Recursive rootInstanceId, timeOrigin, and cause normalization/propagation",
+      "evidence": "error-ledger.js:20,30-45,61-68 and evidence.js:173-178 normalize and serialize causes recursively with origin, rootInstanceId, and timeOrigin preserved."
+    },
+    "additionalPreserved": [
+      "Physical line limit: all 11 Evidence files strictly <200 LOC.",
+      "Exact 12 Phase2 caller files remain byte-immutable.",
+      "Strict portable success keys { protocol, httpAttempts, socketAttempts, errors } preserved.",
+      "Real surface callback context { page, surface, file, inspectNetwork, diagnostics, error } preserved.",
+      "Identity-based deduplication in error ledger preserved."
+    ]
+  },
+  "NF_A4_ScopeDisposition": {
+    "id": "NF-A4",
+    "title": "Bind returned action packets to the integrity-checked native-action records",
+    "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+    "excludedFromRequiredRepairs": true,
+    "scopeDecision": "Original N07-04/N07-05 explicitly cover lifecycle store integrity. Extending identical checks to separately replaceable action-packet storage is not automatically a required cutover; no new repair scope authorized.",
+    "counselInstructions": "Retained verbatim with source mechanism and unresolved applicability. Not labeled repaired, disproved, waived, or source-clean. Normal reviewers must state that GO concerns authorized obligations and disclose NF-A4 separately."
+  },
+  "deferredCallerObligations": {
+    "status": "REQUIRED_UNEXECUTED",
+    "phase2ImmutableFiles": [
+      "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js",
+      "tests/e2e/education/pending-round-lifecycle-cases.js",
+      "tests/e2e/education/pending-round-lifecycle-fixtures.js",
+      "tests/e2e/education/pending-round-lifecycle-leave-return.js",
+      "tests/e2e/education/pending-round-lifecycle-reset.js",
+      "tests/e2e/education/pending-round-lifecycle-isolation.js",
+      "tests/e2e/education/pending-round-lifecycle-state.js",
+      "tests/e2e/education/pending-round-lifecycle-quiz-state.js",
+      "tests/e2e/education/pending-round-lifecycle-hot-potato-state.js",
+      "tests/e2e/education/pending-round-lifecycle-jeopardy-state.js",
+      "tests/e2e/education/pending-round-lifecycle-relay-state.js",
+      "tests/e2e/education/pending-round-lifecycle-trivia-state.js"
+    ],
+    "explanation": "All 12 caller files remain strictly byte-immutable during helper correction. Clean cutover of caller files occurs only after separately applicable authority and helper admission gates. All NC01..11, RPC01..17, original1..9 obligations and both historical mapping snapshots are deferred and remain REQUIRED_UNEXECUTED across all 18 rows on present, share, and file surfaces (54 cells). No canary substitution, execution claims, or runtime verification performed."
+  },
+  "canonicalSubjectAuthority": {
+    "authority": "Immutable authority copied verbatim; historical status is NOT current closure",
+    "NC": [
+      {
+        "id": "NC01",
+        "title": "NC01: Pass the actual surface Page into each journey",
+        "body": "NC01 — Every branch of visitSurface calls visit(Page, metadata), but this callback treats its first parameter as metadata and passes activeSurface.page to both collectSafe and the journey runner. A Playwright Page has no such page property, so getRoot receives undefined and the alive-page evidence path is skipped on all 54 cases; this is source-proven harness failure, not a production lifecycle result. Match the producer/consumer callback signature and forward the real Page plus the actual surface diagnostics. Evidence: surfaces.js:16-20,33-37,61-67; controls.js:3-6; evidence.js:21,31. Shared with GroundedPendingStateEvidence.",
+        "currentDisposition": "REQUIRED_UNEXECUTED; helper correction PENDING_REVIEW, full caller obligations deferred"
+      },
+      {
+        "id": "NC02",
+        "title": "NC02: Install Present observations before its document loads",
+        "body": "NC02 — The canonical launchPresentPopup waits for DOMContentLoaded before returning (present-offline-helpers.js:12-15), so registering addInitScript here cannot execute the recorder in the already loaded Present document, and this branch performs no later navigation. readPassiveEvents then converts the absent recorder to an empty list. All 18 Present cases consequently lack the claimed earliest lifecycle history even after NC01 is repaired. Arrange passive initialization before popup document creation/navigation and distinguish a missing recorder from an observed empty history; do not replace the canonical helper with its stale copied version.",
+        "currentDisposition": "REQUIRED_UNEXECUTED; helper correction PENDING_REVIEW, full caller obligations deferred"
+      },
+      {
+        "id": "NC03",
+        "title": "NC03: Establish root activity alignment before deadline arithmetic",
+        "body": "NC03 — This subtraction treats document performance.now as the root's activity clock without validating that root's accumulated hidden offset. Canonical runtime-session.js:23-25,104-118 subtracts per-session hidden time, while reveal-lifecycle.js:28-42 can pause a root because its section/style is hidden even when the document remains visible. observation.js records only document visibility/page events and returns an instantaneous hidden/paused sample that no timing caller validates; it records neither earliest root pause history nor native action brackets. With a nonzero offset, deadline minus raw time understates the true remaining allowance, so remainingUpperBound is not an established upper bound. Atomic sampling and removal of clipping are genuine improvements, but all preconsumption/checkpoint callers still need justified root-domain provenance; raw elapsed wall differences themselves are not the defect.",
+        "currentDisposition": "REQUIRED_UNEXECUTED; helper correction PENDING_REVIEW, full caller obligations deferred"
+      },
+      {
+        "id": "NC04",
+        "title": "NC04: Measure consumed return and bound the original expiry",
+        "body": "NC04 — The returned state is checked only for generation, exactly as the hidden sample at lines109-111; there is no independent complete pending-state comparison, no returned timer/remaining measurement, and no elapsed-to-original-expiry upper bound in any following branch. The >3800 wall-duration assertion refers to the earlier hidden witness interval, not the returned consumed allowance. A same-generation question/team/score mutation or a substantially extended restart can therefore satisfy these oracles once it eventually reaches the scalar expiry predicate. Validate full original pending context through hidden/return and explicitly bound the original identity's expiry using measured preserved remaining time on all 18 leave-return cells.",
+        "currentDisposition": "REQUIRED_UNEXECUTED; helper correction PENDING_REVIEW, full caller obligations deferred"
+      },
+      {
+        "id": "NC05",
+        "title": "NC05: Prove pending work at the actual native Reset boundary",
+        "body": "NC05 — measureBatonPendingAtReset proves only that batonDue is future at an earlier browser sample; resetGame then performs separate locator/visibility/click operations without capturing the actual native Reset event boundary. If the 1200ms baton settles during that gap, all subsequent generation+1 baseline and witness checks can still pass although Reset never interrupted pending baton work. The full original turn/question/team/positions validator is also not invoked. The same unbounded sample-to-click gap exists for long resets at lines137-141 and isolation.js:133-142. Capture and retain actual same-domain native Pass/Reset brackets with complete original identity, require positive remaining work at the Reset boundary, and measure crossing of that exact due; capturing batonDue rather than deadline is credited but does not close POC07/PBR07.",
+        "currentDisposition": "REQUIRED_UNEXECUTED; helper correction PENDING_REVIEW, full caller obligations deferred"
+      },
+      {
+        "id": "NC06",
+        "title": "NC06: Anchor the new Quiz due and expiry to native Reset",
+        "body": "NC06 — The checkpoint now validates a complete correlated Quiz object, but baseline.deadline is accepted from runtime without ever bounding it to native Reset+5000; assertCompleteResetState is called without its optional deadlineBounds. The subsequent terminal poll is likewise untimed relative to that new due. After fixing the separate state-owned terminal-shape mismatch, an incorrect longer reset duration can still pass the after-old/before-new checkpoint and eventual expiry. Correlate the actual native Reset bracket with the independently authored five-second deadline, then retain the exact new-generation question state and measured bounded expiry observation. The same unvalidated new due is used by isolation.js:167-169; canonical policy is quiz-session.js:34-43.",
+        "currentDisposition": "REQUIRED_UNEXECUTED; helper correction PENDING_REVIEW, full caller obligations deferred"
+      },
+      {
+        "id": "NC07",
+        "title": "NC07: Await the Relay peer's real baton settlement",
+        "body": "NC07 — Relay peer setup returns immediately after the native Pass click, then runIsolationJourney reads one snapshot and synchronously requires the peer to be ended. Canonical relay-race.js:78-80 first enters waiting and schedules batonDue=now+1200; only its later baton branch at56-66 produces the expected one-step winner. Any ordinary read before that due fails against a correct owner instead of establishing a settled peer. Restore observation-only waiting for the exact independent ended/team-2/both-lanes/full-state context before freezing it; do not add another Pass, fixed sleep, retry or arbitrary winner fallback. This is a regression from the settled prior review's credited awaited peer.",
+        "currentDisposition": "REQUIRED_UNEXECUTED; helper correction PENDING_REVIEW, full caller obligations deferred"
+      },
+      {
+        "id": "NC08",
+        "title": "NC08: Validate the complete first Relay timeout transition",
+        "body": "NC08 — The arbitrary winner fallback is removed, but these alternatives still accept any generation/question/activeTeamId with matching phase/turn/lane subsets; the active alternative does not require cleared batonDue/correct, and neither proves the original due or native status/lane UI. A wrong-generation or wrong-team first transition can pass all three Relay leave-return cells. The more complete assertRelayPendingBaton and assertRelayFirstTimeoutSettled helpers are defined but never imported or called here. Wire exact independent original-turn or exact first-settled-turn expectations, including deadline/baton timing and full identity, rather than treating the new subset predicate as closure of RPC09.",
+        "currentDisposition": "REQUIRED_UNEXECUTED; helper correction PENDING_REVIEW, full caller obligations deferred"
+      },
+      {
+        "id": "NC09",
+        "title": "NC09: Preserve exact Trivia identity and due policy through Next",
+        "body": "NC09 — This round-expiry validator checks phase/error/correct/roundExpired and generation but not the required original round-1/q1/turn1 identity, indices, scores, awards, startedAt or retained due relationships; assertTriviaRoundNextEnded similarly omits the retained identity/history, and the question Next validator checks only that its new deadline is a number equal to questionDeadline. Thus a wrong round/question or mutated award history can qualify, and a wrong-duration next question is not rejected. Preserve the genuine improved question identities and both native Next branches, but validate complete independent expiry/Next objects, actual timer bounds and native UI at leave-return.js:153-167. R16 remains this Trivia obligation and must not be relabeled as LOC compliance.",
+        "currentDisposition": "REQUIRED_UNEXECUTED; helper correction PENDING_REVIEW, full caller obligations deferred"
+      },
+      {
+        "id": "NC10",
+        "title": "NC10: Consume measured witness start and expiry bounds",
+        "body": "NC10 — The running witness validator has a deadlineBounds parameter, but this sole caller supplies none; the returned startTime is unused by every journey, and waitForWitnessExpiry returns only state, discarding its expiry timestamp. Only expired UI is checked, not the complete idle/running display/control lifecycle. Therefore the now-correct duration/revision/expiry fields do not establish a measured native Start+4000 interval: the callers' lower wall-duration checks begin at primary preconsumption and include unrelated action latency. Retain and stage native Start brackets, full idle/running UI, same-root lifecycle observations and measured expiry timing, then consume that interval in each of the 54 cases; do not infer measured latency from nominal tick cadence.",
+        "currentDisposition": "REQUIRED_UNEXECUTED; helper correction PENDING_REVIEW, full caller obligations deferred"
+
+[Showing lines 321-480 of 605. Use :481 to continue]

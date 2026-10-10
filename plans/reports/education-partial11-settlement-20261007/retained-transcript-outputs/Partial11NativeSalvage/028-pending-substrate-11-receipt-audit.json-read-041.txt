@@ -1,0 +1,202 @@
+      "requirement": "Producer prompt line15 requires precise current source evidence/dispositions for the original findings.",
+      "actual": "Every Native original entry has an old finding body/location and a disposition, but no precise current source evidence. Nine are asserted SOURCE_CORRECTED_LOCAL and three PARTIAL_REPAIR_REQUIRED.",
+      "impact": "The receipt cannot substantiate these current Native dispositions. The absent Native11 receipt cannot be replaced by these sibling assertions; this audit does not decide whether any of the assertions are true or stale."
+    },
+    {
+      "id": "RC11-04",
+      "category": "08_09_CHRONOLOGY_CURRENT_RECORD_COMPLETENESS",
+      "receiptPath": "$.assigned08And09FindingsAndChronology",
+      "receiptLines": "235-367",
+      "requirement": "Dispatch authority lines245-255 requires complete08/09 findings and chronology; producer prompt line15 requires separately recorded08/09/chronology and new11 findings.",
+      "actual": "The expected 6+5+2+6 identities are all enumerated, but the section is substantially title/disposition-only rather than a complete governing obligation record.",
+      "specificOmissions": [
+        "Native08-1..4: governing full bodies, source ranges and precise current evidence are missing; original Native audit titles are also shortened.",
+        "Evidence08-1..2: governing full bodies and original ranges are missing, although current evidence claims are supplied.",
+        "09-S1..3: source locations, mechanisms, full required repairs and current evidence are absent. In particular,09-S2 does not retain the explicit BOTH packet-storage and native-action diagnostic publication obligation.",
+        "09-S4/S5: original source ranges and full repair constraints are omitted despite concise stable-identity/phase claims.",
+        "09-C1: no full actual-arrival chronology record, including earlier setup versus later extraction distinctions and the prohibition on fixed category sorting.",
+        "09-C2: no full shared-reference/authoritative-wrapper/caller-object preservation and independent numeric-order namespace constraints.",
+        "S10-C1/NF-A2/NF-A3/N10B-01/N10B-02: no source paths/ranges or full consumer-visible mechanisms/required repairs; NATIVE_PARTITION_OWNED is ownership, not a completed repair disposition."
+      ],
+      "impact": "Enumeration is complete, but delivery detail is not. No omitted mechanism is promoted here into a newly observed source defect."
+    },
+    {
+      "id": "RC11-05",
+      "category": "DEFERRED_SCOPE_COMPLETENESS",
+      "receiptPath": "$.deferredCallerObligations",
+      "receiptLines": "401-418",
+      "requirement": "Producer prompt lines15 and18 expressly requires complete deferred obligations, not three generic sentences. Governing settled09 counsel lines240-253 preserves the detailed later acceptance scope.",
+      "actual": "The dedicated section lists twelve immutable files and an aggregate explanation, but does not reproduce the entire detailed caller/later-slice contract. The canonical NC bodies and historical snapshots elsewhere preserve some relevant detail, not all requirements.",
+      "missingExplicitObligations": [
+        "Complete clean twelve-caller sink/root-manifest/document forwarding and real Page callback/signature cutover; consumption of all action results, activity intervals, startRecord and measured expiry; no old aliases/shims.",
+        "The exact eighteen-row matrix: six leave-return rows (Quiz, Hot Potato, Jeopardy, Relay, Trivia question, Trivia round), seven reset rows (Quiz, Hot Potato, Jeopardy, Relay deadline, Relay baton, Trivia question, Trivia round), and five isolation rows (Quiz, Hot Potato, Jeopardy, Relay, Trivia), each independently on present/share/file.",
+        "Independently authored complete initial/pending/hidden/returned/reset/terminal/peer states AND native UI, measured consumed-return/original-expiry bounds, and original pending work at actual native Pass/Reset with exact due crossing.",
+        "Strict native Reset+5000 Quiz due, after-old/before-new checkpoint and new expiry without the old arbitrary800ms slack, together with the exact canonical terminal shape and complete reset controls/UI.",
+        "Full Relay peer validation/settlement and full first-timeout identity/team/question/lane/native UI invariance, including no extra Pass, fixed sleep, retry or arbitrary winner fallback.",
+        "Full Trivia question/round expiry and native Next retained identity/history/scores/awards/deadline/UI plus independently bounded next-question timing policy.",
+        "Every cell's full idle/running/expired witness state and UI, native Start+4000 bounds, original last-running/first-expired crossover interval and exact raw failure samples staged before assertions.",
+        "Earliest Present/share/file setup, exact root/document tuples and cardinality, native focus/geometry/control routing, complete live PNG/diagnostics, portable before/after network enforcement, source GET/config equality and failure-safe setup/close/attachment finalization.",
+        "Ordered gaps5..9 remain unchanged and required. The exact other-slice original7 Hot Potato speed-bonus, original8 Scattergories NFC duplicate/unique control and original9 full Trivia scoring policy matrix must remain explicit later obligations; their identities are retained in the canonical mappings, but not elaborated in the deferred section."
+      ],
+      "impact": "The receipt preserves REQUIRED_UNEXECUTED aggregate status but does not deliver the complete deferred scope expressly requested."
+    },
+    {
+      "id": "RC11-06",
+      "category": "EXCLUDED_SCOPE_RECORD_COMPLETENESS",
+      "receiptPath": "$.NF_A4_ScopeDisposition",
+      "receiptLines": "393-400",
+      "authorityPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-dispatch-authority.json",
+      "authorityLines": "210-222",
+      "actual": "The unresolved disposition, exclusion and scopeDecision are correctly retained. Line399 says 'Retained verbatim with source mechanism', but the receipt omits the actual mechanism, file/range and the public-packet-store versus retained-native-action distinction.",
+      "missingMechanism": "Governing authority describes replacement of __nsRecordedPackets or an element with a forged packet while lifecycle-store health remains true; the extraction/witness consumer can then adopt its bracket and baseline. It also identifies the corresponding lastSeq binding seam.",
+      "impact": "The NF-A4 scope state is not incorrectly waived or repaired, but its claimed complete mechanism retention is not satisfied. No source inspection or applicability resolution is performed here."
+    },
+    {
+      "id": "RC11-07",
+      "category": "PRESERVATION_RECORD_MISMATCH",
+      "receiptPath": "$.exactOwnedChanges.lineCounts['tests/e2e/education/pending-round-lifecycle-error-ledger.js']",
+      "receiptLines": "31",
+      "authorityPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-scope-preservation.json",
+      "authorityLines": [
+        "263-270",
+        "343-349"
+      ],
+      "claimed": 160,
+      "mainMeasured": 150,
+      "actual": "The genuine receipt claims160 ledger lines; Main's preserved inventory records150 and explicitly lists this discrepancy.",
+      "impact": "This count claim is inaccurate relative to Main's preservation record. Both values are below200; no helper line-limit violation follows from this discrepancy. The receipt remains verbatim and no count was independently measured."
+    },
+    {
+      "id": "RC11-08",
+      "category": "INDEPENDENT_COMBINED_DELIVERY_BLOCKER",
+      "receiptPath": "$.partition and $.assigned08And09FindingsAndChronology.new11Findings",
+      "receiptLines": [
+        "2-4",
+        "328-365"
+      ],
+      "authorityPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-dispatch-authority.json",
+      "authorityLines": [
+        "71-74",
+        "245-255"
+      ],
+      "actual": "Only the genuine Evidence11 receipt was delivered. Main reports Native11's terminal exit1 after807.30s from stream_error, with no genuine Native11 receipt. The scope-preservation record's sole addition is the Evidence11 receipt.",
+      "impact": "Missing genuine Native11 delivery independently prevents admission even if every Evidence claim and every source repair were otherwise correct. Evidence ownership entries, Main preservation, terminal transcripts or this audit cannot reconstruct or substitute for that receipt.",
+      "source": "Main's supplied terminal facts and the read preservation/dispatch records; failure not rerun."
+    }
+  ],
+  "preservationComparison": {
+    "authorityPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-scope-preservation.json",
+    "basis": "Existing Main preservation record, not independently remeasured bytes/counts.",
+    "matches": [
+      "Receipt lists exactly one owned Evidence helper modification: pending-round-lifecycle-error-exposure.js; Main records that same Evidence change.",
+      "All ten listed preserved Evidence helpers are unmodified in Main's inventory.",
+      "Ten of eleven Evidence physical-line claims agree with Main's inventory; the ledger count discrepancy is separately enumerated.",
+      "Main records all4327 baseline regular files retained,4328 total regular files, one added genuine Evidence11 receipt, no deletions and no unexpected additions.",
+      "Exactly eight authorized helpers changed: one Evidence helper and seven Native helpers. The receipt's one-file list is partition-specific, not a claim that the combined subject has only one change.",
+      "All twelve named caller files are byte-immutable according to Main's preserved hashes, consistent with receipt lines386-388 and401-417.",
+      "Main records all26 helpers below200 physical lines, consistent with the qualitative limit claim.",
+      "Required false/zero flags and54 declarations match the receipt and governing authority."
+    ],
+    "notEstablishedByPreservation": [
+      "Preservation does not verify semantics, public interfaces, runtime behavior, error-object mutation behavior or acceptance.",
+      "The external node_modules junction is not recursively frozen.",
+      "The workingRoot in the producer receipt denotes its original correction workspace; reviewing the frozen partial copy does not itself make that workingRoot a discrepancy."
+    ]
+  },
+  "preservedImprovements": {
+    "receiptAndDeliveryImprovements": [
+      "A genuine new Evidence11 receipt exists with the pinned producer, correct partition/correction and required false/zero claims.",
+      "All twelve original Native identities/titles and all three Evidence identities/titles are separately retained; all three Evidence full original bodies are intact.",
+      "All six08, five09, two chronology and six current finding identities are enumerated in separate categories.",
+      "The S10-C2 claim specifically covers explicit wrapper phase versus intrinsic/fallback phase, metadata enrichment without phase authority, and errorLedger/secondaryFailures/allErrors reconciliation rather than just one loop.",
+      "Evidence claims explicitly retain stable serialization identity, caller-ledger chronology, identity rather than numeric-order deduplication, serialized-only exclusion and sole-Error preservation.",
+      "The original E06-02..05 meanings are restored rather than relabeled as unrelated portable/UI conveniences.",
+      "Canonical NC/RPC/original and BOTH historical mapping snapshots are preserved without subject renaming.",
+      "NF-A4 remains excluded and unresolved, not repaired, waived, disproved or source-clean.",
+      "REQUIRED_UNEXECUTED status,54 declared cells, twelve immutable callers, three surfaces and no-canary/no-execution limits remain explicit."
+    ],
+    "sourcePreservationObservedByMain": "The partial subject and complete terminal evidence are preserved; eight authorized helper changes remain available for settlement. This credits preservation and detailed claims, not verified semantic repairs.",
+    "sourceRepairCertification": "NOT_PERFORMED"
+  },
+  "limitations": [
+    "Read-only receipt/authority/preservation inspection only; this is not a normal source gate, admission review or runtime/source-correctness certification.",
+    "No changed source or immutable caller source was inspected. No source findings are fabricated from receipt language.",
+    "No shell, commands, eval, imports, checks, tests, builds, lint/format, browser, nested agents, writes or checksum/count remeasurement were performed.",
+    "Original07 and08 reports are historical governing evidence; their source findings and historical statuses are not asserted as current Correction11 defects.",
+    "Producer repair/evidence statements remain claims. Their accuracy, including the three Native PARTIAL_REPAIR_REQUIRED labels, cannot be resolved by this inspection.",
+    "Main's terminal and preservation facts are retained without reproducing the Native failure or reconstructing a missing receipt.",
+    "The dependency junction limitation prevents any recursive dependency-byte-freeze claim.",
+    "The missing Native11 receipt and the enumerated Evidence receipt incompleteness do not authorize retry/resume11, another correction, timeout changes, caller cutover or canonical integration."
+  ],
+  "readEvidence": [
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/.tmp/acceptance-producer-pending-substrate-11-evidence.json",
+      "fullRead": true,
+      "reads": [
+        "1-210:raw",
+        "211-420:raw",
+        "421-640:raw"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Final closing braces for originalPriorMappingSnapshot, canonicalSubjectAuthority and the receipt object were returned.",
+      "note": "The initial declaration-only rendering omitted content and truncated long lines; it was not used as a complete read. Raw reads expanded the entire receipt."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-08-subject-authority.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "qualification:false, executedAcceptanceCells:0, final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-dispatch-authority.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "genuineNewReceiptsOnly:true, receiptRequirements closure, final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-evidence-prompt.md",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final delivery instruction"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Deliver full genuine ...acceptance-producer-pending-substrate-11-evidence.json then STOP."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-scope-preservation.json",
+      "fullRead": true,
+      "reads": [
+        ":raw lines1-300",
+        "301-380:raw through EOF"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "evidenceReceiptLineCountDiscrepancies followed by sourceReady:false, qualification:false, executedAcceptanceCells:0 and final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-07-native-admission.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Twelfth finding closure, overall_correctness:incorrect, final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-07-evidence-admission.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Third finding closure, overall_correctness:incorrect, final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-08-native-salvage-audit.json",
+
+[Showing lines 301-500 of 538. Use :501 to continue]

@@ -1,0 +1,4 @@
+function getGameCapabilities(type) {
+…
+}
+module.exports = { GAME_CATALOG, CANONICAL_GAME_TYPES, isGameSubtype, getGameCapabilities }

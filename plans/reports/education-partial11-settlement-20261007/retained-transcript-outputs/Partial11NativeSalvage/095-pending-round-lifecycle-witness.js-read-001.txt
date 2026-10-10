@@ -1,0 +1,166 @@
+import { expect } from '@playwright/test'
+import {
+  readCorrelatedStateAndTime,
+  assertEvidenceSink,
+} from './pending-round-lifecycle-observation.js'
+import { executeAction } from './pending-round-lifecycle-native-action.js'
+import { deriveDeadlineBounds } from './pending-round-lifecycle-activity-interval.js'
+import {
+  assertCountdownIdle,
+  assertCountdownRunning,
+  assertCountdownExpired,
+  validateRunningWitnessPoll,
+  validateExpiredWitnessPoll,
+  assertHistoryPrefix,
+} from './pending-round-lifecycle-witness-domain.js'
+
+export async function startWitnessTimer(root, evidence) {
+  assertEvidenceSink(evidence)
+  const idleSample = await readCorrelatedStateAndTime(root, evidence, 'witnessIdleSample')
+  assertCountdownIdle(idleSample.state)
+
+  const display = root.locator('[data-ns-countdown], output[aria-label="Time remaining"]')
+  await expect(display.first()).toHaveText('00:04')
+  const status = root.locator('div[role="status"], p[role="status"]')
+  await expect(status.first()).toHaveText('Ready')
+  const startBtn = root.locator('button[data-ns-command="start"]')
+  await expect(startBtn).toBeEnabled()
+  await expect(root.locator('button[data-ns-command="pause"]')).toBeDisabled()
+  await expect(root.locator('button[data-ns-command="resume"]')).toBeDisabled()
+
+  const actionBracket = await executeAction(root, () => startBtn.click(), { command: 'start', type: 'click' }, evidence, 'witnessStartAction')
+  const deadlineBounds = deriveDeadlineBounds(actionBracket, 4000)
+
+  const rootDomain = {
+    rootInstanceId: actionBracket.rootInstanceId,
+    elementId: actionBracket.elementId,
+    slideId: actionBracket.slideId,
+    gameType: actionBracket.gameType,
+    documentId: actionBracket.documentId,
+    timeOrigin: actionBracket.timeOrigin,
+    url: actionBracket.url,
+  }
+
+  if (!Array.isArray(actionBracket.rootEventsBefore) || !Array.isArray(actionBracket.rootEventsAfter)) {
+    throw new Error('Start action bracket lacks valid rootEventsBefore or rootEventsAfter provenance')
+  }
+  if (!Array.isArray(actionBracket.docEventsBefore) || !Array.isArray(actionBracket.docEventsAfter)) {
+    throw new Error('Start action bracket lacks valid docEventsBefore or docEventsAfter provenance')
+  }
+  const cloneEv = (e) => Object.assign({}, e, { detail: e.detail ? Object.assign({}, e.detail) : null })
+  assertHistoryPrefix(actionBracket.rootEventsAfter, actionBracket.rootEventsBefore, 'startRootEvents')
+  if (actionBracket.rootEventsAfter.length !== actionBracket.rootEventsBefore.length) {
+    throw new Error('Start action bracket root events diverged between capture and post')
+  }
+  assertHistoryPrefix(actionBracket.docEventsAfter, actionBracket.docEventsBefore, 'startDocEvents')
+  if (actionBracket.docEventsAfter.length !== actionBracket.docEventsBefore.length) {
+    throw new Error('Start action bracket doc events diverged between capture and post')
+  }
+  const baselineRootEvents = actionBracket.rootEventsAfter.map(cloneEv)
+  const baselineDocVisibilityEvents = actionBracket.docEventsAfter.map(cloneEv)
+  const initialCompletedHiddenPairs = Array.isArray(actionBracket.completedPairsAfter) ? actionBracket.completedPairsAfter.length : 0
+  const startRecord = {
+    deadline: actionBracket.stateAfter?.deadline,
+    actionBracket,
+    rootDomain,
+    baselineRootEvents,
+    baselineDocVisibilityEvents,
+    initialCompletedHiddenPairs,
+    runningSample: null,
+  }
+
+  const runningSample = await readCorrelatedStateAndTime(root, evidence, 'witnessRunningSample')
+  assertCountdownRunning(runningSample.state, deadlineBounds)
+  validateRunningWitnessPoll(runningSample, startRecord)
+  startRecord.runningSample = runningSample
+  startRecord.deadline = runningSample.state.deadline
+
+  await expect(startBtn).toBeDisabled()
+  await expect(status.first()).toHaveText('Countdown started')
+  return {
+    idleState: idleSample.state,
+    runningState: runningSample.state,
+    startTime: actionBracket.tCapture,
+    deadline: runningSample.state.deadline,
+    witnessInterval: [actionBracket.tCapture, deadlineBounds.max],
+    actionBracket,
+    deadlineBounds,
+    startRecord,
+  }
+}
+
+export async function waitForWitnessExpiry(root, startRecord, evidence) {
+  assertEvidenceSink(evidence)
+  if (!startRecord?.actionBracket || !startRecord?.deadline || !startRecord?.runningSample || !startRecord?.rootDomain) {
+    throw new Error('Mandatory startRecord with actionBracket, deadline, runningSample and rootDomain is required')
+  }
+
+  validateRunningWitnessPoll(startRecord.runningSample, startRecord)
+  let lastRunningSample = startRecord.runningSample
+  let firstExpiredSample = null
+  let pollCount = 0
+
+  await expect.poll(async () => {
+    pollCount++
+    const sample = await readCorrelatedStateAndTime(root, evidence, `witnessPoll_${pollCount}`)
+    const s = sample.state
+    if (!s) return false
+    if (s.phase === 'running') {
+      validateRunningWitnessPoll(sample, startRecord)
+      lastRunningSample = sample
+      return false
+    }
+    if (s.phase === 'expired') {
+      validateExpiredWitnessPoll(sample, startRecord)
+      firstExpiredSample = sample
+      return true
+    }
+    throw new Error(`Unexpected witness phase during run: ${s.phase}`)
+  }).toBe(true)
+
+  if (!lastRunningSample) throw new Error('Witness failed to observe running state before expiry')
+  if (!firstExpiredSample) throw new Error('Witness failed to observe first-expired state')
+
+  assertCountdownExpired(firstExpiredSample.state)
+  const display = root.locator('[data-ns-countdown], output[aria-label="Time remaining"]')
+  await expect(display.first()).toHaveText('00:00')
+  const status = root.locator('div[role="status"], p[role="status"]')
+  await expect(status.first()).toHaveText('Time is up!')
+
+  const expiryObservationInterval = {
+    min: lastRunningSample.activityInterval.min,
+    max: firstExpiredSample.activityInterval.max,
+  }
+  const activityElapsedInterval = {
+    min: Math.max(0, lastRunningSample.activityInterval.min - startRecord.actionBracket.activityInterval.max),
+    max: firstExpiredSample.activityInterval.max - startRecord.actionBracket.activityInterval.min,
+  }
+
+  return {
+    startRecord,
+    lastRunningSample,
+    firstExpiredSample,
+    expiryObservationInterval,
+    activityElapsedInterval,
+    expiredState: firstExpiredSample.state,
+    expiryTime: firstExpiredSample.time,
+    provenance: { pollCount },
+  }
+}
+
+export function assertMeasuredWitnessInterval(witnessResult, expectedDurationMs = 4000) {
+  if (!witnessResult?.startRecord?.deadline) throw new Error('Missing startRecord deadline')
+  if (!witnessResult?.lastRunningSample) throw new Error('Missing lastRunningSample')
+  if (!witnessResult?.firstExpiredSample) throw new Error('Missing firstExpiredSample')
+
+  assertCountdownExpired(witnessResult.firstExpiredSample.state)
+  const deadline = witnessResult.startRecord.deadline
+  const startAct = witnessResult.startRecord.actionBracket.activityInterval
+
+  expect(deadline).toBeGreaterThanOrEqual(startAct.min + expectedDurationMs)
+  expect(deadline).toBeLessThanOrEqual(startAct.max + expectedDurationMs)
+  expect(witnessResult.lastRunningSample.activityInterval.min).toBeLessThan(deadline)
+  expect(witnessResult.firstExpiredSample.activityInterval.max).toBeGreaterThanOrEqual(deadline)
+  expect(witnessResult.activityElapsedInterval.max).toBeGreaterThanOrEqual(expectedDurationMs)
+  expect(witnessResult.activityElapsedInterval.min).toBeLessThanOrEqual(expectedDurationMs)
+}

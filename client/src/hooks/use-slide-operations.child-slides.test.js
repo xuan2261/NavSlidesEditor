@@ -1,6 +1,11 @@
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useSlideOperations } from './use-slide-operations'
+import {
+  createInteractionSlideState,
+  executeInteractionAction,
+  resolveEffectiveSlide,
+} from 'revealjs-shared'
 
 function makeHarness(initial) {
   let presentation = initial
@@ -59,6 +64,70 @@ describe('useSlideOperations — vertical child CRUD', () => {
     expect(children[1].id).not.toBe('c0')
     expect(children[1].elements[0].id).not.toBe('e0')
     expect(children[1].elements[0].content).toBe('x')
+  })
+
+  it('duplicates a child using fresh local targets and placeholder bindings while preserving fixed scope', () => {
+    const fixed = 'layout-fixed:l:answer'
+    const { get, deps } = makeHarness({
+      layoutMasters: [
+        {
+          id: 'l',
+          name: 'Layout',
+          placeholders: [
+            { id: 'title', type: 'text', role: 'title', x: 20, y: 20, width: 200, height: 40 },
+          ],
+          fixedElements: [{ id: 'answer', type: 'text', x: 20, y: 80, width: 200, height: 40 }],
+        },
+      ],
+      slides: [
+        {
+          id: 'parent',
+          elements: [],
+          children: [
+            {
+              id: 'child',
+              layoutId: 'l',
+              transition: 'fade',
+              transitionDuration: 700,
+              layoutOverrides: { placeholderBindings: { title: 'target' } },
+              elements: [
+                {
+                  id: 'source',
+                  type: 'shape',
+                  action: { kind: 'show', targetElementId: 'target' },
+                },
+                { id: 'target', type: 'text', initialVisibility: 'hidden', content: 'Child title' },
+                {
+                  id: 'fixed-source',
+                  type: 'shape',
+                  action: { kind: 'hide', targetElementId: fixed },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+    const { result } = renderHook(() => useSlideOperations(deps))
+    act(() => result.current.duplicateChildSlide(0, 0))
+    const copy = get().slides[0].children[1]
+    expect(copy.elements[0].action.targetElementId).toBe(copy.elements[1].id)
+    expect(copy.layoutOverrides.placeholderBindings.title).toBe(copy.elements[1].id)
+    expect(copy.elements[2].action.targetElementId).toBe(fixed)
+    expect(copy.elements[2].action.referenceError).toBeUndefined()
+    for (const oldId of ['source', 'target', 'fixed-source'])
+      expect(copy.elements.map((element) => element.id)).not.toContain(oldId)
+    expect(copy).toMatchObject({ transition: 'fade', transitionDuration: 700 })
+    const effective = resolveEffectiveSlide(copy, get().layoutMasters).slide
+    const shown = executeInteractionAction(
+      createInteractionSlideState(effective),
+      copy.elements[0].action
+    )
+    expect(shown.state.visibility[copy.elements[1].id]).toBe(true)
+    const hidden = executeInteractionAction(shown.state, copy.elements[2].action)
+    expect(hidden.state.visibility[fixed]).toBe(false)
+    expect(get().slides[0].children[0]).toEqual(deps.presentation.slides[0].children[0])
+    expect(get().slides[0].elements).toEqual([])
   })
 
   it('deleteChildSlide removes the child at the index', () => {

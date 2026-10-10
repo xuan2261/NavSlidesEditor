@@ -1,0 +1,402 @@
+	 */
+	function syncSlide( slide = currentSlide ) {
+
+		backgrounds.sync( slide );
+		fragments.sync( slide );
+
+		slideContent.load( slide );
+
+		backgrounds.update();
+		notes.update();
+
+		dispatchEvent({
+			type: 'slidesync',
+			data: {
+				slide
+			}
+		});
+
+	}
+
+	/**
+	 * Resets all vertical slides so that only the first
+	 * is visible.
+	 */
+	function resetVerticalSlides() {
+
+		getHorizontalSlides().forEach( horizontalSlide => {
+
+			Util.queryAll( horizontalSlide, 'section' ).forEach( ( verticalSlide, y ) => {
+
+				if( y > 0 ) {
+					verticalSlide.classList.remove( 'present' );
+					verticalSlide.classList.remove( 'past' );
+					verticalSlide.classList.add( 'future' );
+					verticalSlide.setAttribute( 'aria-hidden', 'true' );
+				}
+
+			} );
+
+		} );
+
+	}
+
+	/**
+	 * Randomly shuffles all slides in the deck.
+	 */
+	function shuffle( slides = getHorizontalSlides() ) {
+
+		slides.forEach( ( slide, i ) => {
+
+			// Insert the slide next to a randomly picked sibling slide
+			// slide. This may cause the slide to insert before itself,
+			// but that's not an issue.
+			let beforeSlide = slides[ Math.floor( Math.random() * slides.length ) ];
+			if( beforeSlide.parentNode === slide.parentNode ) {
+				slide.parentNode.insertBefore( slide, beforeSlide );
+			}
+
+			// Randomize the order of vertical slides (if there are any)
+			let verticalSlides = slide.querySelectorAll( 'section' );
+			if( verticalSlides.length ) {
+				shuffle( verticalSlides );
+			}
+
+		} );
+
+	}
+
+	/**
+	 * Updates one dimension of slides by showing the slide
+	 * with the specified index.
+	 *
+	 * @param {string} selector A CSS selector that will fetch
+	 * the group of slides we are working with
+	 * @param {number} index The index of the slide that should be
+	 * shown
+	 *
+	 * @return {number} The index of the slide that is now shown,
+	 * might differ from the passed in index if it was out of
+	 * bounds.
+	 */
+	function updateSlides( selector, index ) {
+
+		// Select all slides and convert the NodeList result to
+		// an array
+		let slides = Util.queryAll( dom.wrapper, selector ),
+			slidesLength = slides.length;
+
+		let printMode = scrollView.isActive() || printView.isActive();
+		let loopedForwards = false;
+		let loopedBackwards = false;
+
+		if( slidesLength ) {
+
+			// Should the index loop?
+			if( config.loop ) {
+				if( index >= slidesLength ) loopedForwards = true;
+
+				index %= slidesLength;
+
+				if( index < 0 ) {
+					index = slidesLength + index;
+					loopedBackwards = true;
+				}
+			}
+
+			// Enforce max and minimum index bounds
+			index = Math.max( Math.min( index, slidesLength - 1 ), 0 );
+
+			for( let i = 0; i < slidesLength; i++ ) {
+				let element = slides[i];
+
+				let reverse = config.rtl && !isVerticalSlide( element );
+
+				// Avoid .remove() with multiple args for IE11 support
+				element.classList.remove( 'past' );
+				element.classList.remove( 'present' );
+				element.classList.remove( 'future' );
+
+				// http://www.w3.org/html/wg/drafts/html/master/editing.html#the-hidden-attribute
+				element.setAttribute( 'hidden', '' );
+				element.setAttribute( 'aria-hidden', 'true' );
+
+				// If this element contains vertical slides
+				if( element.querySelector( 'section' ) ) {
+					element.classList.add( 'stack' );
+				}
+
+				// If we're printing static slides, all slides are "present"
+				if( printMode ) {
+					element.classList.add( 'present' );
+					continue;
+				}
+
+				if( i < index ) {
+					// Any element previous to index is given the 'past' class
+					element.classList.add( reverse ? 'future' : 'past' );
+
+					if( config.fragments ) {
+						// Show all fragments in prior slides
+						showFragmentsIn( element );
+					}
+				}
+				else if( i > index ) {
+					// Any element subsequent to index is given the 'future' class
+					element.classList.add( reverse ? 'past' : 'future' );
+
+					if( config.fragments ) {
+						// Hide all fragments in future slides
+						hideFragmentsIn( element );
+					}
+				}
+				// Update the visibility of fragments when a presentation loops
+				// in either direction
+				else if( i === index && config.fragments ) {
+					if( loopedForwards ) {
+						hideFragmentsIn( element );
+					}
+					else if( loopedBackwards ) {
+						showFragmentsIn( element );
+					}
+				}
+			}
+
+			let slide = slides[index];
+			let wasPresent = slide.classList.contains( 'present' );
+
+			// Mark the current slide as present
+			slide.classList.add( 'present' );
+			slide.removeAttribute( 'hidden' );
+			slide.removeAttribute( 'aria-hidden' );
+
+			if( !wasPresent ) {
+				// Dispatch an event indicating the slide is now visible
+				dispatchEvent({
+					target: slide,
+					type: 'visible',
+					bubbles: false
+				});
+			}
+
+			// If this slide has a state associated with it, add it
+			// onto the current state of the deck
+			let slideState = slide.getAttribute( 'data-state' );
+			if( slideState ) {
+				state = state.concat( slideState.split( ' ' ) );
+			}
+
+		}
+		else {
+			// Since there are no slides we can't be anywhere beyond the
+			// zeroth index
+			index = 0;
+		}
+
+		return index;
+
+	}
+
+	/**
+	 * Shows all fragment elements within the given container.
+	 */
+	function showFragmentsIn( container ) {
+
+		Util.queryAll( container, '.fragment' ).forEach( fragment => {
+			fragment.classList.add( 'visible' );
+			fragment.classList.remove( 'current-fragment' );
+		} );
+
+	}
+
+	/**
+	 * Hides all fragment elements within the given container.
+	 */
+	function hideFragmentsIn( container ) {
+
+		Util.queryAll( container, '.fragment.visible' ).forEach( fragment => {
+			fragment.classList.remove( 'visible', 'current-fragment' );
+		} );
+
+	}
+
+	/**
+	 * Optimization method; hide all slides that are far away
+	 * from the present slide.
+	 */
+	function updateSlidesVisibility() {
+
+		// Select all slides and convert the NodeList result to
+		// an array
+		let horizontalSlides = getHorizontalSlides(),
+			horizontalSlidesLength = horizontalSlides.length,
+			distanceX,
+			distanceY;
+
+		if( horizontalSlidesLength && typeof indexh !== 'undefined' ) {
+
+			const isOverview = overview.isActive();
+
+			// The number of steps away from the present slide that will
+			// be visible
+			let viewDistance = isOverview ? 10 : config.viewDistance;
+
+			// Shorten the view distance on devices that typically have
+			// less resources
+			if( Device.isMobile ) {
+				viewDistance = isOverview ? 6 : config.mobileViewDistance;
+			}
+
+			// All slides need to be visible when exporting to PDF
+			if( printView.isActive() ) {
+				viewDistance = Number.MAX_VALUE;
+			}
+
+			for( let x = 0; x < horizontalSlidesLength; x++ ) {
+				let horizontalSlide = horizontalSlides[x];
+
+				let verticalSlides = Util.queryAll( horizontalSlide, 'section' ),
+					verticalSlidesLength = verticalSlides.length;
+
+				// Determine how far away this slide is from the present
+				distanceX = Math.abs( ( indexh || 0 ) - x ) || 0;
+
+				// If the presentation is looped, distance should measure
+				// 1 between the first and last slides
+				if( config.loop ) {
+					distanceX = Math.abs( ( ( indexh || 0 ) - x ) % ( horizontalSlidesLength - viewDistance ) ) || 0;
+				}
+
+				// Show the horizontal slide if it's within the view distance
+				if( distanceX < viewDistance ) {
+					slideContent.load( horizontalSlide );
+				}
+				else {
+					slideContent.unload( horizontalSlide );
+				}
+
+				if( verticalSlidesLength ) {
+
+					let oy = isOverview ? 0 : getPreviousVerticalIndex( horizontalSlide );
+
+					for( let y = 0; y < verticalSlidesLength; y++ ) {
+						let verticalSlide = verticalSlides[y];
+
+						distanceY = x === ( indexh || 0 ) ? Math.abs( ( indexv || 0 ) - y ) : Math.abs( y - oy );
+
+						if( distanceX + distanceY < viewDistance ) {
+							slideContent.load( verticalSlide );
+						}
+						else {
+							slideContent.unload( verticalSlide );
+						}
+					}
+
+				}
+			}
+
+			// Flag if there are ANY vertical slides, anywhere in the deck
+			if( hasVerticalSlides() ) {
+				dom.wrapper.classList.add( 'has-vertical-slides' );
+			}
+			else {
+				dom.wrapper.classList.remove( 'has-vertical-slides' );
+			}
+
+			// Flag if there are ANY horizontal slides, anywhere in the deck
+			if( hasHorizontalSlides() ) {
+				dom.wrapper.classList.add( 'has-horizontal-slides' );
+			}
+			else {
+				dom.wrapper.classList.remove( 'has-horizontal-slides' );
+			}
+
+		}
+
+		// Prevent offscreen slides from receiving keyboard focus. Unlike the
+		// hidden attribute, inert is not overridden when nearby slides are made
+		// display: block for transitions.
+		const allowAllSlides = overview.isActive() || scrollView.isActive() || printView.isActive();
+		Util.queryAll( dom.wrapper, SLIDES_SELECTOR ).forEach( slide => {
+			slide.toggleAttribute( 'inert', !allowAllSlides && slide !== currentSlide && !slide.contains( currentSlide ) );
+		} );
+
+	}
+
+	/**
+	 * Determine what available routes there are for navigation.
+	 *
+	 * @return {{left: boolean, right: boolean, up: boolean, down: boolean}}
+	 */
+	function availableRoutes({ includeFragments = false } = {}) {
+
+		let horizontalSlides = dom.wrapper.querySelectorAll( HORIZONTAL_SLIDES_SELECTOR ),
+			verticalSlides = dom.wrapper.querySelectorAll( VERTICAL_SLIDES_SELECTOR );
+
+		let routes = {
+			left: indexh > 0,
+			right: indexh < horizontalSlides.length - 1,
+			up: indexv > 0,
+			down: indexv < verticalSlides.length - 1
+		};
+
+		// Looped presentations can always be navigated as long as
+		// there are slides available
+		if( config.loop ) {
+			if( horizontalSlides.length > 1 ) {
+				routes.left = true;
+				routes.right = true;
+			}
+
+			if( verticalSlides.length > 1 ) {
+				routes.up = true;
+				routes.down = true;
+			}
+		}
+
+		if ( horizontalSlides.length > 1 && config.navigationMode === 'linear' ) {
+			routes.right = routes.right || routes.down;
+			routes.left = routes.left || routes.up;
+		}
+
+		// If includeFragments is set, a route will be considered
+		// available if either a slid OR fragment is available in
+		// the given direction
+		if( includeFragments === true ) {
+			let fragmentRoutes = fragments.availableRoutes();
+			routes.left = routes.left || fragmentRoutes.prev;
+			routes.up = routes.up || fragmentRoutes.prev;
+			routes.down = routes.down || fragmentRoutes.next;
+			routes.right = routes.right || fragmentRoutes.next;
+		}
+
+		// Reverse horizontal controls for rtl
+		if( config.rtl ) {
+			let left = routes.left;
+			routes.left = routes.right;
+			routes.right = left;
+		}
+
+		return routes;
+
+	}
+
+	/**
+	 * Returns the number of past slides. This can be used as a global
+	 * flattened index for slides.
+	 *
+	 * @param {HTMLElement} [slide=currentSlide] The slide we're counting before
+	 *
+	 * @return {number} Past slide count
+	 */
+	function getSlidePastCount( slide = currentSlide ) {
+
+		let horizontalSlides = getHorizontalSlides();
+
+		// The number of past slides
+		let pastCount = 0;
+
+		// Step through all slides and count the past ones
+		mainLoop: for( let i = 0; i < horizontalSlides.length; i++ ) {
+
+[Showing lines 1601-2000 of 2973. Use :2001 to continue]

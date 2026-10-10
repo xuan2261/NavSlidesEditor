@@ -1,0 +1,517 @@
+[
+  {
+    "transcript": "C:\\Users\\Z10PAD8C_Xuan2261\\.omp\\agent\\sessions\\--C--Work-NavSlidesEditor--\\2026-10-04T11-03-27-941Z_01a10695-43c5-7000-80a5-281eb32934b4\\Native11LedgerPart.jsonl",
+    "transcriptLine": 182,
+    "timestamp": "2026-10-06T03:15:50.261Z",
+    "toolCallId": "call_gF1aidDAfV5YZfCmzvzzoSo3|fc_0de99d3b368cf018016ac46724680087d0b0e1b935cb2fe4da",
+    "data": {
+      "component": "Native11 coverage continuation — Evidence ledger and collection",
+      "auditIdentity": "Component of the existing authorized Native11 static salvage audit; not another independent opinion, substantive attempt, correction or admission gate.",
+      "exactSubject": {
+        "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+        "recordedFullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+        "identityBasis": "Existing preservation authority, without remeasurement.",
+        "sourcePrefix": "tests/e2e/education/"
+      },
+      "primaryScope": [
+        "pending-round-lifecycle-ui-evidence.js",
+        "pending-round-lifecycle-error-ledger.js",
+        "pending-round-lifecycle-error-exposure.js",
+        "pending-round-lifecycle-live-evidence.js",
+        "pending-round-lifecycle-live-root-observation.js",
+        "pending-round-lifecycle-evidence.js"
+      ],
+      "wholeAuditVerdictProvided": false,
+      "flags": {
+        "admission": false,
+        "sourceReady": false,
+        "qualification": false,
+        "passClaimed": false,
+        "runtimeExecuted": false,
+        "declaredCells": 54,
+        "staticallyAdmittedCells": 0,
+        "executedAcceptanceCells": 0
+      },
+      "componentObservations": [
+        {
+          "obligation": "S10-C2 — all three exposure reconciliation paths",
+          "disposition": "Specified phase-less-wrapper downgrade mechanism is source-corrected in all three paths.",
+          "evidence": [
+            "pending-round-lifecycle-error-exposure.js:7-21 separates explicitPhase from resolved intrinsic/fallback phase.",
+            "pending-round-lifecycle-error-exposure.js:34-53 changes existing.phase only for a nonempty explicitPhase; metadata reconciliation does not confer phase authority.",
+            "pending-round-lifecycle-error-exposure.js:69-82 errorLedger path passes explicitPhase, not its resolved fallback, to reconcileEntry.",
+            "pending-round-lifecycle-error-exposure.js:84-103 secondaryFailures path separates wrapper/secondary explicit phase from intrinsic/fallback p and passes only explicitPhase to reconciliation.",
+            "pending-round-lifecycle-error-exposure.js:105-122 allErrors path passes explicitP rather than resolved p to reconciliation."
+          ],
+          "mechanism": "For a previously recorded Error with authoritative phase portable:close, a phase-less caller wrapper carrying either a conflicting intrinsic Error.phase or metadata alone does not replace that entry phase. An explicit nonempty authoritative wrapper phase still reconciles. Actual Error.phase and original caller wrapper fields are not assigned by these reconciliation branches. Metadata is merged into the entry sidecar; serialization is refreshed in place.",
+          "boundary": "This credits the specified downgrade repair, not every conceivable phase-precedence policy. serializeError explicitly treats the string unknown as its fallback sentinel at error-ledger.js:13."
+        },
+        {
+          "obligation": "Original E06-01-A — Leave sole Errors with empty caller arrays unchanged",
+          "disposition": "Specified original case source-preserved.",
+          "originalBodyRead": "pending-substrate-07-evidence-admission.json:1-48, including the complete first finding body and explanation.",
+          "evidence": [
+            "pending-round-lifecycle-error-ledger.js:82-103 preserves an actual Error as both actualRef and normalized.",
+            "pending-round-lifecycle-error-ledger.js:114-116 refreshes exposure only when entries.length > 1.",
+            "pending-round-lifecycle-error-ledger.js:140-148 returns a sole primary unconditionally.",
+            "pending-round-lifecycle-error-exposure.js:84-103 records no occurrence from an empty secondaryFailures array."
+          ],
+          "mechanism": "Recording one actual Error with secondaryFailures=[] and calling produceThrow returns that same Error and does not create allErrors/errorLedger or append to its empty array. An existing empty caller array is not interpreted as evidence of a second failure."
+        },
+        {
+          "obligation": "Original E06-01-B; settled09-S4 — identity deduplication and stable exposed serialization",
+          "disposition": "Node-reference and stable-serialization mechanisms source-preserved; browser-forwarding identity is separately incomplete.",
+          "originalBodiesRead": [
+            "pending-substrate-07-evidence-admission.json:1-48, complete second finding body.",
+            "pending-substrate-09-native-salvage-audit.json:32-40, complete stable-serialization finding."
+          ],
+          "evidence": [
+            "pending-round-lifecycle-error-ledger.js:84-92 deduplicates original/normalized references and same-object envelopes.",
+            "pending-round-lifecycle-error-exposure.js:44-47 uses Object.assign(existing.serialized, fresh), not serialized-object replacement.",
+            "pending-round-lifecycle-error-exposure.js:125-171 retains caller-owned arrays and appends serializations only when their object identity is absent.",
+            "pending-round-lifecycle-error-exposure.js:163-169 does not compare caller numeric order to ledger numeric order."
+          ],
+          "mechanism": "An unrelated caller diagnostic at order 2 does not suppress this ledger's independently owned order-2 serialization. Recursive ingestion may expose a serialization before later wrapper reconciliation; reconciliation keeps that same outer serialization identity, preventing the two-owned-records regression. Caller array objects and caller records are retained rather than replaced or truncated. Ledger-owned arrays can be rebuilt and are excluded from occurrence ingestion.",
+          "boundary": "These are reference-based guarantees inside Node. They do not establish deduplication of a browser occurrence after separate Playwright evaluations; see the remaining mechanism below."
+        },
+        {
+          "obligation": "Original E06-01-C; Evidence08-1/2; 09-C2 — genuine caller-ledger chronology and wrapper provenance",
+          "disposition": "Specified genuine-reference caller-ledger mechanisms source-preserved.",
+          "originalBodiesRead": [
+            "pending-substrate-07-evidence-admission.json:1-48, complete third finding body.",
+            "pending-substrate-08-evidence-salvage-audit.json:1-32, both complete findings and preservation meanings.",
+            "pending-substrate-11-dispatch-authority.json:111-148, settled09 source defects and complete chronology obligations."
+          ],
+          "evidence": [
+            "pending-round-lifecycle-error-exposure.js:65-67 pre-scans wrappers for phase/metadata without treating that scan as occurrence ingestion.",
+            "pending-round-lifecycle-error-exposure.js:69-82 actually traverses genuine errorLedger references before secondaryFailures at :84-103 and allErrors at :105-122.",
+            "pending-round-lifecycle-error-exposure.js:27,72,88,108 restricts caller-array ingestion to actual Errors or wrappers whose error is an actual Error.",
+            "pending-round-lifecycle-error-ledger.js:100-103 assigns occurrence order upon ingestion; there is no numeric-namespace sort."
+          ],
+          "mechanism": "For primary.errorLedger=[{error:a,phase:'a'},{error:b,phase:'b'}] and secondaryFailures=[b], recording primary yields primary,a,b; the secondary traversal finds b already present instead of moving it ahead of a. Later frame/source/attachment recording follows that established ingestion. Purely serialized caller records, including nested error:{name,message} diagnostics, remain array data and do not become fabricated Errors. Shared genuine references receive wrapper phase/frameUrl metadata without mutating the supplied Error or wrapper."
+        },
+        {
+          "obligation": "Settled09-S5 — authoritative phase survives serialization",
+          "disposition": "Specified close-versus-intrinsic-phase case source-preserved.",
+          "originalBodiesRead": [
+            "pending-substrate-09-evidence-salvage-audit.json:32-40, complete phase finding.",
+            "pending-substrate-10-native-completion-settlement.json:634-643, complete subsequent S10-C2 finding."
+          ],
+          "evidence": [
+            "pending-round-lifecycle-error-ledger.js:11-21 uses the passed non-unknown occurrence phase ahead of intrinsic err.phase and namespaces cause serialization beneath that phase.",
+            "pending-round-lifecycle-error-exposure.js:34-53 passes existing.phase and existing.metadata to serialization and updates the owned serialization in place."
+          ],
+          "mechanism": "A genuine Error intrinsically marked state, exposed by a wrapper explicitly marked close, retains its actual Error reference and intrinsic property while entry/serialized occurrence phase becomes close. frameUrl stays sidecar data."
+        },
+        {
+          "obligation": "Original E06-02 — chronological frame-error arrival dispatch",
+          "disposition": "Original meaning source-preserved in the inspected frame path.",
+          "evidence": [
+            "release-portable-inspection.js:20-33 awaits each frame and records its failure inside that iteration's catch before advancing to the next frame.",
+            "release-surfaces.js:29-34 forwards recordArrival immediately to evidence.recordError.",
+            "release-surfaces.js:78-82 records pageerror on arrival.",
+            "pending-round-lifecycle-evidence.js:60-61 also forwards active Page pageerror synchronously."
+          ],
+          "mechanism": "Frame rejections are not first accumulated and then replayed in a later category-based pass. executePortableNetworkInspection retains the actual Node Error and passes frameUrl separately. The strict success object remains exactly protocol,httpAttempts,socketAttempts,errors at release-portable-inspection.js:49-54.",
+          "boundary": "This is static dispatch evidence, not exercised frame timing or runtime qualification."
+        },
+        {
+          "obligation": "Original E06-03 — actual Node Error identity and separate metadata",
+          "disposition": "Source-preserved within the inspected owners.",
+          "evidence": [
+            "pending-round-lifecycle-error-ledger.js:50-51 returns an actual Error unchanged during materialization.",
+            "pending-round-lifecycle-error-ledger.js:94-103 uses actualRef directly for genuine Node Errors and stores metadata on the entry.",
+            "pending-round-lifecycle-error-ledger.js:39-45 serializes frameUrl and other sidecar properties without assigning them onto the original Error.",
+            "release-portable-inspection.js:25-30 passes actual rawError plus {frameUrl} to recordArrival."
+          ],
+          "mechanism": "The recorder does not construct a replacement for an actual Node Error or decorate it with frameUrl/phase metadata. Multi-error exposure intentionally adds/appends diagnostic arrays to the primary; that is distinct from mutating the Error's phase/domain sidecar or replacing caller wrappers."
+        },
+        {
+          "obligation": "Original E06-04 — state-before-UI observation and dispatch",
+          "disposition": "State/UI ordering source-preserved in the inspected snapshot and live paths.",
+          "evidence": [
+            "pending-round-lifecycle-native-snapshot.js:57-78 invokes the state getter before the UI getter and gives their actual error envelopes document-local obsOrder.",
+            "pending-round-lifecycle-live-root-observation.js:119-123 pushes stateError before uiError.",
+            "pending-round-lifecycle-live-evidence.js:38-42 dispatches rootErrors in their returned array order.",
+            "pending-round-lifecycle-observation-errors.js:61-75 includes capture state/UI, post state/UI and raw state/UI; :81-88 sorts by actual obsOrder where present."
+          ],
+          "mechanism": "The live collector preserves the state/UI sibling order rather than recording the UI failure first. Both siblings reach the common ledger even when another live-root error also exists."
+        },
+        {
+          "obligation": "Original E06-05; N07-08; NF-A2 — recursive provenance and first recorder cause",
+          "disposition": "Recursive provenance and browser-side first-recorder retention source-preserved; end-to-end forwarded-occurrence uniqueness remains incomplete.",
+          "evidence": [
+            "pending-round-lifecycle-native-observation.js:36-47 recursively envelopes actual recorder causes with origin, phase, stack, documentId/timeOrigin/URL and obsOrder.",
+            "pending-round-lifecycle-native-observation.js:81-92 marks readiness false but assigns a recorder store error only if none already exists.",
+            "pending-round-lifecycle-native-snapshot.js:23-54 recursively carries rootInstanceId, element/slide/game identity, documentId,timeOrigin,URL and cause.",
+            "pending-round-lifecycle-error-ledger.js:50-68 recursively materializes causes and root/timeOrigin/domain fields.",
+            "pending-round-lifecycle-error-ledger.js:11-47 recursively serializes causes and their provenance.",
+            "pending-round-lifecycle-evidence.js:167-179 propagates primary rootInstanceId and timeOrigin into the measured primaryError record."
+          ],
+          "mechanism": "A later record() call after public lifecycle-store replacement no longer overwrites an existing setup error or its cause chain. Normalization preserves the genuine recursive browser envelope domain and cause rather than replacing it with a domain-check wrapper. The measured primaryError summary is intentionally narrower than records.errors; the complete serialized cause remains in the latter.",
+          "originalBodiesRead": [
+            "pending-substrate-07-native-admission.json:59-76, complete N06-N05 snapshot and recorder-cause findings.",
+            "pending-substrate-10-native-completion-settlement.json:573-612, complete S10-C1/NF-A2/NF-A3 bodies."
+          ]
+        },
+        {
+          "obligation": "N07-07; Native08-3/4; 09-S3/09-C1; S10-C1; NF-A3 — raw staging, normalized siblings and document exception",
+          "disposition": "Local observation-order and button-guard normalization improvements established; S10-C1 forwarded-occurrence requirement remains open.",
+          "evidence": [
+            "pending-round-lifecycle-observation.js:42-97 stages passive/cursor/correlated raw results before common error dispatch and validation.",
+            "pending-round-lifecycle-observation.js:99-138 stages all candidate raw data and matched packet raw data before error dispatch.",
+            "pending-round-lifecycle-observation-errors.js:13-23 captures a document validation exception but delays its ledger ingestion until :77-88, after browser candidates.",
+            "pending-round-lifecycle-observation-errors.js:50-68 retains every sequence-eligible fallback packet's genuine state/UI before/after siblings when no matched packet is supplied.",
+            "pending-round-lifecycle-native-action.js:70-83 stages guard raw data, invokes the common error normalizer, and records/rethrows its returned earliest normalized Error before the later standalone identity assertion can determine the throw."
+          ],
+          "mechanism": "Actual browser obsOrder replaces the former universal non-setup-recorder-after-getters category order for genuine Native envelopes. Capture state/UI occur before capture-health detection, bubble-health detection occurs before post state/UI, and a stored earlier recorder witness retains its earlier order. The document failure is independently recorded last. Button guards now normalize both genuine state/UI getter failures before document failure propagation. Outer catch echoes of the same normalized Node Error deduplicate by identity; that fact alone does not prove correct forwarding across browser evaluations."
+        },
+        {
+          "obligation": "Complete late live/source/screenshot/attachment/close exposure",
+          "disposition": "Inspected late recording and final common-ledger exposure remain connected.",
+          "evidence": [
+            "pending-round-lifecycle-live-evidence.js:66-89 records root/passive/Reveal rejection in each arriving catch before Promise.allSettled result processing.",
+            "pending-round-lifecycle-live-evidence.js:90-110 stages settled diagnostics and produces the common-ledger throw.",
+            "pending-round-lifecycle-evidence.js:112-137 attempts live diagnostics and screenshot/PNG attachment independently and records either failure.",
+            "pending-round-lifecycle-surfaces.js:26-38 records safeClose failure; :166-189 performs post-network inspection, live collection and context-close recording.",
+            "pending-round-lifecycle-evidence.js:139-162 records runner, missing-baseline prerequisite, source GET and source-equality failures.",
+            "pending-round-lifecycle-evidence.js:180-192 records measured-attachment failure before final produceThrow.",
+            "tests/e2e/fixtures/test-fixtures.js:89-99 performs the actual presentation GET and throws for a non-OK response."
+          ],
+          "mechanism": "A source failure, screenshot/PNG-attachment failure, close failure or measured-JSON attachment failure enters the same ledger. Late serialization exposure does not rely on measured attachment succeeding. records.errors is obtained before the measured attachment attempt, so an attachment error cannot be present in the JSON payload of its own failed attempt; it is nevertheless present in final thrown common-ledger exposure. Subsequent recordError arrivals refresh multi-error primary exposure.",
+          "boundary": "Setup/navigation/ownership are crossing bodies inspected for this component, not a substitute for the separately owned full surfaces audit."
+        }
+      ],
+      "remainingComponentObligations": [
+        {
+          "id": "S10-C1-forwarded-occurrence-identity",
+          "classification": "Unmet retained shared semantic contract; not a seventh authorized Correction11 repair or an assertion that a newly discovered defect was introduced in this patch.",
+          "disposition": "REPAIR_REQUIRED for end-to-end forwarded-occurrence deduplication.",
+          "priority": 2,
+          "confidence": 0.99,
+          "primaryLocation": {
+            "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+            "lines": [84, 92]
+          },
+          "relatedLocations": [
+            "pending-round-lifecycle-error-ledger.js:50-68,94-103",
+            "pending-round-lifecycle-observation-errors.js:25-32,39-48,81-88",
+            "pending-round-lifecycle-observation-browser.js:3-23,59-65,80-87,122-125,148-158",
+            "pending-round-lifecycle-observation.js:42-58,60-77,79-97",
+            "pending-round-lifecycle-live-evidence.js:70-73",
+            "pending-round-lifecycle-surfaces.js:76-83,113-119,177-185",
+            "External linked playwright-core/lib/coreBundle.js:12028-12098,57767-57769,57797-57802,60407-60413,61716-61719"
+          ],
+          "trigger": "The same stored window.__nsLifecycleRecorderError is forwarded by an initial cursor/correlated/passive read and then by another read using the same evidence accumulator, including failure-finalization passive collection.",
+          "consumerVisibleMechanism": "Browser producers retain one recorder envelope with one document-local obsOrder. Each Playwright evaluate returns a separately deserialized object: parseResult calls parseSerializedValue, which starts a new refs Map and constructs new objects for serialized object values. The local seenErrors Set only handles references within one assertAndRecordObservationErrors invocation. The ledger likewise deduplicates only original/normalized object references and WeakMap envelope references; materializeEnvelope does not retain obsOrder and there is no document/timeOrigin/occurrence-witness lookup. Consequently two returned objects representing the same retained browser occurrence become two independent normalized Errors and two serialized ledger entries. Catching and re-recording the first normalization does deduplicate, but a later evaluation of the retained envelope does not. This violates the expressly retained rule that forwarding an existing browser occurrence is not a new occurrence.",
+          "concreteStaticTrace": [
+            "A stored recorder envelope E carries documentId=D,timeOrigin=T,obsOrder=K.",
+            "evaluatePreActionCursor or evaluateCorrelatedStateAndTime returns E as a newly deserialized Node object E1; the common consumer records normalized N1.",
+            "The surface failure/finalization path subsequently calls collectLivePageDiagnostics, whose readPassiveEvents returns the same browser E as another Node object E2.",
+            "E2 !== E1, so ledger reference checks and envelopeToNorm miss; a new normalization N2 is appended even though D,T,K identify the same browser observation.",
+            "Final exposure contains N1 and N2 as separate occurrences. Their serialization does not retain K, so the exposed records cannot identify the forwarding relationship."
+          ],
+          "repairNeeded": "Under future separately granted repair authority, retain a scoped internal browser-occurrence witness across normalization/ingestion and deduplicate forwarded instances of that same occurrence, while preserving distinct independently observed errors and their actual order. Keep Node Error identity semantics, stable serialization, domain scoping and no-public-API-change obligations. Do not deduplicate by message, packet sequence alone or unrelated caller-ledger numeric orders.",
+          "execution": "Static source trace only; no evaluation, import, test or browser run."
+        }
+      ],
+      "integrationSeams": [
+        {
+          "seam": "Native obsOrder to Node common ledger",
+          "producer": "native-snapshot/native-history/native-observation document-local envelope witnesses",
+          "consumer": "observation-errors candidate ordering -> evidence.recordError -> createErrorLedger",
+          "result": "Within one genuine same-document result, witnesses establish interleaving. They do not survive as a ledger-level occurrence identity across evaluations. The integration owner must not close S10-C1 from sorting and same-Node-object catch deduplication alone."
+        },
+        {
+          "seam": "Original E06-01-B versus forwarded browser envelopes",
+          "result": "Node-reference identity and numeric-order-independent serialization exposure are preserved. Browser transport produces new envelope identities, so these credited Node guarantees cannot establish forwarded-browser occurrence uniqueness."
+        },
+        {
+          "seam": "Live root errors versus Node document validation",
+          "evidence": [
+            "pending-round-lifecycle-live-evidence.js:28-51",
+            "pending-round-lifecycle-live-root-observation.js:45-136"
+          ],
+          "observation": "The live-root collector stages raw data, then records a document identity failure before dispatching already observed browser rootErrors. Its selected rootFailure also prefers that document error. This is different from the corrected Native common-observation path, which records browser failures before the Node validation failure.",
+          "scopeTreatment": "Disclose this exact existing crossing to the integration owner when interpreting broad chronological obligations. Do not label it a newly introduced Correction11 regression: the historical Evidence08 preservation explanation already describes this document-first live collector. State-before-UI sibling ordering itself remains preserved."
+        },
+        {
+          "seam": "Late close/source/attachment ownership",
+          "result": "Surfaces record live/post-network/close errors before outer finalization; finalize ingests runner echoes by reference, independently performs source checking, records measured attachment failure and only then produces the common-ledger throw. The complete surfaces owner must independently finish its setup/no-sink/ownership coverage."
+        },
+        {
+          "seam": "Immutable callers and future cutover",
+          "result": "This component establishes helper bodies and their crossing consumers, not migrated Phase2 callers or runtime acceptance. Existing old signatures are deferred obligations, not automatically new helper regressions."
+        }
+      ],
+      "NF_A4Scope": {
+        "id": "NF-A4",
+        "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+        "boundary": "Separate action-packet-store replacement binding remains excluded from the six required Correction11 repairs; not repaired, waived, disproved or promoted here. No complete packet-store-integrity claim.",
+        "verbatimExcludedScopeCandidate": {
+          "consumerVisibleMechanism": "evaluateActionCandidates returns candidates from the public, replaceable window.__nsRecordedPackets (:146-147). storeHealth (:148) checks only the lifecycle store. In-place mutation of an original packet is detected, because that packet object is also the retained native-action detail. Replacing the array, or replacing an element with a forged object, leaves the retained and private stores untouched, so health stays true. extractActionBracket (observation.js:107-131) then builds the action bracket from the forged packet: rootEventsBefore/After, stateAfter and tCapture/tBubble, which witness.js:44-63 adopts as the Start baseline. This is the same public-store replacement model as N07-04, applied to the packet store.",
+          "lineEnd": 158,
+          "title": "Bind returned action packets to the integrity-checked native-action records",
+          "confidence": 0.6,
+          "id": "NF-A4",
+          "lineStart": 146,
+          "repairNeeded": "Inside evaluateActionCandidates, derive candidates from, or verify each one against, the closure-retained native-action entries. For example, expose a private read of native-action details by sequence, or verify that each candidate is identical to the retained entry's detail and matches its private JSON clone. Report a recorder:store error when they diverge. evaluatePreActionCursor's lastSeq source (:36-37) needs the same binding.",
+          "priority": 2,
+          "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+          "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+          "scopeDecision": "Original N07-04/N07-05 explicitly cover lifecycle store integrity. Extending identical checks to separately replaceable action-packet storage is not automatically a required cutover; no new repair scope authorized."
+        }
+      },
+      "readEvidence": {
+        "provenance": "All listed source/document reads are personal tool reads in this continuation component, not borrowed Evidence11 audit coverage. Complete primary source outputs are retained in this component's tool transcript. The integration owner must read those complete outputs or read the frozen source directly; observations alone are not full-source inspection.",
+        "primaryFiles": [
+          {
+            "file": "pending-round-lifecycle-ui-evidence.js",
+            "readSelectors": ["1-210", "raw:140-210"],
+            "coveredSourceLines": "1-151 plus trailing EOF whitespace",
+            "fullBodies": true,
+            "eofObserved": true,
+            "eofAnchor": "Closing OWNER_UI_OBSERVATION_INIT_SCRIPT backtick after })()."
+          },
+          {
+            "file": "pending-round-lifecycle-error-ledger.js",
+            "readSelectors": ["1-200"],
+            "coveredSourceLines": "1-150 through EOF",
+            "fullBodies": true,
+            "eofObserved": true,
+            "eofAnchor": "Final createErrorLedger closing brace at line 150."
+          },
+          {
+            "file": "pending-round-lifecycle-error-exposure.js",
+            "readSelectors": ["1-220", "raw:155-220"],
+            "coveredSourceLines": "1-171 through EOF",
+            "fullBodies": true,
+            "eofObserved": true,
+            "eofAnchor": "Final refreshLedgerExposure closing brace at line 171."
+          },
+          {
+            "file": "pending-round-lifecycle-live-evidence.js",
+            "readSelectors": ["1-220"],
+            "coveredSourceLines": "1-120 through EOF",
+            "fullBodies": true,
+            "eofObserved": true,
+            "eofAnchor": "Final captureLiveScreenshot closing brace at line 120."
+          },
+          {
+            "file": "pending-round-lifecycle-live-root-observation.js",
+            "readSelectors": ["1-200"],
+            "coveredSourceLines": "1-157 through EOF",
+            "fullBodies": true,
+            "eofObserved": true,
+            "eofAnchor": "Final evaluateLiveRootObservation closing brace at line 157."
+          },
+          {
+            "file": "pending-round-lifecycle-evidence.js",
+            "readSelectors": ["1-220"],
+            "coveredSourceLines": "1-198 through EOF",
+            "fullBodies": true,
+            "eofObserved": true,
+            "eofAnchor": "Final createEvidenceAccumulator closing brace at line 198."
+          }
+        ],
+        "fullCrossSourceReads": [
+          {
+            "file": "pending-round-lifecycle-observation-errors.js",
+            "coveredSourceLines": "1-93 through EOF",
+            "readSelector": "1-200",
+            "fullBodies": true,
+            "eofObserved": true
+          },
+          {
+            "file": "pending-round-lifecycle-observation-browser.js",
+            "coveredSourceLines": "1-175 through EOF",
+            "readSelector": "1-210",
+            "fullBodies": true,
+            "eofObserved": true
+          },
+          {
+            "file": "pending-round-lifecycle-observation.js",
+            "coveredSourceLines": "1-152 through EOF",
+            "readSelector": "1-210",
+            "fullBodies": true,
+            "eofObserved": true
+          },
+          {
+            "file": "pending-round-lifecycle-native-observation.js",
+            "coveredSourceLines": "1-163 through EOF",
+            "readSelector": "1-200",
+            "fullBodies": true,
+            "eofObserved": true
+          },
+          {
+            "file": "pending-round-lifecycle-native-snapshot.js",
+            "coveredSourceLines": "1-106 through EOF",
+            "readSelector": "1-180",
+            "fullBodies": true,
+            "eofObserved": true
+          },
+          {
+            "file": "pending-round-lifecycle-native-history.js",
+            "coveredSourceLines": "1-185 through EOF",
+            "readSelector": "1-200",
+            "fullBodies": true,
+            "eofObserved": true
+          },
+          {
+            "file": "pending-round-lifecycle-native-action.js",
+            "coveredSourceLines": "1-84 through EOF",
+            "readSelector": "1-170",
+            "fullBodies": true,
+            "eofObserved": true
+          },
+          {
+            "file": "pending-round-lifecycle-evidence-domain.js",
+            "coveredSourceLines": "1-143 through EOF",
+            "readSelector": "1-190",
+            "fullBodies": true,
+            "eofObserved": true
+          },
+          {
+            "file": "pending-round-lifecycle-surfaces.js",
+            "coveredSourceLines": "1-193 through EOF",
+            "readSelector": "1-200",
+            "fullBodies": true,
+            "eofObserved": true
+          },
+          {
+            "file": "release-portable-inspection.js",
+            "coveredSourceLines": "1-55 through EOF",
+            "readSelector": "1-140",
+            "fullBodies": true,
+            "eofObserved": true
+          },
+          {
+            "file": "release-surfaces.js",
+            "coveredSourceLines": "1-199 through EOF",
+            "readSelector": "1-200",
+            "fullBodies": true,
+            "eofObserved": true
+          }
+        ],
+        "targetedOwnerReads": [
+          {
+            "file": "tests/e2e/fixtures/test-fixtures.js",
+            "readSelectors": ["82-103", "raw:89-101"],
+            "completeRelevantBody": "apiGetPresentation, lines 89-99",
+            "wholeFileRead": false
+          },
+          {
+            "file": "node_modules/playwright-core/lib/coreBundle.js",
+            "readSelectors": [
+              "12028-12098",
+              "57797-57807",
+              "60407-60420",
+              "61716-61719",
+              "57767-57769",
+              "raw:57767-57769"
+            ],
+            "completeRelevantBodies": [
+              "parseSerializedValue and innerParseSerializedValue",
+              "JSHandle.evaluate",
+              "Frame.evaluate",
+              "Page.evaluate",
+              "parseResult"
+            ],
+            "wholeFileRead": false,
+            "externalLinkedDependency": true
+          },
+          {
+            "file": "node_modules/playwright-core/package.json",
+            "readSelector": "1-80",
+            "fullBody": true,
+            "eofObserved": true,
+            "observedPackage": "playwright-core 1.63.0",
+            "externalLinkedDependency": true
+          }
+        ],
+        "governingReads": [
+          {
+            "file": "pending-substrate-11-native-coverage-continuation-counsel.json",
+            "readSelectors": ["initial declaration read", "1-240", "raw:188-189"],
+            "fullBodyAndEOF": true,
+            "extentEvidence": "Raw expanded obligation read identifies 235 lines; 1-240 covers the complete document."
+          },
+          {
+            "file": "pending-substrate-11-native-salvage-prompt.md",
+            "readSelectors": ["1-240", "raw:1-110"],
+            "fullBodyAndEOF": true,
+            "omissionsExpanded": true
+          },
+          {
+            "file": "pending-substrate-11-dispatch-authority.json",
+            "readSelectors": ["raw:1-240", "raw:241-280"],
+            "coveredSourceLines": "1-257 through EOF",
+            "fullBodyAndEOF": true
+          },
+          {
+            "file": "pending-substrate-11-terminal-failure-counsel.json",
+            "readSelectors": ["raw:1-180", "raw:181-360", "raw:361-560"],
+            "coveredSourceLines": "1-541 through EOF",
+            "fullBodyAndEOF": true
+          },
+          {
+            "file": "pending-substrate-07-evidence-admission.json",
+            "readSelector": "raw:1-220",
+            "fullBodyAndEOF": true,
+            "includes": "Complete three canonical Evidence finding bodies and original E06-02..05 meanings."
+          },
+          {
+            "file": "pending-substrate-08-evidence-salvage-audit.json",
+            "readSelector": "raw:1-36",
+            "fullBodyAndEOF": true,
+            "includes": "Both full applicable findings and credited preservation meanings."
+          },
+          {
+            "file": "pending-substrate-09-native-salvage-audit.json",
+            "readSelector": "raw:32-40",
+            "includes": "Complete applicable stable-serialization finding body only; not whole historical audit."
+          },
+          {
+            "file": "pending-substrate-09-evidence-salvage-audit.json",
+            "readSelector": "raw:32-40",
+            "includes": "Complete applicable authoritative-phase finding body only; not whole historical audit."
+          },
+          {
+            "file": "pending-substrate-07-native-admission.json",
+            "readSelector": "raw:59-76",
+            "includes": "Complete applicable original snapshot-normalization and recursive-recorder-cause finding bodies only."
+          },
+          {
+            "file": "pending-substrate-10-native-completion-settlement.json",
+            "readSelectors": ["raw:573-612", "raw:634-643"],
+            "includes": "Complete applicable S10-C1,NF-A2,NF-A3,S10-C2 finding bodies only."
+          },
+          {
+            "file": "skill://ak-code-review",
+            "readSelector": "1-180",
+            "purpose": "Read-only evidence-backed review constraints."
+          }
+        ],
+        "inspectionToolsUsed": ["read", "grep", "glob"],
+        "sourceOrReceiptWrites": 0,
+        "commandsChecksTestsBuildsBrowserActionsNestedAgents": 0
+      },
+      "deliveryAndScopePreservation": {
+        "missingNativeReceipt": "Genuine Native11 producer receipt remains absent and independently fatal to admission. This component cannot replace, reconstruct or create it.",
+        "evidenceReceipt": "Genuine Evidence11 delivery and the separately recorded 160-versus-150 ledger-line discrepancy remain authority facts. This component did not reread the complete genuine receipt or certify receipt completeness; that governing obligation belongs to the integration owner.",
+        "originalArtifacts": "Original incomplete Native report and provenance supplement remain immutable. This component changes coverage evidence only.",
+        "deferredCoverage": "All 18 independent rows across present/share/file remain 54 REQUIRED_UNEXECUTED cells. All false flags and zero admitted/executed cells remain unchanged. Full state AND native UI, pending work/Pass/Reset/Start brackets, Quiz Reset+5000 checkpoint/new-expiry, complete Relay peer/first-timeout/old-due invariance, Trivia expiry/nativeNext identities/history/scores/awards/deadlines/UI and full Start+4000 idle/running/expired witness requirements are retained without canary substitution.",
+        "laterGaps": "Gap4 remains unresolved; dependent gaps5-9 are unchanged. Original7 Hot Potato exact speed bonus, original8 Scatter NFC duplicate/unique controls and original9 full Trivia scoring matrix remain required other slices."
+      },
+      "limitations": [
+        "This is one non-overlapping primary coverage component, not a completed whole-audit verdict or complete 38-file audit manifest.",
+        "Cross-source overlap was used only to establish incoming/outgoing mechanisms and actual consuming bodies.",
+        "No patch-introduction claim is made without a permitted diff; the forwarded-occurrence finding is a current unmet governing obligation.",
+        "The observed Playwright transport owners were read through the subject's external node_modules link. They are not recursively frozen source, and their package version/content is an attributable read observation, not immutable dependency identity or runtime equivalence certification.",
+        "Canonical NC/RPC/original mappings, every unrelated original finding, the complete genuine Evidence11 receipt and remaining owners/callers require the integration owner's independently attributable full coverage; this component does not borrow those reads or invent closure.",
+        "No source, receipts or artifacts were changed; no runtime verification or acceptance execution occurred."
+      ]
+    },
+    "notIndependentCompleteAudit": true
+  }
+]

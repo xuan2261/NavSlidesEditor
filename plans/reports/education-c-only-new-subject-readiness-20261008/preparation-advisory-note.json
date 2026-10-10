@@ -1,0 +1,197 @@
+{
+  "date": "2026-10-08",
+  "kind": "BOUNDED_PREPARATION_ADVISORY_NOT_FULL_SOURCE_AUDIT",
+  "verdict": "REQUIREMENTS_AND_AUTHORITY_GAPS_REMAIN_NO_GO_OR_PERMISSION_GRANTED",
+  "cwd": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001",
+  "authority": {
+    "current": "USER20261008",
+    "scope": "Read C documents and write this single new advisory file only.",
+    "obsoleteModelBlockers": "Historical mandatory local8045/gemini-3.8-flash-high pin, GPT-substitution prohibition and demands to re-prove that historical route/quota are superseded by USER20261008 for this advisory. They are not current advisory blockers and do not authorize any producer dispatch.",
+    "actualModel": "UNKNOWN_UNLESS_ENGINE_PROVIDES_EXPLICIT_INFORMATION",
+    "modelInferenceForbidden": "Do not infer actual model/provider from worktree name, old receipts, draft model fields or reviewer labels; no host/config/model probe.",
+    "historicalInstructions": "Old plan handoff, generator permissions, D freeze commands, gate0 probes and draft execution commands are reference text, not present authority. Preserve original documents unchanged."
+  },
+  "readingCompleteness": {
+    "requiredDocumentsFullyRead": [
+      { "file": "AGENTS.md", "lines": 1 },
+      { "file": "CLAUDE.md", "lines": 181 },
+      {
+        "file": "plans/reports/education-c-only-correction-preparation-20261007/c-only-readiness.json",
+        "lines": 1081
+      },
+      {
+        "file": "plans/reports/education-c-only-correction-preparation-20261007/new-subject-authority.draft.json",
+        "lines": 441
+      },
+      {
+        "file": "plans/reports/education-c-only-correction-preparation-20261007/producer-prompt.draft.md",
+        "lines": 40
+      },
+      {
+        "file": "plans/reports/education-c-only-correction-preparation-20261007/inherited-34-disposition-ledger.json",
+        "lines": 533
+      },
+      {
+        "file": "plans/reports/education-c-only-correction-preparation-20261007/preparation-validation.json",
+        "lines": 48
+      },
+      {
+        "file": "plans/reports/education-c-only-correction-preparation-20261007/next-step-proposal.md",
+        "lines": 28
+      },
+      { "file": "plans/261001-0639-interactive-html-education-deep-tdd/plan.md", "lines": 192 },
+      {
+        "file": "plans/261001-0639-interactive-html-education-deep-tdd/phase-06-native-quiz.md",
+        "lines": 179
+      }
+    ],
+    "condensedOutputs": "Large condensed responses were reread in bounded contiguous windows for complete required document bodies.",
+    "optionalObservationRead": "read-only-observations.json: selected metadata/counts/limitations and the complete 77-item drift array, not the entire 3097-line status inventory.",
+    "nestedInstructions": "No AGENTS.md or CLAUDE.md found under plans by read-only glob.",
+    "limit": "Document review only; no current implementation owner bodies, candidate source graph or full-source gate audited."
+  },
+  "subjectAndScope": {
+    "baseline": "Current dirty C baseline is a fresh subject, not frozen11. Historical HEAD/status are reported provenance, not freshly verified Git state in this task.",
+    "historicalLedger": "All 34 full historical bodies/dispositions were read. They preserve credit, mechanisms and provenance; they are not 34 current defects, 34 distinct repairs or permissions. All new-subject dispositions remain not evaluated.",
+    "phase1": {
+      "exactHelpers": 26,
+      "absentHelpers": 24,
+      "existingHelpers": [
+        "tests/e2e/education/release-surfaces.js",
+        "tests/e2e/education/present-offline-helpers.js"
+      ],
+      "partition": "15 native helpers plus 11 evidence helpers, exactly as enumerated in draftProducerWriteScope; future isolated candidate only after separate approval.",
+      "meaning": "36 missing required paths does not authorize 36 creations. Existing two helpers require preservation-aware review, not automatic replacement."
+    },
+    "separateCallerScope": {
+      "paths": 12,
+      "present": 0,
+      "authoringAuthorized": false,
+      "cutoverAuthorized": false,
+      "meaning": "Replacement caller/spec/fixture/state bodies need separate explicit authoring and execution authority; do not reconstruct old bytes from transcripts or treat historical immutable callers as available C objects."
+    },
+    "productionRuntime": "No production-runtime edit proposed or authorized; stop for separate scope if required. No canonical integration, source copying, candidate creation, smoke or qualification."
+  },
+  "reportedReadOnlyObservations": {
+    "source": "read-only-observations.json",
+    "observedAt": "2026-10-08T10:22:16.419190+07:00",
+    "fingerprints": {
+      "baselineEntries": 8260,
+      "matched": 8183,
+      "missingViteCacheFiles": 77,
+      "allDrifts": "Every listed drift is MISSING under client/node_modules/.vite/deps/; filenames referring to education modules are cache filenames, not source-file drift.",
+      "selectedCurrentInputs": 2746,
+      "selectedSourceDrift": 0,
+      "limit": "No drift among selected 2746 inputs only; not recursive freeze, new-file inventory, full dependency immutability, runtime equivalence or source admission. Missing caches do not justify rebuild/install/cache repair now."
+    },
+    "capacity": {
+      "reportedFreeBytes": 22811508736,
+      "reportedFreeGiB": 21.245,
+      "budgetApproved": false,
+      "meaning": "Newer snapshot supersedes older 17.55GiB observation for reported free space only. Old 11.4GiB draft clause is stale. Capacity budget remains draft, not sufficient headroom certification."
+    },
+    "closure": "Five reported dependency links target C and were not followed. C-only destination does not make closure immutable, self-contained or safe to copy. Future approved closure must specify linked owners, regular-copy materialization or explicitly bounded sharing, hashes, inclusion/exclusion, dirty/untracked inputs, outputs/temp/data and reserved headroom. No links followed or dependencies probed here.",
+    "toolHealth": "Eight installed/lock manifest matches and cache revision names are reported metadata only, not executable health or browser/package qualification.",
+    "environment": "New report states NODE_OPTIONS set and zero legacy D PATH entries, unlike older observation. Neither observation certifies future execution environment; no host/environment probe or repair performed here."
+  },
+  "requirementsGaps": [
+    {
+      "id": "GAP-AUTHORITY",
+      "requirement": "Approve exact fresh-subject candidate path, copy exclusions, preservation contract, storage budget, helper ownership and explicit bounded authoring scope before implementation.",
+      "current": "All are proposals; this note grants none. No automatic Correction12 or Native11 retry/resume."
+    },
+    {
+      "id": "GAP-TDD",
+      "requirement": "Approve test-file authoring separately from helper authoring and approve focused test execution/imports separately, with exact test targets, runner/config effects, C-only artifacts, limits and no retries.",
+      "current": "The draft excludes callers/tests and tells writers to stop before checks, while the plan requires behavioral RED before implementation. This is a current TDD authority/sequencing gap, not a model blocker. Do not silently convert implementation-first into --tdd or run existing E2E wrappers.",
+      "hazards": "Reported global setup is GET-only, but fixtures mutate/create/delete test data, Playwright can start server/dev and reporters can emit artifacts. Default retries/broad discovery are incompatible with silently assumed bounded execution. Missing-import failure is not behavioral RED."
+    },
+    {
+      "id": "GAP-OCCURRENCE-CONTRACT",
+      "requirement": "Agree a browser-to-Node occurrence contract before partitioned helper work: document/root/generation domain, stable occurrence identity across separate evaluate transports, authentic observation-site order, recursive causes, normalization lookup lifetime and teardown.",
+      "current": "Invocation-local object/reference dedupe cannot establish cross-evaluate identity. Equal numeric orders across caller/common-ledger or different document namespaces cannot define global chronology. Unknown order must remain explicitly uncertain, not assigned rank or obsOrder+0.01."
+    },
+    {
+      "id": "GAP-CHRONOLOGY-AND-EXPOSURE",
+      "requirement": "Retain raw before validation, first recorder/setup cause, genuine capture/post state/UI siblings including matched-but-later-rejected candidates and live-root failures, and earliest applicable normalized occurrence before later Node document rejection. Preserve exact successful packet acceptance.",
+      "current": "Future source evidence must establish these paths without universal category sort, synthetic failures, broadened matching or weakened continuity. Preserve caller Error/array/wrapper identity, serialized-only diagnostics, stable ledger serialization identity, explicit wrapper phase/metadata across all three mapped exposure paths, mandatory sink and late attachment/close/finalization errors."
+    },
+    {
+      "id": "GAP-NAVIGATION",
+      "requirement": "Bind initial slide/document read atomically and stage raw before early return; diagnose production dispatcher guards passively from actual supported APIs/registration evidence.",
+      "current": "Historical Reveal.getBindings wording is nonoperative. No invented accessor, synthetic keyboardCondition callback execution, forced focus, unpause, overlay closure or navigation-policy mutation. Unobservable private bindings remain bounded unresolved."
+    },
+    {
+      "id": "GAP-FULL-SCOPE-EVIDENCE",
+      "requirement": "For all 26 helpers, preserve six inherited obligations, five 09 regressions, two chronology obligations and current11 mechanism locks, mapping all 34 historical dispositions to new actual evidence or explicit deferred/unresolved status.",
+      "current": "A narrow contract slice is not full26 consistency, sourceReady, two independent full-source gates, caller admission or 54-cell acceptance. No historical source line/green/count is a new-subject receipt."
+    }
+  ],
+  "futureBoundedFirstSliceProposal": {
+    "status": "ADVISORY_ONLY_SEPARATE_APPROVAL_REQUIRED",
+    "focus": "Same-domain occurrence identity and ordering, plus normalization/exposure contract, before browser/navigation/control/witness fan-out.",
+    "possibleHelperSeams": [
+      "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+      "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+      "tests/e2e/education/pending-round-lifecycle-observation-errors.js"
+    ],
+    "ownershipLimit": "These are possible seams within the exact26 list, not an approved final file selection. Producer/consumer contracts and actual current owners require a later separately scoped read. Any additional helper or test path must be explicitly authorized; no production repair or 12-caller expansion.",
+    "focusedTestsSeparatelyApproved": [
+      "Distinct transport objects for the same genuine same-domain occurrence normalize once; separate occurrences with equal message/stack remain distinct.",
+      "Setup cause precedes later capture/UI/readiness/document errors; recorder interleaving uses actual observation positions, not fixed categories or fabricated offsets.",
+      "Independent document/generation or caller/common-ledger order namespaces never merge by numeric collision; missing provenance yields explicit bounded uncertainty.",
+      "Genuine caller-ledger [a,b] ordering precedes secondary-only arrivals; serialized diagnostics remain unchanged and do not fabricate occurrences.",
+      "Sole actual Error with empty caller arrays retains own keys; multi-error exposure preserves original Error/array/wrapper identities and stable serialization identity.",
+      "Explicit wrapper phase/metadata survives reconciliation in all three mapped exposure paths; phase-less wrapper does not overwrite authoritative recorded phase.",
+      "Late attachment/close/finalization errors reach mandatory sink without replacing earlier primary or truncating retained evidence."
+    ],
+    "sequence": "After approval only: inspect bounded real owners; specify deterministic contract fixtures and isolated test targets; obtain genuine behavioral RED; implement owned candidate seams; run separately permitted focused GREEN; retain authentic partial/failed receipts. If prerequisites prevent meaningful RED, stop and seek revised scope rather than claim missing imports as RED.",
+    "full26ConsistencyStillRequired": "Later approved work must propagate the same occurrence/domain contract through native observation/history/snapshot/action, browser extraction, live-root evidence, navigation, clocks/witnesses and release/finalization consumers. Narrow unit proof alone cannot close any of those paths or the full26 scope."
+  },
+  "preservedAcceptance": {
+    "status": "REQUIRED_UNEXECUTED",
+    "rows": 18,
+    "surfaces": ["present", "share", "file"],
+    "declaredCells": 54,
+    "admittedCells": 0,
+    "executedCells": 0,
+    "representativeSubstitution": false,
+    "requirements": "Retain all leave/return/reset/isolation row-specific native state AND UI, exact tuple/root/document/cardinality, original pending due crossing/first expiry, genuine controls, clock/history uncertainty and mandatory chronological failure evidence. Quiz Reset+5000 crossover; complete Relay lanes/deadline/baton/settled peer; Trivia question/round/Next identity, scores, history and due-policy contradictions remain required, not weakened.",
+    "planContext": "Phase06 seven kinds, stable IDs/history/media, correct/wrong/invalid, attempts/deadline/dedup/reset, Try/Present/Share/file keyboard/touch and public projection remain open to exact scenario evidence. Offline keys visible and live authority belongs to phase12/13. Historical Present smoke or unit totals do not qualify these boundaries.",
+    "NF_A4": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED; excluded, not repaired/disproved/waived; no seventh repair or complete packet-store-integrity claim.",
+    "blanketIneligibleKeyRejection": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED; accurate passive diagnosis does not authorize blanket skip/reject/reroute of keys.",
+    "laterScope": "Scoring/physics, Hot Potato bonus, Scatter NFC duplicate-versus-unique policy, complete Trivia scoring, simulations/media and full release lanes remain separate required scope."
+  },
+  "FailureProtocol": {
+    "causeFirst": "Stop at the failing bounded checkpoint; retain fixture, expected/observed result, true earliest error/cause, dependency and exact subject/command provenance. Distinguish source defect, oracle defect, authority gap and unproved infrastructure cause.",
+    "scopedCounsel": "Re-scout the responsible permitted owner; propose minimal cause-aligned scope and request authority before repair or new targeted proof. No generic host repair, cleanup, install, config/model change, cache regeneration or broad restart advice.",
+    "limits": {
+      "producerMaximumMinutes": 45,
+      "hostTimeoutSecondsCeiling": 2760,
+      "retry": false,
+      "fallback": false
+    },
+    "ceilingMeaning": "Preserve historical ceilings, not newly granted execution deadlines. Do not increase retries/timeouts/assertion windows, alter scoring/physics, reconstruct receipts, promote old PASS or retry failed producer delivery. Record partial/failure truthfully and stop."
+  },
+  "actionsThisTask": {
+    "readOnlyCReportsAndPlans": true,
+    "soleWrite": "plans/reports/education-c-only-new-subject-readiness-20261008/preparation-advisory-note.json",
+    "sourceEdited": false,
+    "candidateCreatedOrCopied": false,
+    "gitWritten": false,
+    "projectTestsRun": false,
+    "buildRun": false,
+    "projectOrConfigImported": false,
+    "dependencyInstallOrProbe": false,
+    "DReadOrProbed": false,
+    "hostConfigOrModelProbed": false,
+    "producerDispatched": false,
+    "fullSourceAudit": false,
+    "sourceReady": false,
+    "admission": false,
+    "qualification": false,
+    "passClaimed": false,
+    "GO": false,
+    "permissionGranted": false
+  }
+}

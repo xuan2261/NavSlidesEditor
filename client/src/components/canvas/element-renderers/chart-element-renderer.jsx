@@ -1,4 +1,4 @@
-import { resolveChartPalette } from 'revealjs-shared'
+import { resolveChartPalette, resolveChartAuthoringOptions } from 'revealjs-shared'
 
 function safeChartColor(value, fallback) {
   const color = typeof value === 'string' ? value.trim() : ''
@@ -12,41 +12,50 @@ function safeJson(value) {
   return JSON.stringify(value).replace(/</g, '\\u003c')
 }
 
-function chartAxisTitle(value) {
-  const title = typeof value === 'string' ? value.trim() : ''
-  return title ? `title:{display:true,text:${safeJson(title)}},` : ''
-}
-
-function chartLegendOptions(value) {
-  if (value === 'topRight') return "position:'top',align:'end',"
-  const position = ['bottom', 'left', 'right', 'top'].includes(value) ? value : 'right'
-  return `position:'${position}',`
-}
-
 export function ChartRenderer({ element, isSelected, isDragging, slideBackground }) {
   const { chartType = 'bar', chartData = {} } = element
   const isScatter = element._pptxChartMeta?.originalType === 'scatterChart'
   const runtimeChartType = isScatter ? 'scatter' : chartType
   const lineLike = chartType === 'line' || isScatter
-  const chartTitle = typeof element.chartTitle === 'string' ? element.chartTitle.trim() : ''
+  const authoredOptions = resolveChartAuthoringOptions(element)
+  const chartTitle = authoredOptions.title.text
   const labels = chartData.labels || []
   const datasets = chartData.datasets || []
   const areaFill = chartType === 'line' && element.areaFill === true
   const stacked = element.stacked === true
-  const stackedAxis = stacked ? 'stacked:true,' : ''
   const chartPalette = resolveChartPalette(slideBackground)
   const axisTextColor = safeChartColor(element.axisTextColor, chartPalette.text)
   const gridColor = safeChartColor(element.gridColor, chartPalette.grid)
   const legendTextColor = safeChartColor(element.legendTextColor, axisTextColor)
-  const categoryAxisTitle = chartAxisTitle(element.axisTitles?.category)
-  const valueAxisTitle = chartAxisTitle(element.axisTitles?.value)
-  const legendOptions = chartLegendOptions(element.legendPosition)
   const scales =
     chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea'
-      ? '{}'
+      ? {}
       : chartType === 'radar'
-        ? `{r:{${valueAxisTitle}angleLines:{color:'${gridColor}'},ticks:{color:'${axisTextColor}',backdropColor:'transparent'},grid:{color:'${gridColor}'},pointLabels:{color:'${axisTextColor}'}}}`
-        : `{x:{${isScatter ? "type:'linear',beginAtZero:true," : ''}${stackedAxis}${categoryAxisTitle}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}},y:{${isScatter ? 'beginAtZero:true,' : ''}${stackedAxis}${valueAxisTitle}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}}}`
+        ? {
+            r: {
+              ...authoredOptions.valueAxis,
+              angleLines: { color: gridColor },
+              ticks: { color: axisTextColor, backdropColor: 'transparent' },
+              grid: { color: gridColor },
+              pointLabels: { color: axisTextColor },
+            },
+          }
+        : {
+            x: {
+              ...authoredOptions.categoryAxis,
+              ...(isScatter ? { type: 'linear', beginAtZero: true } : {}),
+              ...(stacked ? { stacked: true } : {}),
+              ticks: { color: axisTextColor },
+              grid: { color: gridColor },
+            },
+            y: {
+              ...authoredOptions.valueAxis,
+              ...(isScatter ? { beginAtZero: true } : {}),
+              ...(stacked ? { stacked: true } : {}),
+              ticks: { color: axisTextColor },
+              grid: { color: gridColor },
+            },
+          }
 
   const chartHtml = `<!doctype html><html><head>
 <meta charset="utf-8">
@@ -77,8 +86,8 @@ new Chart(document.getElementById('c'),{
     responsive:true,
     maintainAspectRatio:false,
     animation:false,
-    plugins:{title:{display:${Boolean(chartTitle)},text:${safeJson(chartTitle)},color:'${axisTextColor}',font:{size:16,weight:'normal'}},legend:{${legendOptions}labels:{color:'${legendTextColor}',font:{size:${chartTitle ? 9 : 12}}}}},
-    scales:${scales}
+    plugins:${safeJson({ title: { ...authoredOptions.title, color: axisTextColor }, legend: { ...authoredOptions.legend, labels: { color: legendTextColor, font: { size: chartTitle ? 9 : 12 } } } })},
+    scales:${safeJson(scales)}
   }
 });
 </script></body></html>`

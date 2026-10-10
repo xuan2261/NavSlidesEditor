@@ -1,0 +1,16 @@
+{
+  "transcript": "C:\\Users\\Z10PAD8C_Xuan2261\\.omp\\agent\\sessions\\--C--Work-NavSlidesEditor--\\2026-10-04T11-03-27-941Z_01a10695-43c5-7000-80a5-281eb32934b4\\Evidence07SourceGate.jsonl",
+  "transcriptLine": 91,
+  "timestamp": "2026-10-05T03:18:36.168Z",
+  "toolCallId": "call_WYfyHUyoUdDrlV5X3ldOfduZ|fc_0a1dc11f1c21e2e5016ac316bdfc7487d0b032b2beebbd67bd",
+  "provenance": "AUTHENTIC_HISTORICAL_YIELD_NOT_CURRENT_SOURCE_PASS",
+  "data": {
+    "body": "E06-01 remains open. In the caller-owned errorLedger branch, any existing item with the same order suppresses the new serialized occurrence, even when it is a different record. For example, with a preserved caller errorLedger containing an unrelated record at order 2, recording a primary and then a frame/close failure gives the latter order 2 and prevents its serialized record from being exposed. The original caller record survives, but the new occurrence's phase, stack and frameUrl sidecar are missing from primary.errorLedger; if the measured JSON attachment also fails, that exposed ledger cannot provide the required complete diagnostics. Caller orders and this ledger's orders are independent namespaces; preserve existing objects and track this ledger's appended serialized objects by identity instead of deduplicating by order.",
+    "confidence": 0.99,
+    "file_path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+    "line_end": 112,
+    "line_start": 107,
+    "priority": 2,
+    "title": "E06-01 Deduplicate caller ledger records by identity, not order"
+  }
+}

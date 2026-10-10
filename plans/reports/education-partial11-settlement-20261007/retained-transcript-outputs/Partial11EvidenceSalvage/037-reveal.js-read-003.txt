@@ -1,0 +1,7 @@
+		cueAutoSlide,
+		cancelAutoSlide
+	} );
+
+	return API;
+
+};

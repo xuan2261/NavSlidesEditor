@@ -1,0 +1,518 @@
+{
+  "reportKind": "NATIVE11_ORIGINAL_AUTHORITY_EXPLANATIONS_FULL_READ_ADDENDUM",
+  "logicalAudit": "Partial11NativeSalvage",
+  "mode": "STATIC_FAILURE_SETTLEMENT_NOT_ADMISSION",
+  "verdict": "REPAIR_REQUIRED",
+  "purpose": "Complete the same logical Native11 audit's formerly display-limited governing explanatory evidence. Preserve all earlier reports unchanged. This is a populated scope/delivery/coverage disposition, not a new independent opinion, producer receipt, source repair or normal gate.",
+  "authorityRoot": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/plans/reports/education-partial11-settlement-20261007/retained-original-authority-deliveries",
+  "provenance": "AUTHENTIC_ORIGINAL_AUTHORITY_YIELD_NOT_RECONSTRUCTED_D_FILE",
+  "readMethod": "Personally read all six original authority yield JSON files, including every data field and final closing braces. Initial display-condensed large reads were replaced by contiguous bounded reads. These are original counsel/audit governing deliveries, not reconstructed D documents, evidence screenshots, source-file bodies, Evidence11 sibling conclusions or a manifest substituted for reading.",
+  "originalTranscriptDirectory": "C:/Users/Z10PAD8C_Xuan2261/.omp/agent/sessions/--C--Work-NavSlidesEditor--/2026-10-04T11-03-27-941Z_01a10695-43c5-7000-80a5-281eb32934b4",
+  "authorityReads": [
+    {
+      "artifact": "Correction11ScopeCounsel-yield-76.json",
+      "transcript": "Correction11ScopeCounsel.jsonl",
+      "transcriptRow": 76,
+      "timestamp": "2026-10-06T01:35:19.033Z",
+      "toolCallId": "call_w2sTlClIrlyCOkZpwIucbRvd|fc_0505912236c93eae016ac44fcebe4c87d09fe57186ca802fca",
+      "ranges": ["1-138"],
+      "fullBodyRead": true,
+      "EOFObserved": true,
+      "EOFLine": 138,
+      "operativeRanges": "8-95 scope, cross-seam contract, gate order, NF-A4 and failure protocol;97-136 evidence, limits, assumptions and disclosure"
+    },
+    {
+      "artifact": "Correction11FailureCounsel-yield-80.json",
+      "transcript": "Correction11FailureCounsel.jsonl",
+      "transcriptRow": 80,
+      "timestamp": "2026-10-06T02:02:25.775Z",
+      "toolCallId": "call_tBaU8TeLh7oicyndoGVKXVN7|fc_04ab1c94550f9953016ac455df869887d0bfa8865ea22dc08d",
+      "ranges": ["1-100", "101-200", "201-290", "291-380", "381-465", "466-548"],
+      "fullBodyRead": true,
+      "EOFObserved": true,
+      "EOFLine": 548,
+      "operativeRanges": "24-41 authority comparison;61-101 delivery;103-212 ordered salvage, full authority/source coverage;213-410 complete obligation indices;412-503 deferred scope/report contract;505-546 prohibitions, later authorization and disclosure"
+    },
+    {
+      "artifact": "Correction11FailureCounsel-yield-109.json",
+      "transcript": "Correction11FailureCounsel.jsonl",
+      "transcriptRow": 109,
+      "timestamp": "2026-10-06T03:06:22.831Z",
+      "toolCallId": "call_OIanIlAySQYvNPN0ojgd3rsY|fc_0514bcbe870b07d3016ac465185ce887d08f1b0022fac9a2cc",
+      "ranges": ["1-242"],
+      "fullBodyRead": true,
+      "EOFObserved": true,
+      "EOFLine": 242,
+      "operativeRanges": "8-50 same-audit continuation and interpretation;52-170 accountable coverage/integration contract;172-221 independence, retained obligations, delivery and completion;223-240 assumptions/disclosure"
+    },
+    {
+      "artifact": "Correction11ReceiptAudit-yield-71.json",
+      "transcript": "Correction11ReceiptAudit.jsonl",
+      "transcriptRow": 71,
+      "timestamp": "2026-10-06T02:02:41.919Z",
+      "toolCallId": "call_03YbFulY1frrFRJmg2Rzck8D|fc_0d84248373c035dc016ac4560c3ecc87d081c86ba8a8ea547a",
+      "ranges": ["1-100", "101-200", "201-295", "296-380", "381-465", "466-545"],
+      "fullBodyRead": true,
+      "EOFObserved": true,
+      "EOFLine": 545,
+      "operativeRanges": "22-190 receipt requirements;191-234 canonical fields and historical meaning;235-391 RC11-01..08;393-435 preservation and limits;437-545 readEvidence and conclusion"
+    },
+    {
+      "artifact": "Terminal10FailureCounsel-yield-93.json",
+      "transcript": "Terminal10FailureCounsel.jsonl",
+      "transcriptRow": 93,
+      "timestamp": "2026-10-05T11:46:44.651Z",
+      "toolCallId": "call_SKku7v0cZrJf7Eophkf2ShNb|fc_035745820a513d3a016ac38d2453a487d08d6bbd5ee83d2b1d",
+      "ranges": ["1-90", "91-185", "186-279"],
+      "fullBodyRead": true,
+      "EOFObserved": true,
+      "EOFLine": 279,
+      "operativeRanges": "8-97 failed delivery, permitted ordered settlement and receipt limits;99-174 all governing findings and invariants;175-227 full deferred scope;228-277 prohibitions, missing new authority and disclosure"
+    },
+    {
+      "artifact": "Settled09RejectionCounsel-yield-140.json",
+      "transcript": "Settled09RejectionCounsel.jsonl",
+      "transcriptRow": 140,
+      "timestamp": "2026-10-05T09:30:14.885Z",
+      "toolCallId": "call_TYABKMLaS8bfP7lPE2zW8NGj|fc_01c07934fdcbefde016ac36d0f2cb487d0bd0c72c1ff5fd496",
+      "ranges": ["1-90", "91-185", "186-286"],
+      "fullBodyRead": true,
+      "EOFObserved": true,
+      "EOFLine": 286,
+      "operativeRanges": "35-96 five defects, two chronology obligations and absent receipt;98-205 original findings, six checks, credits and dependency limits;206-244 settlement and distinct new authorization;246-284 full later acceptance scope and disclosure"
+    }
+  ],
+  "explanationClosure": {
+    "status": "CLOSED_FULL_ORIGINAL_GOVERNING_AUTHORITY_BODIES_READ",
+    "allSixFullBodiesRead": true,
+    "allSourceOrderSourceMappingAndGenuineReceiptExpectationFieldsInTheseBodiesRead": true,
+    "governingExplanationDisplayLimitationRemaining": false,
+    "update": "All previously explanation-limited requirements supported by these exact full governing deliveries are closed as read-coverage requirements. Their source, order, source-mapping, genuine delivery, scope, interpretation, deferred acceptance, evidence and limitations fields were read without omissions through EOF. Earlier statements that these governing explanations could not be certified because of display truncation are superseded for this same logical audit; original artifacts are not rewritten.",
+    "priorReportsPreserved": [
+      "native11-integrated-report.json",
+      "native11-coverage-final-report.json",
+      "native11-contributor-integration-addendum.json",
+      "native11-receipt-audit-coverage-addendum.json"
+    ],
+    "notRetroactive": "Original renderer-truncated historical07/08/09 raw artifacts remain as originally preserved. The six full original governing deliveries now supply the complete governing explanatory contract; this does not claim that an omitted raw historical suffix was personally reread from a separate original07/08/09 file. Counsel's own historical readEvidence is attributed to counsel, not converted into new personal source reads.",
+    "receiptAuditCoverage": "The prior receipt-audit addendum remains preserved. Yield71 supplies a separate complete original delivery with its original row/time/tool provenance and full RC11-01..08 explanation; wrapper artifact lines are not the reconstructed D audit's line numbers."
+  },
+  "settledAuthority": {
+    "Correction09": "REJECTED / REPAIR_REQUIRED / FAILED_DELIVERY_NOT_ADMITTED. Five source defects and two separate unresolved chronology obligations were settled historically, with an independently fatal missing genuine Native09 receipt. Exactly-one09 substantive authority was exhausted. Finish settlement, then pause substantive work; a new distinct bounded attempt required explicit new user authority, not retry09 or receipt-only recovery. Source: Settled09 yield140:8-15,35-96,206-244.",
+    "Correction10": "FAILED_DELIVERY_NOT_ADMITTED after Native transport stream_error, not timeout; preparing a receipt was not delivery. Both actual stops allowed preservation and two independent static salvage reviews, not runtime or normal admission. Complete preservation, two audits and combined settlement remained reachable without new substantive authority. A new substantive attempt required explicit separately bounded authorization after settlement. Source: Terminal10 yield93:8-26,33-88,228-253.",
+    "Correction11Authorization": "The recorded continue permitted exactly one fresh conservative Correction11, binary-seeded from frozen partial10, to attempt exactly S10-C1, NF-A2, NF-A3, N10B-01, N10B-02 and S10-C2. It was neither permission to resume10 nor repeat until success. Native owns five and Evidence owns S10-C2. NF-A4 was expressly excluded. Source: Scope yield76:8-18,77-95.",
+    "Correction11Failure": "FAILED_DELIVERY_NOT_ADMITTED. Native bg_6 exit1 at807.3s from transport stream_error, genuine receipt absent. Evidence bg_7 exit0 at745.76s delivered its genuine receipt. Main reports both stops, frozen subject, all4327 baseline inputs retained,4328 total, eight authorized helper modifications, immutable12 callers and all26 helpers below200; these observations are retained, not remeasured. Source: Failure yield80:43-101.",
+    "sameLogicalAuditContinuation": "Permitted completion of outstanding Native evidence and integration, not a third independent opinion or new substantive job. All38 helper/caller bodies and necessary owners/governing evidence remain required. Contributions belong to one accountable Native audit; the integration owner must personally inspect complete evidence and trace crossings. No borrowing Evidence11 conclusions or ranges. Source: Failure yield109:8-50,52-175.",
+    "producerPin": {
+      "producer": "local8045/gemini-3.8-flash-high",
+      "NativeOwnership": 15,
+      "EvidenceOwnership": 11,
+      "jobsPerPartition": 1,
+      "producerLimitMinutes": 45,
+      "hostLimitSeconds": 2760,
+      "retries": false,
+      "fallback": false,
+      "deadlineExtension": false,
+      "changedByThisAddendum": false
+    },
+    "gateOrder": [
+      "Main records bounded scope/ownership/NF-A4 exclusion, immutable inputs, genuine receipt requirements and locked cross-seam semantics before dispatch.",
+      "Exactly one pinned substantive job per partition; execution checks held.",
+      "Both actual producer stops before final freeze or checks.",
+      "Complete genuine deliveries plus complete input/scope preservation on one combined subject; failure or missing delivery closes ordinary progression.",
+      "Two independent normal full-source GO gates on the identical subject only after those prerequisites.",
+      "Only thereafter established conditional Main module/literal/boundary/helper/browser verification on admitted new bytes.",
+      "Caller migration, canonical integration,54 acceptance cells and later gaps remain separately gated."
+    ],
+    "gateOrderAuthority": "Scope yield76:40-75; Failure yield80:103-161; Failure yield109:195-221",
+    "currentPermission": "Read-only completion and failure settlement only. No new source work, receipt recovery, automatic Correction12 or execution. Main owns combined settlement."
+  },
+  "scopeDisposition": {
+    "originalNative12AliasRule": "N07-01..N07-12 are original-order index aliases for twelve Native07 finding records, not twelve new original canonical IDs. Repeated N06 identifiers denote distinct original findings and are not collapsed. Receipt presence or an N07 alias never establishes a genuine Native11 receipt.",
+    "originalNative12": [
+      {
+        "alias": "N07-01",
+        "meaning": "N06-N02: Keep Start diagnostics out of lifecycle continuity",
+        "retainedDisposition": "SOURCE_REVIEW_CLEAN_LOCAL",
+        "constraint": "Lifecycle-only projections retain BOTH packet publication and native-action diagnostics."
+      },
+      {
+        "alias": "N07-02",
+        "meaning": "Declare firstExpiredSample before the witness polling callback",
+        "retainedDisposition": "SOURCE_REVIEW_CLEAN_LOCAL",
+        "constraint": "Bound accumulator and complete last-running/first-expired crossover, not an undeclared assignment."
+      },
+      {
+        "alias": "N07-03",
+        "meaning": "N06-N02: Validate capture-to-post history before adopting Start",
+        "retainedDisposition": "SOURCE_REVIEW_CLEAN_LOCAL",
+        "constraint": "Independent complete histories/prefix/length checks before promotion; legitimate empty histories never replace missing provenance."
+      },
+      {
+        "alias": "N07-04",
+        "meaning": "N06-N03: Bind history health to actual recorder bookkeeping",
+        "retainedDisposition": "SOURCE_REVIEW_CLEAN_LIFECYCLE_STORE",
+        "constraint": "Private lifecycle identity/count/sequence/content before all consumers; valid initialized emptiness. NF-A4 separate."
+      },
+      {
+        "alias": "N07-05",
+        "meaning": "N06-N03: Compare complete retained history content",
+        "retainedDisposition": "SOURCE_REVIEW_CLEAN_LIFECYCLE_CONTENT",
+        "constraint": "Sequence,type,time,bounds,visibility,detail/domain; projected-root sequence gaps valid. NF-A4 separate."
+      },
+      {
+        "alias": "N07-06",
+        "meaning": "Retain lifecycle mutations drained at native action boundaries",
+        "retainedDisposition": "SOURCE_REVIEW_CLEAN_LOCAL",
+        "constraint": "Trigger lower bound includes drained mutations while later delivery upper bound and uncertainty survive."
+      },
+      {
+        "alias": "N07-07",
+        "meaning": "N06-N05: Normalize and retain all observed snapshot failures",
+        "retainedDisposition": "PARTIAL_REPAIR_REQUIRED",
+        "constraint": "All independent state/UI,capture/post,recorder/document occurrences in actual order; earliest normalized returned occurrence rather than domain wrapper. S10-C1 remains."
+      },
+      {
+        "alias": "N07-08",
+        "meaning": "N06-N05: Preserve recorder exception actual cause chain",
+        "retainedDisposition": "SOURCE_REVIEW_CLEAN_CAUSE_RETENTION_WITH_FORWARDING_LIMIT",
+        "constraint": "Recursive real causes,stack,phase/origin/domain and first error survive later failures; forwarded identity remains S10-C1."
+      },
+      {
+        "alias": "N07-09",
+        "meaning": "N06-N01: Stage each navigation poll actual document first",
+        "retainedDisposition": "SOURCE_REVIEW_CLEAN_LOCAL",
+        "constraint": "Actual slide,url,documentId,timeOrigin raw before validation; initial early return separately N10B-02."
+      },
+      {
+        "alias": "N07-10",
+        "meaning": "N06-N07: Match keyboard eligibility to production dispatch",
+        "retainedDisposition": "PARTIAL_REPAIR_REQUIRED_FULL_AUTHORIZED_DISPATCH",
+        "constraint": "Actual key/config/focus/dispatch guards and registered precedence, not policy alteration. N10B-01 remains."
+      },
+      {
+        "alias": "N07-11",
+        "meaning": "Preserve exact null commands when matching native packets",
+        "retainedDisposition": "SOURCE_REVIEW_CLEAN_LOCAL",
+        "constraint": "Exact tuple/document/type/command matching; null not wildcard."
+      },
+      {
+        "alias": "N07-12",
+        "meaning": "Reject disconnected current nodes during action extraction",
+        "retainedDisposition": "SOURCE_REVIEW_CLEAN_LOCAL",
+        "constraint": "Connected current-root check before packet/root acceptance."
+      }
+    ],
+    "originalEvidence3": [
+      {
+        "id": "E06-01-A",
+        "meaning": "Sole actual Error with existing empty secondaryFailures preserves exact reference/own keys, no synthetic exposure",
+        "retainedDisposition": "SOURCE_REVIEW_CLEAN_LOCAL"
+      },
+      {
+        "id": "E06-01-B",
+        "meaning": "Identity not unrelated numeric-order deduplication, stable duplicate-free repeated/late exposure, preserve caller arrays/objects",
+        "retainedDisposition": "SOURCE_REVIEW_CLEAN_LOCAL"
+      },
+      {
+        "id": "E06-01-C",
+        "meaning": "Genuine caller-errorLedger established chronology and authoritative wrappers/provenance; exclude serialized-only diagnostics and self-owned exposures",
+        "retainedDisposition": "SOURCE_REVIEW_CLEAN_MAPPED_CALLER_CHRONOLOGY"
+      }
+    ],
+    "original15Authority": "Failure yield80:213-288; Terminal10 yield93:99-119; Settled09 yield140:98-162. Historical09 dispositions in yield140 are not current11 defects. Current local dispositions above retain the same Native integrated report, not sibling conclusions or fresh source certification.",
+    "audit08Six": [
+      {
+        "id": "Native08-1",
+        "meaning": "Actual assertHistoryPrefix import/binding at both Start continuity calls",
+        "disposition": "RETAIN_CURRENT_NATIVE_LOCAL_CREDIT"
+      },
+      {
+        "id": "Native08-2",
+        "meaning": "Complete private content/time integrity including event.time,diagnostics,other roots before passive/cursor/correlated/capture/post/clock consumers; healthy emptiness and projected/full sequence distinctions",
+        "disposition": "RETAIN_CURRENT_NATIVE_LOCAL_CREDIT_LIFECYCLE_ONLY"
+      },
+      {
+        "id": "Native08-3",
+        "meaning": "Already observed browser snapshot errors before later independent Node document-binding error",
+        "disposition": "RETAIN_CURRENT_NATIVE_LOCAL_CREDIT_EXACT_NARROW_CASE; broader09-C1 remains"
+      },
+      {
+        "id": "Native08-4",
+        "meaning": "Relevant candidate siblings normalized despite outer health/document rejection, not merely raw staging/success matched path",
+        "disposition": "RETAIN_CURRENT_NATIVE_FALLBACK_RETENTION_CREDIT; actual chronology separate"
+      },
+      {
+        "id": "Evidence08-1",
+        "meaning": "Serialized-only caller diagnostics unchanged, never fabricated occurrences",
+        "disposition": "RETAIN_CURRENT_NATIVE_LOCAL_CREDIT"
+      },
+      {
+        "id": "Evidence08-2",
+        "meaning": "Shared genuine references retain authoritative wrapper phase/metadata without duplicates,serialization churn or caller mutation",
+        "disposition": "RETAIN_CURRENT_NATIVE_MAPPED_EXPOSURE_CREDIT"
+      }
+    ],
+    "audit08Authority": "Failure yield80:290-315; Terminal10 yield93:120-126; Settled09 yield140:163-187",
+    "settled09Five": [
+      {
+        "id": "09-S1",
+        "historicalMechanism": "Missing evaluateActionCandidates closing function brace before next export, source-proven parse blocker",
+        "requiredMeaning": "Correct function boundary without evaluation/public-contract change",
+        "currentDisposition": "SOURCE_REVIEW_CLEAN_FUNCTION_BOUNDARY retained from same Native report"
+      },
+      {
+        "id": "09-S2",
+        "historicalMechanism": "Undeclared serializable after completion marking prevents both publication outputs",
+        "requiredMeaning": "Construct complete copy before removing live root; BOTH recorded packets and native-action diagnostics with capture/post,projections,uncertainty",
+        "currentDisposition": "SOURCE_REVIEW_CLEAN_PUBLICATION_BINDING retained; NF-A4 separate"
+      },
+      {
+        "id": "09-S3",
+        "historicalMechanism": "Only first cursor-eligible fallback candidate normalized",
+        "requiredMeaning": "EVERY relevant fallback packet sibling before outer rejection, packet/capture/post/state/UI order; exact-match acceptance/raw retention unchanged",
+        "currentDisposition": "SOURCE_REVIEW_CLEAN_FALLBACK_RETENTION retained; occurrence-time chronology separate"
+      },
+      {
+        "id": "09-S4",
+        "historicalMechanism": "Reconciliation replaces exposed serialization, later refresh appends duplicate",
+        "requiredMeaning": "One stable ledger-owned serialization per occurrence, no caller replacement/truncation, unrelated numeric-order independence",
+        "currentDisposition": "SOURCE_REVIEW_CLEAN_LOCAL retained"
+      },
+      {
+        "id": "09-S5",
+        "historicalMechanism": "Intrinsic Error.phase overrides authoritative wrapper during reserialization",
+        "requiredMeaning": "Authoritative occurrence phase survives serialization/reconciliation with sidecar provenance and no Error/wrapper mutation",
+        "currentDisposition": "SOURCE_REVIEW_CLEAN_SPECIFIED_NON_UNKNOWN_PHASE_CONFLICT retained; no new sentinel scope inferred"
+      }
+    ],
+    "settled09FiveAuthority": "Settled09 yield140:35-75 exact source/mechanism/repair fields; Failure yield80:316-342; Terminal10 yield93:128-154",
+    "chronologyTwo": [
+      {
+        "id": "09-C1",
+        "disposition": "PARTIAL_REPAIR_REQUIRED",
+        "meaning": "Earlier packet getters before genuinely later extraction/store/not-ready/document errors, but genuinely earlier setup/listener recorder errors retain their earlier positions. No fixed packet-first/recorder-first categories or invented times. Earliest applicable normalized Error governs.",
+        "remaining": "S10-C1 actual readiness observation witness and forwarded prior-occurrence identity."
+      },
+      {
+        "id": "09-C2",
+        "disposition": "SOURCE_REVIEW_CLEAN_MAPPED_CALLER_CHRONOLOGY retained",
+        "meaning": "Established caller errorLedger a,b occurrences before later secondary-only/frame/source/attachment arrivals; metadata pre-scan not ingestion; shared identity,authoritative wrappers,caller preservation,independent numeric namespaces."
+      }
+    ],
+    "chronologyAuthority": "Settled09 yield140:77-90; Failure yield80:343-354; Terminal10 yield93:155-166",
+    "current11Six": [
+      {
+        "id": "S10-C1",
+        "owner": "Native",
+        "disposition": "PARTIAL_REPAIR_REQUIRED",
+        "governingMeaning": "Actual browser site order covers setup,earlier listener/store,capture state/UI,capture health,bubble health,post state/UI,pre-existing forwarded recorder and newly detected extraction errors. Document-local occurrence/order witnesses survive forwarding. No fabricated clocks,boundary-time substitutions,packet sequence alone,cross-document comparisons or category sort.",
+        "retainedCurrentEvidence": "native-snapshot.js:33-54; native-observation.js:36-46,81-93; native-history.js:80-83,134-137; observation-browser.js:62-64,85-87,149-151; observation-errors.js:26-31,44-48,77-84; error-ledger.js:84-98 in same Native integrated report.",
+        "remainingMechanism": "Repeated browser evaluate forwarding produces distinct Node envelopes for one persistent recorder occurrence; reference-only Set/WeakMap fails occurrence identity. New readiness errors use another occurrence's obsOrder+0.01 or category rank, not actual observation time. Complete internal identity and actual readiness witness remain required, no public API change or fabricated occurrence."
+      },
+      {
+        "id": "NF-A2",
+        "owner": "Native",
+        "disposition": "SOURCE_REVIEW_CLEAN_FIRST_ERROR_RETENTION retained",
+        "governingMeaning": "Readiness may become false but later record/store failure cannot overwrite first recorder Error and recursive real setup/store cause; forwarding is not a new occurrence."
+      },
+      {
+        "id": "NF-A3",
+        "owner": "Native",
+        "disposition": "SOURCE_REVIEW_CLEAN_LOCAL retained",
+        "governingMeaning": "stageButtonGuard raw then normalize both state/UI getter failures before later document validation; retain all failures and earliest applicable normalized throw; signatures/callers unchanged."
+      },
+      {
+        "id": "N10B-01",
+        "owner": "Native",
+        "disposition": "PARTIAL_REPAIR_REQUIRED",
+        "governingMeaning": "Actual pressed key and production keyboard truthiness,strict keyboardCondition false,focus/input/contenteditable/speaker-notes,overlay,paused/resume key and configured/registered custom precedence. Matching custom binding consumes system arrows even if useless; never invoke callback or force policy state.",
+        "retainedCurrentEvidence": "navigation.js:49-117,105-113; linked keyboard.js:129-133,235-255; linked reveal.js:2740-2973 in same Native report.",
+        "remainingMechanism": "Optional public getBindings/keyboard lookup cannot establish registered bindings because actual returned Reveal API lacks both, although it offers addKeyBinding/removeKeyBinding. Registered arrow may consume internal system-arrow path without being reflected in helper eligibility."
+      },
+      {
+        "id": "N10B-02",
+        "owner": "Native",
+        "disposition": "SOURCE_REVIEW_CLEAN_LOCAL retained",
+        "governingMeaning": "Initial slideId/url/documentId/timeOrigin read together,raw staged and document validated before already-target return; corrected polls preserved."
+      },
+      {
+        "id": "S10-C2",
+        "owner": "Evidence",
+        "disposition": "SOURCE_REVIEW_CLEAN_ALL_THREE_MAPPED_EXPOSURES retained from Native audit",
+        "governingMeaning": "Phase-less wrapper cannot downgrade authoritative explicit recorded phase through intrinsic/fallback. Valid explicit wrapper reconciles; metadata enrichment not phase authority. Apply errorLedger,shared secondaryFailures,allErrors; actual Error identity,stable serialization,chronology,late exposure,caller objects unchanged."
+      }
+    ],
+    "current11Authority": "Failure yield80:355-385; Scope yield76:20-38; Failure yield109:179-194",
+    "unconditionalKeyRejectionScope": {
+      "disposition": "UNRESOLVED_SCOPE_NOT_NEW_CONFIRMED_REQUIRED_DEFECT",
+      "meaning": "Full governing N10B-01 requires accurate actual-key eligibility and custom precedence. It does not grant a blanket new requirement to reject every keyboard operation unconditionally, nor authorize changing routing policy or invoking bindings. Any broader unconditional key-rejection requirement remains unresolved product scope; no waiver or automatic repair inferred."
+    },
+    "NF_A4": {
+      "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+      "excludedFromRequiredRepairs": true,
+      "seventhRepair": false,
+      "mechanism": "Public __nsRecordedPackets array or an element can be replaced by a forged packet while lifecycle private-store health remains true. In-place mutation of an original packet is different because retained native-action detail can detect it. Replacement can let extraction/witness adopt forged bracket histories,state,tCapture/tBubble as Start baseline; evaluatePreActionCursor lastSeq needs the same binding. Lifecycle-store health does not certify separately replaceable packet storage.",
+      "authority": "Scope yield76:77-85; Failure yield80:405-410; ReceiptAudit yield71:349-358; complete recorded dispatch excludedScopeCandidate is preserved in same Native integrated report /NF_A4Scope.",
+      "repaired": false,
+      "disproved": false,
+      "waived": false,
+      "completePacketStoreIntegrityClaimed": false,
+      "boundary": "No repair,acceptance expansion or product-scope resolution. If the authorized six cannot be concluded without crossing this boundary, stop for explicit scope authority."
+    }
+  },
+  "receiptAndMappingDisposition": {
+    "genuineNative11ReceiptPresent": false,
+    "missingNativeReceiptIndependentlyFatal": true,
+    "genuineEvidence11ReceiptPresent": true,
+    "combinedDeliveryComplete": false,
+    "authority": "Failure yield80:61-101; Failure yield109:195-205; ReceiptAudit yield71:22-190,235-391",
+    "expectation": "Each new partition's genuine substantive producer delivery must retain complete original identities/titles/bodies/absolute historical paths and separate precise current evidence, all08/09/chronology/current findings, changed symbols/files,full deferred scope,canonical fields and historical snapshots,truthful source-versus-execution distinctions and false/zero flags. Counsel requests,archived instructions,receipt preparation reasoning,N07 aliases or an audit do not prove delivery.",
+    "remainingReceiptGaps": [
+      {
+        "id": "RC11-01",
+        "disposition": "OPEN_DELIVERED_RECEIPT_FIDELITY",
+        "detail": "N07-01,03,06,07 rewritten/shortened; retain original endings, including action diagnostics separate from pause/resume continuity, legitimate empty versus missing provenance,drained uncertainty and earliest normalized returned occurrence. Original yield71:235-276 is authoritative over paraphrased prior addendum."
+      },
+      {
+        "id": "RC11-02",
+        "disposition": "OPEN_HISTORICAL_PATH_PROVENANCE",
+        "detail": "All15 receipt paths relative instead of original absolute candidate07 locations; old ranges do not distinguish historical/current subjects."
+      },
+      {
+        "id": "RC11-03",
+        "disposition": "OPEN_CURRENT_NATIVE_RECEIPT_EVIDENCE",
+        "detail": "Nine SOURCE_CORRECTED_LOCAL and three PARTIAL_REPAIR_REQUIRED receipt assertions lack precise current Native evidence; neither alias nor sibling assertion substitutes missing receipt."
+      },
+      {
+        "id": "RC11-04",
+        "disposition": "OPEN_COMPLETE_FINDING_RECORDS",
+        "detail": "6+5+2+6 identities enumerated but many bodies/ranges/mechanisms/repairs absent; ownership-only is not completion, BOTH packet outputs and full chronology/identity constraints still required."
+      },
+      {
+        "id": "RC11-05",
+        "disposition": "OPEN_COMPLETE_DEFERRED_DELIVERY_DETAIL",
+        "detail": "Aggregate twelve callers/54 cells does not enumerate full independent state AND UI,timing,witness,surfaces,finalization,later slices."
+      },
+      {
+        "id": "RC11-06",
+        "disposition": "OPEN_EXCLUDED_MECHANISM_RECEIPT_FIDELITY",
+        "detail": "NF-A4 excluded/unresolved correctly but alleged verbatim mechanism not actually delivered. Full authority read closes review explanation,not receipt omission."
+      },
+      {
+        "id": "RC11-07",
+        "disposition": "RETAIN_ACCURACY_DISCREPANCY",
+        "detail": "Receipt ledger160 versus Main150 lines; both below200. No source line violation or new measurement inferred; original receipt unchanged."
+      },
+      {
+        "id": "RC11-08",
+        "disposition": "FATAL_MISSING_GENUINE_NATIVE11_DELIVERY",
+        "detail": "Source cleanliness,complete audit coverage,Main preservation,sibling receipt or transcript cannot supply it."
+      }
+    ],
+    "sourceMapping": {
+      "authority": "ReceiptAudit yield71:191-234; Failure yield80:77-78,400-403; Failure yield109:190-194",
+      "NC": "11 entries MATCH as original audit comparison, all IDs,titles,full bodies,REQUIRED_UNEXECUTED retained",
+      "RPC": "17 entries MATCH",
+      "original": "9 entries MATCH",
+      "originalCurrentMappingSnapshot": "35 entries: R01..R18 and RPC-01..RPC-17 MATCH",
+      "originalPriorMappingSnapshot": "45 entries: POC-01..17,PBR-01..10,TIMED-01..09,original-1..9 MATCH",
+      "comparisonRerun": false,
+      "meaning": "SOURCE_CORRECTED,OPEN,PARTIAL and older SE references are historical labels,not current certification. Do not carry10 NC03/05/06/09/10 discrepancies into11 where exact field equality is recorded. R16 Trivia expiry/native Next; R17 readable splitting; R18 receipt/closure accuracy. Original7 Hot Potato exact speed bonus,8 Scattergories NFC duplicate/unique controls,9 full Trivia scoring matrix remain unchanged."
+    },
+    "creditedMeaningLocks": {
+      "E06-02": "Chronological frame-error arrival dispatch, not portable success keys",
+      "E06-03": "Actual Node Error identity with separate sidecar metadata, not popup cleanup",
+      "E06-04": "State-before-UI observation/dispatch within snapshots, not tuple validation or complete cross-category chronology",
+      "E06-05": "Recursive rootInstanceId/timeOrigin/cause normalization,serialization and primary-record propagation, not getter installation",
+      "Native": "Finite positive bounded remaining/activity operands,actual computed/layout CSS with correlated raw timing,copied full histories/private lifecycle health before projections,valid projected sequence gaps,boundary uncertainty,first-running-before-promotion,original first-expiry crossover,raw-before-validation,exact null/tuple/current connected root,enabled/focus/geometry.",
+      "ownership": "Actual Page callback context,early portable handle transfer,no-sink consumers,strict success keys {protocol,httpAttempts,socketAttempts,errors},failure-safe setup/navigation/live/close and complete late source/attachment/final ledger including attachment failures."
+    }
+  },
+  "deferredScope": {
+    "status": "REQUIRED_UNEXECUTED",
+    "surfaces": ["present", "share", "file"],
+    "leaveReturnRows": [
+      "Quiz",
+      "Hot Potato",
+      "Jeopardy",
+      "Relay",
+      "Trivia question",
+      "Trivia round"
+    ],
+    "resetRows": [
+      "Quiz",
+      "Hot Potato",
+      "Jeopardy",
+      "Relay deadline",
+      "Relay baton",
+      "Trivia question",
+      "Trivia round"
+    ],
+    "isolationRows": ["Quiz", "Hot Potato", "Jeopardy", "Relay", "Trivia"],
+    "rows": 18,
+    "cells": 54,
+    "representativeCanarySubstitution": false,
+    "requirements": [
+      "Later clean12-caller cutover only with separate authority/helper gates: mandatory sink/root manifest/document binding,actual Page,all action/activity results,startRecord and measured expiry; remove obsolete forms without aliases/shims.",
+      "Independent full initial/pending/hidden/returned/reset/terminal/peer state AND native UI,owner identity,consumed return and original expiry bounds,actual same-domain native Pass/Reset/Start and exact positive original pending work/due crossing; earlier sampled batonDue not enough.",
+      "Quiz native Reset+5000,after-old/before-new checkpoint,bounded new expiry,exact terminal/full reset controls/UI; no800ms slack or unbound prior timestamps.",
+      "Relay settled peer before freeze,full independent team/lane/question/turn/identity/UI,exact original pending due,full first-timeout transition/uncertainty,peer invariance across Reset/old due; no extra Pass,sleep,retry or winner fallback.",
+      "Trivia question/round expiry and native Next full identity/history/scores/awards/deadline/UI and independently bounded next-question policy.",
+      "Every cell consumes full idle/running/expired state/UI,native Start+4000,original last-running/first-expired crossover,same root/document continuity,exact raw failures before assertions.",
+      "Earliest lifecycle setup,root/document/cardinality,native focus/geometry/controls,complete live PNG/diagnostics,portable before/after network enforcement,source GET/config equality,early handle ownership and failure-safe setup/close/attachments.",
+      "All state/evidence SE,NC/RPC/original and both mapping snapshots retained. Original7 exact Hot Potato bonus,8 Scatter NFC controls,9 full Trivia scoring required in their other slices. Gap4 unresolved; dependent gaps5-9 blocked,not waived."
+    ],
+    "authority": "Failure yield80:412-484; Failure yield109:194; Terminal10 yield93:175-227; Settled09 yield140:246-259; ReceiptAudit yield71:329-348"
+  },
+  "remainingGaps": {
+    "governingExplanationReads": [],
+    "currentAuthorizedSourceRepairs": [
+      "S10-C1/09-C1 forwarded occurrence identity and actual readiness-order witness",
+      "N10B-01 actual registered custom-binding precedence"
+    ],
+    "delivery": [
+      "Missing genuine Native11 producer receipt independently fatal",
+      "Evidence11 RC11-01..07 delivered detail/accuracy limitations remain; authority recovery does not edit or complete receipt"
+    ],
+    "scope": [
+      "NF-A4 confirmed mechanism excluded,applicability unresolved",
+      "Broader unconditional key-rejection scope unresolved"
+    ],
+    "importAndOwnerCoverage": [
+      "Exact retained education/mount and page-objects/editor paths have authentic not-found outputs; actual browser/mount and pages/editor bodies are distinct readable files,not invented aliases.",
+      "Remaining imported/re-exported presenter,validation,transport,controller,editor-helper and simulation-source bodies outside supplied coverage remain unreviewed. Full governing body reading closes explanatory requirements,not those missing imported bodies. All38 required helper/caller bodies and listed available owners remain credited to earlier attributable Native reads; this addendum adds no source-file reads.",
+      "Linked node_modules lies outside recursive freeze. Main's preserved identity/hash/counts are not remeasured here; dependency immutability and runtime bundle equivalence are not established."
+    ],
+    "exhaustiveTransitiveSourceCoverageClaimed": false,
+    "normalGateSatisfied": false,
+    "wholeMainTranscriptCoverageClaimed": false,
+    "siblingConclusionsUsed": false,
+    "nextBoundary": "Finish same-audit actionable evidence/integration and Main's combined failure settlement. Further substantive repair/completion needs new explicit separately bounded user authority after exact remaining blockers are settled. No commands,tests,hash remeasurement or fixes are authorized by this addendum."
+  },
+  "admission": false,
+  "sourceReady": false,
+  "qualification": false,
+  "passClaimed": false,
+  "runtimeExecuted": false,
+  "declaredCells": 54,
+  "staticallyAdmittedCells": 0,
+  "executedAcceptanceCells": 0,
+  "producerInvoked": false,
+  "producerRetried": false,
+  "correction12Dispatched": false,
+  "callerCutoverPerformed": false,
+  "canonicalIntegrationPerformed": false,
+  "smokePerformed": false,
+  "testsPerformed": false,
+  "commandsPerformed": false,
+  "hashesRemeasured": false,
+  "countsRemeasured": false,
+  "importsPerformed": false,
+  "sourceFixesPerformed": false,
+  "sourceOrReceiptModified": false,
+  "oldReportsModified": false,
+  "filesWritten": [
+    "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/plans/reports/education-partial11-settlement-20261007/native11-authority-explanations-addendum.json"
+  ]
+}

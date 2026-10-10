@@ -1,0 +1,106 @@
+    #print-bar button:hover { background: #5254cc; }
+    #print-bar .hint { color: rgba(255,255,255,0.5); font-size: 12px; }
+    @media print { #print-bar { display: none; } body { margin-top: 0; padding-top: 0; } }
+`)}  </style>${presentation.customCSS ? `\n  <style>\n${safeStyleText(presentation.customCSS)}\n  </style>` : ''}
+</head>
+<body>
+${printBarHtml}
+${pagesHtml}
+  <script src="/vendor/katex/dist/katex.min.js"></script>
+  <script src="${REVEAL_ASSET_PATHS.highlightJs}"></script>
+  <script src="/vendor/chart.js/dist/chart.umd.js"></script>
+  <script src="/vendor/qrcode/qrcode.min.js"></script>
+  <script>
+    window.__navslidesExportReady = false;
+    window.addEventListener('load', function() {
+      var iframePromises = [];
+      // Highlight code blocks
+      var printHighlighter = RevealHighlight().hljs;
+      document.querySelectorAll('pre:not([data-code-walkthrough]) code').forEach(function(el) {
+        printHighlighter.highlightElement(el);
+      });
+      // Render KaTeX math
+      document.querySelectorAll('span[data-math-latex]').forEach(function(el) {
+        try { katex.render(el.getAttribute('data-math-latex'), el, { throwOnError: false, displayMode: el.getAttribute('data-math-display') === 'true' }); } catch(e) {}
+      });
+      // Render Chart.js charts
+      document.querySelectorAll('canvas[data-chart-config]').forEach(function(el) {
+        try {
+          var config = JSON.parse(el.getAttribute('data-chart-config'));
+          config.options = config.options || {};
+          config.options.animation = false;
+          new Chart(el, config);
+        } catch(e) { console.error('Chart render error:', e); }
+      });
+      // Render QR codes
+      document.querySelectorAll('canvas[data-qr-config]').forEach(function(el) {
+        try {
+          var cfg = JSON.parse(el.getAttribute('data-qr-config'));
+          QRCode.toCanvas(el, cfg.data, {
+            color: { dark: cfg.fg, light: cfg.bg },
+            errorCorrectionLevel: cfg.err || 'M',
+            margin: 1,
+            width: Math.min(el.parentElement.offsetWidth, el.parentElement.offsetHeight, 500)
+          });
+        } catch(e) { console.error('QR render error:', e); }
+      });
+      // Initialize data-pdf-iframes via Blob URLs to prevent print layout merging
+      document.querySelectorAll('iframe[data-pdf-iframe]').forEach(function(el) {
+        try {
+          var html = decodeURIComponent(el.getAttribute('data-pdf-iframe'));
+          var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+          iframePromises.push(new Promise(function(resolve) {
+            var done = false;
+            var finish = function() { if (!done) { done = true; resolve(); } };
+            el.addEventListener('load', function() { setTimeout(finish, 120); }, { once: true });
+            setTimeout(finish, 3500);
+          }));
+          el.src = URL.createObjectURL(blob);
+        } catch(e) { console.error('Iframe PDF init error:', e); }
+      });
+      Promise.all(iframePromises.concat([
+        document.fonts && document.fonts.ready ? document.fonts.ready.catch(function(){}) : Promise.resolve()
+      ])).then(function() {
+        setTimeout(function() {
+          window.__navslidesExportReady = true;
+          if (${JSON.stringify(autoPrint)}) window.print();
+        }, ${Math.max(0, exportReadyDelayMs)});
+      });
+    });
+  </script>
+</body>
+</html>`
+}
+
+function exportPDF(presentation, options = {}) {
+  const html = generatePrintHTML(presentation, { teacherReveal: options.teacherReveal === true })
+  const blob = new Blob([html], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  window.open(url, '_blank')
+  setTimeout(() => URL.revokeObjectURL(url), 120000)
+}
+
+function presentInWindow(presentation, { startAt } = {}) {
+  const hash = startAt ? `#/${startAt.h}/${startAt.v}` : ''
+  if (presentation && presentation.id) {
+    // Use server endpoint so vendor assets (reveal.js, katex, etc.) resolve correctly
+    window.open(`/api/presentations/${presentation.id}/present${hash}`, '_blank')
+  } else {
+    // Fallback for cases without an ID (e.g. template preview)
+    const html = generateRevealHTML(presentation)
+    const blob = new Blob([html], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    window.open(`${url}${hash}`, '_blank')
+    setTimeout(() => URL.revokeObjectURL(url), 120000)
+  }
+}
+
+module.exports = {
+  generateRevealHTML,
+  generatePrintHTML,
+  downloadHTML,
+  exportPDF,
+  presentInWindow,
+  getBackgroundAttrs,
+  escapeHtml,
+}

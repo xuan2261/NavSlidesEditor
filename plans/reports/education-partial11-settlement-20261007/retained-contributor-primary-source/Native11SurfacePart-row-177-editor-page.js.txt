@@ -1,0 +1,102 @@
+import { expect } from '@playwright/test'
+import { CanvasHelper } from './canvas-helper.js'
+import { RibbonInsertHelper } from './ribbon-insert-helper.js'
+import { PropertiesPanelHelper } from './properties-panel-helper.js'
+import { SlidePanelHelper } from './slide-panel-helper.js'
+import { RibbonTabToolbarHelper } from './ribbon-tab-toolbar-helper.js'
+import { MenuBarDropdownHelper } from './menu-bar-dropdown-helper.js'
+import { TextEditorProseMirrorHelper } from './text-editor-prosemirror-and-find-replace-helper.js'
+
+export class EditorPage {
+  /**
+   * @param {import('@playwright/test').Page} page
+   */
+  constructor(page) {
+    this.page = page
+    this.canvasLocator = page.getByTestId('canvas-area')
+    this.elementsCountLocator = page.locator('.element-wrapper')
+    this.thumbnailsLocator = page.getByTestId('slide-panel-item')
+    this.addSlideBtn = page.locator('.add-slide-btn').filter({ hasText: 'Add Slide' })
+    this.lastInsertedElementIndex = null
+
+    this.properties = new PropertiesPanelHelper({ page })
+    this.ribbon = new RibbonTabToolbarHelper({ page })
+    this.menubar = new MenuBarDropdownHelper({ page })
+    this.insert = new RibbonInsertHelper({
+      page,
+      getElementCount: () => this.getElementCount(),
+      setLastInsertedElementIndex: (index) => {
+        this.lastInsertedElementIndex = index
+      },
+    })
+    this.slidePanel = new SlidePanelHelper({
+      page,
+      thumbnailsLocator: this.thumbnailsLocator,
+      addSlideBtn: this.addSlideBtn,
+      waitForSlideCount: (expectedCount, timeout) => this.waitForSlideCount(expectedCount, timeout),
+    })
+    this.canvas = new CanvasHelper({
+      page,
+      elementsCountLocator: this.elementsCountLocator,
+      waitForElementCount: (expectedCount, timeout) => this.waitForElementCount(expectedCount, timeout),
+      waitForElementPanelSelected: (timeout) => this.waitForElementPanelSelected(timeout),
+      waitForElementPanelCleared: (timeout) => this.waitForElementPanelCleared(timeout),
+    })
+    this.text = new TextEditorProseMirrorHelper({
+      page,
+      elementsCountLocator: this.elementsCountLocator,
+      getElementCount: () => this.getElementCount(),
+      getLastInsertedElementIndex: () => this.lastInsertedElementIndex,
+    })
+  }
+
+  async waitForReady() {
+    await this.canvasLocator.waitFor({ state: 'visible', timeout: 30000 })
+  }
+
+  async waitForAutoSave() {
+    const savingBadge = this.page.getByText('Saving...', { exact: true })
+    await this.page
+      .getByText('Saving...', { exact: true })
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .catch(() => {})
+    await expect(savingBadge).toHaveCount(0, { timeout: 10000 })
+  }
+
+  async waitForElementCount(expectedCount, timeout = 5000) {
+    await expect(this.elementsCountLocator).toHaveCount(expectedCount, { timeout })
+  }
+
+  async waitForSlideCount(expectedCount, timeout = 5000) {
+    await expect(this.thumbnailsLocator).toHaveCount(expectedCount, { timeout })
+  }
+
+  async waitForElementPanelSelected(t = 5000) { await this.properties.waitForElementPanelSelected(t) }
+  async waitForElementPanelCleared(t = 5000) { await this.properties.waitForElementPanelCleared(t) }
+
+  async gotoPresentation(id) {
+    await this.page.addInitScript(() => {
+      window.__E2E__ = true
+      window.localStorage.setItem('navSlidesTutorialSeen', 'true')
+    })
+    await this.page.goto(`/editor/${id}`, { timeout: 30000 })
+    await this.waitForReady()
+  }
+
+  async getElementCount() { return this.elementsCountLocator.count() }
+  async getSlideCount() { return this.thumbnailsLocator.count() }
+
+  async overridePromptDialog(mockValue = '3') {
+    this.page.on('dialog', (dialog) => dialog.accept(mockValue))
+  }
+
+  async addToolbarElement(buttonTitle) {
+    const titleToTab = {
+      'Slide Background': { tab: 'Design', title: 'Slide background' },
+    }
+    const target = titleToTab[buttonTitle] || { tab: 'Insert', title: buttonTitle }
+    await this.page.getByRole('tab', { name: target.tab }).click()
+    await this.page.locator(`button[title="${target.title}"]`).click()
+  }
+
+[Showing lines 1-100 of 200. Use :101 to continue]

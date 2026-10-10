@@ -1,0 +1,93 @@
+  countdown: () => ({
+    title: 'Countdown',
+    durationSeconds: 60,
+    autoStart: false,
+    expiryMessage: 'Time is up!',
+  }),
+  scoreboard: () => ({
+    title: 'Scoreboard',
+    teams: teams(true),
+    step: 1,
+    minScore: 0,
+    maxScore: 1000000,
+    resetBoundVariables: false,
+  }),
+  memory: () => ({
+    title: 'Memory',
+    pairs: [
+      { id: 'pair-1', first: text('France'), second: text('Paris') },
+      { id: 'pair-2', first: text('Italy'), second: text('Rome') },
+    ],
+    shuffleOnStart: true,
+    mismatchDelayMs: 1000,
+    matchPoints: 10,
+  }),
+  flashcards: () => ({
+    title: 'Flashcards',
+    cards: [
+      { id: 'card-1', front: text('Capital of France?'), back: text('Paris') },
+      { id: 'card-2', front: text('Capital of Italy?'), back: text('Rome') },
+    ],
+    shuffleOnStart: false,
+  }),
+  sorting: () => ({
+    title: 'Sorting',
+    buckets: [
+      { id: 'fruit', label: 'Fruit' },
+      { id: 'vegetable', label: 'Vegetable' },
+    ],
+    items: [
+      { id: 'apple', text: 'Apple' },
+      { id: 'carrot', text: 'Carrot' },
+    ],
+    answerKey: {
+      assignments: [
+        { itemId: 'apple', bucketId: 'fruit' },
+        { itemId: 'carrot', bucketId: 'vegetable' },
+      ],
+    },
+    attemptLimit: 1,
+    points: 10,
+  }),
+  crossword: () => ({
+    title: 'Crossword',
+    rows: 5,
+    columns: 5,
+    entries: [
+      {
+        id: 'entry-1',
+        answer: 'CAT',
+        clue: 'A small feline',
+        row: 0,
+        column: 0,
+        direction: 'across',
+      },
+      {
+        id: 'entry-2',
+        answer: 'CAR',
+        clue: 'A road vehicle',
+        row: 0,
+        column: 0,
+        direction: 'down',
+      },
+    ],
+    seed: 1,
+  }),
+  'word-search': () => ({
+    title: 'Word Search',
+    rows: 8,
+    columns: 8,
+    words: [
+      { id: 'word-1', text: 'CAT' },
+      { id: 'word-2', text: 'DOG' },
+    ],
+    seed: 1,
+    directions: ['E', 'S', 'SE'],
+    alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  }),
+}
+function createDefaultGameConfig(type) {
+  if (!isGameSubtype(type)) throw new Error(`Unknown game subtype: ${String(type)}`)
+  return factories[type]()
+}
+module.exports = { GAME_BASE_DEFAULTS, createDefaultGameConfig, cloneGameConfig }

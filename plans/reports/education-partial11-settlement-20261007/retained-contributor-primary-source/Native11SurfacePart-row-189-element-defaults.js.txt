@@ -1,0 +1,172 @@
+import { buildGameElementDefaults } from '../constants/game-element-types-constants.js'
+
+/**
+ * Default property values for each element type.
+ * Used by createElement() in element-factory.js.
+ */
+export const ELEMENT_DEFAULTS = {
+  text: {
+    width: 600,
+    height: 180,
+    zIndex: 1,
+    content: '<p>New text</p>',
+    textColor: 'auto', // adopts active theme --ns-text (DEFAULT_TOKENS.text = #ffffff = prior white)
+    fontSize: 16,
+  },
+  image: {
+    width: 400,
+    height: 300,
+    zIndex: 2,
+    src: '',
+    objectFit: 'contain',
+    borderWidth: 0,
+    borderColor: '#000000',
+    alt: '',
+    longDescription: '',
+    decorative: false,
+    borderRadius: 0,
+    opacity: 1,
+    flipH: false,
+    flipV: false,
+    filterBrightness: 100,
+    filterContrast: 100,
+    filterSaturate: 100,
+    filterGrayscale: 0,
+    filterSepia: 0,
+    filterBlur: 0,
+    citationText: '',
+    citationLink: '',
+    citationColor: '#808080',
+    citationAlign: 'left',
+  },
+  shape: {
+    width: 200,
+    height: 150,
+    zIndex: 1,
+    shape: 'rect',
+    fill: 'auto', // --ns-accent (DEFAULT_TOKENS.accent = #6366f1 = prior hex)
+    stroke: 'none',
+    strokeWidth: 0,
+    borderRadius: 0,
+    opacity: 1,
+    text: '',
+    textHtml: '',
+    fontSize: 16,
+    textColor: 'auto', // --ns-text (= #ffffff)
+  },
+  code: {
+    width: 600,
+    height: 320,
+    zIndex: 2,
+    content: '// Write your code here\nfunction hello() {\n  return "Hello, World!"\n}',
+    language: 'javascript',
+    fontSize: 14,
+    walkthroughSteps: [],
+    borderRadius: 0,
+    defaultStepIndex: 0,
+  },
+  latex: {
+    width: 500,
+    height: 380,
+    zIndex: 2,
+    fontSize: 16,
+    textColor: '#ffffff', // frozen: default content is tikz (iframe) where CSS vars don't cascade, so 'auto' couldn't resolve
+    content: `\\\\begin{tikzpicture}
+  \\\\draw[thick,->] (0,0) -- (4,0) node[right] {$x$};
+  \\\\draw[thick,->] (0,0) -- (0,3) node[above] {$y$};
+  \\\\draw[blue,thick] (0,0) sin (1,1) cos (2,0) sin (3,-1) cos (4,0);
+  \\\\node at (2,-0.8) {$f(x) = \\\\sin(x)$};
+\\\\end{tikzpicture}`,
+  },
+  html: {
+    width: 500,
+    height: 380,
+    zIndex: 2,
+    content: `<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<style>* { box-sizing: border-box; margin: 0; } body { background: transparent; overflow: hidden; }</style>
+<svg id="viz" width="100%" height="100%" style="display:block;"></svg>
+<script>
+const W = window.innerWidth, H = window.innerHeight;
+const svg = d3.select('#viz').attr('viewBox', \`0 0 \${W} \${H}\`);
+const data = Array.from({length: 30}, () => ({ x: Math.random()*W, y: Math.random()*H, r: 8+Math.random()*20 }));
+svg.selectAll('circle').data(data).join('circle')
+  .attr('cx', d => d.x).attr('cy', d => d.y).attr('r', d => d.r)
+  .attr('fill', (d,i) => d3.schemeTableau10[i%10]).attr('opacity', 0.8);
+</script>`,
+  },
+  markdown: {
+    width: 600,
+    height: 380,
+    zIndex: 2,
+    textColor: 'auto',
+    fontSize: 18,
+    content:
+      '## Hello Markdown\n\n- Item one\n- Item two\n- Item three\n\n**Bold** and *italic* text with [links](https://example.com).\n\n```python\ndef hello():\n    print("Hello!")\n```',
+  },
+  chart: {
+    width: 500,
+    height: 380,
+    zIndex: 2,
+    chartType: 'bar',
+    chartData: {
+      labels: ['A', 'B', 'C', 'D', 'E'],
+      datasets: [{ label: 'Series 1', data: [12, 19, 8, 15, 10], color: '#6366f1' }],
+    },
+    areaFill: false,
+    stacked: false,
+    legendPosition: 'right',
+    axisTitles: { category: '', value: '' },
+  },
+  video: {
+    width: 480,
+    height: 270,
+    zIndex: 2,
+    src: '',
+    controls: true,
+    autoplay: false,
+    loop: false,
+    muted: false,
+    objectFit: 'contain',
+    poster: '',
+    startTime: 0,
+    endTime: 0,
+    playbackRate: 1,
+    tracks: [],
+    transcript: '',
+    audioDescription: '',
+  },
+  audio: {
+    width: 400,
+    height: 60,
+    zIndex: 2,
+    src: '',
+    controls: true,
+    autoplay: false,
+    loop: false,
+    muted: false,
+    tracks: [],
+    transcript: '',
+    audioDescription: '',
+  },
+  table: {
+    width: 600,
+    height: 300,
+    zIndex: 2,
+    data: [
+      ['Header 1', 'Header 2', 'Header 3'],
+      ['', '', ''],
+      ['', '', ''],
+    ],
+    headerRow: true,
+    cellPadding: 8,
+    borderColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 1,
+    headerBgColor: 'rgba(99,102,241,0.3)',
+    cellBgColor: 'transparent',
+    textColor: 'auto', // --ns-text (= #ffffff); header/cell/border bg kept frozen (no matching token value)
+    fontSize: 14,
+    // Phase 3: Extended schema
+    headerTextColor: '#1e40af',
+    headerIsBold: true,
+
+[Showing lines 1-170 of 287. Use :171 to continue]

@@ -1,0 +1,92 @@
+      ledger.recordError('secondary', err)
+    },
+
+    async collectLive(overridePage = null) {
+      const pageToInspect = overridePage || activePage
+      if (!pageToInspect || pageToInspect.isClosed()) {
+        ledger.recordError('collectLive', new Error('Live collection failed: page is missing or closed'))
+        return
+      }
+
+      try {
+        const liveDiagnostics = await collectLivePageDiagnostics(pageToInspect, expectedRoots, sink)
+        records.liveDiagnostics = liveDiagnostics
+      } catch (diagError) {
+        ledger.recordError('collectLiveDiagnostics', diagError)
+      }
+
+      try {
+        const screenshot = await captureLiveScreenshot(pageToInspect)
+        if (screenshot) {
+          await testInfo.attach(`${testName}-shot`, {
+            body: screenshot,
+            contentType: 'image/png',
+          })
+        }
+      } catch (shotError) {
+        ledger.recordError('collectLiveScreenshot', shotError)
+      }
+    },
+
+    async finalize(request, presentationId, savedBeforeJSON, runnerError = null) {
+      if (runnerError) {
+        ledger.recordError('runner', runnerError)
+      }
+
+      if (!savedBeforeJSON) {
+        records.sourceInvariantVerified = false
+        records.sourceInvariantError = 'Baseline savedBeforeJSON missing'
+        ledger.recordError('sourceInvariant:prerequisite', new Error('Baseline savedBeforeJSON is missing; explicit prerequisite failure'))
+      }
+
+      let savedAfter = null
+      try {
+        savedAfter = await apiGetPresentation(request, presentationId)
+        records.savedAfter = savedAfter
+        if (savedBeforeJSON) {
+          expect(savedAfter).toEqual(savedBeforeJSON)
+          records.sourceInvariantVerified = true
+        }
+      } catch (getOrMatchError) {
+        records.sourceInvariantVerified = false
+        records.sourceInvariantError = getOrMatchError?.message || String(getOrMatchError)
+        ledger.recordError('sourceInvariant', getOrMatchError)
+      }
+
+      records.stageTrace = stageTrace
+      records.errors = ledger.getSerializedErrors()
+      const primaryErr = ledger.getPrimaryError()
+      if (primaryErr) {
+        records.primaryError = {
+          name: primaryErr.name,
+          message: primaryErr.message || String(primaryErr),
+          stack: primaryErr.stack || null,
+        }
+        if (primaryErr.rootInstanceId) {
+          records.primaryError.rootInstanceId = primaryErr.rootInstanceId
+        }
+        if (primaryErr.timeOrigin !== undefined && primaryErr.timeOrigin !== null) {
+          records.primaryError.timeOrigin = primaryErr.timeOrigin
+        }
+      }
+
+      try {
+        await testInfo.attach(`${testName}-measured`, {
+          body: JSON.stringify(records, null, 2),
+          contentType: 'application/json',
+        })
+      } catch (attachError) {
+        ledger.recordError('attachment', attachError)
+      }
+
+      const toThrow = ledger.produceThrow()
+      if (toThrow) {
+        throw toThrow
+      }
+    },
+  }
+
+  return sink
+}
+
+[Showing lines 109-198 of 199. Use :199 to continue]

@@ -1,0 +1,132 @@
+  "settled09DefectDispositions": [
+    {
+      "id": "09-S1",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-observation-browser.js:129-175",
+        "pending-round-lifecycle-observation.js:12-18"
+      ],
+      "mechanism": "evaluateActionCandidates closes after its root.evaluate call and before the next top-level export. Its return contract and the consuming observation import are preserved. No import or syntax check was executed."
+    },
+    {
+      "id": "09-S2",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-native-history.js:75-110",
+        "pending-round-lifecycle-observation-browser.js:146-159",
+        "pending-round-lifecycle-observation.js:104-132",
+        "pending-round-lifecycle-witness.js:31-76"
+      ],
+      "mechanism": "completePacket constructs const serializable = Object.assign({}, packet), removes only its live DOM root, then publishes BOTH __nsRecordedPackets and native-action diagnostic outputs. Complete capture/post snapshots and lifecycle-only history projections remain available to the consuming extraction and witness paths."
+    },
+    {
+      "id": "09-S3",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-observation-errors.js:35-60",
+        "pending-round-lifecycle-observation.js:104-135"
+      ],
+      "mechanism": "The no-match fallback no longer collapses to one candidate. It filters the sequence-eligible collection, orders by packet sequence and ingests each packet's genuine capture/post state/UI siblings before throwing. This sort concerns one packet-sequence namespace, not caller/common-ledger order numbers. The exact-match acceptance path is unchanged."
+    },
+    {
+      "id": "09-S4",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:37-55,160-171",
+        "pending-round-lifecycle-error-ledger.js:102-117"
+      ],
+      "mechanism": "Object.assign(existing.serialized, fresh) preserves the already-exposed serialization identity. Recursive refresh and later wrapper reconciliation therefore continue to reference the same owned diagnostic object; identity-based append does not create a second serialization for that occurrence."
+    },
+    {
+      "id": "09-S5",
+      "disposition": "SOURCE_CORRECTED_LOCAL_FOR_SPECIFIED_PHASE_CONFLICT",
+      "evidence": [
+        "pending-round-lifecycle-error-ledger.js:13-20",
+        "pending-round-lifecycle-error-exposure.js:7-55,72-123"
+      ],
+      "mechanism": "An authoritative resolved non-unknown wrapper phase takes precedence over an intrinsic differing Error.phase during initial serialization and in-place reconciliation. The actual Error's phase/reference and caller wrapper remain unchanged, and metadata/provenance are retained."
+    }
+  ],
+  "chronologyObligationDispositions": [
+    {
+      "id": "09-C1",
+      "disposition": "PARTIAL_REPAIR_REQUIRED",
+      "evidence": [
+        "pending-round-lifecycle-observation-errors.js:25-31,47-89",
+        "pending-round-lifecycle-native-history.js:75-100",
+        "pending-round-lifecycle-observation-browser.js:146-159",
+        "pending-round-lifecycle-error-ledger.js:102-128"
+      ],
+      "correctedCases": "Already completed packet getter failures are ingested before a genuinely later extraction store/not-ready/document error. A recorder:setup or RecorderSetupError is ingested before later snapshots. The earliest normalized return is propagated.",
+      "remainingDefect": "The implementation classifies every other recorder error as later than every getter sibling. completePacket can actually discover and retain a recorder:store failure at its bubbling health check before invoking the post-handler state/UI getters. If those later getters fail, the consumer reverses those actual occurrences and can choose the later getter as primary. This is still a category-selected chronology, contrary to the full obligation. See S10-C1.",
+      "boundedUnresolvedObligation": "Actual recorder/getter occurrence ordering across native capture, native post-handler completion and extraction must be preserved, not inferred solely from the setup/non-setup phase label."
+    },
+    {
+      "id": "09-C2",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:68-123",
+        "pending-round-lifecycle-error-ledger.js:102-117"
+      ],
+      "mechanism": "For caller errorLedger=[{error:a,phase:'a'},{error:b,phase:'b'}] and secondaryFailures=[b], the ledger traversal records a then b before secondary traversal. b deduplicates rather than moving ahead of a. Later frame/source/attachment occurrences follow that established sequence. Caller objects, arrays and serialized-only diagnostics survive, and unrelated numeric order namespaces are never sorted into a fictional common chronology."
+    }
+  ],
+  "preservationDispositions": [
+    {
+      "id": "N06-N04",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-witness-domain.js:31-46,107-126",
+        "pending-round-lifecycle-clock.js:46-59",
+        "pending-round-lifecycle-activity-interval.js:3-16,46-65,74-102"
+      ],
+      "mechanism": "Initial and polled running remainingMs must be finite, positive and <=4000. Due/remaining intervals and their operands remain finite and ordered. Deadline bounds are derived from actual activity brackets, without fabricated allowance."
+    },
+    {
+      "id": "N06-N06",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-native-action.js:21-73"
+      ],
+      "mechanism": "Button guards observe actual state, command, disabled state, inherited computed display/visibility and layout visibility in the same raw timing interval; the raw guard is staged before document validation."
+    },
+    {
+      "id": "N06-N08 / canonical authority",
+      "disposition": "AUTHORITY_RETAINED_NOT_QUALIFICATION",
+      "evidence": [
+        "pending-substrate-08-subject-authority.json",
+        "pending-substrate-10-terminal-failure-counsel.json:93-172"
+      ],
+      "mechanism": "NC01..11, RPC01..17, original1..9 and both historical mapping snapshots retain their governing meanings. Historical SOURCE_CORRECTED labels are not current acceptance closure. Original7 exact Hot Potato speed-bonus, original8 Scattergories NFC duplicate/unique control and original9 full Trivia scoring remain separate required other slices."
+    },
+    {
+      "id": "E06-02",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "release-portable-inspection.js:20-33,40-54",
+        "release-surfaces.js:78-82"
+      ],
+      "mechanism": "Each actual frame rejection is recorded in its catch before the next awaited frame; pageerror is forwarded synchronously at arrival. The original obligation is chronological dispatch, not merely success keys. Successful inspection still asserts empty attempt/error arrays and returns exactly {protocol,httpAttempts,socketAttempts,errors}."
+    },
+    {
+      "id": "E06-03",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "release-portable-inspection.js:25-30",
+        "pending-round-lifecycle-error-ledger.js:23-48,51-72,87-102"
+      ],
+      "mechanism": "An actual Node frame Error is retained and frameUrl is passed separately as metadata. Serialization exposes the sidecar without assigning frameUrl onto the original Error or replacing that Error. The original obligation is Error identity/sidecar separation, not popup cleanup."
+    },
+    {
+      "id": "E06-04",
+      "disposition": "SOURCE_PRESERVED_WITH_SEPARATE_CHRONOLOGY_BLOCKER",
+      "evidence": [
+        "pending-round-lifecycle-native-snapshot.js:55-78",
+        "pending-round-lifecycle-live-root-observation.js:119-123",
+        "pending-round-lifecycle-observation-errors.js:47-79"
+      ],
+      "mechanism": "State is observed before UI. Live-root errors and native snapshot siblings are dispatched state-before-UI, and native capture precedes post-handler siblings. These local invariants do not establish chronology relative to an intervening recorder failure; S10-C1 remains separate. The original obligation is not renamed as tuple validation."
+    },
+    {
+
+[Showing lines 261-390 of 1203. Use :391 to continue]

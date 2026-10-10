@@ -13,12 +13,8 @@ function runWithFeedback(action, operation) {
   }
 }
 
-export function downloadHTML(presentation) {
-  return runWithFeedback('HTML export failed', () => shared.downloadHTML(presentation))
-}
-
-export function exportPDF(presentation) {
-  return runWithFeedback('PDF export failed', () => shared.exportPDF(presentation))
+export function exportPDF(presentation, options) {
+  return runWithFeedback('PDF export failed', () => shared.exportPDF(presentation, options))
 }
 
 export function presentInWindow(presentation, options) {

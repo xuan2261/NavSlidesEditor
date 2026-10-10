@@ -1,0 +1,53 @@
+// Pure domain helpers for history prefix verification, continuity and pause-resume pairs.
+
+export function stripHash(url) {
+  if (typeof url !== 'string') return ''
+  const hashIdx = url.indexOf('#')
+  return hashIdx >= 0 ? url.slice(0, hashIdx) : url
+}
+
+export function collectPauseResumePairs(events = [], maxTime = Infinity) {
+  const pairs = []
+  let pending = null
+  for (const ev of events) {
+    if (typeof maxTime === 'number' && ev.tMin > maxTime) continue
+    if (ev.type === 'root-pause') {
+      pending = { min: ev.tMin, max: ev.tMax }
+    } else if (ev.type === 'root-resume' && pending) {
+      pairs.push({ pause: pending, resume: { min: ev.tMin, max: ev.tMax } })
+      pending = null
+    }
+  }
+  return { pairs, pending }
+}
+
+export function assertHistoryPrefix(currentEvents, baselineEvents, historyName = 'history') {
+  if (!Array.isArray(currentEvents)) {
+    throw new Error(`Witness continuity failure: ${historyName} is missing or not an array`)
+  }
+  if (!Array.isArray(baselineEvents)) {
+    throw new Error(`Witness continuity failure: baseline ${historyName} is missing or not an array`)
+  }
+  if (currentEvents.length < baselineEvents.length) {
+    throw new Error(`Witness continuity failure: ${historyName} truncated (current ${currentEvents.length} < baseline ${baselineEvents.length})`)
+  }
+  for (let i = 0; i < baselineEvents.length; i++) {
+    const b = baselineEvents[i]
+    const c = currentEvents[i]
+    if (b.type !== c.type) {
+      throw new Error(`Witness continuity failure: ${historyName} diverged at index ${i} (expected type ${b.type}, got ${c.type})`)
+    }
+    if (typeof b.eventSeq !== 'number' || typeof c.eventSeq !== 'number' || b.eventSeq !== c.eventSeq) {
+      throw new Error(`Witness continuity failure: ${historyName} sequence mismatch at index ${i} (expected seq ${b.eventSeq}, got ${c.eventSeq})`)
+    }
+    if (b.tMin !== c.tMin || b.tMax !== c.tMax || b.time !== c.time) {
+      throw new Error(`Witness continuity failure: ${historyName} timing bounds mismatch at index ${i} (baseline [${b.tMin},${b.tMax},${b.time}] vs current [${c.tMin},${c.tMax},${c.time}])`)
+    }
+    if (b.visibilityState !== c.visibilityState) {
+      throw new Error(`Witness continuity failure: ${historyName} visibilityState mismatch at index ${i} (baseline ${b.visibilityState} vs current ${c.visibilityState})`)
+    }
+    if (JSON.stringify(b.detail) !== JSON.stringify(c.detail)) {
+      throw new Error(`Witness continuity failure: ${historyName} detail content diverged at index ${i}`)
+    }
+  }
+}

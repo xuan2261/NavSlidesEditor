@@ -1,0 +1,7 @@
+export async function assertResetUI(gameType, root) {
+…
+}
+
+export function assertPeerInvariance(frozenSnapshot, currentSnapshot) {
+  expect(currentSnapshot).toEqual(frozenSnapshot)
+}

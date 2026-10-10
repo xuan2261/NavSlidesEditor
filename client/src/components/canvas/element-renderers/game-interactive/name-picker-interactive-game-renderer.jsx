@@ -46,11 +46,36 @@ function injectCSS() {
 // ---------------------------------------------------------------------------
 const DICE_PIPS = {
   1: [[14, 14]],
-  2: [[7, 7], [21, 21]],
-  3: [[7, 7], [14, 14], [21, 21]],
-  4: [[7, 7], [21, 7], [7, 21], [21, 21]],
-  5: [[7, 7], [21, 7], [14, 14], [7, 21], [21, 21]],
-  6: [[7, 7], [7, 14], [7, 21], [21, 7], [21, 14], [21, 21]],
+  2: [
+    [7, 7],
+    [21, 21],
+  ],
+  3: [
+    [7, 7],
+    [14, 14],
+    [21, 21],
+  ],
+  4: [
+    [7, 7],
+    [21, 7],
+    [7, 21],
+    [21, 21],
+  ],
+  5: [
+    [7, 7],
+    [21, 7],
+    [14, 14],
+    [7, 21],
+    [21, 21],
+  ],
+  6: [
+    [7, 7],
+    [7, 14],
+    [7, 21],
+    [21, 7],
+    [21, 14],
+    [21, 21],
+  ],
 }
 
 function DiceFaceSVG({ value, size = 40, color = '#6366f1' }) {
@@ -69,9 +94,10 @@ function DiceFaceSVG({ value, size = 40, color = '#6366f1' }) {
 // Static wheel SVG
 // ---------------------------------------------------------------------------
 function StaticWheelSVG({ element, spinAngle = 0 }) {
-  const colors = element.wheelColors?.length > 0
-    ? element.wheelColors
-    : ['#FF5722', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#00BCD4', '#FF9800', '#795548']
+  const colors =
+    element.wheelColors?.length > 0
+      ? element.wheelColors
+      : ['#FF5722', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#00BCD4', '#FF9800', '#795548']
   const segments = element.wheelSegments || 8
   const items = element.items || []
   const svgR = 70
@@ -81,7 +107,7 @@ function StaticWheelSVG({ element, spinAngle = 0 }) {
   const pointerH = 18
   const accent = element.accentColor || '#6366f1'
   const bgColor = element.backgroundColor || '#1a1a2e'
-  const angleRad = spinAngle * Math.PI / 180
+  const angleRad = (spinAngle * Math.PI) / 180
 
   return (
     <svg width="180" height="196" viewBox="0 0 180 196" style={{ overflow: 'visible' }}>
@@ -94,21 +120,36 @@ function StaticWheelSVG({ element, spinAngle = 0 }) {
         const x2 = cx + svgR * Math.cos(endAngle)
         const y2 = cy + svgR * Math.sin(endAngle)
         return (
-          <path key={i} d={`M${cx},${cy} L${x1},${y1} A${svgR},${svgR} 0 0,1 ${x2},${y2} Z`}
-            fill={colors[i % colors.length]} opacity="0.85" />
+          <path
+            key={i}
+            d={`M${cx},${cy} L${x1},${y1} A${svgR},${svgR} 0 0,1 ${x2},${y2} Z`}
+            fill={colors[i % colors.length]}
+            opacity="0.85"
+          />
         )
       })}
       <circle cx={cx} cy={cy} r="14" fill={bgColor} />
       <circle cx={cx} cy={cy} r="14" fill="none" stroke={accent} strokeWidth="2" />
-      <polygon points={`${cx},${cy - svgR - 2} ${cx - 7},${cy - svgR + pointerH} ${cx + 7},${cy - svgR + pointerH}`} fill={accent} />
+      <polygon
+        points={`${cx},${cy - svgR - 2} ${cx - 7},${cy - svgR + pointerH} ${cx + 7},${cy - svgR + pointerH}`}
+        fill={accent}
+      />
       {items.slice(0, Math.min(items.length, 3)).map((item, i) => {
         const angle = (i * 2 * Math.PI) / Math.max(items.length || 1, 1) - Math.PI / 2 + angleRad
-        const tx = cx + (svgR * 0.55) * Math.cos(angle)
-        const ty = cy + (svgR * 0.55) * Math.sin(angle)
+        const tx = cx + svgR * 0.55 * Math.cos(angle)
+        const ty = cy + svgR * 0.55 * Math.sin(angle)
         return (
-          <text key={i} x={tx} y={ty} fill="white" fontSize="8" textAnchor="middle" dominantBaseline="middle"
-            style={{ fontFamily: 'sans-serif', fontWeight: 'bold', pointerEvents: 'none' }}>
-            {String(item).slice(0, 6)}
+          <text
+            key={item.id}
+            x={tx}
+            y={ty}
+            fill="white"
+            fontSize="8"
+            textAnchor="middle"
+            dominantBaseline="middle"
+            style={{ fontFamily: 'sans-serif', fontWeight: 'bold', pointerEvents: 'none' }}
+          >
+            {item.label.slice(0, 6)}
           </text>
         )
       })}
@@ -123,9 +164,10 @@ function fireConfetti(element) {
   if (typeof window === 'undefined') return
   if (element.showConfetti === false) return
   import('canvas-confetti').then(({ default: confetti }) => {
-    const colors = element.wheelColors?.length > 0
-      ? element.wheelColors
-      : ['#FF5722', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#00BCD4', '#FF9800', '#795548']
+    const colors =
+      element.wheelColors?.length > 0
+        ? element.wheelColors
+        : ['#FF5722', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#00BCD4', '#FF9800', '#795548']
     confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 }, colors })
     setTimeout(() => confetti({ particleCount: 60, spread: 100, origin: { y: 0.7 }, colors }), 200)
   })
@@ -178,33 +220,71 @@ function InteractiveWheel({ element, onWinner, disabled }) {
     }, duration)
   }, [isSpinning, disabled, items, segments, duration, spinAngle, onWinner])
 
-  const winnerColor = winnerIdx >= 0
-    ? ((element.wheelColors || [])[winnerIdx % (element.wheelColors?.length || 8)] || accent)
-    : accent
+  const winnerColor =
+    winnerIdx >= 0
+      ? (element.wheelColors || [])[winnerIdx % (element.wheelColors?.length || 8)] || accent
+      : accent
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: '100%', height: '100%' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 6,
+        width: '100%',
+        height: '100%',
+      }}
+    >
       <div style={{ overflow: 'hidden', height: 196 }}>
-        <div id="game-wheel-interactive" style={{ transform: `rotate(${spinAngle}deg)`, display: 'inline-block' }}>
+        <div
+          id="game-wheel-interactive"
+          style={{ transform: `rotate(${spinAngle}deg)`, display: 'inline-block' }}
+        >
           <StaticWheelSVG element={element} />
         </div>
       </div>
       {items.length > 0 && (
-        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', maxWidth: 160, textAlign: 'center' }}>
-          {items.length} items — {items.slice(0, 2).join(', ')}{items.length > 2 ? '…' : ''}
+        <div
+          style={{
+            fontSize: 10,
+            color: 'rgba(255,255,255,0.6)',
+            maxWidth: 160,
+            textAlign: 'center',
+          }}
+        >
+          {items.length} items —{' '}
+          {items
+            .slice(0, 2)
+            .map((item) => item.label)
+            .join(', ')}
+          {items.length > 2 ? '…' : ''}
         </div>
       )}
       {winnerName && (
-        <div style={{ animation: 'winner-pop 0.5s ease-out forwards', fontSize: 14, fontWeight: 'bold', color: winnerColor, textAlign: 'center' }}>
-          {winnerName}
+        <div
+          style={{
+            animation: 'winner-pop 0.5s ease-out forwards',
+            fontSize: 14,
+            fontWeight: 'bold',
+            color: winnerColor,
+            textAlign: 'center',
+          }}
+        >
+          {winnerName.label}
         </div>
       )}
       <button
         onClick={handleSpin}
         disabled={isSpinning || disabled}
         style={{
-          background: accent, color: 'white', border: 'none', borderRadius: 8,
-          padding: '5px 18px', fontSize: 12, fontWeight: 'bold',
+          background: accent,
+          color: 'white',
+          border: 'none',
+          borderRadius: 8,
+          padding: '5px 18px',
+          fontSize: 12,
+          fontWeight: 'bold',
           cursor: isSpinning || disabled ? 'default' : 'pointer',
           opacity: isSpinning || disabled ? 0.5 : 1,
           pointerEvents: isSpinning || disabled ? 'none' : 'auto',
@@ -264,35 +344,68 @@ function InteractiveDice({ element, onWinner, disabled }) {
     cycle()
   }, [isRolling, disabled, items, duration, onWinner])
 
-  useEffect(() => () => { if (cycleRef.current) clearTimeout(cycleRef.current) }, [])
+  useEffect(
+    () => () => {
+      if (cycleRef.current) clearTimeout(cycleRef.current)
+    },
+    []
+  )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, width: '100%', height: '100%' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 10,
+        width: '100%',
+        height: '100%',
+      }}
+    >
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', perspective: 200 }}>
         {Array.from({ length: diceCount }).map((_, i) => (
-          <div key={i} style={{
-            width: 48, height: 48, position: 'relative',
-            animation: isRolling
-              ? `dice-land ${0.1 + i * 0.03}s linear infinite`
-              : _isLanding ? `dice-land 0.4s ease-out forwards` : 'none',
-            '--dx': `${Math.random() * 360}deg`,
-            '--dy': `${Math.random() * 360}deg`,
-          }}>
+          <div
+            key={i}
+            style={{
+              width: 48,
+              height: 48,
+              position: 'relative',
+              animation: isRolling
+                ? `dice-land ${0.1 + i * 0.03}s linear infinite`
+                : _isLanding
+                  ? `dice-land 0.4s ease-out forwards`
+                  : 'none',
+              '--dx': `${Math.random() * 360}deg`,
+              '--dy': `${Math.random() * 360}deg`,
+            }}
+          >
             <DiceFaceSVG value={diceValues[i] || 6} size={48} color={accent} />
           </div>
         ))}
       </div>
       {winnerName && (
-        <div style={{ animation: 'winner-pop 0.5s ease-out forwards', fontSize: 14, fontWeight: 'bold', color: accent }}>
-          {winnerName}
+        <div
+          style={{
+            animation: 'winner-pop 0.5s ease-out forwards',
+            fontSize: 14,
+            fontWeight: 'bold',
+            color: accent,
+          }}
+        >
+          {winnerName.label}
         </div>
       )}
       <button
         onClick={handleRoll}
         disabled={isRolling || disabled}
         style={{
-          background: accent, color: 'white', border: 'none', borderRadius: 8,
-          padding: '5px 18px', fontSize: 12, fontWeight: 'bold',
+          background: accent,
+          color: 'white',
+          border: 'none',
+          borderRadius: 8,
+          padding: '5px 18px',
+          fontSize: 12,
+          fontWeight: 'bold',
           cursor: isRolling || disabled ? 'default' : 'pointer',
           opacity: isRolling || disabled ? 0.5 : 1,
           pointerEvents: isRolling || disabled ? 'none' : 'auto',
@@ -346,7 +459,12 @@ function InteractiveButtonPicker({ element, onWinner, disabled }) {
     cycle()
   }, [disabled, items, onWinner])
 
-  useEffect(() => () => { if (cycleRef.current) clearTimeout(cycleRef.current) }, [])
+  useEffect(
+    () => () => {
+      if (cycleRef.current) clearTimeout(cycleRef.current)
+    },
+    []
+  )
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
@@ -354,27 +472,48 @@ function InteractiveButtonPicker({ element, onWinner, disabled }) {
         onClick={handlePick}
         disabled={isPicking || disabled}
         style={{
-          width: 100, height: 100, borderRadius: '50%',
-          background: accent, border: 'none',
+          width: 100,
+          height: 100,
+          borderRadius: '50%',
+          background: accent,
+          border: 'none',
           cursor: isPicking || disabled ? 'default' : 'pointer',
           opacity: isPicking || disabled ? 0.7 : 1,
           pointerEvents: isPicking || disabled ? 'none' : 'auto',
-          color: 'white', fontSize: 14, fontWeight: 'bold',
+          color: 'white',
+          fontSize: 14,
+          fontWeight: 'bold',
           textTransform: 'uppercase',
           animation: !isPicking && !disabled ? `pulse-glow 2s ease-in-out infinite` : 'none',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           boxShadow: `0 4px 20px ${accent}66`,
           transition: 'transform 0.1s',
         }}
-        onMouseDown={e => { if (!isPicking && !disabled) e.currentTarget.style.transform = 'scale(0.95)' }}
-        onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
-        onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
+        onMouseDown={(e) => {
+          if (!isPicking && !disabled) e.currentTarget.style.transform = 'scale(0.95)'
+        }}
+        onMouseUp={(e) => {
+          e.currentTarget.style.transform = 'scale(1)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)'
+        }}
       >
         {isPicking ? '…' : 'PICK!'}
       </button>
       {winnerName && (
-        <div style={{ animation: 'winner-pop 0.5s ease-out forwards', fontSize: 15, fontWeight: 'bold', color: accent, textAlign: 'center' }}>
-          {winnerName}
+        <div
+          style={{
+            animation: 'winner-pop 0.5s ease-out forwards',
+            fontSize: 15,
+            fontWeight: 'bold',
+            color: accent,
+            textAlign: 'center',
+          }}
+        >
+          {winnerName.label}
         </div>
       )}
       {items.length > 0 && !winnerName && (
@@ -392,15 +531,20 @@ export function NamePickerRenderer({ element, isPresenting }) {
   const [lastWinner, setLastWinner] = useState(null)
   const [excludedSet, setExcludedSet] = useState(new Set())
 
-  useEffect(() => { injectCSS() }, [])
+  useEffect(() => {
+    injectCSS()
+  }, [])
 
-  const gameOptions = useMemo(() => ({
-    gameType: 'name-picker',
-    options: {
-      items: element.items || [],
-      excludeAfterPick: element.excludeAfterPick !== false,
-    },
-  }), [element.excludeAfterPick, element.items])
+  const gameOptions = useMemo(
+    () => ({
+      gameType: 'name-picker',
+      options: {
+        items: element.items || [],
+        excludeAfterPick: element.excludeAfterPick !== false,
+      },
+    }),
+    [element.excludeAfterPick, element.items]
+  )
   const { emit, isConnected, joinError, lastEvent } = useGameSocket(
     isPresenting ? element.id : null,
     isPresenting ? 'presenter' : null,
@@ -408,56 +552,83 @@ export function NamePickerRenderer({ element, isPresenting }) {
     gameOptions
   )
 
-  const effectiveItems = (element.items || []).filter((_, i) => !excludedSet.has(i))
+  const effectiveItems = (element.items || []).filter((item) => !excludedSet.has(item.id))
 
-  const handleWinner = useCallback((name, idx) => {
-    // When live, the server is authoritative: request a pick and let the
-    // game-random-result event (below) decide the announced winner so every
-    // client renders the SAME index. Offline (no game room) we fall back to
-    // the local animation result so the picker still works in the editor.
-    if (isPresenting && !isConnected) return
-    if (emit && isConnected) {
-      emit('game-random', { gameId: element.id, gameType: 'name-picker', mode })
-      return
-    }
-    setLastWinner({ name, idx })
-    fireConfetti(element)
-  }, [element, emit, isConnected, isPresenting, mode])
+  const handleWinner = useCallback(
+    (name) => {
+      // When live, the server is authoritative: request a pick and let the
+      // game-random-result event (below) decide the announced winner so every
+      // client renders the SAME index. Offline (no game room) we fall back to
+      // the local animation result so the picker still works in the editor.
+      if (isPresenting && !isConnected) return
+      if (emit && isConnected) {
+        emit('game-random', { gameId: element.id, gameType: 'name-picker', mode })
+        return
+      }
+      setLastWinner({ itemId: name.id, label: name.label })
+      fireConfetti(element)
+    },
+    [element, emit, isConnected, isPresenting, mode]
+  )
 
   // Render the SERVER-chosen winner so it matches every other client.
   useEffect(() => {
     if (lastEvent?.type !== 'random-result') return
     const idx = lastEvent.winnerIndex
     if (typeof idx !== 'number' || idx < 0) return
-    const hasStableWinner = Object.prototype.hasOwnProperty.call(lastEvent, 'winner')
-    const name = hasStableWinner
-      ? lastEvent.winner
-      : (element.items || [])[idx]
-    const authoredIndex = hasStableWinner
-      ? (element.items || []).indexOf(name)
-      : idx
+    const winnerId = lastEvent.winner?.id
+    const item = (element.items || []).find((candidate) => candidate.id === winnerId)
+    if (!item) return
     // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing UI to an external socket event is the intended use
-    setLastWinner({ name, idx: authoredIndex })
+    setLastWinner({ itemId: item.id, label: item.label })
     fireConfetti(element)
   }, [lastEvent, element])
 
   const handleExclude = useCallback(() => {
-    if (lastWinner?.idx !== undefined) {
-      setExcludedSet(prev => new Set([...prev, lastWinner.idx]))
+    if (lastWinner?.itemId) {
+      setExcludedSet((prev) => new Set([...prev, lastWinner.itemId]))
     }
   }, [lastWinner])
 
   let content
   if (mode === 'wheel') {
-    content = <InteractiveWheel element={element} onWinner={handleWinner} disabled={!isPresenting || !isConnected || effectiveItems.length === 0} />
+    content = (
+      <InteractiveWheel
+        element={element}
+        onWinner={handleWinner}
+        disabled={!isPresenting || !isConnected || effectiveItems.length === 0}
+      />
+    )
   } else if (mode === 'dice') {
-    content = <InteractiveDice element={element} onWinner={handleWinner} disabled={!isPresenting || !isConnected || effectiveItems.length === 0} />
+    content = (
+      <InteractiveDice
+        element={element}
+        onWinner={handleWinner}
+        disabled={!isPresenting || !isConnected || effectiveItems.length === 0}
+      />
+    )
   } else {
-    content = <InteractiveButtonPicker element={element} onWinner={handleWinner} disabled={!isPresenting || !isConnected || effectiveItems.length === 0} />
+    content = (
+      <InteractiveButtonPicker
+        element={element}
+        onWinner={handleWinner}
+        disabled={!isPresenting || !isConnected || effectiveItems.length === 0}
+      />
+    )
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', height: '100%' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        width: '100%',
+        height: '100%',
+      }}
+    >
       {content}
       {joinError && (
         <div role="alert" style={{ color: '#fecaca', fontSize: 10, textAlign: 'center' }}>
@@ -465,11 +636,18 @@ export function NamePickerRenderer({ element, isPresenting }) {
         </div>
       )}
       {isPresenting && lastWinner && element.excludeAfterPick && effectiveItems.length > 1 && (
-        <button onClick={handleExclude} style={{
-          background: 'transparent', border: `1px solid ${element.accentColor || '#6366f1'}66`,
-          borderRadius: 6, padding: '3px 10px', fontSize: 10,
-          color: `${element.accentColor || '#6366f1'}99`, cursor: 'pointer',
-        }}>
+        <button
+          onClick={handleExclude}
+          style={{
+            background: 'transparent',
+            border: `1px solid ${element.accentColor || '#6366f1'}66`,
+            borderRadius: 6,
+            padding: '3px 10px',
+            fontSize: 10,
+            color: `${element.accentColor || '#6366f1'}99`,
+            cursor: 'pointer',
+          }}
+        >
           Remove & Pick Again
         </button>
       )}

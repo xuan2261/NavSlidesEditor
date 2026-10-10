@@ -1,0 +1,170 @@
+{
+  "kind": "RUNTIME_METADATA_CLOSURE_INTERPRETATION_AND_CORRECT_PATHS_NOT_EXECUTION",
+  "observedAt": "2026-10-08T10:33:13.571054+07:00",
+  "rawEvidence": "runtime-metadata-closure.json",
+  "revealAllDistSourceServerManifestMatch": {
+    "matched": 45,
+    "total": 45
+  },
+  "requiredRevealWebAssets": [
+    {
+      "relativeVendorPath": "reveal.js/dist/reset.css",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/reveal.css",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/reveal.js",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/plugin/notes.js",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/plugin/highlight.js",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/plugin/markdown.js",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/plugin/math.js",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/plugin/search.js",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/plugin/zoom.js",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/plugin/highlight/monokai.css",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/plugin/highlight/zenburn.css",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/theme/black.css",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/theme/white.css",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/theme/league.css",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/theme/beige.css",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/theme/sky.css",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/theme/night.css",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/theme/serif.css",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/theme/simple.css",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/theme/solarized.css",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/theme/blood.css",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/theme/moon.css",
+      "sourceServerManifestMatch": true
+    },
+    {
+      "relativeVendorPath": "reveal.js/dist/theme/dracula.css",
+      "sourceServerManifestMatch": true
+    }
+  ],
+  "requiredRevealWebAssetsMatched": 23,
+  "education": [
+    {
+      "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/navslides-education/runtime.js",
+      "serverManifestMatch": true,
+      "sourceCssMatch": "NOT_ESTABLISHED_NO_BUILD"
+    },
+    {
+      "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/navslides-education/runtime.css",
+      "serverManifestMatch": true,
+      "sourceCssMatch": false
+    }
+  ],
+  "clientPublicVendorAbsenceInterpretation": {
+    "expectedRuntimeOwner": "server/vendor",
+    "evidence": [
+      "client/vite.config.js:28-40 /vendor proxy to API in dev+preview",
+      "server/index.js:242-249 /vendor express.static server/vendor",
+      "scripts/copy-vendor.js:95-140 publisher destination server/vendor"
+    ],
+    "missingClientPublicVendorIsNotClosureDefect": true,
+    "threeCopyMatchMetricInRawReport": "Not applicable to this architecture, do not interpret 0/45 as missing server runtime"
+  },
+  "correctExecutableArtifacts": [
+    {
+      "path": "C:/Users/Z10PAD8C_Xuan2261/AppData/Local/nvm/v22.22.0/node.exe",
+      "exists": true,
+      "bytes": 85804032,
+      "sha256": "bae898add4643fcf890a83ad8ae56e20dce7e781cab161a53991ceba70c99ffb",
+      "executed": false
+    },
+    {
+      "path": "C:/Users/Z10PAD8C_Xuan2261/AppData/Local/ms-playwright/chromium-1243/chrome-win64/chrome.exe",
+      "exists": true,
+      "bytes": 4508160,
+      "sha256": "9b07943f834485b43c9d54caea2951c78715f9f07070a80ab6658465ebd3e711",
+      "executed": false
+    },
+    {
+      "path": "C:/Users/Z10PAD8C_Xuan2261/AppData/Local/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-win64/chrome-headless-shell.exe",
+      "exists": true,
+      "bytes": 211550720,
+      "sha256": "addfa79abb060e1e514e155ed745d4bf96140bca402735958bb4e223aea0b98c",
+      "executed": false
+    }
+  ],
+  "rawGuessedPaths": {
+    "meaning": "NOT canonical, absence not usable-browser or Node blocker",
+    "examples": [
+      "chromium-1187/chrome-win",
+      "chromium_headless_shell-1187/chrome-win",
+      "C:/Program Files/nodejs/node.exe"
+    ]
+  },
+  "nodeLocator": {
+    "locator": "C:/nvm4w/nodejs",
+    "reparse": true,
+    "target": "C:/Users/Z10PAD8C_Xuan2261/AppData/Local/nvm/v22.22.0",
+    "junctionFollowed": false,
+    "directTargetExecutableInspected": true,
+    "executed": false
+  },
+  "rollupNativePackage": "Not found at root node_modules/@rollup nor client/node_modules/@rollup; no Vite/Vitest executable-health claim, no install authority. Proposed minimal TDD runner must avoid or prove dependency separately after approval.",
+  "sourceBundleEquivalence": "NOT_ESTABLISHED",
+  "immutableClosure": "NOT_ESTABLISHED",
+  "binaryHealth": "NOT_EXECUTED",
+  "DRead": false
+}

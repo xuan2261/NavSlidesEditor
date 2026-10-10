@@ -1,0 +1,162 @@
+
+	/**
+	 * Binds all event listeners.
+	 */
+	function addEventListeners() {
+
+		eventsAreBound = true;
+
+		window.addEventListener( 'resize', onWindowResize, false );
+
+		if( config.touch ) touch.bind();
+		if( config.keyboard ) keyboard.bind();
+		if( config.progress ) progress.bind();
+		if( config.respondToHashChanges ) location.bind();
+		controls.bind();
+		focus.bind();
+
+		dom.slides.addEventListener( 'click', onSlidesClicked, false );
+		dom.slides.addEventListener( 'transitionend', onTransitionEnd, false );
+		dom.pauseOverlay.addEventListener( 'click', resume, false );
+
+		if( config.focusBodyOnPageVisibilityChange ) {
+			document.addEventListener( 'visibilitychange', onPageVisibilityChange, false );
+		}
+
+	}
+
+	/**
+	 * Unbinds all event listeners.
+	 */
+	function removeEventListeners() {
+
+		eventsAreBound = false;
+
+		touch.unbind();
+		focus.unbind();
+		keyboard.unbind();
+		controls.unbind();
+		progress.unbind();
+		location.unbind();
+
+		window.removeEventListener( 'resize', onWindowResize, false );
+
+		dom.slides.removeEventListener( 'click', onSlidesClicked, false );
+		dom.slides.removeEventListener( 'transitionend', onTransitionEnd, false );
+		dom.pauseOverlay.removeEventListener( 'click', resume, false );
+
+	}
+
+	/**
+	 * Uninitializes reveal.js by undoing changes made to the
+	 * DOM and removing all event listeners.
+	 */
+
+…
+
+
+		initialize,
+		configure,
+		destroy,
+
+		sync,
+		syncSlide,
+		syncFragments: fragments.sync.bind( fragments ),
+
+		// Navigation methods
+		slide,
+		left: navigateLeft,
+		right: navigateRight,
+		up: navigateUp,
+		down: navigateDown,
+		prev: navigatePrev,
+		next: navigateNext,
+
+		// Navigation aliases
+		navigateLeft, navigateRight, navigateUp, navigateDown, navigatePrev, navigateNext,
+
+		// Fragment methods
+		navigateFragment: fragments.goto.bind( fragments ),
+		prevFragment: fragments.prev.bind( fragments ),
+		nextFragment: fragments.next.bind( fragments ),
+
+		// Event binding
+		on,
+		off,
+
+		// Legacy event binding methods left in for backwards compatibility
+
+…
+
+		hasVerticalSlides,
+
+		// Checks if the deck has navigated on either axis at least once
+		hasNavigatedHorizontally: () => navigationHistory.hasNavigatedHorizontally,
+		hasNavigatedVertically: () => navigationHistory.hasNavigatedVertically,
+
+		shouldAutoAnimateBetween,
+
+		// Adds/removes a custom key binding
+		addKeyBinding: keyboard.addKeyBinding.bind( keyboard ),
+		removeKeyBinding: keyboard.removeKeyBinding.bind( keyboard ),
+
+		// Programmatically triggers a keyboard event
+		triggerKey: keyboard.triggerKey.bind( keyboard ),
+
+		// Registers a new shortcut to include in the help overlay
+		registerKeyboardShortcut: keyboard.registerKeyboardShortcut.bind( keyboard ),
+
+		getComputedSlideSize,
+		setCurrentScrollPage,
+
+
+…
+
+		// Helper method, retrieves query string as a key:value map
+		getQueryHash: Util.getQueryHash,
+
+		// Returns the path to the current slide as represented in the URL
+		getSlidePath: location.getHash.bind( location ),
+
+		// Returns reveal.js DOM elements
+		getRevealElement: () => revealElement,
+		getSlidesElement: () => dom.slides,
+		getViewportElement: () => dom.viewport,
+		getBackgroundsElement: () => backgrounds.element,
+
+		// API for registering and retrieving plugins
+		registerPlugin: plugins.registerPlugin.bind( plugins ),
+		hasPlugin: plugins.hasPlugin.bind( plugins ),
+		getPlugin: plugins.getPlugin.bind( plugins ),
+		getPlugins: plugins.getRegisteredPlugins.bind( plugins )
+
+	};
+
+	// Our internal API which controllers have access to
+	Util.extend( Reveal, {
+		...API,
+
+		// Methods for announcing content to screen readers
+		announceStatus,
+		getStatusText,
+
+		// Controllers
+		focus,
+		scroll: scrollView,
+		progress,
+		controls,
+		location,
+		overview,
+		keyboard,
+		fragments,
+		backgrounds,
+		slideContent,
+		slideNumber,
+
+		onUserInput,
+		closeOverlay: overlay.close.bind( overlay ),
+		updateSlidesVisibility,
+		layoutSlideContents,
+		transformSlides,
+		cueAutoSlide,
+		cancelAutoSlide

@@ -1,0 +1,243 @@
+	}
+
+
+	// --------------------------------------------------------------------//
+	// ------------------------------- API --------------------------------//
+	// --------------------------------------------------------------------//
+
+	// The public reveal.js API
+	const API = {
+		VERSION,
+
+		initialize,
+		configure,
+		destroy,
+
+		sync,
+		syncSlide,
+		syncFragments: fragments.sync.bind( fragments ),
+
+		// Navigation methods
+		slide,
+		left: navigateLeft,
+		right: navigateRight,
+		up: navigateUp,
+		down: navigateDown,
+		prev: navigatePrev,
+		next: navigateNext,
+
+		// Navigation aliases
+		navigateLeft, navigateRight, navigateUp, navigateDown, navigatePrev, navigateNext,
+
+		// Fragment methods
+		navigateFragment: fragments.goto.bind( fragments ),
+		prevFragment: fragments.prev.bind( fragments ),
+		nextFragment: fragments.next.bind( fragments ),
+
+		// Event binding
+		on,
+		off,
+
+		// Legacy event binding methods left in for backwards compatibility
+		addEventListener: on,
+		removeEventListener: off,
+
+		// Forces an update in slide layout
+		layout,
+
+		// Randomizes the order of slides
+		shuffle,
+
+		// Returns an object with the available routes as booleans (left/right/top/bottom)
+		availableRoutes,
+
+		// Returns an object with the available fragments as booleans (prev/next)
+		availableFragments: fragments.availableRoutes.bind( fragments ),
+
+		// Toggles a help overlay with keyboard shortcuts
+		toggleHelp: overlay.toggleHelp.bind( overlay ),
+
+		// Toggles the overview mode on/off
+		toggleOverview: overview.toggle.bind( overview ),
+
+		// Toggles the scroll view on/off
+		toggleScrollView: scrollView.toggle.bind( scrollView ),
+
+		// Toggles the "black screen" mode on/off
+		togglePause,
+
+		// Toggles the auto slide mode on/off
+		toggleAutoSlide,
+
+		// Toggles visibility of the jump-to-slide UI
+		toggleJumpToSlide,
+
+		// Slide navigation checks
+		isFirstSlide,
+		isLastSlide,
+		isLastVerticalSlide,
+		isVerticalSlide,
+		isVerticalStack,
+
+		// State checks
+		isPaused,
+		isAutoSliding,
+		isSpeakerNotes: notes.isSpeakerNotesWindow.bind( notes ),
+		isOverview: overview.isActive.bind( overview ),
+		isFocused: focus.isFocused.bind( focus ),
+		isOverlayOpen: overlay.isOpen.bind( overlay ),
+		isScrollView: scrollView.isActive.bind( scrollView ),
+		isPrintView: printView.isActive.bind( printView ),
+
+		// Checks if reveal.js has been loaded and is ready for use
+		isReady: () => ready,
+
+		// Slide preloading
+		loadSlide: slideContent.load.bind( slideContent ),
+		unloadSlide: slideContent.unload.bind( slideContent ),
+
+		// Start/stop all media inside of the current slide
+		startEmbeddedContent: () => slideContent.startEmbeddedContent( currentSlide ),
+		stopEmbeddedContent: () => slideContent.stopEmbeddedContent( currentSlide, { unloadIframes: false } ),
+
+		// Lightbox previews
+		previewIframe: overlay.previewIframe.bind( overlay ),
+		previewImage: overlay.previewImage.bind( overlay ),
+		previewVideo: overlay.previewVideo.bind( overlay ),
+
+		showPreview: overlay.previewIframe.bind( overlay ), // deprecated in favor of showIframeLightbox
+		hidePreview: overlay.close.bind( overlay ),
+
+		// Adds or removes all internal event listeners
+		addEventListeners,
+		removeEventListeners,
+		dispatchEvent,
+
+		// Facility for persisting and restoring the presentation state
+		getState,
+		setState,
+
+		// Presentation progress on range of 0-1
+		getProgress,
+
+		// Returns the indices of the current, or specified, slide
+		getIndices,
+
+		// Returns an Array of key:value maps of the attributes of each
+		// slide in the deck
+		getSlidesAttributes,
+
+		// Returns the number of slides that we have passed
+		getSlidePastCount,
+
+		// Returns the total number of slides
+		getTotalSlides,
+
+		// Returns the slide element at the specified index
+		getSlide,
+
+		// Returns the previous slide element, may be null
+		getPreviousSlide: () => previousSlide,
+
+		// Returns the current slide element
+		getCurrentSlide: () => currentSlide,
+
+		// Returns the slide background element at the specified index
+		getSlideBackground,
+
+		// Returns the speaker notes string for a slide, or null
+		getSlideNotes: notes.getSlideNotes.bind( notes ),
+
+		// Returns an Array of all slides
+		getSlides,
+
+		// Returns an array with all horizontal/vertical slides in the deck
+		getHorizontalSlides,
+		getVerticalSlides,
+
+		// Checks if the presentation contains two or more horizontal
+		// and vertical slides
+		hasHorizontalSlides,
+		hasVerticalSlides,
+
+		// Checks if the deck has navigated on either axis at least once
+		hasNavigatedHorizontally: () => navigationHistory.hasNavigatedHorizontally,
+		hasNavigatedVertically: () => navigationHistory.hasNavigatedVertically,
+
+		shouldAutoAnimateBetween,
+
+		// Adds/removes a custom key binding
+		addKeyBinding: keyboard.addKeyBinding.bind( keyboard ),
+		removeKeyBinding: keyboard.removeKeyBinding.bind( keyboard ),
+
+		// Programmatically triggers a keyboard event
+		triggerKey: keyboard.triggerKey.bind( keyboard ),
+
+		// Registers a new shortcut to include in the help overlay
+		registerKeyboardShortcut: keyboard.registerKeyboardShortcut.bind( keyboard ),
+
+		getComputedSlideSize,
+		setCurrentScrollPage,
+
+		// Allows for manually removing slides prior to reveal.js initialization
+		removeHiddenSlides,
+
+		// Returns the current scale of the presentation content
+		getScale: () => scale,
+
+		// Returns the current configuration object
+		getConfig: () => config,
+
+		// Helper method, retrieves query string as a key:value map
+		getQueryHash: Util.getQueryHash,
+
+		// Returns the path to the current slide as represented in the URL
+		getSlidePath: location.getHash.bind( location ),
+
+		// Returns reveal.js DOM elements
+		getRevealElement: () => revealElement,
+		getSlidesElement: () => dom.slides,
+		getViewportElement: () => dom.viewport,
+		getBackgroundsElement: () => backgrounds.element,
+
+		// API for registering and retrieving plugins
+		registerPlugin: plugins.registerPlugin.bind( plugins ),
+		hasPlugin: plugins.hasPlugin.bind( plugins ),
+		getPlugin: plugins.getPlugin.bind( plugins ),
+		getPlugins: plugins.getRegisteredPlugins.bind( plugins )
+
+	};
+
+	// Our internal API which controllers have access to
+	Util.extend( Reveal, {
+		...API,
+
+		// Methods for announcing content to screen readers
+		announceStatus,
+		getStatusText,
+
+		// Controllers
+		focus,
+		scroll: scrollView,
+		progress,
+		controls,
+		location,
+		overview,
+		keyboard,
+		fragments,
+		backgrounds,
+		slideContent,
+		slideNumber,
+
+		onUserInput,
+		closeOverlay: overlay.close.bind( overlay ),
+		updateSlidesVisibility,
+		layoutSlideContents,
+		transformSlides,
+		cueAutoSlide,
+		cancelAutoSlide
+	} );
+
+	return API;
+
+};

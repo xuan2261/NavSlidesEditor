@@ -1,4 +1,5 @@
 const path = require('node:path').posix
+const { collectGameMediaReferences } = require('revealjs-shared')
 
 function fileName(value) {
   try {
@@ -9,22 +10,7 @@ function fileName(value) {
 }
 
 function collectMediaUrls(presentation) {
-  const urls = []
-  const add = (value) => {
-    if (typeof value === 'string' && value) urls.push(value)
-  }
-  const visit = (slides) => (slides || []).forEach((slide) => {
-    const background = slide?.background
-    if (background?.type === 'image') add(background.image || background.src)
-    for (const element of slide?.elements || []) {
-      add(element.src)
-      add(element.poster)
-      for (const track of element.tracks || []) add(track?.src)
-    }
-    visit(slide?.children)
-  })
-  visit(presentation?.slides)
-  return urls
+  return collectGameMediaReferences(presentation).map(({ url }) => url)
 }
 
 function buildLegacyMediaInventory(presentation, archivePaths) {

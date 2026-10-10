@@ -12,6 +12,7 @@ export default [
       'dist-electron/**',
       'dist-electron*/**',
       '.tmp/**',
+      '.playwright/**',
       'server/node_modules/**',
       'server/vendor/**',
       'plans/**',
@@ -34,7 +35,12 @@ export default [
     },
   },
   {
-    files: ['*.config.mjs', 'config/**/*.mjs', 'client/vite.config.js', 'website/.vitepress/config.mjs'],
+    files: [
+      '*.config.mjs',
+      'config/**/*.mjs',
+      'client/vite.config.js',
+      'website/.vitepress/config.mjs',
+    ],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -165,7 +171,11 @@ export default [
   // Server
   {
     files: ['server/**/*.{js,cjs}'],
-    ignores: ['server/**/*.test.js'],
+    ignores: [
+      'server/**/*.test.js',
+      'server/services/game-authority-test-fixture.js',
+      'server/services/game-live-wire-fixture.js',
+    ],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -175,7 +185,12 @@ export default [
   },
   // Server + Shared test files (use ES modules)
   {
-    files: ['server/**/*.test.js', 'shared/tests/**/*.js'],
+    files: [
+      'server/**/*.test.js',
+      'shared/tests/**/*.js',
+      'server/services/game-authority-test-fixture.js',
+      'server/services/game-live-wire-fixture.js',
+    ],
     languageOptions: {
       globals: {
         ...globals.node,

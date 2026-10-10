@@ -1,24 +1,33 @@
-
-export function PresenterControls({ teams, activeTeam, onSelectTeam, _onReveal, _onReturn, _accentColor, showFinalJeopardy }) {
+export function PresenterControls({
+  teams,
+  activeTeam,
+  onSelectTeam,
+  _onReveal,
+  _onReturn,
+  _accentColor,
+  showFinalJeopardy,
+}) {
   return (
-    <div style={{
-      display: 'flex',
-      gap: 8,
-      flexShrink: 0,
-      paddingTop: 8,
-      justifyContent: 'center',
-      flexWrap: 'wrap',
-      alignItems: 'center',
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        gap: 8,
+        flexShrink: 0,
+        paddingTop: 8,
+        justifyContent: 'center',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+      }}
+    >
       {/* Team selection */}
-      {teams.map((team, i) => (
+      {teams.map((team) => (
         <button
-          key={team.id || i}
+          key={team.id}
           type="button"
-          aria-pressed={activeTeam === (team.id || team.name)}
-          onClick={() => onSelectTeam && onSelectTeam(team.id || team.name)}
+          aria-pressed={activeTeam === team.id}
+          onClick={() => onSelectTeam && onSelectTeam(team.id)}
           style={{
-            background: activeTeam === (team.id || team.name) ? team.color : 'rgba(255,255,255,0.1)',
+            background: activeTeam === team.id ? team.color : 'rgba(255,255,255,0.1)',
             border: `2px solid ${team.color}`,
             borderRadius: 6,
             padding: '3px 10px',

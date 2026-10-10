@@ -1,0 +1,102 @@
+      "action": "Use Main's retained terminal copies, genuine receipt inventory, scope-preservation record and distinctly identified partial11 freeze as settlement evidence. Preserve original and historical records unchanged. Do not repeat the failure or checksum/count measurements merely to reconfirm the supplied observations.",
+      "basis": "11 terminal settlement and scope-preservation records;11 failure protocol:84-86."
+    },
+    {
+      "order": 2,
+      "decision": "PERMITTED for Main, not dispatched by this counsel.",
+      "action": "Commission exactly two distinct independent read-only salvage reviewers against the identical frozen partial11 subject: one Native15 review and one Evidence11 review. Issue explicitly salvage-only contracts, not the prepared normal-gate prompts whose successful-delivery prerequisites are unsatisfied.",
+      "basis": "09 terminal-failure counsel:6;10 terminal-failure counsel:5,8;11 failure protocol:87-88."
+    },
+    {
+      "order": 3,
+      "decision": "PERMITTED within the full contract below.",
+      "action": "Each reviewer reads complete assigned source, unchanged helpers included, all12 immutable caller consumers and relevant cross-partition/production seams. Require current-subject, obligation-by-obligation static evidence and exact bounded uncertainties. Reviewers neither repair source nor manufacture receipts.",
+      "basis": "10 permitted_settlement_actions_for_main, orders4-5;11 scope counsel:58,87."
+    },
+    {
+      "order": 4,
+      "decision": "PERMITTED; required to finish a source-informed settlement.",
+      "action": "After both reports are complete, Main settles11 with separate delivery blockers, receipt limitations, preservation findings, source credits, source repairs and unresolved scope/evidence. Retain complete independent reports. Even source-clean salvage leaves11 failed and unadmitted; gap4 and dependent gaps5-9 remain unresolved/blocked.",
+      "basis": "10 permitted_settlement_actions_for_main, order6;11 failure protocol:86-88."
+    },
+    {
+      "order": 5,
+      "decision": "NOT PERMITTED automatically.",
+      "action": "Pause substantive work after settlement. A later repair/completion attempt requires a new explicit, separately bounded user authorization based on the actual settled11 blocker list. This counsel supplies no such authorization and dispatches no attempt.",
+      "basis": "11 dispatch authority:73;11 failure protocol:84,88."
+    }
+  ],
+  "full_salvage_contract": {
+    "purpose": "Establish source-backed remaining obligations and preserved local improvements for failed-delivery settlement only. Never claim normal GO, ADMIT, completed delivery, runtime correctness or qualification.",
+    "independence": "Two distinct reviewers produce separate independent reports on the same recorded combined subject. Each owns full assigned-partition coverage and traces relevant cross-partition seams; together they cover all26 helpers. One coordinator opinion, one producer receipt or one partition review does not substitute for both reports.",
+    "authority_read_coverage": {
+      "root": "D:/NavSlidesQualification/edu-resume-261004/",
+      "must_read_completely": [
+        "pending-substrate-07-native-admission.json",
+        "pending-substrate-07-evidence-admission.json",
+        "pending-substrate-08-native-salvage-audit.json",
+        "pending-substrate-08-evidence-salvage-audit.json",
+        "pending-substrate-08-subject-authority.json",
+        "pending-substrate-09-native-salvage-audit.json",
+        "pending-substrate-09-evidence-salvage-audit.json",
+        "pending-substrate-09-settled-rejection-counsel.json",
+        "pending-substrate-09-terminal-failure-counsel.json",
+        "pending-substrate-10-terminal-failure-counsel.json",
+        "pending-substrate-10-native-completion-settlement.json",
+        "pending-substrate-11-dispatch-authority.json",
+        "pending-substrate-11-scope-counsel.json",
+        "pending-substrate-11-native-prompt.md",
+        "pending-substrate-11-evidence-prompt.md",
+        "pending-substrate-11-terminal-settlement.json",
+        "pending-substrate-11-scope-preservation.json"
+      ],
+      "receipt": "Read the genuine Evidence11 receipt completely as delivered; there is no Native11 receipt to read or reconstruct.",
+      "preservation_ownership": "Use Main's subject identity and preservation observations. Reviewers do not remeasure hashes, counts or physical lines, ingest the entire4328-file freeze inventory as a substitute for source coverage, or execute preservation scripts.",
+      "full_body_rule": "Complete governing finding bodies, original titles, paths, historical dispositions and canonical mappings are incorporated by reference without amendment. The summaries below are coverage indices, not replacement bodies. Expand every read omission and continue through each required document's actual extent."
+    },
+    "source_read_coverage": {
+      "sourcePrefix": "tests/e2e/education/",
+      "native15": [
+        "pending-round-lifecycle-native-observation.js",
+        "pending-round-lifecycle-native-snapshot.js",
+        "pending-round-lifecycle-activity-interval.js",
+        "pending-round-lifecycle-observation.js",
+        "pending-round-lifecycle-observation-domain.js",
+        "pending-round-lifecycle-clock.js",
+        "pending-round-lifecycle-controls.js",
+        "pending-round-lifecycle-witness.js",
+        "pending-round-lifecycle-observation-browser.js",
+        "pending-round-lifecycle-native-action.js",
+        "pending-round-lifecycle-witness-domain.js",
+        "pending-round-lifecycle-history-domain.js",
+        "pending-round-lifecycle-native-history.js",
+        "pending-round-lifecycle-observation-errors.js",
+        "pending-round-lifecycle-navigation.js"
+      ],
+      "evidence11": [
+        "pending-round-lifecycle-ui-evidence.js",
+        "pending-round-lifecycle-error-ledger.js",
+        "pending-round-lifecycle-live-evidence.js",
+        "pending-round-lifecycle-evidence.js",
+        "pending-round-lifecycle-surfaces.js",
+        "pending-round-lifecycle-evidence-domain.js",
+        "release-surfaces.js",
+        "present-offline-helpers.js",
+        "pending-round-lifecycle-live-root-observation.js",
+        "pending-round-lifecycle-error-exposure.js",
+        "release-portable-inspection.js"
+      ],
+      "immutableCaller12": [
+        "pending-round-lifecycle-acceptance.spec.js",
+        "pending-round-lifecycle-cases.js",
+        "pending-round-lifecycle-fixtures.js",
+        "pending-round-lifecycle-leave-return.js",
+        "pending-round-lifecycle-reset.js",
+        "pending-round-lifecycle-isolation.js",
+        "pending-round-lifecycle-state.js",
+        "pending-round-lifecycle-quiz-state.js",
+        "pending-round-lifecycle-hot-potato-state.js",
+        "pending-round-lifecycle-jeopardy-state.js",
+        "pending-round-lifecycle-relay-state.js",
+
+[Showing lines 101-200 of 541. Use :201 to continue]

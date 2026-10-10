@@ -1,0 +1,120 @@
+import { readPassiveEvents } from './pending-round-lifecycle-observation.js'
+import { validateManifest, matchRootTuples } from './pending-round-lifecycle-evidence-domain.js'
+import { evaluateLiveRootObservation } from './pending-round-lifecycle-live-root-observation.js'
+
+function assertCollectorSink(evidence) {
+  if (
+    !evidence ||
+    typeof evidence.stage !== 'function' ||
+    typeof evidence.recordError !== 'function' ||
+    typeof evidence.getExpectedRoots !== 'function' ||
+    typeof evidence.assertDocumentIdentity !== 'function' ||
+    typeof evidence.getPrimaryError !== 'function' ||
+    typeof evidence.produceThrow !== 'function'
+  ) {
+    throw new Error(
+      'Callable evidence sink with stage, recordError, getExpectedRoots, assertDocumentIdentity, getPrimaryError and produceThrow is required before collector effects'
+    )
+  }
+}
+
+export async function collectLiveRootStates(page, expectedRoots, evidence) {
+  assertCollectorSink(evidence)
+  if (page.isClosed()) {
+    throw new Error('Cannot collect live root states: page is already closed')
+  }
+  validateManifest(expectedRoots)
+
+  const rootData = await evaluateLiveRootObservation(page)
+  evidence.stage('liveRootsRaw', rootData)
+
+  let docIdentityError = null
+  try {
+    evidence.assertDocumentIdentity(rootData.documentIdentity)
+  } catch (idErr) {
+    docIdentityError = evidence.recordError('live:root:documentIdentity', idErr)
+  }
+
+  const recordedBrowserErrors = []
+  for (const errEnv of rootData.rootErrors) {
+    const recorded = evidence.recordError(`live:root:${errEnv.phase || 'error'}`, errEnv)
+    recordedBrowserErrors.push(recorded)
+  }
+
+  let matchError = null
+  try {
+    matchRootTuples(expectedRoots, rootData.roots)
+  } catch (mErr) {
+    matchError = evidence.recordError('live:root:matchTuples', mErr)
+  }
+
+  const rootFailure = docIdentityError || recordedBrowserErrors[0] || matchError
+  if (rootFailure) {
+    throw rootFailure
+  }
+
+  return rootData
+}
+
+export async function collectLivePageDiagnostics(page, expectedRoots, evidence) {
+  assertCollectorSink(evidence)
+  if (page.isClosed()) {
+    throw new Error('Cannot collect live page diagnostics: page is already closed')
+  }
+  validateManifest(expectedRoots)
+
+  const rootPromise = collectLiveRootStates(page, expectedRoots, evidence).catch((err) => {
+    evidence.recordError('live:roots', err)
+    throw err
+  })
+  const passivePromise = readPassiveEvents(page, evidence).catch((err) => {
+    evidence.recordError('live:passive', err)
+    throw err
+  })
+  const revealPromise = page
+    .evaluate(() => {
+      if (!window.Reveal?.isReady?.()) throw new Error('Reveal is not ready')
+      return {
+        ready: true,
+        currentSlideId: window.Reveal.getCurrentSlide()?.dataset?.nsEffectiveSlideId ?? null,
+        documentTime: performance.now(),
+        visibilityState: document.visibilityState,
+      }
+    })
+    .catch((err) => {
+      evidence.recordError('live:reveal', err)
+      throw err
+    })
+
+  const [rootRes, passiveRes, revealRes] = await Promise.allSettled([rootPromise, passivePromise, revealPromise])
+
+  if (rootRes.status === 'fulfilled') evidence.stage('liveRoots', rootRes.value)
+  if (passiveRes.status === 'fulfilled') evidence.stage('livePassiveEvents', passiveRes.value)
+  if (revealRes.status === 'fulfilled') evidence.stage('liveReveal', revealRes.value)
+
+  const result = {
+    roots: rootRes.status === 'fulfilled' ? rootRes.value.roots : null,
+    rootData: rootRes.status === 'fulfilled' ? rootRes.value : null,
+    rootErrors: rootRes.status === 'fulfilled' ? rootRes.value.rootErrors : [],
+    documentIdentity: rootRes.status === 'fulfilled' ? rootRes.value.documentIdentity : null,
+    passiveEvents: passiveRes.status === 'fulfilled' ? passiveRes.value : null,
+    revealInfo: revealRes.status === 'fulfilled' ? revealRes.value : null,
+    settled: { roots: rootRes.status, passive: passiveRes.status, reveal: revealRes.status },
+  }
+  evidence.stage('livePageDiagnostics', result)
+
+  const hasFailure = rootRes.status === 'rejected' || passiveRes.status === 'rejected' || revealRes.status === 'rejected'
+  if (hasFailure) {
+    const toThrow = evidence.produceThrow() || evidence.getPrimaryError()
+    throw toThrow
+  }
+
+  return result
+}
+
+export async function captureLiveScreenshot(page) {
+  if (page.isClosed()) {
+    throw new Error('Cannot capture screenshot: page is already closed')
+  }
+  return page.screenshot()
+}

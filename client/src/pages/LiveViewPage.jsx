@@ -14,14 +14,20 @@ function getAnnotationBucketKey(slideIndex, verticalIndex = 0) {
 
 function publishTimerStates(states) {
   const now = Date.now()
-  window.__timerStates = Object.fromEntries(Object.entries(states).map(([id, state]) => [id, {
-    remaining: state.running && state.endedAt
-      ? Math.max(0, Math.ceil((state.endedAt - now) / 1000))
-      : (state.pausedRemaining ?? state.duration),
-    duration: state.duration,
-    running: state.running,
-    endedAt: state.endedAt,
-  }]))
+  window.__timerStates = Object.fromEntries(
+    Object.entries(states).map(([id, state]) => [
+      id,
+      {
+        remaining:
+          state.running && state.endedAt
+            ? Math.max(0, Math.ceil((state.endedAt - now) / 1000))
+            : (state.pausedRemaining ?? state.remaining ?? state.duration),
+        duration: state.duration,
+        running: state.running,
+        endedAt: state.endedAt,
+      },
+    ])
+  )
 }
 
 export default function LiveViewPage() {
@@ -54,17 +60,21 @@ export default function LiveViewPage() {
   const { iframeRef } = useRevealPreviewFrame(htmlContent, liveState)
   const [iframeElement, setIframeElement] = useState(null)
 
-  const handleIframeRef = useCallback((node) => {
-    iframeRef.current = node
-    setIframeElement(node)
-  }, [iframeRef])
+  const handleIframeRef = useCallback(
+    (node) => {
+      iframeRef.current = node
+      setIframeElement(node)
+    },
+    [iframeRef]
+  )
 
   const handleOverlayKeyDown = useCallback((event) => {
     if (event.defaultPrevented || event.isComposing) return
 
     const target = event.target
     const tag = target?.tagName
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) return
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable)
+      return
 
     const shortcuts = getShortcuts({})
 
@@ -73,18 +83,27 @@ export default function LiveViewPage() {
       if (keyboardEvent.ctrlKey || keyboardEvent.metaKey) mods.push('Ctrl')
       if (keyboardEvent.shiftKey) mods.push('Shift')
       if (keyboardEvent.altKey) mods.push('Alt')
-      const key = keyboardEvent.key.length === 1 ? keyboardEvent.key.toUpperCase() : keyboardEvent.key
+      const key =
+        keyboardEvent.key.length === 1 ? keyboardEvent.key.toUpperCase() : keyboardEvent.key
       return mods.length > 0 ? [...mods, key].join('+') : key
     }
 
     const shortcut = shortcuts.find((item) => item.activeKey === normalizeKey(event))
     if (!shortcut) return
 
-    if (shortcut.id === 'blackScreen') { event.preventDefault(); setOverlayColor('black'); return }
-    if (shortcut.id === 'whiteScreen') { event.preventDefault(); setOverlayColor('white'); return }
+    if (shortcut.id === 'blackScreen') {
+      event.preventDefault()
+      setOverlayColor('black')
+      return
+    }
+    if (shortcut.id === 'whiteScreen') {
+      event.preventDefault()
+      setOverlayColor('white')
+      return
+    }
     if (shortcut.id === 'escape') {
       event.preventDefault()
-      setOverlayColor((currentOverlayColor) => currentOverlayColor ? null : currentOverlayColor)
+      setOverlayColor((currentOverlayColor) => (currentOverlayColor ? null : currentOverlayColor))
     }
   }, [])
 
@@ -131,7 +150,7 @@ export default function LiveViewPage() {
     setStrokesBySlide({})
 
     const socket = io({ path: '/ws', reconnection: true })
-    socketRef.current = socket  // make available for timer/event bridge hooks immediately
+    socketRef.current = socket // make available for timer/event bridge hooks immediately
     let cancelled = false
     const isCurrentSocket = () => !cancelled && socketRef.current === socket
     const invalidatePresenterPoll = () => {
@@ -294,31 +313,39 @@ export default function LiveViewPage() {
     }
   }, [htmlContent, isConnected, presenterLeft, roomCode, roomEnded])
 
-
   // Annotation sync — handlers operate on the current slide's stroke bucket.
   const slideIndex = liveState.slideIndex
   const verticalIndex = liveState.verticalIndex
 
-  const handleAnnotationAdd = useCallback((annotation, targetSlideIndex = slideIndex, targetVerticalIndex = verticalIndex) => {
-    const bucketKey = getAnnotationBucketKey(targetSlideIndex, targetVerticalIndex)
-    setStrokesBySlide((prev) => ({
-      ...prev,
-      [bucketKey]: [...(prev[bucketKey] || []), annotation],
-    }))
-  }, [slideIndex, verticalIndex])
+  const handleAnnotationAdd = useCallback(
+    (annotation, targetSlideIndex = slideIndex, targetVerticalIndex = verticalIndex) => {
+      const bucketKey = getAnnotationBucketKey(targetSlideIndex, targetVerticalIndex)
+      setStrokesBySlide((prev) => ({
+        ...prev,
+        [bucketKey]: [...(prev[bucketKey] || []), annotation],
+      }))
+    },
+    [slideIndex, verticalIndex]
+  )
 
-  const handleAnnotationRemove = useCallback((annotationId, targetSlideIndex = slideIndex, targetVerticalIndex = verticalIndex) => {
-    const bucketKey = getAnnotationBucketKey(targetSlideIndex, targetVerticalIndex)
-    setStrokesBySlide((prev) => ({
-      ...prev,
-      [bucketKey]: (prev[bucketKey] || []).filter((a) => a.id !== annotationId),
-    }))
-  }, [slideIndex, verticalIndex])
+  const handleAnnotationRemove = useCallback(
+    (annotationId, targetSlideIndex = slideIndex, targetVerticalIndex = verticalIndex) => {
+      const bucketKey = getAnnotationBucketKey(targetSlideIndex, targetVerticalIndex)
+      setStrokesBySlide((prev) => ({
+        ...prev,
+        [bucketKey]: (prev[bucketKey] || []).filter((a) => a.id !== annotationId),
+      }))
+    },
+    [slideIndex, verticalIndex]
+  )
 
-  const handleAnnotationsClear = useCallback((targetSlideIndex = slideIndex, targetVerticalIndex = verticalIndex) => {
-    const bucketKey = getAnnotationBucketKey(targetSlideIndex, targetVerticalIndex)
-    setStrokesBySlide((prev) => ({ ...prev, [bucketKey]: [] }))
-  }, [slideIndex, verticalIndex])
+  const handleAnnotationsClear = useCallback(
+    (targetSlideIndex = slideIndex, targetVerticalIndex = verticalIndex) => {
+      const bucketKey = getAnnotationBucketKey(targetSlideIndex, targetVerticalIndex)
+      setStrokesBySlide((prev) => ({ ...prev, [bucketKey]: [] }))
+    },
+    [slideIndex, verticalIndex]
+  )
 
   useAnnotationSync({
     socket: socketRef.current,
@@ -345,24 +372,26 @@ export default function LiveViewPage() {
     publishTimerStates(states)
     const needsTick = Object.values(states).some((state) => state.running && state.endedAt)
     if (needsTick && timerMirrorIntervalRef.current === null) {
-      timerMirrorIntervalRef.current = setInterval(() => publishTimerStates(timerMirrorSourceRef.current), 100)
+      timerMirrorIntervalRef.current = setInterval(
+        () => publishTimerStates(timerMirrorSourceRef.current),
+        100
+      )
     } else if (!needsTick && timerMirrorIntervalRef.current !== null) {
       clearInterval(timerMirrorIntervalRef.current)
       timerMirrorIntervalRef.current = null
     }
   }, [])
 
-  // Timer sync (Phase 2): subscribe to server timer events
-  const timerStatesRef = useLiveTimerSync(socketRef.current, (elementId) => {
-    // Optional: handle timer end (e.g., log or notify)
-    console.log('[timer] ended:', elementId)
-  }, handleTimerStatesChanged)
+  const timerStatesRef = useLiveTimerSync(socketRef.current, undefined, handleTimerStatesChanged)
 
-  useEffect(() => () => {
-    clearInterval(timerMirrorIntervalRef.current)
-    timerMirrorIntervalRef.current = null
-    window.__timerStates = {}
-  }, [])
+  useEffect(
+    () => () => {
+      clearInterval(timerMirrorIntervalRef.current)
+      timerMirrorIntervalRef.current = null
+      window.__timerStates = {}
+    },
+    []
+  )
 
   // Bridge: iframe game renderers emit timer events via postMessage
   useEffect(() => {
@@ -384,7 +413,9 @@ export default function LiveViewPage() {
         socketRef.current.emit(event, payload)
       }
     }
-    return () => { delete window.__emitTimerEvent }
+    return () => {
+      delete window.__emitTimerEvent
+    }
   }, [])
 
   if (roomNotFound && !htmlContent && !roomEnded && !presenterLeft) {
@@ -405,165 +436,167 @@ export default function LiveViewPage() {
 
   return (
     <TimerContext.Provider value={timerStatesRef}>
-    <div className="w-screen h-screen relative bg-black overflow-hidden">
-      {/* Connection status */}
-      {!isConnected && (
-        <div className="absolute top-3 left-3 z-[1000] bg-danger/90 text-white px-3.5 py-1.5 rounded-md text-[13px] font-medium">
-          Connecting to live session...
-        </div>
-      )}
-
-      {presenterReconnecting && !presenterLeft && !roomEnded && (
-        <div className="absolute top-3 left-1/2 z-[1000] -translate-x-1/2 rounded-md bg-warning/90 px-3.5 py-1.5 text-[13px] font-medium text-white">
-          Presenter reconnecting...
-        </div>
-      )}
-
-      {/* Waiting for presenter */}
-      {isConnected && !htmlContent && !presenterLeft && !presenterReconnecting && !roomEnded && (
-        <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-black">
-          <div className="text-center text-white font-sans">
-            <div className="w-12 h-12 rounded-full border-[3px] border-primary-light border-t-primary animate-spin mx-auto mb-4" />
-            <h2 className="text-xl mb-2">Waiting for presenter...</h2>
-            <p className="text-text-secondary text-sm">Room: {roomCode}</p>
+      <div className="w-screen h-screen relative bg-black overflow-hidden">
+        {/* Connection status */}
+        {!isConnected && (
+          <div className="absolute top-3 left-3 z-[1000] bg-danger/90 text-white px-3.5 py-1.5 rounded-md text-[13px] font-medium">
+            Connecting to live session...
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Viewer count badge */}
-      {isConnected && !presenterLeft && htmlContent && (
-        <div className="absolute top-3 right-3 z-[1000] bg-primary/85 text-white px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
-          {viewerCount} viewer{viewerCount !== 1 ? 's' : ''}
-        </div>
-      )}
-
-      {(presenterLeft || roomEnded) && (
-        <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-black/80">
-          <div className="text-center text-white font-sans">
-            <h2 className="text-2xl mb-2">{presenterLeft ? 'Presenter has left' : 'Session ended'}</h2>
-            <p className="text-text-secondary">
-              {presenterLeft ? 'The presenter has left this session.' : 'The live session has ended.'}
-            </p>
-            <a href="/" className="text-primary text-sm">
-              ← Back to Home
-            </a>
+        {presenterReconnecting && !presenterLeft && !roomEnded && (
+          <div className="absolute top-3 left-1/2 z-[1000] -translate-x-1/2 rounded-md bg-warning/90 px-3.5 py-1.5 text-[13px] font-medium text-white">
+            Presenter reconnecting...
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Cursor dot overlay — KEEP inline: dynamic runtime positions */}
-      {cursorPos && (
-        <div
-          style={{
-            position: 'absolute',
-            left: `${cursorPos.x * 100}%`,
-            top: `${cursorPos.y * 100}%`,
-            width: 12,
-            height: 12,
-            borderRadius: '50%',
-            background: 'rgba(99,102,241,0.8)',
-            border: '2px solid #fff',
-            pointerEvents: 'none',
-            zIndex: 9999,
-            transform: 'translate(-50%, -50%)',
-            transition: 'all 0.08s linear',
-          }}
+        {/* Waiting for presenter */}
+        {isConnected && !htmlContent && !presenterLeft && !presenterReconnecting && !roomEnded && (
+          <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-black">
+            <div className="text-center text-white font-sans">
+              <div className="w-12 h-12 rounded-full border-[3px] border-primary-light border-t-primary animate-spin mx-auto mb-4" />
+              <h2 className="text-xl mb-2">Waiting for presenter...</h2>
+              <p className="text-text-secondary text-sm">Room: {roomCode}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Viewer count badge */}
+        {isConnected && !presenterLeft && htmlContent && (
+          <div className="absolute top-3 right-3 z-[1000] bg-primary/85 text-white px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
+            {viewerCount} viewer{viewerCount !== 1 ? 's' : ''}
+          </div>
+        )}
+
+        {(presenterLeft || roomEnded) && (
+          <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-black/80">
+            <div className="text-center text-white font-sans">
+              <h2 className="text-2xl mb-2">
+                {presenterLeft ? 'Presenter has left' : 'Session ended'}
+              </h2>
+              <p className="text-text-secondary">
+                {presenterLeft
+                  ? 'The presenter has left this session.'
+                  : 'The live session has ended.'}
+              </p>
+              <a href="/" className="text-primary text-sm">
+                ← Back to Home
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Cursor dot overlay — KEEP inline: dynamic runtime positions */}
+        {cursorPos && (
+          <div
+            style={{
+              position: 'absolute',
+              left: `${cursorPos.x * 100}%`,
+              top: `${cursorPos.y * 100}%`,
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              background: 'rgba(99,102,241,0.8)',
+              border: '2px solid #fff',
+              pointerEvents: 'none',
+              zIndex: 9999,
+              transform: 'translate(-50%, -50%)',
+              transition: 'all 0.08s linear',
+            }}
+          />
+        )}
+
+        {/* Laser pointer overlay — KEEP inline: dynamic runtime positions */}
+        {laserPos && (
+          <div
+            style={{
+              position: 'absolute',
+              left: `${laserPos.x * 100}%`,
+              top: `${laserPos.y * 100}%`,
+              width: 20,
+              height: 20,
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(255,0,0,0.8), rgba(255,0,0,0) 70%)',
+              pointerEvents: 'none',
+              zIndex: 9999,
+              transform: 'translate(-50%, -50%)',
+              transition: 'all 0.05s linear',
+              boxShadow: '0 0 20px rgba(255,0,0,0.5)',
+            }}
+          />
+        )}
+
+        {/* Black screen overlay */}
+        <BlackScreenOverlay
+          visible={overlayColor !== null}
+          color={overlayColor}
+          onDismiss={() => setOverlayColor(null)}
         />
-      )}
 
-      {/* Laser pointer overlay — KEEP inline: dynamic runtime positions */}
-      {laserPos && (
-        <div
-          style={{
-            position: 'absolute',
-            left: `${laserPos.x * 100}%`,
-            top: `${laserPos.y * 100}%`,
-            width: 20,
-            height: 20,
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(255,0,0,0.8), rgba(255,0,0,0) 70%)',
-            pointerEvents: 'none',
-            zIndex: 9999,
-            transform: 'translate(-50%, -50%)',
-            transition: 'all 0.05s linear',
-            boxShadow: '0 0 20px rgba(255,0,0,0.5)',
-          }}
+        {/* Annotation overlay — KEEP inline: dynamic SVG paths */}
+        {legacyAnnotationStrokes.length > 0 && (
+          <svg
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none',
+              zIndex: 9998,
+            }}
+          >
+            {legacyAnnotationStrokes.map((a, i) => (
+              <path
+                key={a.id || i}
+                d={a.d}
+                stroke={a.color || '#ff0000'}
+                strokeWidth={a.strokeWidth || 3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+                opacity={a.type === 'highlighter' ? 0.3 : 1}
+              />
+            ))}
+          </svg>
+        )}
+        {normalizedAnnotationStrokes.length > 0 && (
+          <svg
+            data-testid="live-annotation-overlay"
+            viewBox="0 0 1 1"
+            preserveAspectRatio="none"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none',
+              zIndex: 9998,
+            }}
+          >
+            {normalizedAnnotationStrokes.map((a, i) => (
+              <path
+                key={a.id || i}
+                d={a.d}
+                stroke={a.color || '#ff0000'}
+                strokeWidth={a.strokeWidth || 3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+                opacity={a.type === 'highlighter' ? 0.3 : 1}
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
+          </svg>
+        )}
+
+        {/* Presentation iframe — renders the full presentation HTML with all resources */}
+        <iframe
+          ref={handleIframeRef}
+          className="w-full h-full border-none block"
+          title="Live Presentation"
+          sandbox="allow-scripts allow-same-origin"
         />
-      )}
-
-      {/* Black screen overlay */}
-      <BlackScreenOverlay
-        visible={overlayColor !== null}
-        color={overlayColor}
-        onDismiss={() => setOverlayColor(null)}
-      />
-
-
-
-      {/* Annotation overlay — KEEP inline: dynamic SVG paths */}
-      {legacyAnnotationStrokes.length > 0 && (
-        <svg
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            pointerEvents: 'none',
-            zIndex: 9998,
-          }}
-        >
-          {legacyAnnotationStrokes.map((a, i) => (
-            <path
-              key={a.id || i}
-              d={a.d}
-              stroke={a.color || '#ff0000'}
-              strokeWidth={a.strokeWidth || 3}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-              opacity={a.type === 'highlighter' ? 0.3 : 1}
-            />
-          ))}
-        </svg>
-      )}
-      {normalizedAnnotationStrokes.length > 0 && (
-        <svg
-          data-testid="live-annotation-overlay"
-          viewBox="0 0 1 1"
-          preserveAspectRatio="none"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            pointerEvents: 'none',
-            zIndex: 9998,
-          }}
-        >
-          {normalizedAnnotationStrokes.map((a, i) => (
-            <path
-              key={a.id || i}
-              d={a.d}
-              stroke={a.color || '#ff0000'}
-              strokeWidth={a.strokeWidth || 3}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-              opacity={a.type === 'highlighter' ? 0.3 : 1}
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
-        </svg>
-      )}
-
-      {/* Presentation iframe — renders the full presentation HTML with all resources */}
-      <iframe
-        ref={handleIframeRef}
-        className="w-full h-full border-none block"
-        title="Live Presentation"
-        sandbox="allow-scripts allow-same-origin"
-      />
-    </div>
+      </div>
     </TimerContext.Provider>
   )
 }

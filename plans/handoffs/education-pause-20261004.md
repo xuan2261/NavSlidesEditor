@@ -71,7 +71,6 @@ Các acceptance sau **chưa được exercise đủ**, không nhất thiết là
 Underlying atomic-save latency/previous word-search launch timeout chưa có proved cause; không báo đã fix filesystem/storage chỉ vì rerun sau đó pass. Không dùng C: cho qualification stage/cache khi D: đã là approved scratch route.
 
 Browser scratch cleanup còn mở: xác minh archive/relocation trước khi bỏ source hoặc incomplete copy; giữ failed traces/fixtures. Không lặp lại full-copy cleanup không có progress receipt.
-
 ## Exact next actions
 
 1. **First safe step**: đọc handoff, cleanup receipt và education `plan.md`; xác minh branch/HEAD/worktree bằng Git. Không tạo lại snapshot/dispatch trước khi biết source checkpoint và archived artifact locations.

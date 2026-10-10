@@ -1,0 +1,42 @@
+import registry from '../../../shared/src/education/game-registry.js'
+import defaults from '../../../shared/src/education/game-defaults.js'
+import shape from '../../../shared/src/education/question-shape.js'
+import factory from '../../../shared/src/education/question-factory.js'
+import simulations from '../../../shared/src/education/presets/simulations.js'
+const { CANONICAL_GAME_TYPES } = registry
+const { GAME_BASE_DEFAULTS, createDefaultGameConfig } = defaults
+const { QUESTION_KINDS } = shape
+const { createCanonicalQuestion } = factory
+const { SIMULATION_PRESETS } = simulations
+export { CANONICAL_GAME_TYPES, QUESTION_KINDS, SIMULATION_PRESETS }
+
+export function gameFixture(gameType, questionKind = null) {
+  const config = createDefaultGameConfig(gameType)
+  if (gameType === 'quiz')
+    config.questions = [
+      createCanonicalQuestion({
+        id: `release-${questionKind || 'single-choice'}`,
+        kind: questionKind || 'single-choice',
+        prompt: `Authored ${questionKind || 'single-choice'} question`,
+        points: 10,
+        feedback: {
+          correct: 'Authored success',
+          incorrect: 'Authored failure',
+          explanation: 'Teacher explanation',
+        },
+      }),
+    ]
+  if (['name-picker', 'lucky-wheel'].includes(gameType)) {
+    config.items = [{ id: 'release-only-choice', label: 'Authored winner', weight: 3 }]
+    config.animationDuration = 0
+    config.weighted = true
+  }
+  if (gameType === 'name-picker') config.pickerMode = 'button'
+  if (gameType === 'countdown') config.durationSeconds = 1
+  if (gameType === 'memory') {
+    config.shuffleOnStart = false
+    config.mismatchDelayMs = 100
+  }
+  if (gameType === 'scattergories') {
+
+[Showing lines 1-40 of 81. Use :41 to continue]

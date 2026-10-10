@@ -1,0 +1,16 @@
+{
+  "transcript": "C:\\Users\\Z10PAD8C_Xuan2261\\.omp\\agent\\sessions\\--C--Work-NavSlidesEditor--\\2026-10-04T11-03-27-941Z_01a10695-43c5-7000-80a5-281eb32934b4\\Evidence07SourceGate.jsonl",
+  "transcriptLine": 94,
+  "timestamp": "2026-10-05T03:19:03.550Z",
+  "toolCallId": "call_yXheVcKjGGiSQ3h4CR8XCNAS|fc_0f47bcae738a7b01016ac316da16ec87d09979467b04ec5ad3",
+  "provenance": "AUTHENTIC_HISTORICAL_YIELD_NOT_CURRENT_SOURCE_PASS",
+  "data": {
+    "body": "E06-01 remains incomplete for caller-attached failures held in errorLedger. ingestPreexistingErrors only visits secondaryFailures and allErrors, so a primary Error whose caller-owned errorLedger contains a genuine failure reference (for example, { error: closeError, phase: 'close', order: 2 }) never adds that failure to entries. A subsequently arriving frame/source/attachment Error is therefore recorded ahead of the already attached closeError, and getSerializedErrors/getSecondaryErrors omit closeError altogether. Merely retaining the original errorLedger array during refresh does not satisfy ingestion or chronological common-ledger exposure. Ingest genuine error references from caller-owned errorLedger entries, while leaving purely serialized diagnostic objects intact and skipping ledger-owned exposures.",
+    "confidence": 0.98,
+    "file_path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+    "line_end": 43,
+    "line_start": 31,
+    "priority": 2,
+    "title": "E06-01 Ingest genuine failures attached through errorLedger"
+  }
+}

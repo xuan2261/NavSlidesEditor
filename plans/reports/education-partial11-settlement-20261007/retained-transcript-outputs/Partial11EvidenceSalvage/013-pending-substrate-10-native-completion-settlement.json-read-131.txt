@@ -1,0 +1,152 @@
+      },
+      {
+        "file": "tests/e2e/education/release-surfaces.js",
+        "coverage": [
+          "1-192 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/present-offline-helpers.js",
+        "coverage": [
+          "1-29 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/release-portable-inspection.js",
+        "coverage": [
+          "1-55 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js",
+        "coverage": [
+          "1-87 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-cases.js",
+        "coverage": [
+          "1-200 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-fixtures.js",
+        "coverage": [
+          "1-140 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-leave-return.js",
+        "coverage": [
+          "1-137 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-reset.js",
+        "coverage": [
+          "1-110 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-isolation.js",
+        "coverage": [
+          "1-124 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-state.js",
+        "coverage": [
+          "1-98 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-quiz-state.js",
+        "coverage": [
+          "1-105 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-hot-potato-state.js",
+        "coverage": [
+          "1-118 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-jeopardy-state.js",
+        "coverage": [
+          "1-100 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-relay-state.js",
+        "coverage": [
+          "1-100 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-trivia-state.js",
+        "coverage": [
+          "1-180 (complete body)"
+        ]
+      }
+    ]
+  },
+  "independentSliceReports": [
+    "pending-substrate-10-native-completion-Native10CaptureHistorySlice.json",
+    "pending-substrate-10-native-completion-Native10WitnessNavSlice.json",
+    "pending-substrate-10-native-completion-Native10CallerSeamSlice.json"
+  ],
+  "previousInterruptedReportRetained": "pending-substrate-10-native-salvage-audit.json",
+  "originalFindingDispositions": [
+    {
+      "mechanism": "Start diagnostics are still preserved in both diagnostic outputs: native-history.js:107-110 pushes the serializable packet to window.__nsRecordedPackets AND records it as a 'native-action' lifecycle event. Capture and post histories are independent copies: each __nsExtractDomainHistories call (capture :147-149 with maxTime tCap; bubble :94-96 with maxTime tBub) maps through cloneEv (:50), which creates a new event object and a new detail object. Root/doc details contain only primitive fields, so the shallow detail clone is a complete copy. Unhealthy or missing storage returns null rather than an empty fallback (:52-54). witness.js:44-60 (another slice, observed only) consumes these as separate arrays.",
+      "id": "N07-01",
+      "title": "Keep Start diagnostics out of lifecycle continuity (both projections + independent capture/post copies)",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "native-history.js:55-66 (__nsExtractDomainHistories): rootEvents restricted to type root-pause|root-resume plus root tuple (:58-61); docEvents restricted to visibilitychange|pagehide|pageshow. observation-browser.js:89-98 (evaluateCorrelatedStateAndTime) uses the identical type filters for rootEvents/documentVisibilityEvents. The Start native-action is therefore excluded from both continuity projections on both the packet side and the correlated-read side, so Start's own event no longer creates the length difference that witness-domain.js:92-96 rejects."
+    },
+    {
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "witness.js:99-101 declares `let lastRunningSample = startRecord.runningSample`, `let firstExpiredSample = null` and `let pollCount = 0` inside waitForWitnessExpiry, before `expect.poll` at :103. Inside the callback, a running poll is validated (validateRunningWitnessPoll) before it is assigned to lastRunningSample. An expired poll is validated (validateExpiredWitnessPoll, witness-domain.js:128-137, which includes assertCountdownExpired) before `firstExpiredSample = sample` at :115. Any other phase throws at :118. After polling, :130-133 sets expiryObservationInterval={min: lastRunning.activityInterval.min, max: firstExpired.activityInterval.max}. :134-137 sets activityElapsedInterval={min: max(0, lastRunning.min - start.activityInterval.max), max: firstExpired.max - start.activityInterval.min}. assertMeasuredWitnessInterval (:151-166) checks Start activity+[4000,4000] for the deadline, lastRunning.min<deadline<=firstExpired.max, and that the elapsed interval contains 4000. This is exactly the crossover formula in pending-substrate-07-native-prompt.md obligation 7. Both interval operands share the activity domain: runtime-session.js activityClock.now = (paused?pausedAt:performance.now()) - totalHiddenMs, and computeActivityInterval subtracts the completed hidden pairs.",
+      "mechanism": "The binding exists at function scope before the callback, so the ReferenceError path is gone and the returned record carries a validated last-running/first-expired crossover.",
+      "id": "N07-02",
+      "title": "Declare firstExpiredSample before witness polling callback; original expiry result"
+    },
+    {
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "Import: witness.js:8-15 imports assertHistoryPrefix (:14) from witness-domain.js. witness-domain.js:2-5 imports it from history-domain.js and re-exports it at :7. history-domain.js:24-52 is the implementation: per index it compares type, numeric eventSeq, tMin, tMax, time, visibilityState and JSON detail. The `domain` field is covered because the recorder derives it from detail.domain (native-observation.js record) and the browser store-health check compares it. Capture-to-post: witness.js:44-49 requires all four actionBracket history arrays. :51-58 applies assertHistoryPrefix plus exact length equality to root and doc histories, all before startRecord is built at :62. Independent copies: native-history.js __nsExtractDomainHistories clones capture and bubble histories separately (cloneEv, tMin<=boundary). buildActionBracket keeps both projections (rootEventsBefore/After, docEventsBefore/After) in actionBracket, which is retained in startRecord. Separate baseline clones are made at witness.js:59-60. Deadline bounds: :32 deriveDeadlineBounds(actionBracket,4000) = activityInterval.min/max+4000 (activity-interval.js), with no slack. First-running: the sample read at :72 is checked by assertCountdownRunning(state, deadlineBounds) at :73 (witness-domain.js:31-47: full key schema, local, generation 0, running, finite 0<remainingMs<=4000, revision 1, expiries 0, deadline within bounds). validateRunningWitnessPoll at :74 then checks Start rootDomain agreement, continuity against the Start baseline, and deadline===stateAfter.deadline. Only after that does :75-76 promote the sample.",
+      "mechanism": "The Start bracket and the first running sample are fully validated before the baseline is promoted. The comparator is a real ES-module binding.",
+      "id": "N07-03",
+      "title": "Capture-to-post Start history validated before adoption; assertHistoryPrefix imported; valid first-running; Start-derived deadline bounds"
+    },
+    {
+      "title": "Bind history health to actual recorder bookkeeping",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "native-observation.js:24-34 keeps closure-private retainedStore/privateStore/eventSeq. __nsCheckStoreHealth (:47-77) rejects replaced or missing storage by identity (:48-50) and rejects length divergence from eventSeq and from privateStore length (:51-53). record() (:79-87) marks recorderReady=false and sets a recorder:store error when the store is replaced or missing, instead of stopping silently. Every browser reader combines readiness with health: observation-browser.js:6-7, :59-63, :83-84, :148-158. hasLifecycleEvents is health-gated at :13-14, :116-121 and native-history.js:104, :161.",
+      "mechanism": "Replacing a nonempty store with [] fails identity. Truncating in place fails the count check. Missing or non-array storage fails Array.isArray and makes record() mark the recorder unhealthy. In each case readers synthesize or forward recorderError and recorderReady=false, which observation-errors.js:81-86 records. One reachable overwrite in record() of an already-set recorder error is reported separately as NF-A2. It affects the error identity, not the health binding.",
+      "id": "N07-04"
+    },
+    {
+      "id": "N07-05",
+      "title": "COMPLETE private retained-store content+time/domain equality before every consumer, incl. event.time",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "native-observation.js:105-116 builds privateEntry with a JSON-cloned detail, and :54-75 compares every index on eventSeq, type, tMin, tMax, time (:63), visibilityState, domain (:69) and full JSON detail (:72) against the retained entry. Lifecycle-store consumers all check health first: evaluatePassiveEvents (observation-browser.js:6,14), evaluateCorrelatedStateAndTime (:83,:90,:96,:121), capture/bubble pair collection (native-history.js:80-84, :134-138) and __nsExtractDomainHistories (:53-54). history-domain.js:24-52 (assertHistoryPrefix) compares type, required numeric eventSeq, tMin, tMax, time (:44-46), visibilityState and full JSON detail.",
+      "mechanism": "privateStore is append-only and unreachable from page code. A same-sequence replacement, or a tMin/tMax/time/visibility/domain/detail change in the public store, therefore makes every subsequent reader unhealthy, so readers get null histories plus a recorder error rather than corrupted hidden-time input. Mutating a packet that a retained native-action entry references is also caught, because entry.detail === serializable === the __nsRecordedPackets element (native-history.js:107-110) and is JSON-compared against the private clone. Integrity of the separate public packet array is a different store and is reported as NF-A4."
+    },
+    {
+      "id": "N07-06",
+      "title": "Retain drained mutations at native action boundaries with later upper bounds",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "advanceTrigger (native-observation.js:132-140) drains observer.takeRecords() with triggerMin set to the previous lastLifecycleTriggerTime (:135) and only then advances it (:139). The mutation parser records tMin=triggerMin and tMax=deliveryMax, where deliveryMax=performance.now() at drain time (native-history.js:7, :39). Capture (:115) and bubble (:79) drain before extraction (:147, :94). The boundary filter is now e.tMin <= maxTime (:55). Pair collection uses the same tMin rule in the browser (native-snapshot.js:91) and in Node (history-domain.js:13).",
+      "mechanism": "A mutation drained at tCap or tBub has tMin no later than the boundary but tMax later than it. It is retained in rootEventsBefore/After with its later upper bound unchanged, and pair counts and history projections agree."
+    },
+    {
+      "title": "Normalize and retain ALL observed snapshot failures (state-before-UI, capture-before-post)",
+      "disposition": "PARTIAL_REPAIR_REQUIRED",
+      "evidence": "Common consumer corrected: observation-errors.js:47-60 records the packet's stateBefore, uiBefore, stateAfter and uiAfter in browser order (capture snapshot native-history.js:132 precedes bubble snapshot :93; __nsReadRootSnapshot native-snapshot.js:56-79 reads state before UI). Raw stateBefore..uiAfter, state and ui are recorded at :62-79. All of these come before the throw at :91-93, so validateObservationPrerequisites/validatePacketPrerequisites no longer short-circuit sibling getter failures (observation.js:63-70, :84-90, :110-115, :128-130). Remaining gap: stageButtonGuard (native-action.js:19-74) reads __nsReadRootSnapshot (:29-31) and returns stateError/uiError (:57-60), but never passes them to recordError. It also validates document identity (:71) without first recording the getter failures it has already observed (NF-A3).",
+      "mechanism": "Snapshot failures on the cursor, correlated and packet seams are normalized into the ledger. Getter failures on the button-guard snapshot used by resetGame and revealHotPotatoAnswers (controls.js:85, :166) are only staged raw and never normalized. Ordering of these getter failures relative to recorder occurrences is covered under 09-C1.",
+      "id": "N07-07"
+    },
+    {
+
+[Showing lines 161-310 of 723. Use :311 to continue]

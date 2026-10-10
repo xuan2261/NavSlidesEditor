@@ -1,0 +1,99 @@
+
+  async clickInsertMenuItem(name) { await this.insert.clickInsertMenuItem(name) }
+  async openFileMenuItem(name) { await this.menubar.openFileMenuItem(name) }
+  async openSyncModal() { await this.menubar.openSyncModal() }
+  async openHistoryModal() { await this.menubar.openHistoryModal() }
+
+  async closeOverlayModal() {
+    await this.page.getByRole('dialog').last().getByRole('button', { name: /^Close/ }).click()
+  }
+
+  async openTemplateGallery() {
+    await this.page.locator('button').filter({ hasText: 'Insert Template' }).click()
+    await this.page.waitForSelector('h2:has-text("Template Gallery")', { timeout: 5000 })
+  }
+
+  async addTextNode() { return this.insert.addTextNode() }
+
+  async startEditingTextElement(i) { await this.text.startEditingTextElement(i) }
+  async typeInTextEditor(t) { await this.text.typeInTextEditor(t) }
+  async selectAllText() { await this.text.selectAllText() }
+  async getTextEditorState() { return this.text.getTextEditorState() }
+  async openFindReplace() { await this.text.openFindReplace() }
+  async closeFindReplace() { await this.text.closeFindReplace() }
+  async findText(t) { await this.text.findText(t) }
+  async replaceText(s, r) { await this.text.replaceText(s, r) }
+  async replaceAll() { await this.text.replaceAll() }
+  async getMatchCount() { return this.text.getMatchCount() }
+
+  async clickMainToolbarButton(t) { await this.ribbon.clickMainToolbarButton(t) }
+  async chooseMainToolbarOption(t, v) { await this.ribbon.chooseMainToolbarOption(t, v) }
+  async clickQuickAccessSave() { await this.ribbon.clickQuickAccessSave() }
+  async getToolbarOverflowMetrics() { return this.ribbon.getToolbarOverflowMetrics() }
+  async switchRibbonTab(name) { await this.ribbon.switchRibbonTab(name) }
+  async getRibbonLayoutMetrics(name) { return this.ribbon.getRibbonLayoutMetrics(name) }
+  async getButtonClippingStatus(labels) { return this.ribbon.getButtonClippingStatus(labels) }
+
+  async addShape(t) { return this.insert.addShape(t) }
+  async addCodeBlock() { await this.insert.addCodeBlock() }
+  async addLatexBlock() { await this.insert.addLatexBlock() }
+  async addMarkdownBlock() { await this.insert.addMarkdownBlock() }
+  async addChart() { await this.insert.addChart() }
+  async addCallout() { await this.insert.addCallout() }
+  async addHtmlEmbed() { await this.insert.addHtmlEmbed() }
+  async addDrawing() { await this.insert.addDrawing() }
+  async addLine() { await this.insert.addLine() }
+  async addTable(rows = 3, cols = 3) { await this.insert.addTable(rows, cols) }
+  async openMediaLibrary() { await this.insert.openMediaLibrary() }
+
+  async addSlide() { await this.slidePanel.addSlide() }
+  async addSlideFromTemplate(t) { await this.slidePanel.addSlideFromTemplate(t) }
+  async deleteSlide(i = 0) { await this.slidePanel.deleteSlide(i) }
+  async selectSlide(i) { await this.slidePanel.selectSlide(i) }
+  async toggleSlideSelection(i) { await this.slidePanel.toggleSlideSelection(i) }
+  async duplicateSelectedSlides() { await this.slidePanel.duplicateSelectedSlides() }
+  async deleteSelectedSlides() { await this.slidePanel.deleteSelectedSlides() }
+
+  async openShareModal() { await this.menubar.openShareModal() }
+  async openAICopywriter() { await this.menubar.openAICopywriter() }
+  async startBroadcast() { await this.menubar.startBroadcast() }
+  async exportHTML() { await this.menubar.exportHTML() }
+
+  async selectElement(i = 0) { await this.canvas.selectElement(i) }
+  async deleteSelectedElement() { await this.canvas.deleteSelectedElement() }
+  async undo() { await this.canvas.undo() }
+  async redo() { await this.canvas.redo() }
+  async duplicateElement() { await this.canvas.duplicateElement() }
+  async copyElement() { await this.canvas.copyElement() }
+  async pasteElement() { await this.canvas.pasteElement() }
+  async deselectAll() { await this.canvas.deselectAll() }
+
+  async openPresentMode() { await this.page.click('button[title="Present"]') }
+  async isPropertiesPanelVisible() { return this.properties.isPropertiesPanelVisible() }
+
+  async changeBackgroundToGradient() {
+    await this.addToolbarElement('Slide Background')
+    await expect(this.page.getByText('Slide Background')).toBeVisible()
+
+    const initialBgColor = await this.page.evaluate(() => {
+      const el = document.querySelector('.slide-canvas')
+      return el ? window.getComputedStyle(el).backgroundColor : ''
+    })
+
+    await this.page.getByRole('button', { name: 'gradient' }).click()
+    const swatches = this.page.getByRole('button', { name: /^Gradient / }).filter({ visible: true })
+    if ((await swatches.count()) > 0) {
+      await swatches.nth(1).click()
+      await this.page
+        .waitForFunction(
+          (initial) => {
+            const el = document.querySelector('.slide-canvas')
+            return el && window.getComputedStyle(el).backgroundColor !== initial
+          },
+          initialBgColor,
+          { timeout: 5000 }
+        )
+        .catch(() => {})
+    }
+  }
+}

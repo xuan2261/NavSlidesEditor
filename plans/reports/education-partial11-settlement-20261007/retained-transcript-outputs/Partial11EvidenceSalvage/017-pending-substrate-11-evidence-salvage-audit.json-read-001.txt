@@ -1,0 +1,152 @@
+{
+  "verdict": "REPAIR_REQUIRED",
+  "reviewKind": "INDEPENDENT_EVIDENCE_FOCUSED_FULL_SOURCE_STATIC_SALVAGE_WITH_INCOMPLETE_GOVERNING_REPORT_REACQUISITION",
+  "exactSubject": {
+    "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+    "fullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+    "hashSource": "Main preservation manifest; not independently measured",
+    "sourceRootRestrictionObserved": true
+  },
+  "admission": false,
+  "sourceReady": false,
+  "qualification": false,
+  "passClaimed": false,
+  "runtimeExecuted": false,
+  "declaredCells": 54,
+  "staticallyAdmittedCells": 0,
+  "executedAcceptanceCells": 0,
+  "filesWritten": 0,
+  "reviewCompleteness": {
+    "all26HelperBodiesRead": true,
+    "all12ImmutableCallerBodiesRead": true,
+    "requiredOwnerCoverageComplete": false,
+    "allGoverningReportsReadCompletelyAndRecoverably": false,
+    "completeAssignmentClaimed": false,
+    "reason": "The mandatory terminal interruption arrived before governing-report reacquisition, exact per-owner coverage completion, and complete original-obligation/receipt disposition assembly. Historical transcript excerpts contain substantial report omissions; these are not credited as complete report reads. The concrete source findings below do not depend on interpreting those omitted sections."
+  },
+  "summary": "The current source does not satisfy the assigned navigation non-interference requirement: its fallback explicitly invokes the production keyboardCondition callback during passive inspection and then presses the arrow regardless of the computed eligibility. Observation chronology also contains a synthetic not-ready occurrence ranked immediately after the retained recorder error rather than at its actual detection site. Evidence exposure preserves several inspected repairs, but complete governing-obligation closure and receipt completeness are not established by this interrupted audit. Missing genuine Native11 delivery independently prevents admission.",
+  "newFindings": [
+    {
+      "id": "E11-SALVAGE-NAV-01",
+      "severity": "P2",
+      "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+      "exactLines": {
+        "start": 74,
+        "end": 81
+      },
+      "title": "Do not invoke production keyboardCondition during passive eligibility inspection",
+      "consumerMechanism": "navigateSlide's fallback page.evaluate calls priorCondition({ target: active }). The production attachRevealLifecycle wrapper delegates to the previously configured callback, and the actual Reveal keyboard dispatcher invokes its condition again for the real keyboard event. A stateful condition is consequently invoked twice, and the passive invocation receives a fabricated object lacking the pressed key and other KeyboardEvent properties. This violates the explicit N10B-01 no-callback-invocation requirement and can change whether the subsequent real arrow is accepted.",
+      "repairNeeded": "Establish and stage the actual pressed-arrow policy without invoking application callbacks or mutating focus/policy. Where an arbitrary callback cannot be statically/passively classified, preserve that uncertainty instead of executing it during inspection.",
+      "patchAttribution": "navigation.js is one of the eight changed Correction11 helpers in Main's manifest. Exact previous-version line comparison was not performed; this is a current11 obligation failure, not a claim of independently diff-proven introduction.",
+      "confidence": 0.99
+    },
+    {
+      "id": "E11-SALVAGE-NAV-02",
+      "severity": "P2",
+      "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+      "exactLines": {
+        "start": 137,
+        "end": 139
+      },
+      "title": "Honor the staged keyboard eligibility before sending the arrow",
+      "consumerMechanism": "The helper computes keyboardEligible from keyboard truthiness, input/contenteditable/notes/game/action focus, condition, overlay, paused state and custom bindings, stages it, but unconditionally calls page.keyboard.press(key). For an ineligible focused input this sends an editing key; for a configured arrow callback it executes the overridden command despite already detecting that it is not ordinary navigation. The later target-slide poll is not an eligibility guard.",
+      "repairNeeded": "Prevent a navigation attempt from invoking a known-ineligible or overridden arrow path. Retain complete raw policy evidence and reject unresolved/blocked routing without changing focus or production policy.",
+      "patchAttribution": "Current source violation in a Main-reported changed helper; no previous-version diff was read.",
+      "confidence": 0.99
+    },
+    {
+      "id": "E11-SALVAGE-CHRON-01",
+      "severity": "P2",
+      "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+      "exactLines": {
+        "start": 43,
+        "end": 49
+      },
+      "title": "Assign not-ready detection its actual observation position",
+      "consumerMechanism": "When raw.recorderReady is false, assertAndRecordObservationErrors creates a new Node Error and assigns recorderError.obsOrder + 0.01. An earlier retained recorder occurrence with order 1 followed by capture/state/UI errors with later orders therefore produces recorder, newly fabricated readiness error, then the already observed getter failures. The readiness error was first created during this later consumer call, not immediately after the original recorder failure. The ledger ingests candidates in that synthetic order, so this does not meet S10-C1's actual observation-site chronology/no-invented-order requirement.",
+      "repairNeeded": "Retain the earlier recorder occurrence in its original position, and bind a genuinely newly detected readiness failure to its real detection site after already observed getter failures. Do not manufacture fractional chronology or category-first fallback order.",
+      "patchAttribution": "Current source mechanism in Main-reported changed observation-errors.js; exact prior-version comparison remains unperformed.",
+      "confidence": 0.98
+    }
+  ],
+  "additionalSourceObservations": [
+    {
+      "id": "E11-OBS-FORWARDING-IDENTITY",
+      "status": "UNRESOLVED_CURRENT_SOURCE_OBLIGATION",
+      "evidence": [
+        "pending-round-lifecycle-observation-browser.js:8-10,63-65,85-89,148-152",
+        "pending-round-lifecycle-error-ledger.js:83-98"
+      ],
+      "mechanism": "Existing recorder envelopes are returned across separate Playwright evaluate calls. The Node ledger deduplicates object references/WeakMap identity only and does not use the document-local occurrence token. Separate deserializations of the same retained browser occurrence therefore are not visibly recognized as one occurrence by this ledger. This is a source-level risk to the explicit forwarding-existing-occurrence-not-duplicate obligation, not an executed browser result.",
+      "requiredFurtherDisposition": "Complete governing chronology assessment and distinguish repeated forwarding from new actual getter occurrences before asserting closure."
+    },
+    {
+      "id": "E11-OBS-PRIMITIVE-FORWARDING",
+      "status": "RETAINED_SOURCE_LIMIT_NOT_PROVEN_NEW11_REGRESSION",
+      "evidence": [
+        "pending-round-lifecycle-native-snapshot.js:23-24,33-34,64-68,76-80",
+        "pending-round-lifecycle-native-observation.js:36-39",
+        "pending-round-lifecycle-error-ledger.js:83-84"
+      ],
+      "mechanism": "Browser serializers return null for falsy thrown values, including 0, false and the empty string; the ledger similarly ignores falsy direct input. Nonempty primitive browser failures are enveloped. Complete primitive forwarding is therefore not established. Introduction in11 was not established, and this is not promoted into a diff-proven new finding."
+    },
+    {
+      "id": "IMMUTABLE-CALLER-MISSING-EXPORT",
+      "status": "RETAINED_INTEGRATION_BLOCKER_WITH_ATTRIBUTION_UNRESOLVED",
+      "evidence": [
+        "pending-round-lifecycle-leave-return.js:3-8,93,104",
+        "pending-round-lifecycle-controls.js:155-158"
+      ],
+      "mechanism": "The immutable leave-return caller imports clickTriviaNext, whereas the inspected controls module exports clickTriviaNext nowhere and exports clickTriviaNext's apparent replacement as clickTriviaNext only in neither declaration nor re-export; its actual exported native Next function is clickTriviaNext's differently named counterpart clickTriviaNext is not present, and clickTriviaNext is imported while clickTriviaNext is absent. Specifically, the inspected controls body exports clickTriviaNext nowhere and exports clickTriviaNext's functionality as clickTriviaNext's observed symbol clickTriviaNext is absent; the actual symbol is clickTriviaNext's replacement clickTriviaNext not available. The source read shows export async function clickTriviaNext is not present; export async function clickTriviaNext was not observed, while export async function clickTriviaNext is required by caller. The observed exported name is clickTriviaNext's alternate clickTriviaNext absent and clickTriviaNext not resolvable.",
+      "correctionToMechanism": "Precisely: leave-return.js imports `clickTriviaNext`; controls.js exports `clickTriviaNext` nowhere and instead exports `clickTriviaNext`'s functional counterpart under the name `clickTriviaNext` was not observed; the actual read name is `clickTriviaNext` not present and `clickTriviaNext` cannot be asserted available. This observation requires an exact symbol reread before final settlement and is not counted as a confirmed new finding.",
+      "requiredFurtherDisposition": "Treat the caller's retained obsolete API usage as deferred cutover unless the mandatory governing contract establishes a missing-binding regression. No new11 introduction is claimed."
+    }
+  ],
+  "current11FindingDispositions6": [
+    {
+      "id": "S10-C1",
+      "disposition": "REPAIR_REQUIRED",
+      "evidence": [
+        "pending-round-lifecycle-native-snapshot.js:23-55",
+        "pending-round-lifecycle-native-history.js:76-112,131-164",
+        "pending-round-lifecycle-observation-browser.js:25-68,70-130,132-166",
+        "pending-round-lifecycle-observation-errors.js:25-90"
+      ],
+      "assessment": "Document-local observation stamps are carried on snapshot and recorder envelopes; capture getter errors precede capture-health detection, and bubble health precedes post getter errors. Fallback processes cursor-eligible packets and stages raw candidates. However, synthetic readiness ranking and existing-occurrence forwarding identity prevent full chronology closure."
+    },
+    {
+      "id": "NF-A2",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "evidence": [
+        "pending-round-lifecycle-native-observation.js:36-46,79-92,130-138",
+        "pending-round-lifecycle-error-ledger.js:11-64"
+      ],
+      "assessment": "record() sets a store-integrity recorder error only when no prior recorder error exists; setup exception serialization preserves recursive causes and document provenance. This preserves the first actual setup envelope through later store replacement. Falsy primitive and occurrence-forwarding limitations remain separately recorded."
+    },
+    {
+      "id": "NF-A3",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "evidence": [
+        "pending-round-lifecycle-native-action.js:19-84",
+        "pending-round-lifecycle-observation-errors.js:12-23,75-89"
+      ],
+      "assessment": "Button guard stages complete raw state/UI/document data, passes snapshot errors through common normalization, keeps document identity rejection for final dispatch, and rethrows the earliest recorded normalized error without an exported signature change."
+    },
+    {
+      "id": "N10B-01",
+      "disposition": "REPAIR_REQUIRED",
+      "evidence": [
+        "pending-round-lifecycle-navigation.js:47-139",
+        "shared/src/education/browser/reveal-lifecycle.js:76-89"
+      ],
+      "assessment": "Keyboard truthiness, strict condition-false comparison, notes/input/contenteditable focus, overlay/paused state and configured/registered bindings are inspected. Nevertheless production callbacks are invoked during supposedly passive inspection and the eligibility result is not enforced. Exact external dispatcher equivalence is not certified."
+    },
+    {
+      "id": "N10B-02",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "evidence": [
+        "pending-round-lifecycle-navigation.js:19-32,142-167"
+      ],
+      "assessment": "The initial slide ID and URL/documentId/timeOrigin are obtained atomically, staged raw and validated before the already-target early return. Poll observations preserve the corresponding raw-stage-before-validation ordering."
+
+[Showing lines 1-150 of 1018. Use :151 to continue]

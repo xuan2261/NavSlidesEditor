@@ -1,0 +1,4 @@
+function migrateSimulationTemplates(records) {
+…
+}
+module.exports = { SIMULATION_PRESETS, SIMULATION_MANIFEST, migrateSimulationTemplates }

@@ -1,0 +1,32 @@
+export async function apiDeletePresentation(request, id, apiBase = API_BASE) {
+…
+  if (!acceptable.has(softStatus) || !acceptable.has(hardStatus)) {
+    throw new Error(`Cleanup failed for ${id}: soft=${softStatus} hard=${hardStatus}`)
+  }
+}
+
+/**
+ * Helper: get a presentation by ID.
+ */
+export async function apiGetPresentation(request, id) {
+  assertLoopback()
+  const res = await withApiRetry(() =>
+    request.get(`${API_BASE}/presentations/${id}`, {
+      headers: { connection: 'close' },
+    })
+  )
+  if (!res.ok()) {
+    throw new Error(`Failed to fetch presentation ${id}: ${res.status()} ${await res.text()}`)
+  }
+  return res.json()
+}
+
+/**
+ * Helper: update a presentation.
+ */
+export async function apiUpdatePresentation(request, id, data, apiBase = API_BASE) {
+  assertLoopback(apiBase)
+…
+}
+
+[Showing lines 81-106 of 186. Use :107 to continue]

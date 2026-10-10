@@ -114,21 +114,34 @@ function identityFor(manifest) {
   return crypto.createHash('sha256').update(JSON.stringify(document)).digest('hex')
 }
 
-function verifyClientArtifact({ rootDir, manifestPath, expectedSubject }) {
+function verifyClientArtifact({ rootDir, manifestPath, expectedSubject, expectedInputHash }) {
   if (fs.lstatSync(manifestPath).isSymbolicLink()) {
     throw new Error('Client manifest is a symbolic link or reparse point')
   }
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
-  if (manifest?.schemaVersion !== 1) throw new Error('Unsupported client manifest schema')
-  exactKeys(manifest, ['schemaVersion', 'subject', 'build', 'locks', 'files', 'artifact'], 'Client manifest')
+  if (manifest?.schemaVersion !== 2)
+    throw new Error('Unsupported client manifest schema; rebuild with source input capture')
+  exactKeys(
+    manifest,
+    ['schemaVersion', 'subject', 'build', 'locks', 'files', 'artifact'],
+    'Client manifest'
+  )
   exactKeys(manifest.subject, ['sha', 'dirty'], 'Client subject')
-  exactKeys(manifest.build, ['command', 'node', 'npm', 'vite'], 'Client build')
+  exactKeys(manifest.build, ['command', 'node', 'npm', 'vite', 'inputHash'], 'Client build')
   exactKeys(manifest.artifact, ['files', 'bytes', 'identity'], 'Client artifact')
   if (!SUBJECT.test(manifest.subject?.sha || '') || typeof manifest.subject?.dirty !== 'boolean') {
     throw new Error('Client manifest subject must bind a full SHA and dirty marker')
   }
   if (expectedSubject && manifest.subject.sha !== expectedSubject.toLowerCase()) {
     throw new Error('Client manifest subject mismatch')
+  }
+  if (!SHA256.test(manifest.build?.inputHash || ''))
+    throw new Error('Client source input hash is invalid')
+  if (
+    expectedInputHash !== undefined &&
+    (!SHA256.test(expectedInputHash) || manifest.build.inputHash !== expectedInputHash)
+  ) {
+    throw new Error('Client compilation source input mismatch')
   }
   for (const field of ['command', 'node', 'npm', 'vite']) {
     if (typeof manifest.build?.[field] !== 'string' || !manifest.build[field]) {
@@ -150,7 +163,8 @@ function verifyClientArtifact({ rootDir, manifestPath, expectedSubject }) {
     const found = actual.get(entry.path)
     if (!found) throw new Error(`Client artifact file missing: ${entry.path}`)
     if (found.bytes !== entry.bytes) throw new Error(`Client artifact size mismatch: ${entry.path}`)
-    if (found.sha256 !== entry.sha256) throw new Error(`Client artifact hash mismatch: ${entry.path}`)
+    if (found.sha256 !== entry.sha256)
+      throw new Error(`Client artifact hash mismatch: ${entry.path}`)
   }
   for (const entry of actualFiles) {
     if (!declared.has(entry.path)) throw new Error(`Client artifact file extra: ${entry.path}`)
@@ -159,7 +173,12 @@ function verifyClientArtifact({ rootDir, manifestPath, expectedSubject }) {
   if (manifest.artifact.files !== actualFiles.length || manifest.artifact.bytes !== bytes) {
     throw new Error('Client artifact summary mismatch')
   }
-  return { identity: manifest.artifact.identity, subject: manifest.subject.sha, files: actualFiles.length }
+  return {
+    identity: manifest.artifact.identity,
+    subject: manifest.subject.sha,
+    inputHash: manifest.build.inputHash,
+    files: actualFiles.length,
+  }
 }
 
-module.exports = { verifyClientArtifact }
+module.exports = { verifyClientArtifact, collectFiles }

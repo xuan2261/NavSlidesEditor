@@ -17,6 +17,7 @@ const {
   hasValidatedEditedReplay,
 } = require('../services/validated-edited-export')
 const { packageIdentityForFidelity, getLocalBaseUrl } = require('./presentations-helpers')
+const { getServingBaseUrl } = require('../utils/serving-origin')
 
 const router = express.Router()
 
@@ -32,6 +33,16 @@ router.post('/raster-elements', async (req, res) => {
     if (!presentation || !Array.isArray(presentation.slides)) {
       return res.status(400).json({ error: 'Invalid presentation payload' })
     }
+    const options = req.body?.options
+    if (
+      options !== undefined &&
+      (!options ||
+        typeof options !== 'object' ||
+        Array.isArray(options) ||
+        (options.teacherReveal !== undefined && typeof options.teacherReveal !== 'boolean'))
+    ) {
+      return res.status(400).json({ error: 'Raster options.teacherReveal must be a boolean' })
+    }
     if (presentation.slides.length > MAX_RASTER_SLIDES) {
       return res.status(413).json({ error: 'Too many slides to rasterize' })
     }
@@ -43,7 +54,10 @@ router.post('/raster-elements', async (req, res) => {
       return res.status(413).json({ error: 'Too many elements to rasterize' })
     }
 
-    const rasters = await rasterizeComplexElements(presentation, { baseUrl: getLocalBaseUrl(req) })
+    const rasters = await rasterizeComplexElements(presentation, {
+      baseUrl: getLocalBaseUrl(req),
+      teacherReveal: options?.teacherReveal === true,
+    })
     res.json({ rasters })
   } catch (err) {
     logger.error('PPTX element rasterization failed:', err)
@@ -236,7 +250,7 @@ router.get('/:id/export', async (req, res) => {
     const resolved = await readAuthoritativePresentation(req.params.id)
     if (!resolved) return res.status(404).json({ error: 'Not found' })
     const presentation = normalizePresentationNotes(resolved.presentation)
-    const html = generateRevealHTML(presentation)
+    const html = generateRevealHTML(presentation, { baseUrl: getServingBaseUrl(req) })
     const filename = `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.html`
     res.setHeader('Content-Type', 'text/html')
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)

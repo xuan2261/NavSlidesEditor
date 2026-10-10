@@ -1,0 +1,252 @@
+		target.dispatchEvent( event );
+
+		if( target === dom.wrapper ) {
+			// If we're in an iframe, post each reveal.js event to the
+			// parent window. Used by the notes plugin
+			dispatchPostMessage( type );
+		}
+
+		return event;
+
+	}
+
+	/**
+	 * Dispatches a slidechanged event.
+	 *
+	 * @param {string} origin Used to identify multiplex clients
+	 */
+	function dispatchSlideChanged( origin ) {
+
+		dispatchEvent({
+			type: 'slidechanged',
+			data: {
+				indexh,
+				indexv,
+				previousSlide,
+				currentSlide,
+				origin
+			}
+		});
+
+	}
+
+	/**
+	 * Dispatched a postMessage of the given type from our window.
+	 */
+	function dispatchPostMessage( type, data ) {
+
+		if( config.postMessageEvents && window.parent !== window.self ) {
+			let message = {
+				namespace: 'reveal',
+				eventName: type,
+				state: getState()
+			};
+
+			Util.extend( message, data );
+
+			window.parent.postMessage( JSON.stringify( message ), '*' );
+		}
+
+	}
+
+	/**
+	 * Applies JavaScript-controlled layout rules to the
+	 * presentation.
+	 */
+	function layout() {
+
+		if( dom.wrapper && !printView.isActive() ) {
+
+			const viewportWidth = dom.viewport.offsetWidth;
+			const viewportHeight = dom.viewport.offsetHeight;
+
+			if( !config.disableLayout ) {
+
+				// On some mobile devices '100vh' is taller than the visible
+				// viewport which leads to part of the presentation being
+				// cut off. To work around this we define our own '--vh' custom
+				// property where 100x adds up to the correct height.
+				//
+				// https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
+				if( Device.isMobile && !config.embedded ) {
+					document.documentElement.style.setProperty( '--vh', ( window.innerHeight * 0.01 ) + 'px' );
+				}
+
+				const size = scrollView.isActive() ?
+							 getComputedSlideSize( viewportWidth, viewportHeight ) :
+							 getComputedSlideSize();
+
+				const oldScale = scale;
+
+				// Layout the contents of the slides
+				layoutSlideContents( config.width, config.height );
+
+				dom.slides.style.width = size.width + 'px';
+				dom.slides.style.height = size.height + 'px';
+
+				// Determine scale of content to fit within available space
+				scale = Math.min( size.presentationWidth / size.width, size.presentationHeight / size.height );
+
+				// Respect max/min scale settings
+				scale = Math.max( scale, config.minScale );
+				scale = Math.min( scale, config.maxScale );
+				scale = Math.round( scale * 100 ) / 100;
+
+				// Don't apply any scaling styles if scale is 1 or we're
+				// in the scroll view
+				if( scale === 1 || scrollView.isActive() ) {
+					dom.slides.style.zoom = '';
+					dom.slides.style.left = '';
+					dom.slides.style.top = '';
+					dom.slides.style.bottom = '';
+					dom.slides.style.right = '';
+					transformSlides( { layout: '' } );
+				}
+				else {
+					dom.slides.style.zoom = '';
+					dom.slides.style.left = '50%';
+					dom.slides.style.top = '50%';
+					dom.slides.style.bottom = 'auto';
+					dom.slides.style.right = 'auto';
+					transformSlides( { layout: 'translate(-50%, -50%) scale('+ scale +')' } );
+				}
+
+				const visibleSlides = Array.from( dom.wrapper.querySelectorAll( SLIDES_SELECTOR ) )
+					.filter( slide => slide.style.display !== 'none' );
+
+				// Pass 1: read sizes of visible slides
+				const tops = new Array( visibleSlides.length );
+				for( let i = 0, len = visibleSlides.length; i < len; i++ ) {
+					const slide = visibleSlides[ i ];
+
+					if( config.center || slide.classList.contains( 'center' ) ) {
+						// Vertical stacks are not centred since their section
+						// children will be
+						if( slide.classList.contains( 'stack' ) ) {
+							tops[ i ] = 0;
+						}
+						else {
+							tops[ i ] = Math.max( ( size.height - slide.scrollHeight ) / 2, 0 ) + 'px';
+						}
+					}
+					else {
+						tops[ i ] = '';
+					}
+				}
+
+				// Pass 2: write top values to visible slides
+				for( let i = 0, len = visibleSlides.length; i < len; i++ ) {
+					visibleSlides[ i ].style.top = tops[ i ];
+				}
+
+				if( oldScale !== scale ) {
+					dispatchEvent({
+						type: 'resize',
+						data: {
+							oldScale,
+							scale,
+							size
+						}
+					});
+				}
+			}
+
+			checkResponsiveScrollView();
+
+			dom.viewport.style.setProperty( '--slide-scale', scale );
+			dom.viewport.style.setProperty( '--viewport-width', viewportWidth + 'px' );
+			dom.viewport.style.setProperty( '--viewport-height', viewportHeight + 'px' );
+
+			scrollView.layout();
+
+			progress.update();
+			backgrounds.updateParallax();
+
+			if( overview.isActive() ) {
+				overview.update();
+			}
+
+		}
+
+	}
+
+	/**
+	 * Applies layout logic to the contents of all slides in
+	 * the presentation.
+	 *
+	 * @param {string|number} width
+	 * @param {string|number} height
+	 */
+	function layoutSlideContents( width, height ) {
+		// Handle sizing of elements with the 'r-stretch' class
+		Util.queryAll( dom.slides, 'section > .stretch, section > .r-stretch' ).forEach( element => {
+
+			// Determine how much vertical space we can use
+			let remainingHeight = Util.getRemainingHeight( element, height );
+
+			// Consider the aspect ratio of media elements
+			if( /(img|video)/gi.test( element.nodeName ) ) {
+				const nw = element.naturalWidth || element.videoWidth,
+					  nh = element.naturalHeight || element.videoHeight;
+
+				const es = Math.min( width / nw, remainingHeight / nh );
+
+				element.style.width = ( nw * es ) + 'px';
+				element.style.height = ( nh * es ) + 'px';
+
+			}
+			else {
+				element.style.width = width + 'px';
+				element.style.height = remainingHeight + 'px';
+			}
+
+		} );
+
+	}
+
+	/**
+	 * Responsively activates the scroll mode when we reach the configured
+	 * activation width.
+	 */
+	function checkResponsiveScrollView() {
+
+		// Only proceed if...
+		// 1. The DOM is ready
+		// 2. Layouts aren't disabled via config
+		// 3. We're not currently printing
+		// 4. There is a scrollActivationWidth set
+		// 5. The deck isn't configured to always use the scroll view
+		if(
+			dom.wrapper &&
+			!config.disableLayout &&
+			!printView.isActive() &&
+			typeof config.scrollActivationWidth === 'number' &&
+			config.view !== 'scroll'
+		) {
+			const size = getComputedSlideSize();
+
+			if( size.presentationWidth > 0 && size.presentationWidth <= config.scrollActivationWidth ) {
+				if( !scrollView.isActive() ) {
+					backgrounds.create();
+					scrollView.activate()
+				};
+			}
+			else {
+				if( scrollView.isActive() ) scrollView.deactivate();
+			}
+		}
+
+	}
+
+	/**
+	 * Calculates the computed pixel size of our slides. These
+	 * values are based on the width and height configuration
+	 * options.
+	 *
+	 * @param {number} [presentationWidth=dom.wrapper.offsetWidth]
+	 * @param {number} [presentationHeight=dom.wrapper.offsetHeight]
+	 */
+	function getComputedSlideSize( presentationWidth, presentationHeight ) {
+
+
+[Showing lines 751-1000 of 2973. Use :1001 to continue]

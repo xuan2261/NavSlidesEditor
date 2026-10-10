@@ -1,0 +1,16 @@
+export async function executePortableNetworkInspection({
+…
+}) {
+…
+
+  expect(socketAttempts).toEqual([])
+  expect(httpAttempts).toEqual([])
+  expect(errors).toEqual([])
+
+  return {
+    protocol: currentDiag.protocol,
+    httpAttempts: [...httpAttempts],
+    socketAttempts: [...socketAttempts],
+    errors: [...errors],
+  }
+}

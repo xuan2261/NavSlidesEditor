@@ -1,13 +1,17 @@
-export function getAnimationPreviewSteps(slide) {
-  const fragmentIndices = [...new Set(
-    (slide?.elements || [])
-      .filter((element) => element.fragment)
-      .map((element) =>
-        Number.isFinite(element.fragmentIndex) && element.fragmentIndex > 0
-          ? element.fragmentIndex
-          : 1
-      )
-  )].sort((a, b) => a - b)
+import { resolveEffectiveSlide } from 'revealjs-shared'
+
+export function getAnimationPreviewSteps(slide, layoutMasters) {
+  const fragmentIndices = [
+    ...new Set(
+      (resolveEffectiveSlide(slide, layoutMasters).slide.elements || [])
+        .filter((element) => element.fragment && !element.hidden)
+        .map((element) =>
+          Number.isFinite(element.fragmentIndex) && element.fragmentIndex > 0
+            ? element.fragmentIndex
+            : 1
+        )
+    ),
+  ].sort((a, b) => a - b)
 
   return [0, ...fragmentIndices]
 }
@@ -24,7 +28,8 @@ export function getAnimationPreviewState(steps, currentStepIndex) {
   return {
     slideIndex: 0,
     verticalIndex: 0,
-    fragmentIndex: steps[currentStepIndex] ?? 0,
+    // Reveal compacts rendered groups; authored orders are labels, not navigation coordinates.
+    fragmentIndex: steps[currentStepIndex] === undefined ? -1 : currentStepIndex - 1,
   }
 }
 

@@ -1,0 +1,4 @@
+export function buildDeck(concern, caseDef) {
+…
+  throw new Error(`Unknown concern: ${concern}`)
+}

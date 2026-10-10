@@ -1,9 +1,10 @@
 import fs from 'node:fs'
-import crypto from 'node:crypto'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import verifier from './verify-runtime-closure.js'
+import { createManifest } from './ci/create-client-dist-manifest.mjs'
+import { createSubject } from './feature-inventory/education-qualification-stage.mjs'
 
 const { verifyRuntimeClosure } = verifier
 const roots = []
@@ -19,25 +20,17 @@ function writeClientManifest(root, subject = 'a'.repeat(40)) {
   const dist = path.join(root, 'client', 'dist')
   fs.mkdirSync(dist, { recursive: true })
   fs.writeFileSync(path.join(dist, 'index.html'), 'client')
-  const files = [
-    {
-      path: 'index.html',
-      bytes: 6,
-      sha256: crypto.createHash('sha256').update('client').digest('hex'),
-    },
-  ]
-  const payload = {
-    schemaVersion: 1,
-    subject: { sha: subject, dirty: false },
-    build: { command: 'npm run build', node: '22.22.0', npm: '10.9.3', vite: '8.2.2' },
-    locks: [{ name: 'workspace', path: 'package-lock.json', bytes: 2, sha256: 'b'.repeat(64) }],
-    files,
-    artifact: { files: 1, bytes: 6 },
-  }
-  payload.artifact.identity = crypto
-    .createHash('sha256')
-    .update(JSON.stringify(payload))
-    .digest('hex')
+  fs.writeFileSync(path.join(root, 'package-lock.json'), '{}')
+  const inputHash = createSubject(root).subjectHash
+  const payload = createManifest({
+    baseDir: root,
+    root: dist,
+    subject,
+    dirty: false,
+    buildCommand: 'npm run build',
+    viteVersion: '8.2.2',
+    inputHash,
+  })
   const manifestPath = path.join(root, 'client-dist-manifest.json')
   fs.writeFileSync(manifestPath, JSON.stringify(payload))
   return manifestPath
@@ -160,7 +153,10 @@ describe('runtime closure verifier', () => {
         requiredVendorPaths: [],
         expectedRevealVersion: null,
       })
-    ).toMatchObject({ clientDist: true, clientArtifactIdentity: expect.stringMatching(/^[a-f0-9]{64}$/) })
+    ).toMatchObject({
+      clientDist: true,
+      clientArtifactIdentity: expect.stringMatching(/^[a-f0-9]{64}$/),
+    })
 
     fs.writeFileSync(path.join(root, 'client', 'dist', 'index.html'), 'changed')
     expect(() =>

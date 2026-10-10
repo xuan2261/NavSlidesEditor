@@ -1,0 +1,117 @@
+{
+  "component": "Native11 continuation — recorder/history/activity/clock/controls/witness",
+  "auditIdentity": "Continuation component of the already authorized Native11 static salvage audit, not an additional independent opinion or substantive producer.",
+  "exactSubject": {
+    "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+    "recordedFullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+    "identityBasis": "Governing continuation and terminal-failure records; no identity, checksum, count or line-count remeasurement."
+  },
+  "completion": {
+    "all9AssignedPrimaryBodiesRead": true,
+    "all4AssignedOwnerBodiesRead": true,
+    "primaryEOFReached": true,
+    "ownerEOFReached": true,
+    "standaloneWholeAuditVerdictIssued": false,
+    "sourceOrReceiptWrites": false,
+    "commandsOrExecution": false,
+    "nestedAgents": false
+  },
+  "flags": {
+    "admission": false,
+    "sourceReady": false,
+    "qualification": false,
+    "passClaimed": false,
+    "runtimeExecuted": false,
+    "declaredCells": 54,
+    "staticallyAdmittedCells": 0,
+    "executedAcceptanceCells": 0
+  },
+  "componentSummary": "The inspected source preserves complete lifecycle-store health, independent lifecycle-only histories, both native-action publication outputs, drained-boundary uncertainty, finite interval operands, Start baseline validation and the original last-running/first-expired crossover. NF-A2 and NF-A3 have source-backed local repairs. S10-C1 now has actual document-local observation-order witnesses at the relevant browser sites, but its explicit forwarded-occurrence identity requirement remains unsatisfied at the Native-to-Node/common-ledger seam: repeated reads of one retained recorder envelope are normalized as separate occurrences. This is a current-source retained-obligation defect, not a claim that its entire mechanism was first introduced in Correction11.",
+  "currentSourceDefects": [
+    {
+      "id": "Native11-component-recorder-forwarding",
+      "governingIds": [
+        "S10-C1",
+        "N07-07"
+      ],
+      "priority": "P2",
+      "title": "Preserve retained recorder occurrence identity across browser-to-Node forwarding",
+      "sourceDisposition": "REPAIR_REQUIRED for the forwarding/deduplication sub-obligation",
+      "introductionAssessment": "No diff, prior-source execution or regression-introduction claim is made. The mechanism is established in the current frozen source and contradicts the expressly retained Correction11 forwarding contract.",
+      "locations": [
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+          "lines": [
+            3,
+            20
+          ],
+          "symbol": "evaluatePassiveEvents"
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+          "lines": [
+            25,
+            40
+          ],
+          "symbol": "assertAndRecordObservationErrors"
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+          "lines": [
+            76,
+            102
+          ],
+          "symbol": "createErrorLedger.recordError"
+        }
+      ],
+      "trigger": "A genuine setup/listener/action recorder error remains in window.__nsLifecycleRecorderError while the document remains open, and that same diagnostic is forwarded by more than one browser read. The current acceptance callback and surface cleanup provide a concrete double-read path: acceptance.spec.js:73-79 invokes evidence.collectLive in its callback finally, then surfaces.js:75-82,115-121 or172-187 invokes collectLive again before closing the same Page/context.",
+      "consumerVisibleMechanism": "Each page.evaluate/root.evaluate transports a fresh Node-side object for the retained browser envelope. Its existing obsOrder/documentId/timeOrigin are forwarded, but observation-errors.js uses only a fresh invocation-local Set of object references. The common ledger likewise deduplicates only entry.original/entry.normalized identity and WeakMap envelope identity; it has no retained browser-occurrence correlation, and materializeEnvelope does not retain obsOrder. Therefore the second exposure of the same browser recorder failure is assigned a new ledger order, a new normalized Error and a new serialization. The final error set contains a fabricated second recorder occurrence, potentially after later independent errors, even though the browser retained only one first recorder error.",
+      "fullTrace": [
+        "native-observation.js:30,36-46,84-91,133-134 stores the first recorder envelope and assigns its observation witness.",
+        "observation-browser.js:8-20 forwards the retained envelope through page.evaluate; cursor/correlated/extraction readers also forward it at63-64,85-87 and149-151.",
+        "observation.js:42-58 stages the passive result and dispatches it to assertAndRecordObservationErrors.",
+        "observation-errors.js:25-40 deduplicates references only within that invocation, then dispatches to evidence.recordError.",
+        "evidence.js:101-105 delegates to the same createErrorLedger instance.",
+        "error-ledger.js:84-102 treats the second transported envelope as a new reference and appends another occurrence.",
+        "evidence.js:113-125 -> live-evidence.js:59-73 -> observation.js:42-58 is the cleanup passive-reader path.",
+        "acceptance.spec.js:73-79 and surfaces.js:75-82,115-121,172-187 call that collector twice for a retained live document."
+      ],
+      "repairNeeded": "Under later substantive authority, preserve and correlate an internal genuine browser-occurrence identity through forwarding, scoped to its actual document/timeOrigin, so re-exposing the retained recorder envelope reuses the existing normalized occurrence. Do not deduplicate unrelated actual Node Errors, generic message matches or unrelated caller/common-ledger numeric orders; do not mutate caller objects or change public signatures.",
+      "confidence": 0.98
+    }
+  ],
+  "current6Relevance": [
+    {
+      "id": "S10-C1",
+      "disposition": "PARTIAL_SOURCE_REPAIR; forwarding identity remains REPAIR_REQUIRED",
+      "evidence": "Actual observation-site ordering is now represented by the document-local __nsObsOrder counter. Recorder setup/listener errors receive it in native-observation.js:36-46,84-91,133; state/UI envelopes receive it in native-snapshot.js:32-52; capture and bubble health failures receive it in native-history.js:135-136 and81-82. observation-errors.js:27-32,81-87 uses the actual witness instead of universal recorder-first/packet-first ordering. The remaining forwarded-envelope occurrence defect is detailed above."
+    },
+    {
+      "id": "NF-A2",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "native-observation.js:81-93 marks readiness false for replaced/missing storage but creates a recorder envelope only inside if (!window.__nsLifecycleRecorderError). It therefore preserves a prior setup envelope and its recursive cause, or an earlier specific store error, rather than overwriting it with a later generic record() failure. native-history.js:81-82,135-136 retains equivalent first-error guards.",
+      "limit": "Browser-side first-error preservation does not repair the separate Node-side repeated-forwarding duplication."
+    },
+    {
+      "id": "NF-A3",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "native-action.js:71-84 stages the complete raw guard, routes it through assertAndRecordObservationErrors with its observed document domain, then validates/accepts the guard. The common consumer ingests stateError and uiError before its deferred documentIdentity candidate and throws its earliest normalized return. controls.js:85 and166 remain the actual reveal/reset guard consumers; the exported guard signature is unchanged."
+    },
+    {
+      "id": "N10B-01",
+      "disposition": "PRIMARY_OWNER_ELSEWHERE; no dispatcher-equivalence conclusion from this component",
+      "evidence": "controls.js:20 re-exports navigateSlide from navigation.js. Navigation and the linked production dispatcher are an outgoing seam, not this component's assigned primary body.",
+      "limit": "No external linked node_modules file was read by this component, and no immutable-dependency or complete keyboard-dispatch claim is made."
+    },
+    {
+      "id": "N10B-02",
+      "disposition": "PRIMARY_OWNER_ELSEWHERE; no initial-navigation disposition from this component",
+      "evidence": "controls.js:20 and the caller's navigation use remain outgoing integration seams. This component did not inspect navigation.js."
+    },
+    {
+      "id": "S10-C2",
+      "disposition": "PRIMARY_OWNER_ELSEWHERE; phase-authority conclusion requires the exposure component",
+      "evidence": "error-ledger.js:11-21 now serializes the provided occurrence phase ahead of intrinsic Error.phase, and observation.js/native-action.js re-record already normalized thrown Errors by identity. This component did not read the complete error-exposure.js reconciliation loops and does not certify all three exposures."
+    }
+
+[Showing lines 1-115 of 659. Use :116 to continue]

@@ -19,6 +19,7 @@
     "image-size": "file:../vendor-overrides/image-size-disabled",
     "jsdom": "^25.0.1",
     "jszip": "3.10.1",
+    "marked": "^18.0.4",
     "multer": "^2.4.0",
     "playwright": "^1.63.0",
     "pptxgenjs": "4.0.1",
@@ -34,7 +35,6 @@
     "d3": "^7.9.0",
     "highlight.js": "^11.11.1",
     "katex": "^0.16.11",
-    "marked": "^18.0.4",
     "reveal.js": "6.0.2",
     "supertest": "^7.2.2"
   },

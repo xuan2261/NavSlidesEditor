@@ -1,0 +1,12 @@
+      )
+    }
+    const boundNorm = normalizeUrlForIdentity(boundIdentity.url)
+    const observedNorm = normalizeUrlForIdentity(url)
+    if (boundNorm !== observedNorm) {
+      throw new Error(
+        `Document identity URL mismatch: expected ${boundIdentity.url}, observed ${url}`
+      )
+    }
+  }
+  return snapshot
+}

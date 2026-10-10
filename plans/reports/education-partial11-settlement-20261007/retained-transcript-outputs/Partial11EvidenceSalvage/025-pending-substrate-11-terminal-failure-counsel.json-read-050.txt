@@ -1,0 +1,81 @@
+        },
+        {
+          "scope": "Per-cell witness",
+          "requirement": "Every one of54 cells consumes complete idle/running/expired state/UI, actual native Start+4000 deadline, last-running/first-expired intervals, same-root/document lifecycle continuity and exact raw failure observations staged before assertions. No representative canary substitute."
+        },
+        {
+          "scope": "Real surfaces and finalization",
+          "requirement": "Earliest lifecycle setup, exact tuple/document/root cardinality, native visibility/focus/geometry/control routing, complete live PNG/diagnostics, portable before/after network enforcement, source GET equality and independently authored saved configuration, failure-safe setup/close/attachments."
+        },
+        {
+          "scope": "All inherited authority",
+          "requirement": "Retain all state/evidence SE obligations, NC/RPC/original bodies and both current/prior historical mappings without renaming or narrowed interpretation."
+        },
+        {
+          "scope": "Required other slices and ordered gaps",
+          "requirement": "Original7 exact Hot Potato speed-bonus, original8 Scattergories NFC duplicate/unique control and original9 full Trivia scoring policy matrix remain required in their established other slices. Gaps5-9 remain unchanged and dependent on established prerequisites; salvage does not close gap4."
+        }
+      ]
+    },
+    "required_report_contract": {
+      "mode": "FULL_SOURCE_STATIC_SALVAGE_NOT_ADMISSION",
+      "per_obligation": "For every assigned original,08,09, chronology and current11 obligation, give SOURCE_REVIEW_CLEAN, REPAIR_REQUIRED or specifically bounded UNRESOLVED, with exact frozen file/line/symbol/branch evidence. Distinguish prior credit from present source evidence and detect new source-backed regressions. Do not presume09 defects remain or current11 repairs succeeded.",
+      "scope_evidence": "Reference Main's preservation and line-limit records without remeasurement. Record any read-visible inconsistency or external-evidence limitation without repairing it or waiving scope.",
+      "delivery_evidence": "Record absent Native11 genuine delivery and actual Evidence11 receipt limitations independently of the source verdict.",
+      "coverage_completeness": "Include the full read manifest and every obligation; incomplete coverage must be explicit UNRESOLVED, never overall source-clean by omission.",
+      "flags": {
+        "admission": false,
+        "sourceReady": false,
+        "qualification": false,
+        "passClaimed": false,
+        "runtimeExecuted": false,
+        "declaredCells": 54,
+        "staticallyAdmittedCells": 0,
+        "executedAcceptanceCells": 0
+      },
+      "handoff": "Return reviewer reports to Main for preservation and combined settlement. Reviewers do not write source, receipts or corrected candidates. Main remains the report-preservation and settlement owner."
+    }
+  },
+  "forbidden_actions": [
+    "No retry/resume11 or prior attempts; no receipt-only continuation, automatic Correction12, additional substantive producer, provider/model switch, fallback, deadline extension or rearm.",
+    "No Main/sibling/reviewer reconstruction of Native11 delivery, reasoning-to-receipt conversion, old-receipt relabeling, Evidence-for-Native substitution or editing genuine receipts to cure limitations.",
+    "No changed-source inspection by this counsel; proposed reviewer source inspection remains separate, read-only and salvage-only.",
+    "No source/helper/caller/canonical edits, cross-partition writes, new helpers, exported-contract changes, aliases/shims, assertion/policy/timeout changes or dependency/configuration mutation.",
+    "No cleaned-candidate laundering, normalization/reversion/omission of anomalous bytes, destruction of terminals/receipts/authorities or rewriting historical records.",
+    "No shell/commands/eval/imports, syntax or literal checks, tests, builds, lint/format, module/boundary/helper/browser smoke, callback execution, browser automation, installation, nested agents or checksum/count remeasurement under this counsel or salvage contract.",
+    "No execution of prepared Main scripts merely because both writers stopped; preparations remain unexecuted and do not open any gate.",
+    "No normal admission/sourceReady/qualification/PASS/runtime or acceptance-coverage claim from preserved bytes, receipt presence, prior credit or clean salvage.",
+    "No caller cutover, canonical integration, merge/push/deploy or54-cell execution; no scope waiver or silent NF-A4 repair."
+  ],
+  "later_authorization_boundary": {
+    "needed_for_current_read_only_salvage": false,
+    "needed_for_any_source_repair_or_substantive_completion": true,
+    "currently_granted_by_this_counsel": false,
+    "timing": "Only after both new salvage reports and combined11 settlement establish the actual remaining source/delivery/scope blockers.",
+    "minimum_new_authority": "Explicit authorization for exactly one separately identified, independently bounded substantive correction in a fresh isolated workspace seeded from the preserved partial11 subject, covering the complete settled blocker list and genuine complete new delivery/reassessment for both Native15/Evidence11 partitions. Preserve every inherited obligation, current finding, credited invariant, deferred54-cell/later-slice requirement, immutable input and ownership/line limit. Retain the pinned substantive producer and established fixed bounds, retries/fallback disabled, no automatic subsequent attempt, full preservation and complete genuine deliveries followed by two independent normal source-gate verdicts before any separately applicable conditional Main verification. Any required ownership/interface/immutable-input change or NF-A4 scope expansion needs separately explicit authorization. This is a description of missing authority, not permission or a dispatch request."
+  },
+  "success_metrics": [
+    "Two independent complete salvage reports address the same preserved partial11 subject with full15/11 assigned-source coverage, all12 immutable consumer seams and relevant cross-partition/production evidence.",
+    "All15 original findings, six08 findings, five09 defects, two chronology obligations, six current11 findings, credited invariants and excluded/unresolved NF-A4 are accounted for without substituted meanings.",
+    "Main's final settlement separates failed delivery, receipt limitations, scope preservation, source defects/credits and bounded uncertainty.",
+    "All54 cells and later required slices remain unexecuted/unadmitted, false flags remain unchanged, and no additional substantive attempt or runtime check occurs."
+  ],
+  "assumptions": [
+    {
+      "assumption": "Main's reported actual stops, preserved bytes, subject identity, caller immutability and physical-line observations remain authoritative and unchanged.",
+      "confidence": "high",
+      "would_change_answer": "An active writer or intervening subject mutation would prevent using this freeze for reviewer dispatch until Main identifies and preserves the actual distinct subject. Do not rerun the reported failure."
+    },
+    {
+      "assumption": "No later instruction forbids this bounded read-only failure settlement;11 incorporates the established09/10 protocol rather than restricting continuation to archival preservation alone.",
+      "confidence": "high",
+      "would_change_answer": "An explicit later preservation-only/no-review restriction would prohibit reviewer dispatch. The supplied11 documents contain no such restriction."
+    },
+    {
+      "assumption": "Main commissions genuinely independent salvage reviewers, not substantive receipt-producing jobs, and retains ownership of all execution and settlement decisions.",
+      "confidence": "high",
+      "would_change_answer": "A replacement producer, receipt-completion job, normal gate mislabeled as salvage or unauthorized execution would exceed this interpretation."
+    }
+  ],
+  "execution_disclosure": "Advisory-only same-session OMP @default counsel; no Fable/Astra or new-producer claim. Read all seven requested authority/prompt/precedent documents completely, Main's complete scope-preservation record, the freeze identification header, complete original07 reports, complete08 audit reports and canonical subject authority, complete09 settled counsel and complete genuine Evidence11 receipt. Used read/glob/grep only. No changed source inspected, source/receipt/project files written, commands, imports, checks, tests, builds, lint/format, browser actions, checksum/count remeasurement or nested agents. Neither proposed salvage audit was performed or dispatched by this counsel."
+}

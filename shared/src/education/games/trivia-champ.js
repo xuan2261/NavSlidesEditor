@@ -1,0 +1,164 @@
+const { evaluateAnswer } = require('../answer-evaluator.js')
+const { validateGameConfig } = require('../game-schema.js')
+const { throwInvalid } = require('../game-validation-utils.js')
+const { makeAwardKey } = require('../game-score-policy.js')
+
+function createTriviaChampState(config) {
+  throwInvalid(validateGameConfig('trivia-champ', config).errors, 'trivia-champ configuration')
+  const error = !config.teams.length
+    ? 'No teams available.'
+    : !config.rounds.some((round) => round.questionIds.length)
+      ? 'No round questions available.'
+      : null
+  return {
+    phase: error ? 'no-play' : 'setup',
+    error,
+    roundIndex: -1,
+    roundId: null,
+    questionIndex: -1,
+    questionId: null,
+    turn: 0,
+    scores: Object.fromEntries(config.teams.map((team) => [team.id, 0])),
+    awards: [],
+    buzzTeamId: null,
+    bonus: 'normal',
+    roundDeadline: null,
+    questionDeadline: null,
+    startedAt: null,
+    deadline: null,
+    roundExpired: false,
+    correct: null,
+    winnerId: null,
+  }
+}
+function enterQuestion(config, state, roundIndex, questionIndex, time, newRound) {
+  const round = config.rounds[roundIndex],
+    questionId = round.questionIds[questionIndex]
+  const question = config.questions.find((candidate) => candidate.id === questionId)
+  const roundDeadline = newRound ? time + round.timeLimit * 1000 : state.roundDeadline
+  const questionDeadline =
+    question.timeLimit === null
+      ? roundDeadline
+      : Math.min(roundDeadline, time + question.timeLimit * 1000)
+  return {
+    ...state,
+    phase: 'active',
+    error: null,
+    roundIndex,
+    roundId: round.id,
+    questionIndex,
+    questionId,
+    turn: state.turn + 1,
+    roundDeadline,
+    startedAt: time,
+    questionDeadline,
+    deadline: questionDeadline,
+    bonus: 'normal',
+    buzzTeamId: null,
+    correct: null,
+    roundExpired: false,
+  }
+}
+function nextRound(config, state, time) {
+  const index = config.rounds.findIndex(
+    (round, index) => index > state.roundIndex && round.questionIds.length
+  )
+  if (index >= 0) return enterQuestion(config, state, index, 0, time, true)
+  const winner = config.teams.reduce(
+    (best, team) => (!best || state.scores[team.id] > state.scores[best.id] ? team : best),
+    null
+  )
+  return {
+    ...state,
+    phase: 'ended',
+    deadline: null,
+    roundDeadline: null,
+    winnerId: winner?.id ?? null,
+  }
+}
+function award(state, kind, teamId, points) {
+  const key = makeAwardKey({
+    generation: state.generation,
+    gameType: 'trivia-champ',
+    contextId: JSON.stringify([state.roundId, state.questionId, state.turn]),
+    awardKind: kind,
+  })
+  if (state.awards.includes(key)) return state
+  return {
+    ...state,
+    awards: [...state.awards, key],
+    scores: { ...state.scores, [teamId]: state.scores[teamId] + points },
+  }
+}
+function expire(state, time) {
+  return {
+    ...state,
+    phase: 'review',
+    correct: false,
+    roundExpired: time >= state.roundDeadline,
+    error: 'Time expired.',
+  }
+}
+function reduceTriviaChamp(config, state, command, { now = () => 0 } = {}) {
+  if (
+    !command ||
+    command.generation !== state.generation ||
+    ['no-play', 'ended'].includes(state.phase)
+  )
+    return state
+  const time = now()
+  if (command.type === 'start')
+    return state.phase === 'setup' ? nextRound(config, state, time) : state
+  if (
+    command.turn !== state.turn ||
+    command.roundId !== state.roundId ||
+    command.questionId !== state.questionId
+  )
+    return state
+  if (command.type === 'next') {
+    if (state.phase !== 'review') return state
+    const round = config.rounds[state.roundIndex]
+    return state.roundExpired ||
+      time >= state.roundDeadline ||
+      state.questionIndex + 1 >= round.questionIds.length
+      ? nextRound(config, state, time)
+      : enterQuestion(config, state, state.roundIndex, state.questionIndex + 1, time, false)
+  }
+  if (state.phase !== 'active') return state
+  if (['answer', 'buzz', 'bonus', 'deadline'].includes(command.type) && time >= state.deadline)
+    return expire(state, time)
+  if (command.type === 'deadline') return state
+  if (command.type === 'bonus') {
+    if (state.buzzTeamId || !['normal', 'lightning', 'jackpot'].includes(command.mode)) return state
+    if (command.mode !== 'normal' && !config[`${command.mode}Round`].enabled) return state
+    const deadline = Math.min(
+      state.questionDeadline,
+      command.mode === 'lightning'
+        ? state.startedAt + config.lightningRound.timePerQ * 1000
+        : state.roundDeadline
+    )
+    return { ...state, bonus: command.mode, deadline, error: null }
+  }
+  if (!config.teams.some((team) => team.id === command.teamId)) return state
+  const round = config.rounds[state.roundIndex]
+  if (command.type === 'buzz') {
+    if (round.mode !== 'buzzer' || state.buzzTeamId) return state
+    return {
+      ...award(state, 'buzz', command.teamId, config.buzzPoints ?? 10),
+      buzzTeamId: command.teamId,
+      error: null,
+    }
+  }
+  if (command.type !== 'answer' || (round.mode === 'buzzer' && state.buzzTeamId !== command.teamId))
+    return state
+  const question = config.questions.find((candidate) => candidate.id === state.questionId),
+    result = evaluateAnswer(question, command.answer)
+  if (!result.valid) return { ...state, error: result.error }
+  const multiplier =
+    state.bonus === 'lightning' ? 3 : state.bonus === 'jackpot' ? config.jackpotRound.multiplier : 1
+  const next = result.correct
+    ? award(state, 'answer', command.teamId, question.points * multiplier)
+    : state
+  return { ...next, phase: 'review', correct: result.correct, error: null }
+}
+module.exports = { createTriviaChampState, reduceTriviaChamp }

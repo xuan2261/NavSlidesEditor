@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import rasterModule from './server-raster.js'
+import { chromium } from 'playwright'
+import { generatePrintHTML } from 'revealjs-shared'
+import vendorModule from './server-raster-vendor-route.js'
 
 const { __private } = rasterModule
 
@@ -168,4 +171,60 @@ describe('server-raster route isolation', () => {
     expect(route.continue).toHaveBeenCalled()
     expect(route.abort).not.toHaveBeenCalled()
   })
+
+  it('renders offline syntax highlighting and denies outbound and traversal requests', async () => {
+    const browser = await chromium.launch({
+      headless: true,
+      executablePath: process.env.NAVSLIDES_CHROMIUM_PATH || undefined,
+      args: ['--no-sandbox', '--disable-dev-shm-usage'],
+    })
+    try {
+      const page = await browser.newPage()
+      const html = generatePrintHTML(
+        {
+          slides: [
+            {
+              id: 'offline',
+              elements: [
+                {
+                  id: 'code',
+                  type: 'code',
+                  content: 'const answer = 42;',
+                  language: 'javascript',
+                  x: 0,
+                  y: 0,
+                  width: 300,
+                  height: 100,
+                },
+              ],
+            },
+          ],
+        },
+        { autoPrint: false, includePrintBar: false }
+      )
+      await vendorModule.loadRasterHTML(page, html, '')
+      await page.waitForFunction('window.__navslidesExportReady === true', null, { timeout: 15000 })
+      const colors = await page.evaluate(() => {
+        const code = document.querySelector('.slide-page code')
+        return [
+          getComputedStyle(code).color,
+          getComputedStyle(code.querySelector('.hljs-keyword')).color,
+        ]
+      })
+      expect(colors[1]).not.toBe(colors[0])
+      for (const url of [
+        'https://evil.example.com/tracker.js',
+        '/vendor/%2e%2e%2fpackage.json',
+        '/uploads/private.png',
+      ]) {
+        const failed = page.waitForEvent('requestfailed', (request) =>
+          request.url().endsWith(new URL(url, page.url()).pathname)
+        )
+        await page.evaluate((url) => fetch(url).catch(() => null), url)
+        expect((await failed).failure().errorText).toContain('ERR_BLOCKED_BY_CLIENT')
+      }
+    } finally {
+      await browser.close()
+    }
+  }, 60000)
 })

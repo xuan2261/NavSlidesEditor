@@ -1,0 +1,58 @@
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-07-native-admission.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Twelfth finding closure, overall_correctness:incorrect, final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-07-evidence-admission.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Third finding closure, overall_correctness:incorrect, final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-08-native-salvage-audit.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure",
+        ":-5:raw EOF confirmation"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Fourth finding closure, overall_correctness:incorrect, final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-08-evidence-salvage-audit.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Second finding closure, overall_correctness:incorrect, final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-09-settled-rejection-counsel.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Final execution_disclosure field and closing brace."
+    },
+    {
+      "path": "skill://ak-code-review",
+      "fullRead": true,
+      "reads": [
+        "Full skill document returned"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Final paragraph ending 'Never claim correctness beyond the inspected scope.' preceded the complete optional-triage closing section; the actual last paragraph ends 'Ordinary review remains unchanged.'"
+    }
+  ],
+  "conclusion": "Evidence11 genuinely delivered a substantial receipt, preserved all five canonical mapping fields and restored the original E06-02..05 meanings, but did not satisfy complete receipt requirements. Four Native original bodies are altered, original absolute path provenance and precise current Native evidence are missing, later finding records and deferred scope are abbreviated, the NF-A4 mechanism is not actually retained, and the ledger line-count claim disagrees with Main. Missing genuine Native11 delivery independently blocks admission. No current source correctness, blanket clean status or qualification is claimed."
+}

@@ -5,6 +5,7 @@ const { readGithubConfig, writeGithubConfig } = require('../services/storage')
 const { readAuthoritativePresentation } = require('../services/package-backed-presentation-read')
 const { toExternalPresentationDto } = require('../services/pptx-import/package-store/dto')
 const { validate } = require('../middleware/validate')
+const { getServingBaseUrl } = require('../utils/serving-origin')
 
 const router = express.Router()
 
@@ -93,7 +94,7 @@ router.post('/push/:presId', validate(githubPushSchema), async (req, res) => {
     const folderName = (presentation.title || 'untitled')
       .replace(/[^a-z0-9_-]/gi, '_')
       .toLowerCase()
-    const htmlContent = generateRevealHTML(presentation)
+    const htmlContent = generateRevealHTML(presentation, { baseUrl: getServingBaseUrl(req) })
     const jsonContent = JSON.stringify(toExternalPresentationDto(presentation), null, 2)
 
     // Get default branch

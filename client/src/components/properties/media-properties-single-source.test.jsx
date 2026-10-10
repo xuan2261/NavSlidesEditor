@@ -1,108 +1,198 @@
-import { describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { useState } from 'react'
+import { describe, expect, it } from 'vitest'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import MediaProperties from './media-properties'
 
-describe('Phase 2: single video source field', () => {
-  it('offers the same controls visibility setting for audio', () => {
-    const onUpdate = vi.fn()
-    render(
+function Editor({ initial }) {
+  const [element, setElement] = useState(initial)
+  return (
+    <>
       <MediaProperties
-        element={{ id: 'a1', type: 'audio', src: '/audio.mp3', controls: false }}
-        onUpdate={onUpdate}
+        element={element}
+        onUpdate={(patch) => setElement((current) => ({ ...current, ...patch }))}
       />
-    )
+      <output data-testid="saved-media">{JSON.stringify(element)}</output>
+    </>
+  )
+}
 
-    const controls = screen.getByRole('checkbox', { name: 'Show controls' })
-    expect(controls.checked).toBe(false)
-    fireEvent.click(controls)
-    expect(onUpdate).toHaveBeenCalledWith({ controls: true })
+const saved = () => JSON.parse(screen.getByTestId('saved-media').textContent)
+
+describe('media source editing', () => {
+  it('applies controls visibility to an audio element', () => {
+    render(<Editor initial={{ id: 'a1', type: 'audio', src: '/audio.mp3', controls: false }} />)
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Show controls' }))
+    expect(saved().controls).toBe(true)
+    expect(screen.getByRole('checkbox', { name: 'Show controls' }).checked).toBe(true)
   })
 
-  it('renders exactly ONE source field (no separate Video URL)', () => {
+  it('replaces the displayed canonical source without promoting the legacy URL', () => {
     render(
-      <MediaProperties
-        element={{ id: 'v1', type: 'video', src: 'https://x.com/a.mp4' }}
-        onUpdate={vi.fn()}
-      />
-    )
-    // The dual "Video URL" label must be gone
-    expect(screen.queryByText('Video URL')).toBeNull()
-    // The single Source URL field remains
-    expect(screen.getByText('Source URL')).toBeTruthy()
-  })
-
-  it('writes source edits to canonical src only', () => {
-    const onUpdate = vi.fn()
-    render(
-      <MediaProperties
-        element={{
+      <Editor
+        initial={{
           id: 'v1',
           type: 'video',
           src: 'https://cdn.example.com/current.mp4',
           videoUrl: 'https://cdn.example.com/legacy.mp4',
         }}
-        onUpdate={onUpdate}
       />
     )
-
-    fireEvent.change(screen.getByDisplayValue('https://cdn.example.com/current.mp4'), {
-      target: { value: 'https://cdn.example.com/new.mp4' },
+    fireEvent.change(screen.getByLabelText('Video source URL'), {
+      target: { value: '/uploads/new.mp4' },
     })
-
-    expect(onUpdate).toHaveBeenCalledWith({ src: 'https://cdn.example.com/new.mp4' })
-    expect(onUpdate).not.toHaveBeenCalledWith(expect.objectContaining({ videoUrl: expect.anything() }))
+    expect(saved().src).toBe('/uploads/new.mp4')
+    expect(screen.getByLabelText('Video source URL').value).toBe('/uploads/new.mp4')
+    fireEvent.change(screen.getByLabelText('Video source URL'), { target: { value: '' } })
+    expect(saved().src).toBe('')
+    expect(screen.getByLabelText('Video source URL').value).toBe('')
   })
 
-  it('shows a legacy videoUrl when canonical src is absent without deleting it', () => {
-    const onUpdate = vi.fn()
+  it('migrates an edited legacy source into canonical src and rejects script URLs', () => {
     render(
-      <MediaProperties
-        element={{ id: 'v1', type: 'video', videoUrl: 'https://legacy.example.com/old.mp4' }}
-        onUpdate={onUpdate}
+      <Editor
+        initial={{ id: 'v1', type: 'video', videoUrl: 'https://legacy.example.com/old.mp4' }}
       />
     )
-
-    const source = screen.getByDisplayValue('https://legacy.example.com/old.mp4')
-    fireEvent.change(source, { target: { value: 'https://cdn.example.com/new.mp4' } })
-
-    expect(onUpdate).toHaveBeenCalledWith({ src: 'https://cdn.example.com/new.mp4' })
-    expect(onUpdate).not.toHaveBeenCalledWith(expect.objectContaining({ videoUrl: expect.anything() }))
-  })
-
-  it('writes an explicit source clear without mutating legacy videoUrl', () => {
-    const onUpdate = vi.fn()
-    render(
-      <MediaProperties
-        element={{ id: 'v1', type: 'video', src: 'https://current.example.com/current.mp4', videoUrl: 'https://legacy.example.com/old.mp4' }}
-        onUpdate={onUpdate}
-      />
-    )
-
-    const source = screen.getAllByRole('textbox')[0]
-    expect(source.value).toBe('https://current.example.com/current.mp4')
-    fireEvent.change(source, { target: { value: '' } })
-
-    expect(onUpdate).toHaveBeenCalledWith({ src: '' })
-    expect(onUpdate).not.toHaveBeenCalledWith(expect.objectContaining({ videoUrl: expect.anything() }))
+    const source = screen.getByLabelText('Video source URL')
+    expect(source.value).toBe('https://legacy.example.com/old.mp4')
+    fireEvent.change(source, { target: { value: 'javascript:alert(1)' } })
+    expect(source.value).toBe('https://legacy.example.com/old.mp4')
+    fireEvent.change(source, { target: { value: '/uploads/new.mp4' } })
+    expect(saved().src).toBe('/uploads/new.mp4')
+    expect(source.value).toBe('/uploads/new.mp4')
   })
 })
 
 describe('media accessibility properties', () => {
-  it('[cap:media.accessibility] adds, edits, reorders, and removes named caption track rows', () => {
-    const onUpdate = vi.fn()
-    render(<MediaProperties element={{ id: 'v1', type: 'video', tracks: [] }} onUpdate={onUpdate} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Add track' }))
-    expect(onUpdate).toHaveBeenCalledWith({ tracks: [{ src: '', srcLang: '', label: '', kind: 'captions', default: true }] })
-    const tracks = [{ src: '/uploads/en.vtt', srcLang: 'en', label: 'English', kind: 'captions', default: true }, { src: '/uploads/fr.vtt', srcLang: 'fr', label: 'French', kind: 'captions', default: false }]
-    render(<MediaProperties element={{ id: 'v1', type: 'video', tracks }} onUpdate={onUpdate} />)
+  it.each(['video', 'audio'])(
+    'admits a portable WebVTT caption for %s without accepting executable or non-caption data',
+    (type) => {
+      const original = {
+        src: '/uploads/en.vtt',
+        srcLang: 'en',
+        label: 'English',
+        kind: 'captions',
+        default: true,
+      }
+      const inlineCaption =
+        'data:text/vtt;base64,' + btoa('WEBVTT\n\n00:00.050 --> 00:00.150\nCaption.\n')
+      render(
+        <Editor initial={{ id: 'media', type, src: '/uploads/media.webm', tracks: [original] }} />
+      )
+      const input = screen.getByLabelText('Caption track 1 URL')
+      fireEvent.change(input, { target: { value: inlineCaption } })
+      expect(saved().tracks).toEqual([{ ...original, src: inlineCaption }])
+      expect(input.value).toBe(inlineCaption)
+      expect(screen.queryByRole('alert')).toBeNull()
+      for (const unsafe of [
+        'javascript:alert(1)',
+        'data:text/html;base64,PHNjcmlwdC8+',
+        'data:video/webm;base64,YQ==',
+      ]) {
+        fireEvent.change(input, { target: { value: unsafe } })
+        expect(saved().tracks).toEqual([{ ...original, src: inlineCaption }])
+        expect(input.value).toBe(inlineCaption)
+      }
+      fireEvent.change(input, { target: { value: '' } })
+      expect(saved().tracks).toEqual([{ ...original, src: '' }])
+    }
+  )
+
+  it('clears an unsafe imported caption warning only after the source is replaced by valid WebVTT', () => {
+    const unsafe = {
+      src: 'data:text/html;base64,PHNjcmlwdC8+',
+      srcLang: 'en',
+      label: 'English',
+      kind: 'captions',
+      default: true,
+    }
+    render(<Editor initial={{ id: 'media', type: 'video', tracks: [unsafe] }} />)
+    expect(screen.getByRole('alert')).toBeDefined()
+    const src = 'data:text/vtt;base64,' + btoa('WEBVTT\n')
+    fireEvent.change(screen.getByLabelText('Caption track 1 URL'), { target: { value: src } })
+    expect(saved().tracks).toEqual([{ ...unsafe, src }])
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it.each(['video', 'audio'])(
+    'keeps %s caption URL focus while typing and preserves the other track',
+    (type) => {
+      const other = {
+        src: '/uploads/fr.vtt',
+        srcLang: 'fr',
+        label: 'French',
+        kind: 'captions',
+        default: false,
+      }
+      render(
+        <Editor
+          initial={{
+            id: 'media',
+            type,
+            tracks: [
+              { src: '', srcLang: 'en', label: 'English', kind: 'captions', default: true },
+              other,
+            ],
+          }}
+        />
+      )
+      const input = screen.getByLabelText('Caption track 1 URL')
+      input.focus()
+      for (const value of ['/', '/u', '/uploads/en.vtt']) {
+        fireEvent.change(input, { target: { value } })
+        expect(document.activeElement).toBe(screen.getByLabelText('Caption track 1 URL'))
+        expect(screen.getByLabelText('Caption track 1 URL').value).toBe(value)
+        expect(saved().tracks[0].src).toBe(value)
+      }
+      expect(saved().tracks[1]).toEqual(other)
+    }
+  )
+
+  it('[cap:media.accessibility] edits, reorders, selects the default, and removes caption tracks', () => {
+    const english = {
+      src: '/uploads/en.vtt',
+      srcLang: 'en',
+      label: 'English',
+      kind: 'captions',
+      default: true,
+    }
+    const french = {
+      src: '/uploads/fr.vtt',
+      srcLang: 'fr',
+      label: 'French',
+      kind: 'captions',
+      default: false,
+    }
+    render(<Editor initial={{ id: 'v1', type: 'video', tracks: [english, french] }} />)
+    fireEvent.change(screen.getByLabelText('Caption track 2 label'), {
+      target: { value: 'French subtitles' },
+    })
     fireEvent.click(screen.getAllByRole('button', { name: 'Up' })[1])
-    expect(onUpdate).toHaveBeenLastCalledWith({ tracks: [tracks[1], tracks[0]] })
+    expect(screen.getByLabelText('Caption track 1 label').value).toBe('French subtitles')
+    expect(saved().tracks.map((track) => track.src)).toEqual([french.src, english.src])
+    fireEvent.click(screen.getByLabelText('Caption track 1 default'))
+    expect(saved().tracks.map((track) => track.default)).toEqual([true, false])
+    const firstRow = screen.getByLabelText('Caption track 1')
+    fireEvent.click(within(firstRow).getByRole('button', { name: 'Remove' }))
+    expect(saved().tracks).toEqual([{ ...english, default: false }])
     expect(screen.getByLabelText('Caption track 1 label').value).toBe('English')
   })
 
   it('disables media metadata editing on locked elements', () => {
-    render(<MediaProperties element={{ id: 'a1', type: 'audio', locked: true }} onUpdate={vi.fn()} />)
+    render(
+      <Editor
+        initial={{
+          id: 'a1',
+          type: 'audio',
+          locked: true,
+          transcript: 'Original transcript',
+          tracks: [],
+        }}
+      />
+    )
     expect(screen.getByLabelText('Media transcript').disabled).toBe(true)
     expect(screen.getByRole('button', { name: 'Add track' }).disabled).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: 'Add track' }))
+    expect(saved().tracks).toEqual([])
   })
 })

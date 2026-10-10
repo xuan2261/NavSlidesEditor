@@ -1,0 +1,48 @@
+
+    handle = { page, context, file, diagnostics: rawDiagnostics(), inspectNetwork }
+  } catch (setupError) {
+    recordArrival('portable:setup', setupError)
+    if (context) {
+      try {
+        await context.close()
+      } catch (closeError) {
+        if (!setupError.secondaryFailures) setupError.secondaryFailures = []
+        setupError.secondaryFailures.push(closeError)
+        recordArrival('portable:close', closeError)
+      }
+    }
+    throw setupError
+  }
+
+  if (typeof onPageCreated === 'function') {
+    await onPageCreated(handle)
+    try {
+      await handle.page.goto(pathToFileURL(file).href)
+      await handle.page.waitForFunction(() => window.Reveal?.isReady())
+      return handle
+    } catch (navError) {
+      handle.diagnostics = rawDiagnostics()
+      recordArrival('portable:navigation', navError)
+      throw navError
+    }
+  }
+
+  try {
+    await handle.page.goto(pathToFileURL(file).href)
+    await handle.page.waitForFunction(() => window.Reveal?.isReady())
+    return handle
+  } catch (error) {
+    handle.diagnostics = rawDiagnostics()
+    recordArrival('portable:navigation', error)
+    try {
+      await context.close()
+    } catch (closeError) {
+      if (!error.secondaryFailures) error.secondaryFailures = []
+      error.secondaryFailures.push(closeError)
+      recordArrival('portable:close', closeError)
+    }
+    throw error
+  }
+}
+
+[Showing lines 98-143 of 200. Use :144 to continue]

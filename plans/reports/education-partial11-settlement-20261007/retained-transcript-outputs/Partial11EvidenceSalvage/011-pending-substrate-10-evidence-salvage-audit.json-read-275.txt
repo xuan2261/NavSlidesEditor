@@ -1,0 +1,112 @@
+        "recordedPhysicalLines": 106
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-hot-potato-state.js",
+        "ranges": [
+          "1-113"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 112
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-jeopardy-state.js",
+        "ranges": [
+          "1-107"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 106
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-relay-state.js",
+        "ranges": [
+          "1-115"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 114
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-trivia-state.js",
+        "ranges": [
+          "1-198"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 197
+      }
+    ],
+    "importedFixtureProductionAndConsumerSources": [
+      {
+        "file": "tests/e2e/fixtures/test-fixtures.js",
+        "ranges": [
+          "1-69",
+          "70-155",
+          "156-187"
+        ],
+        "coverage": "FULL_BODY; real loopback/retry/API GET/create/update/share/fixture producers inspected, not invoked"
+      },
+      {
+        "file": "tests/e2e/education/release-game-fixtures.js",
+        "ranges": [
+          "1-80"
+        ],
+        "coverage": "ALL_DECLARATIONS_AND_BODIES; EOF footer lists only final trailing line81"
+      },
+      {
+        "file": "tests/e2e/education/release-content-fields.js",
+        "ranges": [
+          "1-175",
+          "120-160"
+        ],
+        "coverage": "Portable no-sink callback/cleanup consumer explicitly inspected at133-141; no broader content-field qualification"
+      },
+      {
+        "file": "tests/e2e/pages/editor-page.js",
+        "ranges": [
+          "1-133"
+        ],
+        "coverage": "Consumed constructor, ready and gotoPresentation implementations; unrelated later editor helpers not certified"
+      },
+      {
+        "file": "shared/src/education/runtime-session.js",
+        "ranges": [
+          "1-190"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; activity clock, pause/resume/reset and resource/timer ownership"
+      },
+      {
+        "file": "shared/src/education/browser/reveal-lifecycle.js",
+        "ranges": [
+          "1-170"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; actual root visibility/lifecycle and keyboard-condition wrapper"
+      },
+      {
+        "file": "shared/src/education/browser/mount.js",
+        "ranges": [
+          "90-150"
+        ],
+        "coverage": "Relevant reset/destroy/pause/resume lifecycle consumer, through module end"
+      },
+      {
+        "file": "shared/src/education/browser/local-activity.js",
+        "ranges": [
+          "1-180"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; Quiz/countdown/Relay state and clock dispatch"
+      },
+      {
+        "file": "shared/src/education/countdown-state.js",
+        "ranges": [
+          "1-190"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; independent authored countdown policy"
+      },
+      {
+        "file": "shared/src/education/browser/countdown-presenter.js",
+        "ranges": [
+          "1-200"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; native UI and timer scheduling"
+      },
+      {
+
+[Showing lines 861-970 of 1203. Use :971 to continue]

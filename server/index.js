@@ -27,14 +27,12 @@ const {
   shutdownPackageStore,
 } = require('./services/pptx-import/package-store-runtime')
 const { stripControlChars } = require('./utils/strip-control-chars')
+const { getServingBaseUrl } = require('./utils/serving-origin')
 const { resolveListenHost, getExposureWarning } = require('./services/listen-host-policy')
 const { sanitizeSvgBuffer } = require('./services/svg-upload-sanitizer')
 const { createHealthState, READY_REASON_CODES } = require('./services/health-state')
 const { assertSingleProcessTopology } = require('./services/health-state-topology')
-const {
-  assertWritableRoot,
-  durableRecoveryReason,
-} = require('./services/health-state-readiness')
+const { assertWritableRoot, durableRecoveryReason } = require('./services/health-state-readiness')
 
 /**
  * A store that fails to release is exactly what leaves the writer lock held and
@@ -136,7 +134,10 @@ app.get('/health/live', (_req, res) => {
 })
 app.get('/health/ready', (_req, res) => {
   const body = healthState.ready()
-  res.set('Cache-Control', 'no-store').status(body.status === 'ready' ? 200 : 503).json(body)
+  res
+    .set('Cache-Control', 'no-store')
+    .status(body.status === 'ready' ? 200 : 503)
+    .json(body)
 })
 
 // ── Security: UUID validation for :id and :snapshotId params ─────────────────
@@ -222,7 +223,8 @@ app.use('/uploads', async (req, res, next) => {
     const sanitized = sanitizeSvgBuffer(await fs.readFile(filePath))
     res.set({
       'Content-Type': 'image/svg+xml; charset=utf-8',
-      'Content-Security-Policy': "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'",
+      'Content-Security-Policy':
+        "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'",
       'X-Content-Type-Options': 'nosniff',
       'Cross-Origin-Resource-Policy': 'same-origin',
     })
@@ -236,7 +238,13 @@ app.use('/uploads', express.static(UPLOADS_DIR))
 if (fs.existsSync(socketIoClientDist)) {
   app.use('/vendor/socket.io', express.static(socketIoClientDist))
 }
-app.use('/vendor', express.static(path.join(__dirname, 'vendor')))
+// Public runtime assets serve opaque compiler frames, never credentialed API data.
+app.use(
+  '/vendor',
+  express.static(path.join(__dirname, 'vendor'), {
+    setHeaders: (res) => res.setHeader('Access-Control-Allow-Origin', '*'),
+  })
+)
 
 // ── Mount routes ─────────────────────────────────────────────────────────────
 // Core CRUD — order matters: more specific paths before generic ones
@@ -286,7 +294,7 @@ app.post('/api/presentations/:id/github/push', (req, res, next) => {
 // bcrypt moved to top-level imports
 
 // Helper for presentation viewer HTML payload (with server-side XSS sanitization)
-async function renderShareView(presentationId, res) {
+async function renderShareView(presentationId, req, res) {
   // Serve-guard (C2): a soft-deleted deck must not render even via a live share
   // token. The authoritative reader returns null for missing or trashed decks.
   const resolved = await readAuthoritativePresentation(presentationId)
@@ -303,7 +311,7 @@ async function renderShareView(presentationId, res) {
       .replace(/url\s*\(\s*['"]?\s*javascript/gi, 'url(/* blocked */')
   }
 
-  const html = generateRevealHTML(sanitized)
+  const html = generateRevealHTML(sanitized, { baseUrl: getServingBaseUrl(req) })
   res.setHeader('Content-Type', 'text/html')
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
   res.send(html)
@@ -393,7 +401,7 @@ app.get('/share/:token', async (req, res) => {
       await recordView(updatedTokenData.presentationId, req.params.token, req.get('referer') || '')
     } catch {}
 
-    await renderShareView(updatedTokenData.presentationId, res)
+    await renderShareView(updatedTokenData.presentationId, req, res)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -428,7 +436,7 @@ app.post('/share/:token', async (req, res) => {
       await recordView(updatedTokenData.presentationId, req.params.token, req.get('referer') || '')
     } catch {}
 
-    await renderShareView(updatedTokenData.presentationId, res)
+    await renderShareView(updatedTokenData.presentationId, req, res)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -522,9 +530,10 @@ async function startServer(port, options = {}) {
 
     server.listen(p, listenHost, () => {
       const address = server.address()
-      const actualAddress = typeof address === 'object' && address
-        ? `${address.address}:${address.port}`
-        : String(address)
+      const actualAddress =
+        typeof address === 'object' && address
+          ? `${address.address}:${address.port}`
+          : String(address)
       logger.log(`Server running on http://${actualAddress}`)
       resolve(server)
     })

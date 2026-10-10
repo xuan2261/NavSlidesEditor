@@ -1,0 +1,13 @@
+export async function readDocumentActivitySnapshot(page, evidence) {
+…
+  try {
+…
+    evidence.stage('documentActivitySnapshot_raw', snap)
+    evidence.assertDocumentIdentity({ url: snap.url, documentId: snap.documentId, timeOrigin: snap.timeOrigin })
+    evidence.stage('documentActivitySnapshot', snap)
+    return snap
+  } catch (err) {
+    evidence.recordError('readDocumentActivitySnapshot', err)
+    throw err
+  }
+}

@@ -1,0 +1,202 @@
+        "release-surfaces.js:149-156",
+        "release-content-fields.js:124-132",
+        "pending-round-lifecycle-surfaces.js:47-54,76-83"
+      ],
+      "observation": "The generic no-sink launchPresentPopup does not return its popup until domcontentloaded succeeds. If that wait rejects after popup creation, visitGeneratedSurfaces/withPresent have not entered their finally and do not possess the popup to close it. The lifecycle visitSurface caller is different: its separate early popup event retains ownership and still reaches collection/close.",
+      "disposition": "A source-backed pre-existing generic limitation, not a new11 finding and not a waiver or newly authorized repair. Do not turn the preserved lifecycle cleanup into a claim that generic Present has equivalent early-failure ownership."
+    },
+    {
+      "id": "GENERIC-NO-SINK-CLOSE-MASKING-LIMIT",
+      "evidence": [
+        "release-surfaces.js:151-156,161-167,172-178",
+        "release-content-fields.js:126-131,136-141",
+        "present-offline-helpers.js:20-27"
+      ],
+      "observation": "Generic no-sink finally blocks directly await close. If both inspection/visit/navigation and close reject, the close rejection replaces the earlier thrown failure rather than preserving both; launchPresentSlidePopup's catch has the same direct-close masking shape. Lifecycle visitSurface uses safeClose plus the common ledger and does not share this limitation.",
+      "disposition": "Source-backed existing error-path boundary. No introduced11 regression claim, blanket cleanliness claim, or new mandatory correction scope is inferred."
+    },
+    {
+      "id": "PORTABLE-CALLBACK-TRANSFER-BOUNDARY",
+      "evidence": [
+        "release-surfaces.js:114-124",
+        "pending-round-lifecycle-surfaces.js:128-137,172-190",
+        "release-content-fields.js:133-142"
+      ],
+      "observation": "onPageCreated is awaited outside freshPortable's setup/navigation catch and cleanup intentionally belongs to the transferred owner. The actual lifecycle callback stashes the handle before operations that could reject, satisfying that ownership seam. The generic withPortable function, however, only enters its own finally after freshPortable returns. A caller-provided options.onPageCreated therefore must itself own early cleanup/retention; passing it through withPortable alone does not establish the lifecycle guarantee.",
+      "disposition": "Explicit ownership contract boundary, not a demand to restore helper-owned cleanup after transfer or an invented defect in the actual lifecycle callback."
+    }
+  ],
+  "deferredCallerCompatibility": {
+    "status": "REQUIRED_UNEXECUTED; not compatible/admitted by this component.",
+    "evidence": [
+      "pending-round-lifecycle-acceptance.spec.js:41-90",
+      "pending-round-lifecycle-evidence.js:28-30,65-73",
+      "pending-round-lifecycle-surfaces.js:7-24,40-42"
+    ],
+    "observations": [
+      "The immutable acceptance callback already consumes context.page; reporting a Page-first callback mismatch here would be false.",
+      "The same acceptance caller constructs the accumulator but never calls setExpectedRoots before visitSurface. expectedRoots starts null, so mandatory manifest validation rejects it before surface creation. This is a required later caller cutover, not an introduced helper regression.",
+      "Generic visitGeneratedSurfaces and withPortable retain their distinct existing callback shapes and no-sink behavior; they are not the deferred pending-lifecycle caller migration.",
+      "No caller, manifest, API signature, policy, timing assertion, source or receipt was changed. No admission or cell execution follows from static helper observations."
+    ],
+    "retainedScope": "All18 independent present/share/file rows remain54 REQUIRED_UNEXECUTED cells; complete state AND native UI, actual Reset/Pass/Start brackets, consumed expiry/witness crossover, root/document/activity/uncertainty bounds, Quiz Reset+5000/new expiry, exact Relay pending due/settled peer/first-timeout invariance, full Trivia expiry/Next, earliest setup/live PNG/diagnostics/portable before-and-after/source/config equality and failure-safe finalization remain required. Original7 Hot Potato bonus, original8 Scatter NFC controls and original9 Trivia scoring matrix, gap4 and dependent gaps5-9 are unchanged."
+  },
+  "integrationSeams": [
+    {
+      "producerConsumer": "Passive script registration -> browser installed snapshot/action/lifecycle owners",
+      "componentEvidence": "All three lifecycle surface registration sites and native-observation.js:1-163/native-snapshot.js:1-106 were read.",
+      "integrationOwnerMustResolve": "Full action recorder/history/UI owner implementations, occurrence witnesses and external production lifecycle/Reveal equivalence remain assigned elsewhere; script registration is not proof of those bodies."
+    },
+    {
+      "producerConsumer": "Portable pageerror/frame Error -> recordArrival -> accumulator -> ledger/exposure -> final throw",
+      "componentEvidence": "Actual Node reference/sidecar and immediate frame-arrival paths plus full ledger/exposure/finalizer consuming bodies were personally read.",
+      "integrationOwnerMustResolve": "Integrate with browser-to-Node occurrence identity and complete S10-C1/NF-A2/NF-A3 traces, without reclassifying metadata as phase authority."
+    },
+    {
+      "producerConsumer": "Live browser root errors -> collectLiveRootStates -> collectLive/finalize",
+      "componentEvidence": "Full producer and consuming bodies establish the specific document-first defect above.",
+      "integrationOwnerMustResolve": "Resolve the chronology defect with the ledger/collection slice; do not silently adopt historical broad source-preserved labels."
+    },
+    {
+      "producerConsumer": "Mandatory manifest/document surface API -> immutable acceptance callback",
+      "componentEvidence": "Callback is context-object compatible, but missing manifest installation is source-visible and intentionally deferred.",
+      "integrationOwnerMustResolve": "Retain all remaining immutable-caller action/clock/witness compatibility and54-cell requirements from their primary components; no helper defect is inferred merely from deferred signatures."
+    },
+    {
+      "producerConsumer": "Generic no-sink callers -> returned portable context/popup cleanup",
+      "componentEvidence": "release-content-fields.js and complete generic generated-surface bodies were read, with an actual game-surfaces consumer callback.",
+      "integrationOwnerMustResolve": "Keep generic signatures, transferred-handle semantics and their documented limits separate from lifecycle-sink cleanup; do not infer universal error exposure from support for absent evidence."
+    }
+  ],
+  "NF_A4Scope": {
+    "id": "NF-A4",
+    "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+    "completeRecordedExcludedScopeCandidate": {
+      "consumerVisibleMechanism": "evaluateActionCandidates returns candidates from the public, replaceable window.__nsRecordedPackets (:146-147). storeHealth (:148) checks only the lifecycle store. In-place mutation of an original packet is detected, because that packet object is also the retained native-action detail. Replacing the array, or replacing an element with a forged object, leaves the retained and private stores untouched, so health stays true. extractActionBracket (observation.js:107-131) then builds the action bracket from the forged packet: rootEventsBefore/After, stateAfter and tCapture/tBubble, which witness.js:44-63 adopts as the Start baseline. This is the same public-store replacement model as N07-04, applied to the packet store.",
+      "lineEnd": 158,
+      "title": "Bind returned action packets to the integrity-checked native-action records",
+      "confidence": 0.6,
+      "id": "NF-A4",
+      "lineStart": 146,
+      "repairNeeded": "Inside evaluateActionCandidates, derive candidates from, or verify each one against, the closure-retained native-action entries. For example, expose a private read of native-action details by sequence, or verify that each candidate is identical to the retained entry's detail and matches its private JSON clone. Report a recorder:store error when they diverge. evaluatePreActionCursor's lastSeq source (:36-37) needs the same binding.",
+      "priority": 2,
+      "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+      "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+      "scopeDecision": "Original N07-04/N07-05 explicitly cover lifecycle store integrity. Extending identical checks to separately replaceable action-packet storage is not automatically a required cutover; no new repair scope authorized."
+    },
+    "componentBoundary": "Retained from the dispatch authority, not repaired, disproved, waived or promoted to a seventh required11 repair. This component does not certify complete action-packet-store integrity."
+  },
+  "readEvidence": {
+    "provenance": "Personal read/grep calls in this continuation component only. The integration owner may personally reread these paths or actually inspect the complete attributable tool outputs; this structured summary itself is not a substitute for full source inspection.",
+    "EOFConvention": "EOF content lines below use the source's final nonempty line/last statement. Raw read footers sometimes report one additional empty terminal line due to the trailing newline; that line was included by the overrun reads. These are source inspection ranges and Main's retained inventory, not new physical-line measurements.",
+    "primaryFiles": [
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+        "exactCompleteContentRanges": [
+          "1-100",
+          "101-193"
+        ],
+        "EOFContentLine": 193,
+        "additionalEOFRead": "194-205 returned no further content",
+        "fullBodyAndOmissionsExpanded": true,
+        "attributableReadRequests": [
+          ":1-199",
+          ":1-100:raw",
+          ":101-193:raw",
+          ":194-205:raw"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+        "exactCompleteContentRanges": [
+          "1-143"
+        ],
+        "EOFContentLine": 143,
+        "EOFMarker": "Final return snapshot and closing brace; overrun raw read through160",
+        "fullBodyAndOmissionsExpanded": true,
+        "attributableReadRequests": [
+          ":1-199",
+          ":1-160:raw",
+          ":102-145:raw"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/release-surfaces.js",
+        "exactCompleteContentRanges": [
+          "1-100",
+          "101-199"
+        ],
+        "EOFContentLine": 199,
+        "EOFMarker": "findFrame final return selected and closing brace; second raw read through210 covers reader-reported terminal empty line200",
+        "fullBodyAndOmissionsExpanded": true,
+        "attributableReadRequests": [
+          ":1-199",
+          ":1-100:raw",
+          ":101-210:raw",
+          ":98-143:raw"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/present-offline-helpers.js",
+        "exactCompleteContentRanges": [
+          "1-28"
+        ],
+        "EOFContentLine": 28,
+        "EOFMarker": "launchPresentSlidePopup final catch/closing brace; raw read through35",
+        "fullBodyAndOmissionsExpanded": true,
+        "attributableReadRequests": [
+          ":1-199",
+          ":1-35:raw"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/release-portable-inspection.js",
+        "exactCompleteContentRanges": [
+          "1-55"
+        ],
+        "EOFContentLine": 55,
+        "EOFMarker": "Strict four-key return and final brace; raw read through65",
+        "fullBodyAndOmissionsExpanded": true,
+        "attributableReadRequests": [
+          ":1-199",
+          ":1-65:raw"
+        ]
+      }
+    ],
+    "primaryOwners": [
+      {
+        "file": "tests/e2e/fixtures/test-fixtures.js",
+        "exactCompleteContentRanges": [
+          "1-100",
+          "101-186"
+        ],
+        "EOFContentLine": 186,
+        "EOFMarker": "export { expect }; reader extent187 includes terminal empty line",
+        "fullBodyAndOmissionsExpanded": true,
+        "attributableReadRequests": [
+          ":1-210",
+          ":1-100:raw",
+          ":101-210:raw",
+          ":186-200:raw"
+        ],
+        "expandedLoadBearingDefinitions": "getBaseUrl, assertLoopback, responseStatus, withApiRetry, apiGetPresentation, apiUpdatePresentation, apiCreateShareLink and fixture setup/cleanup were read, not inferred from names."
+      },
+      {
+        "file": "tests/e2e/pages/editor-page.js",
+        "exactCompleteContentRanges": [
+          "1-100",
+          "101-199"
+        ],
+        "EOFContentLine": 199,
+        "EOFMarker": "Final class brace; reader extent200 includes terminal empty line",
+        "fullBodyAndOmissionsExpanded": true,
+        "attributableReadRequests": [
+          ":1-230",
+          ":1-100:raw",
+          ":101-230:raw",
+          ":195-210:raw"
+        ],
+        "expandedLoadBearingDefinitions": "constructor, gotoPresentation and waitForReady full bodies; irrelevant delegating editor operations were also read but their helper modules are not claimed covered."
+      },
+
+[Showing lines 211-410 of 722. Use :411 to continue]

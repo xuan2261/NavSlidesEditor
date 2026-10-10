@@ -1,0 +1,97 @@
+      {
+        "concern": "reset",
+        "case": "trivia-champ-r",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "isolation",
+        "case": "quiz",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "isolation",
+        "case": "hot-potato",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "isolation",
+        "case": "jeopardy",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "isolation",
+        "case": "relay-race",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "isolation",
+        "case": "trivia-champ",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      }
+    ]
+  },
+  "newExportedBindingErrors": {
+    "identified": [],
+    "scope": "Every imported binding of the six primary files was followed to its actual current export/re-export. No absent named export was observed. This is static source evidence, not an executed import/module/syntax check.",
+    "distinction": "The sink omissions, missing startRecord argument, obsolete Reset bracket fields and missing result consumption are the acknowledged unchanged caller migration. The inherited Trivia Next oracle contradictions are likewise not new Correction11 helper findings."
+  },
+  "newFindings": [],
+  "NF_A4Scope": {
+    "id": "NF-A4",
+    "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+    "completeRecordedMechanismVerbatim": "evaluateActionCandidates returns candidates from the public, replaceable window.__nsRecordedPackets (:146-147). storeHealth (:148) checks only the lifecycle store. In-place mutation of an original packet is detected, because that packet object is also the retained native-action detail. Replacing the array, or replacing an element with a forged object, leaves the retained and private stores untouched, so health stays true. extractActionBracket (observation.js:107-131) then builds the action bracket from the forged packet: rootEventsBefore/After, stateAfter and tCapture/tBubble, which witness.js:44-63 adopts as the Start baseline. This is the same public-store replacement model as N07-04, applied to the packet store.",
+    "completeRecordedScopeDecisionVerbatim": "Original N07-04/N07-05 explicitly cover lifecycle store integrity. Extending identical checks to separately replaceable action-packet storage is not automatically a required cutover; no new repair scope authorized.",
+    "componentRelationship": "Current observation-browser.js still derives cursor sequence and candidate packets from the public packet array; witness baseline consumption depends on those packet fields. This component does not claim complete separate packet-store integrity, repair, waiver or a seventh Correction11 finding."
+  },
+  "integrationSeams": [
+    {
+      "owner": "Native integration owner / recorder-history component",
+      "required": "Integrate full recorder producer checks with the observed witness consumer credits: private full-store integrity, independent copied capture/post history, BOTH native packet and diagnostic publication, boundary-drained uncertainty and valid projected sequence gaps. This component has not certified those producer bodies."
+    },
+    {
+      "owner": "Native integration owner / observation-navigation component",
+      "required": "Retain all original12, six08, five09, two chronology and six current11 obligations. Current sink-aware observations and stageButtonGuard/navigation exports are present; full browser-to-Node occurrence order, first-recorder identity/cause, fallback siblings and keyboard dispatcher equivalence belong to their complete traces, not this component's caller inventory."
+    },
+    {
+      "owner": "Native integration owner / evidence component",
+      "required": "Integrate manifest/document binding, complete expected root cardinality, common-ledger actual order/phase/cause identity, repeated/late exposure, portable no-sink consumers and complete finalization. Outer GET placement/context.page are local credits only."
+    },
+    {
+      "owner": "Immutable state/UI component",
+      "required": "Resolve the retained S02-01/S02-02 Trivia contradictions, complete reset pending state and active/terminal/peer/UI obligations using the full original SE subjects. This component independently inspected consuming state bodies, but does not take over their primary coverage or issue a whole state verdict."
+    }
+  ],
+  "deliveryAndScopeLimits": {
+    "native11Receipt": "Still absent per Main's complete manifest and terminal counsel; independently fatal to admission. This component is not genuine Native11 producer delivery and cannot substitute a receipt.",
+    "evidenceReceipt": "Presence and Main-recorded 160-versus150 discrepancy retained as delivery evidence only; no source defect is inferred from the discrepancy. Full genuine Evidence11 receipt inspection is integration-owned, not claimed here.",
+    "externalDependency": "The linked node_modules owner is outside the recursive freeze. No external keyboard source or immutable dependency equivalence is certified by this component.",
+    "governingCoverage": "The mandatory continuation counsel, native salvage prompt, full dispatch authority and terminal counsel were read fully. A literal unprefixed dispatch-authority.json read was unavailable; the prompt-specified pending-substrate-11-dispatch-authority.json was discovered/read fully. Original full Native12/Evidence3 and applicable state finding bodies were read. Other full08/09/10 governing reports and genuine receipt remain the integration owner's explicit duties; no borrowed coverage is claimed.",
+    "unchangedProgression": "Gap4 remains unresolved; dependent gaps5–9 and later required scoring slices are unchanged. No caller cutover, repair, source admission or execution authorized.",
+    "executionDisclosure": "Read/glob/grep source/document inspection only. No files/source/receipts written, commands/shell/eval/imports/checks/tests/builds/lint/format/browser/git/install/hash/count measurements or nested agents used.",
+    "wholeAuditVerdict": "Not supplied: this is an evidence component, not SOURCE_CLEAN or a completed independent audit."
+  }
+}

@@ -1,0 +1,70 @@
+# Prepared partial Correction11 static salvage contract — NOT normal admission
+DISPATCH ONLY after Main accepts terminal-failure counsel interpretation. This is read-only failure settlement of an already-stopped subject, not a replacement producer, recovered receipt, correction retry, source gate or execution authorization. Native11 failed transport stream_error exit1; genuine Native11 receipt absent. Evidence11 succeeded and its genuine receipt is preserved unchanged. Both writers actually stopped. No substantive attempt, source/receipt edits/writes, shells/eval/imports/syntax/tests/build/lint/formatter/browser/git/installation/checksum remeasurement/nested agents. Same-session-model reviewer, not Fable/Astra or pinned substantive producer.
+
+# Exact subject
+Frozen root D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial
+Full-subject hash e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f
+Read compact pending-substrate-11-helper-caller-manifest.json and scope-preservation.json at D:/NavSlidesQualification/edu-resume-261004; DO NOT ingest878KB full input manifest. Main verified4328 regular copies including every4327 baseline file;8 existing authorized helper differences;12 callers byte unchanged;all26 helpers strictly<200;no unexpected new/deleted files. Sole addition genuine Evidence11 receipt. Node_modules junction C:\Work\worktrees\NavSlidesEditor-education-gemini38-cook-261001\node_modules is outside recursive freeze; disclose owner evidence and dependency limits. Read source ONLY from frozen root. Reports/receipts establish obligations and claims, never current PASS.
+
+# Full governing authority
+Read fully, using bounded ranges and expanding all omissions: pending-substrate-11-terminal-failure-counsel.json (when written by Main), pending-substrate-11-dispatch-authority.json, pending-substrate-11-scope-counsel.json, BOTH11 producer prompts, pending-substrate-07-native-admission.json, pending-substrate-07-evidence-admission.json, BOTH08 salvage audits, pending-substrate-08-subject-authority.json, pending-substrate-09-settled-rejection-counsel.json, BOTH09 salvage audits, pending-substrate-10-native-completion-settlement.json, pending-substrate-10-evidence-salvage-audit.json. Root D:/NavSlidesQualification/edu-resume-261004. Read FULL genuine11 Evidence receipt D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/.tmp/acceptance-producer-pending-substrate-11-evidence.json. Never invent/reconstruct missing Native receipt. Canonical NC/RPC/original/current/prior snapshots match by Main byte-structure comparison; ledger linecount receipt160 versus actual150 is a delivery discrepancy, not source defect by itself. Audit receipt completeness, not blanket reliance.
+
+# Required full code coverage, not partition-only
+Read FULL bodies of ALL26 helpers listed below and ALL12 immutable callers, plus actual imported fixture APIs/runtime/session/reveal lifecycle/htmlGenerator/keyboard/error-finalization owners needed to establish correctness. Every source file requires exact full read ranges and EOF coverage in report; expand collapsed/omitted function bodies. Do not report complete coverage if any file/body was omitted. Known unchanged old caller signatures need future cutover and are NOT a new helper regression; missing exported bindings or unintended exported signature changes ARE source findings. Caller execution remains REQUIRED_UNEXECUTED.
+tests/e2e/education/pending-round-lifecycle-native-observation.js
+tests/e2e/education/pending-round-lifecycle-native-snapshot.js
+tests/e2e/education/pending-round-lifecycle-activity-interval.js
+tests/e2e/education/pending-round-lifecycle-observation.js
+tests/e2e/education/pending-round-lifecycle-observation-domain.js
+tests/e2e/education/pending-round-lifecycle-clock.js
+tests/e2e/education/pending-round-lifecycle-controls.js
+tests/e2e/education/pending-round-lifecycle-witness.js
+tests/e2e/education/pending-round-lifecycle-observation-browser.js
+tests/e2e/education/pending-round-lifecycle-native-action.js
+tests/e2e/education/pending-round-lifecycle-witness-domain.js
+tests/e2e/education/pending-round-lifecycle-history-domain.js
+tests/e2e/education/pending-round-lifecycle-native-history.js
+tests/e2e/education/pending-round-lifecycle-observation-errors.js
+tests/e2e/education/pending-round-lifecycle-navigation.js
+tests/e2e/education/pending-round-lifecycle-ui-evidence.js
+tests/e2e/education/pending-round-lifecycle-error-ledger.js
+tests/e2e/education/pending-round-lifecycle-live-evidence.js
+tests/e2e/education/pending-round-lifecycle-evidence.js
+tests/e2e/education/pending-round-lifecycle-surfaces.js
+tests/e2e/education/pending-round-lifecycle-evidence-domain.js
+tests/e2e/education/release-surfaces.js
+tests/e2e/education/present-offline-helpers.js
+tests/e2e/education/pending-round-lifecycle-live-root-observation.js
+tests/e2e/education/pending-round-lifecycle-error-exposure.js
+tests/e2e/education/release-portable-inspection.js
+# Immutable callers
+tests/e2e/education/pending-round-lifecycle-acceptance.spec.js
+tests/e2e/education/pending-round-lifecycle-cases.js
+tests/e2e/education/pending-round-lifecycle-fixtures.js
+tests/e2e/education/pending-round-lifecycle-leave-return.js
+tests/e2e/education/pending-round-lifecycle-reset.js
+tests/e2e/education/pending-round-lifecycle-isolation.js
+tests/e2e/education/pending-round-lifecycle-state.js
+tests/e2e/education/pending-round-lifecycle-quiz-state.js
+tests/e2e/education/pending-round-lifecycle-hot-potato-state.js
+tests/e2e/education/pending-round-lifecycle-jeopardy-state.js
+tests/e2e/education/pending-round-lifecycle-relay-state.js
+tests/e2e/education/pending-round-lifecycle-trivia-state.js
+
+# Every required obligation retained
+Explicit source-backed disposition for original12 Native and3 Evidence full canonical IDs/bodies;6 audit08;5 settled09 defects;2 additional09 chronology obligations;6 current11 findings S10-C1,NF-A2,NF-A3,N10B-01,N10B-02,S10-C2. Assess current frozen source, not historical claims. Preserve N06 finite-positive activity/time operands, complete CSS/layout state, identity/mapping invariants; BOTH native packet AND diagnostic outputs, independent copied capture/post histories, complete private retained event health incl.time/domain/detail before EVERY consumer, healthy initialized empty store, projected-root sequence gaps, boundary-drained events with later uncertainty maxima, valid first-running state and last-running/first-expired crossover. Exact null command/tuple/document/current-connected root/native action cardinality; raw stage before any assertion.
+
+S10-C1: actual DOCUMENT-LOCAL observation-site chronology covering setup/earlier listener recorder, capture state/UI then capture health, bubble health then post state/UI, pre-existing recorder forwarded by cursor/correlated reads and newly detected extraction errors. Packet sequence alone not time; no invented clocks/order or universal packet-first/recorder-first category sort; forwarding existing occurrence not duplicate; all relevant fallback siblings retained; Node document validation last.
+NF-A2:first actual recorder error/recursive cause/provenance survives later record() store failures. NF-A3:button guard state/UI normalized after raw stage before later document exception; earliest normalized throw, no signature change. N10B-01:actual pressed-arrow production eligibility including keyboard truthiness, STRICT condition-false semantics, deck/focus/input/textarea/contenteditable/notes, overlay/paused/resume rules, configured+registered binding precedence; no callback invocation/focus/policy mutation. N10B-02:atomic initial slide/document raw stage+validation BEFORE target early return; corrected polls preserved. S10-C2:phase-less wrappers never downgrade recorded explicit phase from intrinsic/fallback in ALL3 exposures; explicit valid authoritative wrapper phase still reconciles; metadata no phase authority; original Error/wrapper/arrays preserved, stable serialization and caller-ledger actual order.
+Original E06-02 chronological frame arrival dispatch;E06-03 actual Node Error identity/separate sidecar;E06-04 state-before-UI snapshot dispatch;E06-05 recursive rootInstanceId/timeOrigin/cause normalization, serialization and primary propagation. Strict portable success keys{protocol,httpAttempts,socketAttempts,errors}, actual callback Page+surface+file+inspectNetwork+diagnostics+error, early portable handle ownership, no-sink consumers, complete late source/attachment/close/final common-ledger exposure retained.
+
+NF-A4 action-packet-store replacement binding mechanism is confirmed but scope applicability unresolved, excluded from11 repairs. Disclose separately; never label repaired/disproved/waived or claim complete packet-store integrity. If required source invariant cannot be established without it, report exact prerequisite, not silent scope enlargement.
+
+# Full deferred scope remains REQUIRED_UNEXECUTED
+All12 caller clean cutover only after separate applicable authority/helper proofs;complete NC01..11/RPC01..17/original1..9 and BOTH mapping snapshots;independently authored full initial/pending/hidden/returned/reset/terminal/peer state AND native UI;actual native Reset/Pass/Start brackets/root-document/lifecycle uncertainty/deadline bounds, original expiry/witness idle-running-expired crossover. Quiz native Reset+5000 after-old/before-new checkpoint/new expiry, no800ms slack. Relay full pending original due, genuine peer settlement/full first timeout/team/lane/question/UI old-due invariance, no extra Pass/sleep/retry/winner fallback. Trivia full question/round expiry and nativeNext retained identity/history/scores/awards/deadline/UI. ALL18 rows independently present/share/file=54 cells, no representative substitute. Earliest lifecycle setup,exact tuples/document/cardinality/native geometry/focus/controls,full live PNG/diagnostics,portable before/after network enforcement and sourceGET/config equality,failure-safe setup/close/attachments. Original7 exact Hot Potato bonus,original8 Scatter NFC uniqueness,original9 full Trivia scoring later independent slices;gaps5..9 unchanged.
+
+# Deliver JSON
+verdict SOURCE_REVIEW_CLEAN or REPAIR_REQUIRED (or explicitly bounded UNRESOLVED, never conditional clean);exactSubject;originalFindingDispositions15 full identities+source evidence;additional08FindingDispositions6;settled09DefectDispositions5;chronologyObligationDispositions2;current11FindingDispositions6;credited/preservation dispositions;newFindings severity/file/exactlines/consumer mechanism/repair needed;deliveryBlockers distinct from source;receiptCompleteness/canonicalMappingChecks;NF_A4Scope;complete deferredCallerObligations;readEvidence exact every-file coverage/EOF;limitations. admission/sourceReady/qualification/passClaimed/runtimeExecuted=false;declaredCells54,staticallyAdmittedCells/executedAcceptanceCells0. No files written.
+
+# Independent perspective
+Native15 lifecycle/action/clock/witness/navigation primary trace; independently audit Evidence11 error/surface/finalization seams.

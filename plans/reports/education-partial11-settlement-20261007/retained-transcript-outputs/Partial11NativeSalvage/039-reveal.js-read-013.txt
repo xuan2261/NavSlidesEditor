@@ -1,0 +1,102 @@
+import SlideContent from './controllers/slidecontent'
+import SlideNumber from './controllers/slidenumber'
+import JumpToSlide from './controllers/jumptoslide'
+import Backgrounds from './controllers/backgrounds'
+import AutoAnimate from './controllers/autoanimate'
+import ScrollView from './controllers/scrollview'
+import PrintView from './controllers/printview'
+import Fragments from './controllers/fragments'
+import Overview from './controllers/overview'
+import Keyboard from './controllers/keyboard'
+import Location from './controllers/location'
+import Controls from './controllers/controls'
+import Progress from './controllers/progress'
+import Pointer from './controllers/pointer'
+import Plugins from './controllers/plugins'
+import Overlay from './controllers/overlay'
+import Touch from './controllers/touch'
+import Focus from './controllers/focus'
+import Notes from './controllers/notes'
+import Playback from './components/playback'
+import { defaultConfig } from './config.ts'
+import * as Util from './utils/util'
+import * as Device from './utils/device'
+import {
+	SLIDES_SELECTOR,
+	HORIZONTAL_SLIDES_SELECTOR,
+	VERTICAL_SLIDES_SELECTOR,
+	POST_MESSAGE_METHOD_BLACKLIST
+} from './utils/constants'
+import { version as VERSION } from '../package.json';
+export { VERSION };
+
+/**
+ * reveal.js
+ * https://revealjs.com
+ * MIT licensed
+ *
+ * Copyright (C) 2011-2026 Hakim El Hattab, https://hakim.se
+ */
+export default function( revealElement, options ) {
+
+	// Support initialization with no args, one arg
+	// [options] or two args [revealElement, options]
+	if( arguments.length < 2 ) {
+		options = arguments[0];
+		revealElement = document.querySelector( '.reveal' );
+	}
+
+	const Reveal = {};
+
+	// Configuration defaults, can be overridden at initialization time
+	let config = {},
+
+		// Flags if initialize() has been invoked for this reveal instance
+		initialized = false,
+
+		// Flags if reveal.js is loaded (has dispatched the 'ready' event)
+		ready = false,
+
+		// The horizontal and vertical index of the currently active slide
+		indexh,
+		indexv,
+
+		// The previous and current slide HTML elements
+		previousSlide,
+		currentSlide,
+
+		// Remember which directions that the user has navigated towards
+		navigationHistory = {
+			hasNavigatedHorizontally: false,
+			hasNavigatedVertically: false
+		},
+
+		// Slides may have a data-state attribute which we pick up and apply
+		// as a class to the body. This list contains the combined state of
+		// all current slides.
+		state = [],
+
+		// The current scale of the presentation (see width/height config)
+		scale = 1,
+
+		// CSS transform that is currently applied to the slides container,
+		// split into two groups
+		slidesTransform = { layout: '', overview: '' },
+
+		// Cached references to DOM elements
+		dom = {},
+
+		// Flags if the interaction event listeners are bound
+		eventsAreBound = false,
+
+		// The current slide transition state; idle or running
+		transition = 'idle',
+
+		// The current auto-slide duration
+		autoSlide = 0,
+
+		// Auto slide properties
+		autoSlidePlayer,
+		autoSlideTimeout = 0,
+
+[Showing lines 1-100 of 2973. Use :101 to continue]

@@ -1,0 +1,1079 @@
+{
+  "date": "2026-10-07",
+  "scope": "PREPARATION_ONLY_NO_DISPATCH",
+  "verdict": "C_SOURCE_READABLE_NEW_SUBJECT_FEASIBLE_CONDITIONAL_NOT_EXECUTION_READY",
+  "DProbedOrReadThisRequest": false,
+  "sourceEdited": false,
+  "projectImportedOrExecuted": false,
+  "codegraph": "Four C-directory code_explore calls found no index; no init or index creation. Static grep/read tracing used.",
+  "git": {
+    "branch": "feat/education-gemini38-cook-261001",
+    "HEAD": "c5b5e896d9f06859b21e19122f81c7613067c386",
+    "preexistingStatus": [
+      " M client/src/components/SlidePanel.jsx",
+      " M client/src/components/editor/editor-navigator.jsx",
+      " M client/src/components/properties/action-controls.jsx",
+      " M client/src/components/ribbon/ribbon-format-tab-element-position-size-rotation-controls.jsx",
+      " M client/src/components/slide-panel/slide-navigator-item.jsx",
+      " M client/src/hooks/use-block-library.test.jsx",
+      " M client/src/pages/EditorPage.jsx",
+      " M docs/project-changelog.md",
+      " M plans/261001-0639-interactive-html-education-deep-tdd/phase-06-native-quiz.md",
+      " M plans/261001-0639-interactive-html-education-deep-tdd/plan.md",
+      " M tests/e2e/education/present-offline-helpers.js",
+      " M tests/e2e/education/release-surfaces.js",
+      "?? client/src/components/SlidePanel.child-duplication.test.jsx",
+      "?? client/src/components/properties/inherited-action-targets.test.jsx",
+      "?? plans/handoffs/education-producer-quota-20261005.md",
+      "?? plans/journals/2026-10-05-education-cook-blocked-by-pinned-producer-quota.md",
+      "?? plans/journals/2026-10-05-education-pinned-route-policy-verified-capacity-unconfirmed.md",
+      "?? tests/e2e/education/trigger-local-fixed-history-acceptance.spec.js",
+      "?? tests/e2e/education/trigger-reference-history-acceptance.spec.js",
+      "?? tests/e2e/education/trigger-reference-history-controls.js",
+      "?? tests/e2e/education/trigger-surfaces-acceptance.spec.js"
+    ],
+    "staged": false
+  },
+  "reparseSafety": {
+    "shared": {
+      "regularFiles": 326,
+      "links": [],
+      "errors": [],
+      "noReparseTraversed": true
+    },
+    "tests": {
+      "regularFiles": 379,
+      "links": [],
+      "errors": [],
+      "noReparseTraversed": true
+    },
+    "client": {
+      "regularFiles": 2845,
+      "links": [],
+      "errors": [],
+      "noReparseTraversed": true
+    },
+    "server": {
+      "regularFiles": 7717,
+      "links": [],
+      "errors": [],
+      "noReparseTraversed": true
+    },
+    "scripts": {
+      "regularFiles": 184,
+      "links": [],
+      "errors": [],
+      "noReparseTraversed": true
+    },
+    "config": {
+      "regularFiles": 11,
+      "links": [],
+      "errors": [],
+      "noReparseTraversed": true
+    },
+    "electron": {
+      "regularFiles": 6,
+      "links": [],
+      "errors": [],
+      "noReparseTraversed": true
+    },
+    "vendor-overrides": {
+      "regularFiles": 2,
+      "links": [],
+      "errors": [],
+      "noReparseTraversed": true
+    },
+    "website": {
+      "regularFiles": 369,
+      "links": [],
+      "errors": [],
+      "noReparseTraversed": true
+    },
+    "node_modules": {
+      "regularFiles": 48729,
+      "links": [
+        {
+          "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/image-size",
+          "target": "//?/C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/vendor-overrides/image-size-disabled",
+          "followed": false
+        },
+        {
+          "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/navslides-website",
+          "target": "//?/C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/website",
+          "followed": false
+        },
+        {
+          "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/revealjs-editor-client",
+          "target": "//?/C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client",
+          "followed": false
+        },
+        {
+          "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/revealjs-editor-server",
+          "target": "//?/C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server",
+          "followed": false
+        },
+        {
+          "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/revealjs-shared",
+          "target": "//?/C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/shared",
+          "followed": false
+        }
+      ],
+      "errors": [],
+      "noReparseTraversed": true
+    }
+  },
+  "currentRequired38Presence": {
+    "required": 38,
+    "present": 2,
+    "missing": 36,
+    "files": [
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-native-snapshot.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-activity-interval.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-observation.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-clock.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-controls.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-witness.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-native-action.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-witness-domain.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-history-domain.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-native-history.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-ui-evidence.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-evidence.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/release-surfaces.js",
+        "present": true,
+        "sha256CurrentCBytes": "50a69b8aac7a815e042a347edc992402dad7cd59df596423cf501986bf21f120",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/present-offline-helpers.js",
+        "present": true,
+        "sha256CurrentCBytes": "f97a54b2e88378bf8f7b4fd8d964ab4ddc1147b02b1d59f56e10d82f3bb69912",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-live-root-observation.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/release-portable-inspection.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-cases.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-fixtures.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-leave-return.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-reset.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-isolation.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-state.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-quiz-state.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-hot-potato-state.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-jeopardy-state.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-relay-state.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      },
+      {
+        "relativePath": "tests/e2e/education/pending-round-lifecycle-trivia-state.js",
+        "present": false,
+        "sha256CurrentCBytes": "NOT_PRESENT",
+        "equivalentToFrozen11": "NOT_ESTABLISHED"
+      }
+    ]
+  },
+  "recordedFrozenPathPresenceComparison": [
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/.tmp/acceptance-producer-pending-substrate-11-evidence.json",
+      "currentRelativePath": ".tmp/acceptance-producer-pending-substrate-11-evidence.json",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/node_modules/reveal.js",
+      "currentRelativePath": "node_modules/reveal.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/node_modules/reveal.js/js",
+      "currentRelativePath": "node_modules/reveal.js/js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/node_modules/reveal.js/js/controllers",
+      "currentRelativePath": "node_modules/reveal.js/js/controllers",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/node_modules/reveal.js/js/controllers/focus.js",
+      "currentRelativePath": "node_modules/reveal.js/js/controllers/focus.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/node_modules/reveal.js/js/controllers/keyboard.js",
+      "currentRelativePath": "node_modules/reveal.js/js/controllers/keyboard.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/node_modules/reveal.js/js/reveal.js",
+      "currentRelativePath": "node_modules/reveal.js/js/reveal.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/node_modules/reveal.js/package.json",
+      "currentRelativePath": "node_modules/reveal.js/package.json",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education",
+      "currentRelativePath": "shared/src/education",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/browser",
+      "currentRelativePath": "shared/src/education/browser",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/browser/countdown-presenter.js",
+      "currentRelativePath": "shared/src/education/browser/countdown-presenter.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/browser/local-activity.js",
+      "currentRelativePath": "shared/src/education/browser/local-activity.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/browser/mount.js",
+      "currentRelativePath": "shared/src/education/browser/mount.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/browser/reveal-lifecycle.js",
+      "currentRelativePath": "shared/src/education/browser/reveal-lifecycle.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/countdown-state.js",
+      "currentRelativePath": "shared/src/education/countdown-state.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/game-defaults.js",
+      "currentRelativePath": "shared/src/education/game-defaults.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/game-registry.js",
+      "currentRelativePath": "shared/src/education/game-registry.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/games/hot-potato.js",
+      "currentRelativePath": "shared/src/education/games/hot-potato.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/games/jeopardy.js",
+      "currentRelativePath": "shared/src/education/games/jeopardy.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/games/relay-race.js",
+      "currentRelativePath": "shared/src/education/games/relay-race.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/games/trivia-champ.js",
+      "currentRelativePath": "shared/src/education/games/trivia-champ.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/mount.js",
+      "currentRelativePath": "shared/src/education/mount.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/presets/simulations.js",
+      "currentRelativePath": "shared/src/education/presets/simulations.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/question-factory.js",
+      "currentRelativePath": "shared/src/education/question-factory.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/question-shape.js",
+      "currentRelativePath": "shared/src/education/question-shape.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/quiz-session.js",
+      "currentRelativePath": "shared/src/education/quiz-session.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/education/runtime-session.js",
+      "currentRelativePath": "shared/src/education/runtime-session.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/shared/src/htmlGenerator.js",
+      "currentRelativePath": "shared/src/htmlGenerator.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-acceptance.spec.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-activity-interval.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-activity-interval.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-cases.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-cases.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-clock.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-clock.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-controls.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-controls.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-evidence.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-evidence.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-fixtures.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-fixtures.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-history-domain.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-history-domain.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-hot-potato-state.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-hot-potato-state.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-isolation.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-isolation.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-jeopardy-state.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-jeopardy-state.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-leave-return.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-leave-return.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-live-root-observation.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-live-root-observation.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-native-action.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-native-action.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-native-history.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-native-history.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-native-observation.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-native-snapshot.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-native-snapshot.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-navigation.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-observation.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-observation.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-quiz-state.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-quiz-state.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-relay-state.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-relay-state.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-reset.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-reset.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-state.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-state.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-surfaces.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-trivia-state.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-trivia-state.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-ui-evidence.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-ui-evidence.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-witness-domain.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-witness-domain.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/pending-round-lifecycle-witness.js",
+      "currentRelativePath": "tests/e2e/education/pending-round-lifecycle-witness.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/present-offline-helpers.js",
+      "currentRelativePath": "tests/e2e/education/present-offline-helpers.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/release-content-fields.js",
+      "currentRelativePath": "tests/e2e/education/release-content-fields.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/release-game-fixtures.js",
+      "currentRelativePath": "tests/e2e/education/release-game-fixtures.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/release-portable-inspection.js",
+      "currentRelativePath": "tests/e2e/education/release-portable-inspection.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/education/release-surfaces.js",
+      "currentRelativePath": "tests/e2e/education/release-surfaces.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/fixtures/test-fixtures.js",
+      "currentRelativePath": "tests/e2e/fixtures/test-fixtures.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/page-objects/editor-page.js",
+      "currentRelativePath": "tests/e2e/page-objects/editor-page.js",
+      "presentCurrentC": false,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    },
+    {
+      "originalRecordedPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/tests/e2e/pages/editor-page.js",
+      "currentRelativePath": "tests/e2e/pages/editor-page.js",
+      "presentCurrentC": true,
+      "contentEqualityToFrozen11": "NOT_ESTABLISHED",
+      "meaning": "Presence comparison only; transcript text and current source are distinct subjects."
+    }
+  ],
+  "meaning": "Current C baseline is not frozen11. Missing helpers/callers must be freshly implemented/authored only with new authority; no transcript-to-source reconstruction.",
+  "dependencies": [
+    {
+      "package": "@playwright/test",
+      "declared": "1.63.0",
+      "locked": "1.63.0",
+      "installedManifest": "1.63.0",
+      "lockedInstalledMatch": true,
+      "executableHealth": "NOT_EXECUTED"
+    },
+    {
+      "package": "playwright",
+      "declared": "1.63.0",
+      "locked": "1.63.0",
+      "installedManifest": "1.63.0",
+      "lockedInstalledMatch": true,
+      "executableHealth": "NOT_EXECUTED"
+    },
+    {
+      "package": "playwright-core",
+      "declared": "TRANSITIVE",
+      "locked": "1.63.0",
+      "installedManifest": "1.63.0",
+      "lockedInstalledMatch": true,
+      "executableHealth": "NOT_EXECUTED"
+    },
+    {
+      "package": "vite",
+      "declared": "TRANSITIVE",
+      "locked": "8.2.2",
+      "installedManifest": "8.2.2",
+      "lockedInstalledMatch": true,
+      "executableHealth": "NOT_EXECUTED"
+    },
+    {
+      "package": "vitest",
+      "declared": "^5.0.1",
+      "locked": "5.0.1",
+      "installedManifest": "5.0.1",
+      "lockedInstalledMatch": true,
+      "executableHealth": "NOT_EXECUTED"
+    },
+    {
+      "package": "esbuild",
+      "declared": "0.25.12",
+      "locked": "0.25.12",
+      "installedManifest": "0.25.12",
+      "lockedInstalledMatch": true,
+      "executableHealth": "NOT_EXECUTED"
+    },
+    {
+      "package": "electron",
+      "declared": "42.9.3",
+      "locked": "42.9.3",
+      "installedManifest": "42.9.3",
+      "lockedInstalledMatch": true,
+      "executableHealth": "NOT_EXECUTED"
+    },
+    {
+      "package": "reveal.js",
+      "declared": "TRANSITIVE",
+      "locked": "6.0.2",
+      "installedManifest": "6.0.2",
+      "lockedInstalledMatch": true,
+      "executableHealth": "NOT_EXECUTED"
+    }
+  ],
+  "browserCache": {
+    "root": "C:/Users/Z10PAD8C_Xuan2261/AppData/Local/ms-playwright",
+    "directoryNames": [
+      ".links",
+      ".mangodisk-delete-23420-1",
+      ".mangodisk-delete-23420-16",
+      ".mangodisk-delete-23420-17",
+      ".mangodisk-delete-23420-318",
+      ".mangodisk-delete-5964-175",
+      ".mangodisk-delete-5964-176",
+      ".mangodisk-delete-5964-177",
+      ".mangodisk-delete-5964-178",
+      ".mangodisk-delete-5964-179",
+      ".mangodisk-delete-5964-180",
+      ".mangodisk-delete-5964-181",
+      ".mangodisk-delete-5964-182",
+      ".mangodisk-delete-5964-183",
+      ".mangodisk-delete-5964-184",
+      ".mangodisk-delete-5964-185",
+      ".mangodisk-delete-5964-186",
+      ".mangodisk-delete-5964-187",
+      ".mangodisk-delete-5964-188",
+      "b",
+      "chromium-1243",
+      "chromium_headless_shell-1243",
+      "ffmpeg-1011",
+      "winldd-1007"
+    ],
+    "expectedFromInstalledPlaywright": [
+      {
+        "name": "chromium",
+        "revision": "1243",
+        "installByDefault": true,
+        "browserVersion": "153.0.8010.12",
+        "title": "Chrome for Testing"
+      },
+      {
+        "name": "chromium-headless-shell",
+        "revision": "1243",
+        "installByDefault": true,
+        "browserVersion": "153.0.8010.12",
+        "title": "Chrome Headless Shell"
+      },
+      {
+        "name": "firefox",
+        "revision": "1543",
+        "installByDefault": true,
+        "browserVersion": "155.0",
+        "title": "Firefox"
+      },
+      {
+        "name": "webkit",
+        "revision": "2359",
+        "installByDefault": true,
+        "revisionOverrides": {
+          "mac14": "2251",
+          "mac14-arm64": "2251"
+        },
+        "browserVersion": "26.6",
+        "title": "WebKit"
+      },
+      {
+        "name": "ffmpeg",
+        "revision": "1011",
+        "installByDefault": true
+      },
+      {
+        "name": "winldd",
+        "revision": "1007",
+        "installByDefault": false
+      },
+      {
+        "name": "android",
+        "revision": "1001",
+        "installByDefault": false
+      }
+    ],
+    "regularFiles": 611,
+    "linksNotFollowed": [],
+    "errors": [],
+    "usableBrowserExecution": "NOT_TESTED",
+    "archiveQualification": "NOT_ESTABLISHED"
+  },
+  "staticDReferences": [
+    {
+      "path": "client/node_modules/pdfjs-dist/legacy/build/pdf.sandbox.mjs",
+      "line": 2452,
+      "text": "    const code = [\"/******/ var __webpack_modules__ = ({\\n\\n/***/ 9306\\n(module, __unused_webpack_exports, __webpack_require__) {\\n\\n\\nvar isCallable = __webpack_require__(4901);\\nvar tryToString = __webpack_require__(6823);\\n\\nvar $TypeError = TypeError;\\n\\n// `Assert: IsCallable(argument) is true`",
+      "meaning": "Regex lexical candidates; PDF bundled code and template D:\\quad formula can be false positives. Not evidence of live D access or an automatic script ban.",
+      "matchedContexts": [
+        " {\\n    if (!date || date.length < 15 || !date.startsWith(\\\"D:\\\")) {\\n      return date;\\n    }\\n    date = date.substring(2);\\n    const year = date.substring(0, 4);\\n    const month = date.su"
+      ],
+      "classification": "LITERAL_MATCH_NOT_CONFIRMED_FILESYSTEM_PATH"
+    },
+    {
+      "path": "client/node_modules/pdfjs-dist/build/pdf.sandbox.mjs",
+      "line": 155,
+      "text": "    const code = [\"\\n;// ./src/scripting_api/constants.js\\nconst Border = Object.freeze({\\n  s: \\\"solid\\\",\\n  d: \\\"dashed\\\",\\n  b: \\\"beveled\\\",\\n  i: \\\"inset\\\",\\n  u: \\\"underline\\\"\\n});\\nconst Cursor = Object.freeze({\\n  visible: 0,\\n  hidden: 1,\\n  delay: 2\\n});\\nconst Display = Object.freeze({\\n  ",
+      "meaning": "Regex lexical candidates; PDF bundled code and template D:\\quad formula can be false positives. Not evidence of live D access or an automatic script ban.",
+      "matchedContexts": [
+        " {\\n    if (!date || date.length < 15 || !date.startsWith(\\\"D:\\\")) {\\n      return date;\\n    }\\n    date = date.substring(2);\\n    const year = date.substring(0, 4);\\n    const month = date.su"
+      ],
+      "classification": "LITERAL_MATCH_NOT_CONFIRMED_FILESYSTEM_PATH"
+    },
+    {
+      "path": "server/data/built-in-templates.json",
+      "line": 1087,
+      "text": "            \"content\": \"D:\\\\quad Q(t+1) = D\"",
+      "meaning": "Regex lexical candidates; PDF bundled code and template D:\\quad formula can be false positives. Not evidence of live D access or an automatic script ban.",
+      "matchedContexts": ["            \"content\": \"D:\\\\quad Q(t+1) = D\""],
+      "classification": "LITERAL_MATCH_NOT_CONFIRMED_FILESYSTEM_PATH"
+    }
+  ],
+  "capacity": {
+    "reportedCFreeBytes": 18847141888,
+    "reportedCSizeBytes": 255382777856,
+    "observedLocalTime": "2026-10-07T20:36:05.0911354+07:00",
+    "copiedCandidateBudgetVerified": false,
+    "meaning": "About17.55GiB observed free, not future capacity/budget certification. No cleanup or candidate creation approved.",
+    "supersedes": "Initial hardcoded capacity draft was not a verified exact observation and is withdrawn."
+  },
+  "toolMetadata": {
+    "nodePath": "C:/nvm4w/nodejs/node.exe",
+    "nodeDirectoryTarget": "C:/Users/Z10PAD8C_Xuan2261/AppData/Local/nvm/v22.22.0",
+    "nodeExecutableFileVersion": "22.22.0",
+    "nodeExecution": false,
+    "nodeOptionsEnvironment": "NOT_SET",
+    "nodePathEnvironment": "NOT_SET",
+    "playwrightBrowsersPathEnvironment": "NOT_SET",
+    "PATHCaution": "PATH has legacy D entries; no executable resolution should search D. Future allowed execution must use verified explicit C executable and reviewed C-only environment."
+  },
+  "executionHazards": [
+    "Current global-setup.js1-23 polls GET /presentations. It does NOT DELETE cleanup. Actual fixtures/test-fixtures.js41-83/105-114 create/update/delete including permanent deletion; executing suites mutates isolated test data.",
+    "playwright.config.js135-153 starts npm start or npm run dev; default uses prebuilt client. package.json25 prestart verifies runtime closure, not a build. Server/dev startup still requires authorization.",
+    "desktop-runtime-config.cjs23-30 selects reporter entries and does NOT create a directory on load. Reporter lifecycle/test execution can emit artifacts; no config import performed.",
+    "Default Playwright config has existing retries and broad discovery; specific future tests, endpoints, data and C-only artifact/temp paths require explicit gate scope. Do not silently change configured retries/deadlines.",
+    "Generated education runtime/source equivalence and browser/native binary health not established by static read.",
+    "Installed-lock agreement is manifest agreement only, not reproducibility/full dependency immutability.",
+    "Historical429/auto_retry does not prove current route compliance or current quota. No inference probe or settings edits authorized."
+  ],
+  "flags": {
+    "admission": false,
+    "sourceReady": false,
+    "qualification": false,
+    "passClaimed": false,
+    "producerInvoked": false,
+    "sourceEdited": false,
+    "runtimeExecuted": false,
+    "declaredCells": 54,
+    "admittedCells": 0,
+    "executedCells": 0
+  },
+  "staticScanMeaning": "No confirmed D filesystem dependency in inspected runtime/config routes. Dynamic config/environment routes and all external links are not universally certified. PATH legacyD strings explicitly need bounded future command resolution."
+}

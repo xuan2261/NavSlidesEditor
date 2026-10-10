@@ -1,6 +1,6 @@
 ---
 phase: 1
-title: "Baseline, corrected findings and locked behavioral contracts"
+title: 'Baseline, corrected findings and locked behavioral contracts'
 status: completed
 priority: P1
 dependencies: []
@@ -9,6 +9,10 @@ dependencies: []
 Status completed chỉ ghi qualified historical checkpoint; không phải current-source acceptance hoặc implementation đã merge vào main. Xem [handoff](../handoffs/education-pause-20261004.md) khi resume.
 
 # Phase 01 — Baseline, đính chính review và khóa contract
+
+## Execution progress
+
+Qualified Phase01 checkpoint đã được ghi nhận; [baseline superseding assessment](./reports/baseline-evidence.md) giữ historical failures đúng phân loại, không nâng raw server export thành portable proof. [Root progress](./plan.md#execution-progress) dẫn tới qualification report trong coordinator checkout. Completion ở đây chỉ là baseline/contracts acceptance, không phải standalone gameplay, current-subject integration hoặc release.
 
 ## Goal
 
@@ -46,28 +50,28 @@ Các canonical schemas/reducers nằm `shared/src/education/` (proposed); browse
 
 ## File inventory
 
-| Full path | Action | Size / test impact |
-|---|---|---|
-| `C:/Work/NavSlidesEditor/shared/tests/element-renderers.test.js` | Modify existing behavior only | Existing long suite; không mở rộng monolith bằng assertions source text |
-| `C:/Work/NavSlidesEditor/shared/tests/htmlGenerator.test.js` | Modify existing generated document assertions | Endpoint content, correct runtime integration |
-| `C:/Work/NavSlidesEditor/client/src/utils/element-update-fanout.test.js` | Modify existing | Selected geometry/fanout boundaries |
-| `C:/Work/NavSlidesEditor/tests/e2e/games/game-elements-canvas-rendering.spec.js` | Modify existing | Bỏ placeholder expectations khi runtime cutover, thêm behavior |
-| `C:/Work/NavSlidesEditor/tests/e2e/education/fixtures/interactive-deck.js` | Create proposed | Fixture modules tách <200LOC; IDs config thật |
-| `C:/Work/NavSlidesEditor/tests/e2e/education/presentation-baseline.spec.js` | Create proposed | Normal Present popup, multiple game blocks, vertical slide |
-| `C:/Work/NavSlidesEditor/plans/261001-0639-interactive-html-education-deep-tdd/reports/baseline-evidence.md` | Create during implementation | Snapshot + actual RED/smoke outcomes, không fabricate |
+| Full path                                                                                                    | Action                                        | Size / test impact                                                      |
+| ------------------------------------------------------------------------------------------------------------ | --------------------------------------------- | ----------------------------------------------------------------------- |
+| `C:/Work/NavSlidesEditor/shared/tests/element-renderers.test.js`                                             | Modify existing behavior only                 | Existing long suite; không mở rộng monolith bằng assertions source text |
+| `C:/Work/NavSlidesEditor/shared/tests/htmlGenerator.test.js`                                                 | Modify existing generated document assertions | Endpoint content, correct runtime integration                           |
+| `C:/Work/NavSlidesEditor/client/src/utils/element-update-fanout.test.js`                                     | Modify existing                               | Selected geometry/fanout boundaries                                     |
+| `C:/Work/NavSlidesEditor/tests/e2e/games/game-elements-canvas-rendering.spec.js`                             | Modify existing                               | Bỏ placeholder expectations khi runtime cutover, thêm behavior          |
+| `C:/Work/NavSlidesEditor/tests/e2e/education/fixtures/interactive-deck.js`                                   | Create proposed                               | Fixture modules tách <200LOC; IDs config thật                           |
+| `C:/Work/NavSlidesEditor/tests/e2e/education/presentation-baseline.spec.js`                                  | Create proposed                               | Normal Present popup, multiple game blocks, vertical slide              |
+| `C:/Work/NavSlidesEditor/plans/261001-0639-interactive-html-education-deep-tdd/reports/baseline-evidence.md` | Create during implementation                  | Snapshot + actual RED/smoke outcomes, không fabricate                   |
 
 ## Tests Before — RED
 
-| Severity | Scenario | Failure / invariant |
-|---|---|---|
-| Critical | Insert Name Picker, save, click normal Present | Click pick phải tạo winner; hiện tại generated card không có play |
-| Critical | HotPotato2 questions, actual popup | Answer feedback/next must progress second question, không text-first-only |
-| High | Export offline native game | Network blocked, playable interaction; chưa có runtime hydration |
-| High | 2 images + long description | Metadata applied both after reload, không silently discarded |
-| High | Unequal-width shapes Format align | Chứng minh actual deltas trước định nghĩa desired multi-align |
-| High | Jeopardy local action + incoming event | Chỉ ghi bug nếu sequence thực sự double-applies; policy negativePoints documented |
-| Medium | Existing Shape label size/color | Must continue rendering/persisting; protection regression, không thêm controls lặp |
-| Medium | TipTap font/lineheight | Text renders style after save/reload; không suy từ fallback defaults |
+| Severity | Scenario                                       | Failure / invariant                                                                |
+| -------- | ---------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Critical | Insert Name Picker, save, click normal Present | Click pick phải tạo winner; hiện tại generated card không có play                  |
+| Critical | HotPotato2 questions, actual popup             | Answer feedback/next must progress second question, không text-first-only          |
+| High     | Export offline native game                     | Network blocked, playable interaction; chưa có runtime hydration                   |
+| High     | 2 images + long description                    | Metadata applied both after reload, không silently discarded                       |
+| High     | Unequal-width shapes Format align              | Chứng minh actual deltas trước định nghĩa desired multi-align                      |
+| High     | Jeopardy local action + incoming event         | Chỉ ghi bug nếu sequence thực sự double-applies; policy negativePoints documented  |
+| Medium   | Existing Shape label size/color                | Must continue rendering/persisting; protection regression, không thêm controls lặp |
+| Medium   | TipTap font/lineheight                         | Text renders style after save/reload; không suy từ fallback defaults               |
 
 Test baseline failures phải đúng expected path; import error, missing fixture/server hoặc unrelated failing suite không được tính RED feature.
 

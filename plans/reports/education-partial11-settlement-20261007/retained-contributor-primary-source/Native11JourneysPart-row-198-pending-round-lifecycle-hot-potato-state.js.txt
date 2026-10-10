@@ -1,0 +1,112 @@
+import { expect } from '@playwright/test'
+
+export const HOT_POTATO_KEYS = [
+  'gameType',
+  'phase',
+  'questionIndex',
+  'currentQuestion',
+  'questionOrder',
+  'scores',
+  'answeredPlayers',
+  'leaderboard',
+  'questionStartedAt',
+  'deadline',
+  'deadlinePassed',
+  'roundCount',
+  'awardedKeys',
+  'error',
+  'generation',
+  'runtimeMode',
+]
+
+export function assertHotPotatoKeys(state) {
+  expect(Object.keys(state).sort()).toEqual([...HOT_POTATO_KEYS].sort())
+}
+
+export function assertHotPotatoInitialOrReset(state, expectedConfig, generation = 0) {
+  assertHotPotatoKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(generation)
+  expect(state.gameType).toBe('hot-potato')
+  expect(state.phase).toBe('ready')
+  expect(state.questionIndex).toBe(-1)
+  expect(state.currentQuestion).toBeNull()
+  expect(state.questionOrder).toEqual(expectedConfig.questions.map((q) => q.id))
+  expect(state.scores).toEqual({})
+  expect(state.answeredPlayers).toEqual({})
+  expect(state.leaderboard).toEqual([])
+  expect(state.questionStartedAt).toBe(0)
+  expect(state.deadline).toBeNull()
+  expect(state.deadlinePassed).toBe(false)
+  expect(state.roundCount).toBe(expectedConfig.questions.length)
+  expect(state.awardedKeys).toEqual([])
+  expect(state.error).toBeNull()
+}
+
+export function assertHotPotatoActive(state, expectedConfig, generation = 0, deadlineBounds = null, startBounds = null) {
+  assertHotPotatoKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(generation)
+  expect(state.gameType).toBe('hot-potato')
+  expect(state.phase).toBe('active')
+  expect(state.questionIndex).toBe(0)
+  expect(state.currentQuestion).toEqual(expectedConfig.questions[0])
+  expect(state.questionOrder).toEqual(expectedConfig.questions.map((q) => q.id))
+  expect(state.scores).toEqual({})
+  expect(state.answeredPlayers).toEqual({})
+  expect(state.leaderboard).toEqual([])
+  expect(state.deadlinePassed).toBe(false)
+  expect(state.roundCount).toBe(expectedConfig.questions.length)
+  expect(state.awardedKeys).toEqual([])
+  expect(state.error).toBeNull()
+  if (startBounds) {
+    expect(state.questionStartedAt).toBeGreaterThanOrEqual(startBounds.min)
+    expect(state.questionStartedAt).toBeLessThanOrEqual(startBounds.max)
+  }
+  if (deadlineBounds) {
+    expect(typeof state.deadline).toBe('number')
+    expect(state.deadline).toBeGreaterThanOrEqual(deadlineBounds.min)
+    expect(state.deadline).toBeLessThanOrEqual(deadlineBounds.max)
+  }
+}
+
+export function assertHotPotatoPeerSettled(state, expectedConfig) {
+  assertHotPotatoKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(0)
+  expect(state.gameType).toBe('hot-potato')
+  expect(state.phase).toBe('review')
+  expect(state.questionIndex).toBe(0)
+  expect(state.currentQuestion).toEqual(expectedConfig.questions[0])
+  expect(state.questionOrder).toEqual(['question-1'])
+  expect(state.scores).toEqual({ peer: 10 })
+  expect(state.answeredPlayers).toEqual({
+    peer: { correct: true, points: 10, late: false },
+  })
+  expect(state.leaderboard).toEqual([{ id: 'peer', score: 10 }])
+  expect(state.deadline).toBeNull()
+  expect(state.deadlinePassed).toBe(false)
+  expect(state.roundCount).toBe(1)
+  expect(state.awardedKeys).toEqual(['0:hot-potato:["question-1","peer"]:correct'])
+  expect(state.error).toBeNull()
+}
+
+export async function assertHotPotatoRosterEmptyUI(root) {
+  const select = root.locator('select[aria-label="Current participant"]')
+  await expect(select).toBeVisible()
+  const optCount = await select.locator('option').count()
+  expect(optCount).toBe(0)
+  const board = root.locator('ol[aria-label="Leaderboard"]')
+  await expect(board).toBeAttached()
+  const boardItems = await board.locator('li').count()
+  expect(boardItems).toBe(0)
+}
+
+export async function assertHotPotatoRosterPeerUI(root) {
+  const select = root.locator('select[aria-label="Current participant"]')
+  await expect(select).toBeVisible()
+  await expect(select).toHaveValue('peer')
+  const scoreEl = root.locator('p[aria-label="Participant score"]')
+  await expect(scoreEl).toBeVisible()
+  await expect(scoreEl).toHaveText('Peer: 10 points')
+}

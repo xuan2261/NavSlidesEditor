@@ -1,0 +1,175 @@
+// Concrete browser evaluation helpers for cursor, correlated, packet candidates and document snapshots.
+
+export async function evaluatePassiveEvents(page) {
+  return page.evaluate(() => {
+    const hasLifecycleEvents = Array.isArray(window.__nsLifecycleEvents)
+    const storeHealth = window.__nsCheckStoreHealth ? window.__nsCheckStoreHealth() : { healthy: hasLifecycleEvents, error: null }
+    const recorderReady = Boolean(window.__nsLifecycleRecorderReady) && Boolean(storeHealth.healthy)
+    let recorderError = window.__nsLifecycleRecorderError || null
+    if (!storeHealth.healthy && !recorderError) {
+      recorderError = { origin: 'browser', phase: 'recorder:store', name: 'StoreIntegrityError', message: storeHealth.error || 'Corrupted store', stack: null, cause: null, documentId: window.__nsDocumentId || null, timeOrigin: performance.timeOrigin, url: window.location.href, obsOrder: (window.__nsObsOrder = (window.__nsObsOrder || 0) + 1) }
+    }
+    return {
+      hasLifecycleEvents: hasLifecycleEvents && Boolean(storeHealth.healthy),
+      events: hasLifecycleEvents && storeHealth.healthy ? window.__nsLifecycleEvents : null,
+      recorderError,
+      recorderReady,
+      storeHealth,
+      documentId: window.__nsDocumentId || null,
+      timeOrigin: performance.timeOrigin,
+      url: window.location.href,
+    }
+  })
+}
+
+export async function evaluatePreActionCursor(root, { command, type }) {
+  return root.evaluate((node, { cmd, evtType }) => {
+    const tMin = performance.now()
+    const elementId = node.dataset?.nsElementId || null
+    const gameType = node.dataset?.nsGameType || node.dataset?.nsGame || null
+    const slide = node.closest('[data-ns-effective-slide-id]')
+    const slideId = slide?.dataset?.nsEffectiveSlideId || null
+    const snap = window.__nsReadRootSnapshot?.(node, gameType) || {
+      isMounted: false, hasUIGetter: false, state: null, stateError: null, ui: null, uiError: null,
+    }
+    const tMax = performance.now()
+    const packets = window.__nsRecordedPackets || []
+    const lastSeq = packets.length ? packets[packets.length - 1].sequence : 0
+    const rootInstanceId = window.__nsGetRootInstanceId?.(node) || null
+    return {
+      sequence: lastSeq,
+      timestamp: (tMin + tMax) / 2,
+      rawInterval: { min: tMin, max: tMax },
+      command: cmd,
+      type: evtType,
+      rootInstanceId,
+      elementId,
+      slideId,
+      gameType,
+      documentId: window.__nsDocumentId || null,
+      timeOrigin: performance.timeOrigin,
+      url: window.location.href,
+      isMounted: snap.isMounted,
+      hasUIGetter: snap.hasUIGetter,
+      state: snap.state,
+      stateError: snap.stateError,
+      ui: snap.ui,
+      uiError: snap.uiError,
+      paused: node.classList.contains('ns-education-paused'),
+      visibilityState: document.visibilityState,
+      hidden: document.hidden,
+      hasLifecycleEvents: Array.isArray(window.__nsLifecycleEvents) && (window.__nsCheckStoreHealth ? window.__nsCheckStoreHealth().healthy : true),
+      recorderError: (window.__nsCheckStoreHealth && !window.__nsCheckStoreHealth().healthy)
+        ? (window.__nsLifecycleRecorderError || { origin: 'browser', phase: 'recorder:store', name: 'StoreIntegrityError', message: window.__nsCheckStoreHealth().error || 'Corrupted store', stack: null, cause: null, documentId: window.__nsDocumentId || null, timeOrigin: performance.timeOrigin, url: window.location.href, obsOrder: (window.__nsObsOrder = (window.__nsObsOrder || 0) + 1) })
+        : (window.__nsLifecycleRecorderError || null),
+      recorderReady: Boolean(window.__nsLifecycleRecorderReady) && (window.__nsCheckStoreHealth ? window.__nsCheckStoreHealth().healthy : true),
+    }
+  }, { cmd: command, evtType: type })
+}
+
+export async function evaluateCorrelatedStateAndTime(root) {
+  return root.evaluate((node) => {
+    const tMin = performance.now()
+    const elementId = node.dataset?.nsElementId || null
+    const gameType = node.dataset?.nsGameType || node.dataset?.nsGame || null
+    const slide = node.closest('[data-ns-effective-slide-id]')
+    const slideId = slide?.dataset?.nsEffectiveSlideId || null
+    const rootInstanceId = window.__nsGetRootInstanceId?.(node) || null
+    const snap = window.__nsReadRootSnapshot?.(node, gameType) || {
+      isMounted: false, hasUIGetter: false, state: null, stateError: null, ui: null, uiError: null,
+    }
+    const tMax = performance.now()
+    const hasLifecycleEvents = Array.isArray(window.__nsLifecycleEvents)
+    const storeHealth = window.__nsCheckStoreHealth ? window.__nsCheckStoreHealth() : { healthy: hasLifecycleEvents, error: null }
+    const recorderReady = Boolean(window.__nsLifecycleRecorderReady) && Boolean(storeHealth.healthy)
+    let recorderError = window.__nsLifecycleRecorderError || null
+    if (!storeHealth.healthy && !recorderError) {
+      recorderError = { origin: 'browser', phase: 'recorder:store', name: 'StoreIntegrityError', message: storeHealth.error || 'Corrupted store', stack: null, cause: null, documentId: window.__nsDocumentId || null, timeOrigin: performance.timeOrigin, url: window.location.href, obsOrder: (window.__nsObsOrder = (window.__nsObsOrder || 0) + 1) }
+    }
+    const cloneEv = (e) => Object.assign({}, e, { detail: e.detail ? Object.assign({}, e.detail) : null })
+    const rootEvents = hasLifecycleEvents && storeHealth.healthy ? window.__nsLifecycleEvents.filter(ev =>
+      (ev.type === 'root-pause' || ev.type === 'root-resume') &&
+      ev.detail?.rootInstanceId === rootInstanceId &&
+      ev.detail?.elementId === elementId &&
+      ev.detail?.slideId === slideId
+    ).map(cloneEv) : null
+    const documentVisibilityEvents = hasLifecycleEvents && storeHealth.healthy ? window.__nsLifecycleEvents.filter(ev =>
+      ev.type === 'visibilitychange' || ev.type === 'pagehide' || ev.type === 'pageshow'
+    ).map(cloneEv) : null
+    return {
+      isMounted: snap.isMounted,
+      hasUIGetter: snap.hasUIGetter,
+      state: snap.state,
+      stateError: snap.stateError,
+      rawInterval: { min: tMin, max: tMax },
+      time: (tMin + tMax) / 2,
+      hidden: document.hidden,
+      visibilityState: document.visibilityState,
+      paused: node.classList.contains('ns-education-paused'),
+      slideId,
+      elementId,
+      gameType,
+      rootInstanceId,
+      ui: snap.ui,
+      uiError: snap.uiError,
+      documentId: window.__nsDocumentId || null,
+      timeOrigin: performance.timeOrigin,
+      url: window.location.href,
+      hasLifecycleEvents: hasLifecycleEvents && Boolean(storeHealth.healthy),
+      rootEvents,
+      documentVisibilityEvents,
+      eventsCount: hasLifecycleEvents && storeHealth.healthy ? window.__nsLifecycleEvents.length : null,
+      recorderError,
+      recorderReady,
+      storeHealth,
+    }
+  })
+}
+
+export async function evaluateActionCandidates(root, targetCursor) {
+  return root.evaluate((node, cursor) => {
+    const currentNodeId = window.__nsGetRootInstanceId?.(node) || null
+    const currentElementId = node.dataset?.nsElementId || null
+    const currentGameType = node.dataset?.nsGameType || node.dataset?.nsGame || null
+    const currentSlide = node.closest('[data-ns-effective-slide-id]')
+    const currentSlideId = currentSlide?.dataset?.nsEffectiveSlideId || null
+    const currentNode = {
+      rootInstanceId: currentNodeId,
+      elementId: currentElementId,
+      slideId: currentSlideId,
+      gameType: currentGameType,
+      documentId: window.__nsDocumentId || null,
+      timeOrigin: performance.timeOrigin,
+      url: window.location.href,
+      isConnected: Boolean(node.isConnected),
+    }
+    const packets = window.__nsRecordedPackets || []
+    const candidates = packets.filter((p) => p.sequence > cursor.sequence)
+    const storeHealth = window.__nsCheckStoreHealth ? window.__nsCheckStoreHealth() : { healthy: true, error: null }
+    let recorderError = window.__nsLifecycleRecorderError || null
+    if (!storeHealth.healthy && !recorderError) {
+      recorderError = { origin: 'browser', phase: 'recorder:store', name: 'StoreIntegrityError', message: storeHealth.error || 'Corrupted store', stack: null, cause: null, documentId: window.__nsDocumentId || null, timeOrigin: performance.timeOrigin, url: window.location.href, obsOrder: (window.__nsObsOrder = (window.__nsObsOrder || 0) + 1) }
+    }
+    return {
+      currentNode,
+      candidates,
+      cursor,
+      recorderError,
+      recorderReady: Boolean(window.__nsLifecycleRecorderReady) && Boolean(storeHealth.healthy),
+      totalPacketsCount: packets.length,
+    }
+  }, targetCursor)
+}
+
+export async function evaluateDocumentActivity(page) {
+  return page.evaluate(() => ({
+    time: performance.now(),
+    hidden: document.hidden,
+    visibilityState: document.visibilityState,
+    revealReady: Boolean(window.Reveal?.isReady?.()),
+    revealIndices: window.Reveal?.getIndices ? window.Reveal.getIndices() : null,
+    documentId: window.__nsDocumentId || null,
+    timeOrigin: performance.timeOrigin,
+    url: window.location.href,
+  }))
+}

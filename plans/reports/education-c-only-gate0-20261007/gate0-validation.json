@@ -1,0 +1,19 @@
+{
+  "kind": "GATE0_REPORT_VALIDATION_NOT_RUNTIME_OR_SOURCE_GO",
+  "sourceMetadataEntriesVerified": 3775,
+  "dependencyMetadataEntriesVerified": 31903,
+  "preparationFingerprintsRechecked": 8260,
+  "DHistoricalJunctionTargetsNotFollowed": 73,
+  "sourceLogicalBytes": 41565529,
+  "dependenciesLogicalBytes": 380461429,
+  "logicalBudgetOnly": true,
+  "routeProofStillBlocked": true,
+  "candidateCreated": false,
+  "producerInference": false,
+  "DRead": false,
+  "configChanged": false,
+  "sourceChanged": false,
+  "branchHEADAndExistingStatusVerified": true,
+  "byteVerificationLimit": "Selected priorC fingerprints plus exact status baseline, not full freeze/node_moduleshash",
+  "acceptanceExecuted": 0
+}

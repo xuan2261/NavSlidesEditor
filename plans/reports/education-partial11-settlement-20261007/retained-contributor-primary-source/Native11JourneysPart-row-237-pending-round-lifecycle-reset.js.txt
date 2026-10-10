@@ -1,0 +1,11 @@
+
+  const finalState = await getGameState(root)
+  evidence.stage('finalState', finalState)
+
+  return {
+    pending: pendingState,
+    baseline,
+    finalState,
+    resetBracket,
+  }
+}

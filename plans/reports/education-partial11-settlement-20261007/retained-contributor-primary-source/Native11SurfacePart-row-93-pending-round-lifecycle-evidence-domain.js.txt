@@ -1,0 +1,19 @@
+export function validateDocumentIdentity(snapshot, plannedUrl = null, boundIdentity = null) {
+…
+  if (boundIdentity) {
+…
+    if (boundIdentity.timeOrigin !== timeOrigin) {
+      throw new Error(
+        `Document identity timeOrigin mismatch: expected ${boundIdentity.timeOrigin}, observed ${timeOrigin}`
+      )
+    }
+    const boundNorm = normalizeUrlForIdentity(boundIdentity.url)
+    const observedNorm = normalizeUrlForIdentity(url)
+    if (boundNorm !== observedNorm) {
+      throw new Error(
+        `Document identity URL mismatch: expected ${boundIdentity.url}, observed ${url}`
+      )
+    }
+  }
+  return snapshot
+}

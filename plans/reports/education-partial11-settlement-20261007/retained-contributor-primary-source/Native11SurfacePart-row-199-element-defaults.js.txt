@@ -1,0 +1,116 @@
+    borderStyle: 'solid', // 'solid' | 'dashed' | 'dotted'
+    // Per-cell styling (2D arrays indexed [row][col], null = inherit default)
+    cellStyles: {
+      textColors: [], // [[null, '#ff0000', null], ...]
+      bgColors: [], // [[null, '#ffff00', null], ...]
+      isBold: [], // [[false, true, false], ...]
+      aligns: [], // [['left', 'center', 'right'], ...]
+      vAligns: [], // [['top', 'middle', 'bottom'], ...]
+    },
+    // Merged cells
+    mergedCells: [], // [{ row: 0, col: 1, rowSpan: 1, colSpan: 2 }]
+    // Sizing
+    colWidths: [],
+    rowHeights: [],
+  },
+  icon: {
+    width: 80,
+    height: 80,
+    zIndex: 2,
+    iconName: 'Star',
+    iconColor: 'auto', // --ns-text (= #ffffff)
+    iconStrokeWidth: 2,
+  },
+  callout: {
+    width: 40, // >= MIN_SIZE (40) so first resize/panel edit does not jump
+    height: 40,
+    zIndex: 10,
+    calloutNumber: 1,
+    calloutColor: '#ef4444',
+    calloutTextColor: 'auto', // --ns-text (= #ffffff); calloutColor kept frozen
+    fontSize: 16,
+  },
+  qrcode: {
+    width: 200,
+    height: 200,
+    zIndex: 2,
+    qrData: 'https://example.com',
+    qrColor: '#000000',
+    qrBgColor: '#ffffff',
+    qrErrorLevel: 'M',
+  },
+  drawing: {
+    width: 960,
+    height: 540,
+    zIndex: 1,
+    paths: [],
+    strokeColor: 'auto', // --ns-text (= #ffffff)
+    strokeWidth: 3,
+  },
+  line: {
+    width: 400,
+    height: 200,
+    zIndex: 1,
+    x1: 0,
+    y1: 100,
+    x2: 400,
+    y2: 100,
+    cx: null,
+    cy: null,
+    stroke: 'auto', // --ns-text (= #ffffff)
+    strokeWidth: 2,
+    arrowStart: 'none',
+    arrowEnd: 'arrow',
+    dashArray: '',
+    connections: undefined,
+  },
+  svg: {
+    width: 200,
+    height: 200,
+    zIndex: 1,
+    content:
+      '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40" fill="#6366f1"/></svg>',
+    fillOverride: null,
+    strokeOverride: null,
+  },
+  timeline: {
+    width: 800,
+    height: 300,
+    zIndex: 2,
+    timelineStart: '2000',
+    timelineEnd: '2025',
+    startDate: '2000',
+    endDate: '2025',
+    tickSpacing: 'auto',
+    lineColor: 'auto', // --ns-accent (= #6366f1)
+    dotColor: 'auto', // --ns-accent (= #6366f1)
+    textColor: 'auto', // --ns-text (= #ffffff)
+    fontSize: 11,
+    events: [],
+    items: [],
+  },
+  game: buildGameElementDefaults(),
+}
+
+// Default position for each type (can be overridden)
+export const DEFAULT_POSITIONS = {
+  text: { x: 80, y: 160 },
+  image: { x: 130, y: 100 },
+  shape: { x: 'center', y: 'center' }, // calculated based on canvas
+  code: { x: 80, y: 80 },
+  latex: { x: 80, y: 80 },
+  html: { x: 80, y: 80 },
+  markdown: { x: 80, y: 80 },
+  chart: { x: 80, y: 80 },
+  video: { x: 130, y: 100 },
+  audio: { x: 80, y: 400 },
+  table: { x: 80, y: 100 },
+  icon: { x: 200, y: 200 },
+  callout: { x: 200, y: 200 },
+  qrcode: { x: 380, y: 170 },
+  drawing: { x: 0, y: 0 },
+  line: { x: 100, y: 200 },
+  svg: { x: 200, y: 100 },
+  timeline: { x: 80, y: 120 },
+  game: { x: 160, y: 120 },
+}

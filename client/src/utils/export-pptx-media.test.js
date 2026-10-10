@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { resolveClientPptxMedia } from './export-pptx-media'
+import { resolveClientPptxMedia, resolveClientPptxPoster } from './export-pptx-media'
 
 function response(mime, bytes) {
   const payload =
@@ -69,5 +69,37 @@ describe('client PPTX media resolver', () => {
       embedded: false,
       reason: 'validated-upload-unavailable',
     })
+  })
+
+  it('accepts an authored PNG data poster as a native embedded-video cover without a network request', async () => {
+    const poster =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII='
+    const fetchMock = vi.fn().mockResolvedValue(response('video/mp4'))
+    const media = await resolveClientPptxMedia(
+      { type: 'video', src: '/uploads/lesson.mp4', poster },
+      fetchMock
+    )
+    expect(media).toMatchObject({ embedded: true, cover: poster })
+    expect(fetchMock).toHaveBeenCalledOnce()
+  })
+
+  it.each([
+    'data:image/png;base64,PGh0bWw+',
+    'data:image/png;base64,!!!',
+    'data:text/html;base64,PGh0bWw+',
+  ])('rejects an invalid or non-image authored poster (%s)', async (poster) => {
+    const fetchMock = vi.fn()
+    expect(await resolveClientPptxPoster(poster, fetchMock)).toBeNull()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects embedding when an authored data poster is invalid instead of publishing a default cover', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(response('video/mp4'))
+    await expect(
+      resolveClientPptxMedia(
+        { type: 'video', src: '/uploads/lesson.mp4', poster: 'data:image/png;base64,PGh0bWw+' },
+        fetchMock
+      )
+    ).rejects.toBeInstanceOf(Error)
   })
 })

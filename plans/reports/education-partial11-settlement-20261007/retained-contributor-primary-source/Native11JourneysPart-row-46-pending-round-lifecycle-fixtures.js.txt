@@ -1,0 +1,144 @@
+import { gameFixture, deckWith } from './release-game-fixtures.js'
+
+export function makeTriviaFixture(roundLimit, q1Limit, q2Limit = null, elementId = 'g-pri') {
+  const g = gameFixture('trivia-champ')
+  g.id = elementId
+  g['trivia-champ'].rounds[0].timeLimit = roundLimit
+  const baseQ = g['trivia-champ'].questions[0]
+  const q1 = {
+    ...baseQ,
+    id: 'q1',
+    prompt: 'Question 1',
+    timeLimit: q1Limit,
+  }
+  const qs = [q1]
+  if (q2Limit !== null) {
+    qs.push({
+      ...baseQ,
+      id: 'q2',
+      prompt: 'Question 2',
+      timeLimit: q2Limit,
+    })
+  }
+  g['trivia-champ'].questions = qs
+  g['trivia-champ'].rounds[0].questionIds = qs.map((q) => q.id)
+  return g
+}
+
+export function makeQuizFixture(timeLimit = 5, elementId = 'g-pri') {
+  const g = gameFixture('quiz', 'single-choice')
+  g.id = elementId
+  g.quiz.questions[0].timeLimit = timeLimit
+  return g
+}
+
+export function makeHotPotatoFixture(timeLimit = 5, elementId = 'g-pri') {
+  const g = gameFixture('hot-potato')
+  g.id = elementId
+  g['hot-potato'].questions[0].timeLimit = timeLimit
+  return g
+}
+
+export function makeJeopardyFixture(timerDuration = 5, showTimer = true, elementId = 'g-pri') {
+  const g = gameFixture('jeopardy')
+  g.id = elementId
+  g.jeopardy.showTimer = showTimer
+  g.jeopardy.timerDuration = timerDuration
+  return g
+}
+
+export function makeRelayFixture(timerDuration = 5, passOnWrong = true, questionsPerRound = 2, elementId = 'g-pri') {
+  const g = gameFixture('relay-race')
+  g.id = elementId
+  g['relay-race'].timerDuration = timerDuration
+  g['relay-race'].passOnWrong = passOnWrong
+  g['relay-race'].questionsPerRound = questionsPerRound
+  return g
+}
+
+export function makeWitnessFixture(durationSeconds = 4, elementId = 'witness-timer') {
+  const ct = gameFixture('countdown')
+  ct.id = elementId
+  ct.countdown.durationSeconds = durationSeconds
+  return ct
+}
+
+export function buildDeck(concern, caseDef) {
+  const witness = makeWitnessFixture(4, 'witness-timer')
+  if (concern === 'leave-return') {
+    const primary = caseDef.makeFixture('g-pri')
+    return {
+      ...deckWith([]),
+      slides: [
+        {
+          id: 'p-slide',
+          elements: [primary],
+          children: [
+            {
+              id: 'c-slide',
+              elements: [witness],
+            },
+          ],
+        },
+      ],
+    }
+  }
+  if (concern === 'reset') {
+    const primary = {
+      ...caseDef.makeFixture('g-pri'),
+      x: 20,
+      y: 40,
+      width: 440,
+      height: 460,
+    }
+    const positionedWitness = {
+      ...witness,
+      x: 480,
+      y: 40,
+      width: 440,
+      height: 460,
+    }
+    return {
+      ...deckWith([]),
+      slides: [
+        {
+          id: 'p-slide',
+          elements: [primary, positionedWitness],
+        },
+      ],
+    }
+  }
+  if (concern === 'isolation') {
+    const f1 = {
+      ...caseDef.f1('iso-1'),
+      x: 20,
+      y: 40,
+      width: 440,
+      height: 230,
+    }
+    const f2 = {
+      ...caseDef.f2('iso-2'),
+      x: 480,
+      y: 40,
+      width: 440,
+      height: 230,
+    }
+    const positionedWitness = {
+      ...witness,
+      x: 20,
+      y: 290,
+      width: 440,
+      height: 200,
+    }
+    return {
+      ...deckWith([]),
+      slides: [
+        {
+          id: 'p-slide',
+          elements: [f1, f2, positionedWitness],
+        },
+      ],
+    }
+  }
+  throw new Error(`Unknown concern: ${concern}`)
+}

@@ -1,0 +1,202 @@
+		let width = config.width;
+		let height = config.height;
+
+		if( config.disableLayout ) {
+			width = dom.slides.offsetWidth;
+			height = dom.slides.offsetHeight;
+		}
+
+		const size = {
+			// Slide size
+			width: width,
+			height: height,
+
+			// Presentation size
+			presentationWidth: presentationWidth || dom.wrapper.offsetWidth,
+			presentationHeight: presentationHeight || dom.wrapper.offsetHeight
+		};
+
+		// Reduce available space by margin
+		size.presentationWidth -= ( size.presentationWidth * config.margin );
+		size.presentationHeight -= ( size.presentationHeight * config.margin );
+
+		// Slide width may be a percentage of available width
+		if( typeof size.width === 'string' && /%$/.test( size.width ) ) {
+			size.width = parseInt( size.width, 10 ) / 100 * size.presentationWidth;
+		}
+
+		// Slide height may be a percentage of available height
+		if( typeof size.height === 'string' && /%$/.test( size.height ) ) {
+			size.height = parseInt( size.height, 10 ) / 100 * size.presentationHeight;
+		}
+
+		return size;
+
+	}
+
+	/**
+	 * Stores the vertical index of a stack so that the same
+	 * vertical slide can be selected when navigating to and
+	 * from the stack.
+	 *
+	 * @param {HTMLElement} stack The vertical stack element
+	 * @param {string|number} [v=0] Index to memorize
+	 */
+	function setPreviousVerticalIndex( stack, v ) {
+
+		if( typeof stack === 'object' && typeof stack.setAttribute === 'function' ) {
+			stack.setAttribute( 'data-previous-indexv', v || 0 );
+		}
+
+	}
+
+	/**
+	 * Retrieves the vertical index which was stored using
+	 * #setPreviousVerticalIndex() or 0 if no previous index
+	 * exists.
+	 *
+	 * @param {HTMLElement} stack The vertical stack element
+	 */
+	function getPreviousVerticalIndex( stack ) {
+
+		if( typeof stack === 'object' && typeof stack.setAttribute === 'function' && stack.classList.contains( 'stack' ) ) {
+			// Prefer manually defined start-indexv
+			const attributeName = stack.hasAttribute( 'data-start-indexv' ) ? 'data-start-indexv' : 'data-previous-indexv';
+
+			return parseInt( stack.getAttribute( attributeName ) || 0, 10 );
+		}
+
+		return 0;
+
+	}
+
+	/**
+	 * Checks if the current or specified slide is vertical
+	 * (nested within another slide).
+	 *
+	 * @param {HTMLElement} [slide=currentSlide] The slide to check
+	 * orientation of
+	 * @return {Boolean}
+	 */
+	function isVerticalSlide( slide = currentSlide ) {
+
+		return slide && slide.parentNode && !!slide.parentNode.nodeName.match( /section/i );
+
+	}
+
+	/**
+	 * Checks if the current or specified slide is a stack containing
+	 * vertical slides.
+	 *
+	 * @param {HTMLElement} [slide=currentSlide]
+	 * @return {Boolean}
+	 */
+	function isVerticalStack( slide = currentSlide ) {
+
+		return slide.classList.contains( '.stack' ) || slide.querySelector( 'section' ) !== null;
+
+	}
+
+	/**
+	 * Returns true if we're on the last slide in the current
+	 * vertical stack.
+	 */
+	function isLastVerticalSlide() {
+
+		if( currentSlide && isVerticalSlide( currentSlide ) ) {
+			// Does this slide have a next sibling?
+			if( currentSlide.nextElementSibling ) return false;
+
+			return true;
+		}
+
+		return false;
+
+	}
+
+	/**
+	 * Returns true if we're currently on the first slide in
+	 * the presentation.
+	 */
+	function isFirstSlide() {
+
+		return indexh === 0 && indexv === 0;
+
+	}
+
+	/**
+	 * Returns true if we're currently on the last slide in
+	 * the presentation. If the last slide is a stack, we only
+	 * consider this the last slide if it's at the end of the
+	 * stack.
+	 */
+	function isLastSlide() {
+
+		if( currentSlide ) {
+			// Does this slide have a next sibling?
+			if( currentSlide.nextElementSibling ) return false;
+
+			// If it's vertical, does its parent have a next sibling?
+			if( isVerticalSlide( currentSlide ) && currentSlide.parentNode.nextElementSibling ) return false;
+
+			return true;
+		}
+
+		return false;
+
+	}
+
+	/**
+	 * Enters the paused mode which fades everything on screen to
+	 * black.
+	 */
+	function pause() {
+
+		if( config.pause ) {
+			const wasPaused = dom.wrapper.classList.contains( 'paused' );
+
+			cancelAutoSlide();
+			dom.wrapper.classList.add( 'paused' );
+
+			if( wasPaused === false ) {
+				dispatchEvent({ type: 'paused' });
+			}
+		}
+
+	}
+
+	/**
+	 * Exits from the paused mode.
+	 */
+	function resume() {
+
+		const wasPaused = dom.wrapper.classList.contains( 'paused' );
+		dom.wrapper.classList.remove( 'paused' );
+
+		cueAutoSlide();
+
+		if( wasPaused ) {
+			dispatchEvent({ type: 'resumed' });
+		}
+
+	}
+
+	/**
+	 * Toggles the paused mode on and off.
+	 */
+	function togglePause( override ) {
+
+		if( typeof override === 'boolean' ) {
+			override ? pause() : resume();
+		}
+		else {
+			isPaused() ? resume() : pause();
+		}
+
+	}
+
+	/**
+	 * Checks if we are currently in the paused mode.
+	 *
+
+[Showing lines 1001-1200 of 2973. Use :1201 to continue]

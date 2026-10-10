@@ -1,0 +1,222 @@
+    {
+      "id": "N07-11",
+      "title": "Exact null-command matching",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "observation-domain.js:67-68: expectedCommand = cursor.command!==undefined ? cursor.command : null, followed by strict `p.command !== expectedCommand` rejection. A null cursor command therefore requires p.command===null. No wildcard. Cursor command producers: native-action.js:7 and observation.js:60 default to null; observation-browser.js evaluatePreActionCursor returns command: cmd. Packet producer: native-history.js nativeCaptureHandler yields null when no data-ns-command/cell exists, and 'submit' as the default for submit.",
+      "mechanism": "A change/input cursor (null command) cannot match a same-tuple packet with a non-null command."
+    },
+    {
+      "evidence": "observation-domain.js:43-45 throws when !currentNode.isConnected, before the rootInstanceId/tuple/document/URL agreement checks (:46-57). observation-browser.js:144 supplies isConnected. observation.js:116 calls assertCurrentNodeAgreement before the no-match rejection (:118) and before packet acceptance (:128-133).",
+      "mechanism": "A detached root cannot be accepted as current-root evidence for a matching packet.",
+      "id": "N07-12",
+      "title": "Reject disconnected current nodes",
+      "disposition": "SOURCE_CORRECTED_LOCAL"
+    },
+    {
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-error-ledger.js:114-116,140-147"
+      ],
+      "id": "E06-01-A",
+      "mechanism": "produceThrow returns entries[0].normalized directly without invoking refreshLedgerExposure when entries.length === 1. Caller-owned secondaryFailures array containing [] is registered in callerOwnedSecondaryArrays during ingestPreexistingErrors, but refreshLedgerExposure is bypassed for single errors, preserving own keys and original reference unchanged."
+    },
+    {
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-error-ledger.js:84-89",
+        "tests/e2e/education/pending-round-lifecycle-error-exposure.js:140,152,166"
+      ],
+      "id": "E06-01-B",
+      "mechanism": "Deduplication in recordError checks identity against existing entries via entry.original === error || entry.normalized === error or WeakMap envelopeToNorm. In refreshLedgerExposure, deduplication in secondaryFailures, allErrors, and errorLedger uses reference identity (includes / some) rather than array indices or numeric order fields, preventing duplicate exposure across independent order namespaces.",
+      "disposition": "SOURCE_CORRECTED_LOCAL"
+    },
+    {
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-error-exposure.js:26-35,72-123"
+      ],
+      "id": "E06-01-C",
+      "mechanism": "extractWrapper and ingestPreexistingErrors inspect actualRef.errorLedger, secondaryFailures, and allErrors for genuine Error instances (item instanceof Error || item?.error instanceof Error). Serialized-only objects lacking genuine Error instances are excluded from occurrence recording, preventing fabricated ledger occurrences while preserving caller metadata."
+    }
+  ],
+  "additional08FindingDispositions": [
+    {
+      "evidence": "Same as N07-05: native-observation.js:54-75 compares complete content against the private clone. Native capture/bubble no longer reads unchecked contents: native-history.js:80-84, :134-138, :53-54. observation-browser.js:6,83 checks health before returning or forwarding events.",
+      "id": "08-F2",
+      "title": "N06-N03: Validate complete retained-store content integrity (native-observation.js)",
+      "disposition": "SOURCE_CORRECTED_LOCAL"
+    },
+    {
+      "evidence": "observation-errors.js:12-23 captures the document-identity failure without recording it. It is recorded last (:87-89), after every packet getter and raw getter (:47-79). The later Node document-validation exception therefore no longer precedes browser getter occurrences that were already observed.",
+      "id": "08-F3",
+      "title": "N06-N05: Preserve snapshot-before-document failure chronology (observation-errors.js)",
+      "disposition": "SOURCE_CORRECTED_LOCAL"
+    },
+    {
+      "id": "08-F4",
+      "title": "N06-N05: Retain packet sibling failures before outer rejection (observation.js)",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "observation.js:110-115 passes matchedPacket (or explicit null). observation-errors.js:36-45: if packet is null, every raw.candidates entry with sequence > cursor.sequence is processed in sequence order, and their getter siblings are recorded (:47-60) before recorder/document failures are recorded or thrown."
+    },
+    {
+      "id": "08-F1",
+      "title": "Import assertHistoryPrefix in witness.js",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "Outside this slice; observed only through targeted search, and witness.js was not fully read. witness.js:12-15 imports assertHistoryPrefix from witness-domain.js, which imports and re-exports it from history-domain.js (witness-domain.js:3-7). The calls at witness.js:51 and :55 resolve. Full witness disposition belongs to the owning slice."
+    },
+    {
+      "mechanism": "The ReferenceError on startWitnessTimer is gone.",
+      "id": "08-F1 (witness.js:49-54 assertHistoryPrefix import)",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "Same as N07-03: witness.js:14 imports, witness-domain.js:7 re-exports, call sites at witness.js:51,55."
+    },
+    {
+      "mechanism": "Packet getter failures reach recordError before any outer rejection. Their relative order against recorder:store is still wrong; see the chronology disposition and N10B-03.",
+      "id": "08-F4 (observation.js:108-116 packet sibling retention before outer rejection)",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "observation.js:105 stages the raw candidates result. :107-110 computes and stages matchedPacket. :111-115 passes matchedPacket into the outer assertAndRecordObservationErrors. When nothing matches, observation-errors.js:40-45 processes every candidate with sequence>cursor.sequence in sequence order. Packet errors (:47-60) are recorded before recorder/recorderReady/documentIdentity (:81-89), and before the Node rejections assertCurrentNodeAgreement (:116) and no-match (:118-126)."
+    },
+    {
+      "id": "08-F3 consumer side (snapshot-before-document chronology as consumed by observation.js)",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "observation-errors.js:12-23 only captures the document identity error; it is recorded last at :87-89, after every browser occurrence. The Node prerequisite validators run only after assertAndRecordObservationErrors returns: validateCursorPrerequisites (observation.js:70), validateObservationPrerequisites (:89), assertCurrentNodeAgreement (:116), validatePacketPrerequisites (:130). Raw results are staged first (:46, :64, :83, :105, :144).",
+      "mechanism": "Later Node document validation no longer takes primary position ahead of browser occurrences that were already observed."
+    },
+    {
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-error-exposure.js:26-35,72-85"
+      ],
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "mechanism": "Pure serialized diagnostics (objects lacking genuine Error references in item or item.error) are ignored during ingestion loops and excluded from recordError calls, preventing non-Error diagnostics from generating spurious ledger entries.",
+      "id": "Evidence08-1"
+    },
+    {
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-error-exposure.js:7-24,37-56,92-104"
+      ],
+      "id": "Evidence08-2",
+      "mechanism": "resolveWrapperMeta extracts wrapper phase and frameUrl metadata from caller wrappers. For shared references already recorded, reconcileEntry updates the existing entry's phase and metadata and refreshes its serialized diagnostic via serializeErrorFn without creating duplicate occurrences."
+    }
+  ],
+  "settled09DefectDispositions": [
+    {
+      "id": "09-S1",
+      "title": "Function boundary: evaluateActionCandidates closed before next export",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "observation-browser.js:129-162: root.evaluate closes at :161 and the function at :162, before `export async function evaluateDocumentActivity` at :164. evaluateDocumentActivity closes at :175 (EOF).",
+      "mechanism": "The export is now at module top level. This is static source reading only; no syntax check or import was run."
+    },
+    {
+      "evidence": "native-history.js:107 `const serializable = Object.assign({}, packet)`; :108 deletes root; :109 pushes to window.__nsRecordedPackets; :110 calls recordFn('native-action', serializable, packet.tCapture, tBub).",
+      "mechanism": "The declaration precedes both uses. The packet array is consumed by evaluateActionCandidates (observation-browser.js:146-147) and evaluatePreActionCursor (:36-37). The native-action event is retained in the private and retained lifecycle stores, which gives it content integrity, and it is excluded from the continuity projections.",
+      "id": "09-S2",
+      "title": "Serializable native packet to BOTH outputs",
+      "disposition": "SOURCE_CORRECTED_LOCAL"
+    },
+    {
+      "id": "09-S3",
+      "title": "Every relevant fallback sibling before outer reject",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": "observation.js:110-115 calls assertAndRecordObservationErrors(..., matchedPacket), and matchedPacket is null when nothing matches. In observation-errors.js:35-45, `if (packet)` is false for null and raw.packet is absent, so every candidate with p.sequence > cursor.sequence (sorted ascending, :41-44) goes through :47-60 before the recorder (:81-86) and document (:87-89) records and the throw at :91-93. The later no-match throw (observation.js:117-125) therefore runs only after every candidate's getter occurrences are already in the ledger.",
+      "mechanism": "There is no first-candidate collapse. When a packet matches, only that packet is relevant and it is processed."
+    },
+    {
+      "mechanism": "reconcileEntry updates existing.serialized in place via Object.assign rather than creating a new object identity. Consequently, refreshLedgerExposure retains stable object reference equality in primary.errorLedger, preventing multiple ledger records for the same occurrence across repeated reconciliations.",
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-error-exposure.js:37-56,164-171"
+      ],
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "id": "09-S4"
+    },
+    {
+      "id": "09-S5",
+      "disposition": "PARTIAL_REPAIR_REQUIRED",
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-error-ledger.js:13",
+        "tests/e2e/education/pending-round-lifecycle-error-exposure.js:7-14,37-56,77-85"
+      ],
+      "mechanism": "serializeError now respects effectivePhase (preferring the passed wrapper/caller phase over err.phase). However, in ingestPreexistingErrors (error-exposure.js:77-85), when a caller errorLedger item lacks an explicit phase, resolveWrapperMeta falls back to err.phase or '${phase}:errorLedger'. If that error was already recorded with an authoritative explicit phase (e.g. 'portable:close'), reconcileEntry overwrites the existing entry's authoritative phase with the fallback, re-serializing it and losing the original recorded phase. See finding S10-C2."
+    }
+  ],
+  "chronologyObligationDispositions": [
+    {
+      "evidence": "Setup-before-snapshot survives: observation-errors.js:25-33 records a recorder:setup envelope first. Document validation stays last (:87-89). Every non-setup recorder error, however, is placed after all packet and raw getter errors (:81-83), which is a fixed category order. S10-C1 is independently CONFIRMED from source, and the scope is broader than claimed. (a) completePacket sets the recorder:store envelope at native-history.js:80-82, before the post-handler getters in afterSnap at :93. (b) The capture handler sets it at :134-136, after stateBefore/uiBefore (:132) but before stateAfter/uiAfter. (c) record() sets it at native-observation.js:80-86 whenever the public store is found replaced, which can be before the capture getters themselves. (d) Correlated and cursor reads forward a pre-existing window.__nsLifecycleRecorderError (observation-browser.js:85, :59-61), whose occurrence precedes that read's getters (:78, :32). The envelopes have no observation time or packet-phase marker, so Node cannot recover the actual position.",
+      "mechanism": "error-ledger.js:94-101, 120-121 assigns order and primary by arrival. Example: the store is truncated before a Start click, so capture sets recorder:store at tCap and a stateAfter getter then throws at bubble. extractActionBracket records packet:stateAfter first and throws it as primary, even though the recorder:store failure occurred first. See NF-A1.",
+      "id": "09-C1",
+      "title": "Packet getter vs later extraction recorder/document occurrence; setup-before-later-snapshot; no universal category sort (S10-C1)",
+      "disposition": "REPAIR_REQUIRED"
+    },
+    {
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-error-exposure.js:72-105"
+      ],
+      "mechanism": "actualRef.errorLedger is traversed before secondaryFailures. When errorLedger contains [a, b] and secondaryFailures contains [b], 'a' is recorded first, then 'b' is recorded with its wrapper metadata. The subsequent secondaryFailures loop encounters 'b', locates its existing entry, and performs reconcileEntry without re-appending or changing chronological order, preserving caller-ledger [a, b] sequence. Numeric namespaces are never sorted.",
+      "id": "09-C2",
+      "disposition": "SOURCE_CORRECTED_LOCAL"
+    }
+  ],
+  "preservationDispositions": [
+    {
+      "evidence": [
+        "tests/e2e/education/release-portable-inspection.js:20-33",
+        "tests/e2e/education/release-surfaces.js:80-82,100-110"
+      ],
+      "id": "E06-02 (chronological frame dispatch)",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "mechanism": "release-portable-inspection.js dispatches frame evaluation rejections at arrival order via recordArrival('portable:frame', rawError, { frameUrl }). release-surfaces.js records pageerror events at arrival ('portable:pageerror'). Chronological arrival order is preserved in the common ledger."
+    },
+    {
+      "mechanism": "Raw Error instances are passed without property mutation; frameUrl and diagnostic context are carried as sidecar metadata in recordArrival and stored on entry.metadata and serialized error object, leaving the actual Error reference clean.",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "id": "E06-03 (actual Error/sidecar separation)",
+      "evidence": [
+        "tests/e2e/education/release-portable-inspection.js:25-31,40-43",
+        "tests/e2e/education/pending-round-lifecycle-error-ledger.js:87-103"
+      ]
+    },
+    {
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-live-root-observation.js:119-124",
+        "tests/e2e/education/pending-round-lifecycle-live-evidence.js:38-43"
+      ],
+      "id": "E06-04 (state-before-UI ordering)",
+      "mechanism": "live-root-observation evaluates and pushes snapshot.stateError before snapshot.uiError into rootErrors. live-evidence iterates rootErrors sequentially, recording state errors ahead of UI errors in the common ledger.",
+      "disposition": "SOURCE_PRESERVED_LOCAL"
+    },
+    {
+      "id": "E06-05 (recursive provenance/cause propagation)",
+      "mechanism": "serializeError recursively normalizes error causes with namespaced phases (${effectivePhase}:cause) and preserves rootInstanceId, documentId, and timeOrigin. materializeEnvelope recursively instantiates Error causes and preserves domain properties. evidence.js finalize extracts rootInstanceId and timeOrigin onto primaryError record.",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-error-ledger.js:20,30-45,61-68",
+        "tests/e2e/education/pending-round-lifecycle-evidence.js:173-178"
+      ]
+    },
+    {
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "id": "Real surface callback/ownership",
+      "mechanism": "visitSurface manages present, share, and file surfaces. It binds document identity and planned URLs, sets active page on evidence sink, provides clean { page, surface, file, inspectNetwork, diagnostics, error } contexts to visitor callbacks, and executes safeClose in finally blocks.",
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-surfaces.js:40-190"
+      ]
+    },
+    {
+      "mechanism": "freshPortable sets up reduced motion, network route interception, WebSocket mocks, and onPageCreated callback hooks. Setup and navigation errors record portable:setup / portable:navigation and safe-close contexts. If inspectNetwork fails, no-sink consumers fall back to throwing primary or raw frame errors. Strict success return structure { protocol, httpAttempts, socketAttempts, errors } is maintained.",
+      "id": "Portable setup/navigation/close and no-sink",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "tests/e2e/education/release-surfaces.js:18-142",
+        "tests/e2e/education/release-portable-inspection.js:8-54"
+      ]
+    },
+    {
+      "mechanism": "validateManifest strictly enforces exact 3-key shape (slideId, elementId, gameType). matchRootTuples enforces 1:1 multiset equality. validateDocumentIdentity enforces documentId, timeOrigin, and normalized plannedUrl equality against bound journey identity. Raw observations and manifests are staged before assertions.",
+      "id": "Raw staging/document identity/root tuples",
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-evidence-domain.js:10-74,96-125",
+        "tests/e2e/education/pending-round-lifecycle-evidence.js:65-92"
+      ],
+      "disposition": "SOURCE_PRESERVED_LOCAL"
+    },
+
+[Showing lines 331-550 of 723. Use :551 to continue]

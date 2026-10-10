@@ -1,0 +1,86 @@
+
+export async function visitSurface(options, visit) {
+  const { page, request, browser, id, testInfo, surface, evidence } = options
+  validateSurfaceSink(evidence)
+
+  if (surface === 'present') {
+    const plannedUrl = computePlannedUrl('present', { parentUrl: page.url(), id })
+    await page.context().addInitScript(PASSIVE_OBSERVATION_INIT_SCRIPT)
+    let popupPage = null
+    page.once('popup', (popup) => {
+      popupPage = popup
+      evidence.setActivePage(popup, { surface: 'present', plannedUrl })
+      evidence.stage('presentPopupCreated', { url: popup.url(), plannedUrl })
+    })
+    try {
+      const { popup } = await launchPresentPopup(page)
+      popupPage = popup
+      await popup.waitForFunction(() => window.Reveal?.isReady())
+      const docIdentity = await popup.evaluate(() => ({
+        url: window.location.href,
+        documentId: window.__nsDocumentId || null,
+        timeOrigin: window.performance?.timeOrigin || null,
+      }))
+      evidence.stage('presentDocumentIdentityObserved', docIdentity)
+      evidence.bindDocumentIdentity(docIdentity)
+      return await visit({
+        page: popup,
+        surface: 'present',
+        file: null,
+        inspectNetwork: null,
+        diagnostics: null,
+        error: null,
+      })
+    } catch (err) {
+      evidence.recordError('surface:present', err)
+      throw err
+    } finally {
+      if (popupPage) {
+        try {
+          await evidence.collectLive(popupPage)
+        } catch (liveErr) {
+          evidence.recordError('surface:present:collectLive', liveErr)
+        }
+        await safeClose(popupPage, evidence, 'surface:present:close')
+      }
+    }
+  }
+
+  if (surface === 'share') {
+    await page.context().addInitScript(PASSIVE_OBSERVATION_INIT_SCRIPT)
+    const share = await apiCreateShareLink(request, id)
+    const plannedUrl = computePlannedUrl('share', { parentUrl: page.url(), token: share.token })
+    const sharePage = await page.context().newPage()
+    evidence.setActivePage(sharePage, { surface: 'share', token: share.token, plannedUrl })
+    evidence.stage('sharePageCreated', { token: share.token, plannedUrl })
+    try {
+      await sharePage.goto(`/share/${share.token}`)
+      await sharePage.waitForFunction(() => window.Reveal?.isReady())
+      const docIdentity = await sharePage.evaluate(() => ({
+        url: window.location.href,
+        documentId: window.__nsDocumentId || null,
+        timeOrigin: window.performance?.timeOrigin || null,
+      }))
+      evidence.stage('shareDocumentIdentityObserved', docIdentity)
+      evidence.bindDocumentIdentity(docIdentity)
+      return await visit({
+        page: sharePage,
+        surface: 'share',
+        file: null,
+        inspectNetwork: null,
+        diagnostics: null,
+        error: null,
+      })
+    } catch (err) {
+      evidence.recordError('surface:share', err)
+      throw err
+    } finally {
+      try {
+        await evidence.collectLive(sharePage)
+      } catch (liveErr) {
+        evidence.recordError('surface:share:collectLive', liveErr)
+      }
+      await safeClose(sharePage, evidence, 'surface:share:close')
+    }
+
+[Showing lines 39-122 of 194. Use :123 to continue]

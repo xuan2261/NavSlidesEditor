@@ -35,7 +35,10 @@ function importedTextInsetStyle(el) {
   const side = (name, value, maxDimension) => {
     const raw = Number(value)
     if (!Number.isFinite(raw)) return ''
-    const max = Math.min(Number.isFinite(maxDimension) && maxDimension >= 0 ? maxDimension / 2 : 96, 96)
+    const max = Math.min(
+      Number.isFinite(maxDimension) && maxDimension >= 0 ? maxDimension / 2 : 96,
+      96
+    )
     const px = Math.min(Math.round(Math.max(0, raw) * unitScale * 10) / 10, max)
     return `padding-${name}:${px}px;`
   }
@@ -53,7 +56,7 @@ function importedTextWrapStyle(el) {
 
 function importedFontSize(el) {
   const fit = Number(el?._pptxImportMeta?.fitFontSizePx)
-  return Number.isFinite(fit) && fit > 0 ? fit : el.fontSize || 16
+  return Number.isFinite(fit) && fit > 0 ? fit : Number(el.fontSize) || 16
 }
 
 function innerDimension(value, strokeWidth) {
@@ -86,7 +89,10 @@ function buildSvgGradientData(el) {
 
 function gradientDefsString(data) {
   const stops = data.stops
-    .map((s) => `<stop offset="${Math.round(Number(s.offset) * 1e4) / 1e4}" stop-color="${safeCssColor(s.color, '#000000')}" />`)
+    .map(
+      (s) =>
+        `<stop offset="${Math.round(Number(s.offset) * 1e4) / 1e4}" stop-color="${safeCssColor(s.color, '#000000')}" />`
+    )
     .join('')
   return `<defs><linearGradient id="${data.id}" x1="${data.x1}" y1="${data.y1}" x2="${data.x2}" y2="${data.y2}">${stops}</linearGradient></defs>`
 }
@@ -100,8 +106,8 @@ function gradientFallbackColor(el, fallback = '#6366f1') {
 }
 
 function shapeSvgString(el) {
-  const w = el.width,
-    h = el.height
+  const w = Number(el.width),
+    h = Number(el.height)
   const gradientData = buildSvgGradientData(el)
   const fill = gradientData
     ? `url(#${gradientData.id})`
@@ -109,15 +115,15 @@ function shapeSvgString(el) {
       ? gradientFallbackColor(el)
       : resolveColorField(el.fill, 'shape', 'fill') || '#6366f1'
   const stroke = resolveColorField(el.stroke, 'shape', 'stroke') || 'none'
-  const sw = el.strokeWidth || 0
+  const sw = Number(el.strokeWidth) || 0
   const shape = el.shape || 'rect'
   const defs = gradientData ? gradientDefsString(gradientData) : ''
 
   let inner = ''
   if (shape === 'line') {
-    const lw = el.strokeWidth || 3
+    const lw = Number(el.strokeWidth) || 3
     let dashStyle = ''
-    if (el.dashArray) dashStyle = ` stroke-dasharray="${el.dashArray}"`
+    if (el.dashArray) dashStyle = ` stroke-dasharray="${escapePlainText(el.dashArray)}"`
     const linePaint = svgPaint('stroke', fill)
     const lineStyle = linePaint.style ? ` style="${linePaint.style}"` : ''
     inner = `<line x1="${lw}" y1="${h / 2}" x2="${w - lw}" y2="${h / 2}"${linePaint.attr} stroke-width="${lw}" fill="none"${dashStyle}${lineStyle} />`
@@ -125,7 +131,7 @@ function shapeSvgString(el) {
     let shapeEl = ''
     switch (shape) {
       case 'rect':
-        shapeEl = `<rect x="${sw / 2}" y="${sw / 2}" width="${innerDimension(w, sw)}" height="${innerDimension(h, sw)}" rx="${el.borderRadius || 0}" />`
+        shapeEl = `<rect x="${sw / 2}" y="${sw / 2}" width="${innerDimension(w, sw)}" height="${innerDimension(h, sw)}" rx="${Number(el.borderRadius) || 0}" />`
         break
       case 'rounded-rect':
         shapeEl = `<rect x="${sw / 2}" y="${sw / 2}" width="${innerDimension(w, sw)}" height="${innerDimension(h, sw)}" rx="${Math.min(w, h) * 0.15}" />`
@@ -192,22 +198,25 @@ function shapeSvgString(el) {
   }
 
   let textEl = ''
-  const textAlign = ['left', 'center', 'right', 'justify'].includes(el.textAlign) ? el.textAlign : 'center'
+  const textAlign = ['left', 'center', 'right', 'justify'].includes(el.textAlign)
+    ? el.textAlign
+    : 'center'
   if (el.textHtml) {
     const fs = importedFontSize(el)
     const tc = safeCssColor(resolveColorField(el.textColor, 'shape', 'textColor'), '#ffffff')
     const richText = sanitizeRichTextHtml(el.textHtml)
     textEl = `<foreignObject x="0" y="0" width="${w}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;box-sizing:border-box;display:flex;align-items:center;text-align:${textAlign};color:${tc};font-size:${fs}px;overflow:hidden;${importedTextWrapStyle(el)}${importedTextInsetStyle(el)}"><div style="width:100%;min-width:0;">${richText}</div></div></foreignObject>`
   } else if (el.text) {
-    const fs = el.fontSize || 16
+    const fs = Number(el.fontSize) || 16
     const tc = safeCssColor(resolveColorField(el.textColor, 'shape', 'textColor'), '#ffffff')
     const tp = svgPaint('fill', tc)
     const inset = Math.max(0, Number(el?._pptxImportMeta?.textInsets?.left) || 0)
     const x = textAlign === 'left' ? inset : textAlign === 'right' ? w - inset : w / 2
     const anchor = textAlign === 'left' ? 'start' : textAlign === 'right' ? 'end' : 'middle'
-    const family = typeof el.fontFamily === 'string' && !/[;{}]/.test(el.fontFamily) ? el.fontFamily : 'inherit'
+    const family =
+      typeof el.fontFamily === 'string' && !/[;{}]/.test(el.fontFamily) ? el.fontFamily : 'inherit'
     const weight = el.fontWeight === 'bold' || Number(el.fontWeight) >= 600 ? 'bold' : 'normal'
-    textEl = `<text x="${x}" y="${h / 2}" dominant-baseline="middle" text-anchor="${anchor}" font-size="${fs}"${tp.attr} style="font-family:${family};font-weight:${weight};${tp.style}">${escapePlainText(el.text)}</text>`
+    textEl = `<text x="${x}" y="${h / 2}" dominant-baseline="middle" text-anchor="${anchor}" font-size="${fs}"${tp.attr} style="${escapePlainText(`font-family:${family};font-weight:${weight};${tp.style}`)}">${escapePlainText(el.text)}</text>`
   }
 
   return `<svg width="100%" height="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="position:absolute;inset:0;overflow:visible;">${defs}${inner}${textEl}</svg>`

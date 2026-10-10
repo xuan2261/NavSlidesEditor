@@ -1,0 +1,202 @@
+		dom.slides.addEventListener( 'click', onSlidesClicked, false );
+		dom.slides.addEventListener( 'transitionend', onTransitionEnd, false );
+		dom.pauseOverlay.addEventListener( 'click', resume, false );
+
+		if( config.focusBodyOnPageVisibilityChange ) {
+			document.addEventListener( 'visibilitychange', onPageVisibilityChange, false );
+		}
+
+	}
+
+	/**
+	 * Unbinds all event listeners.
+	 */
+	function removeEventListeners() {
+
+		eventsAreBound = false;
+
+		touch.unbind();
+		focus.unbind();
+		keyboard.unbind();
+		controls.unbind();
+		progress.unbind();
+		location.unbind();
+
+		window.removeEventListener( 'resize', onWindowResize, false );
+
+		dom.slides.removeEventListener( 'click', onSlidesClicked, false );
+		dom.slides.removeEventListener( 'transitionend', onTransitionEnd, false );
+		dom.pauseOverlay.removeEventListener( 'click', resume, false );
+
+	}
+
+	/**
+	 * Uninitializes reveal.js by undoing changes made to the
+	 * DOM and removing all event listeners.
+	 */
+	function destroy() {
+
+		initialized = false;
+
+		// There's nothing to destroy if this instance hasn't finished
+		// initializing
+		if( ready === false ) return;
+
+		removeEventListeners();
+		cancelAutoSlide();
+
+		// Destroy controllers
+		notes.destroy();
+		focus.destroy();
+		overlay.destroy();
+		plugins.destroy();
+		pointer.destroy();
+		controls.destroy();
+		progress.destroy();
+		backgrounds.destroy();
+		slideNumber.destroy();
+		jumpToSlide.destroy();
+
+		// Remove event listeners
+		document.removeEventListener( 'fullscreenchange', onFullscreenChange );
+		document.removeEventListener( 'webkitfullscreenchange', onFullscreenChange );
+		document.removeEventListener( 'visibilitychange', onPageVisibilityChange, false );
+		window.removeEventListener( 'message', onPostMessage, false );
+		window.removeEventListener( 'load', layout, false );
+
+		// Undo DOM changes
+		if( dom.pauseOverlay ) dom.pauseOverlay.remove();
+		if( dom.statusElement ) dom.statusElement.remove();
+
+		document.documentElement.classList.remove( 'reveal-full-page' );
+
+		dom.wrapper.classList.remove( 'ready', 'center', 'has-horizontal-slides', 'has-vertical-slides' );
+		dom.wrapper.removeAttribute( 'data-transition-speed' );
+		dom.wrapper.removeAttribute( 'data-background-transition' );
+
+		dom.viewport.classList.remove( 'reveal-viewport' );
+		dom.viewport.style.removeProperty( '--slide-width' );
+		dom.viewport.style.removeProperty( '--slide-height' );
+
+		dom.slides.style.removeProperty( 'width' );
+		dom.slides.style.removeProperty( 'height' );
+		dom.slides.style.removeProperty( 'zoom' );
+		dom.slides.style.removeProperty( 'left' );
+		dom.slides.style.removeProperty( 'top' );
+		dom.slides.style.removeProperty( 'bottom' );
+		dom.slides.style.removeProperty( 'right' );
+		dom.slides.style.removeProperty( 'transform' );
+
+		Array.from( dom.wrapper.querySelectorAll( SLIDES_SELECTOR ) ).forEach( slide => {
+			slide.style.removeProperty( 'display' );
+			slide.style.removeProperty( 'top' );
+			slide.removeAttribute( 'hidden' );
+			slide.removeAttribute( 'aria-hidden' );
+			slide.removeAttribute( 'inert' );
+		} );
+
+	}
+
+	/**
+	 * Adds a listener to one of our custom reveal.js events,
+	 * like slidechanged.
+	 */
+	function on( type, listener, useCapture ) {
+
+		revealElement.addEventListener( type, listener, useCapture );
+
+	}
+
+	/**
+	 * Unsubscribes from a reveal.js event.
+	 */
+	function off( type, listener, useCapture ) {
+
+		revealElement.removeEventListener( type, listener, useCapture );
+
+	}
+
+	/**
+	 * Applies CSS transforms to the slides container. The container
+	 * is transformed from two separate sources: layout and the overview
+	 * mode.
+	 *
+	 * @param {object} transforms
+	 */
+	function transformSlides( transforms ) {
+
+		// Pick up new transforms from arguments
+		if( typeof transforms.layout === 'string' ) slidesTransform.layout = transforms.layout;
+		if( typeof transforms.overview === 'string' ) slidesTransform.overview = transforms.overview;
+
+		// Apply the transforms to the slides container
+		if( slidesTransform.layout ) {
+			Util.transformElement( dom.slides, slidesTransform.layout + ' ' + slidesTransform.overview );
+		}
+		else {
+			Util.transformElement( dom.slides, slidesTransform.overview );
+		}
+
+	}
+
+	/**
+	 * Dispatches an event of the specified type from the
+	 * reveal DOM element.
+	 */
+	function dispatchEvent({ target=dom.wrapper, type, data, bubbles=true }) {
+
+		let event = document.createEvent( 'HTMLEvents', 1, 2 );
+		event.initEvent( type, bubbles, true );
+		Util.extend( event, data );
+		target.dispatchEvent( event );
+
+		if( target === dom.wrapper ) {
+			// If we're in an iframe, post each reveal.js event to the
+			// parent window. Used by the notes plugin
+			dispatchPostMessage( type );
+		}
+
+		return event;
+
+	}
+
+	/**
+	 * Dispatches a slidechanged event.
+	 *
+	 * @param {string} origin Used to identify multiplex clients
+	 */
+	function dispatchSlideChanged( origin ) {
+
+		dispatchEvent({
+			type: 'slidechanged',
+			data: {
+				indexh,
+				indexv,
+				previousSlide,
+				currentSlide,
+				origin
+			}
+		});
+
+	}
+
+	/**
+	 * Dispatched a postMessage of the given type from our window.
+	 */
+	function dispatchPostMessage( type, data ) {
+
+		if( config.postMessageEvents && window.parent !== window.self ) {
+			let message = {
+				namespace: 'reveal',
+				eventName: type,
+				state: getState()
+			};
+
+			Util.extend( message, data );
+
+			window.parent.postMessage( JSON.stringify( message ), '*' );
+		}
+
+	}
+
+[Showing lines 601-800 of 2973. Use :801 to continue]

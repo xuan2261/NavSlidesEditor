@@ -1,0 +1,171 @@
+/**
+ * Error exposure helpers for the pending round error ledger.
+ * Tracks ledger-owned vs caller-owned arrays, ingests preexisting secondary errors,
+ * and maintains live exposures without mutating sole errors or truncating caller arrays.
+ */
+
+function resolveWrapperMeta(item, err, defaultPhase) {
+  const isWrapper = item && !(item instanceof Error) && typeof item === 'object'
+  const explicitPhase = isWrapper && typeof item.phase === 'string' && item.phase ? item.phase : null
+  const p = explicitPhase || (typeof err?.phase === 'string' && err.phase ? err.phase : defaultPhase)
+  let m = null
+  if (item?.metadata && typeof item.metadata === 'object') {
+    m = { ...item.metadata }
+    if (item.frameUrl && !m.frameUrl) m.frameUrl = item.frameUrl
+  } else if (item?.frameUrl) {
+    m = { frameUrl: item.frameUrl }
+  } else if (err?.metadata && typeof err.metadata === 'object') {
+    m = { ...err.metadata }
+  }
+  return { phase: p, explicitPhase, metadata: m }
+}
+
+function extractWrapper(arr, ledgerOwned, map, defaultPhase) {
+  if (!Array.isArray(arr) || ledgerOwned.has(arr)) return
+  for (const item of arr) {
+    if (!item) continue
+    const err = item instanceof Error ? item : item?.error instanceof Error ? item.error : null
+    if (err && !map.has(err)) {
+      map.set(err, resolveWrapperMeta(item, err, defaultPhase))
+    }
+  }
+}
+
+function reconcileEntry(existing, explicitPhase, m, serializeErrorFn) {
+  let updated = false
+  if (typeof explicitPhase === 'string' && explicitPhase && existing.phase !== explicitPhase) {
+    existing.phase = explicitPhase
+    updated = true
+  }
+  if (m) {
+    existing.metadata = existing.metadata ? { ...existing.metadata, ...m } : m
+    updated = true
+  }
+  if (updated && existing.serialized) {
+    if (typeof serializeErrorFn === 'function') {
+      const fresh = serializeErrorFn(existing.normalized, existing.phase, existing.order, existing.metadata)
+      Object.assign(existing.serialized, fresh)
+    } else {
+      existing.serialized.phase = existing.phase
+      if (m?.frameUrl) existing.serialized.frameUrl = m.frameUrl
+    }
+  }
+}
+
+export function ingestPreexistingErrors({
+  actualRef,
+  phase,
+  entries,
+  recordErrorFn,
+  ledgerOwnedArrays,
+  callerOwnedSecondaryArrays,
+  serializeErrorFn,
+}) {
+  if (!actualRef || typeof actualRef !== 'object') return
+  const wrappers = new Map()
+  extractWrapper(actualRef.errorLedger, ledgerOwnedArrays, wrappers, null)
+  extractWrapper(actualRef.allErrors, ledgerOwnedArrays, wrappers, null)
+
+  if (Array.isArray(actualRef.errorLedger) && !ledgerOwnedArrays.has(actualRef.errorLedger)) {
+    for (const item of actualRef.errorLedger) {
+      if (!item) continue
+      const err = item instanceof Error ? item : item?.error instanceof Error ? item.error : null
+      if (!err) continue
+      const { phase: p, explicitPhase, metadata: m } = resolveWrapperMeta(item, err, `${phase}:errorLedger`)
+      const existing = entries.find((e) => e.original === err || e.normalized === err)
+      if (!existing) {
+        recordErrorFn(p, err, m)
+      } else if (explicitPhase || m) {
+        reconcileEntry(existing, explicitPhase, m, serializeErrorFn)
+      }
+    }
+  }
+
+  if (Array.isArray(actualRef.secondaryFailures) && !ledgerOwnedArrays.has(actualRef.secondaryFailures)) {
+    callerOwnedSecondaryArrays.add(actualRef.secondaryFailures)
+    for (const sec of actualRef.secondaryFailures) {
+      if (!sec) continue
+      const genuineSec = sec instanceof Error ? sec : sec?.error instanceof Error ? sec.error : null
+      if (!genuineSec) continue
+      const existing = entries.find((e) => e.original === genuineSec || e.normalized === genuineSec)
+      const wrap = wrappers.get(genuineSec)
+      const secIsWrap = sec && !(sec instanceof Error) && typeof sec === 'object'
+      const secExplicit = secIsWrap && typeof sec.phase === 'string' && sec.phase ? sec.phase : null
+      const explicitPhase = wrap?.explicitPhase || secExplicit || null
+      const p = explicitPhase || wrap?.phase || (typeof genuineSec.phase === 'string' && genuineSec.phase ? genuineSec.phase : `${phase}:secondary`)
+      const m = wrap?.metadata || (secIsWrap && sec.metadata ? sec.metadata : null) || (secIsWrap && sec.frameUrl ? { frameUrl: sec.frameUrl } : null) || genuineSec.metadata || null
+      if (!existing) {
+        recordErrorFn(p, genuineSec, m)
+      } else if (explicitPhase || m) {
+        reconcileEntry(existing, explicitPhase, m, serializeErrorFn)
+      }
+    }
+  }
+
+  if (Array.isArray(actualRef.allErrors) && !ledgerOwnedArrays.has(actualRef.allErrors)) {
+    for (const item of actualRef.allErrors) {
+      if (!item) continue
+      const err = item instanceof Error ? item : item?.error instanceof Error ? item.error : null
+      if (!err) continue
+      const existing = entries.find((e) => e.original === err || e.normalized === err)
+      const wrap = wrappers.get(err)
+      const { phase: itemP, explicitPhase: itemExplicit, metadata: itemM } = resolveWrapperMeta(item, err, `${phase}:allErrors`)
+      const explicitP = wrap?.explicitPhase || itemExplicit || null
+      const p = explicitP || wrap?.phase || itemP
+      const m = wrap?.metadata || itemM
+      if (!existing) {
+        recordErrorFn(p, err, m)
+      } else if (explicitP || m) {
+        reconcileEntry(existing, explicitP, m, serializeErrorFn)
+      }
+    }
+  }
+}
+
+export function refreshLedgerExposure(primary, entries, ledgerOwnedArrays, callerOwnedSecondaryArrays) {
+  if (!primary || entries.length === 0) return
+
+  if (!Array.isArray(primary.secondaryFailures)) {
+    primary.secondaryFailures = []
+    ledgerOwnedArrays.add(primary.secondaryFailures)
+  }
+  const secList = primary.secondaryFailures
+  const isCallerOwnedSec = !ledgerOwnedArrays.has(secList) || callerOwnedSecondaryArrays.has(secList)
+  if (!isCallerOwnedSec) {
+    secList.length = 0
+    for (const e of entries.slice(1)) secList.push(e.normalized)
+  } else {
+    for (const e of entries.slice(1)) {
+      if (!secList.includes(e.normalized) && !secList.includes(e.original)) secList.push(e.normalized)
+    }
+  }
+
+  if (!Array.isArray(primary.allErrors)) {
+    primary.allErrors = []
+    ledgerOwnedArrays.add(primary.allErrors)
+  }
+  const allList = primary.allErrors
+  if (!ledgerOwnedArrays.has(allList)) {
+    for (const e of entries) {
+      const exists = allList.some((it) => it === e.normalized || it?.error === e.normalized || it?.error === e.original)
+      if (!exists) allList.push({ phase: e.phase, error: e.normalized, order: e.order })
+    }
+  } else {
+    allList.length = 0
+    for (const e of entries) allList.push({ phase: e.phase, error: e.normalized, order: e.order })
+  }
+
+  if (!Array.isArray(primary.errorLedger)) {
+    primary.errorLedger = []
+    ledgerOwnedArrays.add(primary.errorLedger)
+  }
+  const ledList = primary.errorLedger
+  if (!ledgerOwnedArrays.has(ledList)) {
+    for (const e of entries) {
+      if (!ledList.includes(e.serialized)) ledList.push(e.serialized)
+    }
+  } else {
+    ledList.length = 0
+    for (const e of entries) ledList.push(e.serialized)
+  }
+}

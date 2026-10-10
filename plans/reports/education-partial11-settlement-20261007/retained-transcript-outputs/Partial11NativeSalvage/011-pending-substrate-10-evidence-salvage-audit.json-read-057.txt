@@ -1,0 +1,152 @@
+          "1-144"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 143
+      },
+      {
+        "file": "tests/e2e/education/release-surfaces.js",
+        "ranges": [
+          "1-200"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 199
+      },
+      {
+        "file": "tests/e2e/education/present-offline-helpers.js",
+        "ranges": [
+          "1-29"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 28
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-live-root-observation.js",
+        "ranges": [
+          "1-158"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 157
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "ranges": [
+          "1-172",
+          "173"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 172
+      },
+      {
+        "file": "tests/e2e/education/release-portable-inspection.js",
+        "ranges": [
+          "1-56"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 55
+      }
+    ],
+    "immutableCallers": [
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js",
+        "ranges": [
+          "1-96"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 95
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-cases.js",
+        "ranges": [
+          "1-200"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 199
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-fixtures.js",
+        "ranges": [
+          "1-145"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 144
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-leave-return.js",
+        "ranges": [
+          "1-145"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 144
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-reset.js",
+        "ranges": [
+          "1-111"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 110
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-isolation.js",
+        "ranges": [
+          "1-121"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 120
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-state.js",
+        "ranges": [
+          "1-121"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 120
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-quiz-state.js",
+        "ranges": [
+          "1-107"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 106
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-hot-potato-state.js",
+        "ranges": [
+          "1-113"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 112
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-jeopardy-state.js",
+        "ranges": [
+          "1-107"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 106
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-relay-state.js",
+        "ranges": [
+          "1-115"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 114
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-trivia-state.js",
+        "ranges": [
+          "1-198"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 197
+      }
+    ],
+    "importedFixtureProductionAndConsumerSources": [
+      {
+        "file": "tests/e2e/fixtures/test-fixtures.js",
+        "ranges": [
+          "1-69",
+
+[Showing lines 751-900 of 1203. Use :901 to continue]

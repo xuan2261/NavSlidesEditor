@@ -1,0 +1,10 @@
+        ...SELF_CONTAINED_DEPENDENCIES,
+        resources: [],
+        dynamicResources: [],
+      }
+    })
+    replacements.set(record.id, next)
+  }
+  return records.map((record) => replacements.get(record.id) || record)
+}
+module.exports = { SIMULATION_PRESETS, SIMULATION_MANIFEST, migrateSimulationTemplates }

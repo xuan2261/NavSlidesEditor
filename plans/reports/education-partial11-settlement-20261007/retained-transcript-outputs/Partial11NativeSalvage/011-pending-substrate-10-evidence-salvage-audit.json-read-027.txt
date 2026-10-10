@@ -1,0 +1,182 @@
+{
+  "verdict": "REPAIR_REQUIRED",
+  "scope": {
+    "mode": "INDEPENDENT_READ_ONLY_STATIC_SALVAGE",
+    "partition": "Evidence11, with complete Native15 and immutable Phase2 consumer review",
+    "reviewer": "Same-session-model independent source reviewer; not a producer, Fable/Astra reviewer, admission gate or runtime qualifier",
+    "summary": "All five enumerated settled09 defects have local source repairs in partial10. The specified caller-ledger a,b chronology is repaired. The Native chronology change repairs later-extraction-versus-earlier-packet ordering and preserves recorder-setup precedence, but still uses a category rule that reverses an earlier action-boundary recorder failure and later post-handler getter failures. That remaining source defect prevents a source-clean verdict. Missing genuine Native10 delivery independently prevents admission."
+  },
+  "exactSubject": {
+    "root": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-10-partial",
+    "status": "PARTIAL_SALVAGE_NOT_ADMISSION",
+    "fullSubjectHash": "0d20458eefe089ec90d2386b973a474cfb514cfba07ed4839d3a250720dc502a",
+    "hashAuthority": "Main's supplied freeze/scope-preservation record; not recomputed by this reviewer",
+    "sourcePathConvention": "Source references below are relative to this frozen root. Unqualified helper filenames are under tests/e2e/education/.",
+    "baselineRegularInputs": 4326,
+    "preservedRegularInputs": 4327,
+    "baselineUnchanged": 4320,
+    "changedHelpers": [
+      "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+      "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+      "tests/e2e/education/pending-round-lifecycle-native-history.js",
+      "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+      "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+      "tests/e2e/education/pending-round-lifecycle-observation-errors.js"
+    ],
+    "onlyReportedAddition": ".tmp/acceptance-producer-pending-substrate-10-evidence.json",
+    "unchangedPhase2Callers": 12,
+    "mappedHelpers": 26,
+    "preservationCountsAuthority": "pending-substrate-10-scope-preservation.json; preservation facts, not execution or source-correctness proof"
+  },
+  "originalFindingDispositions": [
+    {
+      "id": "Native07-01 / N06-N02",
+      "title": "Keep Start diagnostics out of lifecycle continuity",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-native-history.js:50-65,107-110",
+        "pending-round-lifecycle-observation-browser.js:89-98",
+        "pending-round-lifecycle-witness-domain.js:80-104"
+      ],
+      "mechanism": "Both root-history projections select root-pause/root-resume rather than native-action. completePacket now constructs a DOM-root-free copy and sends it to both recorded-packet storage and the native-action diagnostic. Witness continuity consumes the lifecycle-only projection, while complete-store integrity still protects diagnostic records."
+    },
+    {
+      "id": "Native07-02",
+      "title": "Declare firstExpiredSample before the witness polling callback",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-witness.js:98-146"
+      ],
+      "mechanism": "waitForWitnessExpiry declares a function-scoped firstExpiredSample initialized to null, validates each observed expired sample before retaining it, and returns the original last-running/first-expired crossover, expiryObservationInterval and activityElapsedInterval. No expiry was executed."
+    },
+    {
+      "id": "Native07-03 / N06-N02",
+      "title": "Validate capture-to-post history before adopting Start",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-witness.js:8-15,44-76",
+        "pending-round-lifecycle-witness-domain.js:2-7",
+        "pending-round-lifecycle-history-domain.js:24-53",
+        "pending-round-lifecycle-native-history.js:50-65"
+      ],
+      "mechanism": "The actual comparator is imported and re-exported explicitly. Missing capture/post arrays reject; complete root/document prefixes and exact lengths are checked before baseline adoption. Independently copied capture/post histories remain present. Full initial running state and Start-derived deadline bounds are validated before promoting the running sample."
+    },
+    {
+      "id": "Native07-04 / N06-N03",
+      "title": "Bind history health to actual recorder bookkeeping",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-native-observation.js:24-26,47-75,89-116",
+        "pending-round-lifecycle-observation-browser.js:5-17,61-65,83-98,148-159",
+        "pending-round-lifecycle-native-history.js:50-65,80-96,134-149"
+      ],
+      "mechanism": "The recorder retains the original public array plus independently retained private event content. Health compares identity, counts, eventSeq/type, tMin/tMax/time, visibilityState, domain and serialized detail. Untouched initialized emptiness is valid; replacement, truncation and same-sequence content corruption reject before passive, cursor, correlated, packet-history and extraction consumers use histories. Projected histories may legitimately have full-store sequence gaps."
+    },
+    {
+      "id": "Native07-05 / N06-N03",
+      "title": "Compare complete retained history content",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-history-domain.js:24-53",
+        "pending-round-lifecycle-witness-domain.js:80-104",
+        "pending-round-lifecycle-native-observation.js:47-75"
+      ],
+      "mechanism": "The prefix comparator requires matching numeric eventSeq and compares type, both timing bounds, event.time, visibilityState and serialized detail. Witness consumers additionally preserve exact lengths and completed-pause counts. The private full-store checker protects pre-baseline content, diagnostics and other roots rather than relying solely on witness comparison."
+    },
+    {
+      "id": "Native07-06",
+      "title": "Retain lifecycle mutations drained at native action boundaries",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-native-history.js:6-40,55,79,115",
+        "pending-round-lifecycle-native-snapshot.js:83-102",
+        "pending-round-lifecycle-history-domain.js:9-21",
+        "pending-round-lifecycle-activity-interval.js:23-35"
+      ],
+      "mechanism": "Drained mutations retain triggerMin and the later deliveryMax. Histories and pairs use lower-bound inclusion rather than dropping an event because its upper delivery bound exceeds the native boundary. Activity conversion consumes both uncertainty bounds without inventing or clipping away delivery uncertainty."
+    },
+    {
+      "id": "Native07-07 / N06-N05",
+      "title": "Normalize and retain all observed snapshot failures",
+      "disposition": "PARTIAL_REPAIR_REQUIRED",
+      "evidence": [
+        "pending-round-lifecycle-native-snapshot.js:55-78",
+        "pending-round-lifecycle-observation.js:45-51,63-69,82-88,104-135",
+        "pending-round-lifecycle-observation-errors.js:25-94",
+        "pending-round-lifecycle-error-ledger.js:51-117"
+      ],
+      "mechanism": "Raw observations are staged first. Exact matched-packet siblings and all sequence-eligible no-match fallback packets now reach the common ledger in packet sequence, capture-before-post and state-before-UI order. Browser envelopes are normalized, actual Node references are retained, and the consumer throws recordError's earliest normalized return. However, all non-setup recorder errors are placed after all getter siblings even when completePacket observed the recorder error before the post-handler getters. See finding S10-C1."
+    },
+    {
+      "id": "Native07-08 / N06-N05",
+      "title": "Preserve the recorder exception's actual cause chain",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-native-observation.js:36-44,123-127",
+        "pending-round-lifecycle-native-snapshot.js:23-51",
+        "pending-round-lifecycle-error-ledger.js:11-48,51-72"
+      ],
+      "mechanism": "Actual setup exceptions are recursively serialized with browser origin, phase, name/message/stack, documentId/timeOrigin/URL and real causes. Materialization and subsequent serialization preserve that chain; actual Node Error references are not replaced."
+    },
+    {
+      "id": "Native07-09 / N06-N01",
+      "title": "Stage each navigation poll's actual document first",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-navigation.js:85-103"
+      ],
+      "mechanism": "Each complete pollDoc includes slideId, URL, documentId and timeOrigin. Both the raw poll and contextual navigation poll are staged before document binding is asserted, retaining the offending observed identity on rejection."
+    },
+    {
+      "id": "Native07-10 / N06-N07",
+      "title": "Match keyboard eligibility to production dispatch",
+      "disposition": "SOURCE_CORRECTED_FOR_ORIGINAL_LISTED_EXCLUSIONS",
+      "evidence": [
+        "pending-round-lifecycle-navigation.js:37-69",
+        "shared/src/education/browser/reveal-lifecycle.js:73-83",
+        "shared/src/htmlGenerator.js:462-466",
+        "node_modules/reveal.js/js/controllers/keyboard.js:140-243,244-359,360-414"
+      ],
+      "mechanism": "The helper observes input/textarea/contenteditable focus, game/action ancestry and the actual configured keyboardCondition/focused-deck policy without forcing focus. The production wrapper delegates the generated summary/video/audio condition, and the linked Reveal dispatcher explicitly receives and routes Arrow keys after its guards. This establishes the concrete originally reported exclusions, not complete dispatcher equivalence: Reveal also checks speaker-notes focus, modifiers, overlay/paused state and custom bindings. Linked dependency contents are not recursively frozen and runtime actionability is not certified."
+    },
+    {
+      "id": "Native07-11",
+      "title": "Preserve exact null commands when matching native packets",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-observation-domain.js:60-69",
+        "pending-round-lifecycle-native-action.js:7-16",
+        "pending-round-lifecycle-controls.js:44-50,54-79,144-151"
+      ],
+      "mechanism": "Only an absent cursor command normalizes to null; packet command must equal it exactly. Input/change actions still deliberately supply null. Root instance, element/slide/game tuple, documentId/timeOrigin, URL, event type and sequence checks are retained."
+    },
+    {
+      "id": "Native07-12",
+      "title": "Reject disconnected current nodes during action extraction",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-observation-browser.js:129-162",
+        "pending-round-lifecycle-observation-domain.js:41-58",
+        "pending-round-lifecycle-observation.js:111-131"
+      ],
+      "mechanism": "The browser observation captures node.isConnected. The consuming domain gate rejects disconnection before full current-node/cursor agreement and before bracket acceptance."
+    },
+    {
+      "id": "E06-01-A",
+      "title": "Leave sole Errors with empty caller arrays unchanged",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-error-ledger.js:87-117,140-147",
+        "pending-round-lifecycle-error-exposure.js:72-123"
+      ],
+      "mechanism": "A genuine Error remains the same normalized reference. Empty secondaryFailures and serialized-only diagnostics add no occurrence. Exposure refresh runs only for multiple entries; produceThrow returns a sole primary immediately. The precise required sole-Error case retains own keys, the existing empty array reference and the thrown Error reference."
+    },
+    {
+      "id": "E06-01-B",
+      "title": "Deduplicate caller ledger records by identity, not order",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:37-55,125-171",
+        "pending-round-lifecycle-error-ledger.js:102-117,140-147",
+
+[Showing lines 1-180 of 1203. Use :181 to continue]

@@ -14,36 +14,101 @@ import ActionControls from './properties/action-controls'
 import { Button, Input, Select, ColorPicker } from '../components/ui'
 import { MousePointer2 } from 'lucide-react'
 import { clampNumber } from '../utils/number-input'
+import GameTryLauncher from './education/game-try-launcher'
+import InteractionVariableControls from './properties/interaction-variable-controls'
 
 /**
  * Type-specific property panel router.
  * Renders the correct sub-panel based on element.type.
  */
-function ElementTypeProperties({ element, onUpdate, onDelete, onEditHtml, onEditCode, onEditLatex, elements, selectedElementIds }) {
+function ElementTypeProperties({
+  element,
+  onUpdate,
+  onDelete,
+  onEditHtml,
+  onEditCode,
+  onEditLatex,
+  elements,
+  selectedElementIds,
+  slideLocked,
+  variables,
+}) {
   switch (element.type) {
     case 'shape':
     case 'line':
-      return <ShapeProperties element={element} onUpdate={onUpdate} elements={elements} selectedElementIds={selectedElementIds} />
+      return (
+        <ShapeProperties
+          element={element}
+          onUpdate={onUpdate}
+          elements={elements}
+          selectedElementIds={selectedElementIds}
+          slideLocked={slideLocked}
+        />
+      )
     case 'image':
-      return <ImageProperties element={element} onUpdate={onUpdate} elements={elements} selectedElementIds={selectedElementIds} />
+      return (
+        <ImageProperties
+          element={element}
+          onUpdate={onUpdate}
+          elements={elements}
+          selectedElementIds={selectedElementIds}
+        />
+      )
     case 'chart':
       return <ChartProperties element={element} onUpdate={onUpdate} />
     case 'code':
       return <CodeProperties element={element} onUpdate={onUpdate} onEditCode={onEditCode} />
     case 'video':
     case 'audio':
-      return <MediaProperties element={element} onUpdate={onUpdate} elements={elements} selectedElementIds={selectedElementIds} />
+      return (
+        <MediaProperties
+          element={element}
+          onUpdate={onUpdate}
+          elements={elements}
+          selectedElementIds={selectedElementIds}
+        />
+      )
     case 'table':
-      return <TableProperties element={element} onUpdate={onUpdate} />
+      return (
+        <TableProperties
+          element={element}
+          onUpdate={onUpdate}
+          elements={elements}
+          selectedElementIds={selectedElementIds}
+        />
+      )
     case 'timeline':
       return <TimelineProperties element={element} onUpdate={onUpdate} />
     case 'text':
       return (
         <CollapsibleSection title="Text Formatting" defaultOpen={true}>
+          <label className="mb-2 block text-xs text-text-secondary">
+            Text font size
+            <Input
+              type="number"
+              aria-label="Text font size"
+              min={1}
+              max={512}
+              value={element.fontSize ?? 16}
+              onChange={(event) =>
+                onUpdate({
+                  fontSize: clampNumber(event.target.value, 1, 512, element.fontSize ?? 16),
+                })
+              }
+            />
+          </label>
+          <div className="mb-2 text-xs text-text-secondary">
+            <div className="mb-1">Text color</div>
+            <ColorPicker
+              aria-label="Text color"
+              value={element.textColor || 'auto'}
+              onChange={(event) => onUpdate({ textColor: event.target.value })}
+            />
+          </div>
           <div className="rounded-md border border-border bg-card p-3 text-[11px] leading-5 text-text-secondary">
             <p className="m-0">
-              Use direct text editing on the slide or the Home and Format ribbon controls to
-              change font, size, color, alignment, lists, and spacing.
+              Use direct text editing on the slide or the Home and Format ribbon controls to change
+              font, size, color, alignment, lists, and spacing.
             </p>
           </div>
         </CollapsibleSection>
@@ -56,6 +121,7 @@ function ElementTypeProperties({ element, onUpdate, onDelete, onEditHtml, onEdit
           onDelete={onDelete}
           onEditHtml={onEditHtml}
           onEditLatex={onEditLatex}
+          variables={variables}
         />
       )
   }
@@ -87,8 +153,12 @@ export default function PropertiesPanel({
   const notesRef = useRef(null)
   const layersRef = useRef(null)
   useEffect(() => {
-    const target = focusRequest?.section === 'notes' ? notesRef.current
-      : focusRequest?.section === 'layers' ? layersRef.current?.querySelector('[role="list"]') : null
+    const target =
+      focusRequest?.section === 'notes'
+        ? notesRef.current
+        : focusRequest?.section === 'layers'
+          ? layersRef.current?.querySelector('[role="list"]')
+          : null
     const panel = panelRef.current
     if (!target || !panel) return
     target.focus({ preventScroll: true })
@@ -123,37 +193,43 @@ export default function PropertiesPanel({
       aria-label="Properties panel"
     >
       <div ref={layersRef}>
-          <CollapsibleSection title="Selection Pane" defaultOpen={focusRequest?.section === 'layers'} key={`layers-${focusRequest?.section === 'layers' ? focusRequest.request : 0}`}>
-            <SelectionPane
-              elements={slide?.elements || []}
-              selectedIds={selectedElementIds || []}
-              onSelect={(id, additive) => {
-                if (typeof onSelectElement === 'function') onSelectElement(id, additive)
-              }}
-              onToggleVisibility={(id) => {
-                const el = (slide?.elements || []).find((e) => e.id === id)
-                if (el) onUpdateElement(id, { hidden: !el.hidden })
-              }}
-              onToggleLock={(id) => {
-                const el = (slide?.elements || []).find((e) => e.id === id)
-                if (el) onUpdateElement(id, { locked: !el.locked })
-              }}
-              onRename={(id, name) => onUpdateElement(id, { name })}
-              onReorder={(fromIdx, toIdx) => {
-                const els = [...(slide?.elements || [])].sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0))
-                const [moved] = els.splice(fromIdx, 1)
-                els.splice(toIdx, 0, moved)
-                const updates = els.map((el, i) => ({ id: el.id, zIndex: i }))
-                if (typeof onReorderElements === 'function') {
-                  onReorderElements(updates)
-                } else if (typeof onUpdateElements === 'function') {
-                  onUpdateElements(updates)
-                } else {
-                  updates.forEach(({ id, zIndex }) => onUpdateElement(id, { zIndex }))
-                }
-              }}
-            />
-          </CollapsibleSection>
+        <CollapsibleSection
+          title="Selection Pane"
+          defaultOpen={focusRequest?.section === 'layers'}
+          key={`layers-${focusRequest?.section === 'layers' ? focusRequest.request : 0}`}
+        >
+          <SelectionPane
+            elements={slide?.elements || []}
+            selectedIds={selectedElementIds || []}
+            onSelect={(id, additive) => {
+              if (typeof onSelectElement === 'function') onSelectElement(id, additive)
+            }}
+            onToggleVisibility={(id) => {
+              const el = (slide?.elements || []).find((e) => e.id === id)
+              if (el) onUpdateElement(id, { hidden: !el.hidden })
+            }}
+            onToggleLock={(id) => {
+              const el = (slide?.elements || []).find((e) => e.id === id)
+              if (el) onUpdateElement(id, { locked: !el.locked })
+            }}
+            onRename={(id, name) => onUpdateElement(id, { name })}
+            onReorder={(fromIdx, toIdx) => {
+              const els = [...(slide?.elements || [])].sort(
+                (a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0)
+              )
+              const [moved] = els.splice(fromIdx, 1)
+              els.splice(toIdx, 0, moved)
+              const updates = els.map((el, i) => ({ id: el.id, zIndex: i }))
+              if (typeof onReorderElements === 'function') {
+                onReorderElements(updates)
+              } else if (typeof onUpdateElements === 'function') {
+                onUpdateElements(updates)
+              } else {
+                updates.forEach(({ id, zIndex }) => onUpdateElement(id, { zIndex }))
+              }
+            }}
+          />
+        </CollapsibleSection>
       </div>
       {/* Element Section */}
       {selectedElement && (
@@ -190,9 +266,18 @@ export default function PropertiesPanel({
             selectedElementIds={selectedElementIds || []}
           />
 
-
+          {selectedElement.type === 'game' && (
+            <GameTryLauncher
+              key={`${slide.id}:${selectedElement.id}:try`}
+              element={selectedElement}
+              effectiveSlideId={slide.id}
+              variables={presentation?.interactionVariables}
+            />
+          )}
           {/* Type-specific properties */}
           <ElementTypeProperties
+            key={`${slide.id}:${selectedElement.id}`}
+            slideLocked={slide.locked}
             element={selectedElement}
             onUpdate={onUpdateElement}
             onDelete={onDeleteElement}
@@ -201,9 +286,15 @@ export default function PropertiesPanel({
             onEditLatex={onEditLatex}
             elements={slide?.elements || []}
             selectedElementIds={selectedElementIds || []}
+            variables={presentation?.interactionVariables}
           />
           <CollapsibleSection title="Action" defaultOpen={true}>
-            <ActionControls element={selectedElement} onUpdate={onUpdateElement} presentation={presentation} />
+            <ActionControls
+              element={selectedElement}
+              onUpdate={onUpdateElement}
+              presentation={presentation}
+              slide={slide}
+            />
           </CollapsibleSection>
         </div>
       )}
@@ -213,7 +304,12 @@ export default function PropertiesPanel({
         <CollapsibleSection title="Presentation Settings" defaultOpen={true}>
           <div className="flex flex-col gap-2.5">
             <div>
-              <label htmlFor="presentation-auto-slide" className="text-[10px] text-text-muted mb-0.5">Auto-slide (s)</label>
+              <label
+                htmlFor="presentation-auto-slide"
+                className="text-[10px] text-text-muted mb-0.5"
+              >
+                Auto-slide (s)
+              </label>
               <Input
                 id="presentation-auto-slide"
                 className="w-full px-2.5 py-1.5 text-xs"
@@ -240,7 +336,12 @@ export default function PropertiesPanel({
             </div>
           </div>
           <div className="mt-2.5">
-            <label htmlFor="presentation-navigation-mode" className="text-[10px] text-text-muted mb-0.5">Navigation Mode</label>
+            <label
+              htmlFor="presentation-navigation-mode"
+              className="text-[10px] text-text-muted mb-0.5"
+            >
+              Navigation Mode
+            </label>
             <Select
               id="presentation-navigation-mode"
               className="w-full px-2.5 py-1.5 text-xs"
@@ -253,27 +354,43 @@ export default function PropertiesPanel({
           </div>
         </CollapsibleSection>
       )}
-
-      {/* Slide Footer */}
-      {!isMaster && <SlideFooterSection
-        slide={slide}
-        presentation={presentation}
-        onUpdateSlide={onUpdateSlide}
-        onUpdatePresentation={onUpdatePresentation}
-      />}
-
-      {/* Speaker Notes */}
-      {!isMaster && <div className="mt-6 border-t border-border pt-2">
-        <CollapsibleSection title="Speaker Notes" key={`notes-${focusRequest?.section === 'notes' ? focusRequest.request : 0}`}>
-          <textarea ref={notesRef}
-            aria-label="Speaker notes"
-            className="w-full bg-card border border-border text-text-primary px-2.5 py-2 rounded-sm text-xs resize-y min-h-[80px] focus:outline-none focus:border-accent placeholder:text-text-muted"
-            value={slide.notes || ''}
-            onChange={(e) => onUpdateSlide({ notes: e.target.value })}
-            placeholder="Add speaker notes here..."
+      {presentation && onUpdatePresentation && (
+        <CollapsibleSection title="Interaction variables">
+          <InteractionVariableControls
+            variables={presentation.interactionVariables || []}
+            onChange={(interactionVariables) => onUpdatePresentation({ interactionVariables })}
           />
         </CollapsibleSection>
-      </div>}
+      )}
+
+      {/* Slide Footer */}
+      {!isMaster && (
+        <SlideFooterSection
+          slide={slide}
+          presentation={presentation}
+          onUpdateSlide={onUpdateSlide}
+          onUpdatePresentation={onUpdatePresentation}
+        />
+      )}
+
+      {/* Speaker Notes */}
+      {!isMaster && (
+        <div className="mt-6 border-t border-border pt-2">
+          <CollapsibleSection
+            title="Speaker Notes"
+            key={`notes-${focusRequest?.section === 'notes' ? focusRequest.request : 0}`}
+          >
+            <textarea
+              ref={notesRef}
+              aria-label="Speaker notes"
+              className="w-full bg-card border border-border text-text-primary px-2.5 py-2 rounded-sm text-xs resize-y min-h-[80px] focus:outline-none focus:border-accent placeholder:text-text-muted"
+              value={slide.notes || ''}
+              onChange={(e) => onUpdateSlide({ notes: e.target.value })}
+              placeholder="Add speaker notes here..."
+            />
+          </CollapsibleSection>
+        </div>
+      )}
 
       {/* Custom CSS — template editor only */}
       {isTemplate && presentation && onUpdatePresentation && (
@@ -466,9 +583,7 @@ function FooterStyleControls({ presentation, onUpdatePresentation }) {
                 className="w-[22px] h-[22px] text-xs shrink-0"
                 title="Remove section"
                 aria-label={`Remove footer section ${i + 1}: ${sec || `Section ${i + 1}`}`}
-                onClick={() =>
-                  onUpdatePresentation((current) => removeSequenceSection(current, i))
-                }
+                onClick={() => onUpdatePresentation((current) => removeSequenceSection(current, i))}
               >
                 ×
               </Button>

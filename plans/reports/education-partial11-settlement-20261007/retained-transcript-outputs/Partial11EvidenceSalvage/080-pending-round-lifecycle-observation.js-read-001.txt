@@ -1,0 +1,152 @@
+import { PASSIVE_OBSERVATION_INIT_SCRIPT } from './pending-round-lifecycle-native-observation.js'
+import {
+  assertValidCursor,
+  validateCursorPrerequisites,
+  assertCurrentNodeAgreement,
+  matchPacketToCursor,
+  validateObservationPrerequisites,
+  validatePacketPrerequisites,
+  buildCorrelatedSample,
+  buildActionBracket,
+} from './pending-round-lifecycle-observation-domain.js'
+import {
+  evaluatePassiveEvents,
+  evaluatePreActionCursor,
+  evaluateCorrelatedStateAndTime,
+  evaluateActionCandidates,
+  evaluateDocumentActivity,
+} from './pending-round-lifecycle-observation-browser.js'
+import { assertAndRecordObservationErrors } from './pending-round-lifecycle-observation-errors.js'
+
+export { PASSIVE_OBSERVATION_INIT_SCRIPT }
+
+export function assertEvidenceSink(evidence, requireDocument = false) {
+  if (typeof evidence?.stage !== 'function' || typeof evidence?.recordError !== 'function') {
+    throw new Error('Callable evidence sink with stage and recordError is required')
+  }
+  if (requireDocument && typeof evidence?.assertDocumentIdentity !== 'function') {
+    throw new Error('Callable evidence sink with assertDocumentIdentity is required')
+  }
+}
+
+export async function installPassiveObservations(page, evidence) {
+  assertEvidenceSink(evidence)
+  try {
+    await page.addInitScript(PASSIVE_OBSERVATION_INIT_SCRIPT)
+  } catch (err) {
+    evidence.recordError('installPassiveObservations', err)
+    throw err
+  }
+}
+
+export async function readPassiveEvents(page, evidence, label = null) {
+  assertEvidenceSink(evidence, true)
+  try {
+    const raw = await evaluatePassiveEvents(page)
+    evidence.stage(label ? `${label}_raw` : 'passiveEvents_raw', raw)
+    assertAndRecordObservationErrors(evidence, 'readPassiveEvents', raw, {
+      url: raw.url,
+      documentId: raw.documentId,
+      timeOrigin: raw.timeOrigin,
+    })
+    evidence.stage(label || 'passiveEvents', raw.events)
+    return raw.events
+  } catch (err) {
+    evidence.recordError('readPassiveEvents', err)
+    throw err
+  }
+}
+
+export async function capturePreActionCursor(root, { command = null, type = null } = {}, evidence, label = null) {
+  assertEvidenceSink(evidence, true)
+  try {
+    const cursor = await evaluatePreActionCursor(root, { command, type })
+    evidence.stage(label ? `${label}_raw` : `cursor_raw_${command || type || 'action'}`, cursor)
+    assertAndRecordObservationErrors(evidence, 'capturePreActionCursor', cursor, {
+      url: cursor.url,
+      documentId: cursor.documentId,
+      timeOrigin: cursor.timeOrigin,
+    })
+    validateCursorPrerequisites(cursor)
+    evidence.stage(label || `cursor_${command || type || 'action'}`, cursor)
+    return cursor
+  } catch (err) {
+    evidence.recordError('capturePreActionCursor', err)
+    throw err
+  }
+}
+
+export async function readCorrelatedStateAndTime(root, evidence, label = null) {
+  assertEvidenceSink(evidence, true)
+  try {
+    const rawData = await evaluateCorrelatedStateAndTime(root)
+    evidence.stage(label ? `${label}_raw` : `sample_raw_${rawData.elementId || 'root'}_${Math.round(rawData.time || Date.now())}`, rawData)
+    assertAndRecordObservationErrors(evidence, 'readCorrelatedStateAndTime', rawData, {
+      url: rawData.url,
+      documentId: rawData.documentId,
+      timeOrigin: rawData.timeOrigin,
+    })
+    validateObservationPrerequisites(rawData)
+    const sample = buildCorrelatedSample(rawData)
+    evidence.stage(label || `sample_${rawData.elementId || 'root'}_${Math.round(rawData.time)}`, sample)
+    return sample
+  } catch (err) {
+    evidence.recordError('readCorrelatedStateAndTime', err)
+    throw err
+  }
+}
+
+export async function extractActionBracket(root, cursorOrCommand = null, evidence, label = null) {
+  assertEvidenceSink(evidence, true)
+  try {
+    const cursor = cursorOrCommand
+    assertValidCursor(cursor)
+    const result = await evaluateActionCandidates(root, cursor)
+    evidence.stage(label ? `${label}_candidates_raw` : 'action_candidates_raw', result)
+    const candidates = result.candidates || []
+    const matchedPacket = candidates.find((p) => matchPacketToCursor(p, cursor)) || null
+    if (matchedPacket) {
+      evidence.stage(label ? `${label}_raw` : `action_raw_${matchedPacket.command || matchedPacket.eventType}_${matchedPacket.sequence}`, matchedPacket)
+    }
+    assertAndRecordObservationErrors(evidence, 'extractActionBracket', result, {
+      url: result.currentNode?.url || result.url,
+      documentId: result.currentNode?.documentId || result.documentId,
+      timeOrigin: result.currentNode?.timeOrigin || result.timeOrigin,
+    }, matchedPacket)
+    assertCurrentNodeAgreement(result.currentNode, cursor)
+
+    if (!matchedPacket) {
+      evidence.stage(label ? `${label}_rejected` : 'action_rejected', {
+        cursor,
+        currentNode: result.currentNode,
+        candidates,
+        totalPacketsCount: result.totalPacketsCount,
+      })
+      throw new Error(`No native action packet matching cursor type=${cursor.type} cmd=${cursor.command} inst=${cursor.rootInstanceId} seq>${cursor.sequence}`)
+    }
+
+    assertAndRecordObservationErrors(evidence, 'extractActionBracket:packet', matchedPacket, { url: matchedPacket.url, documentId: matchedPacket.documentId, timeOrigin: matchedPacket.timeOrigin })
+    evidence.assertDocumentIdentity({ url: matchedPacket.url, documentId: matchedPacket.documentId, timeOrigin: matchedPacket.timeOrigin })
+    validatePacketPrerequisites(matchedPacket)
+    const actionBracket = buildActionBracket(matchedPacket)
+    evidence.stage(label || `action_${matchedPacket.command || matchedPacket.eventType || 'cmd'}_${Math.round(matchedPacket.tCapture)}`, actionBracket)
+    return actionBracket
+  } catch (err) {
+    evidence.recordError('extractActionBracket', err)
+    throw err
+  }
+}
+
+export async function readDocumentActivitySnapshot(page, evidence) {
+  assertEvidenceSink(evidence, true)
+  try {
+    const snap = await evaluateDocumentActivity(page)
+    evidence.stage('documentActivitySnapshot_raw', snap)
+    evidence.assertDocumentIdentity({ url: snap.url, documentId: snap.documentId, timeOrigin: snap.timeOrigin })
+    evidence.stage('documentActivitySnapshot', snap)
+    return snap
+  } catch (err) {
+    evidence.recordError('readDocumentActivitySnapshot', err)
+    throw err
+  }
+}

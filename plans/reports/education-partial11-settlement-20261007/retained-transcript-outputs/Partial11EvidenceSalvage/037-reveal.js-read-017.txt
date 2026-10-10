@@ -1,0 +1,402 @@
+			if( autoSlidePlayer ) {
+				autoSlidePlayer.setPlaying( false );
+			}
+		}
+
+	}
+
+	function resumeAutoSlide() {
+
+		if( autoSlide && autoSlidePaused ) {
+			autoSlidePaused = false;
+			dispatchEvent({ type: 'autoslideresumed' });
+			cueAutoSlide();
+		}
+
+	}
+
+	function navigateLeft({skipFragments=false}={}) {
+
+		navigationHistory.hasNavigatedHorizontally = true;
+
+		// Scroll view navigation is handled independently
+		if( scrollView.isActive() ) return scrollView.prev();
+
+		// Reverse for RTL
+		if( config.rtl ) {
+			if( ( overview.isActive() || skipFragments || fragments.next() === false ) && availableRoutes().left ) {
+				slide( indexh + 1, config.navigationMode === 'grid' ? indexv : undefined );
+			}
+		}
+		// Normal navigation
+		else if( ( overview.isActive() || skipFragments || fragments.prev() === false ) && availableRoutes().left ) {
+			slide( indexh - 1, config.navigationMode === 'grid' ? indexv : undefined );
+		}
+
+	}
+
+	function navigateRight({skipFragments=false}={}) {
+
+		navigationHistory.hasNavigatedHorizontally = true;
+
+		// Scroll view navigation is handled independently
+		if( scrollView.isActive() ) return scrollView.next();
+
+		// Reverse for RTL
+		if( config.rtl ) {
+			if( ( overview.isActive() || skipFragments || fragments.prev() === false ) && availableRoutes().right ) {
+				slide( indexh - 1, config.navigationMode === 'grid' ? indexv : undefined );
+			}
+		}
+		// Normal navigation
+		else if( ( overview.isActive() || skipFragments || fragments.next() === false ) && availableRoutes().right ) {
+			slide( indexh + 1, config.navigationMode === 'grid' ? indexv : undefined );
+		}
+
+	}
+
+	function navigateUp({skipFragments=false}={}) {
+
+		// Scroll view navigation is handled independently
+		if( scrollView.isActive() ) return scrollView.prev();
+
+		// Prioritize hiding fragments
+		if( ( overview.isActive() || skipFragments || fragments.prev() === false ) && availableRoutes().up ) {
+			slide( indexh, indexv - 1 );
+		}
+
+	}
+
+	function navigateDown({skipFragments=false}={}) {
+
+		navigationHistory.hasNavigatedVertically = true;
+
+		// Scroll view navigation is handled independently
+		if( scrollView.isActive() ) return scrollView.next();
+
+		// Prioritize revealing fragments
+		if( ( overview.isActive() || skipFragments || fragments.next() === false ) && availableRoutes().down ) {
+			slide( indexh, indexv + 1 );
+		}
+
+	}
+
+	/**
+	 * Navigates backwards, prioritized in the following order:
+	 * 1) Previous fragment
+	 * 2) Previous vertical slide
+	 * 3) Previous horizontal slide
+	 */
+	function navigatePrev({skipFragments=false}={}) {
+
+		// Scroll view navigation is handled independently
+		if( scrollView.isActive() ) return scrollView.prev();
+
+		// Prioritize revealing fragments
+		if( skipFragments || fragments.prev() === false ) {
+			if( availableRoutes().up ) {
+				navigateUp({skipFragments});
+			}
+			else {
+				// Fetch the previous horizontal slide, if there is one
+				let previousSlide;
+
+				if( config.rtl ) {
+					previousSlide = Util.queryAll( dom.wrapper, HORIZONTAL_SLIDES_SELECTOR + '.future' ).pop();
+				}
+				else {
+					previousSlide = Util.queryAll( dom.wrapper, HORIZONTAL_SLIDES_SELECTOR + '.past' ).pop();
+				}
+
+				// When going backwards and arriving on a stack we start
+				// at the bottom of the stack
+				if( previousSlide && previousSlide.classList.contains( 'stack' ) ) {
+					let v = ( previousSlide.querySelectorAll( 'section' ).length - 1 ) || undefined;
+					let h = indexh - 1;
+					slide( h, v );
+				}
+				else if( config.rtl ) {
+					navigateRight({skipFragments});
+				}
+				else {
+					navigateLeft({skipFragments});
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * The reverse of #navigatePrev().
+	 */
+	function navigateNext({skipFragments=false}={}) {
+
+		navigationHistory.hasNavigatedHorizontally = true;
+		navigationHistory.hasNavigatedVertically = true;
+
+		// Scroll view navigation is handled independently
+		if( scrollView.isActive() ) return scrollView.next();
+
+		// Prioritize revealing fragments
+		if( skipFragments || fragments.next() === false ) {
+
+			let routes = availableRoutes();
+
+			// When looping is enabled `routes.down` is always available
+			// so we need a separate check for when we've reached the
+			// end of a stack and should move horizontally
+			if( routes.down && routes.right && config.loop && isLastVerticalSlide() ) {
+				routes.down = false;
+			}
+
+			if( routes.down ) {
+				navigateDown({skipFragments});
+			}
+			else if( config.rtl ) {
+				navigateLeft({skipFragments});
+			}
+			else {
+				navigateRight({skipFragments});
+			}
+		}
+
+	}
+
+
+	// --------------------------------------------------------------------//
+	// ----------------------------- EVENTS -------------------------------//
+	// --------------------------------------------------------------------//
+
+	/**
+	 * Called by all event handlers that are based on user
+	 * input.
+	 *
+	 * @param {object} [event]
+	 */
+	function onUserInput( event ) {
+
+		if( config.autoSlideStoppable ) {
+			pauseAutoSlide();
+		}
+
+	}
+
+	/**
+	* Listener for post message events posted to this window.
+	*/
+	function onPostMessage( event ) {
+
+		let data = event.data;
+
+		// Make sure we're dealing with JSON
+		if( typeof data === 'string' && data.charAt( 0 ) === '{' && data.charAt( data.length - 1 ) === '}' ) {
+			data = JSON.parse( data );
+
+			// Check if the requested method can be found
+			if( data.method && typeof Reveal[data.method] === 'function' ) {
+
+				if( POST_MESSAGE_METHOD_BLACKLIST.test( data.method ) === false ) {
+
+					const result = Reveal[data.method].apply( Reveal, data.args );
+
+					// Dispatch a postMessage event with the returned value from
+					// our method invocation for getter functions
+					dispatchPostMessage( 'callback', { method: data.method, result: result } );
+
+				}
+				else {
+					console.warn( 'reveal.js: "'+ data.method +'" is is blacklisted from the postMessage API' );
+				}
+
+			}
+		}
+
+	}
+
+	/**
+	 * Event listener for transition end on the current slide.
+	 *
+	 * @param {object} [event]
+	 */
+	function onTransitionEnd( event ) {
+
+		if( transition === 'running' && /section/gi.test( event.target.nodeName ) ) {
+			transition = 'idle';
+			dispatchEvent({
+				type: 'slidetransitionend',
+				data: { indexh, indexv, previousSlide, currentSlide }
+			});
+		}
+
+	}
+
+	/**
+	 * A global listener for all click events inside of the
+	 * .slides container.
+	 *
+	 * @param {object} [event]
+	 */
+	function onSlidesClicked( event ) {
+
+		const anchor = Util.closest( event.target, 'a[href^="#"]' );
+
+		// If a hash link is clicked, we find the target slide
+		// and navigate to it. We previously relied on 'hashchange'
+		// for links like these but that prevented media with
+		// audio tracks from playing in mobile browsers since it
+		// wasn't considered a direct interaction with the document.
+		if( anchor ) {
+			const hash = anchor.getAttribute( 'href' );
+			const indices = location.getIndicesFromHash( hash );
+
+			if( indices ) {
+				Reveal.slide( indices.h, indices.v, indices.f );
+				event.preventDefault();
+			}
+		}
+
+	}
+
+	/**
+	 * Handler for the window level 'resize' event.
+	 *
+	 * @param {object} [event]
+	 */
+	function onWindowResize( event ) {
+
+		layout();
+	}
+
+	/**
+	 * Handle for the window level 'visibilitychange' event.
+	 *
+	 * @param {object} [event]
+	 */
+	function onPageVisibilityChange( event ) {
+
+		// If, after clicking a link or similar and we're coming back,
+		// focus the document.body to ensure we can use keyboard shortcuts
+		if( document.hidden === false && document.activeElement !== document.body ) {
+			// Not all elements support .blur() - SVGs among them.
+			if( typeof document.activeElement.blur === 'function' ) {
+				document.activeElement.blur();
+			}
+			document.body.focus();
+		}
+
+	}
+
+	/**
+	 * Handler for the document level 'fullscreenchange' event.
+	 *
+	 * @param {object} [event]
+	 */
+	function onFullscreenChange( event ) {
+
+		let element = document.fullscreenElement || document.webkitFullscreenElement;
+		if( element === dom.wrapper ) {
+			event.stopImmediatePropagation();
+
+			// Timeout to avoid layout shift in Safari
+			setTimeout( () => {
+				Reveal.layout();
+				Reveal.focus.focus(); // focus.focus :'(
+			}, 1 );
+		}
+
+	}
+
+	/**
+	 * Handles click on the auto-sliding controls element.
+	 *
+	 * @param {object} [event]
+	 */
+	function onAutoSlidePlayerClick( event ) {
+
+		// Replay
+		if( isLastSlide() && config.loop === false ) {
+			slide( 0, 0 );
+			resumeAutoSlide();
+		}
+		// Resume
+		else if( autoSlidePaused ) {
+			resumeAutoSlide();
+		}
+		// Pause
+		else {
+			pauseAutoSlide();
+		}
+
+	}
+
+
+	// --------------------------------------------------------------------//
+	// ------------------------------- API --------------------------------//
+	// --------------------------------------------------------------------//
+
+	// The public reveal.js API
+	const API = {
+		VERSION,
+
+		initialize,
+		configure,
+		destroy,
+
+		sync,
+		syncSlide,
+		syncFragments: fragments.sync.bind( fragments ),
+
+		// Navigation methods
+		slide,
+		left: navigateLeft,
+		right: navigateRight,
+		up: navigateUp,
+		down: navigateDown,
+		prev: navigatePrev,
+		next: navigateNext,
+
+		// Navigation aliases
+		navigateLeft, navigateRight, navigateUp, navigateDown, navigatePrev, navigateNext,
+
+		// Fragment methods
+		navigateFragment: fragments.goto.bind( fragments ),
+		prevFragment: fragments.prev.bind( fragments ),
+		nextFragment: fragments.next.bind( fragments ),
+
+		// Event binding
+		on,
+		off,
+
+		// Legacy event binding methods left in for backwards compatibility
+		addEventListener: on,
+		removeEventListener: off,
+
+		// Forces an update in slide layout
+		layout,
+
+		// Randomizes the order of slides
+		shuffle,
+
+		// Returns an object with the available routes as booleans (left/right/top/bottom)
+		availableRoutes,
+
+		// Returns an object with the available fragments as booleans (prev/next)
+		availableFragments: fragments.availableRoutes.bind( fragments ),
+
+		// Toggles a help overlay with keyboard shortcuts
+		toggleHelp: overlay.toggleHelp.bind( overlay ),
+
+		// Toggles the overview mode on/off
+		toggleOverview: overview.toggle.bind( overview ),
+
+		// Toggles the scroll view on/off
+		toggleScrollView: scrollView.toggle.bind( scrollView ),
+
+		// Toggles the "black screen" mode on/off
+		togglePause,
+
+		// Toggles the auto slide mode on/off
+		toggleAutoSlide,
+
+
+[Showing lines 2401-2800 of 2973. Use :2801 to continue]

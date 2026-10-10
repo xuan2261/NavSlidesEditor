@@ -59,6 +59,7 @@ test.describe('responsive Ribbon and coarse-pointer controls', () => {
     for (const viewport of [
       { width: 1024, height: 768 },
       { width: 768, height: 1024 },
+      { width: 320, height: 568 },
     ]) {
       await page.setViewportSize(viewport)
       await expectNoPageOverflow(page)
@@ -70,30 +71,29 @@ test.describe('responsive Ribbon and coarse-pointer controls', () => {
       await expectActiveTabVisible(page)
 
       await home.click()
-      const primaryBounds = await page.locator('[role="tabpanel"][data-state="active"] [data-ribbon-content-row]').evaluate((row) => {
-        const action = row.querySelector('[data-ribbon-big-button]')
-        if (!action) return null
-        const rowRect = row.getBoundingClientRect()
-        const actionRect = action.getBoundingClientRect()
-        return {
-          left: actionRect.left >= rowRect.left - 1,
-          right: actionRect.right <= rowRect.right + 1,
-        }
-      })
+      const primaryBounds = await page
+        .locator('[role="tabpanel"][data-state="active"] [data-ribbon-content-row]')
+        .evaluate((row) => {
+          const action = row.querySelector('[data-ribbon-big-button]')
+          if (!action) return null
+          const rowRect = row.getBoundingClientRect()
+          const actionRect = action.getBoundingClientRect()
+          return {
+            left: actionRect.left >= rowRect.left - 1,
+            right: actionRect.right <= rowRect.right + 1,
+          }
+        })
       expect(primaryBounds).toEqual({ left: true, right: true })
       if (viewport.width === 768) {
         const tabList = page.getByRole('tablist', { name: 'Ribbon tabs' })
         const beforeWheel = await tabList.evaluate((node) => node.scrollLeft)
         await tabList.hover()
         await page.mouse.wheel(160, 0)
-        await expect.poll(() => tabList.evaluate((node) => node.scrollLeft)).toBeGreaterThan(beforeWheel)
+        await expect
+          .poll(() => tabList.evaluate((node) => node.scrollLeft))
+          .toBeGreaterThan(beforeWheel)
       }
     }
-
-    await page.setViewportSize({ width: 320, height: 568 })
-    await expect(page.getByTestId('editor-small-screen-guard')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Back to presentations' })).toBeVisible()
-    await expectNoPageOverflow(page)
   })
 
   test('[cap:control.ribbon.touch-targets] provides 44px targets and native touch tab scrolling', async ({
@@ -142,7 +142,9 @@ test.describe('responsive Ribbon and coarse-pointer controls', () => {
     const tabBox = await tabList.boundingBox()
     expect(tabBox).toBeTruthy()
     const driver = await createCdpMultiTouchDriver(page)
-    await driver.start([{ x: tabBox.x + tabBox.width - 52, y: tabBox.y + tabBox.height / 2, id: 0 }])
+    await driver.start([
+      { x: tabBox.x + tabBox.width - 52, y: tabBox.y + tabBox.height / 2, id: 0 },
+    ])
     await driver.move([{ x: tabBox.x + 52, y: tabBox.y + tabBox.height / 2, id: 0 }])
     await driver.end()
     await expect.poll(() => tabList.evaluate((node) => node.scrollLeft)).toBeGreaterThan(before)

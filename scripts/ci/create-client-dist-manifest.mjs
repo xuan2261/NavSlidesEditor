@@ -2,7 +2,6 @@ import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
-import { pathToFileURL } from 'node:url'
 
 const SHA256 = /^[a-f0-9]{64}$/
 const SUBJECT = /^[a-f0-9]{40}$/
@@ -61,7 +60,8 @@ export function collectFiles(rootDir) {
     for (const entry of entries) {
       const absolute = path.join(directory, entry.name)
       const stat = assertOrdinaryPath(absolute, 'Artifact entry')
-      if (entry.name !== entry.name.normalize('NFC')) throw new Error('Artifact entry name must be NFC-normalized')
+      if (entry.name !== entry.name.normalize('NFC'))
+        throw new Error('Artifact entry name must be NFC-normalized')
       const relative = normalizedManifestPath(prefix ? `${prefix}/${entry.name}` : entry.name)
       const folded = relative.toLowerCase()
       if (foldedPaths.has(folded)) throw new Error(`Artifact path collision: ${relative}`)
@@ -99,7 +99,12 @@ function lockEntry(spec, baseDir) {
   assertPathChain(baseDir, absolute, 'Lock file')
   const stat = fs.lstatSync(absolute)
   if (!stat.isFile()) throw new Error(`Lock path is not a file: ${absolute}`)
-  return { name, path: normalizedManifestPath(relative), bytes: stat.size, sha256: sha256File(absolute) }
+  return {
+    name,
+    path: normalizedManifestPath(relative),
+    bytes: stat.size,
+    sha256: sha256File(absolute),
+  }
 }
 
 export function identityFor(manifest) {
@@ -120,10 +125,14 @@ export function createManifest(options) {
   if (typeof options.dirty !== 'boolean') throw new Error('Dirty marker must be true or false')
   if (!options.buildCommand) throw new Error('Build command is required')
   if (!options.viteVersion) throw new Error('Vite version is required')
+  if (!SHA256.test(options.inputHash || ''))
+    throw new Error('Compilation source input hash is required')
   const defaultLocks = [
     'workspace=package-lock.json',
     'electron-server=electron/server-package-lock.json',
-  ].filter((spec) => fs.existsSync(path.resolve(options.baseDir, spec.slice(spec.indexOf('=') + 1))))
+  ].filter((spec) =>
+    fs.existsSync(path.resolve(options.baseDir, spec.slice(spec.indexOf('=') + 1)))
+  )
   const lockSpecs = options.locks?.length ? options.locks : defaultLocks
   if (!lockSpecs.length) throw new Error('At least one lock file is required')
   const locks = lockSpecs
@@ -138,10 +147,11 @@ export function createManifest(options) {
   const files = collectFiles(options.root)
   if (!files.length) throw new Error('Client artifact is empty')
   const manifest = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     subject: { sha, dirty: options.dirty },
     build: {
       command: options.buildCommand,
+      inputHash: options.inputHash,
       node: process.versions.node,
       npm: npmVersion(),
       vite: options.viteVersion,
@@ -151,49 +161,7 @@ export function createManifest(options) {
     artifact: { files: files.length, bytes: files.reduce((sum, file) => sum + file.bytes, 0) },
   }
   manifest.artifact.identity = identityFor(manifest)
-  if (!SHA256.test(manifest.artifact.identity)) throw new Error('Artifact identity generation failed')
+  if (!SHA256.test(manifest.artifact.identity))
+    throw new Error('Artifact identity generation failed')
   return manifest
-}
-
-function parseArgs(args) {
-  const values = { locks: [], baseDir: process.cwd() }
-  for (let index = 0; index < args.length; index += 1) {
-    const key = args[index]
-    const value = args[++index]
-    if (!value) throw new Error(`Missing value for ${key}`)
-    if (key === '--lock') values.locks.push(value)
-    else if (key.startsWith('--')) values[key.slice(2).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = value
-    else throw new Error(`Unknown argument: ${key}`)
-  }
-  if (values.dirty === undefined && process.env.BUILD_DIRTY !== undefined)
-    values.dirty = process.env.BUILD_DIRTY
-  if (values.dirty === undefined) {
-    values.dirty =
-      execFileSync('git', ['status', '--porcelain'], {
-        cwd: values.baseDir,
-        encoding: 'utf8',
-      }).trim().length > 0
-  } else values.dirty = values.dirty === 'true' ? true : values.dirty === 'false' ? false : values.dirty
-  values.subject ||=
-    process.env.BUILD_SUBJECT_SHA ||
-    execFileSync('git', ['rev-parse', 'HEAD'], { cwd: values.baseDir, encoding: 'utf8' }).trim()
-  values.buildCommand ||= 'npm run build'
-  if (!values.viteVersion) {
-    const lock = JSON.parse(fs.readFileSync(path.join(values.baseDir, 'package-lock.json'), 'utf8'))
-    values.viteVersion = lock.packages?.['node_modules/vite']?.version
-  }
-  return values
-}
-
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  try {
-    const options = parseArgs(process.argv.slice(2))
-    const manifest = createManifest(options)
-    fs.mkdirSync(path.dirname(path.resolve(options.out)), { recursive: true })
-    fs.writeFileSync(path.resolve(options.out), `${JSON.stringify(manifest, null, 2)}\n`)
-    console.log(JSON.stringify({ artifactIdentity: manifest.artifact.identity, files: manifest.files.length }))
-  } catch (error) {
-    console.error(error.message)
-    process.exitCode = 1
-  }
 }

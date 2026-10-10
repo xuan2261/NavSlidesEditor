@@ -1,0 +1,212 @@
+{
+  "component": "Native11 continuation — immutable journeys and declarations",
+  "purpose": "Bounded evidence component of the existing Native11 salvage audit; not a third opinion, substantive producer, source gate, or whole-audit verdict.",
+  "exactSubject": {
+    "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+    "recordedFullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+    "identitySource": "Main's existing continuation counsel, compact helper/caller manifest, and scope-preservation record; no remeasurement."
+  },
+  "flags": {
+    "admission": false,
+    "sourceReady": false,
+    "qualification": false,
+    "passClaimed": false,
+    "runtimeExecuted": false,
+    "declaredCells": 54,
+    "staticallyAdmittedCells": 0,
+    "executedAcceptanceCells": 0
+  },
+  "primaryCoverageComplete": true,
+  "readEvidence": {
+    "provenance": "Personal, direct functions.read source outputs in this component's transcript. Source roots below are relative to exactSubject.frozenRoot. Ranges are actual requested selectors, not executed line-count measurements. LastContentLine identifies the final source statement/closing delimiter located by source grep and confirmed by ending reads; trailing line terminators are not asserted to be physical-count measurements. All full-body reads below reached EOF; the defaults read's cropped ending was expanded by raw reads.",
+    "primary": [
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js",
+        "requestedRanges": [
+          "1-240:raw",
+          "80-110:raw",
+          ":-1"
+        ],
+        "coveredContent": "1-95",
+        "lastContentLine": 95,
+        "EOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-cases.js",
+        "requestedRanges": [
+          "1-220",
+          "180-220:raw",
+          ":-1"
+        ],
+        "coveredContent": "1-199",
+        "lastContentLine": 199,
+        "EOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-fixtures.js",
+        "requestedRanges": [
+          "1-240",
+          "130-160:raw",
+          ":-1"
+        ],
+        "coveredContent": "1-144",
+        "lastContentLine": 144,
+        "EOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-leave-return.js",
+        "requestedRanges": [
+          "1-240",
+          "130-160:raw",
+          ":-1"
+        ],
+        "coveredContent": "1-144",
+        "lastContentLine": 144,
+        "EOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-reset.js",
+        "requestedRanges": [
+          "1-240",
+          "100-130:raw",
+          ":-1"
+        ],
+        "coveredContent": "1-110",
+        "lastContentLine": 110,
+        "EOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-isolation.js",
+        "requestedRanges": [
+          "1-240",
+          "110-140:raw",
+          ":-1"
+        ],
+        "coveredContent": "1-120",
+        "lastContentLine": 120,
+        "EOF": true
+      }
+    ],
+    "primaryOwners": [
+      {
+        "file": "shared/src/education/quiz-session.js",
+        "requestedRanges": [
+          "1-240",
+          "140-160:raw",
+          ":-1"
+        ],
+        "coveredContent": "1-149",
+        "lastContentLine": 149,
+        "EOF": true
+      },
+      {
+        "file": "shared/src/education/games/relay-race.js",
+        "requestedRanges": [
+          "1-240",
+          "90-110:raw",
+          ":-1"
+        ],
+        "coveredContent": "1-97",
+        "lastContentLine": 97,
+        "EOF": true
+      },
+      {
+        "file": "shared/src/education/game-defaults.js",
+        "requestedRanges": [
+          "1-240",
+          "231-310",
+          "1-230:raw",
+          "231-310:raw",
+          ":-1"
+        ],
+        "coveredContent": "1-283, including all factory bodies and final export",
+        "lastContentLine": 283,
+        "EOF": true,
+        "omissionsExpanded": true
+      },
+      {
+        "file": "shared/src/education/game-registry.js",
+        "requestedRanges": [
+          "1-240",
+          "130-160:raw",
+          ":-1"
+        ],
+        "coveredContent": "1-140",
+        "lastContentLine": 140,
+        "EOF": true
+      },
+      {
+        "file": "shared/src/education/presets/simulations.js",
+        "requestedRanges": [
+          "1-240",
+          "85-110:raw",
+          ":-1"
+        ],
+        "coveredContent": "1-94",
+        "lastContentLine": 94,
+        "EOF": true
+      }
+    ],
+    "fixtureAndGeneratorAPIs": [
+      {
+        "file": "tests/e2e/education/release-game-fixtures.js",
+        "requestedRanges": [
+          "1-240"
+        ],
+        "fullBodyAndEOF": true,
+        "symbols": [
+          "gameFixture",
+          "deckWith",
+          "CANONICAL_GAME_TYPES",
+          "QUESTION_KINDS",
+          "SIMULATION_PRESETS"
+        ]
+      },
+      {
+        "file": "tests/e2e/fixtures/test-fixtures.js",
+        "requestedRanges": [
+          "1-240"
+        ],
+        "fullBodyAndEOF": true,
+        "symbols": [
+          "testPresentation fixture",
+          "apiCreatePresentation",
+          "apiDeletePresentation",
+          "apiGetPresentation",
+          "apiUpdatePresentation",
+          "apiCreateShareLink",
+          "assertLoopback",
+          "withApiRetry"
+        ]
+      },
+      {
+        "file": "tests/e2e/pages/editor-page.js",
+        "requestedRanges": [
+          "1-220"
+        ],
+        "fullBodyAndEOF": true,
+        "loadBearingBodies": [
+          "EditorPage constructor",
+          "gotoPresentation",
+          "waitForReady"
+        ]
+      },
+      {
+        "file": "shared/src/education/question-factory.js",
+        "requestedRanges": [
+          "1-220"
+        ],
+        "fullBodyAndEOF": true,
+        "symbols": [
+          "createCanonicalQuestion and all question-kind branches"
+        ]
+      },
+      {
+        "file": "shared/src/education/question-shape.js",
+        "requestedRanges": [
+          "1-200"
+        ],
+        "fullBodyAndEOF": true,
+        "symbols": [
+
+[Showing lines 1-210 of 1107. Use :211 to continue]

@@ -1,0 +1,93 @@
+// Helpers for genuine browser error propagation and concurrent document identity preservation.
+
+export function assertAndRecordObservationErrors(evidence, phase, raw, docDomain, packet = null) {
+  let earliestError = null
+  const record = (subPhase, err) => {
+    if (!err || typeof evidence?.recordError !== 'function') return null
+    const norm = evidence.recordError(`${phase}:${subPhase}`, err)
+    if (!earliestError) earliestError = norm
+    return norm
+  }
+
+  let docIdentityError = null
+  if (docDomain && typeof evidence?.assertDocumentIdentity === 'function') {
+    try {
+      evidence.assertDocumentIdentity({
+        url: docDomain.url,
+        documentId: docDomain.documentId,
+        timeOrigin: docDomain.timeOrigin,
+      })
+    } catch (idErr) {
+      docIdentityError = idErr
+    }
+  }
+
+  const candidates = []
+  const seenErrors = new Set()
+  const addCandidate = (subPhase, err, defaultRank, explicitOrder = null) => {
+    if (!err) return
+    if (seenErrors.has(err)) return
+    seenErrors.add(err)
+    const order = explicitOrder !== null ? explicitOrder : (typeof err.obsOrder === 'number' ? err.obsOrder : defaultRank)
+    candidates.push({ subPhase, err, order, defaultRank })
+  }
+
+  const isSetupRecorderError = Boolean(
+    raw?.recorderError && (raw.recorderError.phase === 'recorder:setup' || raw.recorderError.name === 'RecorderSetupError')
+  )
+
+  if (raw?.recorderError) {
+    addCandidate('recorder', raw.recorderError, isSetupRecorderError ? 1 : 20)
+  }
+
+  if (raw?.recorderReady === false) {
+    const readyErr = new Error('Passive lifecycle recorder not ready from window')
+    const readyOrder = typeof raw?.recorderError?.obsOrder === 'number'
+      ? raw.recorderError.obsOrder + 0.01
+      : (isSetupRecorderError ? 2 : 21)
+    addCandidate('recorderReady', readyErr, isSetupRecorderError ? 2 : 21, readyOrder)
+  }
+
+  let packetsToProcess = []
+  if (packet) {
+    packetsToProcess = Array.isArray(packet) ? packet : [packet]
+  } else if (raw?.packet) {
+    packetsToProcess = [raw.packet]
+  } else if (Array.isArray(raw?.candidates)) {
+    const minSeq = typeof raw?.cursor?.sequence === 'number' ? raw.cursor.sequence : -1
+    packetsToProcess = raw.candidates
+      .filter((p) => p && (minSeq === -1 || p.sequence > minSeq))
+      .sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
+  }
+
+  for (const pkt of packetsToProcess) {
+    if (pkt?.stateBeforeError) addCandidate('packet:stateBefore', pkt.stateBeforeError, 10)
+    if (pkt?.uiBeforeError) addCandidate('packet:uiBefore', pkt.uiBeforeError, 11)
+    if (pkt?.stateAfterError) addCandidate('packet:stateAfter', pkt.stateAfterError, 30)
+    if (pkt?.uiAfterError) addCandidate('packet:uiAfter', pkt.uiAfterError, 31)
+  }
+
+  if (raw?.stateBeforeError) addCandidate('stateBefore', raw.stateBeforeError, 10)
+  if (raw?.uiBeforeError) addCandidate('uiBefore', raw.uiBeforeError, 11)
+  if (raw?.stateAfterError) addCandidate('stateAfter', raw.stateAfterError, 30)
+  if (raw?.uiAfterError) addCandidate('uiAfter', raw.uiAfterError, 31)
+  if (raw?.stateError) addCandidate('state', raw.stateError, 40)
+  if (raw?.uiError) addCandidate('ui', raw.uiError, 41)
+
+  if (docIdentityError) {
+    addCandidate('documentIdentity', docIdentityError, 999999, Infinity)
+  }
+
+  candidates.sort((a, b) => {
+    if (a.order !== b.order) return a.order - b.order
+    return a.defaultRank - b.defaultRank
+  })
+
+  for (const c of candidates) {
+    record(c.subPhase, c.err)
+  }
+
+  if (earliestError) {
+    throw earliestError
+  }
+}

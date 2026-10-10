@@ -9,8 +9,9 @@ let root
 let ownership
 
 function resetCjsModules() {
+  const serverDir = `${path.resolve(path.dirname(require.resolve('./storage')), '..')}${path.sep}`
   for (const key of Object.keys(require.cache)) {
-    if (key.includes(`${path.sep}NavSlidesEditor${path.sep}server${path.sep}`)) {
+    if (key.startsWith(serverDir)) {
       delete require.cache[key]
     }
   }

@@ -1,0 +1,202 @@
+    {
+      "ids": [
+        "Native08-3",
+        "N07-07 browser-before-document portion"
+      ],
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "observation.js:45-51,63-69,82-88,105-115 stages raw observations before normalization.",
+        "observation-errors.js:12-23 captures the later identity error without recording it; :71-88 ingests getter failures before that identity occurrence.",
+        "evidence.js:85-90 validates without implicit ledger insertion."
+      ],
+      "remainingBoundary": "All-sibling completeness and repeated browser occurrence identity are separately defective; this narrower document-last repair is not full chronology closure."
+    },
+    {
+      "ids": [
+        "Native08-4",
+        "09-S3",
+        "N07-07 complete sibling portion"
+      ],
+      "disposition": "PARTIAL_REPAIR_REQUIRED_COMPONENT_EVIDENCE",
+      "evidence": [
+        "observation-errors.js:56-67 processes every sequence-eligible candidate when no packet argument is supplied.",
+        "observation.js:107,113-118 passes the exact matched packet when one exists.",
+        "observation-errors.js:52-55 then ignores raw.candidates."
+      ],
+      "mechanism": "No-match fallback now covers all eligible packets, but a matched packet plus a later outer/current-node rejection still leaves other genuine candidate siblings raw-only. Exact-match success selection is not itself widened or rejected by this observation."
+    },
+    {
+      "id": "09-C1",
+      "disposition": "PARTIAL_REPAIR_REQUIRED_COMPONENT_EVIDENCE",
+      "evidence": [
+        "Actual getter/recorder observation orders are now generated at the browser sites cited under S10-C1.",
+        "observation-errors.js:81-88 interleaves them for one coherent document-local batch and places Node validation last."
+      ],
+      "remainingBoundary": "Forwarded occurrence duplication, invented readiness positioning, and matched-rejection sibling omission prevent complete chronology closure."
+    },
+    {
+      "id": "09-C2",
+      "disposition": "SOURCE_CORRECTED_LOCAL_SUPPORTING_CROSSING",
+      "evidence": [
+        "error-exposure.js:69-81 ingests genuine caller errorLedger entries before :84-103 secondary-only entries and :106-122 allErrors entries.",
+        "error-ledger.js:100-111 assigns occurrence order at actual ingestion; no numeric caller-order sort exists."
+      ],
+      "mechanism": "For the authority's caller-ledger a,b example, genuine entries are ingested in array order before later secondary-only occurrences. This credit concerns Node genuine-reference chronology, not deduplication of independently deserialized browser envelopes."
+    },
+    {
+      "ids": [
+        "09-S1",
+        "09-S2"
+      ],
+      "disposition": "SOURCE_CORRECTED_LOCAL_SUPPORTING_CROSSING",
+      "evidence": [
+        "observation-browser.js:161-164 closes evaluateActionCandidates before the next export.",
+        "native-history.js:107-110 declares the serializable copy before deleting its root and publishes both the packet and native-action diagnostic."
+      ],
+      "qualification": "Static body inspection only; no parser/import/publication execution."
+    },
+    {
+      "ids": [
+        "N07-09",
+        "N07-10",
+        "N07-11",
+        "N07-12"
+      ],
+      "dispositionById": {
+        "N07-09": "SOURCE_CORRECTED_LOCAL for poll raw-document staging.",
+        "N07-10": "PARTIAL_REPAIR_REQUIRED under N10B-01.",
+        "N07-11": "SOURCE_CORRECTED_LOCAL for exact null command.",
+        "N07-12": "SOURCE_CORRECTED_LOCAL for connected-current-root rejection."
+      },
+      "evidence": [
+        "navigation.js:145-166",
+        "observation-domain.js:60-70 requires sequence, rootInstanceId, elementId/slideId/gameType, documentId/timeOrigin, hash-stripped URL, event type and exact command; only undefined cursor command is normalized to null.",
+        "observation-domain.js:41-58 rejects disconnected current nodes before identity/tuple/document/URL acceptance.",
+        "observation-browser.js:135-144 supplies the actual current-node discriminators.",
+        "observation.js:118 consumes current-node agreement before constructing/returning a bracket."
+      ]
+    },
+    {
+      "ids": [
+        "N07-01",
+        "N07-04",
+        "N07-05",
+        "N07-06",
+        "Native08-2"
+      ],
+      "disposition": "SOURCE_PRESERVED_LOCAL_PRODUCER_AND_READER_EVIDENCE",
+      "evidence": [
+        "native-observation.js:24-34,49-78,94-121 retains private independent event content and checks identity, count, sequence/type, tMin/tMax/time, visibility, domain and complete detail before reader projection.",
+        "native-history.js:49-66 and observation-browser.js:89-98 exclude diagnostics from root/document lifecycle projections.",
+        "native-history.js:7,39,55,79,115 retains boundary-drained mutations with the later delivery upper bound and filters on tMin rather than truncating tMax.",
+        "native-snapshot.js:86-100 and history-domain.js:9-22 use the compatible tMin pair rule.",
+        "history-domain.js:24-53 checks mandatory eventSeq and complete time/detail history prefix content."
+      ],
+      "boundary": "Complete witness baseline adoption, first-running promotion, finite activity bounds and expiry crossover belong to their assigned integration/control/witness owners. No whole-witness conclusion is made here."
+    },
+    {
+      "ids": [
+        "N07-08",
+        "E06-05"
+      ],
+      "disposition": "SOURCE_PRESERVED_LOCAL_RECURSIVE_PROVENANCE",
+      "evidence": [
+        "native-snapshot.js:23-54 and native-observation.js:36-46 retain real recursive causes, origin, phase, stack and observed domain.",
+        "error-ledger.js:50-69 recursively materializes causes with rootInstanceId/timeOrigin; :11-48 recursively serializes them.",
+        "evidence.js:167-178 retains primary rootInstanceId/timeOrigin in measured records."
+      ],
+      "boundary": "First browser recorder occurrence preservation is credited under NF-A2; identity after repeated evaluate serialization remains a separate defect."
+    },
+    {
+      "ids": [
+        "E06-01-A",
+        "E06-01-B",
+        "E06-01-C",
+        "Evidence08-1",
+        "Evidence08-2",
+        "09-S4",
+        "09-S5"
+      ],
+      "disposition": "SOURCE_PRESERVED_LOCAL_NODE_REFERENCE_AND_EXPOSURE_EVIDENCE",
+      "evidence": [
+        "error-ledger.js:93-102 preserves actual Node Error reference and assigns ledger occurrence order by ingestion.",
+        "error-ledger.js:139-146 returns a sole Error without multi-error exposure.",
+        "error-exposure.js:23-32,69-122 accepts actual Error references, not serialized-only diagnostics.",
+        "error-exposure.js:34-53 updates one stable serialized identity.",
+        "error-exposure.js:133-169 preserves caller arrays and appends using reference identity, without numeric-order deduplication.",
+        "error-ledger.js:11-17 and error-exposure.js:34-53 preserve authoritative wrapper phase."
+      ],
+      "boundary": "These credits apply to genuine shared Node references. They do not establish identity of the same browser error forwarded in separate evaluate responses."
+    }
+  ],
+  "consumerDefects": [
+    {
+      "id": "OBS-NAV-C1",
+      "retainedObligations": [
+        "S10-C1",
+        "09-C1",
+        "N07-07"
+      ],
+      "priority": 2,
+      "confidence": 0.99,
+      "title": "Preserve browser occurrence identity across repeated evaluate results",
+      "primaryAnchor": {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+        "lines": "25-32"
+      },
+      "evidence": [
+        "observation-browser.js:59-64 and149-159 repeatedly return the existing window.__nsLifecycleRecorderError.",
+        "Playwright coreBundle.js:12028-12030 creates a new deserialization reference map per result; :12079-12083 creates a new object for an object value. JSHandle/Frame evaluate returns parseResult for each response at :57800-57801 and60411-60412.",
+        "error-ledger.js:84-102 only deduplicates matching object references and WeakMap keys; it has no browser occurrence-domain/order key, and materializeEnvelope at :50-69 does not retain obsOrder.",
+        "evidence.js:101-105 directly forwards to that ledger. collectLivePageDiagnostics at live-evidence.js:71-74 performs a later readPassiveEvents using the same sink."
+      ],
+      "mechanism": "After an initial cursor/correlated/extraction read forwards a retained recorder failure, later live/passive collection can forward that same browser occurrence again. Separate evaluate responses reconstruct distinct envelope objects, so the ledger creates another normalized Error and another occurrence/order despite identical document-local obsOrder. Same-call Set deduplication and Node Error reference deduplication cannot repair this boundary. This is a static consumer trace, not a measured run or invented output.",
+      "requiredRepairBoundary": "Preserve internal occurrence identity across browser serialization and Node ingestion using the actual document/timeOrigin namespace and a genuine observation-site occurrence witness. Do not deduplicate unrelated Node Errors or unrelated documents solely by numeric order; do not change public signatures."
+    },
+    {
+      "id": "OBS-NAV-C2",
+      "retainedObligations": [
+        "Native08-4",
+        "09-S3",
+        "S10-C1"
+      ],
+      "priority": 2,
+      "confidence": 0.98,
+      "title": "Retain every relevant sibling on matched-packet rejection paths",
+      "primaryAnchor": {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+        "lines": "51-60"
+      },
+      "evidence": [
+        "observation.js:107 selects a matched packet and :113-118 normalizes using that packet before checking current-node agreement.",
+        "observation-errors.js:52-55 processes only the supplied packet; the all-candidate loop is reachable only in the else branch.",
+        "observation-domain.js:43-57 supplies connected-root/domain rejection after this normalization gate."
+      ],
+      "mechanism": "If a sequence-eligible packet exactly matches the cursor, additional eligible packets contain genuine getter failures, and the current root is subsequently found disconnected or another outer extraction condition rejects, the additional packets are never normalized. The raw candidate array remains staged, but the rejection terminates the path before their genuine sibling errors reach the ledger. Processing all candidates on the no-match branch fixes only part of the retained rejection-path obligation.",
+      "requiredRepairBoundary": "Keep exact successful packet acceptance unchanged; ensure every relevant cursor-eligible packet's genuine siblings are normalized before an outer rejection can terminate extraction."
+    },
+    {
+      "id": "OBS-NAV-C3",
+      "retainedObligations": [
+        "N10B-01",
+        "N07-10"
+      ],
+      "priority": 2,
+      "confidence": 0.99,
+      "title": "Do not probe configured keyboard conditions by invoking them",
+      "primaryAnchor": {
+        "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+        "lines": "74-79"
+      },
+      "evidence": [
+        "navigation.js:76 calls priorCondition({target: active}) before the actual keyboard.press at :143.",
+        "reveal-lifecycle.js:75-82 delegates its wrapper to an arbitrary priorCondition.",
+        "keyboard.js:146 supplies the real KeyboardEvent to production condition dispatch."
+      ],
+      "mechanism": "The diagnostic read executes the configured condition callback once with an incomplete synthetic event before production executes it for the real key. A key-dependent condition does not receive the pressed key/keyCode/modifiers during this probe; a condition with effects is executed during observation. This is a retained no-probing contract violation and remaining eligibility mismatch, not a claim that the condition call was newly introduced in Correction11.",
+      "requiredRepairBoundary": "Use read-only owner-backed discriminators; do not call condition or binding callbacks to discover effects, force focus, or mutate keyboard policy."
+    },
+    {
+      "id": "OBS-NAV-C4",
+
+[Showing lines 421-620 of 746. Use :621 to continue]

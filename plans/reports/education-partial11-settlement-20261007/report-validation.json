@@ -1,0 +1,22 @@
+{
+  "validation": "REPORT_STRUCTURE_PROVENANCE_AND_GIT_STATUS_VALIDATED_NOT_SOURCE_OR_ACCEPTANCE_GATE",
+  "topLevelReportsParsed": 13,
+  "rawTranscriptTextExactlyMatched": 1756,
+  "windowsCRLFRepresentationExactlyMatched": 279,
+  "originalYieldDataExactlyMatched": 16,
+  "representationNote": "Contributor excerpts emitted with Windows CRLF; every character verified against exact LF-to-CRLF transformation plus reverse equality. Original transcripts and extracted evidence not changed. These text representations are not byte-identical frozen source files. Native/Evidence own retained outputs raw equality verified.",
+  "nullValuesInCombinedReport": 0,
+  "dispositionsPerAudit": 34,
+  "receiptCategories": 8,
+  "declaredCells": 54,
+  "admittedCells": 0,
+  "executedCells": 0,
+  "preexistingModifiedPaths": 12,
+  "preexistingUntrackedPaths": 9,
+  "stagedPaths": 0,
+  "branchHEADAndObservedStatusVerified": true,
+  "projectTestsOrChecksRun": false,
+  "frozenSourceHashRemeasured": false,
+  "gitPreservationLimit": "Observed status/path baseline and scoped writes, no initial byte-hash snapshot",
+  "combinedReportSHA256": "0c24d812171c221342bfa7c0d175a0d1d49745645cd963b23513f17aad1552d4"
+}

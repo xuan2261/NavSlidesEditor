@@ -1,0 +1,727 @@
+{
+  "transcriptLine": 3302,
+  "timestamp": "2026-10-06T03:02:29.943Z",
+  "toolCallId": "call_d7IA8PHQKKoNOV4gR5oOInaJ|fc_06807fc480b3e7c6016ac463f1ff5087d0b181f7f249b4c23b",
+  "data": {
+    "mode": "FULL_SOURCE_STATIC_SALVAGE_NOT_ADMISSION",
+    "perspective": "Native15 primary trace; independent Evidence11 seams required",
+    "verdict": "UNRESOLVED",
+    "completionStatus": "INCOMPLETE_REVIEW_RETURNED_AT_EXPLICIT_USER_WRAP_UP",
+    "summary": "The current authority/receipt-reading step is complete. A complete, independently evidenced full26/full12 source verdict cannot be certified from the retained review record. The user's subsequent instruction to finish the current step and return the final report stops further investigation. This report does not treat historical source credits, producer dispositions, or another review's read manifest as this reviewer's current-source proof. Missing genuine Native11 delivery remains an independently fatal admission blocker.",
+    "exactSubject": {
+      "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+      "fullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+      "identityAuthority": "Main's preserved subject records; not remeasured",
+      "baselineRegularInputs": 4327,
+      "preservedRegularInputs": 4328,
+      "allBaselineInputsRetained": true,
+      "existingAuthorizedHelpersModified": 8,
+      "immutableCallers": 12,
+      "all26HelpersStrictlyBelow200PhysicalLines": true,
+      "soleAddition": ".tmp/acceptance-producer-pending-substrate-11-evidence.json",
+      "preservationFactsIndependentlyRemeasured": false,
+      "externalDependencyJunction": {
+        "target": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules",
+        "recursivelyFrozen": false,
+        "immutableDispatcherIdentityEstablishedByThisReport": false
+      }
+    },
+    "dispositionEvidenceRule": "Every UNRESOLVED below means current frozen-source correctness has not been established by a complete attributable read/consumer trace in this final report. It does not mean the historical defect necessarily persists. Canonical reports remain controlling; titles below index those obligations and do not replace their full governing bodies.",
+    "originalFindingDispositions": [
+      {
+        "id": "N07-01",
+        "title": "N06-N02: Keep Start diagnostics out of lifecycle continuity",
+        "disposition": "UNRESOLVED",
+        "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 1",
+        "currentSourceEvidence": [],
+        "requiredProof": "Lifecycle-only continuity projections retain both packet publication and native-action diagnostic outputs."
+      },
+      {
+        "id": "N07-02",
+        "title": "Declare firstExpiredSample before the witness polling callback",
+        "disposition": "UNRESOLVED",
+        "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 2",
+        "currentSourceEvidence": [],
+        "requiredProof": "Bound accumulator and complete last-running/first-expired result."
+      },
+      {
+        "id": "N07-03",
+        "title": "N06-N02: Validate capture-to-post history before adopting Start",
+        "disposition": "UNRESOLVED",
+        "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 3",
+        "currentSourceEvidence": [],
+        "requiredProof": "Independent complete capture/post histories, prefix/length checks and valid first-running state before promotion; no missing-history empty fallback."
+      },
+      {
+        "id": "N07-04",
+        "title": "N06-N03: Bind history health to actual recorder bookkeeping",
+        "disposition": "UNRESOLVED",
+        "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 4",
+        "currentSourceEvidence": [],
+        "requiredProof": "Private store identity/count/sequence/content health before every consumer, distinguishing initialized emptiness from absent/replaced/truncated storage."
+      },
+      {
+        "id": "N07-05",
+        "title": "N06-N03: Compare complete retained history content",
+        "disposition": "UNRESOLVED",
+        "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 5",
+        "currentSourceEvidence": [],
+        "requiredProof": "Mandatory sequence and complete ordered time/bounds/type/visibility/detail/domain content, including event.time."
+      },
+      {
+        "id": "N07-06",
+        "title": "Retain lifecycle mutations drained at native action boundaries",
+        "disposition": "UNRESOLVED",
+        "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 6",
+        "currentSourceEvidence": [],
+        "requiredProof": "All actually observed boundary-drained events survive with their later upper uncertainty bounds."
+      },
+      {
+        "id": "N07-07",
+        "title": "N06-N05: Normalize and retain all observed snapshot failures",
+        "disposition": "UNRESOLVED",
+        "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 7",
+        "currentSourceEvidence": [],
+        "requiredProof": "Every genuine state/UI, capture/post, recorder and document occurrence enters the common ledger in actual observation order, with earliest normalized primary propagation."
+      },
+      {
+        "id": "N07-08",
+        "title": "N06-N05: Preserve the recorder exception's actual cause chain",
+        "disposition": "UNRESOLVED",
+        "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 8",
+        "currentSourceEvidence": [],
+        "requiredProof": "Real recursive causes, phase/origin/stack and observed domain survive normalization and later recorder failures."
+      },
+      {
+        "id": "N07-09",
+        "title": "N06-N01: Stage each navigation poll's actual document first",
+        "disposition": "UNRESOLVED",
+        "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 9",
+        "currentSourceEvidence": [],
+        "requiredProof": "Actual poll slideId/url/documentId/timeOrigin staged before binding validation."
+      },
+      {
+        "id": "N07-10",
+        "title": "N06-N07: Match keyboard eligibility to production dispatch",
+        "disposition": "UNRESOLVED",
+        "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 10",
+        "currentSourceEvidence": [],
+        "requiredProof": "Actual configuration/focus/dispatch discriminators without forcing focus or modifying navigation."
+      },
+      {
+        "id": "N07-11",
+        "title": "Preserve exact null commands when matching native packets",
+        "disposition": "UNRESOLVED",
+        "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 11",
+        "currentSourceEvidence": [],
+        "requiredProof": "Exact command, tuple, document and type matching; null must not become a wildcard."
+      },
+      {
+        "id": "N07-12",
+        "title": "Reject disconnected current nodes during action extraction",
+        "disposition": "UNRESOLVED",
+        "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 12",
+        "currentSourceEvidence": [],
+        "requiredProof": "Connected-current-root rejection before accepting packet/root identity."
+      },
+      {
+        "id": "E06-01-A",
+        "title": "Leave sole Errors with empty caller arrays unchanged",
+        "disposition": "UNRESOLVED",
+        "governingAuthority": "pending-substrate-07-evidence-admission.json, original Evidence finding 1",
+        "currentSourceEvidence": [],
+        "requiredProof": "Sole genuine Error keeps exact reference and own keys despite an existing empty secondaryFailures array."
+      },
+      {
+        "id": "E06-01-B",
+        "title": "Deduplicate caller entries by occurrence identity",
+        "disposition": "UNRESOLVED",
+        "governingAuthority": "pending-substrate-07-evidence-admission.json, original Evidence finding 2",
+        "currentSourceEvidence": [],
+        "requiredProof": "Identity-based duplicate-free repeated/late exposure, preserving caller arrays/objects and unrelated numeric namespaces."
+      },
+      {
+        "id": "E06-01-C",
+        "title": "Ingest genuine failures attached through errorLedger",
+        "disposition": "UNRESOLVED",
+        "governingAuthority": "pending-substrate-07-evidence-admission.json, original Evidence finding 3",
+        "currentSourceEvidence": [],
+        "requiredProof": "Genuine caller-ledger occurrences enter established chronology with authoritative wrappers/provenance; serialized-only diagnostics remain unchanged and ledger-owned exposures excluded."
+      }
+    ],
+    "additional08FindingDispositions": [
+      {
+        "id": "Native08-1",
+        "title": "Import assertHistoryPrefix before validating Start bracket",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": [],
+        "governingAuthority": "pending-substrate-08-native-salvage-audit.json"
+      },
+      {
+        "id": "Native08-2",
+        "title": "Validate complete retained-store content integrity",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": [],
+        "governingAuthority": "pending-substrate-08-native-salvage-audit.json"
+      },
+      {
+        "id": "Native08-3",
+        "title": "Preserve snapshot-before-document failure chronology",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": [],
+        "governingAuthority": "pending-substrate-08-native-salvage-audit.json"
+      },
+      {
+        "id": "Native08-4",
+        "title": "Retain packet sibling failures before outer rejection",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": [],
+        "governingAuthority": "pending-substrate-08-native-salvage-audit.json"
+      },
+      {
+        "id": "Evidence08-1",
+        "title": "E06-01-C Exclude serialized diagnostics from occurrence ingestion",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": [],
+        "governingAuthority": "pending-substrate-08-evidence-salvage-audit.json"
+      },
+      {
+        "id": "Evidence08-2",
+        "title": "E06-01-C Retain ledger metadata for already-ingested references",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": [],
+        "governingAuthority": "pending-substrate-08-evidence-salvage-audit.json"
+      }
+    ],
+    "settled09DefectDispositions": [
+      {
+        "id": "09-S1",
+        "title": "Restore evaluateActionCandidates function closing brace",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": []
+      },
+      {
+        "id": "09-S2",
+        "title": "Restore serializable declaration before completing packet",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": []
+      },
+      {
+        "id": "09-S3",
+        "title": "Ingest all relevant fallback packet siblings before outer throw",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": []
+      },
+      {
+        "id": "09-S4",
+        "title": "Maintain stable ledger-owned exposed serialization identity",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": []
+      },
+      {
+        "id": "09-S5",
+        "title": "Preserve authoritative wrapper phase over intrinsic Error.phase",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": []
+      }
+    ],
+    "chronologyObligationDispositions": [
+      {
+        "id": "09-C1",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": [],
+        "requirement": "Already observed packet getters precede genuinely later extraction store/not-ready/document failures; genuinely earlier setup/listener recorder occurrences retain their earlier positions. No universal category order or fabricated timing; throw earliest applicable normalized Error."
+      },
+      {
+        "id": "09-C2",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": [],
+        "requirement": "Established caller errorLedger a,b chronology precedes secondary-only and later frame/source/attachment arrivals; metadata pre-scan does not count as ingestion and unrelated order namespaces must not be sorted."
+      }
+    ],
+    "current11FindingDispositions": [
+      {
+        "id": "S10-C1",
+        "title": "Order non-setup recorder errors by actual browser observation, not category",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": [],
+        "requiredProof": "Document-local actual observation-site chronology across setup/listeners, capture state/UI then capture health, bubble health then post state/UI, forwarding existing recorder occurrences, extraction failures, every relevant fallback sibling and later independent Node validation."
+      },
+      {
+        "id": "NF-A2",
+        "title": "Do not overwrite an existing recorder error in record()",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": [],
+        "requiredProof": "First recorder occurrence, recursive cause and provenance survive later store/readiness failures without duplicate fabricated occurrences."
+      },
+      {
+        "id": "NF-A3",
+        "title": "Normalize button-guard snapshot failures before document validation",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": [],
+        "requiredProof": "Raw staging followed by normalization of both getter failures before later document validation; retain document failure and propagate earliest normalized Error without exported-signature change."
+      },
+      {
+        "id": "N10B-01",
+        "title": "Capture remaining Reveal dispatcher guards in keyboardEligible",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": [],
+        "requiredProof": "Actual pressed-key keyboard truthiness, strict condition-false semantics, focused-deck/input/contenteditable/speaker-notes exclusions, overlays, paused/resume rules and configured/registered custom-binding precedence, without callback invocation or policy mutation."
+      },
+      {
+        "id": "N10B-02",
+        "title": "Bind the initial slide read to its observed document before early return",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": [],
+        "requiredProof": "Atomic initial slideId/url/documentId/timeOrigin read staged and validated before already-target return; corrected poll path preserved."
+      },
+      {
+        "id": "S10-C2",
+        "title": "Prevent phase-less caller wrappers from overwriting authoritative recorded phases",
+        "disposition": "UNRESOLVED",
+        "currentSourceEvidence": [],
+        "requiredProof": "All errorLedger, secondaryFailures and allErrors paths preserve explicit recorded phase against intrinsic/fallback downgrade while supporting explicit valid wrapper reconciliation, metadata enrichment, stable identity/serialization, chronology and late exposure."
+      }
+    ],
+    "creditedPreservationDispositions": {
+      "currentSourceCertification": "UNRESOLVED",
+      "historicalCreditsNotPromotedToCurrentProof": true,
+      "MainPreservationFacts": "RETAINED_WITHOUT_REMEASUREMENT",
+      "NativeInvariantsRetainedAsRequirements": [
+        "Finite strictly positive bounded remaining/activity operands.",
+        "Actual computed/layout CSS visibility and correlated raw timing.",
+        "Independent full-store health before projection, healthy initialized emptiness, valid projected sequence gaps and copied histories.",
+        "Boundary uncertainty and complete native capture/post histories.",
+        "Valid first-running state before baseline promotion and complete original last-running/first-expired crossover.",
+        "Raw-before-validation root/document evidence.",
+        "Exact tuple/null-command/current-connected-root/native-action cardinality checks.",
+        "Actual enabled/focus/geometry observations and both packet/diagnostic outputs."
+      ],
+      "EvidenceInvariantMeanings": {
+        "E06-02": "Chronological frame-error arrival dispatch.",
+        "E06-03": "Actual Node Error identity plus separate sidecar metadata.",
+        "E06-04": "State-before-UI snapshot observation and dispatch.",
+        "E06-05": "Recursive rootInstanceId/timeOrigin/cause normalization, serialization and primary propagation."
+      },
+      "OwnershipAndFinalizationRequirements": [
+        "Actual Page-containing surface callback context.",
+        "Early portable-handle ownership transfer and no-sink consumers.",
+        "Exact success keys {protocol,httpAttempts,socketAttempts,errors}.",
+        "Setup/navigation/live/close ownership and complete late frame/source/attachment/final common-ledger exposure, including attachment failure."
+      ],
+      "scopeContracts": "All15 Native/all11 Evidence existing helper contracts, no new helpers/signature changes/shims, all12 immutable callers and strict physical-line limits remain governing."
+    },
+    "newFindings": [],
+    "newFindingsInterpretation": "No new current-source finding is asserted by this incomplete report. An empty list is not evidence of a clean subject and does not disprove earlier findings.",
+    "deliveryBlockers": [
+      {
+        "id": "MISSING_GENUINE_NATIVE11_RECEIPT",
+        "category": "DELIVERY",
+        "fatalToAdmission": true,
+        "evidence": "pending-substrate-11-terminal-failure-counsel.json:49-66",
+        "detail": "Native11 actual transport stream_error, exit1. Genuine Native11 receipt absent. Last reasoning about preparing a receipt cannot replace successful delivery. Neither this review nor Evidence11 may reconstruct it."
+      },
+      {
+        "id": "EVIDENCE11_RECEIPT_INCOMPLETE_OBLIGATION_RECORDS",
+        "category": "RECEIPT_COMPLETENESS",
+        "evidence": [
+          "pending-substrate-11-receipt-audit.json:15-110",
+          "pending-substrate-11-terminal-failure-counsel.json:67-112",
+          "genuine Evidence11 receipt:235-418"
+        ],
+        "detail": "Genuine Evidence11 delivery is present, but complete original/08/09/chronology/current obligation details, excluded mechanism and deferred-scope enumeration are not established by its abbreviated records. Source-closure assertions remain producer claims."
+      }
+    ],
+    "receiptCompleteness": {
+      "genuineEvidence11ReceiptPresent": true,
+      "genuineNative11ReceiptPresent": false,
+      "combinedDeliveryComplete": false,
+      "genuineReceiptPreservedUnchanged": true,
+      "decision": "GENUINE_EVIDENCE_DELIVERY_PRESENT_BUT_REQUIREMENTS_NOT_FULLY_SATISFIED",
+      "originalNativeBodies": {
+        "alteredAccordingToMainReceiptAudit": ["N07-01", "N07-03", "N07-06", "N07-07"],
+        "completeCurrentSourceEvidenceSupplied": false
+      },
+      "originalEvidenceBodies": "Main's receipt audit records all three original bodies preserved; their current source claims remain independently unverified here.",
+      "audit08Records": "Six named records do not reproduce complete governing bodies/original line ranges; four Native records provide shortened identities and closure assertions.",
+      "settled09AndChronology": "Separate abbreviated claims do not replace governing complete obligations.",
+      "NF_A4": "Receipt retains unresolved/excluded disposition but not the complete recorded source mechanism.",
+      "deferredScope": "Caller list/general paragraph does not independently enumerate every required journey/timing/state/UI/surface/finalization/later-slice obligation.",
+      "physicalLineDiscrepancy": {
+        "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+        "receiptClaim": 160,
+        "MainRecordedPhysicalLines": 150,
+        "bothBelow200": true,
+        "sourceDefectEstablishedByDiscrepancy": false
+      },
+      "sourceClaimsAcceptedAsIndependentVerdicts": false
+    },
+    "canonicalMappingChecks": {
+      "authority": "pending-substrate-08-subject-authority.json",
+      "comparisonOwner": "Main",
+      "independentRemeasurementPerformed": false,
+      "NC": "MATCH_REPORTED_BY_MAIN",
+      "RPC": "MATCH_REPORTED_BY_MAIN",
+      "original": "MATCH_REPORTED_BY_MAIN",
+      "originalCurrentMappingSnapshot": "MATCH_REPORTED_BY_MAIN",
+      "originalPriorMappingSnapshot": "MATCH_REPORTED_BY_MAIN",
+      "historicalStatusesCertifyCurrentSource": false,
+      "Correction10MappingDiscrepanciesCarriedForwardAsCorrection11Defects": false
+    },
+    "NF_A4Scope": {
+      "consumerVisibleMechanism": "evaluateActionCandidates returns candidates from the public, replaceable window.__nsRecordedPackets (:146-147). storeHealth (:148) checks only the lifecycle store. In-place mutation of an original packet is detected, because that packet object is also the retained native-action detail. Replacing the array, or replacing an element with a forged object, leaves the retained and private stores untouched, so health stays true. extractActionBracket (observation.js:107-131) then builds the action bracket from the forged packet: rootEventsBefore/After, stateAfter and tCapture/tBubble, which witness.js:44-63 adopts as the Start baseline. This is the same public-store replacement model as N07-04, applied to the packet store.",
+      "lineEnd": 158,
+      "title": "Bind returned action packets to the integrity-checked native-action records",
+      "confidence": 0.6,
+      "id": "NF-A4",
+      "lineStart": 146,
+      "repairNeeded": "Inside evaluateActionCandidates, derive candidates from, or verify each one against, the closure-retained native-action entries. For example, expose a private read of native-action details by sequence, or verify that each candidate is identical to the retained entry's detail and matches its private JSON clone. Report a recorder:store error when they diverge. evaluatePreActionCursor's lastSeq source (:36-37) needs the same binding.",
+      "priority": 2,
+      "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+      "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+      "scopeDecision": "Original N07-04/N07-05 explicitly cover lifecycle store integrity. Extending identical checks to separately replaceable action-packet storage is not automatically a required cutover; no new repair scope authorized.",
+      "mechanismProvenance": "Verbatim excludedScopeCandidate fields returned from pending-substrate-11-dispatch-authority.json:211-224; not a fresh current-source certification.",
+      "excludedFromRequiredCorrection11Repairs": true,
+      "repaired": false,
+      "disproved": false,
+      "waived": false,
+      "completePacketStoreIntegrityClaimed": false
+    },
+    "deferredCallerObligations": {
+      "status": "REQUIRED_UNEXECUTED",
+      "staticallyAdmittedCells": 0,
+      "executedAcceptanceCells": 0,
+      "surfaces": ["present", "share", "file"],
+      "leaveReturnRows": [
+        "Quiz",
+        "Hot Potato",
+        "Jeopardy",
+        "Relay",
+        "Trivia question",
+        "Trivia round"
+      ],
+      "resetRows": [
+        "Quiz",
+        "Hot Potato",
+        "Jeopardy",
+        "Relay deadline",
+        "Relay baton",
+        "Trivia question",
+        "Trivia round"
+      ],
+      "isolationRows": ["Quiz", "Hot Potato", "Jeopardy", "Relay", "Trivia"],
+      "rowCount": 18,
+      "cellCount": 54,
+      "representativeCanarySubstitutionPermitted": false,
+      "callerCutover": "All12 immutable callers require later clean cutover only under separately applicable authority and complete helper proofs: mandatory sinks, authored root manifests and document bindings; actual Page contexts; every relevant actionRecord/actionBracket/activityInterval; witness startRecord and measured expiry results; remove obsolete signatures and tBefore/tAfter/activityNow assumptions without aliases or shims.",
+      "inheritedAuthorities": "Complete canonical NC01..NC11, RPC-01..RPC-17, original-1..original-9 and both historical mapping snapshots remain unchanged; all inherited state/evidence SE obligations remain required. This report does not replace those full bodies with its index.",
+      "completeStateAndUI": "Independently authored complete initial/pending/hidden/returned/reset/terminal/peer state AND native UI, full owner identity/context, measured consumed return and original expiry bounds; generation/eventual scalar expiry insufficient.",
+      "nativePendingBoundaries": "Actual same-domain Pass/Reset/Start brackets, positive exact originally pending work at Reset and crossing the original due, retaining root/document/lifecycle uncertainty and deadline bounds; earlier batonDue sample insufficient.",
+      "Quiz": "Native Reset+5000 authored deadline, after-old/before-new checkpoint, bounded new expiry, exact terminal shape and complete controls/UI; no old unbound timestamps or arbitrary800ms slack.",
+      "Relay": "Genuine settled peer before freezing; full independent team/lane/question/turn/identity/UI; exact originally pending due; complete first-timeout transition/uncertainty; peer invariance across Reset and old due. No extra Pass, fixed sleep, retries or winner fallback.",
+      "Trivia": "Full question/round expiry and native Next identity/history/scores/awards/deadline/UI, independently bounded next-question policy; R16 remains Trivia expiry/Next, not LOC compliance.",
+      "perCellWitness": "Every54 cells must consume full idle/running/expired state/UI, actual native Start+4000 deadline, last-running/first-expired intervals, same-root/document lifecycle continuity and exact raw failing observations staged before assertions.",
+      "realSurfacesAndFinalization": "Earliest lifecycle setup, exact tuple/document/root cardinality, native visibility/focus/geometry/control routing, complete live PNG/diagnostics, portable before/after network enforcement, source GET equality and independently authored saved configuration, failure-safe setup/close/attachments.",
+      "laterSlices": {
+        "original7": "Exact Hot Potato speed-bonus policy.",
+        "original8": "Scattergories NFC duplicate/unique controls.",
+        "original9": "Full Trivia scoring policy matrix."
+      },
+      "orderedGaps": "Gap4 is not closed; gaps5-9 remain unchanged and dependent on established prerequisites.",
+      "unchangedCallerMismatchesAreNewHelperFindings": false
+    },
+    "readEvidence": {
+      "complete": false,
+      "sourceRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+      "coverageRule": "Empty certified ranges below mean this final report cannot certify attributable full-body/EOF coverage from the retained record. They do not establish that the file was never opened during earlier archived work. Another report's read ranges are not adopted as this reviewer's evidence.",
+      "requiredHelpers": [
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-native-snapshot.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-activity-interval.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-observation.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-clock.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-controls.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-witness.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-native-action.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-witness-domain.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-history-domain.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-native-history.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-ui-evidence.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-evidence.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/release-surfaces.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/present-offline-helpers.js",
+          "observedArchivedRequest": "1-200:raw",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-live-root-observation.js",
+          "observedArchivedRequest": "1-200:raw",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/release-portable-inspection.js",
+          "observedArchivedRequest": "1-200:raw",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        }
+      ],
+      "requiredImmutableCallers": [
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js",
+          "observedArchivedRequest": "1-230:raw",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-cases.js",
+          "observedArchivedRequest": "1-230:raw",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-fixtures.js",
+          "observedArchivedRequest": "1-230:raw",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-leave-return.js",
+          "observedArchivedRequest": "1-230:raw",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-reset.js",
+          "observedArchivedRequest": "1-230:raw",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-isolation.js",
+          "observedArchivedRequest": "1-230:raw",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-state.js",
+          "observedArchivedRequest": "1-230:raw",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-quiz-state.js",
+          "observedArchivedRequest": "1-230:raw",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-hot-potato-state.js",
+          "observedArchivedRequest": "1-230:raw",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-jeopardy-state.js",
+          "observedArchivedRequest": "1-230:raw",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-relay-state.js",
+          "observedArchivedRequest": "1-230:raw",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        },
+        {
+          "file": "tests/e2e/education/pending-round-lifecycle-trivia-state.js",
+          "observedArchivedRequest": "1-230:raw",
+          "certifiedRanges": [],
+          "fullBodyAndEOFCertified": false
+        }
+      ],
+      "requiredOwnerCoverage": {
+        "certifiedComplete": false,
+        "certifiedRanges": [],
+        "mappedOwnersRequiringAttributableProof": [
+          "tests/e2e/fixtures/test-fixtures.js",
+          "tests/e2e/education/release-game-fixtures.js",
+          "tests/e2e/education/release-content-fields.js",
+          "tests/e2e/pages/editor-page.js",
+          "shared/src/education/runtime-session.js",
+          "shared/src/education/browser/reveal-lifecycle.js",
+          "shared/src/education/browser/mount.js",
+          "shared/src/education/browser/local-activity.js",
+          "shared/src/education/countdown-state.js",
+          "shared/src/education/browser/countdown-presenter.js",
+          "shared/src/education/quiz-session.js",
+          "shared/src/education/games/relay-race.js",
+          "shared/src/education/game-defaults.js",
+          "shared/src/education/game-registry.js",
+          "shared/src/education/question-shape.js",
+          "shared/src/education/question-factory.js",
+          "shared/src/education/presets/simulations.js",
+          "shared/src/htmlGenerator.js",
+          "node_modules/reveal.js/js/controllers/keyboard.js"
+        ],
+        "meaning": "Mapped owners are identified by the governing prior review, not claimed inspected by this report."
+      },
+      "currentStepAuthorityReads": [
+        {
+          "file": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-native-salvage-prompt.md",
+          "ranges": ["1-100:raw"],
+          "coverage": "Complete returned contract, ending with Independent perspective."
+        },
+        {
+          "file": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-terminal-failure-counsel.json",
+          "ranges": ["1-180:raw", "181-360:raw", "361-560:raw"],
+          "coverage": "Complete body through closing brace; tool reports541 lines."
+        },
+        {
+          "file": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-10-evidence-salvage-audit.json",
+          "ranges": ["701-900:raw", "901-1100:raw", "1101-1220:raw"],
+          "coverage": "Current continuation through EOF1203; preceding archived ranges are not promoted to independently certified complete evidence."
+        },
+        {
+          "file": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/.tmp/acceptance-producer-pending-substrate-11-evidence.json",
+          "ranges": ["161-320:raw", "321-480:raw", "481-620:raw"],
+          "coverage": "Current continuation through EOF605; archived1-160 output is truncated in retained history."
+        },
+        {
+          "file": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-dispatch-authority.json",
+          "ranges": ["211-270:raw"],
+          "coverage": "Excluded mechanism, shared semantic contract and final receipt requirements through document end; not a fresh full-document read."
+        },
+        {
+          "file": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-receipt-audit.json",
+          "ranges": ["1-110:raw"],
+          "coverage": "Receipt-audit conclusion and original/08/initial09 records only; not full538-line audit."
+        }
+      ],
+      "governingAuthorityReadCompleteness": "NOT_CERTIFIED_FOR_ALL_REQUIRED_DOCUMENTS; retained archive includes bounded requests with omitted output. Exact full governing body coverage must not be inferred from titles or prior read manifests."
+    },
+    "limitations": [
+      "This is an incomplete source review, not either required complete independent salvage audit. Main must not count it as satisfying full26/full12 coverage or the two-complete-report settlement prerequisite.",
+      "The user explicitly instructed immediate wrap-up after the current step. This terminal report records reachable authority/receipt facts and unresolved source obligations rather than inventing missing evidence.",
+      "Archived read requests and elided responses are not sufficient to reconstruct every exact full-body range, expanded omission and EOF proof. No complete current-source verdict is claimed.",
+      "All findings and source credits in genuine producer receipts or earlier audits remain claims/historical dispositions unless independently traced against this frozen subject.",
+      "No current source defect is inferred merely from a delivery failure, receipt abbreviation, physical-line discrepancy or incomplete reviewer coverage.",
+      "NF-A4's recorded mechanism remains confirmed by governing authority, scope applicability unresolved and excluded. This report neither broadens its scope nor certifies complete packet-store integrity.",
+      "External linked dependencies are outside the recursive freeze; this report establishes neither immutable linked keyboard source identity nor complete dispatcher equivalence.",
+      "No files were written. No shells, eval/imports, syntax checks, tests, builds, linters, formatters, browser operations, git, installation, hash/count remeasurement or nested agents were performed in this continuation.",
+      "No execution, automatic correction, receipt reconstruction, caller migration or normal source gate is authorized by this report."
+    ],
+    "admission": false,
+    "sourceReady": false,
+    "qualification": false,
+    "passClaimed": false,
+    "runtimeExecuted": false,
+    "declaredCells": 54,
+    "staticallyAdmittedCells": 0,
+    "executedAcceptanceCells": 0,
+    "filesWritten": false
+  }
+}

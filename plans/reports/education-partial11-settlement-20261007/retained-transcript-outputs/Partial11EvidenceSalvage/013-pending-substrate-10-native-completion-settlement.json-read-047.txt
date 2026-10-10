@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "verdict": "REPAIR_REQUIRED",
+  "mode": "USER_AUTHORIZED_READ_ONLY_NATIVE10_COVERAGE_COMPLETION",
+  "exactSubject": {
+    "root": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-10-partial",
+    "fullSubjectHash": "0d20458eefe089ec90d2386b973a474cfb514cfba07ed4839d3a250720dc502a",
+    "hashAuthority": "Main previously preserved freeze; no new hash measurement"
+  },
+  "coverage": {
+    "helpers": 26,
+    "callers": 12,
+    "missingHelpers": [],
+    "missingCallers": [],
+    "perFile": [
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+        "coverage": [
+          "1-158 of 158 (complete)",
+          "complete read through EOF"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-snapshot.js",
+        "coverage": [
+          "1-105 of 105 (complete)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-history.js",
+        "coverage": [
+          "1-185 of 185 (complete)",
+          "complete read through EOF"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+        "coverage": [
+          "1-175 of 175 (complete)",
+          "1-175 complete"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+        "coverage": [
+          "1-94 of 94 (complete)",
+          "1-94 complete"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-action.js",
+        "coverage": [
+          "1-74 of 74 (complete)",
+          "complete read through EOF"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-history-domain.js",
+        "coverage": [
+          "1-53 of 53 (complete)",
+          "complete read through EOF"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-activity-interval.js",
+        "coverage": [
+          "1-102 of 102 (complete)",
+          "complete read through EOF"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation.js",
+        "coverage": [
+          "1-152 of 152 (complete)",
+          "1-152 complete (EOF 152)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-witness.js",
+        "coverage": [
+          "1-166 complete (EOF 166)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-witness-domain.js",
+        "coverage": [
+          "1-137 complete (EOF 137)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+        "coverage": [
+          "1-187 complete (EOF 187)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-clock.js",
+        "coverage": [
+          "1-102 complete (EOF 102)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-controls.js",
+        "coverage": [
+          "1-171 complete (EOF 171)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+        "coverage": [
+          "1-113 complete (EOF 113)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-ui-evidence.js",
+        "coverage": [
+          "1-152 complete (EOF; line 151 closes the template, 152 is empty)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+        "coverage": [
+          "1-150 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "coverage": [
+          "1-172 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-evidence.js",
+        "coverage": [
+          "1-198 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+        "coverage": [
+          "1-125 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+        "coverage": [
+          "1-112 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+        "coverage": [
+          "1-192 (complete body)"
+        ]
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-live-root-observation.js",
+        "coverage": [
+          "1-163 (complete body)"
+        ]
+
+[Showing lines 1-160 of 723. Use :161 to continue]

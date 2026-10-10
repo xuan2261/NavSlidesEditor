@@ -1,0 +1,172 @@
+{
+  "reportType": "SAME_LOGICAL_EVIDENCE11_CURRENT_AUDIT_SCOPE_CITATION_ADDENDUM",
+  "date": "2026-10-07",
+  "subject": "Frozen pending-substrate-candidate-11-partial; retained Evidence11 source only",
+  "preservedArtifacts": [
+    "evidence11-integrated-report.json",
+    "evidence11-coverage-final-report.json"
+  ],
+  "originalsModified": false,
+  "basis": {
+    "handoff": "C:/Work/NavSlidesEditor/plans/handoffs/education-partial11-resume-20261007.md:1-110, personally read full; especially 69-80",
+    "ownRawRoot": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/plans/reports/education-partial11-settlement-20261007/retained-transcript-outputs/Partial11EvidenceSalvage",
+    "referenceConvention": "Raw filenames below are relative to ownRawRoot. Their line numbers are frozen source lines, not live-worktree measurements. Source suffixes denote tests/e2e/education/pending-round-lifecycle-*.js unless explicitly release-surfaces.js.",
+    "personallyReadFull": [
+      "076-pending-round-lifecycle-navigation.js-read-001.txt:1-176",
+      "079-pending-round-lifecycle-observation-errors.js-read-001.txt:1-93",
+      "080-pending-round-lifecycle-observation.js-read-001.txt:1-152",
+      "071-pending-round-lifecycle-live-root-observation.js-read-001.txt:1-157",
+      "061-pending-round-lifecycle-error-ledger.js-read-001.txt:1-150",
+      "070-pending-round-lifecycle-live-evidence.js-read-001.txt:1-120",
+      "078-pending-round-lifecycle-observation-domain.js-read-001.txt:1-187",
+      "085-pending-round-lifecycle-surfaces.js-read-001.txt:1-193",
+      "095-release-surfaces.js-read-001.txt:1-199"
+    ],
+    "personallyReadRelevantSections": [
+      "evidence11-coverage-final-report.json:135-176,195-298",
+      "077-pending-round-lifecycle-observation-browser.js-read-001.txt:125-175",
+      "015-pending-substrate-11-dispatch-authority.json-read-001.txt:120-224",
+      "009-pending-substrate-09-settled-rejection-counsel.json-read-001.txt:46-87",
+      "003-pending-substrate-07-native-admission.json-read-001.txt:56-75"
+    ],
+    "independence": "No Native11 sibling report, component or current conclusion inspected or adopted. Historical canonical obligation text in OWN Evidence outputs is authority, not a new Native opinion."
+  },
+  "citationAndScopeCorrection": {
+    "id": "E11-SALVAGE-NAV-02",
+    "mechanismStatus": "SOURCE_CONFIRMED",
+    "mechanism": "navigation.js:116-117 computes keyboardEligible; :118-133 returns it; :135-142 merely stages focusInfo; :143 unconditionally sends the fallback key. No eligibility rejection intervenes. This is a source control-flow observation, not an executed keypress or demonstrated runtime outcome.",
+    "actualDispatchCitation": "076-pending-round-lifecycle-navigation.js-read-001.txt:143",
+    "incorrectPriorCitation": "137-139 are staged targetSlideId/key/controlVisible fields, not page.keyboard.press(key)",
+    "repairStatus": "SCOPE_APPLICABILITY_UNRESOLVED",
+    "authority": "Coordinator handoff:78 explicitly distinguishes this rejection proposal from automatically required repair; OWN 015 dispatch authority:178-187 requires read-only discriminators without changing navigation policy.",
+    "correctedDisposition": "Preserve the observed unconditional dispatch mechanism and the prior rejection proposal, but treat reject-before-keypress as a proposal pending scope adjudication, not an additional required repair, automatic seventh repair, waiver, or approved implementation. The valid prohibition on passive application-callback invocation does not itself authorize changing the dispatch policy.",
+    "supersedesOnly": "The automatic repairNeeded implication in coverage-final-report:169 and any equivalent integrated-report NAV-02 implication; originals remain untouched."
+  },
+  "directSeamAdjudications": [
+    {
+      "id": "E11-EXACT-MATCH-SIBLING-RETENTION",
+      "disposition": "SOURCE_CONFIRMED_REPAIR_REQUIRED_UNDER_ORIGINAL_ALL_OBSERVED_OBLIGATION",
+      "mechanism": "evaluateActionCandidates returns every packet with sequence greater than the cursor (:146-160). extractActionBracket stages that entire result (:104-105), finds only the first exact match (:107), and passes that packet as the explicit normalization argument (:111-115). observation-errors:51-61 chooses the explicit packet instead of raw.candidates, so :63-68 visits only the matched packet. Genuine state/UI errors in other sequence-eligible siblings remain raw-only. A caught document-identity exception is queued at :77-78 and thrown after the selected errors at :86-91, or a later current-node/root/tuple/domain rejection at observation:116 / observation-domain:41-57 terminates extraction. Neither outer catch (:134-136) nor the later matched-packet-only pass (:128) normalizes the omitted sibling occurrences.",
+      "preciseReferences": [
+        "077-pending-round-lifecycle-observation-browser.js-read-001.txt:146-160",
+        "080-pending-round-lifecycle-observation.js-read-001.txt:104-136",
+        "079-pending-round-lifecycle-observation-errors.js-read-001.txt:12-23,51-68,77-91",
+        "078-pending-round-lifecycle-observation-domain.js-read-001.txt:41-69"
+      ],
+      "scopeAuthority": [
+        "003-pending-substrate-07-native-admission.json-read-001.txt:60-66 (N07-07 / N06-N05: every actual observed snapshot occurrence, including independent document/recorder failures)",
+        "009-pending-substrate-09-settled-rejection-counsel.json-read-001.txt:47-52 (09-S3 rejection/fallback retention without broadening packet acceptance)"
+      ],
+      "reassessment": "Coverage-final-report:139 credit remains true for the no-explicit-packet fallback loop, but its 'all relevant siblings retained' wording is not globally valid. An exact match does not remove rejection-path retention duties for other observed cursor-sequence-eligible siblings when an outer gate fails.",
+      "requiredMeaning": "Retain genuine applicable sibling occurrences before rejection, with actual observation order and earliest common-ledger normalized Error. Preserve exact-match acceptance and raw evidence; do not broaden accepted brackets, manufacture failures or treat unrelated domains as one chronological namespace.",
+      "bounds": "Conditional source trace assumes a genuine sibling error and a failing outer gate; no such runtime case was executed. Precise relevance across unrelated root/document packets must remain domain-bounded; no blanket acceptance or global numeric-order sort follows. This is a retained original obligation, not a newly authorized producer attempt."
+    },
+    {
+      "id": "E11-LIVE-ROOT-DOCUMENT-PREEMPTION",
+      "disposition": "SOURCE_CONFIRMED_REPAIR_REQUIRED_UNDER_ORIGINAL_ALL_OBSERVED_AND_CHRONOLOGY_OBLIGATIONS",
+      "mechanism": "Browser live-root observation calls the snapshot at :88-91, collects stateError then uiError at :119-123, and returns them at :155 before the awaited evaluate returns. collectLiveRootStates stages that completed result at live-evidence:28-29, then detects and immediately records a Node document-identity exception at :31-36 before forwarding already observed browser errors at :38-42. :51 explicitly selects docIdentityError first. The ledger assigns append order at :100-102 and exposes entry zero as primary at :120-122/:140-147; therefore, absent an earlier ledger entry, the later Node error becomes common-ledger primary as well as the local rootFailure. Existing prior ledger entries can remain global primary, but cannot repair this local chronology inversion.",
+      "preciseReferences": [
+        "071-pending-round-lifecycle-live-root-observation.js-read-001.txt:88-123,155-157",
+        "070-pending-round-lifecycle-live-evidence.js-read-001.txt:28-54,66-72,106-109",
+        "061-pending-round-lifecycle-error-ledger.js-read-001.txt:100-102,120-122,140-147"
+      ],
+      "scopeAuthority": [
+        "003-pending-substrate-07-native-admission.json-read-001.txt:60-66",
+        "015-pending-substrate-11-dispatch-authority.json-read-001.txt:124-128,140-154 (actual observation order; subsequent Node validation last)"
+      ],
+      "requiredMeaning": "Keep the independent document failure, but normalize already observed genuine browser getter occurrences before that later Node detection, and propagate the earliest applicable common-ledger normalized Error. Do not replace genuine errors with validation wrappers or impose a universal browser-first rule on errors actually observed earlier elsewhere.",
+      "retainedCredit": "State-before-UI sibling collection and raw liveRootsRaw staging are preserved; no browser sibling is lost in this loop. Their order relative to the later Node document check is nevertheless incorrect.",
+      "surfaceReach": "surfaces.js:78,117,183 invokes evidence.collectLive in Present/share/file finalization; local catches record live errors at :80,119,185 and close remains :82,121,187. These are preservation credits, not a cure for collector ordering. release-surfaces.js:29-34,78-82 retains pageerror arrival dispatch independently.",
+      "bounds": "No browser evaluation or document replacement was performed. Concurrent collector branches and any preexisting ledger primary prevent a universal claim that this Node exception is always global primary; the sequential local defect is confirmed. No independent new seventh repair or runtime acceptance is asserted."
+    }
+  ],
+  "retainedFindingMappings": {
+    "E11-SALVAGE-NAV-01": {
+      "disposition": "SOURCE_CONFIRMED_REPAIR_REQUIRED_EXISTING_N10B-01",
+      "mechanism": "navigation:74-80 invokes arbitrary configured keyboardCondition with fabricated {target:active} at :76 during passive inspection, before the actual dispatch at :143; caught callback exceptions become false rather than an independent invocation-free uncertainty observation.",
+      "reference": "076-pending-round-lifecycle-navigation.js-read-001.txt:74-80,143",
+      "boundary": "Do not invoke application callbacks or mutate focus/pause/overlay/policy for passive inspection. This established non-interference obligation does not automatically require rejecting the subsequent keypress."
+    },
+    "registeredAccessorGap": {
+      "disposition": "SOURCE_CONFIRMED_EXISTING_N10B-01_RETAINED",
+      "currentConsumerReference": "076-pending-round-lifecycle-navigation.js-read-001.txt:104-117",
+      "retainedOwnerResolution": "coverage-final-report:156-164 personally reviewed: full OWN Reveal public API inspection previously established addKeyBinding/removeKeyBinding at reveal.js:2899-2900, no getBindings/keyboard on returned API:2738-2973; private keyboard extension:2941-2969 is not the API returned at :2971. Controller getBindings:129-133 and bindings dispatch:235-255 do not make them public.",
+      "mechanism": "The consumer probes those unavailable public accessors and treats null as no registered override; a registered arrow binding can be unobserved. Retain uncertainty rather than silently adding a public interface.",
+      "bounds": "Owner resolution is retained from the same Evidence final report, not newly re-read in this narrow addendum. Linked dependency is outside recursive freeze; runtime-dist equivalence remains unresolved. No Native conclusion adopted."
+    },
+    "E11-SALVAGE-CHRON-01": {
+      "disposition": "SOURCE_CONFIRMED_REPAIR_REQUIRED_EXISTING_S10-C1_AND_09-C1",
+      "mechanism": "observation-errors:43-49 creates a new Node readiness Error and assigns recorderError.obsOrder + 0.01, or fixed category rank. :81-91 sorts/records/throws by that invented location; it is not a genuine readiness observation-site witness.",
+      "reference": "079-pending-round-lifecycle-observation-errors.js-read-001.txt:39-49,81-91",
+      "credit": "Browser observation stamps and document-last handling within this helper improve local interleaving; neither closes the invented readiness position nor the separate live collector seam."
+    },
+    "forwardedOccurrenceIdentity": {
+      "disposition": "SOURCE_CONFIRMED_UNCLOSED_ORIGINAL_S10-C1_OCCURRENCE_IDENTITY",
+      "mechanism": "Separate Playwright serializations of a retained browser envelope produce distinct Node objects. error-ledger:83-98 deduplicates only identical original/normalized references or its object-keyed WeakMap. materializeEnvelope:50-68 retains documentId/timeOrigin but not obsOrder as occurrence identity; serialization:11-47 also omits obsOrder. Consequently, the same retained occurrence can append again at :100-102 when forwarded through another evaluation; local sorting stamps alone do not bind occurrence identity.",
+      "references": [
+        "061-pending-round-lifecycle-error-ledger.js-read-001.txt:11-68,75-102",
+        "077-pending-round-lifecycle-observation-browser.js-read-001.txt:149-158",
+        "evidence11-coverage-final-report.json:144,148,173"
+      ],
+      "bounds": "Static forwarding reasoning only; no repeated evaluate or callback invoked. A durable same-domain occurrence witness is required by the original obligation, not message equality or fictional cross-document order."
+    }
+  },
+  "preservation": {
+    "allOtherPriorFindings": "Retained unchanged by reference to evidence11-coverage-final-report.json and evidence11-integrated-report.json. This supplement corrects only the dispatch citation/scope and adjudicates the two missing seams; it does not replace historical bodies, receipts or completion coverage.",
+    "retractions": {
+      "Reveal.isPausedMissing": "RETRACTED; public owner API exposes it; never a defect",
+      "clickTriviaNextMissing": "RETRACTED; controls.js:157-161 exports it; missing caller sink remains deferred cutover, not missing export"
+    },
+    "credits": [
+      "Local lifecycle-store integrity, independent histories and drained uncertainty bounds",
+      "Start/expiry witness bounds and full crossover retention",
+      "First recorder cause retention (NF-A2)",
+      "Button-guard raw staging and sibling normalization before document validation (NF-A3)",
+      "Initial navigation document binding (N10B-02)",
+      "Three-path explicit wrapper phase reconciliation and stable serialized exposure (S10-C2 / 09-S4 / 09-S5)",
+      "Actual Node Error reference with sidecar metadata; portable frame/pageerror arrival dispatch",
+      "State-before-UI collection, complete finalization exposure and actual Page-containing surface contexts"
+    ],
+    "creditLimit": "Source-only preserved credits from coverage-final-report:205-215; not independently re-certified transitive owners or runtime acceptance. The two new seam dispositions narrow only the previously overbroad sibling/chronology closure implications.",
+    "NF-A4": {
+      "status": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+      "excludedFromSixAuthorized11Repairs": true,
+      "seventhRepair": false,
+      "repaired": false,
+      "disproved": false,
+      "waived": false,
+      "completePacketStoreIntegrityClaimed": false,
+      "reference": "015-pending-substrate-11-dispatch-authority.json-read-001.txt:210-222; coverage-final-report:217-228",
+      "mechanism": "Public packet array/element replacement may diverge from retained native-action detail while lifecycle-store health remains true; this separate packet-store extension remains excluded/unresolved."
+    }
+  },
+  "limits": [
+    "Same Evidence audit supplement, not another opinion, source patch, producer retry or authorization for substantive progression.",
+    "Prior truncated historical explanation fields, archived Evidence11 audit gaps and absent transitive owner bodies remain exactly bounded by coverage-final-report:248-290; this addendum does not certify full-contract completeness.",
+    "Genuine Native11 delivery remains absent and receipt limitations remain separate from source findings; no receipt reconstructed.",
+    "All eighteen rows across Present/share/file remain required; Gap4 open, gaps5-9 and final qualification blocked. No caller cutover or historical PASS substitution.",
+    "Only document/source reads and this sole absolute-path JSON write; no commands, tests, imports, callbacks, evaluation, builds, browser checks or source fixes."
+  ],
+  "flags": {
+    "admission": false,
+    "sourceReady": false,
+    "sourceGatePassed": false,
+    "qualification": false,
+    "PASS": false,
+    "runtimeProgression": false,
+    "fullContractComplete": false,
+    "testsRun": false,
+    "commandsRun": false,
+    "importsRun": false,
+    "callbacksInvoked": false,
+    "evaluationRun": false,
+    "sourceFixed": false,
+    "callerCutover": false,
+    "producerRetry": false,
+    "merge": false,
+    "push": false,
+    "deploy": false
+  },
+  "matrix": { "declared": 54, "admitted": 0, "executed": 0, "status": "REQUIRED_UNEXECUTED" },
+  "summary": "Correct dispatch citation to navigation.js:143 and reject-before-keypress repair status to SCOPE_APPLICABILITY_UNRESOLVED. Personally traced exact-match sibling omission on outer rejection and live-root Node-document preemption as confirmed failures of original all-observed/chronology obligations; retained existing N10B-01/S10-C1 findings, credits, retractions and excluded NF-A4. No original artifact changed or runtime authority exercised."
+}

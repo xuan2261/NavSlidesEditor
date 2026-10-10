@@ -1,0 +1,182 @@
+{
+  "component": "Native11 continuation — immutable independent state and UI",
+  "scope": "Six immutable state/assertion files and the assigned mount/question owners; targeted consumer and production-policy reads for their actual interfaces. This is a continuation component, not an additional independent opinion or a whole-audit source verdict.",
+  "exactSubject": {
+    "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+    "recordedFullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+    "identityBasis": "Existing preservation authority only; no hash, count or immutability remeasurement."
+  },
+  "admission": false,
+  "sourceReady": false,
+  "qualification": false,
+  "passClaimed": false,
+  "runtimeExecuted": false,
+  "declaredCells": 54,
+  "staticallyAdmittedCells": 0,
+  "executedAcceptanceCells": 0,
+  "readEvidence": {
+    "provenance": "All listed reads were personally performed in this continuation using read/glob/grep only. Complete primary bodies are retained in this component's tool transcript, not inferred from grep declarations or another audit. The integration owner must inspect those actual full outputs or reread the frozen files; this summary does not replace full-body integration coverage.",
+    "primaryPrefix": "tests/e2e/education/",
+    "primaryFiles": [
+      {
+        "file": "pending-round-lifecycle-state.js",
+        "coveredRanges": [
+          [
+            1,
+            120
+          ]
+        ],
+        "requestedRead": "1-210:raw",
+        "eof": 120,
+        "eofText": "}",
+        "completeBody": true,
+        "outputReference": "Tool call Reading independent state dispatch; Locating primary file endpoints anchors the final assertPeerInvariance closure."
+      },
+      {
+        "file": "pending-round-lifecycle-quiz-state.js",
+        "coveredRanges": [
+          [
+            1,
+            106
+          ]
+        ],
+        "requestedRead": "1-230:raw",
+        "eof": 106,
+        "eofText": "}",
+        "completeBody": true,
+        "outputReference": "Tool call Reading complete quiz expectations; Locating primary file endpoints anchors the final assertQuizTerminalExpiry closure."
+      },
+      {
+        "file": "pending-round-lifecycle-hot-potato-state.js",
+        "coveredRanges": [
+          [
+            1,
+            112
+          ]
+        ],
+        "requestedRead": "1-220:raw",
+        "eof": 112,
+        "eofText": "}",
+        "completeBody": true,
+        "outputReference": "Tool call Reading hot potato expectations; Locating primary file endpoints anchors the final roster-peer UI closure."
+      },
+      {
+        "file": "pending-round-lifecycle-jeopardy-state.js",
+        "coveredRanges": [
+          [
+            1,
+            106
+          ]
+        ],
+        "requestedRead": "1-220:raw",
+        "eof": 106,
+        "eofText": "}",
+        "completeBody": true,
+        "outputReference": "Tool call Reading jeopardy expectations; Locating primary file endpoints anchors the reset UI closure."
+      },
+      {
+        "file": "pending-round-lifecycle-relay-state.js",
+        "coveredRanges": [
+          [
+            1,
+            114
+          ]
+        ],
+        "requestedRead": "1-230:raw",
+        "eof": 114,
+        "eofText": "}",
+        "completeBody": true,
+        "outputReference": "Tool call Reading relay expectations; Locating primary file endpoints anchors the reset UI closure."
+      },
+      {
+        "file": "pending-round-lifecycle-trivia-state.js",
+        "coveredRanges": [
+          [
+            1,
+            197
+          ]
+        ],
+        "requestedRead": "1-250:raw;187-210:raw",
+        "eof": 197,
+        "eofText": "}",
+        "completeBody": true,
+        "outputReference": "Tool calls Reading trivia expectations and Confirming trivia complete EOF; Confirming primary EOF anchors explicitly returns lines190-197."
+      }
+    ],
+    "assignedOwners": [
+      {
+        "file": "shared/src/education/browser/mount.js",
+        "coveredRanges": [
+          [
+            1,
+            138
+          ]
+        ],
+        "eof": 138,
+        "completeBody": true,
+        "outputReference": "Reading browser mount owner; Certifying full mount raw body, requested1-145:raw; Anchoring owner policy symbols."
+      },
+      {
+        "file": "shared/src/education/question-shape.js",
+        "coveredRanges": [
+          [
+            1,
+            150
+          ]
+        ],
+        "eof": 150,
+        "completeBody": true,
+        "outputReference": "Reading question shape owner; Certifying full question shape body, requested1-160:raw; Confirming primary EOF anchors returns138-150."
+      },
+      {
+        "file": "shared/src/education/question-factory.js",
+        "coveredRanges": [
+          [
+            1,
+            87
+          ]
+        ],
+        "eof": 87,
+        "completeBody": true,
+        "outputReference": "Reading question factory owner, requested1-240; Anchoring owner policy symbols confirms module.exports at87."
+      }
+    ],
+    "fullPolicyAndUIOwnerReads": [
+      {
+        "file": "shared/src/education/runtime-session.js",
+        "ranges": [
+          [
+            1,
+            138
+          ]
+        ],
+        "eofCovered": true
+      },
+      {
+        "file": "shared/src/education/browser/local-activity.js",
+        "ranges": [
+          [
+            1,
+            124
+          ]
+        ],
+        "eofCovered": true
+      },
+      {
+        "file": "shared/src/education/browser/reveal-lifecycle.js",
+        "ranges": [
+          [
+            1,
+            145
+          ]
+        ],
+        "eofCovered": true
+      },
+      {
+        "file": "shared/src/education/quiz-session.js",
+        "ranges": [
+          [
+            1,
+            149
+
+[Showing lines 1-180 of 783. Use :181 to continue]

@@ -26,19 +26,46 @@ function parseDatePos(value, startDate, endDate, width, padding, yearMode) {
   return padding + ((date - start) / (end - start || 1)) * (width - padding * 2)
 }
 
-function buildTicks(startDate, endDate, spacing, yearMode = true) {
+function automaticYearStep(start, end, availableWidth, fontSize) {
+  const labelWidth =
+    Math.max(8, fontSize) * (Math.max(String(start).length, String(end).length) + 1)
+  const intervals = Math.max(1, Math.floor(availableWidth / labelWidth))
+  const minimum = Math.max(1, Math.abs(end - start) / intervals)
+  const power = 10 ** Math.floor(Math.log10(minimum))
+  if (minimum <= power) return power
+  if (minimum <= power * 2) return power * 2
+  if (minimum <= power * 5) return power * 5
+  return power * 10
+}
+
+function buildTicks(
+  startDate,
+  endDate,
+  spacing,
+  yearMode = true,
+  availableWidth = 740,
+  fontSize = 10
+) {
   if (yearMode) {
     const start = yearValue(startDate)
     const end = yearValue(endDate)
     if (![start, end].every(Number.isFinite)) return []
-    const step = spacing === '1000year' ? 1000
-      : spacing === '100year' ? 100
-      : spacing === '10year' ? 10
-      : spacing === 'year' ? 1
-      : Math.abs(end - start) > 8 ? 2 : 1
+    const step =
+      spacing === '1000year'
+        ? 1000
+        : spacing === '100year'
+          ? 100
+          : spacing === '10year'
+            ? 10
+            : spacing === 'year'
+              ? 1
+              : automaticYearStep(start, end, availableWidth, fontSize)
     const direction = start <= end ? 1 : -1
     const first = direction > 0 ? Math.ceil(start / step) * step : Math.floor(start / step) * step
-    return boundedTicks(first, end, direction * step, (year) => ({ date: String(year), label: String(year) }))
+    return boundedTicks(first, end, direction * step, (year) => ({
+      date: String(year),
+      label: String(year),
+    }))
   }
 
   const start = new Date(startDate)
@@ -47,7 +74,10 @@ function buildTicks(startDate, endDate, spacing, yearMode = true) {
   if (spacing === 'day') {
     return boundedTicks(start.getTime(), end.getTime(), 86400000, (time) => {
       const date = new Date(time)
-      return { date: date.toISOString().split('T')[0], label: `${date.getMonth() + 1}/${date.getDate()}` }
+      return {
+        date: date.toISOString().split('T')[0],
+        label: `${date.getMonth() + 1}/${date.getDate()}`,
+      }
     })
   }
   if (spacing === 'month') {
@@ -62,10 +92,14 @@ function buildTicks(startDate, endDate, spacing, yearMode = true) {
       }
     })
   }
-  const yearSpan = (end - start) / (365.25 * 86400000)
-  const step = spacing === 'year' ? 1 : yearSpan > 8 ? 2 : 1
-  return boundedTicks(start.getFullYear(), end.getFullYear(), step,
-    (year) => ({ date: `${year}-01-01`, label: String(year) }))
+  const step =
+    spacing === 'year'
+      ? 1
+      : automaticYearStep(start.getFullYear(), end.getFullYear(), availableWidth, fontSize)
+  return boundedTicks(start.getFullYear(), end.getFullYear(), step, (year) => ({
+    date: `${year}-01-01`,
+    label: String(year),
+  }))
 }
 
 module.exports = { MAX_TIMELINE_TICKS, buildTicks, parseDatePos }

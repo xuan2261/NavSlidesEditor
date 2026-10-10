@@ -1,0 +1,110 @@
+import { expect } from '@playwright/test'
+import { RESET_CASES } from './pending-round-lifecycle-cases.js'
+import {
+  getRoot,
+  getGameState,
+  resetGame,
+} from './pending-round-lifecycle-controls.js'
+import {
+  preconsumeTimerToWindow,
+  measureQuizCheckpoint,
+  measureBatonPendingAtReset,
+} from './pending-round-lifecycle-clock.js'
+import { readCorrelatedStateAndTime } from './pending-round-lifecycle-observation.js'
+import {
+  startWitnessTimer,
+  waitForWitnessExpiry,
+} from './pending-round-lifecycle-witness.js'
+import {
+  assertCompleteResetState,
+  assertResetUI,
+} from './pending-round-lifecycle-state.js'
+import {
+  assertQuizCheckpoint,
+  assertQuizTerminalExpiry,
+} from './pending-round-lifecycle-quiz-state.js'
+
+export { RESET_CASES }
+
+export async function runResetJourney(page, caseDef, evidence) {
+  const root = getRoot(page, 'p-slide', 'g-pri')
+  const witness = getRoot(page, 'p-slide', 'witness-timer')
+
+  const pendingRes = await caseDef.preparePending(root)
+  const pendingState = pendingRes.state || (await getGameState(root))
+  evidence.stage('pending', pendingState)
+  const oldGen = pendingState.generation
+
+  let oldDue = null
+  let resetBracket = null
+
+  if (caseDef.isBaton) {
+    const batonSample = await measureBatonPendingAtReset(root, evidence)
+    evidence.stage('batonSample', batonSample)
+    oldDue = batonSample.batonDue
+    resetBracket = await resetGame(root)
+    evidence.stage('resetBracket', resetBracket)
+    expect(oldDue).toBeGreaterThan(resetBracket.tBefore)
+  } else {
+    const preconsumed = await preconsumeTimerToWindow(root, page, evidence)
+    evidence.stage('preconsumed', preconsumed)
+    oldDue = preconsumed.due
+    resetBracket = await resetGame(root)
+    evidence.stage('resetBracket', resetBracket)
+    expect(oldDue).toBeGreaterThan(resetBracket.tBefore)
+  }
+
+  const baselineSample = await readCorrelatedStateAndTime(root)
+  evidence.stage('baselineSample', baselineSample)
+  const baseline = baselineSample.state
+  expect(baseline.generation).toBe(oldGen + 1)
+
+  const deadlineBounds = {
+    min: resetBracket.tBefore + 5000,
+    max: resetBracket.tAfter + 5000 + 800,
+  }
+  assertCompleteResetState(caseDef.gameType, baseline, oldGen, caseDef.config, deadlineBounds)
+  await assertResetUI(caseDef.gameType, root)
+
+  const witnessStart = await startWitnessTimer(witness, evidence)
+  evidence.stage('witnessStart', witnessStart)
+
+  const witnessFinal = await waitForWitnessExpiry(witness, evidence)
+  evidence.stage('witnessFinal', witnessFinal)
+
+  const nowSample = await readCorrelatedStateAndTime(root)
+  evidence.stage('nowSample', nowSample)
+  expect(nowSample.activityNow).toBeGreaterThanOrEqual(oldDue)
+
+  if (caseDef.isQuiz) {
+    const cp = await measureQuizCheckpoint(root, page, oldDue, baseline.deadline, evidence)
+    evidence.stage('quizCheckpoint', cp)
+    assertQuizCheckpoint(cp.checkpointState, caseDef.config, oldGen + 1, baseline.deadline)
+
+    await expect.poll(async () => {
+      const s = await getGameState(root)
+      return s.status === 'terminal' && s.lastResult?.error === 'deadline'
+    }).toBe(true)
+
+    const terminal = await getGameState(root)
+    evidence.stage('terminal', terminal)
+    assertQuizTerminalExpiry(terminal, oldGen + 1, baseline.deadline)
+  } else {
+    const settledSample = await readCorrelatedStateAndTime(root)
+    evidence.stage('settledSample', settledSample)
+    const settled = settledSample.state
+    expect(settled.generation).toBe(oldGen + 1)
+    assertCompleteResetState(caseDef.gameType, settled, oldGen, caseDef.config, deadlineBounds)
+    await assertResetUI(caseDef.gameType, root)
+  }
+
+  const finalState = await getGameState(root)
+  evidence.stage('finalState', finalState)
+
+  return {
+    pending: pendingState,
+    baseline,
+    finalState,
+    resetBracket,
+  }
+}

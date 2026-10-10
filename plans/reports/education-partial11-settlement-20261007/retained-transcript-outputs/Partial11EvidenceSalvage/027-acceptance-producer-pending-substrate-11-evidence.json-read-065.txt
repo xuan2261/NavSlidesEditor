@@ -1,0 +1,142 @@
+      {
+        "id": "Evidence08-1",
+        "title": "E06-01-C Exclude serialized diagnostics from occurrence ingestion",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "disposition": "SOURCE_CORRECTED_LOCAL",
+        "evidence": "error-exposure.js:72-76,89-92,108-111 verifies item/item.error instanceof Error; non-Error serialized diagnostic objects are excluded from recordError calls and remain preserved in caller arrays."
+      },
+      {
+        "id": "Evidence08-2",
+        "title": "E06-01-C Retain ledger metadata for already-ingested references",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "disposition": "SOURCE_CORRECTED_LOCAL",
+        "evidence": "error-exposure.js:77-80,94-100,112-120 enriches metadata into existing entry via reconcileEntry without adding duplicate occurrences or clobbering recorded phase."
+      }
+    ],
+    "settled09Defects": [
+      {
+        "id": "09-S1",
+        "owner": "Native",
+        "title": "Restore evaluateActionCandidates function closing brace",
+        "disposition": "SOURCE_CORRECTED_LOCAL (Native partition)"
+      },
+      {
+        "id": "09-S2",
+        "owner": "Native",
+        "title": "Restore serializable declaration before completing packet",
+        "disposition": "SOURCE_CORRECTED_LOCAL (Native partition)"
+      },
+      {
+        "id": "09-S3",
+        "owner": "Native",
+        "title": "Ingest all relevant fallback packet siblings before outer throw",
+        "disposition": "SOURCE_CORRECTED_LOCAL (Native partition)"
+      },
+      {
+        "id": "09-S4",
+        "owner": "Evidence",
+        "title": "Maintain stable ledger-owned exposed serialization identity",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "disposition": "SOURCE_CORRECTED_LOCAL",
+        "evidence": "reconcileEntry updates existing.serialized in place via Object.assign, preventing duplicate records for the same occurrence in caller-visible exposures."
+      },
+      {
+        "id": "09-S5",
+        "owner": "Evidence",
+        "title": "Authoritative wrapper phase precedence over intrinsic Error.phase",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "disposition": "SOURCE_CORRECTED_LOCAL",
+        "evidence": "Explicit valid wrapper phase survives serialization and reconciliation without mutating Error.phase or dropping provenance."
+      }
+    ],
+    "unresolved09ChronologyObligations": [
+      {
+        "id": "09-C1",
+        "owner": "Native",
+        "title": "Packet getter vs later extraction store/not-ready occurrence arrival chronology",
+        "disposition": "REPAIR_REQUIRED (Native partition S10-C1)"
+      },
+      {
+        "id": "09-C2",
+        "owner": "Evidence",
+        "title": "Caller-ledger [a, b] arrival chronology before secondary-only entries",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "disposition": "SOURCE_CORRECTED_LOCAL",
+        "evidence": "actualRef.errorLedger is traversed before secondaryFailures, ensuring caller-ledger [a, b] sequence is preserved in common ledger before secondary-only occurrences."
+      }
+    ],
+    "new11Findings": [
+      {
+        "id": "S10-C1",
+        "owner": "Native",
+        "title": "Order non-setup recorder errors by actual browser observation, not category",
+        "disposition": "NATIVE_PARTITION_OWNED"
+      },
+      {
+        "id": "NF-A2",
+        "owner": "Native",
+        "title": "Do not overwrite an existing recorder error in record()",
+        "disposition": "NATIVE_PARTITION_OWNED"
+      },
+      {
+        "id": "NF-A3",
+        "owner": "Native",
+        "title": "Normalize button-guard snapshot failures before document validation",
+        "disposition": "NATIVE_PARTITION_OWNED"
+      },
+      {
+        "id": "N10B-01",
+        "owner": "Native",
+        "title": "Capture remaining Reveal dispatcher guards in keyboardEligible",
+        "disposition": "NATIVE_PARTITION_OWNED"
+      },
+      {
+        "id": "N10B-02",
+        "owner": "Native",
+        "title": "Bind the initial slide read to its observed document before early return",
+        "disposition": "NATIVE_PARTITION_OWNED"
+      },
+      {
+        "id": "S10-C2",
+        "owner": "Evidence",
+        "title": "Prevent phase-less caller errorLedger items from overwriting authoritative recorded phases",
+        "disposition": "SOURCE_CORRECTED_LOCAL",
+        "evidence": "Repaired in error-exposure.js:7-124. Phase-less wrappers and wrappers with intrinsic Error.phase cannot clobber an already-recorded explicit phase during reconciliation."
+      }
+    ]
+  },
+  "preservedInvariants": {
+    "E06-02": {
+      "definition": "Chronological frame arrival dispatch",
+      "evidence": "release-portable-inspection.js:20-33 and release-surfaces.js:80-82,100-110 dispatch frame evaluation and pageerror events at arrival into common ledger."
+    },
+    "E06-03": {
+      "definition": "Actual Node Error identity with separate sidecar metadata",
+      "evidence": "release-portable-inspection.js:25-31 and error-ledger.js:87-103 pass raw Error instances without mutation, storing frameUrl and diagnostics in sidecar metadata."
+    },
+    "E06-04": {
+      "definition": "State-before-UI observation and dispatch within snapshots",
+      "evidence": "live-root-observation.js:119-124 and live-evidence.js:38-43 record stateError before uiError."
+    },
+    "E06-05": {
+      "definition": "Recursive rootInstanceId, timeOrigin, and cause normalization/propagation",
+      "evidence": "error-ledger.js:20,30-45,61-68 and evidence.js:173-178 normalize and serialize causes recursively with origin, rootInstanceId, and timeOrigin preserved."
+    },
+    "additionalPreserved": [
+      "Physical line limit: all 11 Evidence files strictly <200 LOC.",
+      "Exact 12 Phase2 caller files remain byte-immutable.",
+      "Strict portable success keys { protocol, httpAttempts, socketAttempts, errors } preserved.",
+      "Real surface callback context { page, surface, file, inspectNetwork, diagnostics, error } preserved.",
+      "Identity-based deduplication in error ledger preserved."
+    ]
+  },
+  "NF_A4_ScopeDisposition": {
+    "id": "NF-A4",
+    "title": "Bind returned action packets to the integrity-checked native-action records",
+    "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+    "excludedFromRequiredRepairs": true,
+    "scopeDecision": "Original N07-04/N07-05 explicitly cover lifecycle store integrity. Extending identical checks to separately replaceable action-packet storage is not automatically a required cutover; no new repair scope authorized.",
+    "counselInstructions": "Retained verbatim with source mechanism and unresolved applicability. Not labeled repaired, disproved, waived, or source-clean. Normal reviewers must state that GO concerns authorized obligations and disclose NF-A4 separately."
+  },
+
+[Showing lines 261-400 of 605. Use :401 to continue]

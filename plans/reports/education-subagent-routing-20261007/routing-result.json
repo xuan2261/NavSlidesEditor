@@ -1,0 +1,73 @@
+{
+  "kind": "SUBAGENT_ROUTING_ATTEMPT_SCHEMA_VERIFICATION",
+  "date": "2026-10-07",
+  "verdict": "SEPARATE_GEMINI_PIN_NOT_ESTABLISHED_NO_CONFIG_CHANGE",
+  "authorization": "User authorized carrying out proposal to configure separate subagent routing, preserve coordinator/limits and not implement source.",
+  "target": "local8045/gemini-3.8-flash-high",
+  "targetRegistryDeclared": true,
+  "currentTaskSchema": {
+    "parameters": [
+      "tasks.description",
+      "tasks.difficulty",
+      "tasks.prompt",
+      "tasks.scope",
+      "tasks.subagent_type"
+    ],
+    "perCallProviderModelParameter": false
+  },
+  "configObserved": {
+    "subagentEnabled": true,
+    "declaredSubagentKeys": [
+      "enabled",
+      "initial_turns",
+      "max_turns",
+      "max_concurrent",
+      "timeout_secs",
+      "max_rounds"
+    ],
+    "supportedSeparateModelPinField": "NOT_ESTABLISHED"
+  },
+  "executionObservation": {
+    "work": "Read-only schema exploration only, not substantive education implementation",
+    "actualTaskReceiptVisible": "<task id=\"explore#1\" model=\"gpt-6.1-sol\" state=\"completed\">",
+    "effectiveModelForObservedTask": "gpt-6.1-sol",
+    "GeminiBindingVerified": false,
+    "meaning": "Subagent capability works, but observed execution does not satisfy substantive producer pin. Prompt text cannot force provider routing. Do not infer the active task model from registry/default declarations."
+  },
+  "schemaResearch": {
+    "toolsUsed": [
+      "jeikcode_config guide models/tools/all",
+      "code_explore",
+      "grep/read Rust source",
+      "read-only exploration subagents"
+    ],
+    "sourceEvidenceLimit": "Paths and source lookups did not establish a supported live configuration field/selector. Do not treat guessed model_id/small_model_id/large_model_id fields as effective.",
+    "noFurtherPermissionNeededForThisResearch": true,
+    "previousProposalCorrection": "Assistant proposed configuring pin before confirming a supported mechanism. This proposal was premature. Authorization does not create a missing tool parameter or prove schema support."
+  },
+  "preservation": {
+    "configEdited": false,
+    "configReloaded": false,
+    "configBackupCreated": false,
+    "backupReason": "No edit performed; avoided unnecessary duplicate config containing credentials.",
+    "coordinatorModelChanged": false,
+    "timeoutChanged": false,
+    "retryOrFallbackChanged": false,
+    "DReadByAgent": false,
+    "candidateCreated": false,
+    "sourceEdited": false,
+    "substantiveProducerInvoked": false,
+    "schemaResearchSubagentInferenceOccurred": true,
+    "runtimeAcceptanceExecuted": false,
+    "declaredCells": 54,
+    "admittedCells": 0,
+    "executedCells": 0,
+    "NF_A4": "EXCLUDED_SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED"
+  },
+  "actualNextPrerequisite": {
+    "option1": "Expose supported per-task provider/model routing in JeikCode, or supply exact supported config field plus observed runtime selector evidence for installed version. Agent will not patch host application within education scope.",
+    "option2": "Operate education continuation in a genuinely Gemini-selected separate session, with receipt proving any inherited subagent model. Coordinator of that separate session is Gemini; current coordinator remains unchanged. This is not proof that present task tool can pin Gemini.",
+    "policy": "Before substantive source implementation, preserve independent no-retry/no-fallback and bounded new-subject authority. No historical receipt reconstruction or Native11 retry.",
+    "notRecommendation": "Do not repeat generic permission requests, CLI help/startup or registry scans; these have already been performed and cannot fix observed task binding."
+  }
+}

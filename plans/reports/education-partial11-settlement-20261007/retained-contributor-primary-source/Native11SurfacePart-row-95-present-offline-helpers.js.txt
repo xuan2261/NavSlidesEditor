@@ -1,0 +1,12 @@
+
+export async function launchPresentSlidePopup(page, slideIndex) {
+  const { popup, url } = await launchPresentPopup(page)
+  try {
+    await popup.goto(`${url}#/${slideIndex}`)
+    await popup.waitForSelector('.reveal section.present', { timeout: 15000 })
+    return { popup, url }
+  } catch (error) {
+    await popup.close()
+    throw error
+  }
+}

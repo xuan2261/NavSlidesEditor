@@ -1,0 +1,592 @@
+[
+  {
+    "transcript": "C:\\Users\\Z10PAD8C_Xuan2261\\.omp\\agent\\sessions\\--C--Work-NavSlidesEditor--\\2026-10-04T11-03-27-941Z_01a10695-43c5-7000-80a5-281eb32934b4\\Native11SurfacePart.jsonl",
+    "transcriptLine": 216,
+    "timestamp": "2026-10-06T03:14:39.325Z",
+    "toolCallId": "call_WuKaAKjcUtAjNZ0R8A2P5qIp|fc_0e00d8149311b620016ac466ba31ac87d0a5f8c922d130095c",
+    "data": {
+      "component": "Native11 continuation — evidence surfaces and ownership",
+      "auditIdentity": "A bounded component of the already authorized Native11 static salvage audit, not another independent opinion, producer, correction, admission gate or whole-audit verdict.",
+      "exactSubject": {
+        "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+        "recordedFullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+        "identityBasis": "Main's preserved identity and scope records; not remeasured."
+      },
+      "flags": {
+        "admission": false,
+        "sourceReady": false,
+        "qualification": false,
+        "passClaimed": false,
+        "runtimeExecuted": false,
+        "declaredCells": 54,
+        "staticallyAdmittedCells": 0,
+        "executedAcceptanceCells": 0
+      },
+      "primaryCoverage": {
+        "complete": true,
+        "files": [
+          "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+          "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+          "tests/e2e/education/release-surfaces.js",
+          "tests/e2e/education/present-offline-helpers.js",
+          "tests/e2e/education/release-portable-inspection.js"
+        ],
+        "primaryOwnersComplete": [
+          "tests/e2e/fixtures/test-fixtures.js",
+          "tests/e2e/pages/editor-page.js",
+          "tests/e2e/education/release-game-fixtures.js",
+          "tests/e2e/education/release-content-fields.js"
+        ],
+        "preservationDistinction": "Main's full helper inventory records all five primary files as modified=false for Correction11. No finding below is presented as a newly introduced Correction11 defect in those five files."
+      },
+      "loadBearingSignatures": [
+        {
+          "symbol": "visitSurface(options, visit)",
+          "source": "tests/e2e/education/pending-round-lifecycle-surfaces.js:40-193",
+          "contract": "options supplies page, request, browser, id, testInfo, surface and a mandatory evidence sink. The callback receives an object with exactly the authored fields page, surface, file, inspectNetwork, diagnostics and error. Present/share supply their actual Page and null file/inspection/diagnostics/error; file supplies its actual Page, downloaded path, inspector closure, successful before-inspection diagnostics and null error. This is not the generic Page-first release callback."
+        },
+        {
+          "symbol": "validateSurfaceSink(evidence)",
+          "source": "tests/e2e/education/pending-round-lifecycle-surfaces.js:7-24",
+          "contract": "Requires stage, recordError, setActivePage, collectLive, bindDocumentIdentity, assertDocumentIdentity, getExpectedRoots, getPrimaryError and produceThrow; validates the authored manifest before surface effects."
+        },
+        {
+          "symbol": "freshPortable(browser, file, { initScripts = [], onPageCreated, evidence } = {})",
+          "source": "tests/e2e/education/release-surfaces.js:18-143",
+          "contract": "Returns the actual {page, context, file, diagnostics, inspectNetwork} handle. Sink absence remains supported. onPageCreated receives that same handle before navigation; callback-owner cleanup intentionally differs from the no-callback path."
+        },
+        {
+          "symbol": "visitGeneratedSurfaces({page, request, browser, id, testInfo, surfaces = ['present','share','file']}, visit)",
+          "source": "tests/e2e/education/release-surfaces.js:145-180",
+          "contract": "Generic no-sink callbacks remain visit(actualPage, surface, artifacts[, network]); file receives [file] and inspection network data. Do not migrate this API to visitSurface's context-object convention."
+        },
+        {
+          "symbol": "launchPresentPopup(page) / launchPresentSlidePopup(page, slideIndex)",
+          "source": "tests/e2e/education/present-offline-helpers.js:5-28",
+          "contract": "Return {popup, url}; use the native Present menu and From beginning control. Slide helper navigates the returned URL with the slide hash."
+        },
+        {
+          "symbol": "executePortableNetworkInspection({...})",
+          "source": "tests/e2e/education/release-portable-inspection.js:8-55",
+          "contract": "Consumes the actual Page, shared attempt/error/frame arrays, recordArrival/getPrimaryError callbacks, rawDiagnostics and actual handle. Successful result has exactly protocol, httpAttempts, socketAttempts and errors; raw handle diagnostics intentionally have additional pageErrors/frameSuccesses/frameFailures."
+        },
+        {
+          "symbol": "withPortable(page, browser, testInfo, filename, inspect, options = {})",
+          "source": "tests/e2e/education/release-content-fields.js:133-142",
+          "contract": "Passes options to freshPortable, invokes inspect(portable.page, file), returns {file, observed, network}, closes the actual portable.context in finally after a handle is returned."
+        },
+        {
+          "symbol": "API and editor owners",
+          "source": "tests/e2e/fixtures/test-fixtures.js:7-36,89-130; tests/e2e/pages/editor-page.js:14-55,77-84",
+          "contract": "apiGetPresentation(request,id) performs the real GET and throws on a failed response; apiCreateShareLink(request,id) performs the real share POST and returns parsed JSON. Both use the existing loopback guard and bounded transient-status retry owner. EditorPage stores the actual Page; gotoPresentation installs its tutorial/E2E script, navigates /editor/:id and awaits the actual canvas locator through waitForReady."
+        }
+      ],
+      "preservedMechanisms": [
+        {
+          "obligation": "Earliest passive lifecycle setup and actual Page ownership",
+          "evidence": [
+            "pending-round-lifecycle-surfaces.js:44-85",
+            "pending-round-lifecycle-surfaces.js:87-123",
+            "pending-round-lifecycle-surfaces.js:125-143",
+            "release-surfaces.js:56-99,114-124",
+            "present-offline-helpers.js:5-15"
+          ],
+          "observation": "Present registers the passive script on the parent BrowserContext before the native popup action, retains the popup from the early popup event, attaches the active-page error listener and stages creation before later readiness/document operations. Share registers the context init script before creating its page and attaches active ownership before goto. File registers the supplied passive script before context.newPage and transfers the complete handle to the callback before file navigation. Its callback first assigns stashedHandle, so later metadata/staging/navigation failures still leave the finally block with the actual context to close.",
+          "boundary": "This proves static registration/ownership ordering, not execution timing or external Playwright/Reveal dispatcher equivalence."
+        },
+        {
+          "obligation": "Raw document identity and exact root manifest/cardinality",
+          "evidence": [
+            "pending-round-lifecycle-evidence-domain.js:9-39,46-78,80-143",
+            "pending-round-lifecycle-surfaces.js:57-63,95-103,139-145",
+            "pending-round-lifecycle-evidence.js:49-90",
+            "pending-round-lifecycle-live-evidence.js:21-57"
+          ],
+          "observation": "Manifests require a nonempty array, exact three-key entries, nonempty string fields and uniqueness checking. Observed roots require equal cardinality and one-use exact slideId/elementId/gameType tuple matches. Present/share/file stage actual URL/documentId/timeOrigin before binding. Identity validation rejects about:blank/missing discriminators, compares normalized planned URLs with hashes ignored and checks the bound documentId/timeOrigin/normalized URL on subsequent reads. Bound identity is copied and cannot be rebound.",
+          "boundary": "Tuple/document validation remains connected; it does not make the immutable acceptance caller compatible, nor establish complete browser-versus-Node failure chronology in the live-root consumer."
+        },
+        {
+          "obligation": "Early portable handle transfer and failure-safe lifecycle-surface cleanup",
+          "evidence": ["release-surfaces.js:98-143", "pending-round-lifecycle-surfaces.js:128-190"],
+          "observation": "freshPortable's callback branch deliberately leaves cleanup to the transferred owner. visitSurface stores the handle before any further callback work. After navigation, document binding, before-network enforcement or visit failure, its finally still performs after-network inspection, stages settled diagnostics, collects live evidence and closes the actual context. Each after-inspection/live/close failure is independently recorded rather than replacing the runner error. Present/share likewise collect live evidence before safeClose; safeClose records a close occurrence."
+        },
+        {
+          "obligation": "Portable setup/navigation failures and no-sink ownership",
+          "evidence": [
+            "release-surfaces.js:29-54,56-143,169-179",
+            "release-content-fields.js:124-142",
+            "game-surfaces-release.spec.js:69-88"
+          ],
+          "observation": "Sink callbacks are optional. Setup failures close an allocated context; no-callback navigation/readiness failures also close it. A close failure is attached to the actual setup/navigation Error's secondaryFailures and is separately dispatched when a sink exists. Generic generated-surface and content-field consumers continue to use actual returned Page/context handles and close in finally. Frame inspection without a sink still throws the first retained actual frame Error. No alternate fake handle or successful fallback was added.",
+          "boundary": "The callback-transfer path and generic no-sink cleanup have specific pre-existing failure limits enumerated separately below; this is not an unconditional claim that every generic helper failure exposes all errors."
+        },
+        {
+          "obligation": "E06-02 — chronological frame arrival dispatch",
+          "evidence": [
+            "release-portable-inspection.js:20-33",
+            "release-surfaces.js:77-82",
+            "pending-round-lifecycle-error-ledger.js:82-117"
+          ],
+          "observation": "Each sequentially awaited frame rejection is dispatched immediately in its catch before inspection proceeds to the next frame. Page errors dispatch synchronously in their event callback. The ledger assigns occurrence order at recordError arrival. This preserves the original chronological-arrival meaning rather than substituting popup/success-key semantics."
+        },
+        {
+          "obligation": "E06-03 — actual Node Error identity and separate sidecar",
+          "evidence": [
+            "release-portable-inspection.js:25-30,40-42",
+            "release-surfaces.js:29-34",
+            "pending-round-lifecycle-error-ledger.js:11-72,82-117"
+          ],
+          "observation": "An actual frame Error is retained as rawError and forwarded unchanged; frameUrl is supplied as separate metadata. materializeEnvelope returns an actual Error unchanged. serializeError reads frameUrl from metadata without assigning it to the original Error. Without a sink, the thrown fallback is frameFailures[0].rawError. With a sink, the common-ledger primary can be an earlier independent occurrence."
+        },
+        {
+          "obligation": "Strict portable success shape and cumulative before/after enforcement",
+          "evidence": [
+            "release-portable-inspection.js:35-55",
+            "release-surfaces.js:36-54,84-99",
+            "pending-round-lifecycle-surfaces.js:145-181"
+          ],
+          "observation": "Inspection refreshes actual handle diagnostics before a frame-error throw or empty-network assertions. Frame failures remain cumulative across inspections. Success requires empty socketAttempts, httpAttempts and errors and returns exactly {protocol,httpAttempts,socketAttempts,errors}. Pending lifecycle file journeys inspect before and after the visit while routes block HTTP(S)/WebSocket activity from context setup onward. The callback diagnostics field is the strict before-result, not a substituted raw object."
+        },
+        {
+          "obligation": "E06-04 and E06-05 — local snapshot order and recursive provenance",
+          "evidence": [
+            "pending-round-lifecycle-native-snapshot.js:23-82",
+            "pending-round-lifecycle-live-root-observation.js:89-126",
+            "pending-round-lifecycle-error-ledger.js:11-72",
+            "pending-round-lifecycle-evidence.js:164-179"
+          ],
+          "observation": "The shared snapshot reader invokes state before UI; live-root dispatch lists actual stateError before uiError. Browser recursive envelopes carry phase/stack/cause/rootInstanceId/document/timeOrigin/URL and materialization/serialization retain those fields. Primary measured evidence propagates rootInstanceId/timeOrigin. These local credits do not excuse the separate live-root document-before-browser ordering defect."
+        },
+        {
+          "obligation": "Late live/source/attachment/common-ledger finalization",
+          "evidence": [
+            "pending-round-lifecycle-evidence.js:112-198",
+            "pending-round-lifecycle-live-evidence.js:59-120",
+            "pending-round-lifecycle-error-ledger.js:114-150",
+            "pending-round-lifecycle-error-exposure.js:125-171",
+            "test-fixtures.js:89-100"
+          ],
+          "observation": "collectLive independently catches diagnostics versus screenshot/PNG-attachment failures, so diagnostics failure does not skip the screenshot attempt. finalize records runner failure, missing baseline prerequisite, actual source GET/comparison failure and measured JSON-attachment failure. JSON attachment failure is recorded before produceThrow. Multi-error exposures refresh on later occurrences, preserving stable serialized identities and identity-based caller-ledger append behavior; a sole occurrence returns the actual Error without synthetic allErrors/errorLedger exposure. A failed GET is not represented as successful source equality."
+        },
+        {
+          "obligation": "S10-C2 exposure seam, 09-S4/09-S5 and original E06-01 preservation",
+          "evidence": [
+            "pending-round-lifecycle-error-exposure.js:7-53,65-123,125-171",
+            "pending-round-lifecycle-error-ledger.js:11-47,82-150"
+          ],
+          "observation": "All three ingestion exposures reconcile an existing entry's phase only from an explicit nonempty wrapper phase; metadata enrichment alone calls reconciliation with no new phase authority. serializeError uses the recorded explicit occurrence phase ahead of intrinsic Error.phase. Reconciliation updates the same serialized object via Object.assign. Genuine caller errorLedger references are ingested in caller order before secondaryFailures and allErrors; serialized-only objects are not materialized as occurrences. These are personally read cross-component observations, not borrowed independent Evidence11 conclusions.",
+          "boundary": "The integration owner remains accountable for the complete obligations and non-surface seams."
+        }
+      ],
+      "componentDefects": [
+        {
+          "id": "SURFACE-SEAM-LIVE-CHRONOLOGY",
+          "classification": "Retained current-source obligation defect in a cross-component consuming body; not a newly introduced Correction11 finding in an assigned primary file.",
+          "priority": 2,
+          "confidence": 1,
+          "file": "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+          "lines": "31-41,51-53",
+          "governingObligations": [
+            "Original Native07 finding 7 / N06-N05 — Normalize and retain all observed snapshot failures",
+            "Native08 snapshot-before-document chronology",
+            "E06-04 local snapshot dispatch does not establish global browser/Node chronology"
+          ],
+          "trigger": "evaluateLiveRootObservation returns already observed stateError/uiError and an actual document identity that fails the bound identity assertion, such as a replacement document still containing game roots.",
+          "mechanism": "collectLiveRootStates stages the complete result, then records the later Node documentIdentity exception before iterating rootData.rootErrors. The ledger makes that document exception primary/order-first; rootFailure additionally selects docIdentityError before the normalized browser errors. Both browser siblings survive, but their chronology and governing primary are wrong.",
+          "actualPath": "visitSurface finally -> evidence.collectLive -> collectLivePageDiagnostics -> collectLiveRootStates -> ledger.recordError. The actual browser producer calls __nsReadRootSnapshot before it returns rootErrors/documentIdentity; the subsequent Node assertion cannot precede those getter occurrences.",
+          "evidence": [
+            "pending-round-lifecycle-live-root-observation.js:6-157",
+            "pending-round-lifecycle-native-snapshot.js:57-82",
+            "pending-round-lifecycle-live-evidence.js:28-53",
+            "pending-round-lifecycle-error-ledger.js:94-117,120-121",
+            "pending-substrate-07-native-admission.json:59-66",
+            "pending-substrate-08-native-salvage-audit.json:29-36"
+          ],
+          "repairMechanism": "Preserve raw staging and every independent failure, normalize the already observed browser occurrences before the later Node document validation occurrence, and select the earliest applicable normalized failure rather than a document-first category. No repair performed or additional correction authorized.",
+          "integrationRequirement": "Reconcile this finding with the evidence-ledger/collection component and the historical preservation credits. The scope inventory records live-evidence.js as unchanged, so do not label it an introduced Correction11 regression."
+        }
+      ],
+      "retainedFailurePathLimits": [
+        {
+          "id": "GENERIC-PRESENT-EARLY-HANDLE-LIMIT",
+          "evidence": [
+            "present-offline-helpers.js:12-15",
+            "release-surfaces.js:149-156",
+            "release-content-fields.js:124-132",
+            "pending-round-lifecycle-surfaces.js:47-54,76-83"
+          ],
+          "observation": "The generic no-sink launchPresentPopup does not return its popup until domcontentloaded succeeds. If that wait rejects after popup creation, visitGeneratedSurfaces/withPresent have not entered their finally and do not possess the popup to close it. The lifecycle visitSurface caller is different: its separate early popup event retains ownership and still reaches collection/close.",
+          "disposition": "A source-backed pre-existing generic limitation, not a new11 finding and not a waiver or newly authorized repair. Do not turn the preserved lifecycle cleanup into a claim that generic Present has equivalent early-failure ownership."
+        },
+        {
+          "id": "GENERIC-NO-SINK-CLOSE-MASKING-LIMIT",
+          "evidence": [
+            "release-surfaces.js:151-156,161-167,172-178",
+            "release-content-fields.js:126-131,136-141",
+            "present-offline-helpers.js:20-27"
+          ],
+          "observation": "Generic no-sink finally blocks directly await close. If both inspection/visit/navigation and close reject, the close rejection replaces the earlier thrown failure rather than preserving both; launchPresentSlidePopup's catch has the same direct-close masking shape. Lifecycle visitSurface uses safeClose plus the common ledger and does not share this limitation.",
+          "disposition": "Source-backed existing error-path boundary. No introduced11 regression claim, blanket cleanliness claim, or new mandatory correction scope is inferred."
+        },
+        {
+          "id": "PORTABLE-CALLBACK-TRANSFER-BOUNDARY",
+          "evidence": [
+            "release-surfaces.js:114-124",
+            "pending-round-lifecycle-surfaces.js:128-137,172-190",
+            "release-content-fields.js:133-142"
+          ],
+          "observation": "onPageCreated is awaited outside freshPortable's setup/navigation catch and cleanup intentionally belongs to the transferred owner. The actual lifecycle callback stashes the handle before operations that could reject, satisfying that ownership seam. The generic withPortable function, however, only enters its own finally after freshPortable returns. A caller-provided options.onPageCreated therefore must itself own early cleanup/retention; passing it through withPortable alone does not establish the lifecycle guarantee.",
+          "disposition": "Explicit ownership contract boundary, not a demand to restore helper-owned cleanup after transfer or an invented defect in the actual lifecycle callback."
+        }
+      ],
+      "deferredCallerCompatibility": {
+        "status": "REQUIRED_UNEXECUTED; not compatible/admitted by this component.",
+        "evidence": [
+          "pending-round-lifecycle-acceptance.spec.js:41-90",
+          "pending-round-lifecycle-evidence.js:28-30,65-73",
+          "pending-round-lifecycle-surfaces.js:7-24,40-42"
+        ],
+        "observations": [
+          "The immutable acceptance callback already consumes context.page; reporting a Page-first callback mismatch here would be false.",
+          "The same acceptance caller constructs the accumulator but never calls setExpectedRoots before visitSurface. expectedRoots starts null, so mandatory manifest validation rejects it before surface creation. This is a required later caller cutover, not an introduced helper regression.",
+          "Generic visitGeneratedSurfaces and withPortable retain their distinct existing callback shapes and no-sink behavior; they are not the deferred pending-lifecycle caller migration.",
+          "No caller, manifest, API signature, policy, timing assertion, source or receipt was changed. No admission or cell execution follows from static helper observations."
+        ],
+        "retainedScope": "All18 independent present/share/file rows remain54 REQUIRED_UNEXECUTED cells; complete state AND native UI, actual Reset/Pass/Start brackets, consumed expiry/witness crossover, root/document/activity/uncertainty bounds, Quiz Reset+5000/new expiry, exact Relay pending due/settled peer/first-timeout invariance, full Trivia expiry/Next, earliest setup/live PNG/diagnostics/portable before-and-after/source/config equality and failure-safe finalization remain required. Original7 Hot Potato bonus, original8 Scatter NFC controls and original9 Trivia scoring matrix, gap4 and dependent gaps5-9 are unchanged."
+      },
+      "integrationSeams": [
+        {
+          "producerConsumer": "Passive script registration -> browser installed snapshot/action/lifecycle owners",
+          "componentEvidence": "All three lifecycle surface registration sites and native-observation.js:1-163/native-snapshot.js:1-106 were read.",
+          "integrationOwnerMustResolve": "Full action recorder/history/UI owner implementations, occurrence witnesses and external production lifecycle/Reveal equivalence remain assigned elsewhere; script registration is not proof of those bodies."
+        },
+        {
+          "producerConsumer": "Portable pageerror/frame Error -> recordArrival -> accumulator -> ledger/exposure -> final throw",
+          "componentEvidence": "Actual Node reference/sidecar and immediate frame-arrival paths plus full ledger/exposure/finalizer consuming bodies were personally read.",
+          "integrationOwnerMustResolve": "Integrate with browser-to-Node occurrence identity and complete S10-C1/NF-A2/NF-A3 traces, without reclassifying metadata as phase authority."
+        },
+        {
+          "producerConsumer": "Live browser root errors -> collectLiveRootStates -> collectLive/finalize",
+          "componentEvidence": "Full producer and consuming bodies establish the specific document-first defect above.",
+          "integrationOwnerMustResolve": "Resolve the chronology defect with the ledger/collection slice; do not silently adopt historical broad source-preserved labels."
+        },
+        {
+          "producerConsumer": "Mandatory manifest/document surface API -> immutable acceptance callback",
+          "componentEvidence": "Callback is context-object compatible, but missing manifest installation is source-visible and intentionally deferred.",
+          "integrationOwnerMustResolve": "Retain all remaining immutable-caller action/clock/witness compatibility and54-cell requirements from their primary components; no helper defect is inferred merely from deferred signatures."
+        },
+        {
+          "producerConsumer": "Generic no-sink callers -> returned portable context/popup cleanup",
+          "componentEvidence": "release-content-fields.js and complete generic generated-surface bodies were read, with an actual game-surfaces consumer callback.",
+          "integrationOwnerMustResolve": "Keep generic signatures, transferred-handle semantics and their documented limits separate from lifecycle-sink cleanup; do not infer universal error exposure from support for absent evidence."
+        }
+      ],
+      "NF_A4Scope": {
+        "id": "NF-A4",
+        "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+        "completeRecordedExcludedScopeCandidate": {
+          "consumerVisibleMechanism": "evaluateActionCandidates returns candidates from the public, replaceable window.__nsRecordedPackets (:146-147). storeHealth (:148) checks only the lifecycle store. In-place mutation of an original packet is detected, because that packet object is also the retained native-action detail. Replacing the array, or replacing an element with a forged object, leaves the retained and private stores untouched, so health stays true. extractActionBracket (observation.js:107-131) then builds the action bracket from the forged packet: rootEventsBefore/After, stateAfter and tCapture/tBubble, which witness.js:44-63 adopts as the Start baseline. This is the same public-store replacement model as N07-04, applied to the packet store.",
+          "lineEnd": 158,
+          "title": "Bind returned action packets to the integrity-checked native-action records",
+          "confidence": 0.6,
+          "id": "NF-A4",
+          "lineStart": 146,
+          "repairNeeded": "Inside evaluateActionCandidates, derive candidates from, or verify each one against, the closure-retained native-action entries. For example, expose a private read of native-action details by sequence, or verify that each candidate is identical to the retained entry's detail and matches its private JSON clone. Report a recorder:store error when they diverge. evaluatePreActionCursor's lastSeq source (:36-37) needs the same binding.",
+          "priority": 2,
+          "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+          "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+          "scopeDecision": "Original N07-04/N07-05 explicitly cover lifecycle store integrity. Extending identical checks to separately replaceable action-packet storage is not automatically a required cutover; no new repair scope authorized."
+        },
+        "componentBoundary": "Retained from the dispatch authority, not repaired, disproved, waived or promoted to a seventh required11 repair. This component does not certify complete action-packet-store integrity."
+      },
+      "readEvidence": {
+        "provenance": "Personal read/grep calls in this continuation component only. The integration owner may personally reread these paths or actually inspect the complete attributable tool outputs; this structured summary itself is not a substitute for full source inspection.",
+        "EOFConvention": "EOF content lines below use the source's final nonempty line/last statement. Raw read footers sometimes report one additional empty terminal line due to the trailing newline; that line was included by the overrun reads. These are source inspection ranges and Main's retained inventory, not new physical-line measurements.",
+        "primaryFiles": [
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+            "exactCompleteContentRanges": ["1-100", "101-193"],
+            "EOFContentLine": 193,
+            "additionalEOFRead": "194-205 returned no further content",
+            "fullBodyAndOmissionsExpanded": true,
+            "attributableReadRequests": [":1-199", ":1-100:raw", ":101-193:raw", ":194-205:raw"]
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+            "exactCompleteContentRanges": ["1-143"],
+            "EOFContentLine": 143,
+            "EOFMarker": "Final return snapshot and closing brace; overrun raw read through160",
+            "fullBodyAndOmissionsExpanded": true,
+            "attributableReadRequests": [":1-199", ":1-160:raw", ":102-145:raw"]
+          },
+          {
+            "file": "tests/e2e/education/release-surfaces.js",
+            "exactCompleteContentRanges": ["1-100", "101-199"],
+            "EOFContentLine": 199,
+            "EOFMarker": "findFrame final return selected and closing brace; second raw read through210 covers reader-reported terminal empty line200",
+            "fullBodyAndOmissionsExpanded": true,
+            "attributableReadRequests": [":1-199", ":1-100:raw", ":101-210:raw", ":98-143:raw"]
+          },
+          {
+            "file": "tests/e2e/education/present-offline-helpers.js",
+            "exactCompleteContentRanges": ["1-28"],
+            "EOFContentLine": 28,
+            "EOFMarker": "launchPresentSlidePopup final catch/closing brace; raw read through35",
+            "fullBodyAndOmissionsExpanded": true,
+            "attributableReadRequests": [":1-199", ":1-35:raw"]
+          },
+          {
+            "file": "tests/e2e/education/release-portable-inspection.js",
+            "exactCompleteContentRanges": ["1-55"],
+            "EOFContentLine": 55,
+            "EOFMarker": "Strict four-key return and final brace; raw read through65",
+            "fullBodyAndOmissionsExpanded": true,
+            "attributableReadRequests": [":1-199", ":1-65:raw"]
+          }
+        ],
+        "primaryOwners": [
+          {
+            "file": "tests/e2e/fixtures/test-fixtures.js",
+            "exactCompleteContentRanges": ["1-100", "101-186"],
+            "EOFContentLine": 186,
+            "EOFMarker": "export { expect }; reader extent187 includes terminal empty line",
+            "fullBodyAndOmissionsExpanded": true,
+            "attributableReadRequests": [":1-210", ":1-100:raw", ":101-210:raw", ":186-200:raw"],
+            "expandedLoadBearingDefinitions": "getBaseUrl, assertLoopback, responseStatus, withApiRetry, apiGetPresentation, apiUpdatePresentation, apiCreateShareLink and fixture setup/cleanup were read, not inferred from names."
+          },
+          {
+            "file": "tests/e2e/pages/editor-page.js",
+            "exactCompleteContentRanges": ["1-100", "101-199"],
+            "EOFContentLine": 199,
+            "EOFMarker": "Final class brace; reader extent200 includes terminal empty line",
+            "fullBodyAndOmissionsExpanded": true,
+            "attributableReadRequests": [":1-230", ":1-100:raw", ":101-230:raw", ":195-210:raw"],
+            "expandedLoadBearingDefinitions": "constructor, gotoPresentation and waitForReady full bodies; irrelevant delegating editor operations were also read but their helper modules are not claimed covered."
+          },
+          {
+            "file": "tests/e2e/education/release-game-fixtures.js",
+            "exactCompleteContentRanges": ["1-40", "41-80"],
+            "EOFContentLine": 80,
+            "EOFMarker": "gameCases final brace; reader extent81 includes terminal empty line",
+            "fullBodyAndOmissionsExpanded": true,
+            "attributableReadRequests": [":1-180", ":1-40:raw", ":41-95:raw", ":76-90:raw"],
+            "expandedLoadBearingDefinitions": "gameFixture, deckWith, gameCases plus the referenced registry, shared defaults, question factory and question-shape bodies were read."
+          },
+          {
+            "file": "tests/e2e/education/release-content-fields.js",
+            "exactCompleteContentRanges": ["1-100", "101-158"],
+            "EOFContentLine": 158,
+            "EOFMarker": "reachable final brace; reader extent159 includes terminal empty line",
+            "fullBodyAndOmissionsExpanded": true,
+            "attributableReadRequests": [":1-180", ":1-100:raw", ":101-180:raw", ":149-175:raw"],
+            "expandedLoadBearingDefinitions": "Full withPresent/withPortable, setup/read/reload/contentFixture and control bodies; actual fixture API/editor/default data definitions used by these bodies were inspected."
+          }
+        ],
+        "completeIntegrationReads": [
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-evidence.js",
+            "contentRanges": ["1-198"],
+            "request": ":1-199",
+            "EOF": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+            "contentRanges": ["1-150"],
+            "request": ":1-160",
+            "EOF": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+            "contentRanges": ["1-171"],
+            "request": ":1-199",
+            "EOF": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+            "contentRanges": ["1-120"],
+            "request": ":1-199",
+            "EOF": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-live-root-observation.js",
+            "contentRanges": ["1-157"],
+            "request": ":1-170:raw",
+            "EOF": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-observation.js",
+            "contentRanges": ["1-152"],
+            "request": ":1-180:raw",
+            "EOF": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+            "contentRanges": ["1-93"],
+            "request": ":1-110:raw",
+            "EOF": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+            "contentRanges": ["1-163"],
+            "request": ":1-165:raw",
+            "EOF": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-native-snapshot.js",
+            "contentRanges": ["1-106"],
+            "request": ":1-115:raw",
+            "EOF": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js",
+            "contentRanges": ["1-95"],
+            "request": ":1-145",
+            "EOF": true
+          }
+        ],
+        "additionalOwnerReads": [
+          {
+            "file": "shared/src/education/game-defaults.js",
+            "requests": [":1-180", ":1-169:raw", ":170-310:raw"],
+            "fullBodyAndEOF": true,
+            "expandedInitialDeclarationReadOmissions": true,
+            "finalDefinition": "createDefaultGameConfig validates isGameSubtype and returns factories[type](); module.exports follows."
+          },
+          {
+            "file": "shared/src/education/game-registry.js",
+            "requests": [":1-180:raw"],
+            "fullBodyAndEOF": true,
+            "finalDefinition": "module.exports = { GAME_CATALOG, CANONICAL_GAME_TYPES, isGameSubtype, getGameCapabilities }"
+          },
+          {
+            "file": "shared/src/education/question-factory.js",
+            "requests": [":1-170:raw"],
+            "fullBodyAndEOF": true,
+            "finalDefinition": "module.exports = { createCanonicalQuestion }"
+          },
+          {
+            "file": "shared/src/education/question-shape.js",
+            "requests": [":1-185:raw"],
+            "fullBodyAndEOF": true,
+            "loadBearingSymbols": ["QUESTION_KINDS", "cloneValue"]
+          },
+          {
+            "file": "shared/src/education/presets/simulations.js",
+            "requests": [":1-170:raw"],
+            "fullBodyAndEOF": true,
+            "limit": "Preset construction/export bodies read; simulator content source-data, migration-validation and preset-factory dependency graph is not claimed recursively inspected."
+          },
+          {
+            "file": "client/src/data/element-defaults.js",
+            "requests": [":1-170:raw", ":171-300:raw"],
+            "fullBodyAndEOF": true,
+            "loadBearingSymbols": [
+              "All nine CONTENT_TYPES default objects",
+              "ELEMENT_DEFAULTS",
+              "DEFAULT_POSITIONS"
+            ]
+          },
+          {
+            "file": "client/src/constants/game-element-types-constants.js",
+            "requests": [":1-160:raw"],
+            "fullBodyAndEOF": true,
+            "loadBearingSymbols": ["buildGameElementDefaults"],
+            "limit": "Its revealjs-shared package import is disclosed; this component does not claim external package-resolution/runtime equivalence."
+          },
+          {
+            "file": "tests/e2e/education/release-observations.js",
+            "requests": [":1-180:raw"],
+            "fullBodyAndEOF": true,
+            "limit": "observe's full body read; loadRequiredCells and recordScenario owners are not counted as this component's coverage."
+          },
+          {
+            "file": "tests/e2e/education/game-surfaces-release.spec.js",
+            "requests": [":1-125:raw"],
+            "fullBodyAndEOF": true,
+            "loadBearingSymbols": ["Actual visitGeneratedSurfaces Page-first consumer callback"]
+          }
+        ],
+        "governingReads": [
+          {
+            "file": "pending-substrate-11-native-coverage-continuation-counsel.json",
+            "ranges": ["1-235"],
+            "requests": [":1-260", ":155-184:raw", ":185-235:raw"],
+            "complete": true,
+            "note": "Initial bare omissions and truncated long retained clauses were expanded."
+          },
+          {
+            "file": "pending-substrate-11-native-salvage-prompt.md",
+            "request": ":1-240:raw",
+            "completeThroughEOF": true
+          },
+          {
+            "file": "pending-substrate-11-dispatch-authority.json",
+            "ranges": ["1-220", "221-257"],
+            "complete": true
+          },
+          {
+            "file": "pending-substrate-11-terminal-failure-counsel.json",
+            "ranges": ["1-185", "186-370", "371-541"],
+            "complete": true
+          },
+          {
+            "file": "pending-substrate-11-helper-caller-manifest.json",
+            "ranges": ["1-150", "151-302"],
+            "complete": true
+          },
+          {
+            "file": "pending-substrate-11-scope-preservation.json",
+            "ranges": ["1-190", "191-354"],
+            "complete": true
+          },
+          {
+            "file": "pending-substrate-07-evidence-admission.json",
+            "request": ":1-60:raw",
+            "completeThroughEOF": true
+          },
+          {
+            "file": "pending-substrate-08-evidence-salvage-audit.json",
+            "request": ":1-45:raw",
+            "completeThroughEOF": true
+          },
+          {
+            "file": "pending-substrate-09-evidence-salvage-audit.json",
+            "ranges": ["4-43", "44-52"],
+            "completeRelevantFindingBodies": true,
+            "wholeDocumentCoverageClaimed": false
+          },
+          {
+            "file": "pending-substrate-10-evidence-salvage-audit.json",
+            "range": "334-450",
+            "completeRelevantPreservationBodies": true,
+            "wholeDocumentCoverageClaimed": false
+          },
+          {
+            "file": "pending-substrate-07-native-admission.json",
+            "range": "59-76",
+            "completeRelevantFindingBodies": ["Original Native findings7 and8"],
+            "wholeDocumentCoverageClaimed": false
+          },
+          {
+            "file": "pending-substrate-08-native-salvage-audit.json",
+            "range": "29-46",
+            "completeRelevantFindingBodies": [
+              "Snapshot-before-document chronology",
+              "Packet sibling retention"
+            ],
+            "wholeDocumentCoverageClaimed": false
+          }
+        ]
+      },
+      "deliveryAndEvidenceLimits": {
+        "missingNativeReceipt": "Main's inventory and governing counsel record genuine Native11 receipt absent. This remains independently fatal to admission. This component neither reconstructs delivery nor substitutes its report for a receipt.",
+        "evidenceReceipt": "Genuine Evidence11 receipt remains immutable; recorded160-versus150 ledger physical-line discrepancy is a receipt-accuracy limitation, not itself a source defect. This component did not personally read the full genuine receipt and does not claim receipt-completeness or canonical-mapping certification; those remain integration-owner coverage.",
+        "historicalArtifacts": "Original Native incomplete report and provenance supplement were not rewritten or treated as user scope reduction; prior credits are distinguished from current inspected mechanisms.",
+        "externalDependency": "Linked node_modules target C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules is outside recursive freeze. No external node_modules dispatcher body was read by this component, and immutable dependency/runtime equivalence is not claimed.",
+        "coverageBoundary": "All five primary files and four assigned primary owners were fully read. Cross-component reads are permitted integration overlap, not reassignment of primary ownership. This component does not claim all38-file/all-governing-document coverage or an overall SOURCE_REVIEW_CLEAN verdict."
+      },
+      "executionDisclosure": "Only bounded read and grep inspection. No source/receipt/artifact writes, shell, git, eval/import, commands, hash/count measurements, tests/checks/builds/lint/format, browser actions, callback execution, installation or nested agents. No runtime verification performed."
+    },
+    "notIndependentCompleteAudit": true
+  }
+]

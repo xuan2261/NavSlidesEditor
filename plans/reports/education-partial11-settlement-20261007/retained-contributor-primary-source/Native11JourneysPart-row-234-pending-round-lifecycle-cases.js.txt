@@ -1,0 +1,20 @@
+      await startRelayRound(r)
+      await passRelayBaton(r)
+    },
+    actPrimary: (r) => startRelayRound(r),
+  },
+  {
+    name: 'trivia-champ',
+    gameType: 'trivia-champ',
+    f1: (id) => makeTriviaFixture(30, 5, 5, id),
+    f2: (id) => makeTriviaFixture(60, 30, null, id),
+    primaryConfig: makeTriviaFixture(30, 5, 5)['trivia-champ'],
+    peerConfig: makeTriviaFixture(60, 30, null)['trivia-champ'],
+    actPeer: async (r) => {
+      await startTriviaRound(r)
+      await buzzTriviaTeam(r, 'team-2')
+      await answerTriviaOption(r, 'question-1-option-1')
+    },
+    actPrimary: (r) => startTriviaRound(r),
+  },
+]

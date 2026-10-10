@@ -1,0 +1,20 @@
+.
+  - touch.js         8.0KB     4d ago
+  - slidenumber.js   3.6KB     4d ago
+  - slidecontent.js  20.8KB    4d ago
+  - scrollview.js    27.3KB    4d ago
+  - progress.js      2.1KB     4d ago
+  - printview.js     7.5KB     4d ago
+  - pointer.js       2.8KB     4d ago
+  - plugins.js       5.3KB     4d ago
+  - overview.js      6.4KB     4d ago
+  - overlay.js       10.7KB    4d ago
+  - notes.js         2.8KB     4d ago
+  - location.js      6.2KB     4d ago
+  - keyboard.js      10.6KB    4d ago
+  - jumptoslide.js   4.0KB     4d ago
+  - fragments.js     9.1KB     4d ago
+  - focus.js         1.9KB     4d ago
+  - controls.js      10.1KB    4d ago
+  - backgrounds.js   14.9KB    4d ago
+  - autoanimate.js   19.9KB    4d ago

@@ -1,0 +1,102 @@
+      "expected": 5,
+      "present": 5,
+      "ids": [
+        "09-S1",
+        "09-S2",
+        "09-S3",
+        "09-S4",
+        "09-S5"
+      ],
+      "completeObligationRecords": false,
+      "detail": "Native09-S1..S3 lack source locations, mechanisms, required-repair detail and current source evidence. Evidence09-S4/S5 retain a relative file and concise repair claim, but omit governing source ranges and full mechanism/repair obligations."
+    },
+    "chronologyObligations": {
+      "expected": 2,
+      "present": 2,
+      "ids": [
+        "09-C1",
+        "09-C2"
+      ],
+      "completeObligationRecords": false,
+      "detail": "09-C1 is a title and REPAIR_REQUIRED assertion linked to S10-C1, without its source locations, full actual-arrival requirement or current evidence. 09-C2 retains the caller-ledger [a,b] ordering meaning and a repair claim, but not the complete preservation, deduplication and independent-order-namespace requirements."
+    },
+    "currentFindings": {
+      "expected": 6,
+      "present": 6,
+      "ids": [
+        "S10-C1",
+        "NF-A2",
+        "NF-A3",
+        "N10B-01",
+        "N10B-02",
+        "S10-C2"
+      ],
+      "completeObligationRecords": false,
+      "detail": "The five Native findings are ownership-only entries, not claims of Correction11 completion. They omit source paths/ranges and complete governing mechanisms/repair requirements. S10-C2 is also described in assignedRepairs with a file/range, mechanism and repair claim."
+    },
+    "originalE06Meanings": {
+      "E06-02": {
+        "preserved": true,
+        "meaning": "Chronological frame-error arrival dispatch",
+        "receiptLines": "369-372"
+      },
+      "E06-03": {
+        "preserved": true,
+        "meaning": "Actual Node Error identity with separate sidecar metadata",
+        "receiptLines": "373-376"
+      },
+      "E06-04": {
+        "preserved": true,
+        "meaning": "State-before-UI observation and dispatch within snapshots",
+        "receiptLines": "377-380"
+      },
+      "E06-05": {
+        "preserved": true,
+        "meaning": "Recursive rootInstanceId/timeOrigin/cause normalization and propagation",
+        "receiptLines": "381-384"
+      },
+      "qualification": "These are correctly named preservation claims, not independently established current behavior."
+    },
+    "deferredCallerObligations": {
+      "statusRetained": "REQUIRED_UNEXECUTED",
+      "all12CallerPathsListed": true,
+      "aggregate18Rows54CellsAndThreeSurfacesRetained": true,
+      "noCanaryAndNoExecutionClaimsRetained": true,
+      "completeDetailedObligationsRetained": false,
+      "canonicalNCAndHistoricalMappingsDoSupplySomeDetail": true
+    },
+    "NF_A4": {
+      "excludedFromRequiredRepairs": true,
+      "unresolvedDispositionPreserved": true,
+      "notClaimedRepairedDisprovedWaivedOrSourceClean": true,
+      "completeSourceMechanismRetained": false
+    },
+    "falseAndZeroReceiptFlags": {
+      "matchesRequiredClaims": true,
+      "sourceReady": false,
+      "qualification": false,
+      "passClaimed": false,
+      "runtimeExecuted": false,
+      "declaredCells": 54,
+      "staticallyAdmittedCells": 0,
+      "executedAcceptanceCells": 0
+    }
+  },
+  "canonicalMappingChecks": {
+    "authorityPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-08-subject-authority.json",
+    "method": "Read-only comparison of fully expanded artifact text, consistent with Main's supplied exact-field comparison; no programmatic comparison or checksum remeasurement.",
+    "NC": {
+      "receiptPath": "$.canonicalSubjectAuthority.NC",
+      "receiptLines": "421-488",
+      "authorityLines": "3-70",
+      "entries": 11,
+      "result": "MATCH",
+      "detail": "All IDs, titles, full bodies and REQUIRED_UNEXECUTED currentDisposition values are retained."
+    },
+    "RPC": {
+      "receiptPath": "$.canonicalSubjectAuthority.RPC",
+      "receiptLines": "489-507",
+      "authorityLines": "71-89",
+      "entries": 17,
+
+[Showing lines 101-200 of 538. Use :201 to continue]

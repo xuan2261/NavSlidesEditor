@@ -1,0 +1,202 @@
+      "boundary": "Policy reducer → runtime/presenter consumption",
+      "actual": "local-activity.js explicitly routes Quiz, Relay, Trivia and countdown. mount.js adds runtimeMode, runtime-session.js fixes generation and owns reset/pause/timers. Relay presenter schedules deadline/baton with generation/turn/question commands; round-games-view rechecks the actual due before dispatch. Trivia presenter includes round/question/turn in Next commands and schedules only while active.",
+      "observation": "These actual consuming bodies establish the pending-work/expiry policy; reducer definitions alone were not used as proof."
+    }
+  ],
+  "componentObservations": [
+    {
+      "id": "J11-C01",
+      "classification": "RETAINED_LOCAL_SOURCE_CREDIT_WITH_DEFERRED_INTEGRATION",
+      "obligation": "NC01 / SE01 / independent declarations / original-1 layout component",
+      "evidence": [
+        "acceptance.spec.js:37-40,73-78",
+        "cases.js:9-54,56-129,131-199",
+        "fixtures.js:66-144"
+      ],
+      "observation": "The three nested loops still create separate tests for each case and surface. There are six leave-return, seven reset and five isolation descriptors. Structured context.page is forwarded to the actual runner and collector. Leave-return authors p-slide with immediate child c-slide; reset/isolation author separately positioned scoped roots. These are source credits, not live fit/hit/overflow or execution evidence."
+    },
+    {
+      "id": "J11-C02",
+      "classification": "DEFERRED_CALLER_PREREQUISITE",
+      "obligation": "Mandatory authored manifest; NC01/NC03; SE11/SE15",
+      "evidence": [
+        "acceptance.spec.js:41-79",
+        "evidence.js:createEvidenceAccumulator/setExpectedRoots/getExpectedRoots",
+        "surfaces.js:validateSurfaceSink",
+        "evidence-domain.js:9-37"
+      ],
+      "observation": "The accumulator starts with expectedRoots=null. Acceptance never calls setExpectedRoots or supplies authored expectedRoots before visitSurface validates the manifest. Therefore the current immutable caller path cannot enter a surface with its required manifest. This is within the acknowledged deferred caller cutover; it must not be counted as a newly introduced Correction11 helper defect.",
+      "requiredManifest": "leave-return: {p-slide,g-pri,gameType} and {c-slide,witness-timer,countdown}; reset: {p-slide,g-pri,gameType} and {p-slide,witness-timer,countdown}; isolation: {p-slide,iso-1,gameType}, {p-slide,iso-2,gameType}, {p-slide,witness-timer,countdown}. Actual cardinality/document/root identity must then be verified, not merely declared."
+    },
+    {
+      "id": "J11-C03",
+      "classification": "DEFERRED_STATE_TIMING_AND_UI",
+      "obligation": "NC03/NC04; RPC-04/05; SE04/09/17; original-4",
+      "evidence": [
+        "leave-return.js:33-52,65-69,102-144",
+        "state.js:assertCompleteActiveState",
+        "quiz-state.js:assertQuizInitialActive",
+        "hot-potato-state.js:assertHotPotatoActive",
+        "jeopardy-state.js:assertJeopardyActive",
+        "relay-state.js:assertRelayActive",
+        "trivia-state.js:assertTriviaActive"
+      ],
+      "observation": "Initial and pre-hide active validators are reached, but callers supply no dynamic native deadline/start bounds. Hidden/returned checks remain generation/runtimeMode and a hidden pause marker. Full independently accepted pending logical context and native UI are not compared through hide/return; returned preserved remaining allowance and original first-expiry bounds are not consumed. Quiz/HP/Jeopardy expiry branches remain scalar readiness/subset checks, and the final terminal object is merely staged. Optional bounds/partial state validators do not fulfill complete state AND UI."
+    },
+    {
+      "id": "J11-C04",
+      "classification": "DEFERRED_NATIVE_RESET_AND_QUIZ_POLICY",
+      "obligation": "NC05/NC06; RPC-06/07/08/11; SE04/06/08/17; original-5/6",
+      "evidence": [
+        "reset.js:33-54,57-98",
+        "isolation.js:50-78,91-105",
+        "quiz-session.js:34-43,62-85",
+        "runtime-session.js:23-30,97-118",
+        "mount.js:87-102",
+        "activity-interval.js:deriveDeadlineBounds/assertPositivePendingAtAction"
+      ],
+      "observation": "Reset adopts pendingState.generation without independently validating the complete original active/pending owner state. Baton due is sampled before Reset, but the actual Reset boundary still uses the obsolete compound result shape and only tBefore. Existing Quiz bounds include the forbidden +800 slack. Native reset reinitializes Quiz at actual activity-clock time with the independently authored five-second deadline; proof requires the full Reset activity interval plus 5000 and positive original pending work across the actual event bracket. Reset has a checkpoint and eventual Quiz terminal validator but no bounded new-expiry crossover; isolation has a checkpoint but no complete legitimate new-generation expiry step. Old-due crossing also uses the obsolete activityNow field.",
+      "required": "Consume same-root/document Pass/Reset/Start brackets and lifecycle uncertainty; require originalDue > resetAction.activityInterval.max; cross the exact original due using the correlated interval's lower bound; derive strict Reset+5000, observe after-old/before-new, then bound and independently validate full new expiry and native UI. Do not add slack, sleep, retry or runtime-derived expectation."
+    },
+    {
+      "id": "J11-C05",
+      "classification": "RETAINED_RELAY_SETTLEMENT_CREDIT_AND_DEFERRED_COMPLETENESS",
+      "obligation": "NC07/NC08; RPC-09/12; SE03/04/05/17",
+      "evidence": [
+        "cases.js:173-183",
+        "isolation.js:34-48,59-62,80-83,107-112",
+        "leave-return.js:71-81",
+        "relay-state.js:assertRelayPendingBaton/assertRelayFirstTimeoutSettled/assertRelayPeerSettled/assertRelayPeerUI",
+        "shared/src/education/games/relay-race.js:33-95",
+        "shared/src/education/browser/games/relay-race.js:68-92",
+        "shared/src/education/browser/games/round-games-view.js:schedule"
+      ],
+      "observation": "The peer path contains an observation-only poll for ended/team-2/position1 before full settled state validation and freezing; it has one native Pass, no added sleep/retry/winner fallback. For the target-one peer, Pass produces waiting/correct=false with batonDue=actual activity time+1200; its first baton awards team-2, ends at both positions {team-1:0,team-2:1}, retains activeTeamId team-1/question-1/turn1/correct=false and clears deadline/batonDue. Complete static settled state is checked after the poll. Peer UI checks only Red:1/1, not both lanes/progress/winner feedback/controls. Leave-return invokes pending or first-settled validators, but pending lacks retained deadline and exact baton due bounds; first-settled checks only deadline type. Target-two first timeout must remain original team/question/turn1 while waiting, then advance team-2 to1 and reactivate team-1/question-1/turn2 with correct/batonDue cleared and a separately bounded new deadline. Full transition timing/uncertainty and UI remain required.",
+      "seam": "Restore sinks/result consumption without losing the genuine observed settlement credit. Do not reinterpret the old historical NC07 body as proof that the current caller has no wait."
+    },
+    {
+      "id": "J11-C06",
+      "classification": "INHERITED_TRIVIA_FALSE_REJECTION_NOT_NEW_HELPER_REGRESSION",
+      "obligation": "NC09 / RPC-10 / R16 / SE07 / S02-01",
+      "evidence": [
+        "leave-return.js:83-91",
+        "cases.js:40-45",
+        "trivia-state.js:assertTriviaQuestionNext",
+        "clock.js:preconsumeTimerToWindow",
+        "shared/src/education/games/trivia-champ.js:34-60,118-128"
+      ],
+      "observation": "Question Next still passes preconsumed.due (q1's state.deadline) as originalRoundDue. The real authored round is 30 seconds and q1/q2 are five seconds; native Next creates q2 deadline=min(retained roundDeadline,native Next activity time+5000), later than q1 expiry on the intended transition. The validator's <=originalRoundDue therefore rejects the correct owner. The retained round due must be independently validated/preserved by equality, while the native Next result supplies the separate next-question deadline interval. Do not relax the assertion or recategorize R16 as LOC."
+    },
+    {
+      "id": "J11-C07",
+      "classification": "INHERITED_TRIVIA_FALSE_REJECTION_NOT_NEW_HELPER_REGRESSION",
+      "obligation": "NC09 / RPC-10 / R16 / SE07 / S02-02",
+      "evidence": [
+        "leave-return.js:92-101",
+        "trivia-state.js:assertTriviaRoundNextEnded",
+        "shared/src/education/games/trivia-champ.js:62-77,93-100",
+        "shared/src/education/browser/games/trivia-champ.js:124-140"
+      ],
+      "observation": "Round-expiry Next expects error=null and questionDeadline=null, but nextRound's exhausted-round branch spreads the review object and changes only phase,deadline,roundDeadline,winnerId. It retains error='Time expired.', finite original questionDeadline and startedAt, with tied-zero winner team-1. The presenter gives retained error precedence over winner text. Current immutable oracle therefore contradicts the real owner. Preserve exact retained identities/history/scores/awards/clocks and owner feedback rather than inventing a clearing transition."
+    },
+    {
+      "id": "J11-C08",
+      "classification": "DEFERRED_TRIVIA_FULL_CONTEXT",
+      "obligation": "NC09 / SE05/07/17 / RPC-10/12",
+      "evidence": [
+        "trivia-state.js:assertTriviaActive/assertTriviaQuestionExpiry/assertTriviaQuestionNext/assertTriviaRoundExpiry/assertTriviaPeerSettled",
+        "leave-return.js:83-101",
+        "cases.js:185-198",
+        "isolation.js:43-48"
+      ],
+      "observation": "Question/round expiry and Next have improved complete key/static identity checks, but retained clock values and independently bounded next-question policy are not fully checked, and corresponding native UI is not asserted. Trivia peer checks the two exact awards, both scores and identities but not all four independently native-bounded clocks before freezing. A retained review deadline is data, not outstanding work: the presenter schedules only active states. Required complete expiry/Next/peer meaning is unchanged."
+    },
+    {
+      "id": "J11-C09",
+      "classification": "RETAINED_WITNESS_BODY_CREDITS_WITH_DEFERRED_CALLER_CONSUMPTION",
+      "obligation": "NC10/NC11; RPC-13/14; original Native Start/history/firstExpiredSample findings; N06-N04; SE10",
+      "evidence": [
+        "witness.js:16-166",
+        "witness-domain.js:14-137",
+        "history-domain.js:24-53",
+        "countdown-state.js:createCountdownState/reduceCountdown",
+        "browser/countdown-presenter.js:16-25,70-112",
+        "leave-return.js:54-61",
+        "reset.js:69-73",
+        "isolation.js:85-89"
+      ],
+      "observation": "The current witness body has an actual function-scoped firstExpiredSample, imports assertHistoryPrefix, requires capture/post root/document arrays and exact continuity before adopting copied baselines, validates the first running sample before promotion, and returns both last-running/first-expired samples and complete elapsed intervals. Running predicates retain finite strictly positive <=4000 remaining checks; the history comparator requires sequence/time/bounds/visibility/detail. These are observed consuming-side credits, not proof of every recorder producer invariant. The actual callers still omit startRecord and do not consume the measured crossover. UI checks remain partial: idle display/status and selected controls are checked, running display/all controls and complete expired controls are not. first() selector fallbacks remain. All 54 cells require the complete independent idle/running/expired state AND UI, native Start+4000 domain/history-continuous crossover, and raw failure observations."
+    },
+    {
+      "id": "J11-C10",
+      "classification": "DEFERRED_SAVED_AUTHORING_AND_FAILURE_EVIDENCE",
+      "obligation": "SE10/11/12/13/14/15; NC11; RPC-14/15",
+      "evidence": [
+        "acceptance.spec.js:41-59,61-90",
+        "evidence.js:collectLive/finalize",
+        "surfaces.js:visitSurface/safeClose",
+        "tests/e2e/fixtures/test-fixtures.js:apiGetPresentation/apiUpdatePresentation"
+      ],
+      "observation": "Acceptance stages authoredDeck and savedBefore and places source finalize in an outer finally covering build/PUT/GET/editor/surface/runner failure. Only p-slide existence is asserted before savedBefore becomes the unchanged-source baseline; independently authored normalized complete configs/IDs/options/timings are not compared. Journey results/native records are not consumed by acceptance. The current helpers provide early surface collection/close and before/after portable inspection ownership, but those helper bodies alone cannot admit immutable callers lacking their manifest/sinks. Editor preparation failure has no early acceptance setActivePage registration; the final GET cannot substitute for unavailable live diagnostics. Complete source GET equality, live PNG/UI/diagnostics, exact raw poll/transition evidence and all late failure/attachment exposure remain required."
+    }
+  ],
+  "canonicalMappingImplications": {
+    "authorityReadFully": "pending-substrate-08-subject-authority.json:1-187, including full NC01–NC11 bodies and both originalCurrentMappingSnapshot/originalPriorMappingSnapshot.",
+    "nonMutation": "No canonical value, receipt, original report, mapping snapshot or finding identity was changed. Historical SOURCE_CORRECTED/PARTIAL/OPEN labels are not current certification.",
+    "NC": [
+      {
+        "id": "NC01",
+        "currentComponentEvidence": "Actual context.page forwarding present; manifest/sink cutover remains deferred."
+      },
+      {
+        "id": "NC02",
+        "currentComponentEvidence": "Surface init registration precedes popup/share creation and portable receives initScripts; earliest recorder/history health remains an integration-owned source trace, not certified by declarations."
+      },
+      {
+        "id": "NC03",
+        "currentComponentEvidence": "Current helper exposes correlated activity/history intervals; immutable callers omit sinks/use obsolete raw result fields. Required root-domain alignment unchanged."
+      },
+      {
+        "id": "NC04",
+        "currentComponentEvidence": "Complete hidden/returned context, preserved allowance and bounded original expiry still deferred."
+      },
+      {
+        "id": "NC05",
+        "currentComponentEvidence": "Native action result exists; old callers do not consume actual Reset/Pass intervals or complete pending context."
+      },
+      {
+        "id": "NC06",
+        "currentComponentEvidence": "Quiz actual native Reset+5000 and bounded new expiry still deferred; obsolete tBefore/tAfter and +800 remain."
+      },
+      {
+        "id": "NC07",
+        "currentComponentEvidence": "Genuine observation-only Relay peer settlement restored in current caller; complete native UI/action-bound setup still required."
+      },
+      {
+        "id": "NC08",
+        "currentComponentEvidence": "Pending/first-settled validators are now called, but full original/new due policy, uncertainty and native UI remain incomplete."
+      },
+      {
+        "id": "NC09",
+        "currentComponentEvidence": "Both Trivia Next branches retained; original S02-01/S02-02 contradictions and full clock/UI obligations remain."
+      },
+      {
+        "id": "NC10",
+        "currentComponentEvidence": "Witness helper returns complete crossover data; all three current runners still fail to pass/consume startRecord and measured result."
+      },
+      {
+        "id": "NC11",
+        "currentComponentEvidence": "Sink-aware helper raw staging precedes temporal checks; immutable consumers must propagate sinks and retain every transition/poll/result before assertions."
+      }
+    ],
+    "RPCImplications": [
+      {
+        "ids": [
+          "RPC-01",
+          "RPC-02",
+          "RPC-03"
+        ],
+        "meaning": "Retain distinct Trivia roots, real HP/Trivia option IDs and native HP Reveal credits; not full peer/timing admission."
+      },
+
+[Showing lines 611-810 of 1107. Use :811 to continue]

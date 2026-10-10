@@ -1,0 +1,115 @@
+        "sourcePrefix": "tests/e2e/education/",
+        "files": [
+          "pending-round-lifecycle-acceptance.spec.js",
+          "pending-round-lifecycle-cases.js",
+          "pending-round-lifecycle-fixtures.js",
+          "pending-round-lifecycle-leave-return.js",
+          "pending-round-lifecycle-reset.js",
+          "pending-round-lifecycle-isolation.js"
+        ],
+        "focus": "Actual consumer signatures/results and complete deferred journey/matrix/timing obligations. Existing deferred caller mismatches are not automatically new helper regressions."
+      },
+      {
+        "slice": "Immutable independent state and UI",
+        "sourcePrefix": "tests/e2e/education/",
+        "files": [
+          "pending-round-lifecycle-state.js",
+          "pending-round-lifecycle-quiz-state.js",
+          "pending-round-lifecycle-hot-potato-state.js",
+          "pending-round-lifecycle-jeopardy-state.js",
+          "pending-round-lifecycle-relay-state.js",
+          "pending-round-lifecycle-trivia-state.js"
+        ],
+        "focus": "Full independently authored state/UI predicates, identity, peer settlement, reset/expiry/Next requirements and exact deferred mappings."
+      }
+    ],
+    "owner_coverage": "The19 mapped owner paths in the incomplete report's readEvidence.requiredOwnerCoverage are a starting index, not completed evidence or a closed import graph. Main assigns each necessary owner to exactly one primary slice or the integration owner, including fixture/Page APIs, portable no-sink consumers, runtime/session/lifecycle/mount/local activity, countdown state/presenter, Quiz/Relay policies, defaults/registry/questions/presets, htmlGenerator and linked Reveal keyboard dispatcher. Follow actual referenced imported/re-exported definitions needed for every load-bearing trace; do not infer current exports from prior audits.",
+    "non_overlap_meaning": "Non-overlap applies to primary coverage ownership, not an artificial ban on necessary integration reads. The integration owner must read relevant crossing bodies and resolve seam evidence. Targeted integration rereads are legitimate source inspection, not extra opinions or execution; assign them explicitly.",
+    "component_output_requirements": [
+      "Identify the same frozen subject, slice owner and exact primary scope.",
+      "Read every assigned source body completely with omissions expanded and demonstrable EOF coverage. Return exact file/range evidence and attributable tool-output references.",
+      "Retain full source outputs or complete source excerpts when the integration owner needs to read them; a paraphrased summary or findings list is not a full-body read.",
+      "Map each observation to the original governing obligation, actual symbol/branch and consumer-visible mechanism. Separate source evidence, prior credits, receipt claims and unknowns.",
+      "Return every outgoing/incoming seam that needs integration, not a standalone overall clean verdict.",
+      "Use only read/glob/grep document/source inspection; return structured results without source/receipt/file writes or commands."
+    ],
+    "integration_owner_requirements": [
+      "Read all governing obligations and all complete source evidence for the required38 files, plus applicable owners. Do not silently replace the prompt's full-source requirement with seven narrow summaries.",
+      "Complete full-body inspection either by direct reads from the frozen subject or by actually reading complete attributable source outputs produced within this same continuation. If outputs are partial or omitted, perform direct bounded reads. Label indirect evidence provenance truthfully; never claim personal original tool reads that did not occur.",
+      "Consume the slices as components of this audit, not as another independent review's proof. Maintain separate personal-read and contributor-read provenance; require an auditable full38/owner coverage union and integration inspection.",
+      "Personally trace Native browser occurrence order through Node ingestion, phase reconciliation, repeated/late exposure, packet publication/history/clock/witness consumption, document/root validation, navigation dispatch and surface/finalization ownership. Merely concatenating manifests does not establish these seams.",
+      "Resolve source-evidence conflicts by bounded source reads. Retain contradictory historical artifacts unchanged and explain later dispositions without laundering them.",
+      "Issue one completed Native-perspective report with the original schema and per-obligation exact current evidence; record any genuinely unreachable prerequisite as specifically bounded UNRESOLVED, never conditional clean.",
+      "Do not count missing readable-file coverage as a completed audit simply because all slices returned. Finish actionable missing reads before handing off; do not infer correctness from absent findings."
+    ]
+  },
+  "independence_contract": {
+    "two_required_audits": "The Native continuation and still-running Evidence11 audit remain the two independent audit branches on the same subject.",
+    "native_branch": "Continuation contributors and the integration owner are internal evidence producers for the same Native audit. They are not additional independent opinions or substantive source producers.",
+    "no_cross_branch_substitution": "Do not borrow Evidence11 conclusions or read ranges as Native coverage or use them to determine Native dispositions. Native must develop its own complete evidence and integrated source traces.",
+    "Main_role": "Main commissions, preserves and settles. Main may inventory returned coverage and identify omissions, but a coordinator summary cannot replace the accountable integrated Native source report or genuine Native producer receipt.",
+    "identity_disclosure": "If a new reviewer assumes integration ownership, disclose that handoff. Do not attribute its reads to the original reviewer, pretend an uninterrupted original session, or claim the original incomplete report was retroactively complete."
+  },
+  "obligations_retained": {
+    "original_findings": "All12 original Native and all3 original Evidence full governing bodies and identities.",
+    "audit08": "All6 checks, without relying on historical closure labels.",
+    "settled09": "All5 defects and both additional chronology obligations.",
+    "current11": [
+      "S10-C1",
+      "NF-A2",
+      "NF-A3",
+      "N10B-01",
+      "N10B-02",
+      "S10-C2"
+    ],
+    "credited_invariants": "Every credited Native clock/history/CSS/identity invariant and original E06-02 chronological arrival, E06-03 actual Error/sidecar separation, E06-04 state-before-UI and E06-05 recursive domain/cause meaning; surface/handle/no-sink/late-finalization ownership remains required.",
+    "NF_A4": "Preserve the complete recorded excluded mechanism verbatim, SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED. No repair, waiver, seventh-finding expansion or complete packet-store-integrity claim.",
+    "canonical_authority": "Retain complete NC01-NC11, RPC-01-RPC-17, original1-original9 and both current/prior historical mapping snapshots, all state/evidence SE obligations and their original meanings.",
+    "deferred_scope": "All18 independent rows across present/share/file remain54 REQUIRED_UNEXECUTED cells. Retain full state AND native UI across initial/pending/hidden/returned/reset/terminal/peer contexts; actual Pass/Reset/Start brackets and root/document/activity/uncertainty bounds; consumed original expiry; native Reset+5000 Quiz checkpoint/new-expiry without800ms slack; Relay exact pending due, settled peer and full first-timeout/team/lane/question/UI invariance without extra Pass/sleep/retry/fallback; complete Trivia expiry/nativeNext identity/history/scores/awards/deadline/UI; full idle/running/expired Start+4000 witness crossover; earliest setup, cardinality, focus/geometry/controls, live PNG/diagnostics, portable before/after enforcement and source GET/config equality, failure-safe setup/close/attachments. No caller cutover or canary substitution.",
+    "later_slices": "Original7 exact Hot Potato speed-bonus, original8 Scatter NFC duplicate/unique controls and original9 full Trivia scoring matrix remain required; gap4 unresolved and dependent gaps5-9 unchanged."
+  },
+  "artifact_and_delivery_rules": {
+    "retain": [
+      "pending-substrate-11-native-salvage-audit.json verbatim",
+      "pending-substrate-11-native-salvage-provenance-supplement.json verbatim",
+      "All original producer terminal records, actual receipts, source preservation records, governing authorities and independent Evidence audit outputs"
+    ],
+    "new_outputs": "Main preserves distinctly labeled continuation components and an integrated audit completion report, linked to the original report and supplement. Do not overwrite the original artifact to suggest it had complete evidence.",
+    "Native_receipt": "Still absent and independently fatal to admission. Neither integration ownership, complete coverage nor a source-clean result creates or substitutes genuine Native11 producer delivery.",
+    "Evidence_receipt": "Retain genuine Evidence11 receipt unchanged and its recorded accuracy/completeness limitations separately from source findings; Main's160-versus150 line discrepancy is not itself a source defect.",
+    "source_vs_delivery": "An audit's missing evidence is a review-coverage limitation, not proof of a helper defect. Its completion changes review evidence only, not the substantive11 delivery outcome."
+  },
+  "forbidden_actions": [
+    "No failed-producer retry/resume, new correction, receipt-only job, deadline extension/rearm, provider/model fallback or substantive production.",
+    "No source/helper/caller/canonical/dependency/policy/assertion/timeout edits, cleanup/normalization or scope expansion.",
+    "No Main/sibling/reviewer substitute receipt, transcript-to-receipt conversion, historical relabeling or alteration of genuine delivered evidence.",
+    "No commands, shells, eval/imports, syntax/module/literal/boundary checks, tests, builds, lint/format, browser actions, callbacks, installation, checksum/count remeasurement or reviewer-spawned nested agents.",
+    "No normal gate, runtime progression, sourceReady/qualification/PASS claim,54-cell execution or canonical integration.",
+    "No missing-range fabrication, copied independent-review coverage, contributor reads mislabeled as personal reads, or complete verdict from concatenated partial summaries."
+  ],
+  "completion_criteria": [
+    "All38 required files have complete attributable full-body/EOF evidence within the Native continuation, and applicable owner/governing evidence is complete or narrowly unresolved for a genuinely unavailable prerequisite.",
+    "One accountable integration owner has actually inspected the full source evidence and personally grounded cross-seam conclusions rather than simply joining slice manifests.",
+    "Every retained obligation has an exact current-source disposition; all history, receipt and dependency limitations remain distinguished.",
+    "The independent Evidence11 audit and integrated Native audit are both available before Main finishes a source-informed combined settlement.",
+    "Settlement remains FAILED_DELIVERY_NOT_ADMITTED with all false flags and zero admitted/executed cells; no substantive retry or execution has occurred."
+  ],
+  "assumptions": [
+    {
+      "assumption": "Main's report that the original notice did not reflect a user stop/narrowing is accurate; the preserved supplement records the same distinction.",
+      "confidence": "high",
+      "would_change_answer": "An actual user instruction forbidding further review would override continuation permission. No such instruction is supplied."
+    },
+    {
+      "assumption": "The continuation uses the same unchanged preserved partial11 subject and completes only the missing authorized Native audit evidence/integration.",
+      "confidence": "high",
+      "would_change_answer": "A different subject, source changes, extra independent gate or substantive completion would exceed this decision."
+    },
+    {
+      "assumption": "Main retains dispatch ownership and reviewers remain read-only without nested delegation.",
+      "confidence": "high",
+      "would_change_answer": "Reviewer-spawned nested agents or source/receipt-producing jobs would violate the existing contract."
+    }
+  ],
+  "execution_disclosure": "Read-only same-session OMP counsel. Read the complete755-line incomplete Native report, complete provenance supplement, complete Native salvage prompt, complete541-line preserved terminal-failure counsel and operative11 failure-protocol clauses; used glob/read/grep only. No source inspected, files written, commands/checks/tests executed, checksum/count remeasurement, browser actions or agents dispatched. This is an authority/coverage-completion decision, not a source audit or new substantive authorization."
+}

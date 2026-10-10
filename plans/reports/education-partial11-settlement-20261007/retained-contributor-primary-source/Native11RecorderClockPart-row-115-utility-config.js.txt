@@ -1,0 +1,21 @@
+const { normalizeGameConfig } = require('./normalize-game-config.js')
+const { validateGameConfig } = require('./game-schema.js')
+const { throwInvalid } = require('./game-validation-utils.js')
+
+function createUtilityConfig(type, value = {}) {
+  if (!['lucky-wheel', 'countdown', 'scoreboard'].includes(type))
+    throw new TypeError('Choose a classroom utility subtype.')
+  const config = normalizeGameConfig({ gameType: type, [type]: value })
+  throwInvalid(validateGameConfig(type, config).errors, `${type} configuration`)
+  return config
+}
+function utilityNow(now = () => performance.now()) {
+  const value = typeof now === 'function' ? now() : now
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0)
+    throw new RangeError('Utility clock must return finite monotonic milliseconds.')
+  return value
+}
+function isCurrentCommand(state, command) {
+  return command && (command.generation === undefined || command.generation === state.generation)
+}
+module.exports = { createUtilityConfig, utilityNow, isCurrentCommand }

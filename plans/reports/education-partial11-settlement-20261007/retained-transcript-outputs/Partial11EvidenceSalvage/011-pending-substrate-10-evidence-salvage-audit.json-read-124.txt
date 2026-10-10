@@ -1,0 +1,142 @@
+        "file": "shared/src/htmlGenerator.js",
+        "ranges": [
+          "437-485"
+        ],
+        "coverage": "Relevant generated Reveal configuration and actual keyboardCondition policy"
+      },
+      {
+        "file": "node_modules/reveal.js/js/controllers/keyboard.js",
+        "ranges": [
+          "140-243",
+          "244-359",
+          "360-414"
+        ],
+        "coverage": "Actual consuming onDocumentKeyDown dispatcher, including guards, custom precedence and Arrow routing; accessed through preserved dependency junction"
+      }
+    ],
+    "authorityAndReceiptSources": {
+      "base": "D:/NavSlidesQualification/edu-resume-261004/",
+      "documents": [
+        {
+          "file": "pending-substrate-10-evidence-salvage-prompt.md",
+          "coverage": "Complete mapped salvage contract, including appended settled09/actual10/deferred requirements; reread1-80"
+        },
+        {
+          "file": "pending-substrate-10-evidence-prompt.md",
+          "coverage": "Producer requirements read; claims do not amend salvage authority"
+        },
+        {
+          "file": "pending-substrate-10-terminal-failure-counsel.json",
+          "ranges": [
+            "1-90",
+            "91-180",
+            "181-272"
+          ],
+          "coverage": "COMPLETE"
+        },
+        {
+          "file": "pending-substrate-10-scope-preservation.json",
+          "ranges": [
+            "1-77",
+            "78-300",
+            "301-364"
+          ],
+          "coverage": "COMPLETE"
+        },
+        {
+          "file": "pending-substrate-10-partial-freeze.json",
+          "ranges": [
+            "1-80"
+          ],
+          "coverage": "Header/source identity inspected; not all4327 manifest rows. Complete helper/caller inventory read from scope-preservation record as permitted by contract."
+        },
+        {
+          "file": "pending-substrate-10-terminal-delivery.json",
+          "ranges": [
+            "1-100"
+          ],
+          "coverage": "COMPLETE"
+        },
+        {
+          "file": "pending-substrate-10-linked-keyboard-owner.json",
+          "ranges": [
+            "1-100"
+          ],
+          "coverage": "COMPLETE"
+        },
+        {
+          "file": "pending-substrate-10-dispatch-authority.json",
+          "ranges": [
+            "1-150"
+          ],
+          "coverage": "Complete dispatch/ownership and settled defect requirements"
+        },
+        {
+          "file": "pending-substrate-07-evidence-admission.json",
+          "ranges": [
+            "1-100"
+          ],
+          "coverage": "COMPLETE; all three original finding bodies"
+        },
+        {
+          "file": "pending-substrate-07-native-admission.json",
+          "ranges": [
+            "1-115"
+          ],
+          "coverage": "COMPLETE; all twelve original finding bodies"
+        },
+        {
+          "file": "pending-substrate-08-evidence-salvage-audit.json",
+          "ranges": [
+            "1-100"
+          ],
+          "coverage": "COMPLETE original audit and both added Evidence findings"
+        },
+        {
+          "file": "pending-substrate-08-native-salvage-audit.json",
+          "ranges": [
+            "1-150"
+          ],
+          "coverage": "COMPLETE original audit and all four added Native findings"
+        },
+        {
+          "file": "pending-substrate-08-settled-rejection-counsel.json",
+          "ranges": [
+            "1-119"
+          ],
+          "coverage": "COMPLETE"
+        },
+        {
+          "file": "pending-substrate-08-subject-authority.json",
+          "ranges": [
+            "1-85",
+            "86-170",
+            "171-187",
+            "1-75"
+          ],
+          "coverage": "Canonical original definitions and current/prior mapping authority inspected; no historical status treated as current closure"
+        },
+        {
+          "file": "pending-substrate-09-settled-rejection-counsel.json",
+          "ranges": [
+            "1-100",
+            "101-200",
+            "201-279",
+            "261-279"
+          ],
+          "coverage": "Complete ranged archived counsel inspection; used with complete09 audits and counsel10, not as current source proof"
+        },
+        {
+          "file": "pending-substrate-09-native-salvage-audit.json",
+          "ranges": [
+            "1-145"
+          ],
+          "coverage": "COMPLETE; five settled defects and preservation/chronology obligations"
+        },
+        {
+          "file": "pending-substrate-09-evidence-salvage-audit.json",
+          "ranges": [
+            "1-145"
+          ],
+
+[Showing lines 1021-1160 of 1203. Use :1161 to continue]

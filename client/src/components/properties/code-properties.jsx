@@ -1,6 +1,7 @@
 import { Input, Select } from '../../components/ui'
 import { Button } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
+import FocusedAuthoringTextInput from './focused-authoring-text-input'
 /**
  * Code block properties: edit button, language, font size, border radius.
  */
@@ -57,10 +58,10 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
     const next = steps.filter((_, i) => i !== index)
     onUpdate({
       walkthroughSteps: next,
-      defaultStepIndex: Math.max(0, Math.min(
-        defaultStepIndex - (index < defaultStepIndex ? 1 : 0),
-        next.length - 1,
-      )),
+      defaultStepIndex: Math.max(
+        0,
+        Math.min(defaultStepIndex - (index < defaultStepIndex ? 1 : 0), next.length - 1)
+      ),
     })
   }
 
@@ -93,7 +94,8 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
         </div>
         <div>
           <div className="text-[11px] text-text-muted mb-0.5">Font Size</div>
-          <Input
+          <FocusedAuthoringTextInput
+            key={`${element.id}-code-font`}
             data-testid="prop-code-font-size"
             aria-label="Code font size"
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
@@ -161,7 +163,10 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
         )}
         <div className="space-y-1.5">
           {steps.map((step, index) => (
-            <div key={step.id || `${element.id || 'code'}-step-${index}`} className="rounded border border-border bg-hover p-2 space-y-1">
+            <div
+              key={step.id || `${element.id || 'code'}-step-${index}`}
+              className="rounded border border-border bg-hover p-2 space-y-1"
+            >
               <div className="flex items-center gap-1">
                 <Input
                   data-testid={`prop-code-walkthrough-label-${index}`}
@@ -189,7 +194,9 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
                   type="number"
                   min="1"
                   value={step.startLine || 1}
-                  onChange={(e) => updateStep(index, { startLine: clampNumber(e.target.value, 1, 9999, 1) })}
+                  onChange={(e) =>
+                    updateStep(index, { startLine: clampNumber(e.target.value, 1, 9999, 1) })
+                  }
                 />
                 <Input
                   data-testid={`prop-code-walkthrough-end-${index}`}
@@ -198,7 +205,9 @@ export default function CodeProperties({ element, onUpdate, onEditCode }) {
                   type="number"
                   min="1"
                   value={step.endLine || step.startLine || 1}
-                  onChange={(e) => updateStep(index, { endLine: clampNumber(e.target.value, 1, 9999, 1) })}
+                  onChange={(e) =>
+                    updateStep(index, { endLine: clampNumber(e.target.value, 1, 9999, 1) })
+                  }
                 />
               </div>
             </div>

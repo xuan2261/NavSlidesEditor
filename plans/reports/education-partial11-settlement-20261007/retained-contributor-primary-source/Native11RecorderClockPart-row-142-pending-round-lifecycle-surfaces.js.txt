@@ -1,0 +1,71 @@
+  }
+
+  if (surface === 'file') {
+    const file = await downloadArtifact(page, testInfo, 'Export HTML', 'portable.html')
+    const plannedUrl = computePlannedUrl('file', { file })
+    let stashedHandle = null
+    try {
+      const portable = await freshPortable(browser, file, {
+        initScripts: [PASSIVE_OBSERVATION_INIT_SCRIPT],
+        evidence,
+        onPageCreated: async (earlyPortableHandle) => {
+          stashedHandle = earlyPortableHandle
+          evidence.setActivePage(earlyPortableHandle.page, { surface: 'file', file, plannedUrl })
+          evidence.stage('portablePageCreated', { file, plannedUrl, diagnostics: earlyPortableHandle.diagnostics })
+        },
+      })
+      if (!stashedHandle) stashedHandle = portable
+      const docIdentity = await stashedHandle.page.evaluate(() => ({
+        url: window.location.href,
+        documentId: window.__nsDocumentId || null,
+        timeOrigin: window.performance?.timeOrigin || null,
+      }))
+      evidence.stage('fileDocumentIdentityObserved', docIdentity)
+      evidence.bindDocumentIdentity(docIdentity)
+      evidence.stage('portableDiagnosticsBefore', stashedHandle.diagnostics)
+      let networkBefore = null
+      try {
+        networkBefore = await stashedHandle.inspectNetwork()
+        evidence.stage('portableNetworkBefore', { networkBefore, file })
+      } catch (netErr) {
+        evidence.recordError('surface:file:inspectNetworkBefore', netErr)
+        throw netErr
+      } finally {
+        evidence.stage('portableDiagnosticsBeforeSettled', stashedHandle.diagnostics)
+      }
+      return await visit({
+        page: stashedHandle.page,
+        surface: 'file',
+        file,
+        inspectNetwork: stashedHandle.inspectNetwork,
+        diagnostics: networkBefore,
+        error: null,
+      })
+    } catch (err) {
+      if (stashedHandle?.diagnostics) {
+        evidence.stage('portableDiagnosticsError', stashedHandle.diagnostics)
+      }
+      evidence.recordError('surface:file', err)
+      throw err
+    } finally {
+      if (stashedHandle) {
+        try {
+          const networkAfter = await stashedHandle.inspectNetwork()
+          evidence.stage('portableNetworkAfter', networkAfter)
+        } catch (netAfterErr) {
+          evidence.recordError('surface:file:inspectNetworkAfter', netAfterErr)
+        } finally {
+          evidence.stage('portableDiagnosticsAfterSettled', stashedHandle.diagnostics)
+        }
+        try {
+          await evidence.collectLive(stashedHandle.page)
+        } catch (liveErr) {
+          evidence.recordError('surface:file:collectLive', liveErr)
+        }
+        await safeClose(stashedHandle.context, evidence, 'surface:file:close')
+      }
+    }
+  }
+
+  throw new Error(`Unsupported surface: ${surface}`)
+}

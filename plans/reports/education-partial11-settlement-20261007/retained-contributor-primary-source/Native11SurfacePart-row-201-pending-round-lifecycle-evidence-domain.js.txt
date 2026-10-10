@@ -1,0 +1,42 @@
+export function validateDocumentIdentity(snapshot, plannedUrl = null, boundIdentity = null) {
+  if (!snapshot || typeof snapshot !== 'object') {
+    throw new Error('Document identity snapshot is required')
+  }
+  const { url, documentId, timeOrigin } = snapshot
+  if (!url || typeof url !== 'string' || url === 'about:blank') {
+    throw new Error(`Invalid observed document url: ${url}`)
+  }
+  if (!documentId || typeof documentId !== 'string') {
+    throw new Error(`Invalid observed documentId: ${documentId}`)
+  }
+  if (typeof timeOrigin !== 'number' || !Number.isFinite(timeOrigin)) {
+    throw new Error(`Invalid observed timeOrigin: ${timeOrigin}`)
+  }
+  if (plannedUrl) {
+    const plannedNorm = normalizeUrlForIdentity(plannedUrl)
+    const observedNorm = normalizeUrlForIdentity(url)
+    if (plannedNorm !== observedNorm) {
+      throw new Error(`Document URL mismatch: expected ${plannedUrl}, observed ${url}`)
+    }
+  }
+  if (boundIdentity) {
+    if (boundIdentity.documentId !== documentId) {
+      throw new Error(
+        `Document identity documentId mismatch: expected ${boundIdentity.documentId}, observed ${documentId}`
+      )
+    }
+    if (boundIdentity.timeOrigin !== timeOrigin) {
+      throw new Error(
+        `Document identity timeOrigin mismatch: expected ${boundIdentity.timeOrigin}, observed ${timeOrigin}`
+      )
+    }
+    const boundNorm = normalizeUrlForIdentity(boundIdentity.url)
+    const observedNorm = normalizeUrlForIdentity(url)
+    if (boundNorm !== observedNorm) {
+      throw new Error(
+        `Document identity URL mismatch: expected ${boundIdentity.url}, observed ${url}`
+      )
+    }
+  }
+  return snapshot
+}

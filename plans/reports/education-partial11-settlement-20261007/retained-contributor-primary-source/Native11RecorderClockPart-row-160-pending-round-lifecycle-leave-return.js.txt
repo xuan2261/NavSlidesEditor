@@ -1,0 +1,29 @@
+    }).toBe(true)
+    const s = await getGameState(root)
+    expect(s.phase).toBe('review')
+    expect(s.deadlinePassed).toBe(true)
+    expect(s.generation).toBe(before.generation)
+  } else if (caseDef.gameType === 'jeopardy') {
+    await expect.poll(async () => {
+      const s = await getGameState(root)
+      return s.phase === 'question' && s.expired === true && s.deadline === null
+    }).toBe(true)
+    const s = await getGameState(root)
+    expect(s.phase).toBe('question')
+    expect(s.expired).toBe(true)
+    expect(s.deadline).toBeNull()
+    expect(s.generation).toBe(before.generation)
+  }
+
+  const terminal = await getGameState(root)
+  evidence.stage('terminal', terminal)
+
+  return {
+    initial,
+    before,
+    hiddenSample,
+    returned,
+    terminal,
+    measuredWitnessInterval,
+  }
+}

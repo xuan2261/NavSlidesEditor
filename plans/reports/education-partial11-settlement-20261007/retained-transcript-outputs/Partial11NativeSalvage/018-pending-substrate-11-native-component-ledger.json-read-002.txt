@@ -1,0 +1,202 @@
+    },
+    {
+      "seam": "Original E06-01-B versus forwarded browser envelopes",
+      "result": "Node-reference identity and numeric-order-independent serialization exposure are preserved. Browser transport produces new envelope identities, so these credited Node guarantees cannot establish forwarded-browser occurrence uniqueness."
+    },
+    {
+      "seam": "Live root errors versus Node document validation",
+      "evidence": [
+        "pending-round-lifecycle-live-evidence.js:28-51",
+        "pending-round-lifecycle-live-root-observation.js:45-136"
+      ],
+      "observation": "The live-root collector stages raw data, then records a document identity failure before dispatching already observed browser rootErrors. Its selected rootFailure also prefers that document error. This is different from the corrected Native common-observation path, which records browser failures before the Node validation failure.",
+      "scopeTreatment": "Disclose this exact existing crossing to the integration owner when interpreting broad chronological obligations. Do not label it a newly introduced Correction11 regression: the historical Evidence08 preservation explanation already describes this document-first live collector. State-before-UI sibling ordering itself remains preserved."
+    },
+    {
+      "seam": "Late close/source/attachment ownership",
+      "result": "Surfaces record live/post-network/close errors before outer finalization; finalize ingests runner echoes by reference, independently performs source checking, records measured attachment failure and only then produces the common-ledger throw. The complete surfaces owner must independently finish its setup/no-sink/ownership coverage."
+    },
+    {
+      "seam": "Immutable callers and future cutover",
+      "result": "This component establishes helper bodies and their crossing consumers, not migrated Phase2 callers or runtime acceptance. Existing old signatures are deferred obligations, not automatically new helper regressions."
+    }
+  ],
+  "NF_A4Scope": {
+    "id": "NF-A4",
+    "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+    "boundary": "Separate action-packet-store replacement binding remains excluded from the six required Correction11 repairs; not repaired, waived, disproved or promoted here. No complete packet-store-integrity claim.",
+    "verbatimExcludedScopeCandidate": {
+      "consumerVisibleMechanism": "evaluateActionCandidates returns candidates from the public, replaceable window.__nsRecordedPackets (:146-147). storeHealth (:148) checks only the lifecycle store. In-place mutation of an original packet is detected, because that packet object is also the retained native-action detail. Replacing the array, or replacing an element with a forged object, leaves the retained and private stores untouched, so health stays true. extractActionBracket (observation.js:107-131) then builds the action bracket from the forged packet: rootEventsBefore/After, stateAfter and tCapture/tBubble, which witness.js:44-63 adopts as the Start baseline. This is the same public-store replacement model as N07-04, applied to the packet store.",
+      "lineEnd": 158,
+      "title": "Bind returned action packets to the integrity-checked native-action records",
+      "confidence": 0.6,
+      "id": "NF-A4",
+      "lineStart": 146,
+      "repairNeeded": "Inside evaluateActionCandidates, derive candidates from, or verify each one against, the closure-retained native-action entries. For example, expose a private read of native-action details by sequence, or verify that each candidate is identical to the retained entry's detail and matches its private JSON clone. Report a recorder:store error when they diverge. evaluatePreActionCursor's lastSeq source (:36-37) needs the same binding.",
+      "priority": 2,
+      "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+      "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+      "scopeDecision": "Original N07-04/N07-05 explicitly cover lifecycle store integrity. Extending identical checks to separately replaceable action-packet storage is not automatically a required cutover; no new repair scope authorized."
+    }
+  },
+  "readEvidence": {
+    "provenance": "All listed source/document reads are personal tool reads in this continuation component, not borrowed Evidence11 audit coverage. Complete primary source outputs are retained in this component's tool transcript. The integration owner must read those complete outputs or read the frozen source directly; observations alone are not full-source inspection.",
+    "primaryFiles": [
+      {
+        "file": "pending-round-lifecycle-ui-evidence.js",
+        "readSelectors": [
+          "1-210",
+          "raw:140-210"
+        ],
+        "coveredSourceLines": "1-151 plus trailing EOF whitespace",
+        "fullBodies": true,
+        "eofObserved": true,
+        "eofAnchor": "Closing OWNER_UI_OBSERVATION_INIT_SCRIPT backtick after })()."
+      },
+      {
+        "file": "pending-round-lifecycle-error-ledger.js",
+        "readSelectors": [
+          "1-200"
+        ],
+        "coveredSourceLines": "1-150 through EOF",
+        "fullBodies": true,
+        "eofObserved": true,
+        "eofAnchor": "Final createErrorLedger closing brace at line 150."
+      },
+      {
+        "file": "pending-round-lifecycle-error-exposure.js",
+        "readSelectors": [
+          "1-220",
+          "raw:155-220"
+        ],
+        "coveredSourceLines": "1-171 through EOF",
+        "fullBodies": true,
+        "eofObserved": true,
+        "eofAnchor": "Final refreshLedgerExposure closing brace at line 171."
+      },
+      {
+        "file": "pending-round-lifecycle-live-evidence.js",
+        "readSelectors": [
+          "1-220"
+        ],
+        "coveredSourceLines": "1-120 through EOF",
+        "fullBodies": true,
+        "eofObserved": true,
+        "eofAnchor": "Final captureLiveScreenshot closing brace at line 120."
+      },
+      {
+        "file": "pending-round-lifecycle-live-root-observation.js",
+        "readSelectors": [
+          "1-200"
+        ],
+        "coveredSourceLines": "1-157 through EOF",
+        "fullBodies": true,
+        "eofObserved": true,
+        "eofAnchor": "Final evaluateLiveRootObservation closing brace at line 157."
+      },
+      {
+        "file": "pending-round-lifecycle-evidence.js",
+        "readSelectors": [
+          "1-220"
+        ],
+        "coveredSourceLines": "1-198 through EOF",
+        "fullBodies": true,
+        "eofObserved": true,
+        "eofAnchor": "Final createEvidenceAccumulator closing brace at line 198."
+      }
+    ],
+    "fullCrossSourceReads": [
+      {
+        "file": "pending-round-lifecycle-observation-errors.js",
+        "coveredSourceLines": "1-93 through EOF",
+        "readSelector": "1-200",
+        "fullBodies": true,
+        "eofObserved": true
+      },
+      {
+        "file": "pending-round-lifecycle-observation-browser.js",
+        "coveredSourceLines": "1-175 through EOF",
+        "readSelector": "1-210",
+        "fullBodies": true,
+        "eofObserved": true
+      },
+      {
+        "file": "pending-round-lifecycle-observation.js",
+        "coveredSourceLines": "1-152 through EOF",
+        "readSelector": "1-210",
+        "fullBodies": true,
+        "eofObserved": true
+      },
+      {
+        "file": "pending-round-lifecycle-native-observation.js",
+        "coveredSourceLines": "1-163 through EOF",
+        "readSelector": "1-200",
+        "fullBodies": true,
+        "eofObserved": true
+      },
+      {
+        "file": "pending-round-lifecycle-native-snapshot.js",
+        "coveredSourceLines": "1-106 through EOF",
+        "readSelector": "1-180",
+        "fullBodies": true,
+        "eofObserved": true
+      },
+      {
+        "file": "pending-round-lifecycle-native-history.js",
+        "coveredSourceLines": "1-185 through EOF",
+        "readSelector": "1-200",
+        "fullBodies": true,
+        "eofObserved": true
+      },
+      {
+        "file": "pending-round-lifecycle-native-action.js",
+        "coveredSourceLines": "1-84 through EOF",
+        "readSelector": "1-170",
+        "fullBodies": true,
+        "eofObserved": true
+      },
+      {
+        "file": "pending-round-lifecycle-evidence-domain.js",
+        "coveredSourceLines": "1-143 through EOF",
+        "readSelector": "1-190",
+        "fullBodies": true,
+        "eofObserved": true
+      },
+      {
+        "file": "pending-round-lifecycle-surfaces.js",
+        "coveredSourceLines": "1-193 through EOF",
+        "readSelector": "1-200",
+        "fullBodies": true,
+        "eofObserved": true
+      },
+      {
+        "file": "release-portable-inspection.js",
+        "coveredSourceLines": "1-55 through EOF",
+        "readSelector": "1-140",
+        "fullBodies": true,
+        "eofObserved": true
+      },
+      {
+        "file": "release-surfaces.js",
+        "coveredSourceLines": "1-199 through EOF",
+        "readSelector": "1-200",
+        "fullBodies": true,
+        "eofObserved": true
+      }
+    ],
+    "targetedOwnerReads": [
+      {
+        "file": "tests/e2e/fixtures/test-fixtures.js",
+        "readSelectors": [
+          "82-103",
+          "raw:89-101"
+        ],
+        "completeRelevantBody": "apiGetPresentation, lines 89-99",
+        "wholeFileRead": false
+      },
+      {
+        "file": "node_modules/playwright-core/lib/coreBundle.js",
+        "readSelectors": [
+          "12028-12098",
+
+[Showing lines 221-420 of 549. Use :421 to continue]

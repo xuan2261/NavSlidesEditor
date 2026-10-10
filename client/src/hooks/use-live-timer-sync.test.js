@@ -1,128 +1,82 @@
 import { describe, expect, it, vi } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { useLiveTimerSync } from './use-live-timer-sync.js'
-
-function createMockSocket() {
+import { gameInstanceKey } from 'revealjs-shared'
+function socket() {
   const handlers = {}
   return {
-    on: (event, handler) => { handlers[event] = handler },
-    off: (event) => { handlers[event] = null },
-    _trigger: (event, data) => { handlers[event]?.(data) },
-    _getHandler: (event) => handlers[event],
+    on: (event, handler) => {
+      handlers[event] = handler
+    },
+    off: (event) => {
+      delete handlers[event]
+    },
+    receive: (event, data) => handlers[event]?.(data),
+    handler: (event) => handlers[event],
   }
 }
+const timer = (effectiveSlideId, remaining) => ({
+  effectiveSlideId,
+  elementId: 'layout-fixed:lesson:timer',
+  remaining,
+  duration: 30,
+  running: true,
+  endedAt: null,
+})
 
-describe('useLiveTimerSync', () => {
-  it('subscribes to timer:sync and timer:ended events', () => {
-    const socket = createMockSocket()
-    const onEnded = vi.fn()
-    const { result } = renderHook(() => useLiveTimerSync(socket, onEnded))
-
-    socket._trigger('timer:sync', {
-      elementId: 'game-1',
-      remaining: 20,
-      duration: 30,
-      running: true,
-      endedAt: Date.now() + 20000,
+describe('effective server timer state consumption', () => {
+  it('keeps inherited copies independent through pause and completion and reports the completed tuple', () => {
+    const transport = socket(),
+      onEnded = vi.fn()
+    const { result } = renderHook(() => useLiveTimerSync(transport, onEnded))
+    const parent = timer('parent', 20),
+      child = timer('child', 25)
+    transport.receive('timer:sync', parent)
+    transport.receive('timer:sync', child)
+    transport.receive('timer:sync', { ...parent, running: false, pausedRemaining: 7 })
+    expect(result.current.current[gameInstanceKey(parent)]).toMatchObject({
+      running: false,
+      pausedRemaining: 7,
     })
-
-    expect(result.current.current['game-1']).toBeDefined()
-    expect(result.current.current['game-1'].remaining).toBe(20)
-    expect(result.current.current['game-1'].duration).toBe(30)
-    expect(result.current.current['game-1'].running).toBe(true)
+    expect(result.current.current[gameInstanceKey(child)]).toMatchObject({
+      running: true,
+      remaining: 25,
+    })
+    transport.receive('timer:ended', { effectiveSlideId: 'unknown', elementId: parent.elementId })
+    transport.receive('timer:sync', { elementId: parent.elementId, remaining: 0 })
+    expect(Object.keys(result.current.current)).toHaveLength(2)
+    expect(onEnded).not.toHaveBeenCalled()
+    transport.receive('timer:ended', { effectiveSlideId: 'parent', elementId: parent.elementId })
+    expect(result.current.current[gameInstanceKey(parent)]).toBeUndefined()
+    expect(result.current.current[gameInstanceKey(child)].remaining).toBe(25)
+    expect(onEnded).toHaveBeenCalledWith({
+      effectiveSlideId: 'parent',
+      elementId: parent.elementId,
+    })
   })
-
-  it('stores multiple timer states keyed by elementId', () => {
-    const socket = createMockSocket()
-    const { result } = renderHook(() => useLiveTimerSync(socket, vi.fn()))
-
-    socket._trigger('timer:sync', {
-      elementId: 'game-1',
-      remaining: 20,
-      duration: 30,
-      running: true,
-      endedAt: null,
-    })
-    socket._trigger('timer:sync', {
-      elementId: 'game-2',
-      remaining: 45,
-      duration: 60,
-      running: true,
-      endedAt: null,
-    })
-
-    expect(result.current.current['game-1'].remaining).toBe(20)
-    expect(result.current.current['game-2'].remaining).toBe(45)
-  })
-
-  it('removes timer state on timer:ended and calls onTimerEnded', () => {
-    const socket = createMockSocket()
-    const onEnded = vi.fn()
-    const { result } = renderHook(() => useLiveTimerSync(socket, onEnded))
-
-    socket._trigger('timer:sync', {
-      elementId: 'game-1',
-      remaining: 20,
-      duration: 30,
-      running: true,
-      endedAt: Date.now() + 20000,
-    })
-    expect(result.current.current['game-1']).toBeDefined()
-
-    socket._trigger('timer:ended', { elementId: 'game-1' })
-    expect(result.current.current['game-1']).toBeUndefined()
-    expect(onEnded).toHaveBeenCalledWith('game-1')
-  })
-
-  it('clears prior room state and rejects retained callbacks on socket changes', () => {
-    const firstSocket = createMockSocket()
-    const secondSocket = createMockSocket()
-    const onEnded = vi.fn()
-    const { result, rerender } = renderHook(
-      ({ socket }) => useLiveTimerSync(socket, onEnded),
-      { initialProps: { socket: firstSocket } }
+  it('clears former room state and ignores callbacks retained after socket replacement or unmount', () => {
+    const first = socket(),
+      second = socket(),
+      onEnded = vi.fn(),
+      parent = timer('parent', 20)
+    const { result, rerender, unmount } = renderHook(
+      ({ transport }) => useLiveTimerSync(transport, onEnded),
+      { initialProps: { transport: first } }
     )
-
-    firstSocket._trigger('timer:sync', {
-      elementId: 'room-1-timer',
-      remaining: 20,
-      duration: 30,
-      running: true,
-      endedAt: null,
-    })
-    const staleSync = firstSocket._getHandler('timer:sync')
-    const staleEnded = firstSocket._getHandler('timer:ended')
-    expect(result.current.current['room-1-timer']).toBeDefined()
-
-    rerender({ socket: secondSocket })
-    expect(result.current.current).toEqual({})
-
-    staleSync({ elementId: 'room-1-timer', remaining: 1 })
-    staleEnded({ elementId: 'room-1-timer' })
+    first.receive('timer:sync', parent)
+    const staleSync = first.handler('timer:sync'),
+      staleEnded = first.handler('timer:ended')
+    rerender({ transport: second })
+    staleSync(parent)
+    staleEnded(parent)
     expect(result.current.current).toEqual({})
     expect(onEnded).not.toHaveBeenCalled()
-
-    secondSocket._trigger('timer:sync', {
-      elementId: 'room-2-timer',
-      remaining: 45,
-      duration: 60,
-      running: true,
-      endedAt: null,
-    })
-    expect(result.current.current['room-2-timer']).toBeDefined()
-  })
-
-  it('returns early when socket is null', () => {
-    const { result } = renderHook(() => useLiveTimerSync(null, vi.fn()))
-    expect(result.current.current).toEqual({})
-  })
-
-  it('cleans up listeners on unmount', () => {
-    const socket = createMockSocket()
-    const offSpy = vi.spyOn(socket, 'off')
-    const { unmount } = renderHook(() => useLiveTimerSync(socket, vi.fn()))
+    const child = timer('child', 25)
+    second.receive('timer:sync', child)
+    expect(result.current.current[gameInstanceKey(child)].remaining).toBe(25)
+    const unmountedSync = second.handler('timer:sync')
     unmount()
-    expect(offSpy).toHaveBeenCalledWith('timer:sync', expect.any(Function))
-    expect(offSpy).toHaveBeenCalledWith('timer:ended', expect.any(Function))
+    unmountedSync(parent)
+    expect(result.current.current).toEqual({})
   })
 })

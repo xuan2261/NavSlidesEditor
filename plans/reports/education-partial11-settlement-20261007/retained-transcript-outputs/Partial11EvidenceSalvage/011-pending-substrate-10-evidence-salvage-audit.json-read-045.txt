@@ -1,0 +1,202 @@
+      "RPC01Through17": "All seventeen canonical RPC identities and historical dispositions remain required under their original mappings; none is closed by this salvage or renamed as a line-count/receipt check.",
+      "original1Through9": "All nine original identities retain their original scope. Original7/8/9 remain independent required later slices.",
+      "mappingSnapshots": "Preserve originalCurrentMappingSnapshot and originalPriorMappingSnapshot verbatim as authority records; historical credited source labels are not current admission, qualification or PASS."
+    },
+    "currentConsumerEvidence": [
+      "pending-round-lifecycle-acceptance.spec.js:63-81 consumes context.page but does not supply the authored expected-root manifest before visitSurface",
+      "pending-round-lifecycle-cases.js:9-199 wrappers omit sink forwarding and discard parts of returned action evidence",
+      "pending-round-lifecycle-leave-return.js:33-144 omits sinks on observation/navigation/state calls and calls waitForWitnessExpiry using the obsolete two-argument form",
+      "pending-round-lifecycle-reset.js:33-110 consumes obsolete tBefore/tAfter/activityNow and retains an800ms deadline allowance",
+      "pending-round-lifecycle-isolation.js:34-120 retains the same obsolete timing/result contracts and incomplete witness consumption",
+      "pending-round-lifecycle-state.js and all five immutable game-state modules define local state/UI predicates, not complete independently bounded journey acceptance"
+    ],
+    "stateAndUI": "Complete independent initial/pending/hidden/returned/reset/terminal/peer owner context and native UI are required. Generation equality and eventual scalar expiry are insufficient. Preserve original first-expiry identity, consumed return and old-due invariance.",
+    "surfaceAndFailureEvidence": "Present/share/file need earliest lifecycle setup, exact root/document cardinality and identity, actual visibility/focus/geometry/control routing, live diagnostics/PNG, portable before/after enforcement, source GET equality against independently authored saved configuration, and failure-safe setup/navigation/close/attachment finalization.",
+    "acceptanceMatrix": {
+      "surfaces": [
+        "present",
+        "share",
+        "file"
+      ],
+      "leaveReturnRows": [
+        "Quiz",
+        "Hot Potato",
+        "Jeopardy",
+        "Relay",
+        "Trivia question",
+        "Trivia round"
+      ],
+      "resetRows": [
+        "Quiz",
+        "Hot Potato",
+        "Jeopardy",
+        "Relay deadline",
+        "Relay baton",
+        "Trivia question",
+        "Trivia round"
+      ],
+      "isolationRows": [
+        "Quiz",
+        "Hot Potato",
+        "Jeopardy",
+        "Relay",
+        "Trivia"
+      ],
+      "independentRows": 18,
+      "independentCells": 54,
+      "representativeSubstitutionAllowed": false,
+      "status": "ALL_REQUIRED_UNEXECUTED"
+    },
+    "unchangedOtherSlices": [
+      "original7: exact Hot Potato speed-bonus",
+      "original8: Scattergories NFC duplicate/unique scoring and control",
+      "original9: full Trivia scoring policy matrix"
+    ],
+    "orderedGaps": "Gap4 remains unresolved; dependent gaps5..9 remain blocked and required. No historical PASS evidence is used."
+  },
+  "readEvidence": {
+    "method": "Read-only source/document inspection with bounded read ranges and an anchoring grep. Complete mapped helper and immutable caller bodies were read; no source search was substituted for body review. Requested end ranges sometimes include a final blank line or extend past EOF. Physical line counts below are Main's recorded counts, not reviewer measurements.",
+    "root": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-10-partial",
+    "helpers": [
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+        "ranges": [
+          "1-158",
+          "159"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 158
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-snapshot.js",
+        "ranges": [
+          "1-106"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 105
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-activity-interval.js",
+        "ranges": [
+          "1-103"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 102
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation.js",
+        "ranges": [
+          "1-153"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 152
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+        "ranges": [
+          "1-188"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 187
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-clock.js",
+        "ranges": [
+          "1-103"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 102
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-controls.js",
+        "ranges": [
+          "1-172"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 171
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-witness.js",
+        "ranges": [
+          "1-167"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 166
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+        "ranges": [
+          "1-175",
+          "176"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 175
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-action.js",
+        "ranges": [
+          "1-75"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 74
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-witness-domain.js",
+        "ranges": [
+          "1-138"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 137
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-history-domain.js",
+        "ranges": [
+          "1-54"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 53
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-history.js",
+        "ranges": [
+          "1-185",
+          "186",
+          "75-110"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 185
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+        "ranges": [
+          "1-94",
+          "95",
+          "78-94"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 94
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+        "ranges": [
+          "1-114"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 113
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-ui-evidence.js",
+        "ranges": [
+          "1-153"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 152
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+        "ranges": [
+          "1-150",
+          "151"
+        ],
+
+[Showing lines 521-720 of 1203. Use :721 to continue]

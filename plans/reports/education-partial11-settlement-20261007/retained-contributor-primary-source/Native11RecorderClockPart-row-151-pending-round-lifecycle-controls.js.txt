@@ -1,0 +1,44 @@
+export async function passRelayBaton(root, evidence) {
+  assertEvidenceSink(evidence)
+  const actionBracket = await executeAction(root, () => root.locator('button[data-ns-command="pass"]').click(), { command: 'pass', type: 'click' }, evidence, 'relayPassAction')
+  return { state: actionBracket.stateAfter, actionBracket, actionRecords: [actionBracket], passBracket: [actionBracket.tCapture, actionBracket.tBubble] }
+}
+
+export async function startTriviaRound(root, evidence) {
+  assertEvidenceSink(evidence)
+  const startBtn = root.locator('button[data-ns-command="start"]')
+  const actionBracket = await executeAction(root, () => startBtn.click(), { command: 'start', type: 'click' }, evidence, 'triviaStartAction')
+  const state = actionBracket.stateAfter
+  expect(state).not.toBeNull()
+  expect(state.phase).toBe('active')
+  expect(state.deadline).not.toBeNull()
+  return { state, actionBracket, actionRecords: [actionBracket], startBracket: [actionBracket.tCapture, actionBracket.tBubble] }
+}
+export async function buzzTriviaTeam(root, teamId = 'team-2', evidence) {
+  assertEvidenceSink(evidence)
+  const actionBracket = await executeAction(root, () => root.locator(`button[data-ns-command="buzz-${teamId}"]`).click(), { command: `buzz-${teamId}`, type: 'click' }, evidence, `triviaBuzz_${teamId}`)
+  return { state: actionBracket.stateAfter, actionBracket, actionRecords: [actionBracket] }
+}
+export async function answerTriviaOption(root, optionId = 'question-1-option-1', evidence) {
+  assertEvidenceSink(evidence)
+  const option = root.locator(`input[value="${optionId}"]`)
+  const checkBracket = await executeAction(root, () => option.check(), { type: 'change' }, evidence, 'triviaOptionCheck')
+  const submitBtn = root.locator('form button[type="submit"]')
+  const actionBracket = await executeAction(root, () => submitBtn.click(), { command: 'submit', type: 'submit' }, evidence, 'triviaSubmitAnswer')
+  return { state: actionBracket.stateAfter, actionBracket, actionRecords: [checkBracket, actionBracket] }
+}
+export async function clickTriviaNext(root, evidence) {
+  assertEvidenceSink(evidence)
+  const actionBracket = await executeAction(root, () => root.locator('button[data-ns-command="next"]').click(), { command: 'next', type: 'click' }, evidence, 'triviaNextAction')
+  return { state: actionBracket.stateAfter, actionBracket, actionRecords: [actionBracket], nextBracket: [actionBracket.tCapture, actionBracket.tBubble] }
+}
+
+export async function resetGame(root, evidence) {
+  assertEvidenceSink(evidence)
+  const btn = root.locator('button[data-ns-command="reset"], button[data-ns-command="quiz-reset"]')
+  const guard = await stageButtonGuard(root, 'button[data-ns-command="reset"], button[data-ns-command="quiz-reset"]', 'resetGameGuard', evidence)
+  await expect(btn).toBeVisible()
+  const cmd = guard.buttonCommand
+  const actionBracket = await executeAction(root, () => btn.click(), { command: cmd, type: 'click' }, evidence, 'resetGameAction')
+  return { state: actionBracket.stateAfter, actionBracket, actionRecords: [actionBracket] }
+}

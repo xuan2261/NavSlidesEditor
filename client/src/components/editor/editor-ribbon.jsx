@@ -71,6 +71,7 @@ export default function EditorRibbon({ c }) {
       onAddHtml={c.addHtmlElement}
       onAddMermaid={c.addMermaidElement}
       onAddStemSimulation={c.addStemSimulationElement}
+      onInsertEducationPreset={c.onInsertEducationPreset}
       onAddSvg={(svg, targetSlideId) => {
         assertUploadTarget(targetSlideId)
         c.addSvgElement(svg)
@@ -95,7 +96,9 @@ export default function EditorRibbon({ c }) {
       onToggleNavigator={c.onToggleNavigator}
       onOpenDesignIdeas={c.onOpenDesignIdeas}
       isMaster={Boolean(c.masterEdit)}
-      onToggleSlideSorter={() => c.setViewMode((value) => (value === 'sorter' ? 'normal' : 'sorter'))}
+      onToggleSlideSorter={() =>
+        c.setViewMode((value) => (value === 'sorter' ? 'normal' : 'sorter'))
+      }
       onPreviewAnimation={() => c.setShowAnimationPreview(true)}
       onPreviewTransition={() => c.setShowTransitionPreview(true)}
     />

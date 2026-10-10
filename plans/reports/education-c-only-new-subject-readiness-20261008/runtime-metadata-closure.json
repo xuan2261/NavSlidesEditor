@@ -1,0 +1,1104 @@
+{
+  "kind": "READ_ONLY_ARTIFACT_BYTE_COMPARISON_NOT_RUNTIME_EXECUTION_OR_QUALIFICATION",
+  "observedAt": "2026-10-08T10:31:24.028231+07:00",
+  "classificationRecheck": {
+    "GENERATED_OR_BUILD_OUTPUT_REGULAR_FILE": {
+      "baseline": 446,
+      "matches": 446,
+      "missing": 0
+    },
+    "CURRENT_REGULAR_INPUT_SELECTED": {
+      "baseline": 2746,
+      "matches": 2746,
+      "missing": 0
+    },
+    "NESTED_DEPENDENCY_REGULAR_FILE": {
+      "baseline": 5068,
+      "matches": 4991,
+      "missing": 77
+    }
+  },
+  "missingPathsAllViteCache": true,
+  "revealVendorManifestChecks": [
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/config.d.ts",
+        "exists": true,
+        "bytes": 21676,
+        "sha256": "aee6b682a58445b0ffd4080e2f8185b9d26407a389083bcbf3ab8666dcb49320",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/config.d.ts",
+        "exists": true,
+        "bytes": 21676,
+        "sha256": "aee6b682a58445b0ffd4080e2f8185b9d26407a389083bcbf3ab8666dcb49320",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/config.d.ts",
+        "exists": false
+      },
+      "manifestSha256": "aee6b682a58445b0ffd4080e2f8185b9d26407a389083bcbf3ab8666dcb49320",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/highlight.d.ts",
+        "exists": true,
+        "bytes": 1584,
+        "sha256": "4ccd3d87dd977f3005f16edf39d2f3cf91a3fca3c7a4d27b1f04b2c161224bee",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/highlight.d.ts",
+        "exists": true,
+        "bytes": 1584,
+        "sha256": "4ccd3d87dd977f3005f16edf39d2f3cf91a3fca3c7a4d27b1f04b2c161224bee",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/highlight.d.ts",
+        "exists": false
+      },
+      "manifestSha256": "4ccd3d87dd977f3005f16edf39d2f3cf91a3fca3c7a4d27b1f04b2c161224bee",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/highlight.js",
+        "exists": true,
+        "bytes": 920644,
+        "sha256": "6c98ab2d30c913516efed604909ad525367ad5d7ba1715f43d3b2f662a31d6a8",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/highlight.js",
+        "exists": true,
+        "bytes": 920644,
+        "sha256": "6c98ab2d30c913516efed604909ad525367ad5d7ba1715f43d3b2f662a31d6a8",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/highlight.js",
+        "exists": false
+      },
+      "manifestSha256": "6c98ab2d30c913516efed604909ad525367ad5d7ba1715f43d3b2f662a31d6a8",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/highlight.mjs",
+        "exists": true,
+        "bytes": 1041157,
+        "sha256": "fe277e947abcb1ad2afdb276476d5382bde2f5eccc01f1e84fec303ea36d43e7",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/highlight.mjs",
+        "exists": true,
+        "bytes": 1041157,
+        "sha256": "fe277e947abcb1ad2afdb276476d5382bde2f5eccc01f1e84fec303ea36d43e7",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/highlight.mjs",
+        "exists": false
+      },
+      "manifestSha256": "fe277e947abcb1ad2afdb276476d5382bde2f5eccc01f1e84fec303ea36d43e7",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/highlight/monokai.css",
+        "exists": true,
+        "bytes": 940,
+        "sha256": "504e51314144f3f8327155dc69502ba10b1a4991ae4cc3fa70086cf155465999",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/highlight/monokai.css",
+        "exists": true,
+        "bytes": 940,
+        "sha256": "504e51314144f3f8327155dc69502ba10b1a4991ae4cc3fa70086cf155465999",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/highlight/monokai.css",
+        "exists": false
+      },
+      "manifestSha256": "504e51314144f3f8327155dc69502ba10b1a4991ae4cc3fa70086cf155465999",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/highlight/zenburn.css",
+        "exists": true,
+        "bytes": 946,
+        "sha256": "e298a0f1c2de9dea4ace202ce7e60cbc3143ebf7eab42efe891a8885f392444c",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/highlight/zenburn.css",
+        "exists": true,
+        "bytes": 946,
+        "sha256": "e298a0f1c2de9dea4ace202ce7e60cbc3143ebf7eab42efe891a8885f392444c",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/highlight/zenburn.css",
+        "exists": false
+      },
+      "manifestSha256": "e298a0f1c2de9dea4ace202ce7e60cbc3143ebf7eab42efe891a8885f392444c",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/markdown.d.ts",
+        "exists": true,
+        "bytes": 742,
+        "sha256": "006ae93139356cff48b13ea86bfa85e3462c876d49e6bb8ce3cc5706d6673165",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/markdown.d.ts",
+        "exists": true,
+        "bytes": 742,
+        "sha256": "006ae93139356cff48b13ea86bfa85e3462c876d49e6bb8ce3cc5706d6673165",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/markdown.d.ts",
+        "exists": false
+      },
+      "manifestSha256": "006ae93139356cff48b13ea86bfa85e3462c876d49e6bb8ce3cc5706d6673165",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/markdown.js",
+        "exists": true,
+        "bytes": 49498,
+        "sha256": "7a8991997115b882b5f7813a903ed74bf17ab0bbdb90569d5f4331680af92ad9",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/markdown.js",
+        "exists": true,
+        "bytes": 49498,
+        "sha256": "7a8991997115b882b5f7813a903ed74bf17ab0bbdb90569d5f4331680af92ad9",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/markdown.js",
+        "exists": false
+      },
+      "manifestSha256": "7a8991997115b882b5f7813a903ed74bf17ab0bbdb90569d5f4331680af92ad9",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/markdown.mjs",
+        "exists": true,
+        "bytes": 61473,
+        "sha256": "6b066957af29c448bb62ad43ee97a83cd2723dd58e673086a8ff1f298b6c31bc",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/markdown.mjs",
+        "exists": true,
+        "bytes": 61473,
+        "sha256": "6b066957af29c448bb62ad43ee97a83cd2723dd58e673086a8ff1f298b6c31bc",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/markdown.mjs",
+        "exists": false
+      },
+      "manifestSha256": "6b066957af29c448bb62ad43ee97a83cd2723dd58e673086a8ff1f298b6c31bc",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/math.d.ts",
+        "exists": true,
+        "bytes": 590,
+        "sha256": "1ce8ce09e0d6dff97e65343e037254324b60ac5aa73a06de5ffae812032cd8b1",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/math.d.ts",
+        "exists": true,
+        "bytes": 590,
+        "sha256": "1ce8ce09e0d6dff97e65343e037254324b60ac5aa73a06de5ffae812032cd8b1",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/math.d.ts",
+        "exists": false
+      },
+      "manifestSha256": "1ce8ce09e0d6dff97e65343e037254324b60ac5aa73a06de5ffae812032cd8b1",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/math.js",
+        "exists": true,
+        "bytes": 4015,
+        "sha256": "c1990472103c0640a9b21077f32b20347a79615f495ad36c2dd5698ce0ec6a92",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/math.js",
+        "exists": true,
+        "bytes": 4015,
+        "sha256": "c1990472103c0640a9b21077f32b20347a79615f495ad36c2dd5698ce0ec6a92",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/math.js",
+        "exists": false
+      },
+      "manifestSha256": "c1990472103c0640a9b21077f32b20347a79615f495ad36c2dd5698ce0ec6a92",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/math.mjs",
+        "exists": true,
+        "bytes": 5263,
+        "sha256": "260a84eff3d120dda2c188a7a46d789fd0b40d873ddb43113e6a258d4063a42e",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/math.mjs",
+        "exists": true,
+        "bytes": 5263,
+        "sha256": "260a84eff3d120dda2c188a7a46d789fd0b40d873ddb43113e6a258d4063a42e",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/math.mjs",
+        "exists": false
+      },
+      "manifestSha256": "260a84eff3d120dda2c188a7a46d789fd0b40d873ddb43113e6a258d4063a42e",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/notes.d.ts",
+        "exists": true,
+        "bytes": 193,
+        "sha256": "22679207e6caee040240c8aa7becf4e3d709f06ebb600302b460e0a5199919ac",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/notes.d.ts",
+        "exists": true,
+        "bytes": 193,
+        "sha256": "22679207e6caee040240c8aa7becf4e3d709f06ebb600302b460e0a5199919ac",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/notes.d.ts",
+        "exists": false
+      },
+      "manifestSha256": "22679207e6caee040240c8aa7becf4e3d709f06ebb600302b460e0a5199919ac",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/notes.js",
+        "exists": true,
+        "bytes": 67789,
+        "sha256": "447c42f365876e41853de81453d0c53c580c5b2099132e8f61200de4a0ba2af3",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/notes.js",
+        "exists": true,
+        "bytes": 67789,
+        "sha256": "447c42f365876e41853de81453d0c53c580c5b2099132e8f61200de4a0ba2af3",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/notes.js",
+        "exists": false
+      },
+      "manifestSha256": "447c42f365876e41853de81453d0c53c580c5b2099132e8f61200de4a0ba2af3",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/notes.mjs",
+        "exists": true,
+        "bytes": 79200,
+        "sha256": "3fc52b7a08beb48d7e4583ad254c211dd1802737eec4f4f5bbf4b1578e31f057",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/notes.mjs",
+        "exists": true,
+        "bytes": 79200,
+        "sha256": "3fc52b7a08beb48d7e4583ad254c211dd1802737eec4f4f5bbf4b1578e31f057",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/notes.mjs",
+        "exists": false
+      },
+      "manifestSha256": "3fc52b7a08beb48d7e4583ad254c211dd1802737eec4f4f5bbf4b1578e31f057",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/search.d.ts",
+        "exists": true,
+        "bytes": 237,
+        "sha256": "273b3340774982124f640b3e6f8ce903569fbb877cb890fa86d822b78e172beb",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/search.d.ts",
+        "exists": true,
+        "bytes": 237,
+        "sha256": "273b3340774982124f640b3e6f8ce903569fbb877cb890fa86d822b78e172beb",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/search.d.ts",
+        "exists": false
+      },
+      "manifestSha256": "273b3340774982124f640b3e6f8ce903569fbb877cb890fa86d822b78e172beb",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/search.js",
+        "exists": true,
+        "bytes": 2870,
+        "sha256": "887591079bebb965a8d07300b323339ed98d9f4504987713379174f2480d2eb0",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/search.js",
+        "exists": true,
+        "bytes": 2870,
+        "sha256": "887591079bebb965a8d07300b323339ed98d9f4504987713379174f2480d2eb0",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/search.js",
+        "exists": false
+      },
+      "manifestSha256": "887591079bebb965a8d07300b323339ed98d9f4504987713379174f2480d2eb0",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/search.mjs",
+        "exists": true,
+        "bytes": 3396,
+        "sha256": "8e7f7325cc03bc364c61fc6b334bcfbb86b51e1e060815e74e86c796e92bd091",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/search.mjs",
+        "exists": true,
+        "bytes": 3396,
+        "sha256": "8e7f7325cc03bc364c61fc6b334bcfbb86b51e1e060815e74e86c796e92bd091",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/search.mjs",
+        "exists": false
+      },
+      "manifestSha256": "8e7f7325cc03bc364c61fc6b334bcfbb86b51e1e060815e74e86c796e92bd091",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/zoom.d.ts",
+        "exists": true,
+        "bytes": 170,
+        "sha256": "7497bcf7aeae935133b0b08073e8744dbef849b0d974e0462a79ea5e5941f663",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/zoom.d.ts",
+        "exists": true,
+        "bytes": 170,
+        "sha256": "7497bcf7aeae935133b0b08073e8744dbef849b0d974e0462a79ea5e5941f663",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/zoom.d.ts",
+        "exists": false
+      },
+      "manifestSha256": "7497bcf7aeae935133b0b08073e8744dbef849b0d974e0462a79ea5e5941f663",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/zoom.js",
+        "exists": true,
+        "bytes": 2877,
+        "sha256": "ff65816a86a2c0e2d52250d41e4be296b4198fd7684359b4f92a9be5a29ccea8",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/zoom.js",
+        "exists": true,
+        "bytes": 2877,
+        "sha256": "ff65816a86a2c0e2d52250d41e4be296b4198fd7684359b4f92a9be5a29ccea8",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/zoom.js",
+        "exists": false
+      },
+      "manifestSha256": "ff65816a86a2c0e2d52250d41e4be296b4198fd7684359b4f92a9be5a29ccea8",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/plugin/zoom.mjs",
+        "exists": true,
+        "bytes": 3446,
+        "sha256": "f02ae05f9248a85baf98bae742059990b968b71b91ef615e184c92086564482e",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/plugin/zoom.mjs",
+        "exists": true,
+        "bytes": 3446,
+        "sha256": "f02ae05f9248a85baf98bae742059990b968b71b91ef615e184c92086564482e",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/plugin/zoom.mjs",
+        "exists": false
+      },
+      "manifestSha256": "f02ae05f9248a85baf98bae742059990b968b71b91ef615e184c92086564482e",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/reset.css",
+        "exists": true,
+        "bytes": 594,
+        "sha256": "39413c3490fdcf826427c26ff4c1ee59ea961a0aa8507c18454e0c6dc96c12d8",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/reset.css",
+        "exists": true,
+        "bytes": 594,
+        "sha256": "39413c3490fdcf826427c26ff4c1ee59ea961a0aa8507c18454e0c6dc96c12d8",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/reset.css",
+        "exists": false
+      },
+      "manifestSha256": "39413c3490fdcf826427c26ff4c1ee59ea961a0aa8507c18454e0c6dc96c12d8",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/reveal.css",
+        "exists": true,
+        "bytes": 53963,
+        "sha256": "615ee850cbbb98a0f688b60ed37b21819a3f54c9f3e6f20e33e63693ab74a0c0",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/reveal.css",
+        "exists": true,
+        "bytes": 53963,
+        "sha256": "615ee850cbbb98a0f688b60ed37b21819a3f54c9f3e6f20e33e63693ab74a0c0",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/reveal.css",
+        "exists": false
+      },
+      "manifestSha256": "615ee850cbbb98a0f688b60ed37b21819a3f54c9f3e6f20e33e63693ab74a0c0",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/reveal.d.ts",
+        "exists": true,
+        "bytes": 21430,
+        "sha256": "3a8ade0cc09732e6d8c86184fe6c185f57833cc5970fc45a857f2c7432ea4c78",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/reveal.d.ts",
+        "exists": true,
+        "bytes": 21430,
+        "sha256": "3a8ade0cc09732e6d8c86184fe6c185f57833cc5970fc45a857f2c7432ea4c78",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/reveal.d.ts",
+        "exists": false
+      },
+      "manifestSha256": "3a8ade0cc09732e6d8c86184fe6c185f57833cc5970fc45a857f2c7432ea4c78",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/reveal.js",
+        "exists": true,
+        "bytes": 118912,
+        "sha256": "aa1bbbf2617b23a623b23612cb3c5bdb63de512e652bf20fcfa832b045d37844",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/reveal.js",
+        "exists": true,
+        "bytes": 118912,
+        "sha256": "aa1bbbf2617b23a623b23612cb3c5bdb63de512e652bf20fcfa832b045d37844",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/reveal.js",
+        "exists": false
+      },
+      "manifestSha256": "aa1bbbf2617b23a623b23612cb3c5bdb63de512e652bf20fcfa832b045d37844",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/reveal.mjs",
+        "exists": true,
+        "bytes": 141133,
+        "sha256": "4b8fcb93dd5edac3803d8283c9f35fc0b325546e265a4e74ea3b5f3303131aa8",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/reveal.mjs",
+        "exists": true,
+        "bytes": 141133,
+        "sha256": "4b8fcb93dd5edac3803d8283c9f35fc0b325546e265a4e74ea3b5f3303131aa8",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/reveal.mjs",
+        "exists": false
+      },
+      "manifestSha256": "4b8fcb93dd5edac3803d8283c9f35fc0b325546e265a4e74ea3b5f3303131aa8",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/theme/beige.css",
+        "exists": true,
+        "bytes": 46435,
+        "sha256": "b46a29fb18d3e0451c2545d728db60911c2e85ee67740757aabb582832e3a780",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/theme/beige.css",
+        "exists": true,
+        "bytes": 46435,
+        "sha256": "b46a29fb18d3e0451c2545d728db60911c2e85ee67740757aabb582832e3a780",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/theme/beige.css",
+        "exists": false
+      },
+      "manifestSha256": "b46a29fb18d3e0451c2545d728db60911c2e85ee67740757aabb582832e3a780",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/theme/black-contrast.css",
+        "exists": true,
+        "bytes": 575279,
+        "sha256": "d44a241835fe768dcb487059ebc3216d4adeef423c62192c7484bec50bf6d36b",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/theme/black-contrast.css",
+        "exists": true,
+        "bytes": 575279,
+        "sha256": "d44a241835fe768dcb487059ebc3216d4adeef423c62192c7484bec50bf6d36b",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/theme/black-contrast.css",
+        "exists": false
+      },
+      "manifestSha256": "d44a241835fe768dcb487059ebc3216d4adeef423c62192c7484bec50bf6d36b",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/theme/black.css",
+        "exists": true,
+        "bytes": 575282,
+        "sha256": "c29c9689e8f3b277aa66edc01ed2ef97981a6768b05ad750582eac068d9705c3",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/theme/black.css",
+        "exists": true,
+        "bytes": 575282,
+        "sha256": "c29c9689e8f3b277aa66edc01ed2ef97981a6768b05ad750582eac068d9705c3",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/theme/black.css",
+        "exists": false
+      },
+      "manifestSha256": "c29c9689e8f3b277aa66edc01ed2ef97981a6768b05ad750582eac068d9705c3",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/theme/blood.css",
+        "exists": true,
+        "bytes": 5684,
+        "sha256": "157eace8f16356383b8b31a1e1ff5c507071c0f990ecafc85841e584a38cafab",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/theme/blood.css",
+        "exists": true,
+        "bytes": 5684,
+        "sha256": "157eace8f16356383b8b31a1e1ff5c507071c0f990ecafc85841e584a38cafab",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/theme/blood.css",
+        "exists": false
+      },
+      "manifestSha256": "157eace8f16356383b8b31a1e1ff5c507071c0f990ecafc85841e584a38cafab",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/theme/dracula.css",
+        "exists": true,
+        "bytes": 5678,
+        "sha256": "47bf8605c95d61ad25c23d2e16b7de9aca79c1c5b5f1af33558f87f1faef26d0",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/theme/dracula.css",
+        "exists": true,
+        "bytes": 5678,
+        "sha256": "47bf8605c95d61ad25c23d2e16b7de9aca79c1c5b5f1af33558f87f1faef26d0",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/theme/dracula.css",
+        "exists": false
+      },
+      "manifestSha256": "47bf8605c95d61ad25c23d2e16b7de9aca79c1c5b5f1af33558f87f1faef26d0",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/theme/league.css",
+        "exists": true,
+        "bytes": 46437,
+        "sha256": "2303d0b38b4d739908112894f93ddca2e4a30ad058bb8a184c85b0a9ddc00a07",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/theme/league.css",
+        "exists": true,
+        "bytes": 46437,
+        "sha256": "2303d0b38b4d739908112894f93ddca2e4a30ad058bb8a184c85b0a9ddc00a07",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/theme/league.css",
+        "exists": false
+      },
+      "manifestSha256": "2303d0b38b4d739908112894f93ddca2e4a30ad058bb8a184c85b0a9ddc00a07",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/theme/moon.css",
+        "exists": true,
+        "bytes": 46211,
+        "sha256": "e5adaff1083f18014b09452aaec51fa539feabfb5542ffcae15e893e83e166ca",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/theme/moon.css",
+        "exists": true,
+        "bytes": 46211,
+        "sha256": "e5adaff1083f18014b09452aaec51fa539feabfb5542ffcae15e893e83e166ca",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/theme/moon.css",
+        "exists": false
+      },
+      "manifestSha256": "e5adaff1083f18014b09452aaec51fa539feabfb5542ffcae15e893e83e166ca",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/theme/night.css",
+        "exists": true,
+        "bytes": 5136,
+        "sha256": "8f58176d72dba32ad6ecdd2d0035d9355762683b7bf718ddb9a431cbd4d58348",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/theme/night.css",
+        "exists": true,
+        "bytes": 5136,
+        "sha256": "8f58176d72dba32ad6ecdd2d0035d9355762683b7bf718ddb9a431cbd4d58348",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/theme/night.css",
+        "exists": false
+      },
+      "manifestSha256": "8f58176d72dba32ad6ecdd2d0035d9355762683b7bf718ddb9a431cbd4d58348",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/theme/serif.css",
+        "exists": true,
+        "bytes": 5074,
+        "sha256": "9bc18b2e020715b740df656fd28c86230ea4eada95c819901c7bd64b2d187789",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/theme/serif.css",
+        "exists": true,
+        "bytes": 5074,
+        "sha256": "9bc18b2e020715b740df656fd28c86230ea4eada95c819901c7bd64b2d187789",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/theme/serif.css",
+        "exists": false
+      },
+      "manifestSha256": "9bc18b2e020715b740df656fd28c86230ea4eada95c819901c7bd64b2d187789",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/theme/simple.css",
+        "exists": true,
+        "bytes": 5122,
+        "sha256": "b6c8df9a191c2f25acebf0075d748134773f916385a359303a509a52851551c2",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/theme/simple.css",
+        "exists": true,
+        "bytes": 5122,
+        "sha256": "b6c8df9a191c2f25acebf0075d748134773f916385a359303a509a52851551c2",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/theme/simple.css",
+        "exists": false
+      },
+      "manifestSha256": "b6c8df9a191c2f25acebf0075d748134773f916385a359303a509a52851551c2",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/theme/sky.css",
+        "exists": true,
+        "bytes": 5201,
+        "sha256": "3435a76a0d394c93864b90633b5be590ee5dc0f643255a8c8fee0214f799bff3",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/theme/sky.css",
+        "exists": true,
+        "bytes": 5201,
+        "sha256": "3435a76a0d394c93864b90633b5be590ee5dc0f643255a8c8fee0214f799bff3",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/theme/sky.css",
+        "exists": false
+      },
+      "manifestSha256": "3435a76a0d394c93864b90633b5be590ee5dc0f643255a8c8fee0214f799bff3",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/theme/solarized.css",
+        "exists": true,
+        "bytes": 46200,
+        "sha256": "91300a3ac059fe020db391084d1fc7d0fd59f9488e43461ef01b3da6ebcce21c",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/theme/solarized.css",
+        "exists": true,
+        "bytes": 46200,
+        "sha256": "91300a3ac059fe020db391084d1fc7d0fd59f9488e43461ef01b3da6ebcce21c",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/theme/solarized.css",
+        "exists": false
+      },
+      "manifestSha256": "91300a3ac059fe020db391084d1fc7d0fd59f9488e43461ef01b3da6ebcce21c",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/theme/white-contrast.css",
+        "exists": true,
+        "bytes": 575272,
+        "sha256": "ced195643e5700ccbb79203389b6ab8074349a920b566cda08b47228b4e0a505",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/theme/white-contrast.css",
+        "exists": true,
+        "bytes": 575272,
+        "sha256": "ced195643e5700ccbb79203389b6ab8074349a920b566cda08b47228b4e0a505",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/theme/white-contrast.css",
+        "exists": false
+      },
+      "manifestSha256": "ced195643e5700ccbb79203389b6ab8074349a920b566cda08b47228b4e0a505",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/theme/white.css",
+        "exists": true,
+        "bytes": 575268,
+        "sha256": "41e9507d97eb13ce6804645a9ce9f16220ddc3bfd6e7888aa3a0b5f61777d8f3",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/theme/white.css",
+        "exists": true,
+        "bytes": 575268,
+        "sha256": "41e9507d97eb13ce6804645a9ce9f16220ddc3bfd6e7888aa3a0b5f61777d8f3",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/theme/white.css",
+        "exists": false
+      },
+      "manifestSha256": "41e9507d97eb13ce6804645a9ce9f16220ddc3bfd6e7888aa3a0b5f61777d8f3",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/utils/color.d.ts",
+        "exists": true,
+        "bytes": 836,
+        "sha256": "87eb5d8f1883b4916349731590f3470a4d404f546be94d702f2a8b0d6b109fb7",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/utils/color.d.ts",
+        "exists": true,
+        "bytes": 836,
+        "sha256": "87eb5d8f1883b4916349731590f3470a4d404f546be94d702f2a8b0d6b109fb7",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/utils/color.d.ts",
+        "exists": false
+      },
+      "manifestSha256": "87eb5d8f1883b4916349731590f3470a4d404f546be94d702f2a8b0d6b109fb7",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/utils/constants.d.ts",
+        "exists": true,
+        "bytes": 686,
+        "sha256": "323979b0c5b4b4447ff1787824178fbf91a3643a8bd6537edb4495b67466beea",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/utils/constants.d.ts",
+        "exists": true,
+        "bytes": 686,
+        "sha256": "323979b0c5b4b4447ff1787824178fbf91a3643a8bd6537edb4495b67466beea",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/utils/constants.d.ts",
+        "exists": false
+      },
+      "manifestSha256": "323979b0c5b4b4447ff1787824178fbf91a3643a8bd6537edb4495b67466beea",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/utils/device.d.ts",
+        "exists": true,
+        "bytes": 121,
+        "sha256": "783bd90c7e3d0009c9c06f8ea6634aa46041ddeb9bc741ecb74088288ddbc777",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/utils/device.d.ts",
+        "exists": true,
+        "bytes": 121,
+        "sha256": "783bd90c7e3d0009c9c06f8ea6634aa46041ddeb9bc741ecb74088288ddbc777",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/utils/device.d.ts",
+        "exists": false
+      },
+      "manifestSha256": "783bd90c7e3d0009c9c06f8ea6634aa46041ddeb9bc741ecb74088288ddbc777",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/utils/loader.d.ts",
+        "exists": true,
+        "bytes": 311,
+        "sha256": "1c7276c4a28e826ad729dee9e95395949276e9204b79ae113f7f3da3c6bfce93",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/utils/loader.d.ts",
+        "exists": true,
+        "bytes": 311,
+        "sha256": "1c7276c4a28e826ad729dee9e95395949276e9204b79ae113f7f3da3c6bfce93",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/utils/loader.d.ts",
+        "exists": false
+      },
+      "manifestSha256": "1c7276c4a28e826ad729dee9e95395949276e9204b79ae113f7f3da3c6bfce93",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    },
+    {
+      "source": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/reveal.js/dist/utils/util.d.ts",
+        "exists": true,
+        "bytes": 3673,
+        "sha256": "1a78e752ae0b916220804c1be127e2fa251719ef9c5f2e9984bd6014d9a2db6b",
+        "executed": false
+      },
+      "server": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/reveal.js/dist/utils/util.d.ts",
+        "exists": true,
+        "bytes": 3673,
+        "sha256": "1a78e752ae0b916220804c1be127e2fa251719ef9c5f2e9984bd6014d9a2db6b",
+        "executed": false
+      },
+      "client": {
+        "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/reveal.js/dist/utils/util.d.ts",
+        "exists": false
+      },
+      "manifestSha256": "1a78e752ae0b916220804c1be127e2fa251719ef9c5f2e9984bd6014d9a2db6b",
+      "bytesMatchAcrossSourceServerClientManifest": false
+    }
+  ],
+  "revealVendorMatchCount": 0,
+  "educationRuntime": {
+    "checks": [
+      {
+        "artifacts": [
+          {
+            "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/navslides-education/runtime.js",
+            "exists": true,
+            "bytes": 442457,
+            "sha256": "89ad779e5eb3b1d8b23b9b973c8e3181ef9b2fabfffdd8bce6cee9aea99834b9",
+            "executed": false
+          },
+          {
+            "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/navslides-education/runtime.js",
+            "exists": false
+          }
+        ],
+        "manifestSha256": "89ad779e5eb3b1d8b23b9b973c8e3181ef9b2fabfffdd8bce6cee9aea99834b9",
+        "mutualAndManifestByteMatch": false
+      },
+      {
+        "artifacts": [
+          {
+            "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server/vendor/navslides-education/runtime.css",
+            "exists": true,
+            "bytes": 2845,
+            "sha256": "1edf93383e8b9622a2566bfcae20b8a44b47e93f35013d0510f4ddc9b352f905",
+            "executed": false
+          },
+          {
+            "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client/public/vendor/navslides-education/runtime.css",
+            "exists": false
+          }
+        ],
+        "manifestSha256": "1edf93383e8b9622a2566bfcae20b8a44b47e93f35013d0510f4ddc9b352f905",
+        "mutualAndManifestByteMatch": false
+      }
+    ],
+    "sourceBundleEquivalence": "NOT_ESTABLISHED_BUILD_NOT_AUTHORIZED",
+    "cssSource": {
+      "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/shared/src/education/browser/runtime.css",
+      "exists": true,
+      "bytes": 3180,
+      "sha256": "8818ca21294ad70509412026fee270593ae03d7f2e4e86554cabedaa038dd004",
+      "executed": false
+    }
+  },
+  "sharedDist": {
+    "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/shared/dist/revealjs-shared.cjs",
+    "exists": false
+  },
+  "selectedExecutableArtifacts": [
+    {
+      "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/electron/dist/electron.exe",
+      "exists": true,
+      "bytes": 221943296,
+      "sha256": "f05ccb120ecdfc46945d37c68fc7890a70846b5ec5f9cc406c257de2e6ea3baa",
+      "executed": false
+    },
+    {
+      "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/@esbuild/win32-x64/esbuild.exe",
+      "exists": true,
+      "bytes": 10617344,
+      "sha256": "cae1bbc86f4df800b01d99e28aea0a154b02243de6797e98f48a9b88a64a7be0",
+      "executed": false
+    },
+    {
+      "path": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules/@rollup/rollup-win32-x64-msvc/rollup.win32-x64-msvc.node",
+      "exists": false
+    },
+    {
+      "path": "C:/Users/Z10PAD8C_Xuan2261/AppData/Local/ms-playwright/chromium-1187/chrome-win/chrome.exe",
+      "exists": false
+    },
+    {
+      "path": "C:/Users/Z10PAD8C_Xuan2261/AppData/Local/ms-playwright/chromium_headless_shell-1187/chrome-win/headless_shell.exe",
+      "exists": false
+    },
+    {
+      "path": "C:/Program Files/nodejs/node.exe",
+      "exists": false
+    }
+  ],
+  "limitations": [
+    "Checked byte equality does not prove source freshness against generated education/shared bundles.",
+    "No binary executed, package imported, whole node_modules hash/freeze.",
+    "No workspace symlink target dereferenced; selected C artifact checks reject reparse ancestry.",
+    "Selected baseline hashes exclude newly added files; no full recursive new freeze."
+  ],
+  "operationalNote": "Two schema-assumption attempts failed before report write; this pass follows manifest reveal.js/dist keys and documented education runtime paths."
+}

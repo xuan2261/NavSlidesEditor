@@ -35,6 +35,11 @@ extraResources:
     to: client/dist/
   - from: client-dist-manifest.json
     to: client-dist-manifest.json
+  - from: plugins/
+    to: plugins/
+    filter:
+      - '*/parallax-plugin.json'
+      - '*/dist/**'
 
 mac:
   category: public.app-category.productivity

@@ -1,0 +1,15 @@
+      width: 440,
+      height: 200,
+    }
+    return {
+      ...deckWith([]),
+      slides: [
+        {
+          id: 'p-slide',
+          elements: [f1, f2, positionedWitness],
+        },
+      ],
+    }
+  }
+  throw new Error(`Unknown concern: ${concern}`)
+}

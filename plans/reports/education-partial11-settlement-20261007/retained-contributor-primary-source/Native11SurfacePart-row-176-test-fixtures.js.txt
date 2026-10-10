@@ -1,0 +1,86 @@
+
+/**
+ * Helper: update a presentation.
+ */
+export async function apiUpdatePresentation(request, id, data, apiBase = API_BASE) {
+  assertLoopback(apiBase)
+  const res = await withApiRetry(() =>
+    request.put(`${apiBase}/presentations/${id}`, {
+      data,
+      headers: { connection: 'close' },
+    })
+  )
+  expect(res.ok()).toBeTruthy()
+  return res.json()
+}
+
+/**
+ * Helper: create a share link for a presentation.
+ */
+export async function apiCreateShareLink(request, id) {
+  assertLoopback()
+  const res = await withApiRetry(() =>
+    request.post(`${API_BASE}/presentations/${id}/share`, {
+      headers: { connection: 'close' },
+      data: { name: 'E2E Test Link' },
+    })
+  )
+  expect(res.ok()).toBeTruthy()
+  return res.json()
+}
+
+/**
+ * Helper: create a share link with password (and optional expiresInDays).
+ */
+export async function apiCreateShareLinkWithPassword(request, id, password, opts = {}) {
+  assertLoopback()
+  const res = await withApiRetry(() =>
+    request.post(`${API_BASE}/presentations/${id}/share`, {
+      headers: { connection: 'close' },
+      data: { name: opts.name || 'E2E Password Link', password, expiresInDays: opts.expiresInDays },
+    })
+  )
+  expect(res.ok()).toBeTruthy()
+  return res.json()
+}
+
+/**
+ * Helper: revoke a single share token via DELETE /api/shares/:token.
+ */
+export async function apiRevokeShareToken(request, token) {
+  assertLoopback()
+  const res = await withApiRetry(() =>
+    request.delete(`${API_BASE}/shares/${token}`, {
+      headers: { connection: 'close' },
+    })
+  )
+  return res
+}
+
+/**
+ * Helper: create a version snapshot.
+ */
+export async function apiCreateSnapshot(request, id, name = 'E2E Snapshot') {
+  assertLoopback()
+  const res = await withApiRetry(() =>
+    request.post(`${API_BASE}/presentations/${id}/snapshot`, {
+      headers: { connection: 'close' },
+      data: { name },
+    })
+  )
+  expect(res.ok()).toBeTruthy()
+  return res.json()
+}
+
+/**
+ * Custom test fixture that auto-creates and cleans up a presentation.
+ */
+export const test = base.extend({
+  testPresentation: async ({ request }, use) => {
+    const pres = await apiCreatePresentation(request, 'Auto E2E Fixture')
+    await use(pres)
+    await apiDeletePresentation(request, pres.id)
+  },
+})
+
+export { expect }

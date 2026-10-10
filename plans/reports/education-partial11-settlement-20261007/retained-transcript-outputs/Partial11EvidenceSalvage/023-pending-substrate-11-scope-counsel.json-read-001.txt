@@ -1,0 +1,131 @@
+{
+  "scope_decision": {
+    "recommendation": "GO for exactly one separately identified, bounded Correction11 under Main's recorded interpretation of the new user instruction. This is permission to attempt the six settled repairs and complete genuine delivery, not admission, execution permission, or authority for another attempt.",
+    "continue_interpretation": "Yes. Given the supplied chronology—completed Native10 settlement, an explicit substantive-work hold requiring new authorization, then the user's 'continue'—the reasonable contextual interpretation is permission for one conservative substantive continuation. It is not permission to resume10, recover its missing receipt, repeat attempts until success, or migrate callers. Main should record this exact bounded interpretation in the11 dispatch authority before launching. This counsel interprets the instruction; it does not independently grant additional scope.",
+    "authorized_outcome": "Repair S10-C1, NF-A2, NF-A3, N10B-01, N10B-02 and S10-C2; reassess every retained governing obligation and credited invariant; deliver complete genuine new Native15 and Evidence11 receipts. Then seek two independent normal source-gate verdicts on one preserved combined11 subject.",
+    "bounds": [
+      "Create a fresh isolated workspace by binary seeding from pending-substrate-candidate-10-partial, whose recorded full-subject hash is 0d20458eefe089ec90d2386b973a474cfb514cfba07ed4839d3a250720dc502a. Do not execute or modify frozen10.",
+      "Keep the existing Native15/Evidence11 ownership: Native owns the five Native-side findings; Evidence owns S10-C2. No cross-partition writes, new helper files, exported signature changes, compatibility shims or gratuitous rewrites. Every owned helper remains strictly below200 physical lines.",
+      "Use only local8045/gemini-3.8-flash-high, one job per partition,45m internal limit and2760s host limit per job. Disable retries and fallback. The host margin is not extra producer time. No extension, rearm, receipt-only completion job or automatic subsequent attempt.",
+      "Keep all12 callers, canonical/prior subjects and evidence, production/configuration/dependencies/policies/assertions/existing timeouts immutable. Preserve unexpected changes as scope failures; do not clean or normalize them into apparent compliance.",
+      "Carry forward the complete original12 Native/3 Evidence findings, six08 checks, five09 defects, both09 chronology obligations, credited invariants, canonical NC/RPC/original identities and historical mappings. Preserve all54 cells and later-slice obligations without substitution or execution authority."
+    ]
+  },
+  "high_risk_cross_seam_contract_to_lock_before_dispatch": {
+    "central_risk": "Native controls when genuine browser failures become observable; Evidence assigns ledger order by ingestion and may reconcile phases during exposure. A locally plausible chronology repair can still fail if Evidence later overwrites the authoritative phase or if browser occurrence identity/order is lost while forwarding envelopes. Lock that shared semantic contract before the two owners work independently.",
+    "required_contract": [
+      "Observation order must come from the actual browser observation sites. Cover setup failure, an earlier listener-driven store failure, capture state/UI getters, capture health detection, bubble health detection, post-handler state/UI getters, pre-existing recorder errors forwarded by cursor/correlated reads, and newly detected extraction failures. Preserve state-before-UI and actual capture/post ordering; no universal recorder-first or packet-first category sort.",
+      "Use a consistent document-local observation-order representation carried through the existing internal envelopes/results. The representation may be timestamps with an explicit tie-order witness or another actual observation-order witness. Packet sequence alone is insufficient: native-history.js assigns it after capture getters and capture health detection. Capture/bubble boundary times are not necessarily the time each error was observed. Never invent timestamps, compare clocks across document/timeOrigin domains, or sort unrelated ledger order namespaces.",
+      "Readiness may become false, but the first actual recorder error and its recursive cause/provenance must survive later store failures. Preserve all independently required occurrences without replacing the first with a generic later envelope or fabricating a new occurrence from a forwarded diagnostic. Any occurrence bookkeeping must remain an internal implementation detail, not a new public API.",
+      "Stage raw results before validation. Normalize every relevant genuine sibling before an outer rejection can terminate the path. In particular, stageButtonGuard must ingest its state/UI getter failures before document-binding validation determines the throw; preserve both failures and throw the earliest applicable normalized Error. Keep the existing exact-match path and the complete cursor-eligible fallback obligation.",
+      "A phase-less wrapper must not downgrade an already authoritative explicitly recorded phase through intrinsic Error.phase or an ingestion fallback. An explicit valid authoritative wrapper phase must still reconcile under the existing wrapper-precedence obligation. Apply this rule consistently across errorLedger, shared-reference secondary exposure and allErrors reconciliation; do not repair only the first loop.",
+      "Keep actual Node Error identity, identity-based occurrence deduplication, one stable ledger-owned serialization object per occurrence, caller-ledger chronology, recursive causes/provenance and complete late exposure. Do not mutate caller Error/wrapper objects or truncate caller-owned arrays. Metadata enrichment must not silently confer phase authority.",
+      "Navigation diagnostics must describe the actual pressed key and production dispatch guards: keyboard truthiness, strict keyboardCondition false semantics, focus/input/contenteditable/speaker-notes exclusions, overlays, paused/resume-key rules and custom-binding precedence. A matching custom binding consumes the system-arrow path even if its value does not perform useful navigation. Do not invoke custom binding callbacks to discover their effect, force focus, unpause, close overlays or change routing policy.",
+      "The initial slide read must return slideId and its actual url/documentId/timeOrigin together, stage that observation and validate its document before the already-at-target early return. Preserve the already corrected poll path."
+    ],
+    "concrete_lock_examples": [
+      "An existing recorder failure must precede getters in a later cursor/correlated read; a newly detected extraction failure must follow the packet getter failures already observed.",
+      "Capture state/UI failures, then capture health detection, then bubble health detection and post state/UI failures must retain their actual relative positions, including any earlier listener-driven recorder occurrence.",
+      "A setup error with a nested cause must remain the first recorder occurrence after public-store replacement and a later record() callback.",
+      "An already recorded 'portable:close' Error exposed through a phase-less wrapper must keep 'portable:close', including when the Error itself carries a conflicting intrinsic phase.",
+      "A button-guard state/UI getter failure plus a later document mismatch must retain both getter failures and the document failure, with the earlier normalized occurrence governing the throw."
+    ]
+  },
+  "explicit_gate_ordering": [
+    {
+      "order": 1,
+      "gate": "Before dispatch",
+      "requirement": "Main records the bounded11 authority, six-finding scope, NF-A4 exclusion, ownership, immutable inputs, receipt requirements and locked cross-seam contract. Preserve and identify the fresh binary seed and input baseline."
+    },
+    {
+      "order": 2,
+      "gate": "One producer job per partition",
+      "requirement": "Allow each pinned job its one bounded substantive execution. Hold all helper imports, syntax/module checks, boundary proofs, browser smoke and tests. The accepted --tdd workflow does not waive these execution holds."
+    },
+    {
+      "order": 3,
+      "gate": "Both actual producer stops",
+      "requirement": "Record the genuine terminal outcomes for both jobs. A receipt appearing while another writer remains active does not permit checks or a final combined freeze."
+    },
+    {
+      "order": 4,
+      "gate": "Delivery and preservation prerequisites",
+      "requirement": "Inventory both genuine new receipts against the complete governing bodies, not Evidence10's abbreviated titles or generic deferrals. Account for every baseline input, addition, missing file and actual change; preserve actual bytes, immutable-caller results, ownership/line-limit results, terminal evidence and receipt identities in one distinctly identified combined11 freeze. Any producer failure, missing/incomplete required delivery or scope failure closes the ordinary path."
+    },
+    {
+      "order": 5,
+      "gate": "Two independent normal full-source gates",
+      "requirement": "Only after the successful-stop, complete-delivery and scope-preservation prerequisites, commission two independent normal source reviews on the identical preserved11 subject. Require complete assigned-source coverage, unchanged helpers, all12 immutable caller seams and relevant cross-partition/production-policy seams; retain every governing finding and mapping. Both must return GO. A partial review, partition-only receipt, coordinator opinion or failed10 salvage report cannot substitute."
+    },
+    {
+      "order": 6,
+      "gate": "Main's established conditional helper verification",
+      "requirement": "Only after both normal GO verdicts, Main may perform the established module/literal checks and ledger/interval/recorder boundaries, then the authorized real helper/browser smoke with its unchanged bounds. Use the admitted11 bytes, not failed10 or stale working files. Prepared10 scripts were expressly incomplete and unexecuted; their existence neither proves coverage nor opens this gate."
+    },
+    {
+      "order": 7,
+      "gate": "Later education progression remains separately gated",
+      "requirement": "Successful helper verification does not itself authorize caller migration, canonical integration, execution of54 acceptance cells or gaps5–9. Keep qualification/pass claims false and acceptance cells unexecuted until their separately applicable prerequisites and authority are satisfied. sourceReady can change only on its established complete evidence, never from receipt existence or preservation alone."
+    }
+  ],
+  "NF_A4_scope_disposition": {
+    "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED; excluded from required Correction11 repairs.",
+    "reason": "The completion report explicitly distinguishes separately replaceable action-packet storage from the original lifecycle-store integrity obligation. Main has expressly withheld additional scope authority. Neither similarity of mechanisms nor proximity to files needed for S10-C1 converts NF-A4 into a seventh authorized repair.",
+    "instructions": [
+      "Retain NF-A4 verbatim, with its source mechanism and unresolved applicability. Do not label it repaired, disproved, waived or source-clean.",
+      "Do not add packet-store binding/integrity repair or corresponding new acceptance requirements under the chronology task.",
+      "Normal reviewers must state that GO concerns the authorized obligations and disclose NF-A4 separately; do not claim complete action-packet-store integrity.",
+      "If source evidence establishes that an authorized six-finding repair cannot be completed without crossing this boundary, or a normal reviewer rejects the gate because of that unresolved issue, stop and obtain further scope counsel/authority. Do not suppress the finding, waive the reviewer rejection or repair it automatically."
+    ]
+  },
+  "failure_protocol": {
+    "trigger": "Any failed producer, absent/incomplete required genuine delivery, out-of-scope change, normal-source rejection or conditional verification failure stops forward progression.",
+    "required_response": [
+      "Do not retry/resume/rearm the failed job, switch provider/model, extend a deadline, launch a receipt-completion job or automatically dispatch12. Stop gated execution and follow the established cancellation/terminal-settlement rules for any still-active sibling; do not freeze a moving subject.",
+      "Preserve original terminals, actual outputs, genuine receipts exactly as delivered, input inventories and anomalous changes. Wait for both actual stops before creating an immutable partial11 subject.",
+      "Keep delivery outcome, scope preservation, source findings and runtime results separate. Transport failure is delivery evidence, not an independent source defect. A genuine but incomplete receipt is a delivery limitation, not proof that each abbreviated source obligation is broken.",
+      "No Main/sibling receipt reconstruction, transcript-to-receipt conversion, old-receipt relabeling, cleaned-candidate laundering, source repair or execution on failed11. Any permitted read-only salvage must remain failure settlement, not normal admission or a replacement producer.",
+      "Finish reachable authorized preservation/settlement and retain false qualification/pass flags and zero admitted/executed acceptance cells. Further substantive repair or another attempt requires a new explicit user authorization after the exact remaining scope is settled."
+    ]
+  },
+  "evidence": {
+    "complete_reports_read": [
+      "pending-substrate-10-terminal-failure-counsel.json:1-272, including exact_new_authorization_needed:246-255.",
+      "pending-substrate-10-combined-settlement.json, through EOF.",
+      "pending-substrate-10-native-completion-settlement.json:1-723, in bounded raw ranges through EOF."
+    ],
+    "additional_authority_read": [
+      "pending-substrate-10-dispatch-authority.json:1-148.",
+      "pending-substrate-10-main-smoke-preparation.json:1-36.",
+      "pending-substrate-10-linked-keyboard-owner.json:1-21."
+    ],
+    "direct_source_grounding": [
+      "Frozen10 observation-errors.js:25-33,47-89 uses setup-first/getters/non-setup-recorder ordering; error-ledger.js:94-101,120-121 determines order/primary by ingestion.",
+      "Frozen10 native-history.js:80-93,132-152 locates health detection relative to capture/post getters and assigns packet sequence after capture observation.",
+      "Frozen10 native-observation.js:79-87 overwrites the recorder envelope;127-130 captures the recursive setup error.",
+      "Frozen10 native-action.js:29-31,57-60,70-73 stages guard getter failures without normalized ingestion before document validation.",
+      "Frozen10 navigation.js:19-21 permits an unbound initial early return;37-60 contains the incomplete keyboard discriminator.",
+      "Frozen10 error-exposure.js:7-14,37-56,77-85,92-120 carries fallback phases into reconciliation; error-ledger.js:11-21 already gives an explicit passed phase serialization precedence.",
+      "Linked Reveal keyboard.js:144-250 implements strict condition semantics, notes/input exclusions, overlays, paused/resume behavior and custom-binding precedence; reveal.js:595 binds the listener only when keyboard is truthy. These are source reads, not runtime equivalence or recursive dependency-freeze proof."
+    ],
+    "limits": "The six mechanisms are settled static source findings, not exercised failures. The recorded hash, producer stops and receipt status were read from preserved authorities and were not remeasured. This counsel did not repeat the prior all26/all12 audit, inspect a nonexistent11 implementation or certify dependency immutability."
+  },
+  "assumptions": [
+    {
+      "assumption": "The supplied user chronology is accurate: 'continue' followed complete settlement and the stated new-authorization hold, within the already accepted education workflow.",
+      "confidence": "medium",
+      "would_change_answer": "An explicit user restriction to read-only continuation or a contrary intervening instruction would prohibit dispatch. No such restriction is supplied."
+    },
+    {
+      "assumption": "Main's proposed11 is exactly the conservative scope stated in this assignment, with NF-A4 excluded and all prior gates intact.",
+      "confidence": "high",
+      "would_change_answer": "Ownership/public-contract changes, another required repair, broader execution or another producer job would require additional explicit authority."
+    },
+    {
+      "assumption": "The frozen10 subject and supplied actual-stop/delivery observations remain authoritative and unchanged.",
+      "confidence": "high",
+      "would_change_answer": "An intervening mutation or active writer would require preserving the actual distinct subject before seed/freeze decisions; never silently reuse stale evidence."
+    }
+  ],
+  "execution_disclosure": "Advisory-only same-session OMP @default counsel. Used read/glob only. No edits, writes, commands, imports, tests, browser actions, checksum/count recomputation or nested agents. Main remains the dispatch, integration, preservation and verification owner."
+}

@@ -1,0 +1,452 @@
+	 * This is an unfortunate necessity. Some actions – such as
+	 * an input field being focused in an iframe or using the
+	 * keyboard to expand text selection beyond the bounds of
+	 * a slide – can trigger our content to be pushed out of view.
+	 * This scrolling can not be prevented by hiding overflow in
+	 * CSS (we already do) so we have to resort to repeatedly
+	 * checking if the slides have been offset :(
+	 */
+	function setupScrollPrevention() {
+
+		setInterval( () => {
+			if( !scrollView.isActive() && dom.wrapper.scrollTop !== 0 || dom.wrapper.scrollLeft !== 0 ) {
+				dom.wrapper.scrollTop = 0;
+				dom.wrapper.scrollLeft = 0;
+			}
+		}, 1000 );
+
+	}
+
+	/**
+	 * After entering fullscreen we need to force a layout to
+	 * get our presentations to scale correctly. This behavior
+	 * is inconsistent across browsers but a force layout seems
+	 * to normalize it.
+	 */
+	function setupFullscreen() {
+
+		document.addEventListener( 'fullscreenchange', onFullscreenChange );
+		document.addEventListener( 'webkitfullscreenchange', onFullscreenChange );
+
+	}
+
+	/**
+	 * Registers a listener to postMessage events, this makes it
+	 * possible to call all reveal.js API methods from another
+	 * window. For example:
+	 *
+	 * revealWindow.postMessage( JSON.stringify({
+	 *   method: 'slide',
+	 *   args: [ 2 ]
+	 * }), '*' );
+	 */
+	function setupPostMessage() {
+
+		if( config.postMessage ) {
+			window.addEventListener( 'message', onPostMessage, false );
+		}
+
+	}
+
+	/**
+	 * Applies the configuration settings from the config
+	 * object. May be called multiple times.
+	 *
+	 * @param {object} options
+	 */
+	function configure( options ) {
+
+		const oldConfig = { ...config }
+
+		// New config options may be passed when this method
+		// is invoked through the API after initialization
+		if( typeof options === 'object' ) Util.extend( config, options );
+
+		// Abort if reveal.js hasn't finished loading, config
+		// changes will be applied automatically once ready
+		if( Reveal.isReady() ===  false ) return;
+
+		const numberOfSlides = dom.wrapper.querySelectorAll( SLIDES_SELECTOR ).length;
+
+		// The transition is added as a class on the .reveal element
+		dom.wrapper.classList.remove( oldConfig.transition );
+		dom.wrapper.classList.add( config.transition );
+
+		dom.wrapper.setAttribute( 'data-transition-speed', config.transitionSpeed );
+		dom.wrapper.setAttribute( 'data-background-transition', config.backgroundTransition );
+
+		// Expose our configured slide dimensions as custom props
+		dom.viewport.style.setProperty( '--slide-width', typeof config.width === 'string' ? config.width :  config.width + 'px' );
+		dom.viewport.style.setProperty( '--slide-height', typeof config.height === 'string' ? config.height :  config.height + 'px' );
+
+		if( config.shuffle ) {
+			shuffle();
+		}
+
+		Util.toggleClass( dom.wrapper, 'embedded', config.embedded );
+		Util.toggleClass( dom.wrapper, 'rtl', config.rtl );
+		Util.toggleClass( dom.wrapper, 'center', config.center );
+
+		// Exit the paused mode if it was configured off
+		if( config.pause === false ) {
+			resume();
+		}
+
+		// Reset all changes made by auto-animations
+		autoAnimate.reset();
+
+		// Remove existing auto-slide controls
+		if( autoSlidePlayer ) {
+			autoSlidePlayer.destroy();
+			autoSlidePlayer = null;
+		}
+
+		// Generate auto-slide controls if needed
+		if( numberOfSlides > 1 && config.autoSlide && config.autoSlideStoppable ) {
+			autoSlidePlayer = new Playback( dom.wrapper, () => {
+				return Math.min( Math.max( ( Date.now() - autoSlideStartTime ) / autoSlide, 0 ), 1 );
+			} );
+
+			autoSlidePlayer.on( 'click', onAutoSlidePlayerClick );
+			autoSlidePaused = false;
+		}
+
+		// Add the navigation mode to the DOM so we can adjust styling
+		if( config.navigationMode !== 'default' ) {
+			dom.wrapper.setAttribute( 'data-navigation-mode', config.navigationMode );
+		}
+		else {
+			dom.wrapper.removeAttribute( 'data-navigation-mode' );
+		}
+
+		notes.configure( config, oldConfig );
+		focus.configure( config, oldConfig );
+		pointer.configure( config, oldConfig );
+		controls.configure( config, oldConfig );
+		progress.configure( config, oldConfig );
+		keyboard.configure( config, oldConfig );
+		fragments.configure( config, oldConfig );
+		slideNumber.configure( config, oldConfig );
+
+		sync();
+
+	}
+
+	/**
+	 * Binds all event listeners.
+	 */
+	function addEventListeners() {
+
+		eventsAreBound = true;
+
+		window.addEventListener( 'resize', onWindowResize, false );
+
+		if( config.touch ) touch.bind();
+		if( config.keyboard ) keyboard.bind();
+		if( config.progress ) progress.bind();
+		if( config.respondToHashChanges ) location.bind();
+		controls.bind();
+		focus.bind();
+
+		dom.slides.addEventListener( 'click', onSlidesClicked, false );
+		dom.slides.addEventListener( 'transitionend', onTransitionEnd, false );
+		dom.pauseOverlay.addEventListener( 'click', resume, false );
+
+		if( config.focusBodyOnPageVisibilityChange ) {
+			document.addEventListener( 'visibilitychange', onPageVisibilityChange, false );
+		}
+
+	}
+
+	/**
+	 * Unbinds all event listeners.
+	 */
+	function removeEventListeners() {
+
+		eventsAreBound = false;
+
+		touch.unbind();
+		focus.unbind();
+		keyboard.unbind();
+		controls.unbind();
+		progress.unbind();
+		location.unbind();
+
+		window.removeEventListener( 'resize', onWindowResize, false );
+
+		dom.slides.removeEventListener( 'click', onSlidesClicked, false );
+		dom.slides.removeEventListener( 'transitionend', onTransitionEnd, false );
+		dom.pauseOverlay.removeEventListener( 'click', resume, false );
+
+	}
+
+	/**
+	 * Uninitializes reveal.js by undoing changes made to the
+	 * DOM and removing all event listeners.
+	 */
+	function destroy() {
+
+		initialized = false;
+
+		// There's nothing to destroy if this instance hasn't finished
+		// initializing
+		if( ready === false ) return;
+
+		removeEventListeners();
+		cancelAutoSlide();
+
+		// Destroy controllers
+		notes.destroy();
+		focus.destroy();
+		overlay.destroy();
+		plugins.destroy();
+		pointer.destroy();
+		controls.destroy();
+		progress.destroy();
+		backgrounds.destroy();
+		slideNumber.destroy();
+		jumpToSlide.destroy();
+
+		// Remove event listeners
+		document.removeEventListener( 'fullscreenchange', onFullscreenChange );
+		document.removeEventListener( 'webkitfullscreenchange', onFullscreenChange );
+		document.removeEventListener( 'visibilitychange', onPageVisibilityChange, false );
+		window.removeEventListener( 'message', onPostMessage, false );
+		window.removeEventListener( 'load', layout, false );
+
+		// Undo DOM changes
+		if( dom.pauseOverlay ) dom.pauseOverlay.remove();
+		if( dom.statusElement ) dom.statusElement.remove();
+
+		document.documentElement.classList.remove( 'reveal-full-page' );
+
+		dom.wrapper.classList.remove( 'ready', 'center', 'has-horizontal-slides', 'has-vertical-slides' );
+		dom.wrapper.removeAttribute( 'data-transition-speed' );
+		dom.wrapper.removeAttribute( 'data-background-transition' );
+
+		dom.viewport.classList.remove( 'reveal-viewport' );
+		dom.viewport.style.removeProperty( '--slide-width' );
+		dom.viewport.style.removeProperty( '--slide-height' );
+
+		dom.slides.style.removeProperty( 'width' );
+		dom.slides.style.removeProperty( 'height' );
+		dom.slides.style.removeProperty( 'zoom' );
+		dom.slides.style.removeProperty( 'left' );
+		dom.slides.style.removeProperty( 'top' );
+		dom.slides.style.removeProperty( 'bottom' );
+		dom.slides.style.removeProperty( 'right' );
+		dom.slides.style.removeProperty( 'transform' );
+
+		Array.from( dom.wrapper.querySelectorAll( SLIDES_SELECTOR ) ).forEach( slide => {
+			slide.style.removeProperty( 'display' );
+			slide.style.removeProperty( 'top' );
+			slide.removeAttribute( 'hidden' );
+			slide.removeAttribute( 'aria-hidden' );
+			slide.removeAttribute( 'inert' );
+		} );
+
+	}
+
+	/**
+	 * Adds a listener to one of our custom reveal.js events,
+	 * like slidechanged.
+	 */
+	function on( type, listener, useCapture ) {
+
+		revealElement.addEventListener( type, listener, useCapture );
+
+	}
+
+	/**
+	 * Unsubscribes from a reveal.js event.
+	 */
+	function off( type, listener, useCapture ) {
+
+		revealElement.removeEventListener( type, listener, useCapture );
+
+	}
+
+	/**
+	 * Applies CSS transforms to the slides container. The container
+	 * is transformed from two separate sources: layout and the overview
+	 * mode.
+	 *
+	 * @param {object} transforms
+	 */
+	function transformSlides( transforms ) {
+
+		// Pick up new transforms from arguments
+		if( typeof transforms.layout === 'string' ) slidesTransform.layout = transforms.layout;
+		if( typeof transforms.overview === 'string' ) slidesTransform.overview = transforms.overview;
+
+		// Apply the transforms to the slides container
+		if( slidesTransform.layout ) {
+			Util.transformElement( dom.slides, slidesTransform.layout + ' ' + slidesTransform.overview );
+		}
+		else {
+			Util.transformElement( dom.slides, slidesTransform.overview );
+		}
+
+	}
+
+	/**
+	 * Dispatches an event of the specified type from the
+	 * reveal DOM element.
+	 */
+	function dispatchEvent({ target=dom.wrapper, type, data, bubbles=true }) {
+
+		let event = document.createEvent( 'HTMLEvents', 1, 2 );
+		event.initEvent( type, bubbles, true );
+		Util.extend( event, data );
+		target.dispatchEvent( event );
+
+		if( target === dom.wrapper ) {
+			// If we're in an iframe, post each reveal.js event to the
+			// parent window. Used by the notes plugin
+			dispatchPostMessage( type );
+		}
+
+		return event;
+
+	}
+
+	/**
+	 * Dispatches a slidechanged event.
+	 *
+	 * @param {string} origin Used to identify multiplex clients
+	 */
+	function dispatchSlideChanged( origin ) {
+
+		dispatchEvent({
+			type: 'slidechanged',
+			data: {
+				indexh,
+				indexv,
+				previousSlide,
+				currentSlide,
+				origin
+			}
+		});
+
+	}
+
+	/**
+	 * Dispatched a postMessage of the given type from our window.
+	 */
+	function dispatchPostMessage( type, data ) {
+
+		if( config.postMessageEvents && window.parent !== window.self ) {
+			let message = {
+				namespace: 'reveal',
+				eventName: type,
+				state: getState()
+			};
+
+			Util.extend( message, data );
+
+			window.parent.postMessage( JSON.stringify( message ), '*' );
+		}
+
+	}
+
+	/**
+	 * Applies JavaScript-controlled layout rules to the
+	 * presentation.
+	 */
+	function layout() {
+
+		if( dom.wrapper && !printView.isActive() ) {
+
+			const viewportWidth = dom.viewport.offsetWidth;
+			const viewportHeight = dom.viewport.offsetHeight;
+
+			if( !config.disableLayout ) {
+
+				// On some mobile devices '100vh' is taller than the visible
+				// viewport which leads to part of the presentation being
+				// cut off. To work around this we define our own '--vh' custom
+				// property where 100x adds up to the correct height.
+				//
+				// https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
+				if( Device.isMobile && !config.embedded ) {
+					document.documentElement.style.setProperty( '--vh', ( window.innerHeight * 0.01 ) + 'px' );
+				}
+
+				const size = scrollView.isActive() ?
+							 getComputedSlideSize( viewportWidth, viewportHeight ) :
+							 getComputedSlideSize();
+
+				const oldScale = scale;
+
+				// Layout the contents of the slides
+				layoutSlideContents( config.width, config.height );
+
+				dom.slides.style.width = size.width + 'px';
+				dom.slides.style.height = size.height + 'px';
+
+				// Determine scale of content to fit within available space
+				scale = Math.min( size.presentationWidth / size.width, size.presentationHeight / size.height );
+
+				// Respect max/min scale settings
+				scale = Math.max( scale, config.minScale );
+				scale = Math.min( scale, config.maxScale );
+				scale = Math.round( scale * 100 ) / 100;
+
+				// Don't apply any scaling styles if scale is 1 or we're
+				// in the scroll view
+				if( scale === 1 || scrollView.isActive() ) {
+					dom.slides.style.zoom = '';
+					dom.slides.style.left = '';
+					dom.slides.style.top = '';
+					dom.slides.style.bottom = '';
+					dom.slides.style.right = '';
+					transformSlides( { layout: '' } );
+				}
+				else {
+					dom.slides.style.zoom = '';
+					dom.slides.style.left = '50%';
+					dom.slides.style.top = '50%';
+					dom.slides.style.bottom = 'auto';
+					dom.slides.style.right = 'auto';
+					transformSlides( { layout: 'translate(-50%, -50%) scale('+ scale +')' } );
+				}
+
+				const visibleSlides = Array.from( dom.wrapper.querySelectorAll( SLIDES_SELECTOR ) )
+					.filter( slide => slide.style.display !== 'none' );
+
+				// Pass 1: read sizes of visible slides
+				const tops = new Array( visibleSlides.length );
+				for( let i = 0, len = visibleSlides.length; i < len; i++ ) {
+					const slide = visibleSlides[ i ];
+
+					if( config.center || slide.classList.contains( 'center' ) ) {
+						// Vertical stacks are not centred since their section
+						// children will be
+						if( slide.classList.contains( 'stack' ) ) {
+							tops[ i ] = 0;
+						}
+						else {
+							tops[ i ] = Math.max( ( size.height - slide.scrollHeight ) / 2, 0 ) + 'px';
+						}
+					}
+					else {
+						tops[ i ] = '';
+					}
+				}
+
+				// Pass 2: write top values to visible slides
+				for( let i = 0, len = visibleSlides.length; i < len; i++ ) {
+					visibleSlides[ i ].style.top = tops[ i ];
+				}
+
+				if( oldScale !== scale ) {
+					dispatchEvent({
+						type: 'resize',
+						data: {
+							oldScale,
+							scale,
+							size
+						}
+					});
+
+[Showing lines 451-900 of 2973. Use :901 to continue]

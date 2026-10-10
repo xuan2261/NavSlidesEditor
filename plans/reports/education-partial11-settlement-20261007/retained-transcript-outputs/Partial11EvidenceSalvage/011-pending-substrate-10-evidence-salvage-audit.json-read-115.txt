@@ -1,0 +1,212 @@
+  },
+  "readEvidence": {
+    "method": "Read-only source/document inspection with bounded read ranges and an anchoring grep. Complete mapped helper and immutable caller bodies were read; no source search was substituted for body review. Requested end ranges sometimes include a final blank line or extend past EOF. Physical line counts below are Main's recorded counts, not reviewer measurements.",
+    "root": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-10-partial",
+    "helpers": [
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+        "ranges": [
+          "1-158",
+          "159"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 158
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-snapshot.js",
+        "ranges": [
+          "1-106"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 105
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-activity-interval.js",
+        "ranges": [
+          "1-103"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 102
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation.js",
+        "ranges": [
+          "1-153"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 152
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+        "ranges": [
+          "1-188"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 187
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-clock.js",
+        "ranges": [
+          "1-103"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 102
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-controls.js",
+        "ranges": [
+          "1-172"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 171
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-witness.js",
+        "ranges": [
+          "1-167"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 166
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+        "ranges": [
+          "1-175",
+          "176"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 175
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-action.js",
+        "ranges": [
+          "1-75"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 74
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-witness-domain.js",
+        "ranges": [
+          "1-138"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 137
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-history-domain.js",
+        "ranges": [
+          "1-54"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 53
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-history.js",
+        "ranges": [
+          "1-185",
+          "186",
+          "75-110"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 185
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+        "ranges": [
+          "1-94",
+          "95",
+          "78-94"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 94
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+        "ranges": [
+          "1-114"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 113
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-ui-evidence.js",
+        "ranges": [
+          "1-153"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 152
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+        "ranges": [
+          "1-150",
+          "151"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 150
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+        "ranges": [
+          "1-121"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 120
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-evidence.js",
+        "ranges": [
+          "1-199"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 198
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+        "ranges": [
+          "1-194"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 193
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+        "ranges": [
+          "1-144"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 143
+      },
+      {
+        "file": "tests/e2e/education/release-surfaces.js",
+        "ranges": [
+          "1-200"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 199
+      },
+      {
+        "file": "tests/e2e/education/present-offline-helpers.js",
+        "ranges": [
+          "1-29"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 28
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-live-root-observation.js",
+        "ranges": [
+          "1-158"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 157
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "ranges": [
+          "1-172",
+          "173"
+        ],
+
+[Showing lines 576-785 of 1203. Use :786 to continue]

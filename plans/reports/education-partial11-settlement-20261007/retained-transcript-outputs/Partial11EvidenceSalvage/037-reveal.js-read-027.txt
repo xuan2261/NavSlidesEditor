@@ -1,0 +1,192 @@
+	 * target slide to activate
+	 * @param {number} [origin] Origin for use in multimaster environments
+	 */
+	function slide( h, v, f, origin ) {
+
+		// Dispatch an event before the slide
+		const slidechange = dispatchEvent({
+			type: 'beforeslidechange',
+			data: {
+				indexh: h === undefined ? indexh : h,
+				indexv: v === undefined ? indexv : v,
+				origin
+			}
+		});
+
+		// Abort if this slide change was prevented by an event listener
+		if( slidechange.defaultPrevented ) return;
+
+		// Remember where we were at before
+		previousSlide = currentSlide;
+
+		// Query all horizontal slides in the deck
+		const horizontalSlides = dom.wrapper.querySelectorAll( HORIZONTAL_SLIDES_SELECTOR );
+
+		// If we're in scroll mode, we scroll the target slide into view
+		// instead of running our standard slide transition
+		if( scrollView.isActive() ) {
+			const scrollToSlide = scrollView.getSlideByIndices( h, v );
+			if( scrollToSlide ) scrollView.scrollToSlide( scrollToSlide );
+			return;
+		}
+
+		// Abort if there are no slides
+		if( horizontalSlides.length === 0 ) return;
+
+		// If no vertical index is specified and the upcoming slide is a
+		// stack, resume at its previous vertical index
+		if( v === undefined && !overview.isActive() ) {
+			v = getPreviousVerticalIndex( horizontalSlides[ h ] );
+		}
+
+		// If we were on a vertical stack, remember what vertical index
+		// it was on so we can resume at the same position when returning
+		if( previousSlide && previousSlide.parentNode && previousSlide.parentNode.classList.contains( 'stack' ) ) {
+			setPreviousVerticalIndex( previousSlide.parentNode, indexv );
+		}
+
+		// Remember the state before this slide
+		const stateBefore = state.concat();
+
+		// Reset the state array
+		state.length = 0;
+
+		let indexhBefore = indexh || 0,
+			indexvBefore = indexv || 0;
+
+		// Activate and transition to the new slide
+		indexh = updateSlides( HORIZONTAL_SLIDES_SELECTOR, h === undefined ? indexh : h );
+		indexv = updateSlides( VERTICAL_SLIDES_SELECTOR, v === undefined ? indexv : v );
+
+		// Dispatch an event if the slide changed
+		let slideChanged = ( indexh !== indexhBefore || indexv !== indexvBefore );
+
+		// Ensure that the previous slide is never the same as the current
+		if( !slideChanged ) previousSlide = null;
+
+		// Find the current horizontal slide and any possible vertical slides
+		// within it
+		let currentHorizontalSlide = horizontalSlides[ indexh ],
+			currentVerticalSlides = currentHorizontalSlide.querySelectorAll( 'section' );
+
+		// Indicate when we're on a vertical slide
+		revealElement.classList.toggle( 'is-vertical-slide', currentVerticalSlides.length > 1 );
+
+		// Store references to the previous and current slides
+		currentSlide = currentVerticalSlides[ indexv ] || currentHorizontalSlide;
+
+		let autoAnimateTransition = false;
+
+		// Detect if we're moving between two auto-animated slides
+		if( slideChanged && previousSlide && currentSlide && !overview.isActive() ) {
+			transition = 'running';
+
+			autoAnimateTransition = shouldAutoAnimateBetween( previousSlide, currentSlide, indexhBefore, indexvBefore );
+
+			// If this is an auto-animated transition, we disable the
+			// regular slide transition
+			//
+			// Note 20-03-2020:
+			// This needs to happen before we update slide visibility,
+			// otherwise transitions will still run in Safari.
+			if( autoAnimateTransition ) {
+				dom.slides.classList.add( 'disable-slide-transitions' )
+			}
+		}
+
+		// Update the visibility of slides now that the indices have changed
+		updateSlidesVisibility();
+
+		layout();
+
+		// Update the overview if it's currently active
+		if( overview.isActive() ) {
+			overview.update();
+		}
+
+		// Show fragment, if specified
+		if( typeof f !== 'undefined' ) {
+			fragments.goto( f );
+		}
+
+		// Solves an edge case where the previous slide maintains the
+		// 'present' class when navigating between adjacent vertical
+		// stacks
+		if( previousSlide && previousSlide !== currentSlide ) {
+			previousSlide.classList.remove( 'present' );
+			previousSlide.setAttribute( 'aria-hidden', 'true' );
+
+			// Reset all slides upon navigate to home
+			if( isFirstSlide() ) {
+				// Launch async task
+				setTimeout( () => {
+					getVerticalStacks().forEach( slide => {
+						setPreviousVerticalIndex( slide, 0 );
+					} );
+				}, 0 );
+			}
+		}
+
+		// Apply the new state
+		stateLoop: for( let i = 0, len = state.length; i < len; i++ ) {
+			// Check if this state existed on the previous slide. If it
+			// did, we will avoid adding it repeatedly
+			for( let j = 0; j < stateBefore.length; j++ ) {
+				if( stateBefore[j] === state[i] ) {
+					stateBefore.splice( j, 1 );
+					continue stateLoop;
+				}
+			}
+
+			dom.viewport.classList.add( state[i] );
+
+			// Dispatch custom event matching the state's name
+			dispatchEvent({ type: state[i] });
+		}
+
+		// Clean up the remains of the previous state
+		while( stateBefore.length ) {
+			dom.viewport.classList.remove( stateBefore.pop() );
+		}
+
+		if( slideChanged ) {
+			slideContent.afterSlideChanged();
+			dispatchSlideChanged( origin );
+		}
+
+		// Handle embedded content
+		if( slideChanged || !previousSlide ) {
+			slideContent.stopEmbeddedContent( previousSlide );
+			slideContent.startEmbeddedContent( currentSlide );
+		}
+
+		// Announce the current slide contents to screen readers
+		// Use animation frame to prevent getComputedStyle in getStatusText
+		// from triggering layout mid-frame
+		requestAnimationFrame( () => {
+			announceStatus( getStatusText( currentSlide ) );
+		});
+
+		progress.update();
+		controls.update();
+		notes.update();
+		backgrounds.update();
+		backgrounds.updateParallax();
+		slideNumber.update();
+		fragments.update();
+
+		// Update the URL hash
+		location.writeURL();
+
+		cueAutoSlide();
+
+		// Auto-animation
+		if( autoAnimateTransition ) {
+
+			setTimeout( () => {
+				dom.slides.classList.remove( 'disable-slide-transitions' );
+			}, 0 );
+
+			if( config.autoAnimate ) {
+
+[Showing lines 1261-1450 of 2973. Use :1451 to continue]

@@ -1,0 +1,43 @@
+.
+  - lib/                                          4d ago
+    - webp_codec.wasm                   552.1KB   4d ago
+    - tools/                                      4d ago
+    - server/                                     4d ago
+    - webp_codec.LICENSE                8.6KB     4d ago
+    - utilsBundle.js.LICENSE            104.1KB   4d ago
+    - serverRegistry.js.LICENSE         2.9KB     4d ago
+    - utilsBundle.js                    2.9MB     4d ago
+    - serverRegistry.js                 55.7KB    4d ago
+    - package.js                        2.1KB     4d ago
+    - entry/                                      4d ago
+    - coreBundle.js                     3.3MB     4d ago
+    - … 2 more
+    - xdg-open                          31.7KB    4d ago
+  - ThirdPartyNotices.txt               676B      4d ago
+  - types/                                        4d ago
+    - types.d.ts                        1.1MB     4d ago
+    - structs.d.ts                      2.4KB     4d ago
+    - protocol.d.ts                     795.1KB   4d ago
+  - index.d.ts                          634B      4d ago
+  - bin/                                          4d ago
+    - reinstall_msedge_stable_mac.sh    371B      4d ago
+    - reinstall_msedge_stable_linux.sh  1.5KB     4d ago
+    - reinstall_msedge_dev_mac.sh       372B      4d ago
+    - reinstall_msedge_dev_linux.sh     1.5KB     4d ago
+    - reinstall_msedge_beta_mac.sh      377B      4d ago
+    - reinstall_msedge_beta_linux.sh    1.5KB     4d ago
+    - reinstall_chrome_stable_mac.sh    519B      4d ago
+    - reinstall_chrome_stable_linux.sh  1.2KB     4d ago
+    - reinstall_chrome_beta_mac.sh      563B      4d ago
+    - reinstall_chrome_beta_linux.sh    1.2KB     4d ago
+    - reinstall_msedge_stable_win.ps1   856B      4d ago
+    - … 5 more
+    - install_media_pack.ps1            174B      4d ago
+  - index.mjs                           1.0KB     4d ago
+  - README.md                           120B      4d ago
+  - package.json                        876B      4d ago
+  - browsers.json                       1.1KB     4d ago
+  - index.js                            697B      4d ago
+  - cli.js                              839B      4d ago
+  - NOTICE                              254B      4d ago
+  - LICENSE                             11.3KB    4d ago

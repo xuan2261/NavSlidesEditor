@@ -1,0 +1,95 @@
+import {
+  test,
+  apiGetPresentation,
+  apiUpdatePresentation,
+} from '../fixtures/test-fixtures.js'
+import { EditorPage } from '../pages/editor-page.js'
+import { buildDeck } from './pending-round-lifecycle-fixtures.js'
+import {
+  LEAVE_RETURN_CASES,
+  RESET_CASES,
+  ISOLATION_CASES,
+} from './pending-round-lifecycle-cases.js'
+import { runLeaveReturnJourney } from './pending-round-lifecycle-leave-return.js'
+import { runResetJourney } from './pending-round-lifecycle-reset.js'
+import { runIsolationJourney } from './pending-round-lifecycle-isolation.js'
+import { createEvidenceAccumulator } from './pending-round-lifecycle-evidence.js'
+import { visitSurface } from './pending-round-lifecycle-surfaces.js'
+
+const CONCERNS = [
+  {
+    type: 'leave-return',
+    cases: LEAVE_RETURN_CASES,
+    runner: runLeaveReturnJourney,
+  },
+  {
+    type: 'reset',
+    cases: RESET_CASES,
+    runner: runResetJourney,
+  },
+  {
+    type: 'isolation',
+    cases: ISOLATION_CASES,
+    runner: runIsolationJourney,
+  },
+]
+
+for (const surface of ['present', 'share', 'file']) {
+  for (const { type, cases, runner } of CONCERNS) {
+    for (const c of cases) {
+      test(`${c.name} ${type} on ${surface}`, async ({ page, request, browser, testPresentation }, testInfo) => {
+        const evidence = createEvidenceAccumulator(
+          testInfo,
+          `${type}-${c.name}-${surface}`
+        )
+        let savedBeforeJSON = null
+        let runnerError = null
+
+        try {
+          const authored = buildDeck(type, c)
+          evidence.stage('authoredDeck', authored)
+
+          await apiUpdatePresentation(request, testPresentation.id, authored)
+          savedBeforeJSON = await apiGetPresentation(request, testPresentation.id)
+          evidence.stage('savedBefore', savedBeforeJSON)
+
+          const primarySlide = savedBeforeJSON.slides?.find((s) => s.id === 'p-slide')
+          if (!primarySlide) {
+            throw new Error('Saved presentation missing p-slide')
+          }
+
+          await new EditorPage(page).gotoPresentation(testPresentation.id)
+
+          await visitSurface(
+            {
+              page,
+              request,
+              browser,
+              id: testPresentation.id,
+              testInfo,
+              surface,
+              evidence,
+            },
+            async (context) => {
+              const activePage = context.page
+              try {
+                return await runner(activePage, c, evidence)
+              } finally {
+                await evidence.collectLive(activePage)
+              }
+            }
+          )
+        } catch (err) {
+          runnerError = err
+        } finally {
+          await evidence.finalize(
+            request,
+            testPresentation.id,
+            savedBeforeJSON,
+            runnerError
+          )
+        }
+      })
+    }
+  }
+}

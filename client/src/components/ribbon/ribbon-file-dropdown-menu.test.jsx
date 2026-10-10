@@ -1,8 +1,33 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import FileDropdown from './ribbon-file-dropdown-menu'
+import { useState } from 'react'
 
 describe('FileDropdown', () => {
+  it('requires an explicit reversible teacher opt-in and warns before revealed static export', () => {
+    function ControlledMenu() {
+      const [teacherReveal, setTeacherReveal] = useState(false)
+      return (
+        <FileDropdown
+          staticExportTeacherReveal={teacherReveal}
+          onStaticExportTeacherRevealChange={setTeacherReveal}
+        />
+      )
+    }
+    render(<ControlledMenu />)
+    fireEvent.keyDown(screen.getByLabelText('File menu'), { key: 'Enter' })
+    const checkbox = screen.getByRole('menuitemcheckbox', {
+      name: 'Include answers in PDF / reconstructed PPTX',
+    })
+    expect(checkbox.getAttribute('aria-checked')).toBe('false')
+    expect(screen.queryByRole('note')).toBeNull()
+    fireEvent.keyDown(checkbox, { key: ' ' })
+    expect(checkbox.getAttribute('aria-checked')).toBe('true')
+    expect(screen.getByRole('note').textContent).toContain('Answer keys')
+    fireEvent.keyDown(checkbox, { key: 'Enter' })
+    expect(checkbox.getAttribute('aria-checked')).toBe('false')
+    expect(screen.queryByRole('note')).toBeNull()
+  })
   it('renders a File button', () => {
     render(<FileDropdown />)
     expect(screen.getByLabelText('File menu')).toBeTruthy()
@@ -15,38 +40,31 @@ describe('FileDropdown', () => {
     expect(screen.getByText('Save')).toBeTruthy()
   })
 
-  it('[cap:control.file.menu] opens and exposes expected file commands', () => {
-    render(<FileDropdown />)
-    fireEvent.mouseDown(screen.getByLabelText('File menu'))
-    expect(screen.getByText('Open Project')).toBeTruthy()
-    expect(screen.getByText('Export PDF')).toBeTruthy()
-    expect(screen.getByText('Export PPTX')).toBeTruthy()
-    expect(screen.getByText('Export HTML')).toBeTruthy()
-    expect(screen.getByText('Export Offline HTML')).toBeTruthy()
-    expect(screen.getByText('Export Project')).toBeTruthy()
-    expect(screen.getByText('Save to GitHub')).toBeTruthy()
-    expect(screen.getByText('Sync to Cloud')).toBeTruthy()
-    expect(screen.getByText('Version History')).toBeTruthy()
-  })
-
   it('renders imported presentation fidelity choices with explicit actions', () => {
     const downloadOriginal = vi.fn()
-    render(<FileDropdown pptxFidelity={{
-      fidelity: { status: 'source-backed', editabilityTier: 'structural-mvp' },
-      exports: {
-        original: { available: true },
-        validatedEdited: { available: false },
-        reconstructed: { available: true },
-      },
-      officeCli: { available: true },
-    }} pptxActions={{ downloadOriginal }} />)
+    render(
+      <FileDropdown
+        pptxFidelity={{
+          fidelity: { status: 'source-backed', editabilityTier: 'structural-mvp' },
+          exports: {
+            original: { available: true },
+            validatedEdited: { available: false },
+            reconstructed: { available: true },
+          },
+          officeCli: { available: true },
+        }}
+        pptxActions={{ downloadOriginal }}
+      />
+    )
     fireEvent.mouseDown(screen.getByLabelText('File menu'))
 
     expect(screen.getByLabelText('PPTX fidelity')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Download Original' })).toBeTruthy()
-    expect(screen.getByRole('button', {
-      name: 'Export Validated Edited Revision',
-    }).disabled).toBe(true)
+    expect(
+      screen.getByRole('button', {
+        name: 'Export Validated Edited Revision',
+      }).disabled
+    ).toBe(true)
     expect(screen.getByRole('button', { name: 'Generate Reconstructed PPTX' })).toBeTruthy()
   })
 

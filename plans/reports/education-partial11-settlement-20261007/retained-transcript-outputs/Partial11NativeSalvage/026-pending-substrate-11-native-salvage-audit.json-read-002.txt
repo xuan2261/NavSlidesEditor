@@ -1,0 +1,113 @@
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-quiz-state.js",
+        "observedArchivedRequest": "1-230:raw",
+        "certifiedRanges": [],
+        "fullBodyAndEOFCertified": false
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-hot-potato-state.js",
+        "observedArchivedRequest": "1-230:raw",
+        "certifiedRanges": [],
+        "fullBodyAndEOFCertified": false
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-jeopardy-state.js",
+        "observedArchivedRequest": "1-230:raw",
+        "certifiedRanges": [],
+        "fullBodyAndEOFCertified": false
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-relay-state.js",
+        "observedArchivedRequest": "1-230:raw",
+        "certifiedRanges": [],
+        "fullBodyAndEOFCertified": false
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-trivia-state.js",
+        "observedArchivedRequest": "1-230:raw",
+        "certifiedRanges": [],
+        "fullBodyAndEOFCertified": false
+      }
+    ],
+    "requiredOwnerCoverage": {
+      "certifiedComplete": false,
+      "certifiedRanges": [],
+      "mappedOwnersRequiringAttributableProof": [
+        "tests/e2e/fixtures/test-fixtures.js",
+        "tests/e2e/education/release-game-fixtures.js",
+        "tests/e2e/education/release-content-fields.js",
+        "tests/e2e/pages/editor-page.js",
+        "shared/src/education/runtime-session.js",
+        "shared/src/education/browser/reveal-lifecycle.js",
+        "shared/src/education/browser/mount.js",
+        "shared/src/education/browser/local-activity.js",
+        "shared/src/education/countdown-state.js",
+        "shared/src/education/browser/countdown-presenter.js",
+        "shared/src/education/quiz-session.js",
+        "shared/src/education/games/relay-race.js",
+        "shared/src/education/game-defaults.js",
+        "shared/src/education/game-registry.js",
+        "shared/src/education/question-shape.js",
+        "shared/src/education/question-factory.js",
+        "shared/src/education/presets/simulations.js",
+        "shared/src/htmlGenerator.js",
+        "node_modules/reveal.js/js/controllers/keyboard.js"
+      ],
+      "meaning": "Mapped owners are identified by the governing prior review, not claimed inspected by this report."
+    },
+    "currentStepAuthorityReads": [
+      {
+        "file": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-native-salvage-prompt.md",
+        "ranges": [
+          "1-100:raw"
+        ],
+        "coverage": "Complete returned contract, ending with Independent perspective."
+      },
+      {
+        "file": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-terminal-failure-counsel.json",
+        "ranges": [
+          "1-180:raw",
+          "181-360:raw",
+          "361-560:raw"
+        ],
+        "coverage": "Complete body through closing brace; tool reports541 lines."
+      },
+      {
+        "file": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-10-evidence-salvage-audit.json",
+        "ranges": [
+          "701-900:raw",
+          "901-1100:raw",
+          "1101-1220:raw"
+        ],
+        "coverage": "Current continuation through EOF1203; preceding archived ranges are not promoted to independently certified complete evidence."
+      },
+      {
+        "file": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/.tmp/acceptance-producer-pending-substrate-11-evidence.json",
+        "ranges": [
+          "161-320:raw",
+          "321-480:raw",
+          "481-620:raw"
+        ],
+        "coverage": "Current continuation through EOF605; archived1-160 output is truncated in retained history."
+      },
+      {
+        "file": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-dispatch-authority.json",
+        "ranges": [
+          "211-270:raw"
+        ],
+        "coverage": "Excluded mechanism, shared semantic contract and final receipt requirements through document end; not a fresh full-document read."
+      },
+      {
+        "file": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-receipt-audit.json",
+        "ranges": [
+          "1-110:raw"
+        ],
+        "coverage": "Receipt-audit conclusion and original/08/initial09 records only; not full538-line audit."
+      }
+    ],
+    "governingAuthorityReadCompleteness": "NOT_CERTIFIED_FOR_ALL_REQUIRED_DOCUMENTS; retained archive includes bounded requests with omitted output. Exact full governing body coverage must not be inferred from titles or prior read manifests."
+  },
+  "limitations": [
+
+[Showing lines 625-735 of 755. Use :736 to continue]

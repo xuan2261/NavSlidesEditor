@@ -1,0 +1,67 @@
+{
+  "producer": "local8045/gemini-3.8-flash-high",
+  "partition": "evidence",
+  "correction": 11,
+  "workingRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-correction-11",
+  "sourceReady": false,
+  "qualification": false,
+  "passClaimed": false,
+  "runtimeExecuted": false,
+  "declaredCells": 54,
+  "staticallyAdmittedCells": 0,
+  "executedAcceptanceCells": 0,
+  "exactOwnedChanges": {
+    "modifiedFiles": [
+      "tests/e2e/education/pending-round-lifecycle-error-exposure.js"
+    ],
+    "preservedFiles": [
+      "tests/e2e/education/pending-round-lifecycle-ui-evidence.js",
+      "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+      "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+      "tests/e2e/education/pending-round-lifecycle-evidence.js",
+      "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+      "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+      "tests/e2e/education/release-surfaces.js",
+      "tests/e2e/education/present-offline-helpers.js",
+      "tests/e2e/education/pending-round-lifecycle-live-root-observation.js",
+      "tests/e2e/education/release-portable-inspection.js"
+    ],
+    "lineCounts": {
+      "tests/e2e/education/pending-round-lifecycle-ui-evidence.js": 152,
+      "tests/e2e/education/pending-round-lifecycle-error-ledger.js": 160,
+      "tests/e2e/education/pending-round-lifecycle-live-evidence.js": 120,
+      "tests/e2e/education/pending-round-lifecycle-evidence.js": 198,
+      "tests/e2e/education/pending-round-lifecycle-surfaces.js": 193,
+      "tests/e2e/education/pending-round-lifecycle-evidence-domain.js": 143,
+      "tests/e2e/education/release-surfaces.js": 199,
+      "tests/e2e/education/present-offline-helpers.js": 28,
+      "tests/e2e/education/pending-round-lifecycle-live-root-observation.js": 157,
+      "tests/e2e/education/pending-round-lifecycle-error-exposure.js": 171,
+      "tests/e2e/education/release-portable-inspection.js": 55
+    },
+    "symbolsAndContracts": {
+      "resolveWrapperMeta": "Distinguishes explicit wrapper phase (non-Error wrapper item.phase string) from intrinsic err.phase and default ingestion fallbacks. Returns { phase, explicitPhase, metadata }.",
+      "extractWrapper": "Populates wrapper map preserving explicitPhase and metadata without conferring phase authority to phase-less wrappers.",
+      "reconcileEntry": "Reconciles existing entry phase ONLY if caller wrapper provides explicit, valid explicitPhase string differing from existing.phase. Enriches metadata without conferring phase authority. Updates existing.serialized in place maintaining stable object identity.",
+      "ingestPreexistingErrors": "Consistently applies explicit wrapper phase reconciliation and metadata enrichment across errorLedger, secondaryFailures, and allErrors loops. Phase-less wrappers and wrappers containing Errors with conflicting intrinsic phases never overwrite authoritative recorded phases (e.g. portable:close)."
+    }
+  },
+  "assignedRepairs": {
+    "S10-C2": {
+      "id": "S10-C2",
+      "priority": 2,
+      "title": "Prevent phase-less caller errorLedger items from overwriting authoritative recorded phases",
+      "file": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+      "lines": "7-124",
+      "mechanism": "In ingestPreexistingErrors, when a caller errorLedger item lacks an explicit phase property, resolveWrapperMeta previously fell back to err.phase || `${phase}:errorLedger`. If the referenced error was already recorded earlier in the ledger with an authoritative explicit phase (e.g. 'portable:close'), reconcileEntry executed because existing.phase !== p, overwriting the recorded phase with the fallback/intrinsic phase and re-serializing the entry. This regressed the explicit recorded phase on exposure.",
+      "repair": "Repaired in tests/e2e/education/pending-round-lifecycle-error-exposure.js: resolveWrapperMeta now isolates explicitPhase (requiring an explicit non-empty string on a wrapper object, not the Error instance itself). reconcileEntry updates existing.phase only when explicitPhase is provided and differs from existing.phase. Ingest loops for errorLedger, secondaryFailures, and allErrors pass explicitPhase to reconcileEntry; phase-less wrappers enrich metadata while preserving existing authoritative phases intact. Caller Error instances, wrappers, and arrays remain unmutated.",
+      "disposition": "SOURCE_CORRECTED_LOCAL"
+    }
+  },
+  "assignedOriginalFindings": {
+    "evidence": [
+      {
+        "id": "E06-01-A",
+        "title": "E06-01 Leave sole Errors with empty caller arrays unchanged",
+
+[Showing lines 1-65 of 605. Use :66 to continue]

@@ -1,0 +1,20 @@
+.
+  - js/                       4d ago
+    - utils/                  4d ago
+    - reveal.d.ts   20.9KB    4d ago
+    - index.ts      2.0KB     4d ago
+    - config.ts     21.3KB    4d ago
+    - controllers/            4d ago
+    - reveal.js     78.5KB    4d ago
+    - components/             4d ago
+  - css/                      4d ago
+    - theme/                  4d ago
+    - reveal.scss   53.8KB    4d ago
+    - print/                  4d ago
+    - layout.scss   1.4KB     4d ago
+    - reset.css     866B      4d ago
+  - README.md       1.8KB     4d ago
+  - package.json    3.6KB     4d ago
+  - index.html      1.1KB     4d ago
+  - demo.html       21.6KB    4d ago
+  - LICENSE         1.1KB     4d ago

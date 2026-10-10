@@ -1,0 +1,15 @@
+    expect(s.generation).toBe(before.generation)
+  }
+
+  const terminal = await getGameState(root)
+  evidence.stage('terminal', terminal)
+
+  return {
+    initial,
+    before,
+    hiddenSample,
+    returned,
+    terminal,
+    measuredWitnessInterval,
+  }
+}
