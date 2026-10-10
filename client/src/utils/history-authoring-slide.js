@@ -4,11 +4,16 @@ export function resolveHistoryAuthoringSlide(
   snapshot,
   { presentationId, masterId, currentSlideIndex, verticalEdit }
 ) {
-  const master =
-    snapshot.id === presentationId && masterId
+  if (masterId) {
+    const master = snapshot.id === presentationId
       ? snapshot.layoutMasters?.find((layout) => layout.id === masterId)
       : null
-  if (master) return { elements: master.fixedElements }
+    return {
+      elements: (master?.fixedElements || []).map((element) =>
+        element.locked ? { ...element, locked: false } : element
+      ),
+    }
+  }
   const index = Math.min(currentSlideIndex, (snapshot.slides?.length ?? 1) - 1)
   let vertical = index === currentSlideIndex ? verticalEdit : null
   if (vertical?.child != null) {

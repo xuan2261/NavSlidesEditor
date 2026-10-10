@@ -2,6 +2,7 @@ import JSZip from 'jszip'
 import { generateRevealHTML, projectExportValue } from 'revealjs-shared'
 import { generateOfflineHTML } from './offlineExport'
 import { buildArchiveMediaManifestEntries } from './project-media-utils'
+import { api } from './api'
 
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob)
@@ -26,7 +27,8 @@ async function fetchProjectMediaBytes(url) {
   return new Uint8Array(await response.arrayBuffer())
 }
 
-/** Remove editor/package authority before writing a portable project archive. */
+
+/** Remove client authority only for the legacy projection-only export format. */
 export function toProjectExportPresentation(presentation) {
   return projectExportValue(presentation)
 }
@@ -65,11 +67,20 @@ async function collectProjectMediaFiles(mediaEntries) {
 }
 
 /**
- * Export presentation as .navslides.json (no local media)
- * or .navslides ZIP (has local media, includes offline HTML).
+ * Package-backed decks use the server-owned ZIP v2 archive, with or without media.
+ * Legacy projections use JSON v1.1 or a media ZIP without package fidelity claims.
  * @param {object} presentation
  */
 export async function exportProject(presentation) {
+  if (presentation?.pptxSourceAvailable === true) {
+    if (!presentation.id || !Number.isSafeInteger(presentation.aggregateGeneration) || presentation.aggregateGeneration < 1) {
+      throw new Error('Project archive requires a saved package generation')
+    }
+    const archive = await api.downloadProjectArchive(presentation.id, presentation.aggregateGeneration)
+    const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+    downloadBlob(archive, `${slugify(presentation.title)}-backup-${timestamp}.navslides`)
+    return
+  }
   const exportPresentation = toProjectExportPresentation(presentation)
   const mediaEntries = buildArchiveMediaManifestEntries(exportPresentation)
   const title = slugify(exportPresentation?.title)

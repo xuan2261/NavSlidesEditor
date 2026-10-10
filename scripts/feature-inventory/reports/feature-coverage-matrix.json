@@ -4,7 +4,7 @@
     "stale": true,
     "staleSources": {
       "vitest": true,
-      "playwright": false
+      "playwright": true
     }
   },
   "rows": [

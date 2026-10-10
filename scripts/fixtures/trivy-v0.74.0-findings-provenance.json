@@ -1,0 +1,47 @@
+{
+  "kind": "actual-disposable-remote-image-scan",
+  "scannerVersion": "0.74.0",
+  "binarySource": "https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_windows-64bit.zip",
+  "binaryArchiveSha256": "94c40e0696e4b907a74b7b2e1438d5d72ebaca83115817407f568a002d520842",
+  "binaryVerification": "SHA256 matched primary GitHub release asset digest and checksum manifest; signature not verified",
+  "command": [
+    "trivy.exe",
+    "image",
+    "--cache-dir",
+    "<isolated-temp>/cache",
+    "--image-src",
+    "remote",
+    "--scanners",
+    "vuln",
+    "--pkg-types",
+    "os,library",
+    "--list-all-pkgs",
+    "--severity",
+    "HIGH,CRITICAL",
+    "--ignore-unfixed=false",
+    "--exit-code",
+    "0",
+    "--format",
+    "json",
+    "--output",
+    "<raw-capture>",
+    "node@sha256:cd7807368cf24826297cbad5dca1a44972ccfd770647db52a8c7589eb4599ac8"
+  ],
+  "imageConfigID": "sha256:a5591ffa7fb72edbb85f13d16387c2eb1702bcd3f576f7edd7aeefb453dae3dd",
+  "registryManifestDigests": [
+    "node@sha256:cd7807368cf24826297cbad5dca1a44972ccfd770647db52a8c7589eb4599ac8"
+  ],
+  "database": {
+    "Version": 2,
+    "NextUpdate": "2026-10-10T07:05:00.081187086Z",
+    "UpdatedAt": "2026-10-09T07:05:00.081187346Z",
+    "DownloadedAt": "2026-10-09T10:01:11.1593458Z"
+  },
+  "databaseMetadataSha256": "31d2ed8405653669bcc0f211a8b4dffb48767102c73a53469e2874f46e536051",
+  "rawReportSha256": "059a8c53f8f691f976b4977bb85b64b2075c48cead26236937357ab5765b29f6",
+  "fixtureSha256": "3308941f0faa69a575241ed0e5e872d287c1e0dab5681fea5624df38336eaed7",
+  "capturedAt": "2026-10-09T17:02:15.0033381+07:00",
+  "reduction": "Preserved every target/package/finding and its identity. Omitted descriptions, references, image history/layers and ancillary package metadata. No findings pruned by reducer.",
+  "qualification": "Policy-filtered capture; clean is not all-severity vulnerability-free.",
+  "limits": "Disposable image schema evidence only, not NavSlides candidate runtime qualification or scanner attestation. SBOM/browser test inputs are synthetic unless separately captured."
+}

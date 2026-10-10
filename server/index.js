@@ -32,7 +32,10 @@ const { resolveListenHost, getExposureWarning } = require('./services/listen-hos
 const { sanitizeSvgBuffer } = require('./services/svg-upload-sanitizer')
 const { createHealthState, READY_REASON_CODES } = require('./services/health-state')
 const { assertSingleProcessTopology } = require('./services/health-state-topology')
-const { assertWritableRoot, durableRecoveryReason } = require('./services/health-state-readiness')
+const {
+  assertWritableRoot,
+  recoverStartupState,
+} = require('./services/health-state-readiness')
 
 /**
  * A store that fails to release is exactly what leaves the writer lock held and
@@ -121,6 +124,7 @@ const mediaRouter = require('./routes/media')
 const liveRouter = require('./routes/live')
 const pptxImportRouter = require('./routes/pptx-import')
 const projectImportRouter = require('./routes/project-import')
+const projectExportRouter = require('./routes/project-export')
 const gamesRouter = require('./routes/games-rest-api-handler')
 const pluginsRouter = require('./routes/plugins')
 
@@ -170,6 +174,16 @@ app.use(cors(corsOptions))
 // Local deployment and CSRF boundary, not multi-user authentication. This runs
 // before body parsing, upload handling, rate-limit accounting, and every route.
 app.use(createLocalMutationIngressPolicy())
+app.use((req, res, next) => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next()
+  const ready = healthState.ready()
+  if (ready.status === 'ready') return next()
+  res.set('Cache-Control', 'no-store').status(503).json({
+    error: 'Server recovery must complete before mutations are admitted',
+    code: ready.reasons[0],
+    reasons: ready.reasons,
+  })
+})
 app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ extended: false }))
 
@@ -250,6 +264,7 @@ app.use(
 // Core CRUD — order matters: more specific paths before generic ones
 app.use('/api/presentations', shareRouter) // /:id/share
 app.use('/api/presentations', historyRouter) // /:id/snapshot(s), /:id/restore
+app.use('/api/presentations', projectExportRouter) // /:id/project-archive
 app.use('/api/presentations', presentationsRouter) // CRUD + export + present + duplicate + save-as-template
 app.use('/api/templates', templatesRouter)
 app.use('/api/upload', uploadRouter)
@@ -507,7 +522,7 @@ async function startServer(port, options = {}) {
       throw error
     }
   }
-  const recoveryReason = durableRecoveryReason(store.getState())
+  const recoveryReason = await recoverStartupState(store)
   if (recoveryReason) healthState.markDegraded(recoveryReason)
   else healthState.markReady()
   return new Promise((resolve, reject) => {

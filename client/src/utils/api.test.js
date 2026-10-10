@@ -604,3 +604,36 @@ describe('atomic project import API', () => {
     })
   })
 })
+
+describe('P10 package project archive API', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('returns binary ZIP bytes using a package generation precondition', async () => {
+    const blob = new Blob(['PK\u0003\u0004package'], { type: 'application/zip' })
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, blob: async () => blob })))
+    const downloaded = await api.downloadProjectArchive('deck-1', 4)
+    expect(downloaded.type).toBe('application/zip')
+    const bytes = await new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = () => reject(reader.error)
+      reader.readAsArrayBuffer(downloaded)
+    })
+    expect(new TextDecoder().decode(bytes)).toBe('PK\u0003\u0004package')
+    expect(fetch).toHaveBeenCalledWith('/api/presentations/deck-1/project-archive', {
+      headers: { 'If-Pptx-Generation': '4' },
+    })
+  })
+
+  it.each(['SYNC_SOURCE_CHANGED', 'PROJECT_MEDIA_MISSING'])('preserves %s instead of treating JSON failure as a downloadable blob', async (code) => {
+    const blob = vi.fn()
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: false, status: 409, blob,
+      json: async () => ({ error: 'Archive unavailable', code, currentGeneration: 5 }),
+    })))
+    await expect(api.downloadProjectArchive('deck-1', 4)).rejects.toMatchObject({
+      status: 409, code, currentGeneration: 5,
+    })
+    expect(blob).not.toHaveBeenCalled()
+  })
+})

@@ -15,7 +15,9 @@
 export function reconcileSelectionAfterHistory(restoredSlide, selectedIds, editingId) {
   const liveIds = new Set((restoredSlide?.elements || []).map((el) => el.id))
   const nextSelected = (selectedIds || []).filter((id) => liveIds.has(id))
-  const editingSurvives = editingId != null && liveIds.has(editingId)
+  const element = restoredSlide?.elements?.find((candidate) => candidate.id === editingId)
+  const editingSurvives = editingId != null && Boolean(element) &&
+    !restoredSlide?.locked && !element.locked
   return {
     selectedIds: nextSelected,
     editingId: editingSurvives ? editingId : null,

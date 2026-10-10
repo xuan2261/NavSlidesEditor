@@ -5,7 +5,6 @@ const h = vi.hoisted(() => ({
   exportPDF: vi.fn(),
   generateRevealHTML: vi.fn(() => '<html></html>'),
   generateOfflineHTML: vi.fn(() => Promise.resolve('<html>offline</html>')),
-  exportProject: vi.fn(() => Promise.resolve()),
   exportToPptx: vi.fn(() => Promise.resolve([])),
   downloadPptxOriginal: vi.fn(),
   getPptxFidelity: vi.fn(),
@@ -24,7 +23,6 @@ vi.mock('../utils/generateHTML', () => ({
   presentInWindow: vi.fn(),
 }))
 vi.mock('../utils/offlineExport', () => ({ generateOfflineHTML: h.generateOfflineHTML }))
-vi.mock('../utils/export-project', () => ({ exportProject: h.exportProject }))
 vi.mock('../utils/exportPptx', () => ({ exportToPptx: h.exportToPptx }))
 vi.mock('../utils/api', () => ({
   api: {
@@ -455,13 +453,6 @@ describe('useExportActions', () => {
     )
   })
 
-  it('onExportProject delegates to exportProject(presentation)', async () => {
-    const { result } = renderHook(() => useExportActions(presentation))
-    await act(async () => {
-      await result.current.onExportProject()
-    })
-    expect(h.exportProject).toHaveBeenCalledWith(presentation)
-  })
 
   it('exposes onOpenProject as a function', () => {
     const { result } = renderHook(() => useExportActions(presentation))

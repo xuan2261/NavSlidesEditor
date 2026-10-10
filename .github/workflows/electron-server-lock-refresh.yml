@@ -23,7 +23,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      - name: Resolve repository default branch without changing permissions
+        id: policy
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          set -euo pipefail
+          base="$(gh repo view "${{ github.repository }}" --json defaultBranchRef --jq '.defaultBranchRef.name')"
+          test -n "$base"
+          echo "base=$base" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ steps.policy.outputs.base }}' }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: '22.22.0' }
       - run: npm run electron:lock -- --resolve
@@ -39,26 +48,42 @@ jobs:
         # branch updated in place instead of spawning a duplicate PR.
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE: ${{ steps.policy.outputs.base }}
         run: |
           set -euo pipefail
-          if ! git status --porcelain electron/server-package-lock.json | grep -q .; then
+          if git diff --quiet -- electron/server-package-lock.json; then
             echo "Electron server lock already up to date."
             exit 0
           fi
           branch="chore/electron-server-lock-refresh"
+          # Bind the push to the observed ref, not checkout's default-branch tracking refs.
+          expected=""
+          if observed="$(git ls-remote --exit-code --heads origin "refs/heads/$branch")"; then
+            expected="${observed%%[[:space:]]*}"
+            git fetch --no-tags --depth=1 origin "$expected"
+          else
+            status=$?
+            if [ "$status" -ne 2 ]; then
+              echo '::error::Cannot observe the refresh branch; refusing to push without a lease.'
+              exit "$status"
+            fi
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B "$branch"
           git add electron/server-package-lock.json
           git commit -m "chore: refresh isolated Electron server lock"
-          git push --force origin "$branch"
-          open_pr=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number // empty')
+          git push --force-with-lease="refs/heads/$branch:$expected" origin "HEAD:refs/heads/$branch"
+          open_pr=$(gh pr list --head "$branch" --base "$BASE" --state open --json number --jq '.[0].number // empty')
           if [ -z "$open_pr" ]; then
-            gh pr create \
+            if ! gh pr create \
               --title "chore: refresh isolated Electron server lock" \
               --body "Regenerates electron/server-package-lock.json via \`npm run electron:lock -- --resolve\` so the packaged Electron server picks up in-range dependency updates that Dependabot lands on the workspace lockfile. The refresh job verifies the lock installs its declared tree via \`node scripts/prepare-electron.js\`." \
-              --base master \
-              --head "$branch"
+              --base "$BASE" \
+              --head "$branch"; then
+              echo '::error::Refresh PR creation denied or unavailable. Repository owner must approve the existing Actions PR policy; this workflow does not change permissions or use a PAT fallback.'
+              exit 1
+            fi
           else
             echo "Refresh PR #$open_pr already open — branch updated in place."
           fi

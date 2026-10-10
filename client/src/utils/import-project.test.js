@@ -71,6 +71,16 @@ describe('validateProjectFile', () => {
     expect(result.valid).toBe(true)
     expect(result.warnings).toHaveLength(0)
   })
+
+  it('recognizes version 2.0 structurally without claiming DTO package authority', () => {
+    const parsed = {
+      type: 'zip',
+      presentation: { title: 'Portable', slides: [], pptxSourceAvailable: true, aggregateGeneration: 9 },
+      manifest: { version: '2.0', media: [] },
+    }
+    expect(validateProjectFile(parsed)).toEqual({ valid: true, errors: [], warnings: [] })
+    expect(parsed).not.toHaveProperty('packageAuthorityValidated')
+  })
 })
 
 describe('rewriteMediaUrls', () => {

@@ -73,7 +73,7 @@ describe('media placement ownership', () => {
     await expect(fs.readFile(first.absolutePath, 'utf8')).resolves.toBe('same')
   })
 
-  it('does not reuse another pending session file', async () => {
+  it('keeps its pending placement stable after another owner commits identical bytes', async () => {
     const first = await ownership.placeMedia({
       ownerId: 'session-a',
       bytes: Buffer.from('same'),
@@ -88,5 +88,18 @@ describe('media placement ownership', () => {
     })
     expect(second).toMatchObject({ ownership: 'new' })
     expect(second.filename).not.toBe(first.filename)
+    await ownership.commitOwner('session-a', 'deck-a')
+    const retry = await ownership.placeMedia({
+      ownerId: 'session-b', bytes: Buffer.from('same'), originalName: 'retry.png', mimeType: 'image/png',
+    })
+    expect(retry).toMatchObject({ ownership: 'new', deduped: true, filename: second.filename })
+    const reused = await ownership.placeMedia({
+      ownerId: 'session-c', bytes: Buffer.from('same'), originalName: 'shared.png', mimeType: 'image/png',
+    })
+    expect(reused).toMatchObject({ ownership: 'reused', filename: first.filename })
+    await expect(ownership.rollbackOwner('session-c')).resolves.toEqual({ removed: 0 })
+    await expect(ownership.rollbackOwner('session-b')).resolves.toEqual({ removed: 1 })
+    await expect(fs.pathExists(second.absolutePath)).resolves.toBe(false)
+    await expect(fs.readFile(first.absolutePath, 'utf8')).resolves.toBe('same')
   })
 })

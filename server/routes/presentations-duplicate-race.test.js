@@ -6,6 +6,7 @@ import { createRequire } from 'node:module'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import express from 'express'
 import request from 'supertest'
+import JSZip from 'jszip'
 
 const require = createRequire(import.meta.url)
 const originalDataDir = process.env.SLIDES_DATA_DIR
@@ -28,14 +29,8 @@ function deferred() {
 let presentationsRouter
 let duplicateEntered
 let duplicateGate
-let duplicateSawPresentationLock
 let failNextResponseJson
-let observePutRead
-let presentationLockDepth = 0
-let putReadStarted
 let originalDuplicatePackageOwner
-let originalReadPresentations
-let originalWithPresentations
 
 function makeApp() {
   const app = express()
@@ -55,36 +50,19 @@ function makeApp() {
     next()
   })
   app.use('/api/presentations', presentationsRouter)
+  app.use((error, _req, res, _next) => {
+    res.status(500).json({ error: error.message })
+  })
   return app
 }
 
 beforeAll(() => {
-  originalWithPresentations = storage.withPresentations
-  originalReadPresentations = storage.readPresentations
   originalDuplicatePackageOwner = packageLifecycle.duplicatePackageOwner
 
-  storage.withPresentations = async (action) =>
-    originalWithPresentations(async (presentations) => {
-      presentationLockDepth += 1
-      try {
-        return await action(presentations)
-      } finally {
-        presentationLockDepth -= 1
-      }
-    })
-  storage.readPresentations = async (...args) => {
-    if (observePutRead) {
-      observePutRead = false
-      putReadStarted.resolve()
-    }
-    return originalReadPresentations(...args)
-  }
   packageLifecycle.duplicatePackageOwner = async (...args) => {
     if (!duplicateGate) return originalDuplicatePackageOwner(...args)
-    duplicateSawPresentationLock = presentationLockDepth > 0
     duplicateEntered.resolve()
     await duplicateGate.promise
-    if (duplicateSawPresentationLock) return null
     return originalDuplicatePackageOwner(...args)
   }
 
@@ -94,8 +72,6 @@ beforeAll(() => {
 
 afterAll(async () => {
   delete require.cache[require.resolve('./presentations')]
-  storage.withPresentations = originalWithPresentations
-  storage.readPresentations = originalReadPresentations
   packageLifecycle.duplicatePackageOwner = originalDuplicatePackageOwner
   if (originalDataDir === undefined) delete process.env.SLIDES_DATA_DIR
   else process.env.SLIDES_DATA_DIR = originalDataDir
@@ -106,26 +82,25 @@ describe('package-backed duplicate races', () => {
   beforeEach(async () => {
     duplicateEntered = deferred()
     duplicateGate = null
-    duplicateSawPresentationLock = false
     failNextResponseJson = false
-    observePutRead = false
-    presentationLockDepth = 0
-    putReadStarted = deferred()
     await packageRuntime.shutdownPackageStore()
     storage.initDataFiles()
     await storage.writePresentations([
       { id: 'deck-1', title: 'Original', slides: [{ id: 's1', elements: [] }] },
     ])
     await packageRuntime.initializePackageStore({ rootDir: storage.DATA_DIR })
-    const packageHead = await packageRuntime.withPackageStore((store) =>
-      store.commitOriginal(Buffer.from('original-only-package'), {
-        ownerType: 'presentation',
-        ownerId: 'deck-1',
-      })
-    )
-    await storage.withPresentations((presentations) => {
-      presentations[0].pptxAggregateHead = packageHead
-    })
+    const projection = (await storage.readPresentations())[0]
+    const zip = new JSZip()
+    zip.file('[Content_Types].xml', '<Types/>')
+    zip.file('ppt/presentation.xml', '<p:presentation/>')
+    await packageRuntime.withPackageStore(async (store) => store.commitImport(
+      await zip.generateAsync({ type: 'nodebuffer' }), {
+        jobId: 'fixture-import', presentationId: projection.id, projection,
+        sourceMap: await require('../services/pptx-import/source-map').buildImportSourceMap(projection, null, null),
+        compatibilityPresentation: projection,
+      }
+    ))
+    await packageRuntime.drainPackageCompatibilityOutbox()
   })
 
   afterEach(async () => {
@@ -136,6 +111,9 @@ describe('package-backed duplicate races', () => {
   })
 
   it('releases presentation serialization before package duplication', async () => {
+    await storage.withPresentations((presentations) => {
+      presentations.push({ id: 'other-deck', title: 'Other', slides: [] })
+    })
     duplicateGate = deferred()
     const app = makeApp()
     const duplicateRequest = request(app)
@@ -143,22 +121,17 @@ describe('package-backed duplicate races', () => {
       .then((response) => response)
     await duplicateEntered.promise
 
-    observePutRead = true
-    const saveRequest = request(app)
-      .put('/api/presentations/deck-1')
-      .set('Idempotency-Key', 'duplicate-lock-order')
-      .send({ aggregateGeneration: 1, slides: [{ id: 's1', elements: [] }] })
-      .then((response) => response)
-    await putReadStarted.promise
-    duplicateGate.resolve()
-
-    const [duplicate, save] = await Promise.all([duplicateRequest, saveRequest])
-    expect(duplicateSawPresentationLock).toBe(false)
+    try {
+      const save = await request(app)
+        .put('/api/presentations/other-deck')
+        .send({ title: 'Saved while duplication waits' })
+      expect(save.status).toBe(200)
+      expect(save.body.title).toBe('Saved while duplication waits')
+    } finally {
+      duplicateGate.resolve()
+    }
+    const duplicate = await duplicateRequest
     expect(duplicate.status).toBe(201)
-    expect(save).toMatchObject({
-      status: 422,
-      body: { code: 'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE' },
-    })
   })
 
   it('keeps a published duplicate when response serialization fails', async () => {
@@ -167,6 +140,7 @@ describe('package-backed duplicate races', () => {
     const response = await request(makeApp()).post('/api/presentations/deck-1/duplicate')
 
     expect(response.status).toBe(500)
+    expect(response.body.error).toBe('injected response serialization failure')
     const presentations = await storage.readPresentations()
     expect(presentations).toHaveLength(2)
     const ids = presentations.map((presentation) => presentation.id).sort()

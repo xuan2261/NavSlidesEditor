@@ -168,4 +168,20 @@ describe('FileDropdown', () => {
     fireEvent.keyDown(last, { key: 'Home' })
     expect(document.activeElement).toBe(first)
   })
+
+  it('dismisses the File menu and restores trigger focus before a pending Original download finishes', () => {
+    render(<FileDropdown pptxFidelity={{
+      fidelity: { status: 'source-backed', editabilityTier: 'structural-mvp' },
+      exports: { original: { available: true }, validatedEdited: { available: false }, reconstructed: { available: true } },
+      officeCli: { available: true },
+    }}
+      pptxActions={{ downloadOriginal: () => new Promise(() => {}) }} />)
+    const trigger = screen.getByRole('button', { name: 'File menu' })
+    fireEvent.mouseDown(trigger)
+    fireEvent.click(screen.getByRole('button', { name: 'Download Original' }))
+    expect(screen.queryByRole('menu', { name: 'File menu' })).toBeNull()
+    expect(document.activeElement).toBe(trigger)
+    fireEvent.mouseDown(trigger)
+    expect(screen.getByRole('menuitem', { name: 'Export Project' })).toBeTruthy()
+  })
 })

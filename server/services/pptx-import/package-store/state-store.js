@@ -11,6 +11,7 @@ const {
 } = require('./schemas')
 const { loadPackageStoreState, validatePackageStoreRoot } = require('./state-migrations')
 const { createMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
+const { refreshCompatibilityHeads } = require('./authority-publication')
 
 /**
  * Each root embeds its predecessor, so an unbounded chain makes state-root.json
@@ -144,8 +145,10 @@ class StateStore {
     }
   }
 
-  async persistMatrixAuthorityHighWater(matrixAuthorityEpoch) {
+  async persistMatrixAuthorityHighWater(matrixAuthorityEpoch, { signal } = {}) {
+    signal?.throwIfAborted()
     const current = await this.readMatrixAuthorityHighWater()
+    signal?.throwIfAborted()
     if (current !== null && current > matrixAuthorityEpoch) {
       throw new TypeError('Matrix authority epoch regression')
     }
@@ -153,7 +156,7 @@ class StateStore {
     await writeDurable(this.matrixAuthorityHighWaterPath, JSON.stringify({
       schemaVersion: 1,
       matrixAuthorityEpoch,
-    }))
+    }), undefined, { signal })
   }
 
   async recoverMatrixAuthorityHighWater() {
@@ -169,6 +172,7 @@ class StateStore {
       matrixAuthorityEpoch: highWater,
       matrixAuthoritySubjects: createMatrixAuthoritySubjects(undefined, highWater),
     }))
+    refreshCompatibilityHeads(this.state)
     validateState(this.state)
     this.pendingRootRecovery = true
     this.recoveryActions.push('advanced-matrix-authority-high-water')
@@ -202,50 +206,75 @@ class StateStore {
 
   async publish(nextState, {
     assertWriter,
+    signal,
     faultAfterIndex = false,
     faultAfterPrepare = false,
     faultAfterRoot = false,
     faultAfterCompletion = false,
   } = {}) {
+    signal?.throwIfAborted()
     await assertWriter()
+    signal?.throwIfAborted()
     validateState(nextState)
-    await this.persistMatrixAuthorityHighWater(nextState.matrixAuthorityEpoch)
+    await this.persistMatrixAuthorityHighWater(nextState.matrixAuthorityEpoch, { signal })
+    signal?.throwIfAborted()
     const transactionId = crypto.randomUUID()
     const stateHash = hashRecord(nextState)
     const relativeStateFile = path.join('indexes', `${stateHash}.json`)
     const statePath = path.join(this.rootDir, relativeStateFile)
-    try {
-      await fs.access(statePath)
-    } catch (error) {
-      if (error.code !== 'ENOENT') throw error
-      await writeDurable(statePath, JSON.stringify(nextState))
-    }
-    if (faultAfterIndex) throw new Error('Injected fault after index')
-    const nextRoot = {
-      schemaVersion: STATE_ROOT_SCHEMA_VERSION,
-      transactionId,
-      stateHash,
-      stateFile: relativeStateFile,
-      storeGeneration: nextState.generation,
-      fencingEpoch: nextState.fencingEpoch,
-      predecessor: boundPredecessors(this.root),
-    }
-    validateStateRoot(nextRoot)
     const prepared = path.join(this.walDir, `${transactionId}.prepared.json`)
-    await writeDurable(prepared, JSON.stringify(nextRoot))
-    if (faultAfterPrepare) throw new Error('Injected fault after prepare')
-    await assertWriter()
     const tempRoot = `${this.rootPath}.${transactionId}.tmp`
-    await writeDurable(tempRoot, JSON.stringify(nextRoot))
-    await replaceDurable(tempRoot, this.rootPath)
-    this.root = nextRoot
-    this.state = nextState
-    this.pendingMigration = null
-    this.pendingRootRecovery = false
-    this.pendingHighWaterPersist = false
-    if (faultAfterRoot) throw new Error('Injected fault after root')
-    await writeDurable(path.join(this.walDir, `${transactionId}.completed`), 'completed')
-    if (faultAfterCompletion) throw new Error('Injected fault after completion')
+    let published = false
+    try {
+      try {
+        await fs.access(statePath)
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error
+        signal?.throwIfAborted()
+        await writeDurable(statePath, JSON.stringify(nextState), undefined, { signal })
+      }
+      signal?.throwIfAborted()
+      if (faultAfterIndex) throw new Error('Injected fault after index')
+      const nextRoot = {
+        schemaVersion: STATE_ROOT_SCHEMA_VERSION,
+        transactionId,
+        stateHash,
+        stateFile: relativeStateFile,
+        storeGeneration: nextState.generation,
+        fencingEpoch: nextState.fencingEpoch,
+        predecessor: boundPredecessors(this.root),
+      }
+      validateStateRoot(nextRoot)
+      await writeDurable(prepared, JSON.stringify(nextRoot), undefined, { signal })
+      signal?.throwIfAborted()
+      if (faultAfterPrepare) throw new Error('Injected fault after prepare')
+      await assertWriter()
+      signal?.throwIfAborted()
+      await writeDurable(tempRoot, JSON.stringify(nextRoot), undefined, { signal })
+      signal?.throwIfAborted()
+      await replaceDurable(tempRoot, this.rootPath, {
+        signal,
+        onReplaced: () => {
+          // Native rename success is authoritative, even if cancellation or sync fails later.
+          published = true
+          this.root = nextRoot
+          this.state = nextState
+          this.pendingMigration = null
+          this.pendingRootRecovery = false
+          this.pendingHighWaterPersist = false
+        },
+      })
+      if (faultAfterRoot) throw new Error('Injected fault after root')
+      await writeDurable(path.join(this.walDir, `${transactionId}.completed`), 'completed')
+      if (faultAfterCompletion) throw new Error('Injected fault after completion')
+    } catch (error) {
+      if (!published && signal?.aborted) {
+        // Only this unpublished transaction's candidates are removable; indexes remain audit-only.
+        await fs.rm(tempRoot, { force: true })
+        await fs.rm(prepared, { force: true })
+      }
+      throw error
+    }
   }
 }
 

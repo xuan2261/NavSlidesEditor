@@ -191,12 +191,23 @@ describe('canonical mutation journal', () => {
     expect(replayJournal(nested, journal).slides[0].elements[0].elements[0].content).toBe('after')
   })
 
-  it('blocks ambiguous source claims', () => {
-    const after = structuredClone(base)
-    after.slides[0].elements[0].content = 'after'
-    expect(() => deriveMutationJournal(base, after, {
-      sourceMap: { entries: { 's1:e1': { ...source, status: 'ambiguous' } } },
-      baseRevisionId: 'r0',
-    })).toThrow(/not authoritative/i)
+  it.each(['ambiguous', 'diagnostic', null])('persists projection edits without native patch authority: %s', (status) => {
+    const before = canonicalEditableSnapshot(base)
+    before.slides[0].elements[0].content = '<p>before</p>'
+    const after = structuredClone(before)
+    after.slides[0].elements[0].content = '<p>after</p>'
+    const options = {
+      sourceMap: { schemaVersion: 1, presentationId: 'deck', revisionId: 'r0', packageGeneration: 1,
+        entries: status ? { 's1:e1': { ...source, status, revisionId: 'r0', packageGeneration: 1 } } : {} },
+      baseRevisionId: 'r0', matrixAuthorityEpoch: 1,
+      textTransports: { 's1:e1': { format: 'tiptap-html', schemaVersion: 1, html: '<p>after</p>' } },
+    }
+    const edited = deriveMutationJournal(before, after, options)
+    expect(replayJournal(before, edited)).toEqual(after)
+    expect(compilePatchPlan(edited).ok).toBe(false)
+    expect(() => deriveCanonicalPlainTextJournal(before, after, options)).toThrow(TypeError)
+    const deleted = structuredClone(after)
+    deleted.slides[0].elements = []
+    expect(replayJournal(after, deriveMutationJournal(after, deleted, options))).toEqual(deleted)
   })
 })

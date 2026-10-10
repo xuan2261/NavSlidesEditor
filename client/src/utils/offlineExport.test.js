@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { Buffer } from 'node:buffer'
 import { runInNewContext } from 'node:vm'
 import { generateOfflineHTML } from './offlineExport.js'
 import { serializeEducationConfig } from 'revealjs-shared/src/education/config-serialization.js'
@@ -233,5 +234,117 @@ describe('public portable HTML export contract', () => {
         { baseUrl: options.baseUrl, generatedDocument: true }
       )
     ).rejects.toMatchObject({ code: 'manifest' })
+  })
+})
+
+describe('generateOfflineHTML canonical closure compatibility', () => {
+  const legacyOptions = { baseUrl: 'http://localhost:4173/editor/deck-1', htmlDependencies: local }
+  const response = (body, type) => new Response(body, { headers: { 'content-type': type } })
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn(async (url) => {
+      const path = String(url)
+      if (path.includes('fonts.googleapis.com')) return response('.offline-font{}', 'text/css')
+      if (path.includes('theme/black.css'))
+        return response('@import "https://fonts.googleapis.com/css?family=Lato";.reveal{background:#000}', 'text/css')
+      if (path.includes('reveal-overrides.css'))
+        return response('.reveal section{line-height:normal!important}', 'text/css')
+      if (path.includes('reveal.js'))
+        return response('window.Reveal={initialize(){}};// </script safe', 'text/javascript')
+      if (path.includes('mermaid/mermaid.min.js'))
+        return response('window.mermaid={initialize(){},run(){}};', 'text/javascript')
+      if (path.includes('/uploads/image.png')) return response('png-bytes', 'image/png')
+      return new Response('Missing', { status: 404 })
+    }))
+  })
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('inlines vendor CSS/JS, escapes script endings, removes base tags, and embeds uploads', async () => {
+    const html = `<!doctype html><html><head>
+<base href="http://localhost:4173/">
+<link rel="stylesheet" href="/vendor/reveal.js/dist/theme/black.css">
+<link rel="stylesheet" href="/reveal-overrides.css">
+</head><body><img src="/uploads/image.png">
+<script src="/vendor/reveal.js/dist/reveal.js"></script>
+<script>Reveal.initialize({});</script></body></html>`
+    const offline = await generateOfflineHTML(html, legacyOptions)
+    const document = parse(offline)
+    expect(document.querySelector('base')).toBeNull()
+    expect(document.querySelector('link[rel="stylesheet"]')).toBeNull()
+    expect(document.querySelector('script[src]')).toBeNull()
+    expect([...document.querySelectorAll('style')].map((style) => style.textContent).join(' '))
+      .toContain('.reveal section{line-height:normal!important}')
+    expect(offline).toContain('<\\/script safe')
+    expect(document.querySelector('img').getAttribute('src')).toContain('data:image/png;base64,')
+    expect(offline).not.toContain('fonts.googleapis.com')
+  })
+
+  it('embeds local caption track sources for offline playback', async () => {
+    fetch.mockImplementation(async (url) => String(url).includes('/uploads/captions.vtt')
+      ? response('WEBVTT', 'text/vtt') : new Response('Missing', { status: 404 }))
+    const document = parse(await generateOfflineHTML(
+      '<video><track src="/uploads/captions.vtt" kind="captions"></video>', legacyOptions))
+    expect(document.querySelector('track').getAttribute('src')).toContain('data:text/vtt;base64,')
+  })
+
+  it.each(['/uploads/poster-only.png', 'https://media.example/poster-only.png'])(
+    'embeds a video poster without a matching image source: %s', async (poster) => {
+      const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jWZkAAAAASUVORK5CYII='
+      fetch.mockImplementation(async () => response(Buffer.from(png, 'base64'), 'image/png'))
+      const document = parse(await generateOfflineHTML(`<video poster="${poster}"></video>`, legacyOptions))
+      expect(document.querySelector('video').getAttribute('poster')).toBe(`data:image/png;base64,${png}`)
+    }
+  )
+
+  it('embeds local assets referenced by required Reveal theme CSS', async () => {
+    fetch.mockImplementation(async (url) => {
+      const path = String(url)
+      if (path.endsWith('/vendor/reveal.js/dist/theme/black.css'))
+        return response('@import "https://fonts.googleapis.com/css?family=Lato";@font-face{font-family:Local;src:url(../fonts/theme.woff2)}', 'text/css')
+      if (path.includes('fonts.googleapis.com')) return response('.offline-font{}', 'text/css')
+      if (path.endsWith('/vendor/reveal.js/dist/fonts/theme.woff2')) return response('font-bytes', 'font/woff2')
+      return new Response('Missing', { status: 404 })
+    })
+    const offline = await generateOfflineHTML('<link rel="stylesheet" href="/vendor/reveal.js/dist/theme/black.css">',
+      { ...legacyOptions, strictRequiredAssets: true })
+    expect(offline).not.toContain('fonts.googleapis.com')
+    expect(offline).toContain('data:font/woff2;base64,')
+    expect(offline).not.toContain('../fonts/theme.woff2')
+  })
+
+  it('inlines Mermaid runtime inside declared data-url html embed iframes', async () => {
+    const iframeHtml = encodeURIComponent('<!doctype html><html><head><script src="/vendor/mermaid/mermaid.min.js"></script></head><body><pre class="mermaid">flowchart TD\nA-->B</pre></body></html>')
+    const document = parse(await generateOfflineHTML(`<iframe src="data:text/html;charset=utf-8,${iframeHtml}"></iframe>`, legacyOptions))
+    const child = parse(document.querySelector('iframe').srcdoc)
+    expect(child.querySelector('script[src]')).toBeNull()
+    expect([...child.querySelectorAll('script')].some((script) => script.textContent.includes('window.mermaid'))).toBe(true)
+    expect(fetch).toHaveBeenCalledWith('http://localhost:4173/vendor/mermaid/mermaid.min.js', expect.any(Object))
+  })
+
+  it('rejects when strict mode cannot inline a required Reveal asset', async () => {
+    await expect(generateOfflineHTML('<link rel="stylesheet" href="/vendor/katex/dist/strict-missing.css">',
+      { ...legacyOptions, strictRequiredAssets: true })).rejects.toMatchObject({ code: 'fetch' })
+  })
+
+  it('[cap:runtime.reveal6-assets] treats Reveal 6 dist plugin scripts as required offline assets', async () => {
+    fetch.mockImplementationOnce(async () => new Response('Missing', { status: 404 }))
+    await expect(generateOfflineHTML('<script src="/vendor/reveal.js/dist/plugin/notes.js"></script>',
+      { ...legacyOptions, strictRequiredAssets: true })).rejects.toMatchObject({ code: 'fetch' })
+  })
+
+  it('fails closed when a required Reveal asset is missing inside iframe HTML', async () => {
+    fetch.mockImplementationOnce(async () => new Response('Missing', { status: 404 }))
+    await expect(generateOfflineHTML('<iframe srcdoc="&lt;script src=&quot;/vendor/reveal.js/dist/plugin/notes.js&quot;&gt;&lt;/script&gt;"></iframe>',
+      { ...legacyOptions, strictRequiredAssets: true })).rejects.toMatchObject({ code: 'fetch' })
+  })
+
+  it('does not cache failed required assets and retries after recovery', async () => {
+    const html = '<link rel="stylesheet" href="/vendor/reveal.js/dist/theme/strict-recovery.css">'
+    fetch.mockImplementationOnce(async () => new Response('Missing', { status: 404 }))
+      .mockImplementationOnce(async () => response('.reveal{}', 'text/css'))
+    await expect(generateOfflineHTML(html, { ...legacyOptions, strictRequiredAssets: true }))
+      .rejects.toMatchObject({ code: 'fetch' })
+    const offline = await generateOfflineHTML(html, { ...legacyOptions, strictRequiredAssets: true })
+    expect(offline).toContain('.reveal{}')
+    expect(fetch).toHaveBeenCalledTimes(2)
   })
 })

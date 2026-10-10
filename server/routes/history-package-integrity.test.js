@@ -1,10 +1,12 @@
 // @vitest-environment node
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import request from 'supertest'
 import express from 'express'
 import fs from 'fs-extra'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import { createRequire } from 'node:module'
+import JSZip from 'jszip'
 
 const _dataDir = vi.hoisted(() => {
   const os = require('os')
@@ -15,11 +17,16 @@ const _dataDir = vi.hoisted(() => {
   return dir
 })
 
-const storage = await import('../services/storage.js')
-const { openPackageStore } = await import('../services/pptx-import/package-store/index.js')
-const { createSourceMap } = await import('../services/pptx-import/source-map.js')
-const { hashRecord } = await import('../services/pptx-import/package-store/schemas.js')
-const historyRouter = (await import('./history.js')).default
+const nodeRequire = createRequire(import.meta.url)
+const storage = nodeRequire('../services/storage.js')
+const packageRuntime = nodeRequire('../services/pptx-import/package-store-runtime.js')
+const { buildImportSourceMap } = nodeRequire('../services/pptx-import/source-map.js')
+const historyRouter = nodeRequire('./history.js')
+
+afterAll(async () => {
+  await packageRuntime.shutdownPackageStore()
+  await fs.remove(_dataDir)
+})
 
 function makeApp() {
   const app = express()
@@ -28,14 +35,8 @@ function makeApp() {
   return app
 }
 
-async function withStore(action) {
-  const store = await openPackageStore({ rootDir: storage.DATA_DIR })
-  await store.acquireWriter()
-  try {
-    return await action(store)
-  } finally {
-    await store.releaseWriter()
-  }
+function withStore(action) {
+  return packageRuntime.withPackageStore(action)
 }
 
 describe('package-backed history integrity', () => {
@@ -44,52 +45,33 @@ describe('package-backed history integrity', () => {
   beforeEach(async () => {
     vi.restoreAllMocks()
     storage.initDataFiles()
-    await storage.writePresentations([{ id: presId, title: 'Current', slides: [{ id: 's1' }] }])
-    const head = await withStore((store) =>
-      store.commitOriginal(Buffer.from('package'), {
-        ownerType: 'presentation',
-        ownerId: presId,
-      })
-    )
-    const revisionId = head.revision.id
+    await storage.writePresentations([
+      { id: presId, title: 'Current', slides: [{ id: 's1' }] },
+    ])
+    await packageRuntime.initializePackageStore({ rootDir: storage.DATA_DIR })
+    const zip = new JSZip()
+    zip.file('[Content_Types].xml', '<Types/>')
+    zip.file('ppt/presentation.xml', '<p:presentation/>')
     const projection = {
       id: presId,
       title: 'Current',
       slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>Before</p>' }] }],
     }
-    const sourceMap = createSourceMap({
-      presentationId: presId,
-      revisionId,
-      packageGeneration: 1,
-      entries: {},
-    })
-    await withStore((store) =>
-      store.mutate((next) => {
-        const liveHead = next.heads.find((item) => item.presentationId === presId)
-        liveHead.projectionRevisionId = hashRecord(projection)
-        liveHead.sourceMapRevisionId = hashRecord(sourceMap)
-        next.mutationResults.push({
-          schemaVersion: 1,
-          operation: 'package-import',
-          presentationId: presId,
-          idempotencyKey: 'fixture-import',
-          generation: 1,
-          packageRevisionId: revisionId,
-          projection,
-          sourceMap,
-          state: 'committed',
-        })
-      })
-    )
-    const aggregateHead = await withStore((store) =>
-      store.getState().heads.find((item) => item.presentationId === presId)
-    )
-    await storage.withPresentations((presentations) => {
-      presentations[0].pptxAggregateHead = aggregateHead
-    })
+    await withStore(async (store) => store.commitImport(
+      await zip.generateAsync({ type: 'nodebuffer' }),
+      {
+        jobId: 'fixture-import',
+        presentationId: presId,
+        projection,
+        sourceMap: await buildImportSourceMap(projection, null, null),
+        compatibilityPresentation: projection,
+      }
+    ))
+    await packageRuntime.drainPackageCompatibilityOutbox()
   })
 
   afterEach(async () => {
+    await packageRuntime.shutdownPackageStore()
     await fs.remove(_dataDir)
     await fs.ensureDir(_dataDir)
   })
@@ -163,10 +145,11 @@ describe('package-backed history integrity', () => {
       .send({ name: 'package-backed' })
     expect(snapshot.status).toBe(200)
 
-    await storage.writePresentations([{ id: presId, title: 'Changed', slides: [{ id: 's1' }] }])
-    const restored = await request(app).post(
-      `/api/presentations/${presId}/restore/${snapshot.body.id}`
-    )
+    await storage.withPresentations((presentations) => {
+      presentations[0].title = 'Changed'
+    })
+    const restored = await request(app)
+      .post(`/api/presentations/${presId}/restore/${snapshot.body.id}`)
 
     expect(restored.status).toBe(200)
     expect(restored.body.aggregateGeneration).toBe(2)
@@ -187,42 +170,18 @@ describe('package-backed history integrity', () => {
       .send({ name: 'package-backed' })
     expect(snapshot.status).toBe(200)
 
-    await storage.writePresentations([
-      {
-        id: presId,
-        title: 'Stale compatibility',
-        slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>Before</p>' }] }],
-      },
-    ])
-    await withStore((store) =>
-      store.mutate((next) => {
-        const result = next.mutationResults.find(
-          (item) => item.presentationId === presId && item.idempotencyKey === 'fixture-import'
-        )
-        const newerProjection = {
-          ...result.projection,
-          title: 'Newer package authority',
-          slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>After</p>' }] }],
-        }
-        const newerSourceMap = createSourceMap({
-          presentationId: presId,
-          revisionId: result.packageRevisionId,
-          packageGeneration: 2,
-          entries: {},
-        })
-        next.mutationResults.push({
-          ...structuredClone(result),
-          idempotencyKey: 'newer-authority',
-          generation: 2,
-          sourceMap: newerSourceMap,
-          projection: newerProjection,
-        })
-        const head = next.heads.find((item) => item.presentationId === presId)
-        head.generation = 2
-        head.sourceMapRevisionId = hashRecord(newerSourceMap)
-        head.projectionRevisionId = hashRecord(newerProjection)
-      })
+    const successor = await request(app).post(
+      `/api/presentations/${presId}/restore/${snapshot.body.id}`
     )
+    expect(successor.status).toBe(200)
+    expect(successor.body.aggregateGeneration).toBe(2)
+    await packageRuntime.drainPackageCompatibilityOutbox()
+    await storage.withPresentations((presentations) => {
+      presentations[0].title = 'Stale compatibility'
+      presentations[0].slides = [{ id: 's1', elements: [
+        { id: 'e1', type: 'text', content: '<p>After</p>' },
+      ] }]
+    })
 
     const restored = await request(app).post(
       `/api/presentations/${presId}/restore/${snapshot.body.id}`

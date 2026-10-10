@@ -27,17 +27,32 @@ const { hashRecord } = require('../services/pptx-import/package-store/schemas')
 // Namespace import: tests monkey-patch members of this module then re-require
 // the router, so call sites must resolve through the module object.
 const packageLifecycle = require('../services/package-lifecycle-integration')
-const { getPackageGeneration, savePackageProjection } = require('../services/generation-safe-save')
-const { drainPackageCompatibilityOutbox } = require('../services/pptx-import/package-store-runtime')
+const {
+  getPackageGeneration,
+  savePackageProjection,
+} = require('../services/generation-safe-save')
+const {
+  drainPackageCompatibilityOutbox,
+  getReadablePackageStore,
+} = require('../services/pptx-import/package-store-runtime')
 const {
   readAuthoritativePresentation,
   readAuthoritativePresentations,
   resolvePackageBackedRead,
+  resolvePackageBackedReadFromState,
 } = require('../services/package-backed-presentation-read')
 const { withHistoryLock } = require('../services/history-lock')
 const { uuidv4, isSafePresentationId } = require('./presentations-helpers')
 
 const router = express.Router()
+
+function assertNewPresentationId(presentations, id) {
+  if (presentations.some(presentation => presentation.id === id)) {
+    throw Object.assign(new Error('Presentation destination already exists'), {
+      code: 'STALE_GENERATION', status: 409,
+    })
+  }
+}
 
 // GET /api/presentations - list summaries (excludes trashed)
 // Known package-authority failures are quarantined; healthy rows remain a bare array.
@@ -75,7 +90,7 @@ router.get('/', async (req, res) => {
 // POST /api/presentations - create new (optionally from template)
 router.post('/', validate(createPresentationSchema), async (req, res) => {
   let templatePackageOwner
-  let templatePackageAttempted = false
+  let templatePackageHead
   let presentationId
   let presentationPublished = false
   try {
@@ -210,10 +225,10 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
 
     delete presentation.pptxOriginal
     presentationId = presentation.id
+    assertNewPresentationId(await readPresentations(), presentationId)
 
     if (templatePackageOwner) {
-      templatePackageAttempted = true
-      const packageHead = await packageLifecycle.instantiateRetainedPackageHead(
+      templatePackageHead = await packageLifecycle.instantiateRetainedPackageHead(
         templatePackageOwner,
         presentation.id,
         {
@@ -222,16 +237,31 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
           updatedAt: now,
         }
       )
-      if (!packageHead) {
+      if (!templatePackageHead) {
         throw Object.assign(new Error('Package-backed template head is unavailable'), {
           code: 'TEMPLATE_PACKAGE_HEAD_UNAVAILABLE',
           status: 409,
         })
       }
-      presentation.pptxAggregateHead = packageHead
+      presentation.pptxAggregateHead = templatePackageHead
     }
 
-    const result = await withPresentations((presentations) => {
+    const result = await withPresentations(async (presentations) => {
+      assertNewPresentationId(presentations, presentationId)
+      if (templatePackageOwner) {
+        // Read without acquiring package serialization under the JSON lock.
+        // A restore may have refreshed the head while template creation paused.
+        const state = (await getReadablePackageStore()).getState()
+        const currentHead = state.heads.find((head) => head.presentationId === presentationId)
+        if (!currentHead) {
+          throw Object.assign(new Error('Package-backed template head is unavailable'), {
+            code: 'TEMPLATE_PACKAGE_HEAD_UNAVAILABLE', status: 409,
+          })
+        }
+        presentation = resolvePackageBackedReadFromState(state, presentationId, {
+          ...presentation, pptxAggregateHead: currentHead,
+        }).presentation
+      }
       presentations.push(presentation)
       return presentation
     })
@@ -239,10 +269,11 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
     res.status(201).json(toPresentationEditorDto(normalizePresentationNotes(result)))
   } catch (err) {
     let responseError = err
-    if (templatePackageAttempted && presentationId && !presentationPublished) {
+    const rollbackHead = templatePackageHead || err.createdPackageHead
+    if (rollbackHead && presentationId && !presentationPublished) {
       try {
         await packageLifecycle.quarantinePackageOwnerWithRetry(presentationId, {
-          compatibilityRemove: true,
+          expectedHead: rollbackHead,
         })
       } catch (rollbackError) {
         responseError = Object.assign(
@@ -257,7 +288,8 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
         )
       }
     }
-    if (Array.isArray(responseError.errors))
+    if (Array.isArray(responseError.errors) &&
+        responseError.errors.every(issue => Array.isArray(issue.path)))
       return res
         .status(400)
         .json({
@@ -780,9 +812,8 @@ router.delete('/:id/permanent', async (req, res) => {
 })
 
 // POST /api/presentations/:id/duplicate
-router.post('/:id/duplicate', async (req, res) => {
+router.post('/:id/duplicate', async (req, res, next) => {
   let copiedOriginalId
-  let packageDuplicationAttempted = false
   let packageHead
   let destinationId
   let presentationPublished = false
@@ -791,7 +822,8 @@ router.post('/:id/duplicate', async (req, res) => {
       persistOriginalPptx,
       readOriginalPptx,
     } = require('../services/pptx-import/original-package')
-    const original = (await readPresentations()).find((p) => p.id === req.params.id)
+    const presentations = await readPresentations()
+    const original = presentations.find((p) => p.id === req.params.id)
     if (!original || original.deletedAt) return res.status(404).json({ error: 'Not found' })
 
     const sourceFingerprint = hashRecord(original)
@@ -804,11 +836,11 @@ router.post('/:id/duplicate', async (req, res) => {
     const copy = JSON.parse(JSON.stringify(authoritative.presentation))
     copy.id = uuidv4()
     destinationId = copy.id
+    assertNewPresentationId(presentations, destinationId)
     copy.title = (copy.title || 'Untitled') + ' (copy)'
     copy.createdAt = now
     copy.updatedAt = now
 
-    packageDuplicationAttempted = true
     packageHead = await packageLifecycle.duplicatePackageOwner(original.id, copy.id, {
       projection: copy,
       expectedSourceHead,
@@ -855,6 +887,7 @@ router.post('/:id/duplicate', async (req, res) => {
 
     const normalizedCopy = normalizePresentationGames(normalizePresentationNotes(copy))
     const result = await withPresentations((presentations) => {
+      assertNewPresentationId(presentations, destinationId)
       const current = presentations.find((p) => p.id === original.id)
       if (!current || current.deletedAt || hashRecord(current) !== sourceFingerprint) {
         throw Object.assign(new Error('Presentation changed while duplicating'), {
@@ -868,12 +901,16 @@ router.post('/:id/duplicate', async (req, res) => {
     presentationPublished = true
     res.status(201).json(toPresentationEditorDto(result))
   } catch (err) {
+    if (presentationPublished) return next(err)
     let responseError = err
+    const rollbackHead = packageHead || err.createdPackageHead
     if (!presentationPublished) {
       const rollbackErrors = []
-      if (packageDuplicationAttempted && destinationId) {
+      if (rollbackHead && destinationId) {
         try {
-          await packageLifecycle.quarantinePackageOwnerWithRetry(destinationId)
+          await packageLifecycle.quarantinePackageOwnerWithRetry(destinationId, {
+            expectedHead: rollbackHead,
+          })
         } catch (rollbackError) {
           rollbackErrors.push(rollbackError)
         }

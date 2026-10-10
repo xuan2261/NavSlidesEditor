@@ -36,6 +36,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - if: inputs.gate == 'lint'
         run: npm run lint
+      - if: inputs.gate == 'lint'
+        run: npm run docs:verify
       - if: inputs.gate == 'unit-coverage'
         run: npm run test:coverage
       - if: inputs.gate == 'unit-coverage'

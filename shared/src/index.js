@@ -156,6 +156,7 @@ module.exports = {
   ...require('./education/browser/game-connection.js'),
   ...require('./education/browser/live-player-presenter.js'),
   ...require('./education/browser/live-player-clock.js'),
+  ...require('./pptx-import-meta.js'),
   isSafeHref: contentSafety.isSafeHref,
   isSafeMediaSrc: contentSafety.isSafeMediaSrc,
   sanitizeMediaSrc: contentSafety.sanitizeMediaSrc,

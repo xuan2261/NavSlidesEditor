@@ -89,7 +89,9 @@ async mutate(mutator, options = {}) {
     this.mutationTail = new Promise((resolve) => { release = resolve })
     try {
       await previous
+      options.signal?.throwIfAborted()
       await this.assertWriter()
+      options.signal?.throwIfAborted()
       if (options.expectedGeneration !== undefined &&
           options.expectedGeneration !== this.metadata.state.generation) {
         throw Object.assign(new Error('Package store generation is stale'), {
@@ -98,12 +100,14 @@ async mutate(mutator, options = {}) {
         })
       }
       const next = this.getState()
-      const changed = mutator(next)
+      const changed = await mutator(next)
+      options.signal?.throwIfAborted()
       if (changed === false) return this.getState()
       next.generation += 1
       next.fencingEpoch = this.fencingEpoch
       await this.metadata.publish(next, {
         assertWriter: () => this.assertWriter(),
+        signal: options.signal,
         faultAfterIndex: options.faultAfterIndex,
         faultAfterPrepare: options.faultAfterPrepare,
         faultAfterRoot: options.faultAfterRoot,

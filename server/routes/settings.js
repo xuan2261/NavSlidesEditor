@@ -1,57 +1,47 @@
 const express = require('express')
-const { readSettings, writeSettings } = require('../services/storage')
-
+const { readSettings, updateSettings } = require('../services/storage')
 const router = express.Router()
 
-// GET /api/settings
+function respond(res, settings) {
+  const ai = { ...(settings.ai || {}) }
+  if (ai.apiKey) ai.apiKey = '***configured***'
+  return res.set('ETag', `"${settings.settingsRevision}"`).json({ ...settings, ai })
+}
+
 router.get('/', async (req, res, next) => {
   try {
-    const settings = await readSettings()
-    // Mask sensitive fields
-    const safeAi = settings.ai ? { ...settings.ai } : {}
-    if (safeAi.apiKey) safeAi.apiKey = '***configured***'
-
-    res.json({
-      ...settings,
-      ai: safeAi,
-    })
+    respond(res, await readSettings())
   } catch (err) {
     next(err)
   }
 })
 
-// PUT /api/settings
-// Contract: top-level keys are REPLACED (shallow). The `ai` object is the
-// exception — it is deep-merged over the stored `ai` so omitting a sub-key
-// (especially `apiKey`) preserves the stored value instead of wiping it.
+// Top-level replacement; ai subkeys merge, with omitted/sentinel key preserving the secret.
 router.put('/', async (req, res, next) => {
   try {
-    const existing = await readSettings()
-    const body = req.body && typeof req.body === 'object' ? req.body : {}
-
-    const updated = { ...existing, ...body }
-
-    if ('ai' in body) {
-      const incomingAi = body.ai && typeof body.ai === 'object' ? body.ai : {}
-      // Merge over stored ai so unspecified sub-keys (e.g. apiKey) survive.
-      const mergedAi = { ...(existing.ai || {}), ...incomingAi }
-      // Sentinel echo or omitted apiKey both keep the stored secret.
-      if (incomingAi.apiKey === '***configured***' || incomingAi.apiKey === undefined) {
-        mergedAi.apiKey = existing.ai?.apiKey
-      }
-      updated.ai = mergedAi
+    const header = req.get('If-Match')
+    if (header === undefined) return res.status(428).json({ error: 'If-Match settings revision is required' })
+    if (!/^"\d+"$/.test(header) || !Number.isSafeInteger(Number(header.slice(1, -1)))) {
+      return res.status(400).json({ error: 'If-Match must be a quoted integer settings revision' })
     }
-
-    await writeSettings(updated)
-
-    const safeAi = updated.ai ? { ...updated.ai } : {}
-    if (safeAi.apiKey) safeAi.apiKey = '***configured***'
-
-    res.json({
-      ...updated,
-      ai: safeAi,
+    const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {}
+    if (Object.hasOwn(body, 'settingsRevision')) {
+      return res.status(400).json({ error: 'settingsRevision is server-owned' })
+    }
+    const updated = await updateSettings(Number(header.slice(1, -1)), (existing) => {
+      const result = { ...existing, ...body }
+      if ('ai' in body) {
+        const incoming = body.ai && typeof body.ai === 'object' ? body.ai : {}
+        result.ai = { ...(existing.ai || {}), ...incoming }
+        if (incoming.apiKey === '***configured***' || incoming.apiKey === undefined) {
+          result.ai.apiKey = existing.ai?.apiKey
+        }
+      }
+      return result
     })
+    respond(res, updated)
   } catch (err) {
+    if (err.status === 412) return res.status(412).json({ error: err.message })
     next(err)
   }
 })

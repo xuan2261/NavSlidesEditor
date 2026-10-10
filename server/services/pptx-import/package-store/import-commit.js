@@ -1,4 +1,5 @@
 const { canonicalEditableSnapshot } = require('../canonical-snapshot')
+const { collectTrustedImportMetadata } = require('../trusted-import-metadata')
 const { rebindSourceMap } = require('../source-map')
 const { createMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
 const { MUTATION_OPERATIONS } = require('../mutation-operation-scope')
@@ -120,6 +121,7 @@ async function prepareImport(store, source, input, options = {}) {
   const sourceMap = createImportSourceMap(
     input.sourceMap, presentationId, revision.id, canonicalProjection
   )
+  const trustedImportMetadata = collectTrustedImportMetadata(projection, revision.id)
   const staged = await store.stageBlob(source, { expectedSha256: inventory.packageSha256 })
   const blob = await store.blobs.commit(staged)
   const capabilityHash = hashRecord({
@@ -136,6 +138,7 @@ async function prepareImport(store, source, input, options = {}) {
     packageRevisionId: revision.id,
     projection: canonicalProjection,
     sourceMap,
+    ...(trustedImportMetadata === undefined ? {} : { trustedImportMetadata }),
     opcManifest: inventory,
     state: 'committed',
   }
@@ -204,6 +207,7 @@ async function publishImport(store, prepared, options = {}) {
         presentationId,
         generation: head.generation,
         ...(compatibilityUpdatedAt ? { updatedAt: compatibilityUpdatedAt } : {}),
+        ...(authority.trustedImportMetadata === undefined ? {} : { trustedImportMetadata: authority.trustedImportMetadata }),
         presentation: {
           ...compatibilityPresentation,
           id: presentationId,

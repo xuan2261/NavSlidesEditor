@@ -1,5 +1,5 @@
 const path = require('node:path').posix
-const { collectGameMediaReferences } = require('revealjs-shared')
+const { collectMediaUrls } = require('./project-import-presentation')
 
 function fileName(value) {
   try {
@@ -9,9 +9,6 @@ function fileName(value) {
   }
 }
 
-function collectMediaUrls(presentation) {
-  return collectGameMediaReferences(presentation).map(({ url }) => url)
-}
 
 function buildLegacyMediaInventory(presentation, archivePaths) {
   const candidates = new Map()
@@ -31,4 +28,4 @@ function buildLegacyMediaInventory(presentation, archivePaths) {
   })
 }
 
-module.exports = { buildLegacyMediaInventory, collectMediaUrls }
+module.exports = { buildLegacyMediaInventory }

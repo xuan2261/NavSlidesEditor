@@ -77,7 +77,7 @@ test.describe('Coverage Gaps: Editor controls and UI contracts', () => {
     await editor.menubar.openAnalytics()
     await expect(page.getByRole('heading', { name: 'Analytics' })).toBeVisible()
     await page.keyboard.press('Escape')
-
+    await expect(page.getByRole('heading', { name: 'Analytics' })).toHaveCount(0)
     await page.setViewportSize({ width: 390, height: 844 })
     await expect(page.getByTestId('slide-element-a')).toBeVisible()
     await page.keyboard.press('Tab')

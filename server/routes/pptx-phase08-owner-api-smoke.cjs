@@ -1,0 +1,187 @@
+// Synthetic owner-lifetime API acceptance; no Office or release qualification.
+const fs = require('node:fs/promises')
+const sync = require('node:fs')
+const path = require('node:path')
+const os = require('node:os')
+const crypto = require('node:crypto')
+const assert = require('node:assert/strict')
+const repo = path.resolve(__dirname, '../..')
+const sha = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex')
+const jsonHash = (value) => sha(JSON.stringify(value))
+function sourceManifest() {
+  const files = new Set(['package.json', 'package-lock.json', 'server/package.json', 'shared/package.json'])
+  function visit(relative) {
+    for (const entry of sync.readdirSync(path.join(repo, relative), { withFileTypes: true })) {
+      if (['node_modules', 'uploads', '__tests__', 'tests', '__snapshots__', 'fixtures'].includes(entry.name)) continue
+      if (relative === 'server' && entry.name === 'data') continue
+      const name = `${relative}/${entry.name}`
+      const stat = sync.lstatSync(path.join(repo, name))
+      assert(!stat.isSymbolicLink(), `Source symlink: ${name}`)
+      if (stat.isDirectory()) visit(name)
+      else if (/\.(?:js|cjs|mjs|json|ts)$/.test(name) && !/\.test\.|(?:recovery|restart)-test-(?:child|driver)/.test(name)) files.add(name)
+    }
+  }
+  visit('server'); visit('shared')
+  files.add(path.relative(repo, __filename).replaceAll(path.sep, '/'))
+  const entries = [...files].sort().map((name) => {
+    const bytes = sync.readFileSync(path.join(repo, name))
+    return { path: name, bytes: bytes.length, sha256: sha(bytes) }
+  })
+  return { scope: 'backend-server/shared-source-and-package-lock', entries, sha256: jsonHash(entries) }
+}
+function binary(response, callback) {
+  const chunks = []
+  response.on('data', (chunk) => chunks.push(chunk))
+  response.on('end', () => callback(null, Buffer.concat(chunks)))
+  response.on('error', callback)
+}
+async function main() {
+  assert.equal(process.argv.length, 4)
+  assert.equal(process.argv[2], '--receipt')
+  assert.equal(process.argv[3], 'reports/pptx-phase08-source-bound-owner-api-smoke.json')
+  const record = { status: 'started', smoke: 'actual-api-owner-lifetimes', artifactKind: 'backend-source',
+    startedAt: new Date().toISOString(), command: [process.execPath, ...process.argv.slice(1)],
+    runtime: { node: process.version, platform: process.platform, arch: process.arch }, sourceBefore: sourceManifest(),
+    fixture: 'synthetic ZIP/PNG; byte/authority proof only, not Office or render qualification',
+    faultModel: 'injected unavailable projection/rollback sink, not process crash' }
+  const receipt = await fs.open(path.join(repo, process.argv[3]), 'wx')
+  async function persist() {
+    const bytes = Buffer.from(`${JSON.stringify(record, null, 2)}\n`)
+    let offset = 0
+    while (offset < bytes.length) {
+      const result = await receipt.write(bytes, offset, bytes.length - offset, offset)
+      assert(result.bytesWritten > 0, 'Receipt write made no progress'); offset += result.bytesWritten
+    }
+    await receipt.truncate(bytes.length); await receipt.sync()
+  }
+  let root, runtime, route, jobs, releaseAdmission, failure
+  let stage = 'persist-source-before'
+  try {
+    await persist() // Exclusive receipt and source identity exist before modules/workload.
+    root = await fs.mkdtemp(path.join(os.tmpdir(), 'navslides-source-bound-owner-smoke-'))
+    process.env.SLIDES_DATA_DIR = path.join(root, 'data')
+    process.env.SLIDES_UPLOADS_DIR = path.join(root, 'uploads')
+    const express = require('express'), request = require('supertest'), JSZip = require('jszip')
+    const storage = require('../services/storage')
+    runtime = require('../services/pptx-import/package-store-runtime')
+    jobs = require('../services/pptx-import-job-manager')
+    route = require('./pptx-import')
+    const ownership = require('../services/media-placement-ownership')
+    const { persistImageBuffer } = require('../services/pptx-import/media')
+    const { buildImportSourceMap } = require('../services/pptx-import/source-map')
+    const { hashCanonical } = require('../services/pptx-import/evidence/canonical-hash')
+    await storage.initDataFiles()
+    const store = await runtime.initializePackageStore({ rootDir: storage.DATA_DIR })
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jJ8sAAAAASUVORK5CYII=', 'base64')
+    const zip = new JSZip()
+    zip.file('[Content_Types].xml', '<Types/>'); zip.file('ppt/presentation.xml', '<p:presentation/>')
+    zip.file('ppt/media/image1.png', png)
+    const original = await zip.generateAsync({ type: 'nodebuffer' })
+    record.fixtures = { original: { bytes: original.length, sha256: sha(original) }, media: { bytes: png.length, sha256: sha(png) } }
+    await persist() // Fresh fixture digests are durable before the first HTTP admission.
+    let fault = true, firstImport = true
+    const gate = new Promise((resolve) => { releaseAdmission = resolve })
+    const unavailable = () => Object.assign(new Error('Synthetic sink unavailable'), { code: 'EIO' })
+    const app = express(); app.use(express.json())
+    app.use('/api/pptx', route.createPptxImportRouter({ importer: async (_file, { mediaTransaction, signal }) => {
+      if (firstImport) { firstImport = false; await gate }
+      const image = await persistImageBuffer(png, 'image/png', storage.UPLOADS_DIR, { mediaTransaction, signal })
+      assert(image.url, 'Synthetic image placement failed')
+      const presentation = { title: 'Synthetic owner lifetime', slides: [{ id: 's1', elements: [{ id: 'e1', type: 'image', src: image.url }] }] }
+      return { presentation, sourceMap: await buildImportSourceMap(presentation, null, null), warnings: [], stats: { slideCount: 1 } }
+    }, packageRollback: (input) => {
+      if (fault) throw unavailable()
+      return runtime.withPackageStore((current) => current.rollbackImport(input))
+    }, drainCompatibility: () => {
+      if (fault) throw unavailable()
+      return runtime.drainPackageCompatibilityOutbox()
+    } }))
+    app.use('/uploads', express.static(storage.UPLOADS_DIR))
+    app.use('/api/presentations', require('./presentations-crud'))
+    app.use('/api/presentations', require('./presentations-pptx'))
+    const get = (url) => request(app).get(url).timeout({ response: 3000, deadline: 7000 })
+    const admit = () => request(app).post('/api/pptx/import').attach('file', original, 'synthetic.pptx').timeout({ response: 3000, deadline: 7000 })
+    async function settled(admission, expected) {
+      const deadline = Date.now() + 10000
+      while (Date.now() < deadline) {
+        const response = await get(`/api/pptx/jobs/${admission.jobId}`).set('X-Pptx-Job-Capability', admission.capability).expect(200)
+        if (response.body.status === expected && !jobs.getJob(admission.jobId)?.operationPending) return response.body
+        if (['done', 'failed', 'cancelled'].includes(response.body.status) && response.body.status !== expected) throw new Error('Unexpected live terminal status')
+        await new Promise((resolve) => setTimeout(resolve, 10))
+      }
+      throw new Error('Job settlement deadline exceeded')
+    }
+    stage = 'loser-admission-and-capacity'
+    const loser = (await admit().expect(202)).body
+    assert(loser.jobId && loser.capability, 'Admission identity missing')
+    record.loserJobId = loser.jobId
+    const blocked = await admit().expect(429)
+    assert.equal(blocked.body.error, 'import-in-progress'); assert.equal(jobs.MAX_CONCURRENT_RUNNING, 1)
+    record.admissionLimitPreserved = 1; releaseAdmission()
+    stage = 'loser-uncertain-outcome'
+    const live = await settled(loser, 'failed'); assert.equal(live.code, 'EIO')
+    const uncertain = await route.getDurableImportJob(loser.jobId)
+    assert.equal(uncertain.status, 'completed'); assert.equal(uncertain.transactionState, 'reconcile-required')
+    const identity = (job) => ({ revisionId: job.outcomeRevisionId, generation: job.outcomeGeneration, headHash: job.outcomeHeadHash })
+    const loserId = uncertain.presentationId
+    assert(!(await storage.readPresentations()).some((row) => row.id === loserId))
+    assert.equal(await route.isPresentationListable(loserId, identity(uncertain)), false)
+    assert.equal(sha(await store.readOriginal(uncertain.outcomeRevisionId)), sha(original))
+    record.loserBefore = { presentationId: loserId, outcome: identity(uncertain), jobSha256: jsonHash(uncertain), liveStatus: live.status, liveCode: live.code }
+    stage = 'authorized-reconcile-before-winner'; fault = false
+    await request(app).post(`/api/pptx/jobs/${loser.jobId}/reconcile`).set('X-Pptx-Job-Capability', loser.capability).timeout({ response: 3000, deadline: 7000 }).expect(200)
+    const rolled = await route.getDurableImportJob(loser.jobId)
+    assert.equal(rolled.transactionState, 'rolled-back'); assert.equal(rolled.status, 'failed')
+    assert.deepEqual(identity(rolled), identity(uncertain))
+    assert(!store.getState().heads.some((head) => head.presentationId === loserId))
+    assert.equal(sha(await store.readOriginal(rolled.outcomeRevisionId)), sha(original))
+    record.loserAfter = { outcome: identity(rolled), jobSha256: jsonHash(rolled), transactionState: rolled.transactionState }
+    stage = 'winner-publication'
+    const winner = (await admit().expect(202)).body
+    const done = await settled(winner, 'done'), winnerId = done.result.presentationId
+    record.winnerJobId = winner.jobId; record.winnerPresentationId = winnerId
+    async function snapshot() {
+      const state = store.getState(), head = state.heads.find((item) => item.presentationId === winnerId)
+      const job = await route.getDurableImportJob(winner.jobId)
+      const row = (await storage.readPresentations()).find((item) => item.id === winnerId)
+      const outcome = state.mutationResults.find((item) => item.presentationId === winnerId)
+      assert(head && row && outcome, 'Winner authority/projection/outcome missing')
+      assert.equal(await route.isPresentationListable(winnerId, identity(job)), true)
+      return { headSha256: hashCanonical(head), generation: head.generation, revisionId: head.packageRevisionId,
+        jobSha256: jsonHash(job), rowSha256: jsonHash(row), outcomeSha256: jsonHash(outcome), outcome: identity(job) }
+    }
+    async function consumers() {
+      const deck = await get(`/api/presentations/${winnerId}`).expect(200)
+      assert.equal(deck.body.id, winnerId)
+      const url = deck.body.slides[0].elements[0].src
+      const [media, upload] = await Promise.all([get(url).buffer(true).parse(binary).expect(200), get(`/api/presentations/${winnerId}/pptx-original`).buffer(true).parse(binary).expect(200)])
+      assert.equal(sha(media.body), sha(png)); assert.equal(sha(upload.body), sha(original))
+      return { deckSha256: jsonHash(deck.body), mediaUrl: url, mediaSha256: sha(media.body), originalSha256: sha(upload.body) }
+    }
+    record.winnerBefore = await snapshot(); record.consumersBefore = await consumers()
+    stage = 'late-loser-release-versus-winner-consumers'
+    const [released, during] = await Promise.all([
+      runtime.withCompatibilityDrain(() => ownership.rollbackOwner(loser.jobId, { scope: 'pptx-import', uploadsDir: storage.UPLOADS_DIR })), consumers(),
+    ])
+    assert.equal(released.removed, 1); record.lateReleaseCount = released.removed; record.consumersDuring = during
+    record.winnerAfter = await snapshot(); record.consumersAfter = await consumers()
+    assert.deepEqual(record.winnerAfter, record.winnerBefore)
+    assert.deepEqual(during, record.consumersBefore); assert.deepEqual(record.consumersAfter, record.consumersBefore)
+    record.status = 'passed'
+  } catch (error) { failure = error; record.status = 'failed'; record.failure = { stage, code: error.code || error.name, message: error.message } }
+  finally {
+    releaseAdmission?.()
+    for (const [label, action] of [ ['detached-cleanup', () => route?.drainDetachedImportCleanups({ timeoutMs: Infinity })],
+      ['package-shutdown', () => runtime?.shutdownPackageStore()], ['temp-removal', () => root && fs.rm(root, { recursive: true, force: true })] ]) {
+      try { await action() } catch (error) { failure ||= error; record.status = 'failed'; (record.cleanupFailures ||= []).push({ label, code: error.code || error.name }) }
+    }
+    jobs?._reset()
+    try { record.sourceAfter = sourceManifest(); assert.deepEqual(record.sourceAfter, record.sourceBefore) }
+    catch (error) { failure ||= error; record.status = 'failed'; record.sourceBindingFailure = error.message }
+    record.finishedAt = new Date().toISOString()
+    try { await persist() } finally { await receipt.close() }
+  }
+  console.log(JSON.stringify({ status: record.status, receipt: process.argv[3], sourceSha256: record.sourceBefore.sha256 }))
+  if (failure) throw failure
+}
+main().catch((error) => { console.error(JSON.stringify({ smokeFailure: { code: error.code || error.name, message: error.message } })); process.exitCode = 1 })

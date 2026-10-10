@@ -70,12 +70,13 @@ describe('history snapshot deletion compensation', () => {
       { id: 'deck-1', title: 'Original', slides: [{ id: 's1', elements: [] }] },
     ])
     await packageRuntime.initializePackageStore({ rootDir: storage.DATA_DIR })
-    const packageHead = await packageRuntime.withPackageStore((store) =>
-      store.commitOriginal(Buffer.from('history-package'), {
+    const packageHead = await packageRuntime.withPackageStore(async (store) => {
+      await store.commitOriginal(Buffer.from('history-package'), {
         ownerType: 'presentation',
         ownerId: 'deck-1',
       })
-    )
+      return structuredClone(store.getState().heads.find((head) => head.presentationId === 'deck-1'))
+    })
     await storage.withPresentations((presentations) => {
       presentations[0].pptxAggregateHead = packageHead
     })
@@ -92,7 +93,9 @@ describe('history snapshot deletion compensation', () => {
     const snapshot = await request(app)
       .post('/api/presentations/deck-1/snapshot')
       .send({ name: 'recoverable' })
-    expect(snapshot.status).toBe(200)
+    expect(snapshot.status, JSON.stringify({
+      code: snapshot.body.code, error: snapshot.body.error, reason: snapshot.body.reason,
+    })).toBe(200)
 
     failRelease = true
     failOwnerQuery = true

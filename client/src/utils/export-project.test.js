@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import JSZip from 'jszip'
 import { exportProject } from './export-project'
 
 vi.mock('revealjs-shared', async (importOriginal) => ({
@@ -130,15 +131,75 @@ describe('exportProject', () => {
   })
 
   it('rejects missing media without downloading a partial archive', async () => {
-    await expect(
-      exportProject({
-        title: 'Missing Media',
-        slides: [{ id: 'slide-1', elements: [{ type: 'image', src: '/uploads/missing.png' }] }],
-      })
-    ).rejects.toMatchObject({
+    await expect(exportProject({
+      title: 'Missing Media',
+      slides: [{ id: 'slide-1', elements: [{ type: 'image', src: '/uploads/missing.png' }] }],
+    })).rejects.toMatchObject({
       code: 'PROJECT_MEDIA_ATTACHMENT_FAILED',
       failures: [expect.objectContaining({ originalUrl: '/uploads/missing.png' })],
     })
     expect(downloadedBlob).toBeNull()
+  })
+
+  it('rejects a mixed-media legacy projection without downloading a partial archive', async () => {
+    await expect(exportProject({
+      id: 'deck-1', title: 'Mixed Media', aggregateGeneration: 3,
+      pptxAggregateHead: { packageRevisionId: 'secret-head', generation: 3 },
+      _pptxImportReport: { jobId: 'job-secret', diagnostics: [{ type: 'media-missing', message: 'private diagnostic' }] },
+      slides: [{ id: 'slide-1', background: { type: 'image', image: '/uploads/good.png' },
+        elements: [{ id: 'missing-image', type: 'image', src: '/uploads/missing.png',
+          _pptxSource: { packagePath: 'ppt/media/image1.png' } }] }],
+    })).rejects.toMatchObject({
+      code: 'PROJECT_MEDIA_ATTACHMENT_FAILED',
+      failures: [expect.objectContaining({ originalUrl: '/uploads/missing.png' })],
+    })
+    expect(downloadedBlob).toBeNull()
+  })
+
+  it('exports complete legacy media while removing editor and package authority', async () => {
+    await exportProject({
+      id: 'deck-1', title: 'Mixed Media', aggregateGeneration: 3,
+      pptxAggregateHead: { packageRevisionId: 'secret-head', generation: 3 },
+      _pptxImportReport: { jobId: 'job-secret', diagnostics: [{ type: 'media-missing', message: 'private diagnostic' }] },
+      slides: [{ id: 'slide-1', background: { type: 'image', image: '/uploads/good.png' },
+        elements: [{ id: 'good-image', type: 'image', src: '/uploads/good.png',
+          _pptxSource: { packagePath: 'ppt/media/image1.png' } }] }],
+    })
+    const zip = await JSZip.loadAsync(await downloadedBlob.arrayBuffer())
+    const presentation = JSON.parse(await zip.file('presentation.json').async('text'))
+    const manifest = JSON.parse(await zip.file('manifest.json').async('text'))
+    expect(presentation).not.toHaveProperty('aggregateGeneration')
+    expect(presentation).not.toHaveProperty('pptxAggregateHead')
+    expect(presentation).not.toHaveProperty('_pptxImportReport')
+    expect(presentation.slides[0].elements[0]).not.toHaveProperty('_pptxSource')
+    expect(JSON.stringify(presentation)).not.toMatch(/secret-head|job-secret|private diagnostic/)
+    expect(manifest).toMatchObject({ version: '1.1', hasLocalMedia: true, mediaCount: 1 })
+    expect(manifest.media[0].originalUrl).toBe('/uploads/good.png')
+    expect(await zip.file(manifest.media[0].archivePath).async('text')).toBe('good')
+    expect(zip.file('presentation.html')).not.toBeNull()
+    expect(zip.file('package/manifest.json')).toBeNull()
+  })
+
+  it('P10 preserves the server package archive even when the deck has no local media', async () => {
+    const zip = new JSZip()
+    zip.file('manifest.json', JSON.stringify({ version: '2.0', media: [] }))
+    zip.file('presentation.json', JSON.stringify({ title: 'Server snapshot', slides: [] }))
+    zip.file('package/manifest.json', JSON.stringify({ original: { sha256: 'a'.repeat(64) } }))
+    zip.file(`package/blobs/${'a'.repeat(64)}`, 'original-bytes')
+    const payload = new Blob([await zip.generateAsync({ type: 'uint8array' })], { type: 'application/zip' })
+    fetch.mockResolvedValueOnce({ ok: true, blob: async () => payload })
+
+    await exportProject({ id: 'deck-full', title: 'Portable', slides: [], pptxSourceAvailable: true, aggregateGeneration: 4 })
+
+    expect(fetch).toHaveBeenCalledWith('/api/presentations/deck-full/project-archive', {
+      headers: { 'If-Pptx-Generation': '4' },
+    })
+
+    expect(downloadedBlob.type).toBe('application/zip')
+    const exported = await JSZip.loadAsync(await downloadedBlob.arrayBuffer())
+    expect(JSON.parse(await exported.file('manifest.json').async('text')).version).toBe('2.0')
+    expect(JSON.parse(await exported.file('package/manifest.json').async('text')).original.sha256).toBe('a'.repeat(64))
+    expect(await exported.file(`package/blobs/${'a'.repeat(64)}`).async('text')).toBe('original-bytes')
+    expect(JSON.parse(await exported.file('presentation.json').async('text')).title).toBe('Server snapshot')
   })
 })

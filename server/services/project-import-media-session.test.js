@@ -199,4 +199,108 @@ describe('project import media session', () => {
     const durable = await sessions.readProjectImportSession(admitted.sessionId)
     expect(durable.state).toBe('reconcile-required')
   })
+  it.each(['{"unfinished":', '[]', '{"foreign":{"sessionId":"different","state":"committing"}}'])(
+    'P09-13 preserves invalid durable ledger instead of admitting over it: %s', async (bytes) => {
+      const ledger = path.join(storage.DATA_DIR, 'project-import-sessions.json')
+      await fs.writeFile(ledger, bytes)
+      await expect(sessions.createProjectImportSession(validated())).rejects.toBeInstanceOf(Error)
+      expect(await fs.readFile(ledger, 'utf8')).toBe(bytes)
+      await expect(sessions.recoverProjectImports()).rejects.toBeInstanceOf(Error)
+      expect(await fs.readFile(ledger, 'utf8')).toBe(bytes)
+    },
+  )
+
+  it('P09-13 preserves unreadable ledger and its intent instead of resetting it', async () => {
+    const ledger = path.join(storage.DATA_DIR, 'project-import-sessions.json')
+    await fs.ensureDir(ledger)
+    const intent = path.join(ledger, 'retained-intent')
+    await fs.writeFile(intent, 'do-not-discard')
+    await expect(sessions.createProjectImportSession(validated())).rejects.toBeInstanceOf(Error)
+    expect(await fs.readFile(intent, 'utf8')).toBe('do-not-discard')
+    await expect(sessions.recoverProjectImports()).rejects.toBeInstanceOf(Error)
+    expect(await fs.readFile(intent, 'utf8')).toBe('do-not-discard')
+  })
+
+  it.each([
+    ['mismatched key', (record) => { record.sessionId = 'foreign-session' }],
+    ['missing digest', (record) => { delete record.payloadDigest }],
+    ['invalid timestamp', (record) => { record.expiresAt = 'not-a-date' }],
+    ['invalid media shape', (record) => { record.media = [null] }],
+    ['unmatched placement', (record) => { record.placements = [{ archivePath: 'foreign' }] }],
+    ['missing commit identity', (record) => { delete record.intendedPresentationId }],
+  ])('P09-13 rejects %s without publishing or changing durable bytes', async (_label, corrupt) => {
+    const admitted = await sessions.createProjectImportSession(validated())
+    await sessions.beginProjectImportCommit(admitted)
+    const ledger = path.join(storage.DATA_DIR, 'project-import-sessions.json')
+    const records = await fs.readJson(ledger)
+    corrupt(records[admitted.sessionId])
+    await fs.writeJson(ledger, records)
+    const before = await fs.readFile(ledger)
+    await expect(sessions.readProjectImportSession(admitted.sessionId))
+      .rejects.toMatchObject({ code: 'PROJECT_IMPORT_RECOVERY_REQUIRED', status: 503 })
+    await expect(sessions.recoverProjectImports())
+      .rejects.toMatchObject({ code: 'PROJECT_IMPORT_RECOVERY_REQUIRED', status: 503 })
+    await expect(sessions.createProjectImportSession(validated()))
+      .rejects.toMatchObject({ code: 'PROJECT_IMPORT_RECOVERY_REQUIRED', status: 503 })
+    expect((await fs.readFile(ledger)).equals(before)).toBe(true)
+    expect(await storage.readPresentations()).toEqual([])
+  })
+
+  it('P09-08 rereads exact session under its lock instead of replaying a stale snapshot', async () => {
+    const admitted = await sessions.createProjectImportSession(validated())
+    const stale = await sessions.beginProjectImportCommit(admitted)
+    const receipt = await sessions.publishProjectImport(admitted)
+    const ledger = path.join(storage.DATA_DIR, 'project-import-sessions.json')
+    const before = await fs.readFile(ledger)
+    const recovery = require('./project-import-media-session-recovery')
+    await expect(recovery.recoverProjectImport(stale)).resolves.toEqual(receipt)
+    expect((await fs.readFile(ledger)).equals(before)).toBe(true)
+    expect(await storage.readPresentations()).toHaveLength(1)
+  })
+
+  it('P09-06 retains a row whose payload changes between initial read and publication lock', async () => {
+    const admitted = await sessions.createProjectImportSession(validated())
+    const record = await sessions.beginProjectImportCommit(admitted)
+    const dataFile = path.join(storage.DATA_DIR, 'presentations.json')
+    const read = fs.readJson.bind(fs)
+    let presentationReads = 0
+    const foreign = { id: record.intendedPresentationId, title: 'Retained foreign payload', slides: [],
+      _projectImport: { sessionId: record.sessionId, payloadDigest: 'c'.repeat(64) } }
+    const spy = vi.spyOn(fs, 'readJson').mockImplementation(async (filename, ...args) => {
+      if (filename === dataFile && ++presentationReads === 2) await fs.writeJson(dataFile, [foreign])
+      return read(filename, ...args)
+    })
+    try { await sessions.recoverProjectImports() } finally { spy.mockRestore() }
+    expect(await storage.readPresentations()).toEqual([foreign])
+    expect((await sessions.readProjectImportSession(record.sessionId)).state).toBe('reconcile-required')
+  })
+
+  it.each(['commitOwner', 'rollbackOwner'])(
+    'P09-15 aborts queued %s without changing ownership or removing bytes', async (operation) => {
+      const ownership = require('./media-placement-ownership')
+      const admitted = await sessions.createProjectImportSession(validated())
+      const placed = await ownership.placeMedia({ ownerId: admitted.sessionId, bytes: Buffer.from('retained-media'),
+        originalName: 'retained.png', mimeType: 'image/png', sourceKey: 'retained' })
+      const before = await fs.readFile(storage.UPLOAD_HASHES_FILE)
+      let release
+      let entered
+      const barrier = new Promise((resolve) => { entered = resolve })
+      const held = storage.withFileLock(storage.UPLOAD_HASHES_FILE, async () => {
+        entered()
+        await new Promise((resolve) => { release = resolve })
+      })
+      await barrier
+      const controller = new AbortController()
+      const pending = operation === 'commitOwner'
+        ? ownership.commitOwner(admitted.sessionId, 'would-be-owner', { signal: controller.signal })
+        : ownership.rollbackOwner(admitted.sessionId, { signal: controller.signal })
+      const rejected = expect(pending).rejects.toMatchObject({ name: 'AbortError' })
+      controller.abort()
+      release()
+      await held
+      await rejected
+      expect((await fs.readFile(storage.UPLOAD_HASHES_FILE)).equals(before)).toBe(true)
+      expect(await fs.readFile(placed.absolutePath, 'utf8')).toBe('retained-media')
+    },
+  )
 })

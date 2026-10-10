@@ -1,0 +1,2394 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a1201c-7435-7492-aa71-964853731d18",
+  "CreatedAt": "2026-10-09T17:01:38.1012997+07:00",
+  "ArtifactName": "node:22-alpine3.22",
+  "ArtifactType": "container_image",
+  "Metadata": {
+    "ImageID": "sha256:a5591ffa7fb72edbb85f13d16387c2eb1702bcd3f576f7edd7aeefb453dae3dd",
+    "OS": {
+      "Family": "alpine",
+      "Name": "3.22.4"
+    },
+    "RepoDigests": [
+      "node@sha256:cd7807368cf24826297cbad5dca1a44972ccfd770647db52a8c7589eb4599ac8"
+    ],
+    "ImageConfig": {
+      "os": "linux"
+    }
+  },
+  "Results": [
+    {
+      "Target": "node:22-alpine3.22 (alpine 3.22.4)",
+      "Class": "os-pkgs",
+      "Type": "alpine",
+      "Packages": [
+        {
+          "Name": "alpine-baselayout",
+          "Version": "3.7.0-r0",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/alpine-baselayout@3.7.0-r0?arch=x86_64&distro=3.22.4",
+            "UID": "5d7e59cb3cf460c9"
+          }
+        },
+        {
+          "Name": "alpine-baselayout-data",
+          "Version": "3.7.0-r0",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/alpine-baselayout-data@3.7.0-r0?arch=x86_64&distro=3.22.4",
+            "UID": "ab78613e89e34197"
+          }
+        },
+        {
+          "Name": "alpine-keys",
+          "Version": "2.5-r0",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/alpine-keys@2.5-r0?arch=x86_64&distro=3.22.4",
+            "UID": "82fba6933d3c7e01"
+          }
+        },
+        {
+          "Name": "alpine-release",
+          "Version": "3.22.4-r0",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/alpine-release@3.22.4-r0?arch=x86_64&distro=3.22.4",
+            "UID": "c18fc07f01c755fc"
+          }
+        },
+        {
+          "Name": "apk-tools",
+          "Version": "2.14.9-r3",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/apk-tools@2.14.9-r3?arch=x86_64&distro=3.22.4",
+            "UID": "895474353683f05c"
+          }
+        },
+        {
+          "Name": "busybox",
+          "Version": "1.37.0-r20",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/busybox@1.37.0-r20?arch=x86_64&distro=3.22.4",
+            "UID": "506f3663699c0126"
+          }
+        },
+        {
+          "Name": "busybox-binsh",
+          "Version": "1.37.0-r20",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/busybox-binsh@1.37.0-r20?arch=x86_64&distro=3.22.4",
+            "UID": "82cca645a20a4c54"
+          }
+        },
+        {
+          "Name": "ca-certificates-bundle",
+          "Version": "20260413-r0",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/ca-certificates-bundle@20260413-r0?arch=x86_64&distro=3.22.4",
+            "UID": "f85b30502cdea1a0"
+          }
+        },
+        {
+          "Name": "libapk2",
+          "Version": "2.14.9-r3",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/libapk2@2.14.9-r3?arch=x86_64&distro=3.22.4",
+            "UID": "5ed34c337dce53f7"
+          }
+        },
+        {
+          "Name": "libcrypto3",
+          "Version": "3.5.6-r0",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/libcrypto3@3.5.6-r0?arch=x86_64&distro=3.22.4",
+            "UID": "26dbce2a51136e15"
+          }
+        },
+        {
+          "Name": "libgcc",
+          "Version": "14.2.0-r6",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/libgcc@14.2.0-r6?arch=x86_64&distro=3.22.4",
+            "UID": "52cf3ec37cd6ff6b"
+          }
+        },
+        {
+          "Name": "libssl3",
+          "Version": "3.5.6-r0",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/libssl3@3.5.6-r0?arch=x86_64&distro=3.22.4",
+            "UID": "7bbde0eaac45ae9a"
+          }
+        },
+        {
+          "Name": "libstdc++",
+          "Version": "14.2.0-r6",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/libstdc%2B%2B@14.2.0-r6?arch=x86_64&distro=3.22.4",
+            "UID": "550886d080911bc6"
+          }
+        },
+        {
+          "Name": "musl",
+          "Version": "1.2.5-r12",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/musl@1.2.5-r12?arch=x86_64&distro=3.22.4",
+            "UID": "b5a02196ba9bc411"
+          }
+        },
+        {
+          "Name": "musl-utils",
+          "Version": "1.2.5-r12",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/musl-utils@1.2.5-r12?arch=x86_64&distro=3.22.4",
+            "UID": "df612045786a2676"
+          }
+        },
+        {
+          "Name": "scanelf",
+          "Version": "1.3.8-r1",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/scanelf@1.3.8-r1?arch=x86_64&distro=3.22.4",
+            "UID": "361702d1dd5d8a58"
+          }
+        },
+        {
+          "Name": "ssl_client",
+          "Version": "1.37.0-r20",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/ssl_client@1.37.0-r20?arch=x86_64&distro=3.22.4",
+            "UID": "f449bd5b7bfe15e2"
+          }
+        },
+        {
+          "Name": "zlib",
+          "Version": "1.3.2-r0",
+          "Identifier": {
+            "PURL": "pkg:apk/alpine/zlib@1.3.2-r0?arch=x86_64&distro=3.22.4",
+            "UID": "16432bdae66ef0ed"
+          }
+        }
+      ],
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2026-14456",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-45447",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-18798",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-34182",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-34183",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-42764",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-45445",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-63072",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-63076",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-14457",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-34180",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-34181",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-42766",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-42767",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-42768",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-42769",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-42770",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-45446",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-54874",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-63073",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-63074",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-63075",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-7383",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-75803",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-9076",
+          "PkgName": "libcrypto3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-14456",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-45447",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-18798",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-34182",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-34183",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-42764",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-45445",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-63072",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-63076",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-14457",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-34180",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-34181",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-42766",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-42767",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-42768",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-42769",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-42770",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-45446",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-54874",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-63073",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-63074",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-63075",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-7383",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-75803",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.8-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-9076",
+          "PkgName": "libssl3",
+          "InstalledVersion": "3.5.6-r0",
+          "FixedVersion": "3.5.7-r0",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-85091",
+          "PkgName": "zlib",
+          "InstalledVersion": "1.3.2-r0",
+          "FixedVersion": "1.3.2-r1",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        }
+      ]
+    },
+    {
+      "Target": "Node.js",
+      "Class": "lang-pkgs",
+      "Type": "node-pkg",
+      "Packages": [
+        {
+          "Name": "@isaacs/cliui",
+          "Version": "8.0.2",
+          "Identifier": {
+            "PURL": "pkg:npm/%40isaacs/cliui@8.0.2",
+            "UID": "b8227c9af53bf615"
+          }
+        },
+        {
+          "Name": "@isaacs/fs-minipass",
+          "Version": "4.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/%40isaacs/fs-minipass@4.0.1",
+            "UID": "a243149143caa5d3"
+          }
+        },
+        {
+          "Name": "@isaacs/string-locale-compare",
+          "Version": "1.1.0",
+          "Identifier": {
+            "PURL": "pkg:npm/%40isaacs/string-locale-compare@1.1.0",
+            "UID": "4b7c47e3454f8345"
+          }
+        },
+        {
+          "Name": "@npmcli/agent",
+          "Version": "3.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/%40npmcli/agent@3.0.0",
+            "UID": "a200f48a14bc8d6d"
+          }
+        },
+        {
+          "Name": "@npmcli/arborist",
+          "Version": "8.0.5",
+          "Identifier": {
+            "PURL": "pkg:npm/%40npmcli/arborist@8.0.5",
+            "UID": "fbdc31566d3acae4"
+          }
+        },
+        {
+          "Name": "@npmcli/config",
+          "Version": "9.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/%40npmcli/config@9.0.0",
+            "UID": "9a1231a6689da84b"
+          }
+        },
+        {
+          "Name": "@npmcli/fs",
+          "Version": "4.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/%40npmcli/fs@4.0.0",
+            "UID": "a99260a70eb10883"
+          }
+        },
+        {
+          "Name": "@npmcli/git",
+          "Version": "6.0.3",
+          "Identifier": {
+            "PURL": "pkg:npm/%40npmcli/git@6.0.3",
+            "UID": "a1c60860bd5c5710"
+          }
+        },
+        {
+          "Name": "@npmcli/installed-package-contents",
+          "Version": "3.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/%40npmcli/installed-package-contents@3.0.0",
+            "UID": "6f210c833f2004b2"
+          }
+        },
+        {
+          "Name": "@npmcli/map-workspaces",
+          "Version": "4.0.2",
+          "Identifier": {
+            "PURL": "pkg:npm/%40npmcli/map-workspaces@4.0.2",
+            "UID": "7f83b53de880c241"
+          }
+        },
+        {
+          "Name": "@npmcli/metavuln-calculator",
+          "Version": "8.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/%40npmcli/metavuln-calculator@8.0.1",
+            "UID": "3586c94b422e953b"
+          }
+        },
+        {
+          "Name": "@npmcli/name-from-folder",
+          "Version": "3.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/%40npmcli/name-from-folder@3.0.0",
+            "UID": "7dabbbc0ee1915d7"
+          }
+        },
+        {
+          "Name": "@npmcli/node-gyp",
+          "Version": "4.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/%40npmcli/node-gyp@4.0.0",
+            "UID": "2eeb8928b868a416"
+          }
+        },
+        {
+          "Name": "@npmcli/package-json",
+          "Version": "6.2.0",
+          "Identifier": {
+            "PURL": "pkg:npm/%40npmcli/package-json@6.2.0",
+            "UID": "dddc37d11f4d0797"
+          }
+        },
+        {
+          "Name": "@npmcli/promise-spawn",
+          "Version": "8.0.3",
+          "Identifier": {
+            "PURL": "pkg:npm/%40npmcli/promise-spawn@8.0.3",
+            "UID": "a015a31611496882"
+          }
+        },
+        {
+          "Name": "@npmcli/query",
+          "Version": "4.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/%40npmcli/query@4.0.1",
+            "UID": "6959557b7faec84b"
+          }
+        },
+        {
+          "Name": "@npmcli/redact",
+          "Version": "3.2.2",
+          "Identifier": {
+            "PURL": "pkg:npm/%40npmcli/redact@3.2.2",
+            "UID": "77edde12513778c9"
+          }
+        },
+        {
+          "Name": "@npmcli/run-script",
+          "Version": "9.1.0",
+          "Identifier": {
+            "PURL": "pkg:npm/%40npmcli/run-script@9.1.0",
+            "UID": "a5be34778fb73365"
+          }
+        },
+        {
+          "Name": "@pkgjs/parseargs",
+          "Version": "0.11.0",
+          "Identifier": {
+            "PURL": "pkg:npm/%40pkgjs/parseargs@0.11.0",
+            "UID": "63153b366f22754b"
+          }
+        },
+        {
+          "Name": "@sigstore/bundle",
+          "Version": "3.1.0",
+          "Identifier": {
+            "PURL": "pkg:npm/%40sigstore/bundle@3.1.0",
+            "UID": "7927bc0e0cf7af0a"
+          }
+        },
+        {
+          "Name": "@sigstore/core",
+          "Version": "2.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/%40sigstore/core@2.0.0",
+            "UID": "f70e70e8bb1a3ee"
+          }
+        },
+        {
+          "Name": "@sigstore/protobuf-specs",
+          "Version": "0.4.3",
+          "Identifier": {
+            "PURL": "pkg:npm/%40sigstore/protobuf-specs@0.4.3",
+            "UID": "bd9b2ca6220a5a8e"
+          }
+        },
+        {
+          "Name": "@sigstore/sign",
+          "Version": "3.1.0",
+          "Identifier": {
+            "PURL": "pkg:npm/%40sigstore/sign@3.1.0",
+            "UID": "d4445bdd56ad3354"
+          }
+        },
+        {
+          "Name": "@sigstore/tuf",
+          "Version": "3.1.1",
+          "Identifier": {
+            "PURL": "pkg:npm/%40sigstore/tuf@3.1.1",
+            "UID": "35326683f394696e"
+          }
+        },
+        {
+          "Name": "@sigstore/verify",
+          "Version": "2.1.1",
+          "Identifier": {
+            "PURL": "pkg:npm/%40sigstore/verify@2.1.1",
+            "UID": "b04e03f3cc3a2f80"
+          }
+        },
+        {
+          "Name": "@tufjs/canonical-json",
+          "Version": "2.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tufjs/canonical-json@2.0.0",
+            "UID": "c9bd83d46147e58a"
+          }
+        },
+        {
+          "Name": "@tufjs/models",
+          "Version": "3.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tufjs/models@3.0.1",
+            "UID": "fb2b26817b78ce2d"
+          }
+        },
+        {
+          "Name": "abbrev",
+          "Version": "3.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/abbrev@3.0.1",
+            "UID": "accb84b009d748f1"
+          }
+        },
+        {
+          "Name": "agent-base",
+          "Version": "7.1.4",
+          "Identifier": {
+            "PURL": "pkg:npm/agent-base@7.1.4",
+            "UID": "a29114964ca5cb1"
+          }
+        },
+        {
+          "Name": "ansi-regex",
+          "Version": "5.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/ansi-regex@5.0.1",
+            "UID": "1516ae0336e3fe5b"
+          }
+        },
+        {
+          "Name": "ansi-regex",
+          "Version": "6.2.2",
+          "Identifier": {
+            "PURL": "pkg:npm/ansi-regex@6.2.2",
+            "UID": "427b563abd9dea71"
+          }
+        },
+        {
+          "Name": "ansi-regex",
+          "Version": "6.2.2",
+          "Identifier": {
+            "PURL": "pkg:npm/ansi-regex@6.2.2",
+            "UID": "64537dc59acd477e"
+          }
+        },
+        {
+          "Name": "ansi-styles",
+          "Version": "4.3.0",
+          "Identifier": {
+            "PURL": "pkg:npm/ansi-styles@4.3.0",
+            "UID": "d8df5d7a0071b171"
+          }
+        },
+        {
+          "Name": "ansi-styles",
+          "Version": "6.2.3",
+          "Identifier": {
+            "PURL": "pkg:npm/ansi-styles@6.2.3",
+            "UID": "e8a1552423124ba2"
+          }
+        },
+        {
+          "Name": "aproba",
+          "Version": "2.1.0",
+          "Identifier": {
+            "PURL": "pkg:npm/aproba@2.1.0",
+            "UID": "65b5d298c3c834d"
+          }
+        },
+        {
+          "Name": "archy",
+          "Version": "1.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/archy@1.0.0",
+            "UID": "c6f97df2c6bd73cd"
+          }
+        },
+        {
+          "Name": "balanced-match",
+          "Version": "1.0.2",
+          "Identifier": {
+            "PURL": "pkg:npm/balanced-match@1.0.2",
+            "UID": "292b6cb8de8f521c"
+          }
+        },
+        {
+          "Name": "bin-links",
+          "Version": "5.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/bin-links@5.0.0",
+            "UID": "1dd9a7be9aed6fc4"
+          }
+        },
+        {
+          "Name": "binary-extensions",
+          "Version": "2.3.0",
+          "Identifier": {
+            "PURL": "pkg:npm/binary-extensions@2.3.0",
+            "UID": "230ec0fa5d8085ed"
+          }
+        },
+        {
+          "Name": "brace-expansion",
+          "Version": "2.0.2",
+          "Identifier": {
+            "PURL": "pkg:npm/brace-expansion@2.0.2",
+            "UID": "81ea87e5789052ae"
+          }
+        },
+        {
+          "Name": "cacache",
+          "Version": "19.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/cacache@19.0.1",
+            "UID": "bc0a0e917abe1794"
+          }
+        },
+        {
+          "Name": "chalk",
+          "Version": "5.6.2",
+          "Identifier": {
+            "PURL": "pkg:npm/chalk@5.6.2",
+            "UID": "1f19bd2e420a59a6"
+          }
+        },
+        {
+          "Name": "chownr",
+          "Version": "3.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/chownr@3.0.0",
+            "UID": "c2446e59cf4aad08"
+          }
+        },
+        {
+          "Name": "ci-info",
+          "Version": "4.4.0",
+          "Identifier": {
+            "PURL": "pkg:npm/ci-info@4.4.0",
+            "UID": "ec9c48df6b096b3a"
+          }
+        },
+        {
+          "Name": "cidr-regex",
+          "Version": "4.1.3",
+          "Identifier": {
+            "PURL": "pkg:npm/cidr-regex@4.1.3",
+            "UID": "555f12f4d301792f"
+          }
+        },
+        {
+          "Name": "cli-columns",
+          "Version": "4.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/cli-columns@4.0.0",
+            "UID": "c13347c6a11babea"
+          }
+        },
+        {
+          "Name": "cmd-shim",
+          "Version": "7.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/cmd-shim@7.0.0",
+            "UID": "fb59eec8b6d45069"
+          }
+        },
+        {
+          "Name": "color-convert",
+          "Version": "2.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/color-convert@2.0.1",
+            "UID": "bd1efdd30f697050"
+          }
+        },
+        {
+          "Name": "color-name",
+          "Version": "1.1.4",
+          "Identifier": {
+            "PURL": "pkg:npm/color-name@1.1.4",
+            "UID": "d139f68849e5a900"
+          }
+        },
+        {
+          "Name": "common-ancestor-path",
+          "Version": "1.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/common-ancestor-path@1.0.1",
+            "UID": "75be870e681ddfc7"
+          }
+        },
+        {
+          "Name": "corepack",
+          "Version": "0.34.6",
+          "Identifier": {
+            "PURL": "pkg:npm/corepack@0.34.6",
+            "UID": "36651e0812a33f0c"
+          }
+        },
+        {
+          "Name": "cross-spawn",
+          "Version": "7.0.6",
+          "Identifier": {
+            "PURL": "pkg:npm/cross-spawn@7.0.6",
+            "UID": "61f4e4c7fed1b814"
+          }
+        },
+        {
+          "Name": "cssesc",
+          "Version": "3.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/cssesc@3.0.0",
+            "UID": "7f5523593daaa2d6"
+          }
+        },
+        {
+          "Name": "debug",
+          "Version": "4.4.3",
+          "Identifier": {
+            "PURL": "pkg:npm/debug@4.4.3",
+            "UID": "cbfc08d5e097ff06"
+          }
+        },
+        {
+          "Name": "diff",
+          "Version": "5.2.2",
+          "Identifier": {
+            "PURL": "pkg:npm/diff@5.2.2",
+            "UID": "57669da130973e2"
+          }
+        },
+        {
+          "Name": "eastasianwidth",
+          "Version": "0.2.0",
+          "Identifier": {
+            "PURL": "pkg:npm/eastasianwidth@0.2.0",
+            "UID": "e837d05849c9e09b"
+          }
+        },
+        {
+          "Name": "emoji-regex",
+          "Version": "8.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/emoji-regex@8.0.0",
+            "UID": "ff9f7d586cb43e8d"
+          }
+        },
+        {
+          "Name": "emoji-regex",
+          "Version": "9.2.2",
+          "Identifier": {
+            "PURL": "pkg:npm/emoji-regex@9.2.2",
+            "UID": "e3da15e8bc9892e"
+          }
+        },
+        {
+          "Name": "emoji-regex",
+          "Version": "9.2.2",
+          "Identifier": {
+            "PURL": "pkg:npm/emoji-regex@9.2.2",
+            "UID": "cce19d255d5bd19d"
+          }
+        },
+        {
+          "Name": "encoding",
+          "Version": "0.1.13",
+          "Identifier": {
+            "PURL": "pkg:npm/encoding@0.1.13",
+            "UID": "b275a07a9d6210f1"
+          }
+        },
+        {
+          "Name": "env-paths",
+          "Version": "2.2.1",
+          "Identifier": {
+            "PURL": "pkg:npm/env-paths@2.2.1",
+            "UID": "4d5f9228dca262ad"
+          }
+        },
+        {
+          "Name": "err-code",
+          "Version": "2.0.3",
+          "Identifier": {
+            "PURL": "pkg:npm/err-code@2.0.3",
+            "UID": "6520b55ebdc1fc1"
+          }
+        },
+        {
+          "Name": "exponential-backoff",
+          "Version": "3.1.3",
+          "Identifier": {
+            "PURL": "pkg:npm/exponential-backoff@3.1.3",
+            "UID": "1b8f0088b2ee45c2"
+          }
+        },
+        {
+          "Name": "fastest-levenshtein",
+          "Version": "1.0.16",
+          "Identifier": {
+            "PURL": "pkg:npm/fastest-levenshtein@1.0.16",
+            "UID": "c2930316b43e3802"
+          }
+        },
+        {
+          "Name": "fdir",
+          "Version": "6.5.0",
+          "Identifier": {
+            "PURL": "pkg:npm/fdir@6.5.0",
+            "UID": "9c948f687b5a10c1"
+          }
+        },
+        {
+          "Name": "foreground-child",
+          "Version": "3.3.1",
+          "Identifier": {
+            "PURL": "pkg:npm/foreground-child@3.3.1",
+            "UID": "b66b3e60c9840580"
+          }
+        },
+        {
+          "Name": "fs-minipass",
+          "Version": "3.0.3",
+          "Identifier": {
+            "PURL": "pkg:npm/fs-minipass@3.0.3",
+            "UID": "fcead9aef62eff18"
+          }
+        },
+        {
+          "Name": "glob",
+          "Version": "10.5.0",
+          "Identifier": {
+            "PURL": "pkg:npm/glob@10.5.0",
+            "UID": "d5cced6625c74cc"
+          }
+        },
+        {
+          "Name": "graceful-fs",
+          "Version": "4.2.11",
+          "Identifier": {
+            "PURL": "pkg:npm/graceful-fs@4.2.11",
+            "UID": "48999ee23c560636"
+          }
+        },
+        {
+          "Name": "hosted-git-info",
+          "Version": "8.1.0",
+          "Identifier": {
+            "PURL": "pkg:npm/hosted-git-info@8.1.0",
+            "UID": "2473223e22e19f08"
+          }
+        },
+        {
+          "Name": "http-cache-semantics",
+          "Version": "4.2.0",
+          "Identifier": {
+            "PURL": "pkg:npm/http-cache-semantics@4.2.0",
+            "UID": "f7b0a7c67def6ec7"
+          }
+        },
+        {
+          "Name": "http-proxy-agent",
+          "Version": "7.0.2",
+          "Identifier": {
+            "PURL": "pkg:npm/http-proxy-agent@7.0.2",
+            "UID": "b03040e191aa89aa"
+          }
+        },
+        {
+          "Name": "https-proxy-agent",
+          "Version": "7.0.6",
+          "Identifier": {
+            "PURL": "pkg:npm/https-proxy-agent@7.0.6",
+            "UID": "e351f3713548ce82"
+          }
+        },
+        {
+          "Name": "iconv-lite",
+          "Version": "0.6.3",
+          "Identifier": {
+            "PURL": "pkg:npm/iconv-lite@0.6.3",
+            "UID": "3b91bc453b91fa4"
+          }
+        },
+        {
+          "Name": "ignore-walk",
+          "Version": "7.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/ignore-walk@7.0.0",
+            "UID": "a3cf6024c4423a1f"
+          }
+        },
+        {
+          "Name": "imurmurhash",
+          "Version": "0.1.4",
+          "Identifier": {
+            "PURL": "pkg:npm/imurmurhash@0.1.4",
+            "UID": "8c2f7026a19bfbd"
+          }
+        },
+        {
+          "Name": "ini",
+          "Version": "5.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/ini@5.0.0",
+            "UID": "a3bff60fc5b19975"
+          }
+        },
+        {
+          "Name": "init-package-json",
+          "Version": "7.0.2",
+          "Identifier": {
+            "PURL": "pkg:npm/init-package-json@7.0.2",
+            "UID": "f9a5f13066987842"
+          }
+        },
+        {
+          "Name": "ip-address",
+          "Version": "10.1.0",
+          "Identifier": {
+            "PURL": "pkg:npm/ip-address@10.1.0",
+            "UID": "88a805ee478f0c75"
+          }
+        },
+        {
+          "Name": "ip-regex",
+          "Version": "5.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/ip-regex@5.0.0",
+            "UID": "41a7ec2cac2596f3"
+          }
+        },
+        {
+          "Name": "is-cidr",
+          "Version": "5.1.1",
+          "Identifier": {
+            "PURL": "pkg:npm/is-cidr@5.1.1",
+            "UID": "979912027a25476e"
+          }
+        },
+        {
+          "Name": "is-fullwidth-code-point",
+          "Version": "3.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/is-fullwidth-code-point@3.0.0",
+            "UID": "ad71067c5da66cd8"
+          }
+        },
+        {
+          "Name": "isexe",
+          "Version": "2.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/isexe@2.0.0",
+            "UID": "7ef0cf39565c06a4"
+          }
+        },
+        {
+          "Name": "isexe",
+          "Version": "3.1.5",
+          "Identifier": {
+            "PURL": "pkg:npm/isexe@3.1.5",
+            "UID": "6cee478c2cce97e3"
+          }
+        },
+        {
+          "Name": "jackspeak",
+          "Version": "3.4.3",
+          "Identifier": {
+            "PURL": "pkg:npm/jackspeak@3.4.3",
+            "UID": "70a6f223353e0b6e"
+          }
+        },
+        {
+          "Name": "json-parse-even-better-errors",
+          "Version": "4.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/json-parse-even-better-errors@4.0.0",
+            "UID": "eef59382e1d5f78d"
+          }
+        },
+        {
+          "Name": "json-stringify-nice",
+          "Version": "1.1.4",
+          "Identifier": {
+            "PURL": "pkg:npm/json-stringify-nice@1.1.4",
+            "UID": "c5c27ed2359935d9"
+          }
+        },
+        {
+          "Name": "jsonparse",
+          "Version": "1.3.1",
+          "Identifier": {
+            "PURL": "pkg:npm/jsonparse@1.3.1",
+            "UID": "6d24ba846346e57e"
+          }
+        },
+        {
+          "Name": "just-diff",
+          "Version": "6.0.2",
+          "Identifier": {
+            "PURL": "pkg:npm/just-diff@6.0.2",
+            "UID": "c6c2fd84314937b7"
+          }
+        },
+        {
+          "Name": "just-diff-apply",
+          "Version": "5.5.0",
+          "Identifier": {
+            "PURL": "pkg:npm/just-diff-apply@5.5.0",
+            "UID": "f52effebae09b036"
+          }
+        },
+        {
+          "Name": "libnpmaccess",
+          "Version": "9.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/libnpmaccess@9.0.0",
+            "UID": "36d23673811b2cdc"
+          }
+        },
+        {
+          "Name": "libnpmdiff",
+          "Version": "7.0.5",
+          "Identifier": {
+            "PURL": "pkg:npm/libnpmdiff@7.0.5",
+            "UID": "26287702ddfe6297"
+          }
+        },
+        {
+          "Name": "libnpmexec",
+          "Version": "9.0.5",
+          "Identifier": {
+            "PURL": "pkg:npm/libnpmexec@9.0.5",
+            "UID": "892e9eb1cacfc807"
+          }
+        },
+        {
+          "Name": "libnpmfund",
+          "Version": "6.0.5",
+          "Identifier": {
+            "PURL": "pkg:npm/libnpmfund@6.0.5",
+            "UID": "c1b993a9a1f3969d"
+          }
+        },
+        {
+          "Name": "libnpmhook",
+          "Version": "11.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/libnpmhook@11.0.0",
+            "UID": "98107d57f4eae788"
+          }
+        },
+        {
+          "Name": "libnpmorg",
+          "Version": "7.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/libnpmorg@7.0.0",
+            "UID": "d127861fbddf85c1"
+          }
+        },
+        {
+          "Name": "libnpmpack",
+          "Version": "8.0.5",
+          "Identifier": {
+            "PURL": "pkg:npm/libnpmpack@8.0.5",
+            "UID": "f7e1b50c0f974d62"
+          }
+        },
+        {
+          "Name": "libnpmpublish",
+          "Version": "10.0.2",
+          "Identifier": {
+            "PURL": "pkg:npm/libnpmpublish@10.0.2",
+            "UID": "caee096f910b3e55"
+          }
+        },
+        {
+          "Name": "libnpmsearch",
+          "Version": "8.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/libnpmsearch@8.0.0",
+            "UID": "85266cc6f2979458"
+          }
+        },
+        {
+          "Name": "libnpmteam",
+          "Version": "7.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/libnpmteam@7.0.0",
+            "UID": "ed7b356168d3529e"
+          }
+        },
+        {
+          "Name": "libnpmversion",
+          "Version": "7.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/libnpmversion@7.0.0",
+            "UID": "f52eba6e43d982f5"
+          }
+        },
+        {
+          "Name": "lru-cache",
+          "Version": "10.4.3",
+          "Identifier": {
+            "PURL": "pkg:npm/lru-cache@10.4.3",
+            "UID": "7d681053381ec2bc"
+          }
+        },
+        {
+          "Name": "make-fetch-happen",
+          "Version": "14.0.3",
+          "Identifier": {
+            "PURL": "pkg:npm/make-fetch-happen@14.0.3",
+            "UID": "da8860cfe3310af9"
+          }
+        },
+        {
+          "Name": "minimatch",
+          "Version": "9.0.9",
+          "Identifier": {
+            "PURL": "pkg:npm/minimatch@9.0.9",
+            "UID": "773f304ec036ee34"
+          }
+        },
+        {
+          "Name": "minipass",
+          "Version": "3.3.6",
+          "Identifier": {
+            "PURL": "pkg:npm/minipass@3.3.6",
+            "UID": "7efbc5baf98c8d10"
+          }
+        },
+        {
+          "Name": "minipass",
+          "Version": "3.3.6",
+          "Identifier": {
+            "PURL": "pkg:npm/minipass@3.3.6",
+            "UID": "b7ce61ea2292da41"
+          }
+        },
+        {
+          "Name": "minipass",
+          "Version": "3.3.6",
+          "Identifier": {
+            "PURL": "pkg:npm/minipass@3.3.6",
+            "UID": "336c142883f370bb"
+          }
+        },
+        {
+          "Name": "minipass",
+          "Version": "7.1.3",
+          "Identifier": {
+            "PURL": "pkg:npm/minipass@7.1.3",
+            "UID": "4051bad8dec024d1"
+          }
+        },
+        {
+          "Name": "minipass-collect",
+          "Version": "2.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/minipass-collect@2.0.1",
+            "UID": "c5f716d9c0ec4b92"
+          }
+        },
+        {
+          "Name": "minipass-fetch",
+          "Version": "4.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/minipass-fetch@4.0.1",
+            "UID": "c12f3b8ebc68890f"
+          }
+        },
+        {
+          "Name": "minipass-flush",
+          "Version": "1.0.5",
+          "Identifier": {
+            "PURL": "pkg:npm/minipass-flush@1.0.5",
+            "UID": "4e155f4804d5b01e"
+          }
+        },
+        {
+          "Name": "minipass-pipeline",
+          "Version": "1.2.4",
+          "Identifier": {
+            "PURL": "pkg:npm/minipass-pipeline@1.2.4",
+            "UID": "f9ca1e5f3449b3dc"
+          }
+        },
+        {
+          "Name": "minipass-sized",
+          "Version": "1.0.3",
+          "Identifier": {
+            "PURL": "pkg:npm/minipass-sized@1.0.3",
+            "UID": "e396142656705cf8"
+          }
+        },
+        {
+          "Name": "minizlib",
+          "Version": "3.1.0",
+          "Identifier": {
+            "PURL": "pkg:npm/minizlib@3.1.0",
+            "UID": "c55f100e28b906b"
+          }
+        },
+        {
+          "Name": "ms",
+          "Version": "2.1.3",
+          "Identifier": {
+            "PURL": "pkg:npm/ms@2.1.3",
+            "UID": "50a140c9d554dc56"
+          }
+        },
+        {
+          "Name": "mute-stream",
+          "Version": "2.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/mute-stream@2.0.0",
+            "UID": "73f25d912e1a8ff2"
+          }
+        },
+        {
+          "Name": "negotiator",
+          "Version": "1.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/negotiator@1.0.0",
+            "UID": "28c19cc3e361ce6c"
+          }
+        },
+        {
+          "Name": "node-gyp",
+          "Version": "11.5.0",
+          "Identifier": {
+            "PURL": "pkg:npm/node-gyp@11.5.0",
+            "UID": "7878d2102121db27"
+          }
+        },
+        {
+          "Name": "nopt",
+          "Version": "8.1.0",
+          "Identifier": {
+            "PURL": "pkg:npm/nopt@8.1.0",
+            "UID": "41cab835ae9660fb"
+          }
+        },
+        {
+          "Name": "normalize-package-data",
+          "Version": "7.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/normalize-package-data@7.0.1",
+            "UID": "e61599089dc611ef"
+          }
+        },
+        {
+          "Name": "npm",
+          "Version": "10.9.8",
+          "Identifier": {
+            "PURL": "pkg:npm/npm@10.9.8",
+            "UID": "77daf1f88582d71f"
+          }
+        },
+        {
+          "Name": "npm-audit-report",
+          "Version": "6.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/npm-audit-report@6.0.0",
+            "UID": "dc2dc36fc6abd31e"
+          }
+        },
+        {
+          "Name": "npm-bundled",
+          "Version": "4.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/npm-bundled@4.0.0",
+            "UID": "2947f170ba1ca8e3"
+          }
+        },
+        {
+          "Name": "npm-install-checks",
+          "Version": "7.1.2",
+          "Identifier": {
+            "PURL": "pkg:npm/npm-install-checks@7.1.2",
+            "UID": "8fb92bb5a2df3a64"
+          }
+        },
+        {
+          "Name": "npm-normalize-package-bin",
+          "Version": "4.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/npm-normalize-package-bin@4.0.0",
+            "UID": "ee42f2e22cab9180"
+          }
+        },
+        {
+          "Name": "npm-package-arg",
+          "Version": "12.0.2",
+          "Identifier": {
+            "PURL": "pkg:npm/npm-package-arg@12.0.2",
+            "UID": "f894396e3e248134"
+          }
+        },
+        {
+          "Name": "npm-packlist",
+          "Version": "9.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/npm-packlist@9.0.0",
+            "UID": "db7cd72fc0f45f1e"
+          }
+        },
+        {
+          "Name": "npm-pick-manifest",
+          "Version": "10.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/npm-pick-manifest@10.0.0",
+            "UID": "a35bce8cba3286ec"
+          }
+        },
+        {
+          "Name": "npm-profile",
+          "Version": "11.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/npm-profile@11.0.1",
+            "UID": "49c8f7e9fa29054d"
+          }
+        },
+        {
+          "Name": "npm-registry-fetch",
+          "Version": "18.0.2",
+          "Identifier": {
+            "PURL": "pkg:npm/npm-registry-fetch@18.0.2",
+            "UID": "5484a99ea6526660"
+          }
+        },
+        {
+          "Name": "npm-user-validate",
+          "Version": "3.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/npm-user-validate@3.0.0",
+            "UID": "b4f2dfd86ff6e937"
+          }
+        },
+        {
+          "Name": "p-map",
+          "Version": "7.0.4",
+          "Identifier": {
+            "PURL": "pkg:npm/p-map@7.0.4",
+            "UID": "7de5ffb924393231"
+          }
+        },
+        {
+          "Name": "package-json-from-dist",
+          "Version": "1.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/package-json-from-dist@1.0.1",
+            "UID": "5f02a305c6540579"
+          }
+        },
+        {
+          "Name": "pacote",
+          "Version": "19.0.2",
+          "Identifier": {
+            "PURL": "pkg:npm/pacote@19.0.2",
+            "UID": "61822dc9dcec19a2"
+          }
+        },
+        {
+          "Name": "pacote",
+          "Version": "20.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/pacote@20.0.1",
+            "UID": "1fa2aa156482f152"
+          }
+        },
+        {
+          "Name": "parse-conflict-json",
+          "Version": "4.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/parse-conflict-json@4.0.0",
+            "UID": "809fdcdc6ce11080"
+          }
+        },
+        {
+          "Name": "path-key",
+          "Version": "3.1.1",
+          "Identifier": {
+            "PURL": "pkg:npm/path-key@3.1.1",
+            "UID": "9d7c1eb3094d0711"
+          }
+        },
+        {
+          "Name": "path-scurry",
+          "Version": "1.11.1",
+          "Identifier": {
+            "PURL": "pkg:npm/path-scurry@1.11.1",
+            "UID": "89bcb231a511831d"
+          }
+        },
+        {
+          "Name": "picomatch",
+          "Version": "4.0.3",
+          "Identifier": {
+            "PURL": "pkg:npm/picomatch@4.0.3",
+            "UID": "f12a2f1c39a2487"
+          }
+        },
+        {
+          "Name": "postcss-selector-parser",
+          "Version": "7.1.1",
+          "Identifier": {
+            "PURL": "pkg:npm/postcss-selector-parser@7.1.1",
+            "UID": "6bb9fdabb98c035a"
+          }
+        },
+        {
+          "Name": "proc-log",
+          "Version": "5.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/proc-log@5.0.0",
+            "UID": "398eb12bf60f4562"
+          }
+        },
+        {
+          "Name": "proggy",
+          "Version": "3.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/proggy@3.0.0",
+            "UID": "593b297cd25e41d"
+          }
+        },
+        {
+          "Name": "promise-all-reject-late",
+          "Version": "1.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/promise-all-reject-late@1.0.1",
+            "UID": "759c5c0dfe22841e"
+          }
+        },
+        {
+          "Name": "promise-call-limit",
+          "Version": "3.0.2",
+          "Identifier": {
+            "PURL": "pkg:npm/promise-call-limit@3.0.2",
+            "UID": "d3e52c24867edbc5"
+          }
+        },
+        {
+          "Name": "promise-retry",
+          "Version": "2.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/promise-retry@2.0.1",
+            "UID": "6e1f780ae52b5609"
+          }
+        },
+        {
+          "Name": "promzard",
+          "Version": "2.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/promzard@2.0.0",
+            "UID": "ee265baca4217a80"
+          }
+        },
+        {
+          "Name": "qrcode-terminal",
+          "Version": "0.12.0",
+          "Identifier": {
+            "PURL": "pkg:npm/qrcode-terminal@0.12.0",
+            "UID": "b17a7c2ec3321961"
+          }
+        },
+        {
+          "Name": "read",
+          "Version": "4.1.0",
+          "Identifier": {
+            "PURL": "pkg:npm/read@4.1.0",
+            "UID": "865984186a418959"
+          }
+        },
+        {
+          "Name": "read-cmd-shim",
+          "Version": "5.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/read-cmd-shim@5.0.0",
+            "UID": "f25242979738c381"
+          }
+        },
+        {
+          "Name": "read-package-json-fast",
+          "Version": "4.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/read-package-json-fast@4.0.0",
+            "UID": "2c9929860e4df529"
+          }
+        },
+        {
+          "Name": "retry",
+          "Version": "0.12.0",
+          "Identifier": {
+            "PURL": "pkg:npm/retry@0.12.0",
+            "UID": "608a6385cf364c2b"
+          }
+        },
+        {
+          "Name": "safer-buffer",
+          "Version": "2.1.2",
+          "Identifier": {
+            "PURL": "pkg:npm/safer-buffer@2.1.2",
+            "UID": "c91f6999c7debfda"
+          }
+        },
+        {
+          "Name": "semver",
+          "Version": "7.7.4",
+          "Identifier": {
+            "PURL": "pkg:npm/semver@7.7.4",
+            "UID": "90a01a8a01ea3a09"
+          }
+        },
+        {
+          "Name": "shebang-command",
+          "Version": "2.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/shebang-command@2.0.0",
+            "UID": "fe0501cb328ce3b"
+          }
+        },
+        {
+          "Name": "shebang-regex",
+          "Version": "3.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/shebang-regex@3.0.0",
+            "UID": "8c44c7d1eb25d9be"
+          }
+        },
+        {
+          "Name": "signal-exit",
+          "Version": "4.1.0",
+          "Identifier": {
+            "PURL": "pkg:npm/signal-exit@4.1.0",
+            "UID": "883b84195e986f6a"
+          }
+        },
+        {
+          "Name": "sigstore",
+          "Version": "3.1.0",
+          "Identifier": {
+            "PURL": "pkg:npm/sigstore@3.1.0",
+            "UID": "835a7633ebe8b530"
+          }
+        },
+        {
+          "Name": "smart-buffer",
+          "Version": "4.2.0",
+          "Identifier": {
+            "PURL": "pkg:npm/smart-buffer@4.2.0",
+            "UID": "f0c5ee9f68d6fddf"
+          }
+        },
+        {
+          "Name": "socks",
+          "Version": "2.8.7",
+          "Identifier": {
+            "PURL": "pkg:npm/socks@2.8.7",
+            "UID": "a3c3b9778fe9269d"
+          }
+        },
+        {
+          "Name": "socks-proxy-agent",
+          "Version": "8.0.5",
+          "Identifier": {
+            "PURL": "pkg:npm/socks-proxy-agent@8.0.5",
+            "UID": "e2e974b7f8f572c4"
+          }
+        },
+        {
+          "Name": "spdx-correct",
+          "Version": "3.2.0",
+          "Identifier": {
+            "PURL": "pkg:npm/spdx-correct@3.2.0",
+            "UID": "ccc34415eb746b9a"
+          }
+        },
+        {
+          "Name": "spdx-exceptions",
+          "Version": "2.5.0",
+          "Identifier": {
+            "PURL": "pkg:npm/spdx-exceptions@2.5.0",
+            "UID": "3602fef2070203cf"
+          }
+        },
+        {
+          "Name": "spdx-expression-parse",
+          "Version": "3.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/spdx-expression-parse@3.0.1",
+            "UID": "f17cfd9d15e191ac"
+          }
+        },
+        {
+          "Name": "spdx-expression-parse",
+          "Version": "3.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/spdx-expression-parse@3.0.1",
+            "UID": "d810a03590b3ad31"
+          }
+        },
+        {
+          "Name": "spdx-expression-parse",
+          "Version": "4.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/spdx-expression-parse@4.0.0",
+            "UID": "951d3251ced005b"
+          }
+        },
+        {
+          "Name": "spdx-license-ids",
+          "Version": "3.0.23",
+          "Identifier": {
+            "PURL": "pkg:npm/spdx-license-ids@3.0.23",
+            "UID": "565aca18fc1c1d30"
+          }
+        },
+        {
+          "Name": "ssri",
+          "Version": "12.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/ssri@12.0.0",
+            "UID": "25e76f353f17f097"
+          }
+        },
+        {
+          "Name": "string-width",
+          "Version": "4.2.3",
+          "Identifier": {
+            "PURL": "pkg:npm/string-width@4.2.3",
+            "UID": "50671a77584f7818"
+          }
+        },
+        {
+          "Name": "string-width",
+          "Version": "4.2.3",
+          "Identifier": {
+            "PURL": "pkg:npm/string-width@4.2.3",
+            "UID": "f40914f4b9d19df2"
+          }
+        },
+        {
+          "Name": "string-width",
+          "Version": "5.1.2",
+          "Identifier": {
+            "PURL": "pkg:npm/string-width@5.1.2",
+            "UID": "acc7ab16b3c46f2e"
+          }
+        },
+        {
+          "Name": "string-width",
+          "Version": "5.1.2",
+          "Identifier": {
+            "PURL": "pkg:npm/string-width@5.1.2",
+            "UID": "26f12bb4d5f8ce91"
+          }
+        },
+        {
+          "Name": "strip-ansi",
+          "Version": "6.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/strip-ansi@6.0.1",
+            "UID": "c8d49e34f1cd87df"
+          }
+        },
+        {
+          "Name": "strip-ansi",
+          "Version": "6.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/strip-ansi@6.0.1",
+            "UID": "27648fc4d23271fe"
+          }
+        },
+        {
+          "Name": "strip-ansi",
+          "Version": "7.2.0",
+          "Identifier": {
+            "PURL": "pkg:npm/strip-ansi@7.2.0",
+            "UID": "cdaff036565829e1"
+          }
+        },
+        {
+          "Name": "strip-ansi",
+          "Version": "7.2.0",
+          "Identifier": {
+            "PURL": "pkg:npm/strip-ansi@7.2.0",
+            "UID": "826c0bb540146cbf"
+          }
+        },
+        {
+          "Name": "supports-color",
+          "Version": "9.4.0",
+          "Identifier": {
+            "PURL": "pkg:npm/supports-color@9.4.0",
+            "UID": "e6fdec1687f0e861"
+          }
+        },
+        {
+          "Name": "tar",
+          "Version": "7.5.11",
+          "Identifier": {
+            "PURL": "pkg:npm/tar@7.5.11",
+            "UID": "3aca9bae4d3f1419"
+          }
+        },
+        {
+          "Name": "text-table",
+          "Version": "0.2.0",
+          "Identifier": {
+            "PURL": "pkg:npm/text-table@0.2.0",
+            "UID": "db9d37c2491d4eb4"
+          }
+        },
+        {
+          "Name": "tiny-relative-date",
+          "Version": "1.3.0",
+          "Identifier": {
+            "PURL": "pkg:npm/tiny-relative-date@1.3.0",
+            "UID": "113325395c8c3f86"
+          }
+        },
+        {
+          "Name": "tinyglobby",
+          "Version": "0.2.15",
+          "Identifier": {
+            "PURL": "pkg:npm/tinyglobby@0.2.15",
+            "UID": "785b158db9ecc846"
+          }
+        },
+        {
+          "Name": "treeverse",
+          "Version": "3.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/treeverse@3.0.0",
+            "UID": "815f9702b2f3013d"
+          }
+        },
+        {
+          "Name": "tuf-js",
+          "Version": "3.1.0",
+          "Identifier": {
+            "PURL": "pkg:npm/tuf-js@3.1.0",
+            "UID": "351f35e0a85bc32b"
+          }
+        },
+        {
+          "Name": "unique-filename",
+          "Version": "4.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/unique-filename@4.0.0",
+            "UID": "33f76cc124d9f7c1"
+          }
+        },
+        {
+          "Name": "unique-slug",
+          "Version": "5.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/unique-slug@5.0.0",
+            "UID": "377c74e93002c962"
+          }
+        },
+        {
+          "Name": "util-deprecate",
+          "Version": "1.0.2",
+          "Identifier": {
+            "PURL": "pkg:npm/util-deprecate@1.0.2",
+            "UID": "f9c0b05c435e4f77"
+          }
+        },
+        {
+          "Name": "validate-npm-package-license",
+          "Version": "3.0.4",
+          "Identifier": {
+            "PURL": "pkg:npm/validate-npm-package-license@3.0.4",
+            "UID": "bb4a490d518c102f"
+          }
+        },
+        {
+          "Name": "validate-npm-package-name",
+          "Version": "6.0.2",
+          "Identifier": {
+            "PURL": "pkg:npm/validate-npm-package-name@6.0.2",
+            "UID": "31ef9be742c0857b"
+          }
+        },
+        {
+          "Name": "walk-up-path",
+          "Version": "3.0.1",
+          "Identifier": {
+            "PURL": "pkg:npm/walk-up-path@3.0.1",
+            "UID": "a7d0bec29806c900"
+          }
+        },
+        {
+          "Name": "which",
+          "Version": "2.0.2",
+          "Identifier": {
+            "PURL": "pkg:npm/which@2.0.2",
+            "UID": "1e1c9c717eb7247f"
+          }
+        },
+        {
+          "Name": "which",
+          "Version": "5.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/which@5.0.0",
+            "UID": "862f16459e9582a2"
+          }
+        },
+        {
+          "Name": "wrap-ansi",
+          "Version": "7.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/wrap-ansi@7.0.0",
+            "UID": "56487f6382f300f2"
+          }
+        },
+        {
+          "Name": "wrap-ansi",
+          "Version": "8.1.0",
+          "Identifier": {
+            "PURL": "pkg:npm/wrap-ansi@8.1.0",
+            "UID": "c9b062e6020fdea4"
+          }
+        },
+        {
+          "Name": "write-file-atomic",
+          "Version": "6.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/write-file-atomic@6.0.0",
+            "UID": "e6b40f965956ba2f"
+          }
+        },
+        {
+          "Name": "yallist",
+          "Version": "4.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/yallist@4.0.0",
+            "UID": "234c922bfe36d637"
+          }
+        },
+        {
+          "Name": "yallist",
+          "Version": "4.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/yallist@4.0.0",
+            "UID": "f844828a67933457"
+          }
+        },
+        {
+          "Name": "yallist",
+          "Version": "4.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/yallist@4.0.0",
+            "UID": "395c0674795c08fe"
+          }
+        },
+        {
+          "Name": "yallist",
+          "Version": "5.0.0",
+          "Identifier": {
+            "PURL": "pkg:npm/yallist@5.0.0",
+            "UID": "54aace8c0fad3070"
+          }
+        },
+        {
+          "Name": "yarn",
+          "Version": "1.22.22",
+          "Identifier": {
+            "PURL": "pkg:npm/yarn@1.22.22",
+            "UID": "a475ae636b391b4"
+          }
+        }
+      ],
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2026-48758",
+          "PkgName": "@sigstore/core",
+          "InstalledVersion": "2.0.0",
+          "FixedVersion": "3.2.1",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-102276",
+          "PkgName": "brace-expansion",
+          "InstalledVersion": "2.0.2",
+          "FixedVersion": "5.0.10, 3.0.7, 2.1.5, 1.1.19",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-102278",
+          "PkgName": "brace-expansion",
+          "InstalledVersion": "2.0.2",
+          "FixedVersion": "5.0.11, 3.0.8, 2.1.6, 1.1.20",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-13149",
+          "PkgName": "brace-expansion",
+          "InstalledVersion": "2.0.2",
+          "FixedVersion": "5.0.7, 1.1.16, 2.1.2",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-14257",
+          "PkgName": "brace-expansion",
+          "InstalledVersion": "2.0.2",
+          "FixedVersion": "5.0.8, 3.0.3, 2.1.3, 1.1.17",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-69152",
+          "PkgName": "brace-expansion",
+          "InstalledVersion": "2.0.2",
+          "FixedVersion": "1.1.18, 2.1.4, 3.0.6, 5.0.9",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-102277",
+          "PkgName": "brace-expansion",
+          "InstalledVersion": "2.0.2",
+          "FixedVersion": "5.0.12, 3.0.9, 2.1.7, 1.1.21",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-33750",
+          "PkgName": "brace-expansion",
+          "InstalledVersion": "2.0.2",
+          "FixedVersion": "5.0.5, 3.0.2, 2.0.3, 1.1.13",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-93748",
+          "PkgName": "http-cache-semantics",
+          "InstalledVersion": "4.2.0",
+          "Status": "affected",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-69192",
+          "PkgName": "ip-address",
+          "InstalledVersion": "10.1.0",
+          "FixedVersion": "10.3.1",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-101911",
+          "PkgName": "ip-address",
+          "InstalledVersion": "10.1.0",
+          "FixedVersion": "10.7.1",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-101912",
+          "PkgName": "ip-address",
+          "InstalledVersion": "10.1.0",
+          "FixedVersion": "10.7.1",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-101913",
+          "PkgName": "ip-address",
+          "InstalledVersion": "10.1.0",
+          "FixedVersion": "10.5.1",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-42338",
+          "PkgName": "ip-address",
+          "InstalledVersion": "10.1.0",
+          "FixedVersion": "10.1.1",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-9496",
+          "PkgName": "pacote",
+          "InstalledVersion": "19.0.2",
+          "FixedVersion": "21.5.1",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-9496",
+          "PkgName": "pacote",
+          "InstalledVersion": "20.0.1",
+          "FixedVersion": "21.5.1",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-33671",
+          "PkgName": "picomatch",
+          "InstalledVersion": "4.0.3",
+          "FixedVersion": "4.0.4, 3.0.2, 2.3.2",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-33672",
+          "PkgName": "picomatch",
+          "InstalledVersion": "4.0.3",
+          "FixedVersion": "4.0.4, 3.0.2, 2.3.2",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-104844",
+          "PkgName": "postcss-selector-parser",
+          "InstalledVersion": "7.1.1",
+          "FixedVersion": "7.1.6",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-9358",
+          "PkgName": "postcss-selector-parser",
+          "InstalledVersion": "7.1.1",
+          "FixedVersion": "6.1.3, 7.1.3",
+          "Status": "fixed",
+          "Severity": "LOW"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-48815",
+          "PkgName": "sigstore",
+          "InstalledVersion": "3.1.0",
+          "FixedVersion": "4.1.1",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-59873",
+          "PkgName": "tar",
+          "InstalledVersion": "7.5.11",
+          "FixedVersion": "7.5.19",
+          "Status": "fixed",
+          "Severity": "CRITICAL"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-59874",
+          "PkgName": "tar",
+          "InstalledVersion": "7.5.11",
+          "FixedVersion": "7.5.18",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-73566",
+          "PkgName": "tar",
+          "InstalledVersion": "7.5.11",
+          "FixedVersion": "7.5.21",
+          "Status": "fixed",
+          "Severity": "HIGH"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-53655",
+          "PkgName": "tar",
+          "InstalledVersion": "7.5.11",
+          "FixedVersion": "7.5.16",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-59871",
+          "PkgName": "tar",
+          "InstalledVersion": "7.5.11",
+          "FixedVersion": "7.5.18",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-59875",
+          "PkgName": "tar",
+          "InstalledVersion": "7.5.11",
+          "FixedVersion": "7.5.17",
+          "Status": "fixed",
+          "Severity": "MEDIUM"
+        }
+      ]
+    }
+  ]
+}

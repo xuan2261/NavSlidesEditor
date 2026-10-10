@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 import http from 'node:http'
+import { createRequire } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
 import express from 'express'
@@ -9,8 +10,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import routeModule from './pptx-import.js'
 import jobManager from '../services/pptx-import-job-manager.js'
 import originalPackage from '../services/pptx-import/original-package.js'
+import storage from '../services/storage.js'
+// Match the route's CJS loader so initialization reaches its runtime singleton.
+const nodeRequire = createRequire(import.meta.url)
+const packageRuntime = nodeRequire('../services/pptx-import/package-store-runtime.js')
 
-const { createPptxImportRouter, drainDetachedImportCleanups, runImport } = routeModule
+const { createPptxImportRouter, drainDetachedImportCleanups } = routeModule
 const { persistOriginalPptx, getOriginalsDir, sha256Buffer } = originalPackage
 
 async function writeMinimalPptx(filePath) {
@@ -116,167 +121,153 @@ describe('PPTX import route', () => {
   it('returns a typed in-progress response for repeated cancellation', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-cancel-'))
     const file = path.join(dir, 'valid.pptx')
-    let releaseImport
-    const importGate = new Promise((resolve) => {
-      releaseImport = resolve
-    })
+    let releaseDrain, markDrainStarted, releaseRollback, markRollbackStarted
+    const drainGate = new Promise((resolve) => { releaseDrain = resolve })
+    const drainStarted = new Promise((resolve) => { markDrainStarted = resolve })
+    const rollbackGate = new Promise((resolve) => { releaseRollback = resolve })
+    const rollbackStarted = new Promise((resolve) => { markRollbackStarted = resolve })
     try {
       await writeMinimalPptx(file)
+      storage.initDataFiles()
+      await packageRuntime.initializePackageStore({ rootDir: storage.DATA_DIR })
       const app = express()
       app.use('/api/pptx', createPptxImportRouter({
-        ...mockAtomicDeps(),
-        importer: async () => {
-          await importGate
-          throw new Error('cancelled test import')
+        importer: async () => ({
+          presentation: { title: 'cancel', slides: [] }, sourceMap: { entries: {} },
+          stats: { parser: 'pptxtojson', slideCount: 0 }, warnings: [],
+        }),
+        drainCompatibility: async () => { markDrainStarted(); await drainGate },
+        packageRollback: async (input) => {
+          markRollbackStarted()
+          await rollbackGate
+          return packageRuntime.withPackageStore((store) => store.rollbackImport(input))
         },
       }))
-
       const admitted = await request(app).post('/api/pptx/import').attach('file', file)
       expect(admitted.status).toBe(202)
-      await waitForJob(app, admitted.body.jobId, 'running', admitted.body.capability)
-
-      const firstCancel = await withCapability(
-        request(app).delete(`/api/pptx/jobs/${admitted.body.jobId}`),
-        admitted.body.capability
+      await drainStarted
+      const cancel = () => withCapability(
+        request(app).delete(`/api/pptx/jobs/${admitted.body.jobId}`), admitted.body.capability
       )
-      expect(firstCancel.status).toBe(204)
-
-      const secondCancel = await withCapability(
-        request(app).delete(`/api/pptx/jobs/${admitted.body.jobId}`),
-        admitted.body.capability
-      )
-      expect(secondCancel.status).toBe(409)
-      expect(secondCancel.body).toMatchObject({
-        error: 'job-cancellation-in-progress',
-        code: 'JOB_CANCEL_IN_PROGRESS',
-        status: 'cancelling',
+      expect((await cancel()).status).toBe(204)
+      releaseDrain()
+      await rollbackStarted
+      const inProgress = await cancel()
+      expect(inProgress.status).toBe(409)
+      expect(inProgress.body).toMatchObject({
+        error: 'job-cancellation-in-progress', code: 'JOB_CANCEL_IN_PROGRESS', status: 'cancelling',
+      })
+      releaseRollback()
+      await drainDetachedImportCleanups()
+      const finished = await cancel()
+      expect(finished.status).toBe(409)
+      expect(finished.body).toMatchObject({
+        error: 'job-already-finished', code: 'JOB_ALREADY_FINISHED', status: 'cancelled',
       })
     } finally {
-      releaseImport?.()
-      await new Promise((resolve) => setTimeout(resolve, 0))
+      releaseDrain?.()
+      releaseRollback?.()
+      await drainDetachedImportCleanups()
+      await packageRuntime.shutdownPackageStore()
       await fs.rm(dir, { recursive: true, force: true })
     }
   })
 
-  it('publishes package authority via outbox-only writer, awaits drain, then completes the API job', async () => {
+  it('publishes an HTTP-imported package projection before returning an openable job', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-package-authority-'))
     const file = path.join(dir, 'valid.pptx')
-    let commitInput
-    const createPresentation = vi.fn(async () => {
-      throw new Error('createPresentation must not run on package path')
-    })
-    const drainOrder = []
-    const drainCompatibility = vi.fn(async () => {
-      drainOrder.push('drain')
-      return 1
-    })
     try {
       await writeMinimalPptx(file)
+      const original = await fs.readFile(file)
+      storage.initDataFiles()
+      await storage.writePresentations([])
+      await packageRuntime.initializePackageStore({ rootDir: storage.DATA_DIR })
       const app = express()
       app.use('/api/pptx', createPptxImportRouter({
         importer: async () => ({
           presentation: { title: 'authoritative', theme: 'white', slides: [] },
-          stats: { parser: 'pptxtojson', slideCount: 2 },
+          sourceMap: { entries: {} },
+          stats: { parser: 'pptxtojson', slideCount: 0 },
           warnings: [{ type: 'media-missing', message: 'img' }],
         }),
-        createPresentation,
-        deletePresentation: async () => true,
-        drainCompatibility,
-        packageCommit: async (source, input) => {
-          drainOrder.push('commit')
-          commitInput = { source, input }
-          expect(input.compatibilityPresentation).toMatchObject({
-            id: input.presentationId,
-            title: 'authoritative',
-            theme: 'white',
-            transition: 'slide',
-            _pptxImportReport: {
-              schemaVersion: 1,
-              jobId: input.jobId,
-              summary: { warningCount: 1, byType: { 'media-missing': 1 }, omittedCount: 0 },
-            },
-          })
-          expect(input.compatibilityPresentation.createdAt).toBe(input.compatibilityUpdatedAt)
-          expect(input.projection._pptxImportReport).toEqual(
-            input.compatibilityPresentation._pptxImportReport
-          )
-          return {
-            revision: { id: 'r0-authoritative' },
-            head: {
-              originalRevisionId: 'r0-authoritative',
-              packageRevisionId: 'r0-authoritative',
-              generation: 1,
-            },
-          }
-        },
       }))
-
-      const res = await request(app).post('/api/pptx/import').attach('file', file)
-      const poll = await waitForJob(app, res.body.jobId, 'done', res.body.capability)
-
-      expect(poll.body).toMatchObject({
+      const admitted = await request(app).post('/api/pptx/import').attach('file', file)
+      expect(admitted.status).toBe(202)
+      const poll = await waitForJob(app, admitted.body.jobId, 'done', admitted.body.capability)
+      expect(poll.body, JSON.stringify({
+        error: poll.body.error,
+        code: poll.body.code,
+        stage: poll.body.stage,
+        failureStage: poll.body.failureStage,
+        message: poll.body.message,
+      })).toMatchObject({
         status: 'done',
-        result: {
-          presentationId: commitInput.input.presentationId,
-          reportSummary: {
-            schemaVersion: 1,
-            warningCount: 1,
-            byType: { 'media-missing': 1 },
-            omittedCount: 0,
-          },
-        },
+        result: { reportSummary: { warningCount: 1, byType: { 'media-missing': 1 } } },
       })
-      expect(poll.body.result.warnings).toBeUndefined()
-      expect(createPresentation).not.toHaveBeenCalled()
-      expect(drainCompatibility).toHaveBeenCalledTimes(1)
-      expect(drainOrder).toEqual(['commit', 'drain'])
-      expect(commitInput.source).toBeTruthy()
-      expect(commitInput.input).toMatchObject({
-        jobId: res.body.jobId,
-        presentationId: expect.any(String),
-        projection: { id: commitInput.input.presentationId, title: 'authoritative' },
+      const row = (await storage.readPresentations()).find((item) =>
+        item.id === poll.body.result.presentationId
+      )
+      expect(row).toMatchObject({
+        title: 'authoritative',
+        _pptxImportReport: { jobId: admitted.body.jobId },
       })
+      const store = packageRuntime.getPackageStore()
+      expect(row.pptxAggregateHead).toEqual(
+        store.getState().heads.find((head) => head.presentationId === row.id)
+      )
+      expect(await store.readOriginal(row.pptxAggregateHead.originalRevisionId)).toEqual(original)
+      expect(store.getState().compatibilityOutbox).toEqual([])
     } finally {
+      await drainDetachedImportCleanups()
+      await packageRuntime.shutdownPackageStore()
       await fs.rm(dir, { recursive: true, force: true })
     }
   })
 
-  it('fails closed and rolls back when drain fails after package publish', async () => {
+  it('fails closed and records an exact rollback when drain fails after package publish', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-route-drain-fail-'))
     const file = path.join(dir, 'valid.pptx')
-    const packageRollback = vi.fn(async () => {})
-    const createPresentation = vi.fn()
+    let publishedHead
+    let publishedJob
     try {
       await writeMinimalPptx(file)
+      const original = await fs.readFile(file)
+      storage.initDataFiles()
+      await storage.writePresentations([])
+      await packageRuntime.initializePackageStore({ rootDir: storage.DATA_DIR })
+      const store = packageRuntime.getPackageStore()
+      const priorHeads = new Set(store.getState().heads.map(head => head.presentationId))
       const app = express()
       app.use('/api/pptx', createPptxImportRouter({
         importer: async () => ({
           presentation: { title: 'drain-fail', slides: [] },
+          sourceMap: { entries: {} },
           stats: { parser: 'pptxtojson', slideCount: 0 },
           warnings: [],
         }),
-        createPresentation,
-        packageCommit: async (_source, input) => ({
-          revision: { id: 'r0-x' },
-          head: { generation: 1, packageRevisionId: 'r0-x', originalRevisionId: 'r0-x' },
-          presentationId: input.presentationId,
-        }),
-        packageRollback,
         drainCompatibility: async () => {
+          const state = store.getState()
+          publishedHead = state.heads.find(head => !priorHeads.has(head.presentationId))
+          publishedJob = state.jobs.find(job => job.presentationId === publishedHead.presentationId)
           throw new Error('drain failed')
         },
       }))
-
-      const res = await request(app).post('/api/pptx/import').attach('file', file)
-      const poll = await waitForJob(app, res.body.jobId, 'failed', res.body.capability)
-
-      expect(poll.body).toMatchObject({ status: 'failed', error: 'drain failed' })
-      expect(createPresentation).not.toHaveBeenCalled()
-      expect(packageRollback).toHaveBeenCalledWith({
-        jobId: res.body.jobId,
-        presentationId: expect.any(String),
+      const admitted = await request(app).post('/api/pptx/import').attach('file', file)
+      expect(admitted.status).toBe(202)
+      const poll = await waitForJob(app, admitted.body.jobId, 'failed', admitted.body.capability)
+      expect(poll.body.status).toBe('failed')
+      expect((await storage.readPresentations()).some(row => row.id === publishedHead.presentationId)).toBe(false)
+      expect(store.getState().heads.some(head => head.presentationId === publishedHead.presentationId)).toBe(false)
+      expect(await store.getJob(admitted.body.jobId)).toMatchObject({
+        id: admitted.body.jobId, status: 'failed', transactionState: 'rolled-back', cancellationPoint: 'rolled-back',
+        outcomeRevisionId: publishedJob.outcomeRevisionId,
+        outcomeGeneration: publishedJob.outcomeGeneration,
+        outcomeHeadHash: publishedJob.outcomeHeadHash,
       })
+      expect(await store.readOriginal(publishedHead.originalRevisionId)).toEqual(original)
     } finally {
+      await drainDetachedImportCleanups()
+      await packageRuntime.shutdownPackageStore()
       await fs.rm(dir, { recursive: true, force: true })
     }
   })
@@ -766,25 +757,35 @@ describe('PPTX import route', () => {
 
   it('[cap:import.upload-safety] applies the upload limiter to PPTX import in production', async () => {
     const originalNodeEnv = process.env.NODE_ENV
+    const originalDataDir = process.env.SLIDES_DATA_DIR
+    const originalUploadsDir = process.env.SLIDES_UPLOADS_DIR
+    const rootDir = storage.DATA_DIR
+    let server
+    let stopServer
     try {
       vi.resetModules()
       process.env.NODE_ENV = 'production'
+      process.env.SLIDES_DATA_DIR = rootDir
+      process.env.SLIDES_UPLOADS_DIR = storage.UPLOADS_DIR
       const imported = await import('../index.js')
       const app = imported.app || imported.default?.app
+      stopServer = imported.stopServer
+      server = await imported.startServer(0, { host: '127.0.0.1' })
       let last
       for (let i = 0; i < 31; i += 1) {
         last = await request(app).post('/api/pptx/import')
       }
       expect(last.status).toBe(429)
     } finally {
+      if (server) await stopServer(server)
+      if (originalDataDir === undefined) delete process.env.SLIDES_DATA_DIR
+      else process.env.SLIDES_DATA_DIR = originalDataDir
+      if (originalUploadsDir === undefined) delete process.env.SLIDES_UPLOADS_DIR
+      else process.env.SLIDES_UPLOADS_DIR = originalUploadsDir
       vi.resetModules()
-      process.env.NODE_ENV = originalNodeEnv
+      if (originalNodeEnv === undefined) delete process.env.NODE_ENV
+      else process.env.NODE_ENV = originalNodeEnv
     }
   }, 30_000)
 })
 
-describe('runImport atomic helpers', () => {
-  it('exports runImport for unit wiring', () => {
-    expect(typeof runImport).toBe('function')
-  })
-})

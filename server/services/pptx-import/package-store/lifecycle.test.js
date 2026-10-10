@@ -109,6 +109,13 @@ describe('package lifecycle ownership', () => {
     expect(store.getState().mutationResults).toEqual(expect.arrayContaining([
       expect.objectContaining({ presentationId: 'deck-b', state: 'committed' }),
     ]))
+    const owned = store.getState().owners
+      .filter((owner) => owner.ownerType === 'presentation' && owner.ownerId === 'deck-b')
+      .map((owner) => owner.revisionId).sort()
+    expect(owned).toEqual([...new Set([
+      duplicated.originalRevisionId, duplicated.packageRevisionId,
+      duplicated.projectionRevisionId, duplicated.sourceMapRevisionId,
+    ])].sort())
     await store.releaseWriter()
   })
 
@@ -301,6 +308,37 @@ describe('package lifecycle ownership', () => {
     await store.releaseWriter()
   })
 
+  it('refreshes Original-only publication heads without replacing metadata or creating ghost rows', async () => {
+    const { applyCompatibilityWrites } = require('../compatibility-view')
+    const { resolvePackageBackedReadFromState } = require('../../package-backed-presentation-read')
+    const store = await createAuthorityStore()
+    const history = { ownerType: 'history', ownerId: 'deck-a:original-only-refresh' }
+    await store.retainHead(history, 'deck-a')
+    await store.commitOriginal(Buffer.from('unrelated Original'), { ownerType: 'presentation', ownerId: 'deck-b' })
+    await store.commitOriginal(Buffer.from('unpublished Original'), { ownerType: 'presentation', ownerId: 'deck-c' })
+    const oldHead = store.getState().heads.find((head) => head.presentationId === 'deck-b')
+    const metadata = {
+      id: 'deck-b', title: 'Keep title', description: 'Keep description',
+      createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-02T00:00:00.000Z',
+      pptxOriginal: { filename: 'original.pptx' }, _pptxImportReport: { warnings: ['retained'] },
+      slides: [{ id: 'media-slide', elements: [{ id: 'image', type: 'image', src: '/uploads/owned.png' }] }],
+    }
+    const rows = [{ ...structuredClone(metadata), pptxAggregateHead: oldHead }]
+    const owners = store.getState().owners.filter((owner) => owner.ownerId === 'deck-b')
+    await store.restoreForward('deck-a', history)
+    const state = store.getState()
+    applyCompatibilityWrites(rows, state.compatibilityOutbox)
+    const currentHead = state.heads.find((head) => head.presentationId === 'deck-b')
+    expect(currentHead.matrixAuthorityEpoch).toBe(oldHead.matrixAuthorityEpoch + 1)
+    expect(rows.find((row) => row.id === 'deck-b')).toEqual({ ...metadata, pptxAggregateHead: currentHead })
+    expect(rows.some((row) => row.id === 'deck-c')).toBe(false)
+    expect(resolvePackageBackedReadFromState(state, 'deck-b', rows.find((row) => row.id === 'deck-b')))
+      .toMatchObject({ generation: oldHead.generation, presentation: metadata })
+    expect(state.owners.filter((owner) => owner.ownerId === 'deck-b')).toEqual(owners)
+    expect(await store.readOriginal(currentHead.originalRevisionId)).toEqual(Buffer.from('unrelated Original'))
+    await store.releaseWriter()
+  })
+
   it('reissues authority to every live head during restore-forward', async () => {
     const store = await createStore()
     await store.duplicatePresentationOwner('deck-a', 'deck-b')
@@ -453,5 +491,105 @@ describe('package lifecycle ownership', () => {
     })).rejects.toMatchObject({ code: 'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE' })
     expect(store.getState().heads[0].generation).toBe(1)
     await store.releaseWriter()
+  })
+
+  it.each(['projected', 'Original-only'])('repairs durable compatibility fences after unpublished restore high-water recovery (%s)', async (kind) => {
+    const { applyCompatibilityWrites } = require('../compatibility-view')
+    const { drainCompatibilityOutbox } = require('../compatibility-outbox')
+    const { resolvePackageBackedReadFromState } = require('../../package-backed-presentation-read')
+    const store = await createAuthorityStore()
+    const history = { ownerType: 'history', ownerId: 'deck-a:unpublished-restore' }
+    await store.retainHead(history, 'deck-a')
+    if (kind === 'projected') await store.duplicatePresentationOwner('deck-a', 'deck-b')
+    else await store.commitOriginal(Buffer.from('unrelated Original'), {
+      ownerType: 'presentation', ownerId: 'deck-b',
+    })
+    const before = store.getState()
+    const oldHead = before.heads.find((head) => head.presentationId === 'deck-b')
+    const metadata = {
+      ...(kind === 'projected' ? resolveEditedExportContext(before, 'deck-b').after : { slides: [] }),
+      id: 'deck-b', title: 'Keep unrelated title',
+      createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-02T00:00:00.000Z',
+      _pptxImportReport: { warnings: ['retained'] },
+    }
+    const oldRow = { ...metadata, pptxAggregateHead: oldHead }
+    const rows = [structuredClone(oldRow)]
+    const original = await store.readOriginal(oldHead.originalRevisionId)
+    expect(resolvePackageBackedReadFromState(before, 'deck-b', oldRow).generation).toBe(1)
+    await expect(store.restoreForward('deck-a', history, { faultAfterPrepare: true })).rejects.toThrow()
+    expect(store.getState()).toEqual(before)
+    await store.releaseWriter()
+
+    const reopened = await openPackageStore({ rootDir: store.rootDir })
+    await reopened.acquireWriter()
+    try {
+      const recovered = reopened.getState()
+      const current = recovered.heads.find((head) => head.presentationId === 'deck-b')
+      expect(recovered.matrixAuthorityEpoch).toBeGreaterThan(before.matrixAuthorityEpoch)
+      expect(current).toMatchObject({ generation: oldHead.generation, matrixAuthorityEpoch: recovered.matrixAuthorityEpoch })
+      expect(current.matrixAuthoritySubjects).not.toEqual(oldHead.matrixAuthoritySubjects)
+      expect(validateMatrixAuthoritySubjects(oldHead.matrixAuthoritySubjects, undefined, recovered.matrixAuthorityEpoch).authorized).toBe(false)
+      expect(() => resolvePackageBackedReadFromState(recovered, 'deck-b', oldRow))
+        .toThrow('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
+      const root = JSON.parse(await fs.readFile(path.join(store.rootDir, 'state-root.json'), 'utf8'))
+      const published = JSON.parse(await fs.readFile(path.join(store.rootDir, root.stateFile), 'utf8'))
+      expect(published.compatibilityOutbox).toEqual(recovered.compatibilityOutbox)
+      expect(published.heads).toEqual(recovered.heads)
+      expect(recovered.compatibilityOutbox).toEqual(expect.arrayContaining([
+        expect.objectContaining({ presentationId: 'deck-b', generation: oldHead.generation }),
+      ]))
+      await drainCompatibilityOutbox(reopened, async (writes) => applyCompatibilityWrites(rows, writes))
+      expect(rows).toEqual([{ ...metadata, pptxAggregateHead: current }])
+      expect(resolvePackageBackedReadFromState(reopened.getState(), 'deck-b', rows[0]))
+        .toMatchObject({ generation: oldHead.generation, presentation: { id: 'deck-b', slides: metadata.slides } })
+      expect(await reopened.readOriginal(current.originalRevisionId)).toEqual(original)
+      expect(reopened.getState().owners).toEqual(before.owners)
+    } finally { await reopened.releaseWriter() }
+
+    const durable = await openPackageStore({ rootDir: store.rootDir })
+    expect(durable.getState().compatibilityOutbox).toEqual([])
+    expect(resolvePackageBackedReadFromState(durable.getState(), 'deck-b', rows[0]).generation).toBe(1)
+  })
+
+  it('refreshes unpublished canonical template heads without manufacturing rows and preserves explicit pending publication', async () => {
+    const { applyCompatibilityWrites } = require('../compatibility-view')
+    const { drainCompatibilityOutbox } = require('../compatibility-outbox')
+    const { resolvePackageBackedReadFromState } = require('../../package-backed-presentation-read')
+    const store = await createAuthorityStore()
+    try {
+      const template = { ownerType: 'template', ownerId: 'template-source' }
+      const history = { ownerType: 'history', ownerId: 'deck-a:template-interleaving' }
+      await store.retainHead(template, 'deck-a')
+      await store.retainHead(history, 'deck-a')
+      const before = store.getState()
+      const retained = before.owners.filter((owner) => owner.ownerType !== 'presentation')
+      const projection = { ...resolveEditedExportContext(before, 'deck-a').after, id: 'template-destination' }
+      // The route's row insertion follows this durable head creation. Hold that
+      // boundary explicitly while another restore publishes and drains.
+      await store.instantiateRetainedHead(template, projection.id, { projection })
+      const pendingProjection = { ...projection, id: 'explicit-pending', title: 'Admitted pending publication' }
+      await store.instantiateRetainedHead(template, pendingProjection.id, {
+        projection: pendingProjection, compatibilityPresentation: pendingProjection,
+      })
+      const rows = []
+      expect(rows).toHaveLength(0)
+      await store.restoreForward('deck-a', history)
+      const state = store.getState()
+      await drainCompatibilityOutbox(store, async (writes) => applyCompatibilityWrites(rows, writes))
+      expect(rows.filter((row) => row.id === projection.id)).toEqual([])
+      const pending = rows.filter((row) => row.id === pendingProjection.id)
+      expect(pending).toHaveLength(1)
+      expect(pending[0]).toMatchObject({ title: pendingProjection.title })
+      expect(resolvePackageBackedReadFromState(state, pendingProjection.id, pending[0]).generation).toBe(1)
+      expect(state.owners.filter((owner) => owner.ownerType !== 'presentation')).toEqual(retained)
+      const destination = state.heads.find((head) => head.presentationId === projection.id)
+      expect(resolveEditedExportContext(state, projection.id)).toMatchObject({ ok: true, after: projection })
+      expect(destination.journalRevisionId).toBe(before.heads[0].journalRevisionId)
+      // Resume the destination publication with its current fenced identity.
+      rows.push({ ...projection, pptxAggregateHead: destination })
+      expect(rows.filter((row) => row.id === projection.id)).toHaveLength(1)
+      expect(resolvePackageBackedReadFromState(state, projection.id, rows.find((row) => row.id === projection.id)))
+        .toMatchObject({ generation: 1, presentation: { slides: projection.slides } })
+    } finally { await store.releaseWriter() }
   })
 })

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../../utils/api'
 import { markdownToSlidesWithWarnings } from '../../utils/markdown-import'
-import { importProjectAtomically } from '../../utils/import-project'
+import { useProjectImport } from '../../hooks/use-project-import'
 import { summarizePptxImportWarnings } from '../../utils/pptx-import-summary'
 import {
   DEFAULT_PPTX_JOB_MAX_WAIT_MS,
@@ -16,7 +16,12 @@ export function usePresentationImports({ onOpen, confirmActiveContent }) {
   const [importProgress, setImportProgress] = useState(null)
   const [importWarningSummary, setImportWarningSummary] = useState(null)
   const pptxImportRef = useRef(null)
-  const projectImportRef = useRef(null)
+  const handleImportProject = useProjectImport({
+    onOpen,
+    confirmActiveContent,
+    onProgress: setImportProgress,
+    onWarnings: setImportWarningSummary,
+  })
 
   useEffect(() => () => {
     const activeImport = pptxImportRef.current
@@ -26,12 +31,6 @@ export function usePresentationImports({ onOpen, confirmActiveContent }) {
     if (activeImport?.jobId) {
       api.cancelPptxJob(activeImport.jobId, { capability: activeImport.capability }).catch(() => {})
     }
-    const projectImport = projectImportRef.current
-    projectImport?.controller.abort()
-    if (projectImport?.state === 'pending' && projectImport.sessionId) {
-      api.rollbackProjectImport(projectImport.sessionId, projectImport.capability).catch(() => {})
-    }
-    projectImportRef.current = null
   }, [])
 
   async function handleImportPdf(file) {
@@ -93,75 +92,6 @@ export function usePresentationImports({ onOpen, confirmActiveContent }) {
     }
   }
 
-  async function handleImportProject(file) {
-    if (!file || projectImportRef.current) return
-    setImportWarningSummary(null)
-    const activeImport = {
-      controller: new AbortController(),
-      state: 'preflight',
-      sessionId: null,
-      capability: null,
-    }
-    projectImportRef.current = activeImport
-    const runImport = (acknowledged = false) => importProjectAtomically(api, file, {
-      signal: activeImport.controller.signal,
-      trustedAuthorActiveContentAcknowledged: acknowledged,
-      onSession: (session) => {
-        activeImport.state = 'pending'
-        activeImport.sessionId = session.sessionId
-        activeImport.capability = session.capability
-      },
-      onPhase: (phase) => {
-        if (projectImportRef.current !== activeImport) return
-        if (phase === 'preflight') setImportProgress('Validating project archive...')
-        if (phase === 'media') setImportProgress('Placing project media...')
-        if (phase === 'publishing') {
-          activeImport.state = 'committing'
-          setImportProgress('Publishing presentation...')
-        }
-      },
-    })
-    try {
-      let receipt
-      try {
-        receipt = await runImport(false)
-      } catch (error) {
-        if (error?.code !== 'ACTIVE_CONTENT_ACK_REQUIRED') throw error
-        const types = Array.isArray(error.activeContent) ? error.activeContent.join(', ') : 'active content'
-        const message = `This project contains trusted-author active content (${types}). Import only if you trust its author.`
-        const confirmFn = confirmActiveContent || (typeof window !== 'undefined' ? window.__confirmActiveContent : null)
-        const accepted = confirmFn ? await confirmFn(message) : false
-        if (!accepted) return
-        receipt = await runImport(true)
-      }
-      if (projectImportRef.current === activeImport && receipt?.presentationId) {
-        activeImport.state = 'committed'
-        if (receipt.warnings?.length) {
-          setImportWarningSummary(`Project import warnings:\n- ${receipt.warnings.join('\n- ')}`)
-        }
-        onOpen(receipt.presentationId)
-      }
-    } catch (err) {
-      const abandoned = err?.name === 'AbortError' || projectImportRef.current !== activeImport
-      if (!abandoned && activeImport.state === 'pending' && activeImport.sessionId) {
-        await api.rollbackProjectImport(activeImport.sessionId, activeImport.capability).catch(() => {})
-        activeImport.state = 'rolled-back'
-      }
-      if (!abandoned) {
-        console.error('Project import failed:', err)
-        const message = activeImport.state === 'committing'
-          ? 'Project publication outcome is unknown. Check existing presentations before retrying.'
-          : `Failed to import project: ${err.message}`
-        showError(message)
-      }
-    } finally {
-      if (projectImportRef.current === activeImport) {
-        activeImport.controller.abort()
-        projectImportRef.current = null
-        setImportProgress(null)
-      }
-    }
-  }
 
   async function handleImportPptx(file) {
     if (!file) return

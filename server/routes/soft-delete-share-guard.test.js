@@ -14,6 +14,8 @@ let storage
 let tmpDir
 let originalDataDir
 let originalUploadsDir
+let server
+let stopServer
 
 async function seedDeck() {
   const res = await request(app)
@@ -52,9 +54,12 @@ beforeAll(async () => {
 
   const mod = await import('../index.js')
   app = mod.app
+  stopServer = mod.stopServer
+  server = await mod.startServer(0, { host: '127.0.0.1' })
 }, 30000)
 
 afterAll(async () => {
+  if (server) await stopServer(server)
   if (originalDataDir === undefined) delete process.env.SLIDES_DATA_DIR
   else process.env.SLIDES_DATA_DIR = originalDataDir
   if (originalUploadsDir === undefined) delete process.env.SLIDES_UPLOADS_DIR

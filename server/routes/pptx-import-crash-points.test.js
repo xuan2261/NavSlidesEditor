@@ -620,9 +620,19 @@ describe('PPTX import crash points (real store + outbox)', () => {
     }
   })
 
-  it('success path always calls drainCompatibility (hard gate)', async () => {
+  it('P07-13: a production drain that dead-letters every write never publishes openable live or SSE done', async () => {
     const jobId = jobManager.createJob()
-    const drainCompatibility = vi.fn(realDrain)
+    const capability = jobManager.takeJobCapability(jobId)
+    const originalBytes = await fs.readFile(pptxPath)
+    const events = []
+    jobManager.attachSseClient(jobId, {
+      write: (chunk) => events.push(chunk),
+      end: () => {},
+    })
+    const fsExtra = require('fs-extra')
+    const originalRename = fsExtra.rename
+    let presentationId
+    let drained
 
     await runImport({
       jobId,
@@ -630,12 +640,178 @@ describe('PPTX import crash points (real store + outbox)', () => {
       originalName: 'deck.pptx',
       importer: async () => importerResult(),
       jobManager,
-      packageCommit: realPackageCommit,
+      packageCommit: async (source, input) => {
+        presentationId = input.presentationId
+        return realPackageCommit(source, input)
+      },
       packageRollback: realPackageRollback,
-      drainCompatibility,
+      drainCompatibility: async () => {
+        const failure = vi.spyOn(fsExtra, 'rename').mockImplementation(async (source, destination) => {
+          if (path.resolve(destination) === path.resolve(storage.DATA_DIR, 'presentations.json')) {
+            throw Object.assign(new Error('projection sink unavailable'), { code: 'EIO' })
+          }
+          return originalRename(source, destination)
+        })
+        try {
+          drained = await realDrain()
+          return drained
+        } finally {
+          failure.mockRestore()
+        }
+      },
     })
 
-    expect(await settleJob(jobId, ['done'])).toMatchObject({ status: 'done' })
-    expect(drainCompatibility).toHaveBeenCalledTimes(1)
+    expect(drained).toBe(0)
+    const state = packageRuntime.getPackageStore().getState()
+    expect(state.compatibilityDeadLetter).toEqual(expect.arrayContaining([
+      expect.objectContaining({ presentationId, code: 'EIO' }),
+    ]))
+    expect(await storage.readPresentations()).toEqual([])
+    const app = express()
+    app.use('/api/pptx', createPptxImportRouter({ jobManager }))
+    const live = await request(app).get(`/api/pptx/jobs/${jobId}`)
+      .set('X-Pptx-Job-Capability', capability)
+    expect(live.status).toBe(200)
+    expect(live.body.status).not.toBe('done')
+    expect(live.body.result?.presentationId).toBeUndefined()
+    expect(events.join('')).not.toContain('event: done\n')
+
+    jobManager.cleanup(jobId)
+    const durable = await request(app).get(`/api/pptx/jobs/${jobId}`)
+      .set('X-Pptx-Job-Capability', capability)
+    expect(durable.status).toBe(200)
+    expect(durable.body).toMatchObject({ status: 'pending-visibility', durable: true })
+    expect(durable.body.result).toBeUndefined()
+    const head = state.heads.find((item) => item.presentationId === presentationId)
+    expect(head).toBeTruthy()
+    expect(await packageRuntime.getPackageStore().readOriginal(head.originalRevisionId))
+      .toEqual(originalBytes)
   })
+
+  it('P07-02: live and durable GET withhold done after raw publication identity diverges', async () => {
+    const jobId = jobManager.createJob()
+    const capability = jobManager.takeJobCapability(jobId)
+    let presentationId
+    await runImport({
+      jobId,
+      filePath: pptxPath,
+      originalName: 'deck.pptx',
+      importer: async () => importerResult(),
+      jobManager,
+      packageCommit: async (source, input) => {
+        presentationId = input.presentationId
+        return realPackageCommit(source, input)
+      },
+      packageRollback: realPackageRollback,
+      drainCompatibility: realDrain,
+    })
+    expect(jobManager.getJob(jobId)?.status).toBe('done')
+    await storage.withPresentations((rows) => {
+      rows.find((row) => row.id === presentationId).pptxAggregateHead.sourceMapRevisionId = '0'.repeat(64)
+    })
+    const app = express()
+    app.use('/api/pptx', createPptxImportRouter({ jobManager }))
+    const stream = await request(app)
+      .get(`/api/pptx/jobs/${jobId}/stream?capability=${encodeURIComponent(capability)}`)
+    expect(stream.status).toBe(200)
+    expect(stream.text).toContain('pending-visibility')
+    expect(stream.text).not.toContain('event: done\n')
+    for (const live of [true, false]) {
+      if (!live) jobManager.cleanup(jobId)
+      const response = await request(app).get(`/api/pptx/jobs/${jobId}`)
+        .set('X-Pptx-Job-Capability', capability)
+      expect(response.status).toBe(200)
+      expect(response.body.status).toBe('pending-visibility')
+      expect(response.body.result).toBeUndefined()
+    }
+  })
+
+  it.each(['rollback-error', 'visible-error', 'stale-cleanup', 'cancel-successor'])(
+    'P08-11/13: %s retains media and immutable Original instead of destructive compensation',
+    async (mode) => {
+      const jobId = jobManager.createJob()
+      const capability = jobManager.takeJobCapability(jobId)
+      const originalBytes = await fs.readFile(pptxPath)
+      const uploads = path.join(workDir, 'uploads')
+      const image = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13,
+        73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0, 0, 0, 144, 119, 83, 222,
+        0, 0, 0, 12, 73, 68, 65, 84, 8, 215, 99, 248, 15, 0, 0, 1, 1, 0, 5,
+        24, 212, 205, 0, 0, 0, 59, 73, 69, 78, 68, 174, 66, 96, 130])
+      const { persistImageBuffer } = require('../services/pptx-import/media')
+      const { buildImportSourceMap } = require('../services/pptx-import/source-map')
+      let mediaUrl
+      let presentationId
+      let committedHead
+      let successorHead
+      await runImport({
+        jobId, filePath: pptxPath, originalName: 'deck.pptx', jobManager,
+        importer: async (_file, { mediaTransaction, signal }) => {
+          const placed = await persistImageBuffer(image, 'image/png', uploads, { mediaTransaction, signal })
+          mediaUrl = placed.url
+          const presentation = {
+            title: 'Media owner', slides: [{ id: 's1', elements: [{ id: 'e1', type: 'image', src: mediaUrl }] }],
+          }
+          return importerResult({
+            presentation, sourceMap: await buildImportSourceMap(presentation, null, null),
+          })
+        },
+        packageCommit: async (source, input) => {
+          presentationId = input.presentationId
+          const result = await realPackageCommit(source, input)
+          committedHead = result.head
+          return result
+        },
+        packageRollback: async (input) => {
+          if (mode === 'rollback-error') {
+            throw Object.assign(new Error('rollback sink unavailable'), { code: 'EIO' })
+          }
+          return realPackageRollback(input)
+        },
+        drainCompatibility: async () => {
+          if (mode !== 'rollback-error') await realDrain()
+          if (mode === 'stale-cleanup' || mode === 'cancel-successor') {
+            const row = (await storage.readPresentations()).find((item) => item.id === presentationId)
+            const owner = { ownerType: 'history', ownerId: `${presentationId}:successor` }
+            successorHead = await packageRuntime.withPackageStore(async (store) => {
+              await store.retainHead(owner, presentationId)
+              return store.restoreForward(presentationId, owner, { compatibilityPresentation: row })
+            })
+            await realDrain()
+          }
+          if (mode === 'cancel-successor') {
+            const control = express()
+            control.use('/api/pptx', createPptxImportRouter({ jobManager }))
+            const cancelled = await request(control).delete(`/api/pptx/jobs/${jobId}`)
+              .set('X-Pptx-Job-Capability', capability)
+            expect(cancelled.status).toBe(204)
+            return
+          }
+          throw Object.assign(new Error('drain interrupted'), { code: 'EIO' })
+        },
+      })
+      await importRouterModule.drainDetachedImportCleanups()
+      const app = express()
+      app.use('/uploads', express.static(uploads))
+      const fetched = await request(app).get(mediaUrl).buffer(true)
+      expect(fetched.status).toBe(200)
+      expect(fetched.body).toEqual(image)
+      const store = packageRuntime.getPackageStore()
+      expect(store.getState().heads.find((head) => head.presentationId === presentationId))
+        .toEqual(successorHead || committedHead)
+      expect(await store.readOriginal(committedHead.originalRevisionId)).toEqual(originalBytes)
+      const view = await durableView(jobId, presentationId)
+      expect(view.durable).toMatchObject({
+        transactionState: 'reconcile-required', reconcileRequired: true,
+        reconcileReasonCode: expect.stringMatching(/^[A-Z][A-Z0-9_]{1,63}$/),
+      })
+      expect(view.serialized.status).toBe(mode === 'visible-error' ? 'done' : 'pending-visibility')
+      if (successorHead) {
+        const { readAuthoritativePresentation } = require('../services/package-backed-presentation-read')
+        const opened = await readAuthoritativePresentation(presentationId, { normalize: false })
+        expect(opened.presentation.slides[0].elements[0].src).toBe(mediaUrl)
+      }
+    },
+    5_000
+  )
+
 })

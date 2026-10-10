@@ -192,7 +192,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const getAuthoringSlide = useCallback(() => authoringSlideRef.current, [])
   const {
     editor,
-    settingContent,
+    resetContent,
     clearContent: clearRichTextContent,
     startEditingElement,
     stopEditingElement,
@@ -249,6 +249,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     commitHistoryTransaction,
   } = useEditorHistoryController({
     presentation,
+    authoringTarget: masterEdit ? { kind: 'master', id: masterEdit.id } : null,
     setPresentation,
     setCurrentSlideIndex,
     setVerticalEdit,
@@ -257,8 +258,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     editingElementIdRef,
     setSelectedElementIds,
     setEditingElementId,
-    editor,
-    settingContent,
+    resetContent,
   })
   const {
     adoptGeneration,
@@ -274,6 +274,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     recoverLocalDraft,
     lastSaveError,
     loading,
+    restorePresentation,
     retryPendingSave,
     saveConflict,
     saveRecovery,
@@ -1008,6 +1009,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
           setCurrentSlideIndex,
           navigateToSlide,
           setPresentation,
+          restorePresentation,
           htmlEditorState,
           setHtmlEditorState,
           commitHtmlEdit,

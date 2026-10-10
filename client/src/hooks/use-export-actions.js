@@ -2,11 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { exportPDF, generateRevealHTML } from '../utils/generateHTML'
 import { generateOfflineHTML } from '../utils/offlineExport'
 import { exportProject } from '../utils/export-project'
-import {
-  parseProjectFile,
-  rehydrateImportedPresentation,
-  validateProjectFile,
-} from '../utils/import-project'
+import { useProjectImport } from './use-project-import'
 import { api } from '../utils/api'
 import { usePresentationStore } from '../stores/presentation-store'
 import { showError, showNotice } from '../utils/app-feedback'
@@ -218,47 +214,57 @@ export function useExportActions(
   }, [presentation])
 
   const onExportProject = useCallback(async () => {
+    let exportToken = null
     try {
-      await exportProject(presentation)
+      if (usePresentationStore.getState().saveConflict) {
+        throw new Error('Resolve the save conflict before exporting the project')
+      }
+      if (typeof flushPendingSave === 'function' && !(await flushPendingSave())) {
+        throw new Error('Unable to save current edits before project export')
+      }
+      if (typeof beginExport === 'function') {
+        exportToken = beginExport()
+        if (exportToken === null) throw new Error('An export is already in progress')
+      }
+      if (usePresentationStore.getState().saveConflict) {
+        throw new Error('Resolve the save conflict before exporting the project')
+      }
+      let snapshot = presentation
+      if (presentation?.pptxSourceAvailable === true) {
+        // The prop can predate the completed save, and the store can contain edits
+        // queued during this barrier. Only the saved server snapshot is exported.
+        snapshot = await api.getPresentation(presentation.id)
+        if (snapshot?.id !== presentation.id || snapshot.pptxSourceAvailable !== true) {
+          throw new Error('Saved package snapshot is unavailable')
+        }
+      }
+      await exportProject(snapshot)
     } catch (err) {
       console.error('Project export failed:', err)
       showError('Project export failed: ' + err.message)
+    } finally {
+      if (exportToken !== null && typeof endExport === 'function') endExport(exportToken)
     }
-  }, [presentation])
+  }, [beginExport, endExport, flushPendingSave, presentation])
+
+  const openImportedProject = useCallback((id) => {
+    window.location.href = `/editor/${id}`
+  }, [])
+  const showImportWarnings = useCallback((summary) => {
+    if (summary) showNotice(summary)
+  }, [])
+  const handleImportProject = useProjectImport({
+    onOpen: openImportedProject,
+    onWarnings: showImportWarnings,
+  })
 
   const onOpenProject = useCallback(() => {
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = '.navslides,.json'
-    input.onchange = async (e) => {
-      const file = e.target.files[0]
-      if (!file) return
-      try {
-        const parsed = await parseProjectFile(file)
-        const { valid, errors, warnings } = validateProjectFile(parsed)
-        if (!valid) {
-          showError('Invalid project file: ' + errors.join(', '))
-          return
-        }
-        if (warnings.length) console.warn('Import warnings:', warnings)
-        const rehydrated = await rehydrateImportedPresentation(api, parsed)
-        if (rehydrated.warnings.length) {
-          console.warn('Import warnings:', rehydrated.warnings)
-        }
-        let finalPres = rehydrated.presentation
-        finalPres.title = (finalPres.title || 'Imported') + ' (Imported)'
-        const newPres = await api.createPresentation({
-          ...finalPres,
-          slides: finalPres.slides,
-        })
-        window.location.href = `/editor/${newPres.id}`
-      } catch (err) {
-        console.error('Import failed:', err)
-        showError('Import failed: ' + err.message)
-      }
-    }
+    input.onchange = (event) => handleImportProject(event.target.files?.[0])
     input.click()
-  }, [])
+  }, [handleImportProject])
 
   return {
     onExportPDF,

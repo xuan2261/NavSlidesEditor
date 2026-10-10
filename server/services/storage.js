@@ -72,15 +72,17 @@ async function withFileLock(filePath, fn) {
 // reload, Ctrl+C, OS kill) corrupting the JSON file.
 let atomicCounter = 0
 
-async function renameWithRetry(src, dest, attempts = 5) {
+async function renameWithRetry(src, dest, attempts = 5, { signal } = {}) {
   // Windows occasionally fails rename with EPERM/EBUSY when antivirus or
   // another reader holds the target briefly. Retry with bounded backoff.
   let lastErr
   for (let i = 0; i < attempts; i++) {
+    signal?.throwIfAborted()
     try {
       await fs.rename(src, dest)
       return
     } catch (err) {
+      signal?.throwIfAborted()
       lastErr = err
       const retriable = ['EPERM', 'EBUSY', 'EACCES', 'EEXIST'].includes(err.code)
       if (!retriable || i === attempts - 1) throw err
@@ -90,14 +92,17 @@ async function renameWithRetry(src, dest, attempts = 5) {
   throw lastErr
 }
 
-async function writeJsonAtomic(filePath, data, options) {
+async function writeJsonAtomic(filePath, data, { signal, ...options } = {}) {
   const tmpPath = `${filePath}.tmp.${process.pid}.${++atomicCounter}`
   const secret = isSecretBearingPath(filePath)
   try {
+    signal?.throwIfAborted()
     await fs.writeJson(tmpPath, data, secret ? { ...options, mode: OWNER_ONLY_MODE } : options)
+    signal?.throwIfAborted()
     if (secret && process.platform !== 'win32') await fs.chmod(tmpPath, OWNER_ONLY_MODE)
-    await renameWithRetry(tmpPath, filePath)
-    if (secret && process.platform !== 'win32') await fs.chmod(filePath, OWNER_ONLY_MODE)
+    signal?.throwIfAborted()
+    // A native rename already in flight cannot be revoked; success is committed.
+    await renameWithRetry(tmpPath, filePath, 5, { signal })
   } catch (err) {
     await fs.remove(tmpPath).catch(() => {})
     throw err
@@ -173,11 +178,14 @@ async function writePresentations(data) {
   return withFileLock(DATA_FILE, async () => writeJsonAtomic(DATA_FILE, data, { spaces: 2 }))
 }
 
-async function withPresentations(fn) {
+async function withPresentations(fn, { signal } = {}) {
   return withFileLock(DATA_FILE, async () => {
+    signal?.throwIfAborted()
     const presentations = await fs.readJson(DATA_FILE)
+    signal?.throwIfAborted()
     const result = await fn(presentations)
-    await writeJsonAtomic(DATA_FILE, presentations, { spaces: 2 })
+    signal?.throwIfAborted()
+    await writeJsonAtomic(DATA_FILE, presentations, { spaces: 2, signal })
     return result
   })
 }
@@ -231,11 +239,30 @@ async function writeGithubConfig(data) {
 
 // ── Settings ─────────────────────────────────────────────────────────────────
 async function readSettings() {
-  return withFileLock(SETTINGS_FILE, async () => fs.readJson(SETTINGS_FILE))
+  return withFileLock(SETTINGS_FILE, async () => normalizeSettings(await fs.readJson(SETTINGS_FILE)))
 }
 
 async function writeSettings(data) {
   return withFileLock(SETTINGS_FILE, async () => writeJsonAtomic(SETTINGS_FILE, data, { spaces: 2 }))
+}
+
+function normalizeSettings(settings) {
+  const revision = settings.settingsRevision ?? 0
+  if (!Number.isSafeInteger(revision) || revision < 0) throw new Error('Invalid stored settings revision')
+  return { ...settings, settingsRevision: revision }
+}
+
+async function updateSettings(expectedRevision, update) {
+  return withFileLock(SETTINGS_FILE, async () => {
+    const current = normalizeSettings(await fs.readJson(SETTINGS_FILE))
+    if (current.settingsRevision !== expectedRevision) {
+      throw Object.assign(new Error('Settings changed; reload or resolve the conflict'), { status: 412 })
+    }
+    if (current.settingsRevision === Number.MAX_SAFE_INTEGER) throw new Error('Settings revision exhausted')
+    const updated = { ...await update(current), settingsRevision: current.settingsRevision + 1 }
+    await writeJsonAtomic(SETTINGS_FILE, updated, { spaces: 2 })
+    return updated
+  })
 }
 
 // ── Analytics ────────────────────────────────────────────────────────────────
@@ -278,17 +305,25 @@ async function withMediaDb(fn) {
 // Single canonical writer for upload-hashes.json. Both the upload route and the
 // presentation media-orphan sweep go through this so the index has one atomic
 // read-modify-write path instead of two drift-prone copies.
-async function withUploadHashes(fn) {
+async function withUploadHashes(fn, { signal } = {}) {
   return withFileLock(UPLOAD_HASHES_FILE, async () => {
+    signal?.throwIfAborted()
     let hashes
     try {
       hashes = await fs.readJson(UPLOAD_HASHES_FILE)
-    } catch {
+    } catch (err) {
+      if (err?.code !== 'ENOENT') throw err
       hashes = {}
     }
+    signal?.throwIfAborted()
+    if (!hashes || typeof hashes !== 'object' || Array.isArray(hashes)) {
+      throw new TypeError('Upload hash ledger must be an object')
+    }
     const result = await fn(hashes)
+    signal?.throwIfAborted()
     await fs.ensureDir(path.dirname(UPLOAD_HASHES_FILE))
-    await writeJsonAtomic(UPLOAD_HASHES_FILE, hashes, { spaces: 2 })
+    signal?.throwIfAborted()
+    await writeJsonAtomic(UPLOAD_HASHES_FILE, hashes, { spaces: 2, signal })
     return result
   })
 }
@@ -329,6 +364,7 @@ module.exports = {
   writeGithubConfig,
   readSettings,
   writeSettings,
+  updateSettings,
   readAnalytics,
   writeAnalytics,
   withAnalytics,

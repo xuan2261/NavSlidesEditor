@@ -10,7 +10,6 @@ const sessions = require('../services/project-import-media-session')
 const { privateEditorOnly } = require('./project-import-origin')
 
 const incomingDir = path.join(DATA_DIR, 'project-import-incoming')
-const stagingRoot = path.join(DATA_DIR, 'project-import-staging')
 const upload = multer({
   dest: incomingDir,
   limits: { files: 1, fileSize: 100 * 1024 * 1024, fields: 2 },
@@ -51,7 +50,8 @@ function receiveArchive(req, res, next) {
 }
 
 router.post('/preflight', receiveArchive, async (req, res) => {
-  const stagingDir = path.join(stagingRoot, crypto.randomUUID())
+  const stagingDir = path.join(incomingDir, crypto.randomUUID())
+  let sessionAdmitted = false
   try {
     if (!req.file) return res.status(400).json({ error: 'Project file is required' })
     const options = {
@@ -64,9 +64,10 @@ router.post('/preflight', receiveArchive, async (req, res) => {
       ? await validateProjectJson(req.file.path, options)
       : await validateProjectArchive(req.file.path, options)
     const admitted = await sessions.createProjectImportSession(validated)
+    sessionAdmitted = true
     res.status(201).json(admitted)
   } catch (error) {
-    await fs.remove(stagingDir).catch(() => {})
+    if (!sessionAdmitted) await fs.remove(stagingDir).catch(() => {})
     sendError(res, error)
   } finally {
     if (req.file?.path) await fs.remove(req.file.path).catch(() => {})

@@ -37,6 +37,7 @@ describe('PUT /api/settings deep-merge ai', () => {
     const app = makeApp()
     const res = await request(app)
       .put('/api/settings')
+      .set('If-Match', '"0"')
       .send({ ai: { model: 'gpt-4o-mini' } })
 
     expect(res.status).toBe(200)
@@ -54,6 +55,7 @@ describe('PUT /api/settings deep-merge ai', () => {
     const app = makeApp()
     const res = await request(app)
       .put('/api/settings')
+      .set('If-Match', '"0"')
       .send({ defaultTheme: 'white' })
 
     expect(res.status).toBe(200)
@@ -67,6 +69,7 @@ describe('PUT /api/settings deep-merge ai', () => {
     const app = makeApp()
     await request(app)
       .put('/api/settings')
+      .set('If-Match', '"0"')
       .send({ ai: { provider: 'openai', model: 'm', apiKey: '***configured***' } })
 
     const stored = await storage.readSettings()

@@ -16,7 +16,7 @@ const AUTHORITY_KEY = /^(?:_?pptx.*|.*(?:aggregateHead|capability|validatedRevis
 const ROOT_TIMESTAMP_KEYS = new Set(['createdAt', 'updatedAt', 'deletedAt'])
 
 function isAuthorityKey(key, isRoot) {
-  return !SAFE_PPTX_METADATA_KEYS.has(key) && AUTHORITY_KEY.test(key) &&
+  return key === 'trustedImportMetadata' || !SAFE_PPTX_METADATA_KEYS.has(key) && AUTHORITY_KEY.test(key) &&
     (isRoot || !ROOT_TIMESTAMP_KEYS.has(key))
 }
 

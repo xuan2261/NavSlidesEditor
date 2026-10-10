@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import { useEditor } from '@tiptap/react'
+import { EditorState } from '@tiptap/pm/state'
 import { createEditorRichTextExtensions, preserveBlockColors } from './editor-rich-text-extensions'
 import { invalidatePptxFitMetaForUpdates } from '../../utils/pptx-import-meta'
 
@@ -32,8 +33,11 @@ export function useEditorRichTextController({
     editorProps: { handleKeyDown: (view, event) => exitEditOnEscape(view, event) },
     onUpdate: ({ editor: instance }) => {
       if (settingContent.current || !editingElementIdRef.current) return
-      const content = instance.getHTML()
       const id = editingElementIdRef.current
+      const target = activeSlideRef.current
+      const element = target?.elements?.find((candidate) => candidate.id === id)
+      if (!element || element.type !== 'text' || target.locked || element.locked) return
+      const content = instance.getHTML()
       setPresentation((previous) =>
         mapTargetRef.current(previous, (slide) => ({
           ...slide,
@@ -47,12 +51,22 @@ export function useEditorRichTextController({
     },
   })
 
-  const clearContent = useCallback(() => {
+  const resetContent = useCallback((content) => {
     if (!editor || editor.isDestroyed) return
     settingContent.current = true
-    editor.commands.setContent('', false)
-    settingContent.current = false
+    try {
+      editor.commands.setContent(preserveBlockColors(content || ''), { emitUpdate: false })
+      editor.view.updateState(EditorState.create({
+        schema: editor.schema,
+        doc: editor.state.doc,
+        plugins: editor.state.plugins,
+      }))
+    } finally {
+      settingContent.current = false
+    }
   }, [editor])
+
+  const clearContent = useCallback(() => resetContent(''), [resetContent])
 
   const startEditingElement = useCallback(
     (elementId) => {
@@ -68,9 +82,7 @@ export function useEditorRichTextController({
       setSelectedElementIds([elementId])
       if (element.type !== 'text') return
       if (!editor || editor.isDestroyed) return
-      settingContent.current = true
-      editor.commands.setContent(preserveBlockColors(element.content || ''), false)
-      settingContent.current = false
+      resetContent(element.content || '')
       setTimeout(() => {
         if (!editor.isDestroyed && editingElementIdRef.current === elementId)
           editor.commands.focus()
@@ -83,6 +95,7 @@ export function useEditorRichTextController({
       editor,
       getElement,
       presentation,
+      resetContent,
       setActiveTab,
       setEditingElementId,
       setSelectedElementIds,
@@ -96,9 +109,9 @@ export function useEditorRichTextController({
 
   return {
     editor,
-    settingContent,
     editingElementIdRef,
     clearContent,
+    resetContent,
     startEditingElement,
     stopEditingElement,
   }

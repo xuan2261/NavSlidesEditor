@@ -20,16 +20,41 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with: { name: '${{ inputs.docker_artifact }}', run-id: '${{ inputs.source_run_id }}', github-token: '${{ github.token }}', path: container-evidence }
       - run: docker load --input container-evidence/navslides-editor-image.tar
-      - run: docker image inspect navslides-editor:ci --format '{{.Id}}' > actual-image-digest.txt
+      - name: Capture immutable Docker config ID
+        id: image
+        run: |
+          image_id=$(docker image inspect navslides-editor:ci --format '{{.Id}}')
+          printf '%s\n' "$image_id" > actual-image-id.txt
+          printf 'image_id=%s\n' "$image_id" >> "$GITHUB_OUTPUT"
       - name: Capture browser inventory
         run: |
-          docker run --rm navslides-editor:ci node -e "const fs=require('fs');const p=require('/app/server/node_modules/playwright/package.json');const c=require('/app/server/node_modules/playwright').chromium;const b=require('/app/server/node_modules/playwright-core/browsers.json').browsers.find(x=>x.name==='chromium');const executablePath=c.executablePath();fs.accessSync(executablePath);process.stdout.write(JSON.stringify({playwrightVersion:p.version,chromium:{revision:b.revision,executablePath}}))" > container-browser-inventory.json
-      - run: docker run --rm navslides-editor:ci sh -c "dpkg-query -W -f='\${Package}\t\${Version}\n' | sort" > container-os-packages.txt
+          docker run --rm '${{ steps.image.outputs.image_id }}' node -e "const fs=require('fs');const p=require('/app/server/node_modules/playwright/package.json');const c=require('/app/server/node_modules/playwright').chromium;const b=require('/app/server/node_modules/playwright-core/browsers.json').browsers.find(x=>x.name==='chromium');const executablePath=c.executablePath();fs.accessSync(executablePath);process.stdout.write(JSON.stringify({playwrightVersion:p.version,chromium:{revision:b.revision,executablePath}}))" > container-browser-inventory.json
+      - run: docker run --rm '${{ steps.image.outputs.image_id }}' sh -c "dpkg-query -W -f='\${Package}\t\${Version}\n' | sort" > container-os-packages.txt
       - uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
-        with: { image: navslides-editor:ci, format: spdx-json, output-file: container-sbom.spdx.json, syft-version: v1.52.0 }
+        with: { image: 'docker:${{ steps.image.outputs.image_id }}', format: spdx-json, output-file: container-sbom.spdx.json, syft-version: v1.52.0, upload-artifact: false, upload-release-assets: false }
+      - name: Disable implicit vulnerability suppression
+        run: printf '' > container-trivy-empty-ignore.txt
       - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with: { scan-type: image, image-ref: navslides-editor:ci, format: json, output: container-trivy.json, severity: 'HIGH,CRITICAL', ignore-unfixed: false, exit-code: '0', version: v0.74.0 }
-      - run: node scripts/verify-container-supply-chain.js --policy config/container-vulnerability-policy.json --report container-trivy.json --sbom container-sbom.spdx.json --browser container-browser-inventory.json --image-digest actual-image-digest.txt --expected-image-digest "$(cat container-evidence/docker-image-digest.txt)" --playwright-version 1.63.0 --chromium-revision 1243 --out container-supply-chain-receipt.json
+        env:
+          TRIVY_IGNORE_UNFIXED: 'false'
+          TRIVY_IGNOREFILE: container-trivy-empty-ignore.txt
+          TRIVY_PKG_TYPES: os,library
+        with: { scan-type: image, image-ref: '${{ steps.image.outputs.image_id }}', scanners: vuln, vuln-type: 'os,library', list-all-pkgs: true, format: json, output: container-trivy.json, severity: 'HIGH,CRITICAL', ignore-unfixed: false, exit-code: '0', version: v0.74.0 }
+      - name: Capture completed scanner invocation evidence
+        env:
+          SCANNED_IMAGE_ID: ${{ steps.image.outputs.image_id }}
+        run: |
+          trivy --cache-dir "$GITHUB_WORKSPACE/.cache/trivy" --version --format json > container-trivy-version.json
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs'
+          import { scanEvidence } from './scripts/trivy-report-evidence.js'
+          const load = (path) => JSON.parse(readFileSync(path, 'utf8'))
+          const input = { actualImageID: process.env.SCANNED_IMAGE_ID, report: load('container-trivy.json'), sbom: load('container-sbom.spdx.json'), browser: load('container-browser-inventory.json') }
+          const invocation = { target: input.actualImageID, exitCode: 0, listAllPkgs: true, ignoreUnfixed: false, scanners: ['vuln'], pkgTypes: ['os', 'library'], severities: ['HIGH', 'CRITICAL'] }
+          writeFileSync('container-scan-evidence.json', JSON.stringify(scanEvidence(input, load('container-trivy-version.json'), invocation), null, 2) + '\n')
+          NODE
+      # The producer's legacy digest file stores a Docker config ID, not a registry manifest digest.
+      - run: node scripts/verify-container-supply-chain.js --policy config/container-vulnerability-policy.json --report container-trivy.json --sbom container-sbom.spdx.json --browser container-browser-inventory.json --scan-evidence container-scan-evidence.json --image-id actual-image-id.txt --expected-image-id "$(cat container-evidence/docker-image-digest.txt)" --artifact-name '${{ steps.image.outputs.image_id }}' --os-family debian --language-types node-pkg --playwright-version 1.63.0 --chromium-revision 1243 --out container-supply-chain-receipt.json
       - if: success() || failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -39,6 +64,9 @@ jobs:
             container-trivy.json
             container-browser-inventory.json
             container-os-packages.txt
+            actual-image-id.txt
+            container-trivy-version.json
+            container-scan-evidence.json
             container-supply-chain-receipt.json
           if-no-files-found: error
           retention-days: 30

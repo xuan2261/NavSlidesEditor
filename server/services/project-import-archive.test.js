@@ -8,6 +8,7 @@ import crypto from 'node:crypto'
 import nativeFixture from '../../shared/tests/fixtures/education-native-media.js'
 import importedPresentation from './project-import-presentation'
 import { buildArchiveMediaManifestEntries } from '../../client/src/utils/project-media-utils.js'
+import rawZipModule from './pptx-import/package-store/raw-zip'
 const { PROJECT_IMPORT_LIMITS, validateProjectArchive } = archiveModule
 
 const tempPaths = []
@@ -128,6 +129,25 @@ describe('project import archive validation', () => {
     expect(slide.elements[0].quiz.questions[0].answerKey).toEqual(
       deck.slides[0].elements[0].quiz.questions[0].answerKey
     )
+  })
+
+  it('rejects omitted local native-game media before staging any bytes', async () => {
+    const deck = nativeFixture.nativeMediaFixture()
+    deck.slides[0].elements[0].quiz.questions[0].media.src = '/uploads/missing-question.png'
+    const input = await archive({
+      'manifest.json': JSON.stringify({ version: '1.1', media: [] }),
+      'presentation.json': JSON.stringify(deck),
+    })
+    await expect(validateProjectArchive(input.filePath, { stagingDir: input.stagingDir }))
+      .rejects.toMatchObject({ code: 'PROJECT_MEDIA_INVENTORY_MISMATCH' })
+    await expect(fs.pathExists(input.stagingDir)).resolves.toBe(false)
+  })
+
+  it('rejects non-image replacement data for canonical native-game images', () => {
+    const deck = nativeFixture.nativeMediaFixture()
+    expect(() => importedPresentation.rewritePresentationMedia(deck, {
+      [nativeFixture.image('question').src]: 'data:video/mp4;base64,AAAA',
+    })).toThrow('Invalid replacement media URL')
   })
 
   it('rejects a manifest resource appearing only in an unknown native field before staging bytes', async () => {
@@ -286,4 +306,34 @@ describe('project import archive validation', () => {
     )
     expect(result.warnings).toEqual(['Imported legacy project archive version 1.0'])
   })
+
+  it('rejects ZIP CRC mismatch and actual expansion over budget before staging', async () => {
+    const input = await archive({
+      'manifest.json': JSON.stringify({ version: '1.1', media: [] }),
+      'presentation.json': presentation(),
+    })
+    await expect(validateProjectArchive(input.filePath, {
+      stagingDir: input.stagingDir, limits: { maxExpandedBytes: 1 },
+    })).rejects.toMatchObject({ code: 'PROJECT_ARCHIVE_EXPANSION_LIMIT', status: 413 })
+    const bytes = await fs.readFile(input.filePath)
+    const entry = rawZipModule.parseRawEntries(bytes)[0]
+    bytes.writeUInt32LE((bytes.readUInt32LE(entry.centralHeaderOffset + 16) ^ 1) >>> 0, entry.centralHeaderOffset + 16)
+    await fs.writeFile(input.filePath, bytes)
+    await expect(validateProjectArchive(input.filePath, { stagingDir: input.stagingDir }))
+      .rejects.toMatchObject({ code: 'PROJECT_ARCHIVE_INVALID' })
+    expect(await fs.pathExists(input.stagingDir)).toBe(false)
+  })
+
+  it.each(['/outside.png', 'media/../outside.png', 'media\\outside.png', 'C:/outside.png', 'media/%2e%2e.png'])(
+    'rejects unsafe archive path %s before any staging side effect', async (name) => {
+      const input = await archive({
+        'manifest.json': JSON.stringify({ version: '2.0', media: [], externalLinks: [] }),
+        'presentation.json': presentation(),
+        [name]: 'not trusted media',
+      })
+      await expect(validateProjectArchive(input.filePath, { stagingDir: input.stagingDir }))
+        .rejects.toMatchObject({ code: 'PROJECT_ARCHIVE_STRUCTURE_INVALID' })
+      expect(await fs.pathExists(input.stagingDir)).toBe(false)
+    },
+  )
 })

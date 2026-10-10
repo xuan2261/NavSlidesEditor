@@ -148,7 +148,7 @@ describe('validated edited export validators', () => {
       generation: 1,
       projectionRevisionId: hashRecord(projection),
       sourceMapRevisionId: hashRecord(sourceMap),
-      journalRevisionId: null,
+      journalRevisionId: hashRecord({ baseRevisionId: revisionId, operations: [] }),
       fencingEpoch: 1,
       matrixAuthorityEpoch: 1,
       matrixAuthoritySubjects: createMatrixAuthoritySubjects(),

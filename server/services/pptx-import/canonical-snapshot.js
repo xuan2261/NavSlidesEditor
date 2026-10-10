@@ -2,7 +2,7 @@ const INTERNAL_KEYS = new Set([
   'sourceRef', 'sourceMap', 'sourceMapRevisionId', 'packageRevisionId', 'journal',
   'journalRevisionId', 'pendingJournalHash', 'originalPath', 'packagePath',
   'pptxOriginal', 'pptxAggregateHead',
-  'aggregateGeneration', 'idempotencyKey',
+  'aggregateGeneration', 'idempotencyKey', 'trustedImportMetadata',
 ])
 const DEFAULTS = Object.freeze({
   maxSlides: 500,

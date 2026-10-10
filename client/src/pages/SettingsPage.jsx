@@ -27,6 +27,9 @@ import {
 } from '../utils/shortcut-local-storage-persistence'
 import { normalizeKey, isReservedChord } from '../utils/shortcut-normalizer'
 import SyncModal from '../components/SyncModal'
+import useSettingsDraft from './use-settings-draft'
+import { DEFAULT_SETTINGS } from './settings-draft'
+import SettingsConflict from './SettingsConflict'
 
 const TRANSITIONS = ['none', 'fade', 'slide', 'convex', 'concave', 'zoom']
 
@@ -42,25 +45,11 @@ const PROVIDERS = [
 
 const fieldClass =
   'w-full px-3 py-2 rounded-md border border-border bg-secondary text-text-primary text-sm focus:outline-none focus:border-accent'
-const DEFAULT_SETTINGS = {
-  ai: {
-    provider: 'openai',
-    apiKey: '',
-    model: 'gpt-4o-mini',
-    customEndpoint: '',
-    customModel: '',
-  },
-  defaultTheme: 'black',
-  defaultTransition: 'slide',
-}
 
 export default function SettingsPage() {
   const navigate = useNavigate()
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [saveMsg, setSaveMsg] = useState('')
-  const [loadError, setLoadError] = useState('')
+  const draftState = useSettingsDraft()
+  const { settings, setSettings, loading, saving, saveMsg, loadError, handleSave, dirty, conflict } = draftState
   const [testStatus, setTestStatus] = useState(null) // null | 'testing' | 'ok' | 'fail'
   const [testError, setTestError] = useState('')
   const [shortcuts, setShortcuts] = useState([])
@@ -71,27 +60,8 @@ export default function SettingsPage() {
   const [reservedWarning, setReservedWarning] = useState(null) // reserved chord warning
   const [showSyncModal, setShowSyncModal] = useState(false)
   const recordCancelRef = useRef(null)
+  const saveButtonRef = useRef(null)
 
-  useEffect(() => {
-    fetch('/api/settings')
-      .then((r) => {
-        if (!r.ok) throw new Error('Failed to load settings')
-        return r.json()
-      })
-      .then((data) => {
-        setSettings({
-          ...DEFAULT_SETTINGS,
-          ...data,
-          ai: { ...DEFAULT_SETTINGS.ai, ...(data.ai || {}) },
-        })
-        setLoading(false)
-      })
-      .catch((err) => {
-        setLoadError(err.message || 'Failed to load settings')
-        setSettings(DEFAULT_SETTINGS)
-        setLoading(false)
-      })
-  }, [])
 
   // Load and refresh shortcut registry
   const refreshShortcuts = useCallback(() => {
@@ -182,30 +152,6 @@ export default function SettingsPage() {
     setReservedWarning(null)
   }
 
-  const handleSave = async () => {
-    setSaving(true)
-    setSaveMsg('')
-    try {
-      const res = await fetch('/api/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      })
-      if (!res.ok) throw new Error('Save failed')
-      const data = await res.json()
-      setSettings({
-        ...DEFAULT_SETTINGS,
-        ...data,
-        ai: { ...DEFAULT_SETTINGS.ai, ...(data.ai || {}) },
-      })
-      setSaveMsg('Settings saved!')
-      setTimeout(() => setSaveMsg(''), 2000)
-    } catch (err) {
-      setSaveMsg('Error: ' + err.message)
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const handleTestConnection = async () => {
     setTestStatus('testing')
@@ -274,15 +220,17 @@ export default function SettingsPage() {
               {loadError}
             </span>
           )}
-          {saveMsg && (
+          {(saveMsg || dirty) && (
             <span
               className={`text-[13px] ${saveMsg.startsWith('Error') ? 'text-danger' : 'text-success'}`}
               role={saveMsg.startsWith('Error') ? 'alert' : 'status'}
+              aria-label="Settings save status"
+              aria-live={saveMsg.startsWith('Error') ? 'assertive' : 'polite'}
             >
-              {saveMsg}
+              {saveMsg || 'Unsaved changes'}
             </span>
           )}
-          <Button variant="primary" onClick={handleSave} disabled={saving}>
+          <Button ref={saveButtonRef} variant="primary" onClick={handleSave} disabled={saving || !!loadError || !!conflict}>
             <Save size={14} />
             {saving ? 'Saving...' : 'Save'}
           </Button>
@@ -290,6 +238,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto pt-7 px-8 pb-7 max-w-[640px] mx-auto">
+        <SettingsConflict {...draftState} cancelShortcutRecording={cancelShortcutRecording} resolutionFocusRef={saveButtonRef} />
         {/* AI Configuration */}
         <section className="mb-8">
           <h2 className="flex items-center gap-2 mb-4">
@@ -413,6 +362,7 @@ export default function SettingsPage() {
               {testStatus === 'ok' && (
                 <span
                   role="status"
+                  aria-label="AI connection status"
                   aria-live="polite"
                   className="text-success text-[13px] flex items-center gap-1"
                 >
@@ -422,6 +372,7 @@ export default function SettingsPage() {
               {testStatus === 'fail' && (
                 <span
                   role="status"
+                  aria-label="AI connection status"
                   aria-live="polite"
                   className="text-danger text-[13px] flex items-center gap-1"
                 >

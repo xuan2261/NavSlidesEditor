@@ -16,6 +16,8 @@ const {
   executeValidatedEditedExport,
 } = require('./validated-edited-export.js')
 const { replayRequest } = require('./pptx-import/validated-edited-export-context.js')
+const { resolvePackageBackedReadFromState } = require('./package-backed-presentation-read.js')
+const { applyCompatibilityWrites } = require('./pptx-import/compatibility-view.js')
 const { createNativeTextAdapter } = require('./pptx-import/text-ooxml-adapter.js')
 const { createPrimitiveAdapters } = require('./pptx-import/primitive-ooxml-adapters.js')
 const { resolveExportStrategy } = require('./pptx-import/roundtrip-policy.js')
@@ -168,9 +170,17 @@ describe('validated edited export pending materialization', () => {
         pptxAggregateHead: { generation: 3, packageRevisionId: result.revisionId },
       },
     })
-    expect(nativeReimport).toHaveBeenCalledWith(expect.objectContaining({
-      expectedProjection: after,
-    }))
+    const rows = []
+    applyCompatibilityWrites(rows, state.compatibilityOutbox)
+    const resolved = resolvePackageBackedReadFromState(state, 'deck', rows[0])
+    expect(resolved.presentation.slides).toEqual(after.slides)
+    expect(resolved.generation).toBe(3)
+    const wrongJournal = structuredClone(state)
+    wrongJournal.heads[0].journalRevisionId = 'a'.repeat(64)
+    const wrongCompatibility = structuredClone(rows[0])
+    wrongCompatibility.pptxAggregateHead = structuredClone(wrongJournal.heads[0])
+    expect(() => resolvePackageBackedReadFromState(wrongJournal, 'deck', wrongCompatibility))
+      .toThrow('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
     expect(store.getState().mutationResults.at(-1).journal.operations).toEqual([
       expect.objectContaining({
         before: 'Before',
@@ -188,6 +198,181 @@ describe('validated edited export pending materialization', () => {
     })
     expect(retry).toMatchObject({ ok: true, idempotent: true, revisionId: result.revisionId })
     expect(store.getState().revisions).toHaveLength(2)
+  })
+
+  it('Audit regression: a true no-op pending export remains reopenable with immutable Original', async () => {
+    const { store, committed, after } = await setupPendingSave(snapshot())
+    const original = await store.readOriginal(committed.revision.id)
+    const result = await executeValidatedEditedExport({
+      presentationId: 'deck',
+      expectedGeneration: 2,
+      idempotencyKey: 'audit-no-op-reopen',
+      after,
+    }, { store })
+
+    expect(result).toMatchObject({ ok: true, noOp: true, generation: 2 })
+    expect(result.bytes).toEqual(original)
+    const state = store.getState()
+    const rows = []
+    applyCompatibilityWrites(rows, state.compatibilityOutbox)
+    const reopened = resolvePackageBackedReadFromState(state, 'deck', rows.find((row) => row.id === 'deck'))
+    expect(reopened).toMatchObject({ generation: 2, presentation: { id: 'deck', slides: after.slides } })
+    expect(await store.readOriginal(state.heads[0].originalRevisionId)).toEqual(original)
+    expect(state.revisions).toHaveLength(1)
+  })
+
+  it.each([false, true])('preserves selected R1 authority through no-op save, disk reopen, portable import and replay (replace=%s)', async (replace) => {
+    const { openPackageStore } = require('./pptx-import/package-store')
+    const { resolveEditedExportContext } = require('./pptx-import/validated-edited-export-context')
+    const { store, committed, after } = await setupPendingSave()
+    const original = await store.readOriginal(committed.revision.id)
+    const materialized = await executeValidatedEditedExport({
+      presentationId: 'deck', expectedGeneration: 2, idempotencyKey: 'r1-before-no-op',
+    }, {
+      store, nativeTextAdapter: createNativeTextAdapter(), nativePrimitiveAdapter: createPrimitiveAdapters(),
+      ...validators(vi.fn(async () => true)),
+    })
+    expect(materialized).toMatchObject({ ok: true, generation: 3 })
+    const editedZip = await JSZip.loadAsync(materialized.bytes)
+    expect(await editedZip.file('ppt/slides/slide1.xml').async('string')).toContain('<a:t>After</a:t>')
+    const selectedJournal = resolveEditedExportContext(store.getState(), 'deck').committedJournalHash
+    expect(selectedJournal).toEqual(expect.any(String))
+    const saved = await savePackageProjection({
+      presentationId: 'deck', expectedGeneration: 3, baseRevisionId: materialized.revisionId,
+      idempotencyKey: 'r1-identical-save', after,
+      loadStored: async () => { throw new Error('Canonical authority must supply the no-op projection') },
+    })
+    expect(saved).toMatchObject({ ok: true, generation: 4 })
+    const request = { presentationId: 'deck', expectedGeneration: 4, idempotencyKey: 'r1-no-op-export' }
+    const reconciled = await executeValidatedEditedExport(request, { store })
+    expect(reconciled).toMatchObject({ ok: true, noOp: true, generation: 4, revisionId: materialized.revisionId })
+    expect(reconciled.bytes).toEqual(materialized.bytes)
+    const rootDir = store.rootDir
+    await shutdownPackageStore()
+    const reopened = await initializePackageStore({ rootDir })
+    const state = reopened.getState()
+    expect(resolveEditedExportContext(state, 'deck')).toMatchObject({
+      ok: true, pendingEdit: false, committedJournalHash: selectedJournal,
+      head: { journalRevisionId: selectedJournal, packageRevisionId: materialized.revisionId },
+    })
+    expect(state.heads[0].pendingJournalHash).toBeUndefined()
+    expect(state.mutationResults.find((result) => result.idempotencyKey === request.idempotencyKey).operationIds).toEqual([])
+    expect(replayRequest(state, request)).toMatchObject({ pendingEdit: false })
+    const rows = []
+    applyCompatibilityWrites(rows, state.compatibilityOutbox)
+    expect(resolvePackageBackedReadFromState(state, 'deck', rows.find((row) => row.id === 'deck')))
+      .toMatchObject({ generation: 4, presentation: { slides: after.slides } })
+    const replayed = await executeValidatedEditedExport(request, { store: reopened })
+    expect(replayed).toMatchObject({ ok: true, idempotent: true, revisionId: materialized.revisionId })
+    expect(replayed.bytes).toEqual(materialized.bytes)
+    expect(await reopened.readOriginal(state.heads[0].originalRevisionId)).toEqual(original)
+    expect(reopened.getState().revisions).toHaveLength(2)
+    const bundle = await reopened.exportPresentationPackage('deck')
+    const destinationRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'r1-no-op-portable-'))
+    dirs.push(destinationRoot)
+    const destination = await openPackageStore({ rootDir: destinationRoot })
+    await destination.acquireWriter()
+    try {
+      if (replace) await destination.commitOriginal(Buffer.from('Previous destination Original'), {
+        ownerType: 'presentation', ownerId: 'portable-copy',
+      })
+      const predecessor = destination.getState().heads.find((head) => head.presentationId === 'portable-copy')
+      const imported = await destination.importPresentationPackage(bundle, 'portable-copy',
+        replace ? { replace: true, expectedHead: predecessor } : {})
+      const importedState = destination.getState()
+      const context = resolveEditedExportContext(importedState, 'portable-copy')
+      expect(context).toMatchObject({ ok: true, pendingEdit: false, committedJournalHash: imported.journalRevisionId })
+      expect(context.committedJournalHash).toEqual(expect.any(String))
+      expect(resolvePackageBackedReadFromState(importedState, 'portable-copy', {
+        ...context.after, pptxAggregateHead: imported,
+      })).toMatchObject({ generation: imported.generation, presentation: { slides: after.slides } })
+      const portableRequest = { ...request, presentationId: 'portable-copy', expectedGeneration: imported.generation }
+      expect(replayRequest(importedState, portableRequest)).toMatchObject({ pendingEdit: false })
+      expect(importedState.mutationResults.find((result) => result.idempotencyKey === request.idempotencyKey).operationIds).toEqual([])
+      const portableReplay = await executeValidatedEditedExport(portableRequest, { store: destination })
+      expect(portableReplay).toMatchObject({ ok: true, idempotent: true, revisionId: materialized.revisionId })
+      expect(portableReplay.bytes).toEqual(materialized.bytes)
+      expect(await destination.readOriginal(imported.originalRevisionId)).toEqual(original)
+      expect(destination.getState().revisions).toHaveLength(importedState.revisions.length)
+      await expect(destination.exportPresentationPackage('portable-copy')).resolves.toMatchObject({
+        manifest: { head: { journalRevisionId: context.committedJournalHash } },
+      })
+    } finally {
+      await destination.releaseWriter()
+    }
+  })
+
+  it.each(['request selection', 'transaction execution'])('replays the current exact no-op receipt after same-bundle portable replacement (%s)', async (pathUnderTest) => {
+    const { openPackageStore } = require('./pptx-import/package-store')
+    const { resolveEditedExportContext } = require('./pptx-import/validated-edited-export-context')
+    const { createMutationTransactionService } = require('./pptx-import/mutation-transaction')
+    const { store, committed } = await setupPendingSave(snapshot())
+    const sourceRequest = { presentationId: 'deck', expectedGeneration: 2, idempotencyKey: 'portable-replacement-no-op' }
+    const result = await executeValidatedEditedExport(sourceRequest, { store })
+    expect(result).toMatchObject({ ok: true, noOp: true, generation: 2 })
+    const bundle = await store.exportPresentationPackage('deck')
+    const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'portable-replacement-replay-'))
+    dirs.push(rootDir)
+    const destination = await openPackageStore({ rootDir })
+    await destination.acquireWriter()
+    try {
+      const firstHead = await destination.importPresentationPackage(bundle, 'portable-copy')
+      const request = { ...sourceRequest, presentationId: 'portable-copy', expectedGeneration: firstHead.generation }
+      expect(firstHead.generation).toBe(1)
+      const firstReplay = replayRequest(destination.getState(), request)
+      expect(firstReplay).toMatchObject({ expectedGeneration: 1, pendingEdit: false })
+      expect(await executeValidatedEditedExport(request, { store: destination }))
+        .toMatchObject({ ok: true, idempotent: true, generation: 1, bytes: result.bytes })
+      const history = { ownerType: 'history', ownerId: 'portable-copy:before-replace' }
+      const template = { ownerType: 'template', ownerId: 'portable-template-before-replace' }
+      await destination.retainHead(history, 'portable-copy')
+      await destination.retainHead(template, 'portable-copy')
+      const predecessorState = destination.getState()
+      const retainedOwners = predecessorState.owners.filter((owner) => owner.ownerType !== 'presentation')
+      const firstReceipt = predecessorState.mutationResults.find((receipt) => receipt.idempotencyKey === request.idempotencyKey)
+      const secondHead = await destination.importPresentationPackage(bundle, 'portable-copy', {
+        replace: true, expectedHead: firstHead,
+      })
+      const state = destination.getState()
+      const currentRequest = { ...request, expectedGeneration: secondHead.generation }
+      expect(secondHead.generation).toBe(2)
+      expect(secondHead.packageRevisionId).toBe(firstHead.packageRevisionId)
+      expect(state.mutationResults).toContainEqual(firstReceipt)
+      expect(state.owners.filter((owner) => owner.ownerType !== 'presentation')).toEqual(retainedOwners)
+      expect(destination.getRestorableHead('portable-copy', history)).toEqual(firstHead)
+      const current = resolveEditedExportContext(state, 'portable-copy')
+      expect(current).toMatchObject({ ok: true, pendingEdit: false, head: secondHead })
+      if (pathUnderTest === 'request selection') {
+        expect(replayRequest(state, currentRequest)).toMatchObject({
+          expectedGeneration: 2, after: current.after, baseRevisionId: committed.revision.id, pendingEdit: false,
+        })
+      } else {
+        // Exercise the real execution boundary independently of replayRequest:
+        // the current exact identity must not collide with a retained receipt.
+        const service = createMutationTransactionService({
+          store: destination,
+          nativeTextAdapter: createNativeTextAdapter(),
+          loadSourceMap: async () => { throw new Error('Idempotent replay must not materialize') },
+          loadCanonicalProjection: async () => { throw new Error('Idempotent replay must not materialize') },
+        })
+        const reboundRequest = { ...firstReplay, expectedGeneration: secondHead.generation, after: current.after }
+        expect(await service.execute(reboundRequest)).toMatchObject({
+          ok: true, idempotent: true, generation: 2, revisionId: secondHead.packageRevisionId, bytes: result.bytes,
+        })
+        expect(await executeValidatedEditedExport(currentRequest, { store: destination })).toMatchObject({
+          ok: true, idempotent: true, generation: 2, bytes: result.bytes,
+        })
+        expect(await service.execute({ ...reboundRequest, after: snapshot('<p>Different identity</p>') }))
+          .toMatchObject({ ok: false, status: 409, reasonCode: 'IDEMPOTENCY_KEY_CONFLICT' })
+      }
+      expect(destination.getState()).toEqual(state)
+      expect(await destination.readOriginal(secondHead.originalRevisionId)).toEqual(result.bytes)
+      const instantiated = await destination.instantiateRetainedHead(template, 'retained-template-copy')
+      expect(instantiated).toMatchObject({ generation: 1, packageRevisionId: firstHead.packageRevisionId })
+      expect(resolveEditedExportContext(destination.getState(), 'retained-template-copy')).toMatchObject({
+        ok: true, after: { id: 'retained-template-copy', slides: snapshot().slides },
+      })
+    } finally { await destination.releaseWriter() }
   })
 
   it('does not advertise formatter-wrapped text as a validated export', async () => {

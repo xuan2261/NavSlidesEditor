@@ -150,7 +150,6 @@ export function useAuthoringSafetyHarness(seed) {
       }),
     [presentation.id, layout.masterEdit?.id, active.currentSlideIndexRef, active.verticalEditRef]
   )
-  const settingContent = useRef(false)
   const history = useEditorHistoryController({
     presentation,
     setPresentation,
@@ -161,8 +160,7 @@ export function useAuthoringSafetyHarness(seed) {
     editingElementIdRef,
     setSelectedElementIds,
     setEditingElementId,
-    editor: null,
-    settingContent,
+    resetContent: () => {},
   })
   useEffect(() => {
     history.seedHistory(seed)

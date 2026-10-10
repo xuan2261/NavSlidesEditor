@@ -38,6 +38,7 @@ export default function EditorModals(props) {
     setCurrentSlideIndex,
     navigateToSlide,
     setPresentation,
+    restorePresentation,
     htmlEditorState,
     setHtmlEditorState,
     commitHtmlEdit,
@@ -112,9 +113,7 @@ export default function EditorModals(props) {
       {showHistoryModal && (
         <HistoryModal
           presentationId={presentationId}
-          onRestore={(restored) =>
-            setPresentation({ ...restored, slides: (restored.slides || []).map((s) => s) })
-          }
+          onRestore={restorePresentation}
           onClose={() => setShowHistoryModal(false)}
         />
       )}

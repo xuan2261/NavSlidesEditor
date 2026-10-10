@@ -16,8 +16,7 @@ function useHistoryHarness() {
     editingElementIdRef: useRef(null),
     setSelectedElementIds: () => {},
     setEditingElementId: () => {},
-    editor: null,
-    settingContent: useRef(false),
+    resetContent: () => {},
   })
   return { presentation, setPresentation, ...history }
 }

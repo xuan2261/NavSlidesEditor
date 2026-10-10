@@ -9,6 +9,14 @@ on:
         description: Existing v1.17.0 or v1.17.0-rc.N tag
         required: true
         type: string
+      officecli_receipt_run_id:
+        description: Approved exact-subject OfficeCLI physical producer run
+        required: true
+        type: string
+      fidelity_receipt_run_id:
+        description: Approved exact-subject Microsoft PowerPoint producer run
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -26,7 +34,9 @@ jobs:
     outputs:
       tag: ${{ steps.subject.outputs.tag }}
       subject_sha: ${{ steps.subject.outputs.sha }}
-      source_run_id: ${{ steps.ci.outputs.run_id }}
+      linux_ci_run_id: ${{ steps.ci.outputs.run_id }}
+      officecli_receipt_run_id: ${{ steps.ci.outputs.officecli_run_id }}
+      fidelity_receipt_run_id: ${{ steps.ci.outputs.fidelity_run_id }}
       ci_head_sha: ${{ steps.ci.outputs.head_sha }}
       kind: ${{ steps.subject.outputs.kind }}
     steps:
@@ -53,12 +63,29 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           SUBJECT_SHA: ${{ steps.subject.outputs.sha }}
+          OFFICECLI_RUN: ${{ inputs.officecli_receipt_run_id || vars.OFFICECLI_RECEIPT_RUN_ID }}
+          FIDELITY_RUN: ${{ inputs.fidelity_receipt_run_id || vars.FIDELITY_RECEIPT_RUN_ID }}
         run: |
-          RUN="$(gh api "repos/${{ github.repository }}/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml/runs?head_sha=${SUBJECT_SHA}&branch=master&event=push&status=success&per_page=1" --jq '.workflow_runs[0] | [.id,.head_sha,.conclusion] | @tsv')"
-          IFS=$'\t' read -r RUN_ID CI_HEAD CONCLUSION <<< "$RUN"
-          test -n "$RUN_ID" && test "$CI_HEAD" = "$SUBJECT_SHA" && test "$CONCLUSION" = success
+          set -euo pipefail
+          BASE="$(gh repo view "${{ github.repository }}" --json defaultBranchRef --jq '.defaultBranchRef.name')"
+          test -n "$BASE"
+          RUN="$(gh api -X GET "repos/${{ github.repository }}/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml/runs" -f head_sha="$SUBJECT_SHA" -f branch="$BASE" -f event=push -f status=success -f per_page=100 --jq '.workflow_runs[0] | [.id,.head_sha,.conclusion,.head_branch,.event,.path] | @tsv')"
+          IFS=$'\t' read -r RUN_ID CI_HEAD CONCLUSION CI_BRANCH CI_EVENT CI_WORKFLOW <<< "$RUN"
+          # Nonfinal && operands bypass errexit; each admission guard must stand alone.
+          test -n "$RUN_ID"
+          test "$CI_HEAD" = "$SUBJECT_SHA"
+          test "$CONCLUSION" = success
+          test "$CI_BRANCH" = "$BASE"
+          test "$CI_EVENT" = push
+          test "$CI_WORKFLOW" = .github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml
+          [[ "$OFFICECLI_RUN" =~ ^[1-9][0-9]*$ && "$FIDELITY_RUN" =~ ^[1-9][0-9]*$ ]]
+          test "$OFFICECLI_RUN" != "$RUN_ID"
+          test "$FIDELITY_RUN" != "$RUN_ID"
+          test "$OFFICECLI_RUN" != "$FIDELITY_RUN"
           echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
           echo "head_sha=$CI_HEAD" >> "$GITHUB_OUTPUT"
+          echo "officecli_run_id=$OFFICECLI_RUN" >> "$GITHUB_OUTPUT"
+          echo "fidelity_run_id=$FIDELITY_RUN" >> "$GITHUB_OUTPUT"
 
   verification:
     needs: [resolve, container-supply-chain]
@@ -71,10 +98,11 @@ jobs:
       attestations: write
     with:
       subject_sha: ${{ needs.resolve.outputs.subject_sha }}
-      mode: release
       release_tag: ${{ needs.resolve.outputs.tag }}
       gate_policy_version: release-target-policy-v1
-      source_run_id: ${{ needs.resolve.outputs.source_run_id }}
+      linux_ci_run_id: ${{ needs.resolve.outputs.linux_ci_run_id }}
+      officecli_receipt_run_id: ${{ needs.resolve.outputs.officecli_receipt_run_id }}
+      fidelity_receipt_run_id: ${{ needs.resolve.outputs.fidelity_receipt_run_id }}
       officecli_receipt_artifact: officecli-physical-receipt-v1-${{ needs.resolve.outputs.subject_sha }}
       fidelity_receipt_artifact: powerpoint-fidelity-receipt-v1-${{ needs.resolve.outputs.subject_sha }}
 
@@ -83,7 +111,7 @@ jobs:
     uses: ./.github/workflows/reusable-container-supply-chain.yml
     with:
       subject_sha: ${{ needs.resolve.outputs.subject_sha }}
-      source_run_id: ${{ needs.resolve.outputs.source_run_id }}
+      source_run_id: ${{ needs.resolve.outputs.linux_ci_run_id }}
       docker_artifact: docker-runtime-qualification
 
   verify-staged-assets:
@@ -103,40 +131,22 @@ jobs:
         with: { name: '${{ needs.verification.outputs.windows_artifact }}', path: post-download }
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with: { name: '${{ needs.verification.outputs.green_receipt_artifact }}', path: root-evidence }
-      - name: Verify exact release subject
-        shell: pwsh
-        run: |
-          $root = Get-Content root-evidence/green-sha-root-receipt.json | ConvertFrom-Json
-          $manifest = Get-Content client-evidence/client-dist-manifest.json | ConvertFrom-Json
-          $artifactSubject = $manifest.subject.sha
-          node scripts/ci/release-subject.mjs --tag "${{ needs.resolve.outputs.tag }}" --subject "${{ needs.resolve.outputs.subject_sha }}" --tag-commit "${{ needs.resolve.outputs.subject_sha }}" --checkout "$(git rev-parse HEAD)" --ci-head "${{ needs.resolve.outputs.ci_head_sha }}" --artifact-subjects "$artifactSubject" --receipt-subjects "$($root.subjectSha)"
-      - name: Post-download Authenticode verification
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: '22.22.0' }
+      - name: Verify subject DAG manifest and independently downloaded signed bytes
         shell: pwsh
         env:
+          GH_TOKEN: ${{ github.token }}
           WINDOWS_SIGNING_SUBJECT: ${{ vars.WINDOWS_SIGNING_SUBJECT }}
           WINDOWS_SIGNING_THUMBPRINT: ${{ vars.WINDOWS_SIGNING_THUMBPRINT }}
+          WINDOWS_VERIFIER_PATH: ${{ vars.WINDOWS_VERIFIER_PATH }}
+          WINDOWS_VERIFIER_SHA256: ${{ vars.WINDOWS_VERIFIER_SHA256 }}
+          WINDOWS_VERIFIER_VERSION: ${{ vars.WINDOWS_VERIFIER_VERSION }}
+          WINDOWS_SIGNTOOL_PATH: ${{ vars.WINDOWS_SIGNTOOL_PATH }}
+          WINDOWS_SIGNTOOL_SHA256: ${{ vars.WINDOWS_SIGNTOOL_SHA256 }}
         run: |
-          Get-ChildItem post-download/*.exe | ForEach-Object {
-            $signature = Get-AuthenticodeSignature $_.FullName
-            if ($signature.Status -ne 'Valid') { throw "post-download Authenticode invalid: $($_.Name)" }
-            if ($signature.SignerCertificate.Subject -ne $env:WINDOWS_SIGNING_SUBJECT) { throw 'post-download publisher mismatch' }
-            if ($signature.SignerCertificate.Thumbprint -ne $env:WINDOWS_SIGNING_THUMBPRINT) { throw 'post-download thumbprint mismatch' }
-            if (-not $signature.TimeStamperCertificate) { throw 'post-download RFC3161 timestamp missing' }
-          }
-          Get-ChildItem post-download/evidence/authenticode/*.json | ForEach-Object {
-            node scripts/ci/authenticode-policy.mjs $_.FullName $env:WINDOWS_SIGNING_SUBJECT $env:WINDOWS_SIGNING_THUMBPRINT
-          }
-      - name: Verify workflow-bound attestations
-        shell: pwsh
-        env: { GH_TOKEN: '${{ github.token }}' }
-        run: |
-          New-Item -ItemType Directory -Force evidence | Out-Null
-          $identity = "https://github.com/${{ github.repository }}/.github/workflows/reusable-windows-qualification.yml@${{ github.ref }}"
-          $signerWorkflow = "${{ github.repository }}/.github/workflows/reusable-windows-qualification.yml"
-          $results = Get-ChildItem post-download/*.exe | ForEach-Object { gh attestation verify $_.FullName --repo "${{ github.repository }}" --signer-workflow $signerWorkflow --format json | ConvertFrom-Json }
-          $results | ConvertTo-Json -Depth 100 | Out-File attestation-post-download.json
-          node scripts/ci/release-receipt-workflow.mjs attestation-windows attestation-post-download.json "${{ needs.resolve.outputs.subject_sha }}" "$(Get-FileHash client-evidence/client-dist-manifest.json -Algorithm SHA256 | Select-Object -ExpandProperty Hash | ForEach-Object ToLower)" $identity
-          node scripts/ci/attestation-policy.mjs evidence/attestation-policy.json electron-windows "${{ needs.resolve.outputs.subject_sha }}" "$(Get-FileHash client-evidence/client-dist-manifest.json -Algorithm SHA256 | Select-Object -ExpandProperty Hash | ForEach-Object ToLower)" $identity
+          node scripts/ci/release-receipt-workflow.mjs verify-staged "${{ needs.resolve.outputs.subject_sha }}" "${{ needs.resolve.outputs.tag }}" "${{ needs.resolve.outputs.ci_head_sha }}"
+          if ($LASTEXITCODE -ne 0) { throw 'staged release verification failed; release assets not admitted' }
       - id: name
         shell: pwsh
         run: '"value=staged-release-v1-${{ needs.resolve.outputs.subject_sha }}" >> $env:GITHUB_OUTPUT'

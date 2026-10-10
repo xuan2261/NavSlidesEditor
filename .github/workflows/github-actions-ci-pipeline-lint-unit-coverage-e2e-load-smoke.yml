@@ -141,6 +141,7 @@ jobs:
   required-checks:
     name: Required checks summary
     runs-on: ubuntu-latest
+    permissions: { contents: read }
     needs:
       - lint
       - unit-coverage
@@ -157,13 +158,16 @@ jobs:
       - container-supply-chain
     if: always()
     steps:
-      - name: Fail if any required job failed
-        run: |
-          status='${{ join(needs.*.result, ',') }}'
-          echo "results=$status"
-          case "$status" in
-            *failure*|*cancelled*|*timed_out*) exit 1 ;;
-          esac
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.subject_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: '22.22.0' }
+      - name: Require every mandatory job to succeed
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node scripts/ci/required-checks.mjs
 
   linux-ci-receipt:
     name: Linux CI qualification receipt
@@ -171,6 +175,7 @@ jobs:
     needs: [build, required-checks]
     runs-on: ubuntu-latest
     permissions: { contents: read, actions: read }
+    env: { GH_TOKEN: '${{ github.token }}' }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with: { ref: '${{ inputs.subject_sha || github.sha }}' }
@@ -180,6 +185,18 @@ jobs:
         with: { name: docker-runtime-qualification, path: evidence/docker }
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with: { name: 'container-supply-chain-v1-${{ inputs.subject_sha || github.sha }}', path: evidence/supply-chain }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: '${{ needs.build.outputs.artifact_name }}', path: evidence/client }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { pattern: 'playwright-report-*', path: evidence/reports }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: coverage-html, path: evidence/reports/coverage-html }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: 'vitest-ci-budget-v1-${{ inputs.subject_sha || github.sha }}', path: 'evidence/reports/vitest-ci-budget-v1-${{ inputs.subject_sha || github.sha }}' }
+      - name: Capture exact API run attempt jobs shards and artifacts
+        run: node scripts/ci/release-receipt-workflow.mjs capture-run evidence "$GITHUB_RUN_ID" linux
+      - name: Independently verify downloaded Docker provenance
+        run: node scripts/ci/release-receipt-workflow.mjs capture-attestation evidence/docker/navslides-editor-image.tar "${{ inputs.subject_sha || github.sha }}" .github/workflows/reusable-docker-qualification.yml evidence/docker/docker-verified.json
       - run: node scripts/ci/release-receipt-workflow.mjs linux "${{ inputs.subject_sha || github.sha }}" "${{ needs.build.outputs.client_digest }}" release-target-policy-v1 evidence
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with: { name: 'linux-ci-receipt-v1-${{ inputs.subject_sha || github.sha }}', path: linux-ci-receipt.json, if-no-files-found: error, retention-days: 30 }

@@ -178,4 +178,5 @@ describe('client artifact manifest', () => {
     fs.writeFileSync(paths.manifest, JSON.stringify(manifest))
     expectFailure(() => verify(paths), 'Artifact identity mismatch')
   })
+
 })

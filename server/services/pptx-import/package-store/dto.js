@@ -82,7 +82,7 @@ const SAFE_CHART_METADATA_KEYS = new Set([
 const AUTHORITY_KEYS = /^(?:_?pptx.*|.*(?:aggregateHead|capability|validatedRevision|packageRevision|journal|authority).*|.*source(?:Map|Ref|Authority).*|(?:aggregateGeneration|baseRevisionId|idempotencyKey|blobSha256|sha256|generation|ordinal|fencingEpoch|predecessorId|originalRevisionId|projectionRevisionId|revisionId|manifestHash|originalPath|packagePath|complexObjects|relationships|securityFlags|unknownParts))$/i
 
 function isAuthorityKey(key) {
-  return !SAFE_PPTX_METADATA_KEYS.has(key) && AUTHORITY_KEYS.test(key)
+  return key === 'trustedImportMetadata' || !SAFE_PPTX_METADATA_KEYS.has(key) && AUTHORITY_KEYS.test(key)
 }
 
 function isSafeChartMetadataValue(value) {

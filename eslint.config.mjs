@@ -183,13 +183,15 @@ export default [
       sourceType: 'commonjs',
     },
   },
-  // Server + Shared test files (use ES modules)
+  // Server + Shared test files and ESM test helpers
   {
     files: [
       'server/**/*.test.js',
       'shared/tests/**/*.js',
       'server/services/game-authority-test-fixture.js',
       'server/services/game-live-wire-fixture.js',
+      'server/recovery-test-driver.js',
+      'server/routes/portable-package-project-fixture.js',
     ],
     languageOptions: {
       globals: {

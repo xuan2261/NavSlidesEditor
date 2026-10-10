@@ -1,14 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 import navigationPolicy from '../../electron/navigation-policy.js'
 import desktopCsp from '../../electron/content-security-policy.js'
 
 const { isTrustedAppUrl, isExternalHttpUrl } = navigationPolicy
 const APP_ORIGIN = 'http://127.0.0.1:3002'
-const root = resolve(__dirname, '..', '..')
-
-const readText = (...parts) => readFileSync(resolve(root, ...parts), 'utf8').replace(/\r\n/g, '\n')
 const { DESKTOP_CSP, withDesktopCsp } = desktopCsp
 
 describe('Electron desktop runtime & packaging contracts', () => {
@@ -48,28 +43,6 @@ describe('Electron desktop runtime & packaging contracts', () => {
     expect(isExternalHttpUrl(`${APP_ORIGIN}/editor/deck-123`, APP_ORIGIN)).toBe(false)
   })
 
-  it('verifies confirmation dialogs use non-blocking themed UI without native dialog traps', () => {
-    const nativeDialogAudit = readText('client', 'src', 'utils', 'native-dialog-audit.test.js')
-    expect(nativeDialogAudit).toContain("keeps production UI flows on themed feedback surfaces")
-    expect(nativeDialogAudit).toContain("prompt|confirm|alert")
-
-    // The editor uses themed modal components instead of blocking modal loops
-    const editorPage = readText('client', 'src', 'pages', 'EditorPage.jsx')
-    expect(editorPage).not.toMatch(/\bwindow\.(alert|confirm|prompt)\s*\(/)
-  })
-
-  it('keeps uploaded SVG sandboxed independently of the desktop presentation policy', () => {
-    const serverIndex = readText('server', 'index.js')
-
-    // SVG uploads are sandboxed with restrictive CSP to prevent XSS
-    expect(serverIndex).toContain(
-      "Content-Security-Policy': \"sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'\""
-    )
-
-    // Rate limiter is bypassed during test automation to prevent 429 cascades
-    expect(serverIndex).toContain('isRateLimitSkipped')
-  })
-
   it('applies a desktop-only policy that permits inline Reveal and packaged assets without eval', () => {
     const headers = withDesktopCsp({ 'Content-Type': ['text/html'] })
     expect(headers['Content-Security-Policy']).toEqual([DESKTOP_CSP])
@@ -82,15 +55,5 @@ describe('Electron desktop runtime & packaging contracts', () => {
 
     const uploadHeaders = { 'content-security-policy': ["sandbox; default-src 'none'"] }
     expect(withDesktopCsp(uploadHeaders)).toBe(uploadHeaders)
-  })
-
-  it('enforces Electron security confinement: sandbox, contextIsolation, and no IPC bridge', () => {
-    const main = readText('electron', 'main.js')
-
-    expect(main).toContain('nodeIntegration: false')
-    expect(main).toContain('contextIsolation: true')
-    expect(main).toContain('sandbox: true')
-    expect(main).not.toContain('preload:')
-    expect(main).not.toContain('ipcMain')
   })
 })

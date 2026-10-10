@@ -80,6 +80,28 @@ describe('OPC inventory and authority boundaries', () => {
     }))
   })
 
+  it('keeps published authority unchanged when reloading a relationship without an identifier', async () => {
+    const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), 'package-store-reload-'))
+    dirs.push(rootDir)
+    const store = await openPackageStore({ rootDir })
+    await store.acquireWriter()
+    try {
+      const bytes = await makePptx({
+        '[Content_Types].xml': '<Types/>',
+        'ppt/presentation.xml': '<p:presentation/>',
+        '_rels/.rels': '<Relationships><Relationship Type="officeDocument" Target="ppt/presentation.xml"/></Relationships>',
+      })
+      const imported = await store.commitImport(bytes, {
+        jobId: 'reload-job', presentationId: 'inventory',
+        projection: { id: 'inventory', slides: [] }, sourceMap: { entries: {} },
+      })
+      const published = store.getState()
+      await store.reload()
+      expect(store.getState()).toStrictEqual(published)
+      expect(await store.readOriginal(imported.head.originalRevisionId)).toEqual(bytes)
+    } finally { await store.releaseWriter() }
+  })
+
   it('allowlists editor/public/provider DTOs and strips authority fields', () => {
     const record = {
       id: 'rev-1',

@@ -102,8 +102,9 @@ export function validateProjectFile(parsed) {
     return { valid: false, errors, warnings }
   }
 
-  if (parsed.manifest?.version && !['1.0', '1.1'].includes(parsed.manifest.version)) {
-    warnings.push(`Unknown version: ${parsed.manifest.version}. Expected 1.0 or 1.1`)
+  // Version recognition is structural only; DTO metadata never grants package authority.
+  if (parsed.manifest?.version && !['1.0', '1.1', '2.0'].includes(parsed.manifest.version)) {
+    warnings.push(`Unknown version: ${parsed.manifest.version}. Expected 1.0, 1.1 or 2.0`)
   }
 
   if (!parsed.presentation.title) warnings.push('Presentation missing title field')
@@ -117,26 +118,3 @@ export function rewriteMediaUrls(presentation, urlMap) {
   return rewriteProjectMediaUrls(presentation, urlMap)
 }
 
-export async function rehydrateImportedPresentation(api, parsed) {
-  const warnings = []
-  let finalPresentation = parsed.presentation
-  if (parsed.type !== 'zip' || !parsed.mediaFiles?.length) {
-    return { presentation: finalPresentation, warnings }
-  }
-
-  const urlMap = {}
-  for (const media of parsed.mediaFiles) {
-    try {
-      const uploadName = media.filename || media.archivePath.replace(/^media\//, '')
-      const uploaded = await api.uploadFile(new File([media.blob], uploadName))
-      const uploadedUrl = uploaded.url || `/uploads/${uploaded.filename}`
-      urlMap[media.originalUrl] = uploadedUrl
-    } catch (error) {
-      console.warn('Failed to upload media:', media.archivePath, error)
-      warnings.push(`Failed to upload media: ${media.archivePath}`)
-    }
-  }
-
-  if (Object.keys(urlMap).length > 0) finalPresentation = rewriteProjectMediaUrls(finalPresentation, urlMap)
-  return { presentation: finalPresentation, warnings }
-}

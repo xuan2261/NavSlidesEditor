@@ -1,10 +1,9 @@
-import crypto from 'node:crypto'
 import { readFile, writeFile } from 'node:fs/promises'
 import { pathToFileURL } from 'node:url'
 
-const IMAGE_DIGEST = /^sha256:[a-f0-9]{64}$/
-const hash = (value) =>
-  crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex')
+import { IMAGE_ID, assertInvocation, assertTrivyReport, hashJson as hash } from './trivy-report-evidence.js'
+
+const text = (value) => typeof value === 'string' && value.trim().length > 0
 
 function assertSbom(sbom) {
   const spdx = typeof sbom?.spdxVersion === 'string' && sbom.spdxVersion.startsWith('SPDX-')
@@ -19,25 +18,27 @@ function approvedException(vulnerability, policy) {
   const matches = policy.exceptions.filter(
     (entry) =>
       entry.id === vulnerability.VulnerabilityID &&
-      (!entry.package || entry.package === vulnerability.PkgName)
+      entry.package === vulnerability.PkgName
   )
   return matches.length > 0
 }
 
 export function verifyContainerSupplyChain(input, now = Date.now()) {
-  const { policy, report, sbom, browser, expected, actualImageDigest } = input
+  if (!input || typeof input !== 'object') throw new Error('container verification input is invalid')
+  const { policy, report, sbom, browser, expected, actualImageID } = input
   if (policy?.schemaVersion !== 1) throw new Error('unsupported container policy schema')
-  if (!Array.isArray(policy.failSeverities) || !Array.isArray(policy.exceptions)) {
+  if (JSON.stringify(policy.failSeverities) !== '["HIGH","CRITICAL"]' || !Array.isArray(policy.exceptions)) {
     throw new Error('container policy is invalid')
   }
   for (const entry of policy.exceptions) {
-    if (!entry.id || !entry.reason || !Number.isFinite(Date.parse(entry.expires))) {
-      throw new Error(`invalid exception for ${entry.id ?? 'unknown'}`)
+    if (!entry || ![entry.id, entry.package, entry.owner, entry.reason, entry.expires].every(text) ||
+        entry.package.includes('*') || entry.id.includes('*') || !Number.isFinite(Date.parse(entry.expires))) {
+      throw new Error(`invalid exception for ${entry?.id ?? 'unknown'}`)
     }
     if (Date.parse(entry.expires) <= now) throw new Error(`expired exception for ${entry.id}`)
   }
-  if (!IMAGE_DIGEST.test(actualImageDigest) || actualImageDigest !== expected.imageDigest) {
-    throw new Error('container image digest mismatch')
+  if (!IMAGE_ID.test(actualImageID) || actualImageID !== expected?.imageID) {
+    throw new Error('container image configID mismatch')
   }
   assertSbom(sbom)
   if (browser?.playwrightVersion !== expected.playwrightVersion) {
@@ -49,9 +50,8 @@ export function verifyContainerSupplyChain(input, now = Date.now()) {
   if (String(browser.chromium.revision) !== String(expected.chromiumRevision)) {
     throw new Error('Chromium revision drift')
   }
-  const vulnerabilities = (report?.Results ?? []).flatMap((result) =>
-    (result.Vulnerabilities ?? []).map((entry) => ({ ...entry, target: result.Target }))
-  )
+  const vulnerabilities = assertTrivyReport(report, expected, actualImageID, sbom)
+  assertInvocation(input, now)
   const failures = vulnerabilities.filter(
     (entry) =>
       policy.failSeverities.includes(entry.Severity) &&
@@ -65,9 +65,12 @@ export function verifyContainerSupplyChain(input, now = Date.now()) {
     )
   }
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     status: 'passed',
-    imageDigest: actualImageDigest,
+    imageID: actualImageID,
+    registryManifestDigests: report.Metadata.RepoDigests ?? [],
+    scannerVersion: report.Trivy.Version,
+    scannerEvidenceHash: hash(input.scanEvidence),
     playwrightVersion: browser.playwrightVersion,
     chromiumRevision: String(browser.chromium.revision),
     vulnerabilityCount: vulnerabilities.length,
@@ -89,22 +92,26 @@ function parseArgs(args) {
   return values
 }
 
-export async function runCli(args) {
+export async function runCli(args, now = Date.now()) {
   const values = parseArgs(args)
   const load = async (name) => JSON.parse(await readFile(values[name], 'utf8'))
-  const actualImageDigest = (await readFile(values.imageDigest, 'utf8')).trim()
+  const actualImageID = (await readFile(values.imageId, 'utf8')).trim()
   const receipt = verifyContainerSupplyChain({
     policy: await load('policy'),
     report: await load('report'),
     sbom: await load('sbom'),
     browser: await load('browser'),
+    scanEvidence: await load('scanEvidence'),
     expected: {
-      imageDigest: values.expectedImageDigest,
+      imageID: values.expectedImageId,
+      artifactName: values.artifactName,
+      osFamily: values.osFamily,
+      requiredLanguageTypes: values.languageTypes === 'none' ? [] : values.languageTypes?.split(','),
       playwrightVersion: values.playwrightVersion,
       chromiumRevision: values.chromiumRevision,
     },
-    actualImageDigest,
-  })
+    actualImageID,
+  }, now)
   await writeFile(values.out, `${JSON.stringify(receipt, null, 2)}\n`)
   return receipt
 }
