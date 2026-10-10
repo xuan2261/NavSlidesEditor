@@ -1,0 +1,192 @@
+			slide.style.removeProperty( 'display' );
+			slide.style.removeProperty( 'top' );
+			slide.removeAttribute( 'hidden' );
+			slide.removeAttribute( 'aria-hidden' );
+			slide.removeAttribute( 'inert' );
+		} );
+
+	}
+
+	/**
+	 * Adds a listener to one of our custom reveal.js events,
+	 * like slidechanged.
+	 */
+	function on( type, listener, useCapture ) {
+
+		revealElement.addEventListener( type, listener, useCapture );
+
+	}
+
+	/**
+	 * Unsubscribes from a reveal.js event.
+	 */
+	function off( type, listener, useCapture ) {
+
+		revealElement.removeEventListener( type, listener, useCapture );
+
+	}
+
+	/**
+	 * Applies CSS transforms to the slides container. The container
+	 * is transformed from two separate sources: layout and the overview
+	 * mode.
+	 *
+	 * @param {object} transforms
+	 */
+	function transformSlides( transforms ) {
+
+		// Pick up new transforms from arguments
+		if( typeof transforms.layout === 'string' ) slidesTransform.layout = transforms.layout;
+		if( typeof transforms.overview === 'string' ) slidesTransform.overview = transforms.overview;
+
+		// Apply the transforms to the slides container
+		if( slidesTransform.layout ) {
+			Util.transformElement( dom.slides, slidesTransform.layout + ' ' + slidesTransform.overview );
+		}
+		else {
+			Util.transformElement( dom.slides, slidesTransform.overview );
+		}
+
+	}
+
+	/**
+	 * Dispatches an event of the specified type from the
+	 * reveal DOM element.
+	 */
+	function dispatchEvent({ target=dom.wrapper, type, data, bubbles=true }) {
+
+		let event = document.createEvent( 'HTMLEvents', 1, 2 );
+		event.initEvent( type, bubbles, true );
+		Util.extend( event, data );
+		target.dispatchEvent( event );
+
+		if( target === dom.wrapper ) {
+			// If we're in an iframe, post each reveal.js event to the
+			// parent window. Used by the notes plugin
+			dispatchPostMessage( type );
+		}
+
+		return event;
+
+	}
+
+	/**
+	 * Dispatches a slidechanged event.
+	 *
+	 * @param {string} origin Used to identify multiplex clients
+	 */
+	function dispatchSlideChanged( origin ) {
+
+		dispatchEvent({
+			type: 'slidechanged',
+			data: {
+				indexh,
+				indexv,
+				previousSlide,
+				currentSlide,
+				origin
+			}
+		});
+
+	}
+
+	/**
+	 * Dispatched a postMessage of the given type from our window.
+	 */
+	function dispatchPostMessage( type, data ) {
+
+		if( config.postMessageEvents && window.parent !== window.self ) {
+			let message = {
+				namespace: 'reveal',
+				eventName: type,
+				state: getState()
+			};
+
+			Util.extend( message, data );
+
+			window.parent.postMessage( JSON.stringify( message ), '*' );
+		}
+
+	}
+
+	/**
+	 * Applies JavaScript-controlled layout rules to the
+	 * presentation.
+	 */
+	function layout() {
+
+		if( dom.wrapper && !printView.isActive() ) {
+
+			const viewportWidth = dom.viewport.offsetWidth;
+			const viewportHeight = dom.viewport.offsetHeight;
+
+			if( !config.disableLayout ) {
+
+				// On some mobile devices '100vh' is taller than the visible
+				// viewport which leads to part of the presentation being
+				// cut off. To work around this we define our own '--vh' custom
+				// property where 100x adds up to the correct height.
+				//
+				// https://css-tricks.com/the-trick-to-viewport-units-on-mobile/
+				if( Device.isMobile && !config.embedded ) {
+					document.documentElement.style.setProperty( '--vh', ( window.innerHeight * 0.01 ) + 'px' );
+				}
+
+				const size = scrollView.isActive() ?
+							 getComputedSlideSize( viewportWidth, viewportHeight ) :
+							 getComputedSlideSize();
+
+				const oldScale = scale;
+
+				// Layout the contents of the slides
+				layoutSlideContents( config.width, config.height );
+
+				dom.slides.style.width = size.width + 'px';
+				dom.slides.style.height = size.height + 'px';
+
+				// Determine scale of content to fit within available space
+				scale = Math.min( size.presentationWidth / size.width, size.presentationHeight / size.height );
+
+				// Respect max/min scale settings
+				scale = Math.max( scale, config.minScale );
+				scale = Math.min( scale, config.maxScale );
+				scale = Math.round( scale * 100 ) / 100;
+
+				// Don't apply any scaling styles if scale is 1 or we're
+				// in the scroll view
+				if( scale === 1 || scrollView.isActive() ) {
+					dom.slides.style.zoom = '';
+					dom.slides.style.left = '';
+					dom.slides.style.top = '';
+					dom.slides.style.bottom = '';
+					dom.slides.style.right = '';
+					transformSlides( { layout: '' } );
+				}
+				else {
+					dom.slides.style.zoom = '';
+					dom.slides.style.left = '50%';
+					dom.slides.style.top = '50%';
+					dom.slides.style.bottom = 'auto';
+					dom.slides.style.right = 'auto';
+					transformSlides( { layout: 'translate(-50%, -50%) scale('+ scale +')' } );
+				}
+
+				const visibleSlides = Array.from( dom.wrapper.querySelectorAll( SLIDES_SELECTOR ) )
+					.filter( slide => slide.style.display !== 'none' );
+
+				// Pass 1: read sizes of visible slides
+				const tops = new Array( visibleSlides.length );
+				for( let i = 0, len = visibleSlides.length; i < len; i++ ) {
+					const slide = visibleSlides[ i ];
+
+					if( config.center || slide.classList.contains( 'center' ) ) {
+						// Vertical stacks are not centred since their section
+						// children will be
+						if( slide.classList.contains( 'stack' ) ) {
+							tops[ i ] = 0;
+						}
+						else {
+							tops[ i ] = Math.max( ( size.height - slide.scrollHeight ) / 2, 0 ) + 'px';
+						}
+
+[Showing lines 691-880 of 2973. Use :881 to continue]

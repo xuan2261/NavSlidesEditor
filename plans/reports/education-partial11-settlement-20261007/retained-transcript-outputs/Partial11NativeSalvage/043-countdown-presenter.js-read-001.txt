@@ -1,0 +1,114 @@
+const { node, listen, button } = require('./dom.js')
+const { countdownRemaining } = require('../countdown-state.js')
+
+function formatRemaining(milliseconds) {
+  const total = Math.ceil(milliseconds / 1000),
+    seconds = String(total % 60).padStart(2, '0')
+  const minutes = String(Math.floor(total / 60) % 60).padStart(2, '0'),
+    hours = Math.floor(total / 3600)
+  return hours ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`
+}
+function presentCountdown({ root, config, session, reset, clock }) {
+  const document = root.ownerDocument,
+    ui = root.querySelector('[data-ns-game-ui]')
+  const heading = node(document, 'h3', config.title),
+    local = node(document, 'small', 'Local classroom — one device')
+  const display = node(document, 'output', '', {
+    'aria-label': 'Time remaining',
+    'aria-live': 'off',
+    'data-ns-countdown': '',
+  })
+  const status = node(document, 'div', '', {
+    role: 'status',
+    'aria-live': 'polite',
+    'aria-atomic': 'true',
+  })
+  const form = node(document, 'form', undefined, {
+    'aria-label': 'Adjust countdown duration',
+    class: 'ns-game-controls',
+  })
+  const durationLabel = node(document, 'label', 'Duration in seconds')
+  const duration = node(document, 'input', undefined, {
+    type: 'number',
+    min: '1',
+    max: '86400',
+    step: '1',
+    'aria-label': 'Duration in seconds',
+  })
+  duration.value = String(session.getState().durationSeconds)
+  durationLabel.append(duration)
+  const apply = node(document, 'button', 'Apply duration', { type: 'submit' })
+  const error = node(document, 'p', '', { role: 'alert' })
+  form.append(durationLabel, apply, error)
+  const start = button(document, 'Start', 'start'),
+    pause = button(document, 'Pause', 'pause')
+  const resume = button(document, 'Resume', 'resume'),
+    replay = button(document, 'Reset', 'reset')
+  const controls = node(document, 'div', undefined, { class: 'ns-game-controls' })
+  controls.append(start, pause, resume, replay)
+  ui.replaceChildren(heading, local, display, status, form, controls)
+  let cancelTick,
+    shownDuration = session.getState().durationSeconds,
+    shownPhase
+  session.own(() => {
+    cancelTick?.()
+    ui.replaceChildren()
+  })
+  listen(session, form, 'submit', (event) => {
+    event.preventDefault()
+    const value = Number(duration.value)
+    if (!duration.value.trim() || !Number.isInteger(value) || value < 1 || value > 86400) {
+      error.textContent = 'Enter a whole duration from 1 to 86400 seconds.'
+      duration.setAttribute('aria-invalid', 'true')
+      return
+    }
+    error.textContent = ''
+    duration.removeAttribute('aria-invalid')
+    session.dispatch({ type: 'duration', durationSeconds: value })
+  })
+  for (const [control, type] of [
+    [start, 'start'],
+    [pause, 'pause'],
+    [resume, 'resume'],
+  ])
+    listen(session, control, 'click', () => session.dispatch({ type }))
+  listen(session, replay, 'click', reset)
+  function render(state) {
+    cancelTick?.()
+    cancelTick = undefined
+    const remainingMs = countdownRemaining(state, clock.now)
+    display.textContent = formatRemaining(remainingMs)
+    start.disabled = state.phase !== 'idle'
+    pause.disabled = state.phase !== 'running'
+    resume.disabled = state.phase !== 'paused' || state.pauseReason !== 'user'
+    if (shownDuration !== state.durationSeconds) {
+      duration.value = String(state.durationSeconds)
+      shownDuration = state.durationSeconds
+    }
+    if (shownPhase !== state.phase) {
+      status.textContent =
+        state.phase === 'expired'
+          ? config.expiryMessage
+          : { idle: 'Ready', running: 'Countdown started', paused: 'Countdown paused' }[state.phase]
+      shownPhase = state.phase
+    }
+    if (state.phase === 'running') {
+      const command = { type: 'tick', generation: state.generation, revision: state.revision }
+      cancelTick = session.schedule(
+        () => {
+          cancelTick = undefined
+          const before = session.getState(),
+            after = session.dispatch(command)
+          if (after === before) render(after)
+        },
+        Math.min(100, remainingMs)
+      )
+    }
+  }
+  return {
+    render,
+    pause: () => session.dispatch({ type: 'hide' }),
+    resume: () => session.dispatch({ type: 'show' }),
+  }
+}
+module.exports = { presentCountdown, formatRemaining }

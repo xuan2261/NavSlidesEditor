@@ -1,0 +1,192 @@
+				// Run the auto-animation between our slides
+				autoAnimate.run( previousSlide, currentSlide );
+			}
+
+		}
+
+	}
+
+	/**
+	 * Checks whether or not an auto-animation should take place between
+	 * the two given slides.
+	 *
+	 * @param {HTMLElement} fromSlide
+	 * @param {HTMLElement} toSlide
+	 * @param {number} indexhBefore
+	 * @param {number} indexvBefore
+	 *
+	 * @returns {boolean}
+	 */
+	function shouldAutoAnimateBetween( fromSlide, toSlide, indexhBefore, indexvBefore ) {
+
+		return 	fromSlide.hasAttribute( 'data-auto-animate' ) && toSlide.hasAttribute( 'data-auto-animate' ) &&
+				fromSlide.getAttribute( 'data-auto-animate-id' ) === toSlide.getAttribute( 'data-auto-animate-id' ) &&
+				!( ( indexh > indexhBefore || indexv > indexvBefore ) ? toSlide : fromSlide ).hasAttribute( 'data-auto-animate-restart' );
+
+	}
+
+	/**
+	 * Called anytime a new slide should be activated while in the scroll
+	 * view. The active slide is the page that occupies the most space in
+	 * the scrollable viewport.
+	 *
+	 * @param {number} pageIndex
+	 * @param {HTMLElement} slideElement
+	 */
+	function setCurrentScrollPage( slideElement, h, v ) {
+
+		let indexhBefore = indexh || 0;
+
+		indexh = h;
+		indexv = v;
+
+		const slideChanged = currentSlide !== slideElement;
+
+		previousSlide = currentSlide;
+		currentSlide = slideElement;
+
+		if( currentSlide && previousSlide ) {
+			if( config.autoAnimate && shouldAutoAnimateBetween( previousSlide, currentSlide, indexhBefore, indexv ) ) {
+				// Run the auto-animation between our slides
+				autoAnimate.run( previousSlide, currentSlide );
+			}
+		}
+
+		// Start or stop embedded content like videos and iframes
+		if( slideChanged ) {
+			slideContent.afterSlideChanged();
+
+			if( previousSlide ) {
+				slideContent.stopEmbeddedContent( previousSlide );
+				slideContent.stopEmbeddedContent( previousSlide.slideBackgroundElement );
+			}
+
+			slideContent.startEmbeddedContent( currentSlide );
+			slideContent.startEmbeddedContent( currentSlide.slideBackgroundElement );
+		}
+
+		requestAnimationFrame( () => {
+			announceStatus( getStatusText( currentSlide ) );
+		});
+
+		dispatchSlideChanged();
+
+	}
+
+	/**
+	 * Syncs the presentation with the current DOM. Useful
+	 * when new slides or control elements are added or when
+	 * the configuration has changed.
+	 */
+	function sync() {
+
+		// Subscribe to input
+		removeEventListeners();
+		addEventListeners();
+
+		// Force a layout to make sure the current config is accounted for
+		layout();
+
+		// Reflect the current autoSlide value
+		autoSlide = config.autoSlide;
+
+		// Start auto-sliding if it's enabled
+		cueAutoSlide();
+
+		// Re-create all slide backgrounds
+		backgrounds.create();
+
+		// Write the current hash to the URL
+		location.writeURL();
+
+		if( config.sortFragmentsOnSync === true ) {
+			fragments.sortAll();
+		}
+
+		// Re-apply slide state classes for the current indices.
+		// This ensures dynamically inserted/removed slides receive
+		// proper past/present/future classes on sync.
+		if( typeof indexh !== 'undefined' ) {
+			indexh = updateSlides( HORIZONTAL_SLIDES_SELECTOR, indexh );
+			indexv = updateSlides( VERTICAL_SLIDES_SELECTOR, indexv );
+		}
+
+		controls.update();
+		progress.update();
+
+		updateSlidesVisibility();
+
+		notes.update();
+		notes.updateVisibility();
+		overlay.update();
+		backgrounds.update( true );
+		slideNumber.update();
+		slideContent.formatEmbeddedContent();
+
+		// Start or stop embedded content depending on global config
+		if( config.autoPlayMedia === false ) {
+			slideContent.stopEmbeddedContent( currentSlide, { unloadIframes: false } );
+		}
+		else {
+			slideContent.startEmbeddedContent( currentSlide );
+		}
+
+		if( overview.isActive() ) {
+			overview.layout();
+		}
+
+		dispatchEvent({ type: 'sync' });
+
+	}
+
+	/**
+	 * Updates reveal.js to keep in sync with new slide attributes. For
+	 * example, if you add a new `data-background-image` you can call
+	 * this to have reveal.js render the new background image.
+	 *
+	 * Similar to #sync() but more efficient when you only need to
+	 * refresh a specific slide.
+	 *
+	 * @param {HTMLElement} slide
+	 */
+	function syncSlide( slide = currentSlide ) {
+
+		backgrounds.sync( slide );
+		fragments.sync( slide );
+
+		slideContent.load( slide );
+
+		backgrounds.update();
+		notes.update();
+
+		dispatchEvent({
+			type: 'slidesync',
+			data: {
+				slide
+			}
+		});
+
+	}
+
+	/**
+	 * Resets all vertical slides so that only the first
+	 * is visible.
+	 */
+	function resetVerticalSlides() {
+
+		getHorizontalSlides().forEach( horizontalSlide => {
+
+			Util.queryAll( horizontalSlide, 'section' ).forEach( ( verticalSlide, y ) => {
+
+				if( y > 0 ) {
+					verticalSlide.classList.remove( 'present' );
+					verticalSlide.classList.remove( 'past' );
+					verticalSlide.classList.add( 'future' );
+					verticalSlide.setAttribute( 'aria-hidden', 'true' );
+				}
+
+			} );
+
+		} );
+
+[Showing lines 1451-1640 of 2973. Use :1641 to continue]

@@ -1,0 +1,301 @@
+ */
+function getFxCanvasHtml(bg) {
+  if (!bg || bg.type !== 'fx' || !bg.fx || !getFxModule(bg.fx.name)) return ''
+  const params = escapeHtml(JSON.stringify(bg.fx.params || {}))
+  return `<canvas data-fx-name="${escapeHtml(bg.fx.name)}" data-fx-params='${params}' style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>`
+}
+
+function downloadHTML(presentation) {
+  const html = generateRevealHTML(presentation)
+  const blob = new Blob([html], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.html`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ΓöÇΓöÇΓöÇ PDF export (print-ready HTML, one page per fragment state) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+function getBgPrintStyle(bg, deckTokens) {
+  const tokenBg = deckTokens?.colors?.bg || '#1e1e2e'
+  if (!bg || bg.type === 'none') return `background-color:${tokenBg};`
+  if (bg.type === 'color') return `background-color:${bg.color || tokenBg};`
+  if (bg.type === 'gradient') return `background:${formatGradientCss(bg) || tokenBg};`
+  if (bg.type === 'fx') {
+    // Canvas can't print — fall back to a solid color (author override, then the
+    // theme bg token, then default).
+    const fallback =
+      (bg.fx && bg.fx.fallbackColor) ||
+      (deckTokens && deckTokens.colors && deckTokens.colors.bg) ||
+      '#1e1e2e'
+    return `background-color:${fallback};`
+  }
+  const imageSrc = bg.type === 'image' ? bg.image || bg.src : ''
+  if (imageSrc) {
+    const src = absoluteSrc(imageSrc)
+    return `background-image:url('${src}');background-size:${bg.size || 'cover'};background-position:${bg.position || 'center'};`
+  }
+  return 'background-color:#1e1e2e;'
+}
+
+function generatePrintHTML(presentation, options = {}) {
+  const autoPrint = options.autoPrint !== false
+  const includePrintBar = options.includePrintBar !== false
+  const fragmentMode = options.fragmentMode || 'expanded'
+  const exportReadyDelayMs = Number(options.exportReadyDelayMs ?? (autoPrint ? 3000 : 300))
+  const showFooter = presentation.showFooter || false
+  const showPageNumbers = presentation.showPageNumbers || false
+  const pageNumberFormat = presentation.pageNumberFormat || 'c/t'
+  const codeTheme = presentation.codeTheme || 'monokai'
+  const footerFontSize = Number(presentation.footerFontSize) || 14
+  const footerFontFamily = presentation.footerFontFamily || '-apple-system,sans-serif'
+  const footerColor = presentation.footerColor || 'rgba(255,255,255,0.65)'
+  const footerMode = presentation.footerMode || 'basic'
+  const sequenceSections = presentation.sequenceSections || []
+  const footerInactiveColor = presentation.footerInactiveColor || 'rgba(255,255,255,0.25)'
+  const resW = Number(presentation.resolution?.width) || 960
+  const resH = Number(presentation.resolution?.height) || 540
+  const printDeckTokens = mergeTokens(DEFAULT_TOKENS, presentation.designTokens)
+  const pages = []
+  let printPageCounter = 0
+  presentation.slides.forEach((sourceSlide) => {
+    const slide = resolveSlideForRender(sourceSlide, presentation)
+    if (fragmentMode === 'final') {
+      pages.push({ slide, maxIdx: Infinity, countPageNumber: true })
+      return
+    }
+
+    // Expand each slide into one page per fragment step (initial + one per unique index)
+    const fragIndices = [
+      ...new Set(
+        (slide.elements || [])
+          .filter((el) => !(el.hidden || false))
+          .filter((el) => el.fragment)
+          .map((el) => el.fragmentIndex || 1)
+      ),
+    ].sort((a, b) => a - b)
+    pages.push({ slide, maxIdx: -Infinity, countPageNumber: true }) // initial: no fragments
+    fragIndices.forEach((idx) => pages.push({ slide, maxIdx: idx, countPageNumber: false }))
+  })
+  const totalPages = pages.length
+
+  const pagesHtml = pages
+    // eslint-disable-next-line unused-imports/no-unused-vars
+    .map(({ slide, maxIdx, countPageNumber }, pageIndex) => {
+      const slidePrintTokens = mergeTokens(printDeckTokens, slide?.designTokens)
+      const bgStyle = getBgPrintStyle(slide.background, slidePrintTokens)
+
+      const elementsHtml = renderSlideElements(slide, {
+        forPrint: true,
+        baseUrl: options.baseUrl,
+        maxFragIdx: maxIdx,
+        exportElementIds: options.exportElementIds,
+        teacherReveal: options.teacherReveal === true,
+        designTokens: slidePrintTokens,
+        slideBackground: getPrintChartBackground(slide, printDeckTokens),
+      })
+
+      // Per-slide page numbering
+      const slideHasPageNum = slide.showPageNumber !== false
+      if (slideHasPageNum && countPageNumber) printPageCounter++
+      const pageLabel =
+        showPageNumbers && slideHasPageNum
+          ? pageNumberFormat === 'c/t'
+            ? `${printPageCounter} / ${(presentation.slides || []).filter((s) => s.showPageNumber !== false).length}`
+            : `${printPageCounter}`
+          : ''
+
+      let footerHtml = ''
+      if (footerMode === 'sequence' && sequenceSections.length > 0 && showFooter) {
+        const activeIdx = slide.activeSection
+        const seqSpans = sequenceSections
+          .map((sec, i) => {
+            const isActive = activeIdx === i
+            const color = isActive ? footerColor : footerInactiveColor
+            const weight = isActive ? 'font-weight:700;' : 'font-weight:400;'
+            return `<span style="${escapeHtml(`color:${color};${weight}`)}">${escapeHtml(sec || `Section ${i + 1}`)}</span>`
+          })
+          .join('')
+        const pageSpan = pageLabel
+          ? `<span style="margin-left:12px;flex-shrink:0;">${pageLabel}</span>`
+          : ''
+        footerHtml = `<div style="${escapeHtml(`position:absolute;bottom:6px;left:16px;right:16px;z-index:900;display:flex;justify-content:center;align-items:center;font-size:calc(${footerFontSize}px * var(--font-zoom, 1));font-family:${footerFontFamily};pointer-events:none;box-sizing:border-box;`)}"><div style="display:flex;flex:1;justify-content:space-evenly;align-items:center;">${seqSpans}</div>${pageSpan}</div>`
+      } else {
+        const sectionLabel = showFooter && slide.section ? escapeHtml(slide.section) : ''
+        footerHtml =
+          sectionLabel || pageLabel
+            ? `<div style="${escapeHtml(`position:absolute;bottom:8px;left:16px;right:16px;z-index:900;display:flex;justify-content:space-between;align-items:center;font-size:calc(${footerFontSize}px * var(--font-zoom, 1));color:${footerColor};font-family:${footerFontFamily};pointer-events:none;box-sizing:border-box;`)}"><span>${sectionLabel}</span><span>${pageLabel}</span></div>`
+            : ''
+      }
+
+      return `<div class="slide-page" style="${escapeHtml(`${bgStyle}font-size:calc(16px * var(--font-zoom, 1));`)}">\n${elementsHtml}\n${footerHtml}\n</div>`
+    })
+    .join('\n')
+
+  const title = escapeHtml(presentation.title || 'Presentation')
+  // Determine base URL for resolving relative asset paths (images, vendor, etc.)
+  // When PDF HTML is opened via blob: URL, relative paths like /uploads/... won't resolve
+  const baseUrl =
+    options.baseUrl ||
+    (typeof window !== 'undefined' && window.location && window.location.origin !== 'null'
+      ? window.location.origin
+      : '')
+  const printBarHtml = includePrintBar
+    ? `  <div id="print-bar">
+    <div>
+      <strong>${title}</strong>
+      <span class="hint"> &nbsp;┬╖&nbsp; ${totalPages} page${totalPages !== 1 ? 's' : ''} (${fragmentMode === 'final' ? 'final fragment state' : 'fragments expanded'})
+        &nbsp;┬╖&nbsp; enable <em>Background graphics</em> in print settings</span>
+    </div>
+    <button onclick="window.print()">Print / Save as PDF</button>
+  </div>`
+    : ''
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="navslides-reveal-version" content="${REVEAL_RUNTIME_VERSION}">
+  <title>${title} — PDF</title>${baseUrl ? `\n  <base href="${escapeHtml(baseUrl)}/">` : ''}
+  <link rel="stylesheet" href="/vendor/katex/dist/katex.min.css">
+  <link rel="stylesheet" href="/vendor/highlight.js/styles/${escapeHtml(codeTheme)}.min.css">
+  <style>${safeStyleText(`
+    @page { size: ${resW}px ${resH}px; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    html { width: 100%; height: auto; overflow: visible !important; background: #000; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    body { width: 100%; height: auto; overflow: visible !important; background: #000; margin: 0; padding-top: ${includePrintBar ? 48 : 0}px; print-color-adjust: exact; -webkit-print-color-adjust: exact; display: block; }
+    .slide-page {
+      width: ${resW}px; height: ${resH}px; position: relative; overflow: hidden;
+      margin: 0 auto;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      break-after: page; page-break-after: always;
+      print-color-adjust: exact; -webkit-print-color-adjust: exact;
+    }
+    .slide-page:last-child { break-after: avoid; page-break-after: avoid; }
+    .slide-page h1 { font-size: 2.5em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .slide-page h2 { font-size: 1.6em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .slide-page h3 { font-size: 1.3em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .slide-page h4 { font-size: 1em;   font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .slide-page p  { margin: 0 0 6px; line-height: 1.5; }
+    .slide-page ul, .slide-page ol { padding-left: 24px; margin: 0 0 6px; }
+    .slide-page li { margin-bottom: 3px; line-height: 1.5; }
+    .slide-page a  { text-decoration: underline; }
+    .slide-page [data-ns-markdown] pre { white-space: pre; overflow: auto; background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: 6px; font-size: 13px; }
+    .slide-page [data-ns-markdown] code { font-family: 'Fira Code', monospace; }
+    .slide-page img { margin: 0 !important; border: none !important; background: none !important; box-shadow: none !important; max-width: none !important; max-height: none !important; }
+    #print-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      background: rgba(15,15,23,0.96); color: white; padding: 10px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-family: -apple-system, sans-serif; font-size: 13px;
+      backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    #print-bar button { padding: 7px 18px; background: #6366f1; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500; }
+    #print-bar button:hover { background: #5254cc; }
+    #print-bar .hint { color: rgba(255,255,255,0.5); font-size: 12px; }
+    @media print { #print-bar { display: none; } body { margin-top: 0; padding-top: 0; } }
+`)}  </style>${presentation.customCSS ? `\n  <style>\n${safeStyleText(presentation.customCSS)}\n  </style>` : ''}
+</head>
+<body>
+${printBarHtml}
+${pagesHtml}
+  <script src="/vendor/katex/dist/katex.min.js"></script>
+  <script src="${REVEAL_ASSET_PATHS.highlightJs}"></script>
+  <script src="/vendor/chart.js/dist/chart.umd.js"></script>
+  <script src="/vendor/qrcode/qrcode.min.js"></script>
+  <script>
+    window.__navslidesExportReady = false;
+    window.addEventListener('load', function() {
+      var iframePromises = [];
+      // Highlight code blocks
+      var printHighlighter = RevealHighlight().hljs;
+      document.querySelectorAll('pre:not([data-code-walkthrough]) code').forEach(function(el) {
+        printHighlighter.highlightElement(el);
+      });
+      // Render KaTeX math
+      document.querySelectorAll('span[data-math-latex]').forEach(function(el) {
+        try { katex.render(el.getAttribute('data-math-latex'), el, { throwOnError: false, displayMode: el.getAttribute('data-math-display') === 'true' }); } catch(e) {}
+      });
+      // Render Chart.js charts
+      document.querySelectorAll('canvas[data-chart-config]').forEach(function(el) {
+        try {
+          var config = JSON.parse(el.getAttribute('data-chart-config'));
+          config.options = config.options || {};
+          config.options.animation = false;
+          new Chart(el, config);
+        } catch(e) { console.error('Chart render error:', e); }
+      });
+      // Render QR codes
+      document.querySelectorAll('canvas[data-qr-config]').forEach(function(el) {
+        try {
+          var cfg = JSON.parse(el.getAttribute('data-qr-config'));
+          QRCode.toCanvas(el, cfg.data, {
+            color: { dark: cfg.fg, light: cfg.bg },
+            errorCorrectionLevel: cfg.err || 'M',
+            margin: 1,
+            width: Math.min(el.parentElement.offsetWidth, el.parentElement.offsetHeight, 500)
+          });
+        } catch(e) { console.error('QR render error:', e); }
+      });
+      // Initialize data-pdf-iframes via Blob URLs to prevent print layout merging
+      document.querySelectorAll('iframe[data-pdf-iframe]').forEach(function(el) {
+        try {
+          var html = decodeURIComponent(el.getAttribute('data-pdf-iframe'));
+          var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+          iframePromises.push(new Promise(function(resolve) {
+            var done = false;
+            var finish = function() { if (!done) { done = true; resolve(); } };
+            el.addEventListener('load', function() { setTimeout(finish, 120); }, { once: true });
+            setTimeout(finish, 3500);
+          }));
+          el.src = URL.createObjectURL(blob);
+        } catch(e) { console.error('Iframe PDF init error:', e); }
+      });
+      Promise.all(iframePromises.concat([
+        document.fonts && document.fonts.ready ? document.fonts.ready.catch(function(){}) : Promise.resolve()
+      ])).then(function() {
+        setTimeout(function() {
+          window.__navslidesExportReady = true;
+          if (${JSON.stringify(autoPrint)}) window.print();
+        }, ${Math.max(0, exportReadyDelayMs)});
+      });
+    });
+  </script>
+</body>
+</html>`
+}
+
+function exportPDF(presentation, options = {}) {
+  const html = generatePrintHTML(presentation, { teacherReveal: options.teacherReveal === true })
+  const blob = new Blob([html], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  window.open(url, '_blank')
+  setTimeout(() => URL.revokeObjectURL(url), 120000)
+}
+
+function presentInWindow(presentation, { startAt } = {}) {
+  const hash = startAt ? `#/${startAt.h}/${startAt.v}` : ''
+  if (presentation && presentation.id) {
+    // Use server endpoint so vendor assets (reveal.js, katex, etc.) resolve correctly
+    window.open(`/api/presentations/${presentation.id}/present${hash}`, '_blank')
+  } else {
+    // Fallback for cases without an ID (e.g. template preview)
+    const html = generateRevealHTML(presentation)
+    const blob = new Blob([html], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    window.open(`${url}${hash}`, '_blank')
+    setTimeout(() => URL.revokeObjectURL(url), 120000)
+  }
+}
+
+module.exports = {
+  generateRevealHTML,
+  generatePrintHTML,
+  downloadHTML,
+  exportPDF,
+  presentInWindow,
+  getBackgroundAttrs,
+  escapeHtml,
+}

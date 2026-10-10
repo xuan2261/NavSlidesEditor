@@ -1,0 +1,102 @@
+		}
+		// Resume
+		else if( autoSlidePaused ) {
+			resumeAutoSlide();
+		}
+		// Pause
+		else {
+			pauseAutoSlide();
+		}
+
+	}
+
+
+	// --------------------------------------------------------------------//
+	// ------------------------------- API --------------------------------//
+	// --------------------------------------------------------------------//
+
+	// The public reveal.js API
+	const API = {
+		VERSION,
+
+		initialize,
+		configure,
+		destroy,
+
+		sync,
+		syncSlide,
+		syncFragments: fragments.sync.bind( fragments ),
+
+		// Navigation methods
+		slide,
+		left: navigateLeft,
+		right: navigateRight,
+		up: navigateUp,
+		down: navigateDown,
+		prev: navigatePrev,
+		next: navigateNext,
+
+		// Navigation aliases
+		navigateLeft, navigateRight, navigateUp, navigateDown, navigatePrev, navigateNext,
+
+		// Fragment methods
+		navigateFragment: fragments.goto.bind( fragments ),
+		prevFragment: fragments.prev.bind( fragments ),
+		nextFragment: fragments.next.bind( fragments ),
+
+		// Event binding
+		on,
+		off,
+
+		// Legacy event binding methods left in for backwards compatibility
+		addEventListener: on,
+		removeEventListener: off,
+
+		// Forces an update in slide layout
+		layout,
+
+		// Randomizes the order of slides
+		shuffle,
+
+		// Returns an object with the available routes as booleans (left/right/top/bottom)
+		availableRoutes,
+
+		// Returns an object with the available fragments as booleans (prev/next)
+		availableFragments: fragments.availableRoutes.bind( fragments ),
+
+
+…
+
+	// Our internal API which controllers have access to
+	Util.extend( Reveal, {
+		...API,
+
+		// Methods for announcing content to screen readers
+		announceStatus,
+		getStatusText,
+
+		// Controllers
+		focus,
+		scroll: scrollView,
+		progress,
+		controls,
+		location,
+		overview,
+		keyboard,
+		fragments,
+		backgrounds,
+		slideContent,
+		slideNumber,
+
+		onUserInput,
+		closeOverlay: overlay.close.bind( overlay ),
+		updateSlidesVisibility,
+		layoutSlideContents,
+		transformSlides,
+		cueAutoSlide,
+		cancelAutoSlide
+	} );
+
+	return API;
+
+};

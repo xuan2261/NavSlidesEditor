@@ -1,0 +1,202 @@
+          "QUESTION_KINDS",
+          "cloneValue",
+          "isId",
+          "validateQuestionShape"
+        ]
+      },
+      {
+        "file": "shared/src/education/presets/preset-factory.js",
+        "requestedRanges": [
+          "1-220"
+        ],
+        "fullBodyAndEOF": true,
+        "symbols": [
+          "freezePreset",
+          "gamePreset"
+        ]
+      },
+      {
+        "file": "shared/src/education/presets/migration-validation.js",
+        "requestedRanges": [
+          "1-200"
+        ],
+        "fullBodyAndEOF": true,
+        "symbols": [
+          "exactTargets",
+          "assertValidGame"
+        ]
+      }
+    ],
+    "necessaryCrossingBodies": [
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-controls.js",
+        "requestedRanges": [
+          "1-210"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-clock.js",
+        "requestedRanges": [
+          "1-210"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-witness.js",
+        "requestedRanges": [
+          "1-220"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-witness-domain.js",
+        "requestedRanges": [
+          "1-220"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-history-domain.js",
+        "requestedRanges": [
+          "1-90:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation.js",
+        "requestedRanges": [
+          "1-220"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+        "requestedRanges": [
+          "1-220"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+        "requestedRanges": [
+          "1-210:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-action.js",
+        "requestedRanges": [
+          "1-110:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+        "requestedRanges": [
+          "1-210:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-activity-interval.js",
+        "requestedRanges": [
+          "1-140:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-evidence.js",
+        "requestedRanges": [
+          "1-220"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+        "requestedRanges": [
+          "1-210"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+        "requestedRanges": [
+          "1-170:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-state.js",
+        "requestedRanges": [
+          "1-220"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-quiz-state.js",
+        "requestedRanges": [
+          "1-230"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-relay-state.js",
+        "requestedRanges": [
+          "1-220"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-trivia-state.js",
+        "requestedRanges": [
+          "1-230"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-hot-potato-state.js",
+        "requestedRanges": [
+          "1-220:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-jeopardy-state.js",
+        "requestedRanges": [
+          "1-220:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "shared/src/education/browser/local-activity.js",
+        "requestedRanges": [
+          "1-220"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "shared/src/education/runtime-session.js",
+        "requestedRanges": [
+          "1-230:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "shared/src/education/browser/mount.js",
+        "requestedRanges": [
+          "1-240:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "shared/src/education/browser/games/relay-race.js",
+        "requestedRanges": [
+          "1-180"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "shared/src/education/browser/games/round-games-view.js",
+
+[Showing lines 211-410 of 1107. Use :411 to continue]

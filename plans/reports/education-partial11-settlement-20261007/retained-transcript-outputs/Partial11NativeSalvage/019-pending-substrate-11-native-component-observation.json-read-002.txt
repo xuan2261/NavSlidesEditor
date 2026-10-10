@@ -1,0 +1,142 @@
+        "requestedReads": [
+          "1-200:raw"
+        ],
+        "completeContentRange": "1-150",
+        "eofReached": true
+      },
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "requestedReads": [
+          "1-210:raw"
+        ],
+        "completeContentRange": "1-171",
+        "eofReached": true
+      },
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-evidence.js",
+        "requestedReads": [
+          "1-210:raw"
+        ],
+        "completeContentRange": "1-198",
+        "eofReached": true
+      },
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+        "requestedReads": [
+          "1-210:raw"
+        ],
+        "completeContentRange": "1-143",
+        "eofReached": true
+      },
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-controls.js",
+        "requestedReads": [
+          "1-210:raw"
+        ],
+        "completeContentRange": "1-171",
+        "eofReached": true
+      },
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-history-domain.js",
+        "requestedReads": [
+          "1-210:raw"
+        ],
+        "completeContentRange": "1-53",
+        "eofReached": true
+      },
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+        "requestedReads": [
+          "1-210:raw"
+        ],
+        "completeContentRange": "1-120",
+        "eofReached": true
+      },
+      {
+        "path": "shared/src/reveal-runtime-assets.js",
+        "requestedReads": [
+          "1-210:raw"
+        ],
+        "completeContentRange": "1-67",
+        "eofReached": true
+      },
+      {
+        "path": "shared/src/presenterTools.js",
+        "requestedReads": [
+          "126-227:raw"
+        ],
+        "fullRelevantBodies": "getPresenterToolsScripts, getPresenterToolsPlugins, getPresenterToolsConfig",
+        "wholeFileRead": false,
+        "disclosure": "Additional generator helper owner. Its complete configuration body emits menu/chalkboard/customcontrols settings; the menu's keyboard:true is nested, not a top-level replacement of the generated keyboardCondition. Unrelated head/body/inline-JS bodies were not claimed read."
+      },
+      {
+        "path": "node_modules/reveal.js/js/index.ts",
+        "requestedReads": [
+          "1-150:raw"
+        ],
+        "completeContentRange": "1-74",
+        "eofReached": true,
+        "externalLinkedDependency": true,
+        "loadBearingBodies": "Complete singleton wrapper: Object.assign(Reveal, new Deck(...)) receives the returned public API, not the internal keyboard controller."
+      },
+      {
+        "path": "node_modules/reveal.js/js/reveal.js",
+        "requestedReads": [
+          "1-145:raw",
+          "584-636:raw",
+          "2705-2745:raw",
+          "2740-2770:raw",
+          "2790-2895:raw",
+          "2890-2910:raw",
+          "2920-2967:raw",
+          "2940-3010:raw"
+        ],
+        "completeRelevantBodies": "Constructor context and controller construction; complete addEventListeners/removeEventListeners; complete public API object covered by the union of 2738-2940; complete internal Util.extend and return API through EOF at 2973.",
+        "wholeFileRead": false,
+        "externalLinkedDependency": true
+      },
+      {
+        "path": "node_modules/playwright-core/lib/coreBundle.js",
+        "requestedReads": [
+          "12028-12098:raw",
+          "57767-57769:raw",
+          "57797-57803:raw",
+          "58354-58375:raw",
+          "58399-58401:raw",
+          "60407-60417:raw",
+          "61716-61719:raw"
+        ],
+        "completeRelevantBodies": "parseSerializedValue/innerParseSerializedValue, parseResult, JSHandle.evaluate, Locator._withElement, Locator.evaluate, Frame.evaluate and Page.evaluate.",
+        "wholeFileRead": false,
+        "externalLinkedDependency": true,
+        "disclosure": "Large bundled external helper owner, inspected only at complete load-bearing parser/evaluation methods. No bundle-wide read or frozen-dependency assertion."
+      }
+    ],
+    "governingDocuments": [
+      {
+        "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-native-coverage-continuation-counsel.json",
+        "reads": [
+          "initial structured read",
+          "1-240",
+          "157-180:raw",
+          "181-194:raw"
+        ],
+        "eofReached": true,
+        "coverage": "Complete 235-line document; the truncated deferred-scope line was explicitly expanded."
+      },
+      {
+        "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-native-salvage-prompt.md",
+        "reads": [
+          "1-240:raw"
+        ],
+        "eofReached": true,
+        "coverage": "Complete prompt."
+      },
+      {
+        "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-dispatch-authority.json",
+        "reads": [
+          "1-240:raw",
+          "241-280:raw"
+        ],
+
+[Showing lines 141-280 of 746. Use :281 to continue]

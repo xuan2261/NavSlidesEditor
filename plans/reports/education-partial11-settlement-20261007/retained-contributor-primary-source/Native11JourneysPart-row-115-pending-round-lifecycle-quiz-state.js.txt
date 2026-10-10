@@ -1,0 +1,106 @@
+import { expect } from '@playwright/test'
+
+export const QUIZ_KEYS = [
+  'config',
+  'generation',
+  'questionIds',
+  'questionIndex',
+  'attempts',
+  'score',
+  'lastResult',
+  'questionId',
+  'status',
+  'deadline',
+  'runtimeMode',
+]
+
+export function assertQuizKeys(state) {
+  expect(Object.keys(state).sort()).toEqual([...QUIZ_KEYS].sort())
+}
+
+export function assertQuizInitialActive(state, expectedConfig, generation = 0, deadlineBounds = null) {
+  assertQuizKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(generation)
+  expect(state.status).toBe('active')
+  expect(state.questionIndex).toBe(0)
+  expect(state.questionId).toBe(expectedConfig.questions[0].id)
+  expect(state.questionIds).toEqual(expectedConfig.questions.map((q) => q.id))
+  expect(state.score).toBe(0)
+  expect(state.attempts).toEqual([])
+  expect(state.lastResult).toBeNull()
+  expect(state.config).toEqual(expectedConfig)
+  if (deadlineBounds) {
+    expect(typeof state.deadline).toBe('number')
+    expect(state.deadline).toBeGreaterThanOrEqual(deadlineBounds.min)
+    expect(state.deadline).toBeLessThanOrEqual(deadlineBounds.max)
+  }
+}
+
+export function assertQuizResetActive(state, expectedConfig, generation = 1, deadlineBounds = null) {
+  assertQuizInitialActive(state, expectedConfig, generation, deadlineBounds)
+}
+
+export function assertQuizCheckpoint(state, expectedConfig, generation, expectedNewDue) {
+  assertQuizKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(generation)
+  expect(state.status).toBe('active')
+  expect(state.questionIndex).toBe(0)
+  expect(state.questionId).toBe(expectedConfig.questions[0].id)
+  expect(state.questionIds).toEqual(expectedConfig.questions.map((q) => q.id))
+  expect(state.score).toBe(0)
+  expect(state.attempts).toEqual([])
+  expect(state.lastResult).toBeNull()
+  expect(state.deadline).toBe(expectedNewDue)
+  expect(state.config).toEqual(expectedConfig)
+}
+
+export function assertQuizPeerAccepted(state, expectedConfig) {
+  assertQuizKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(0)
+  expect(state.status).toBe('terminal')
+  expect(state.questionIndex).toBe(0)
+  expect(state.questionId).toBe('release-single-choice')
+  expect(state.questionIds).toEqual(['release-single-choice'])
+  expect(state.score).toBe(10)
+  expect(state.deadline).toBeNull()
+  expect(state.config).toEqual(expectedConfig)
+  expect(state.attempts).toHaveLength(1)
+  const attempt = state.attempts[0]
+  expect(attempt.attemptId).toBe('quiz-attempt-1')
+  expect(attempt.questionId).toBe('release-single-choice')
+  expect(attempt.identity).toBe('{"optionId":"release-single-choice/option-1"}')
+  expect(attempt.answer).toEqual({ optionId: 'release-single-choice/option-1' })
+  const expectedResult = {
+    valid: true,
+    correct: true,
+    error: null,
+    accepted: true,
+    attemptId: 'quiz-attempt-1',
+    questionId: 'release-single-choice',
+    attemptsUsed: 1,
+    pointsAwarded: 10,
+    terminal: true,
+  }
+  expect(attempt.result).toEqual(expectedResult)
+  expect(state.lastResult).toEqual(expectedResult)
+}
+
+export function assertQuizTerminalExpiry(state, generation = 0, retainedNewDue = null) {
+  assertQuizKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(generation)
+  expect(state.status).toBe('terminal')
+  if (retainedNewDue !== null) {
+    expect(state.deadline).toBe(retainedNewDue)
+  }
+  expect(state.lastResult).toEqual({
+    accepted: false,
+    valid: false,
+    correct: false,
+    error: 'deadline',
+    terminal: true,
+  })
+}

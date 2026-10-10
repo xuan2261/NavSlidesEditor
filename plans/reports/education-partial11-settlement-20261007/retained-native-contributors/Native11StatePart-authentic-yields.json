@@ -1,0 +1,556 @@
+[
+  {
+    "transcript": "C:\\Users\\Z10PAD8C_Xuan2261\\.omp\\agent\\sessions\\--C--Work-NavSlidesEditor--\\2026-10-04T11-03-27-941Z_01a10695-43c5-7000-80a5-281eb32934b4\\Native11StatePart.jsonl",
+    "transcriptLine": 182,
+    "timestamp": "2026-10-06T03:13:57.790Z",
+    "toolCallId": "call_7OlREMhWxFlPHQmfVDLti0Ap|fc_0ff47b7bef3cea39016ac4669c6d8087d0841c2174e93d008b",
+    "data": {
+      "component": "Native11 continuation — immutable independent state and UI",
+      "scope": "Six immutable state/assertion files and the assigned mount/question owners; targeted consumer and production-policy reads for their actual interfaces. This is a continuation component, not an additional independent opinion or a whole-audit source verdict.",
+      "exactSubject": {
+        "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+        "recordedFullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+        "identityBasis": "Existing preservation authority only; no hash, count or immutability remeasurement."
+      },
+      "admission": false,
+      "sourceReady": false,
+      "qualification": false,
+      "passClaimed": false,
+      "runtimeExecuted": false,
+      "declaredCells": 54,
+      "staticallyAdmittedCells": 0,
+      "executedAcceptanceCells": 0,
+      "readEvidence": {
+        "provenance": "All listed reads were personally performed in this continuation using read/glob/grep only. Complete primary bodies are retained in this component's tool transcript, not inferred from grep declarations or another audit. The integration owner must inspect those actual full outputs or reread the frozen files; this summary does not replace full-body integration coverage.",
+        "primaryPrefix": "tests/e2e/education/",
+        "primaryFiles": [
+          {
+            "file": "pending-round-lifecycle-state.js",
+            "coveredRanges": [[1, 120]],
+            "requestedRead": "1-210:raw",
+            "eof": 120,
+            "eofText": "}",
+            "completeBody": true,
+            "outputReference": "Tool call Reading independent state dispatch; Locating primary file endpoints anchors the final assertPeerInvariance closure."
+          },
+          {
+            "file": "pending-round-lifecycle-quiz-state.js",
+            "coveredRanges": [[1, 106]],
+            "requestedRead": "1-230:raw",
+            "eof": 106,
+            "eofText": "}",
+            "completeBody": true,
+            "outputReference": "Tool call Reading complete quiz expectations; Locating primary file endpoints anchors the final assertQuizTerminalExpiry closure."
+          },
+          {
+            "file": "pending-round-lifecycle-hot-potato-state.js",
+            "coveredRanges": [[1, 112]],
+            "requestedRead": "1-220:raw",
+            "eof": 112,
+            "eofText": "}",
+            "completeBody": true,
+            "outputReference": "Tool call Reading hot potato expectations; Locating primary file endpoints anchors the final roster-peer UI closure."
+          },
+          {
+            "file": "pending-round-lifecycle-jeopardy-state.js",
+            "coveredRanges": [[1, 106]],
+            "requestedRead": "1-220:raw",
+            "eof": 106,
+            "eofText": "}",
+            "completeBody": true,
+            "outputReference": "Tool call Reading jeopardy expectations; Locating primary file endpoints anchors the reset UI closure."
+          },
+          {
+            "file": "pending-round-lifecycle-relay-state.js",
+            "coveredRanges": [[1, 114]],
+            "requestedRead": "1-230:raw",
+            "eof": 114,
+            "eofText": "}",
+            "completeBody": true,
+            "outputReference": "Tool call Reading relay expectations; Locating primary file endpoints anchors the reset UI closure."
+          },
+          {
+            "file": "pending-round-lifecycle-trivia-state.js",
+            "coveredRanges": [[1, 197]],
+            "requestedRead": "1-250:raw;187-210:raw",
+            "eof": 197,
+            "eofText": "}",
+            "completeBody": true,
+            "outputReference": "Tool calls Reading trivia expectations and Confirming trivia complete EOF; Confirming primary EOF anchors explicitly returns lines190-197."
+          }
+        ],
+        "assignedOwners": [
+          {
+            "file": "shared/src/education/browser/mount.js",
+            "coveredRanges": [[1, 138]],
+            "eof": 138,
+            "completeBody": true,
+            "outputReference": "Reading browser mount owner; Certifying full mount raw body, requested1-145:raw; Anchoring owner policy symbols."
+          },
+          {
+            "file": "shared/src/education/question-shape.js",
+            "coveredRanges": [[1, 150]],
+            "eof": 150,
+            "completeBody": true,
+            "outputReference": "Reading question shape owner; Certifying full question shape body, requested1-160:raw; Confirming primary EOF anchors returns138-150."
+          },
+          {
+            "file": "shared/src/education/question-factory.js",
+            "coveredRanges": [[1, 87]],
+            "eof": 87,
+            "completeBody": true,
+            "outputReference": "Reading question factory owner, requested1-240; Anchoring owner policy symbols confirms module.exports at87."
+          }
+        ],
+        "fullPolicyAndUIOwnerReads": [
+          {
+            "file": "shared/src/education/runtime-session.js",
+            "ranges": [[1, 138]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/browser/local-activity.js",
+            "ranges": [[1, 124]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/browser/reveal-lifecycle.js",
+            "ranges": [[1, 145]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/quiz-session.js",
+            "ranges": [[1, 149]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/games/hot-potato.js",
+            "ranges": [[1, 110]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/games/jeopardy.js",
+            "ranges": [[1, 153]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/games/relay-race.js",
+            "ranges": [[1, 97]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/games/trivia-champ.js",
+            "ranges": [[1, 164]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/browser/quiz-presenter.js",
+            "ranges": [[1, 194]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/browser/games/hot-potato.js",
+            "ranges": [[1, 209]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/browser/games/jeopardy.js",
+            "ranges": [
+              [1, 225],
+              [226, 245]
+            ],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/browser/games/relay-race.js",
+            "ranges": [[1, 96]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/browser/games/trivia-champ.js",
+            "ranges": [[1, 143]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/browser/games/round-games-view.js",
+            "ranges": [[1, 88]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/browser/dom.js",
+            "ranges": [[1, 18]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/game-defaults.js",
+            "ranges": [
+              [1, 220],
+              [221, 284]
+            ],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/game-registry.js",
+            "requestedRead": "1-220:raw",
+            "eofCovered": true,
+            "eofText": "module.exports = { GAME_CATALOG, CANONICAL_GAME_TYPES, isGameSubtype, getGameCapabilities }"
+          },
+          {
+            "file": "shared/src/education/game-score-policy.js",
+            "ranges": [[1, 34]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/quiz-config.js",
+            "ranges": [[1, 69]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/answer-evaluator.js",
+            "ranges": [[1, 79]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/question-schema.js",
+            "ranges": [[1, 103]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/question-answer-payload.js",
+            "ranges": [[1, 114]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/question-answer-key.js",
+            "ranges": [[1, 96]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/normalize-game-config.js",
+            "ranges": [[1, 80]],
+            "eofCovered": true
+          },
+          {
+            "file": "shared/src/education/game-legacy-migration.js",
+            "ranges": [[1, 173]],
+            "eofCovered": true
+          }
+        ],
+        "necessaryConsumerReads": [
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-leave-return.js",
+            "ranges": [[1, 144]],
+            "eofCovered": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-reset.js",
+            "ranges": [[1, 110]],
+            "eofCovered": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-isolation.js",
+            "ranges": [[1, 120]],
+            "eofCovered": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-cases.js",
+            "requestedRead": "1-240:raw",
+            "eofCovered": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-fixtures.js",
+            "requestedRead": "1-220",
+            "eofCovered": true
+          },
+          {
+            "file": "tests/e2e/education/release-game-fixtures.js",
+            "requestedRead": "1-220:raw",
+            "eofCovered": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-controls.js",
+            "requestedRead": "1-220:raw",
+            "eofCovered": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-clock.js",
+            "requestedRead": "1-210:raw",
+            "eofCovered": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-observation.js",
+            "requestedRead": "1-210:raw",
+            "eofCovered": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-native-action.js",
+            "requestedRead": "1-160:raw",
+            "eofCovered": true
+          }
+        ],
+        "governingReads": [
+          {
+            "file": "pending-substrate-11-native-coverage-continuation-counsel.json",
+            "reads": ["1-220", "190-260:raw", "167-190:raw"],
+            "completeThroughEOF": 235,
+            "note": "Tail completed and the truncated deferred-scope line explicitly expanded."
+          },
+          {
+            "file": "pending-substrate-11-native-salvage-prompt.md",
+            "read": "1-180:raw",
+            "completeThroughEOF": true
+          },
+          {
+            "file": "pending-substrate-11-dispatch-authority.json",
+            "reads": ["1-160:raw", "161-280:raw"],
+            "completeThroughEOF": 257
+          },
+          {
+            "file": "pending-substrate-11-terminal-failure-counsel.json",
+            "reads": ["1-170:raw", "171-340:raw", "341-550:raw"],
+            "completeThroughEOF": 541
+          },
+          {
+            "file": "pending-substrate-08-subject-authority.json",
+            "reads": ["1-155:raw", "156-200:raw"],
+            "completeThroughEOF": 187
+          },
+          {
+            "file": "pending-grounded-01-state-evidence-detailed-ledger.json",
+            "reads": ["75-240:raw", "233-256:raw"],
+            "completeApplicableFindingBodies": "SE02-SE09, SE16 and SE17 read in full; overlap also includes SE01 and SE10-SE15. No claim to complete560-line historical report coverage."
+          },
+          {
+            "file": "pending-interface-02-state-evidence-detailed-ledger.json",
+            "read": "1-88:raw",
+            "completeApplicableFindingBodies": "S02-01 through S02-08 read in full; overlap includes S02-09. No claim to complete158-line historical report coverage."
+          }
+        ]
+      },
+      "componentMechanisms": [
+        {
+          "component": "Dispatch and independently authored reset state",
+          "evidence": [
+            "pending-round-lifecycle-state.js:1-83",
+            "pending-round-lifecycle-state.js:100-120",
+            "browser/mount.js:25-62,65-99,111-138",
+            "runtime-session.js:23-41,85-118",
+            "browser/local-activity.js:45-111"
+          ],
+          "observations": [
+            "The state dispatcher imports existing exports for each of quiz/hot-potato/jeopardy/relay-race/trivia-champ. Reset, active and peer dispatch cover all five supported values explicitly and throw for an unsupported value. No supported game branch silently discards the request.",
+            "Reset generation is authored as oldGen+1. Quiz reset is an active first question; Hot Potato reset is ready, Jeopardy is board, Relay and Trivia are setup. The non-Quiz states intentionally do not contain a config field.",
+            "mount initializes local runtimeMode and runtime-session installs generation. Reducer state spreads preserve those fields; reset clears owned timers/resources, increments generation, invokes the initializer, and mount reinstalls the presenter. HP's participant Map is presenter-local and is consequently emptied by presenter recreation, not by a fabricated participants state field.",
+            "getState/reset/destroy are the mount public API; getRootLifecycle supplies pause/resume to reveal-lifecycle. The actual consuming reconcile body pauses roots for document.hidden, noncurrent section, root.hidden, display:none or visibility:hidden, and resumes visible roots. Session activity time subtracts accumulated hidden time; pause cancels/remainders timers and resume rearms them.",
+            "Hidden and returned preservation requires the complete independently accepted logical state, not generation alone. Current leave-return:48-52 and65-69 check generation/runtimeMode and hidden paused only. No full logical-state or corresponding native UI preservation comparison is supplied by these primary files. This remains SE09/NC04/S02-06 deferred scope."
+          ]
+        },
+        {
+          "component": "Quiz state, terminal shape and Reset timing",
+          "evidence": [
+            "pending-round-lifecycle-quiz-state.js:3-57,59-106",
+            "quiz-session.js:5-43,62-74,76-147",
+            "browser/quiz-presenter.js:26-29,57-97,100-170",
+            "pending-round-lifecycle-reset.js:62-92",
+            "pending-round-lifecycle-isolation.js:73-77,95-99"
+          ],
+          "observations": [
+            "QUIZ_KEYS enumerates exactly11 top-level keys including config, generation and runtimeMode. Initial/reset assertions independently check local mode, generation, active status, index0, authored questionId/order, score0, empty attempts, null lastResult and complete config equality. Deadline policy is checked only when optional bounds are provided.",
+            "Checkpoint independently checks the same complete initial values and exact expectedNewDue, but the caller supplies a previously observed baseline due. Independent validity therefore depends on the earlier actual native Reset+5000 proof.",
+            "Peer acceptance independently expects release-single-choice, option release-single-choice/option-1, quiz-attempt-1, the canonical structured answer identity, score10, one attempt and the full evaluated result including terminal:true. Factory/sample IDs are correctly distinguished. Exact attempt-object key equality is still absent, preserving SE05/S02-05.",
+            "The native accepted peer fixture is untimed, so deadline:null is valid there. General accepted terminal quiz-session output retains the existing deadline; the null peer expectation must not be extrapolated to timed acceptance.",
+            "Current assertQuizTerminalExpiry correctly includes terminal:true and supports retaining the exact new due. The original contradictory SE02 deadline-null/result-shape mechanism is no longer present in this body, and reset supplies baseline.deadline. However config/questionIds/questionId/index/score/attempts remain semantically unchecked at expiry despite top-level key equality; SE02's complete original-context requirement and SE17/S02-07 remain deferred.",
+            "quiz-session activate sets now+question.timeLimit*1000. The authored Reset limit is5seconds. Current reset:63-64 and isolation:74-75 still use old tBefore/tAfter fields and add800ms slack. Controls.resetGame actually returns state/actionBracket/actionRecords, not those timestamp fields. These immutable caller mismatches and slack are retained deferred cutover defects, not newly introduced primary-state/export regressions.",
+            "Quiz native UI is an ordinary timer paragraph, a role=status paragraph, structured answer controls, Submit answer, quiz-extend-time, quiz-next and quiz-reset. Terminal status disables submit/answers/extend and reveals Next/Finish; expiry reports Time expired. Current primary reset UI checks only visible reset and enabled Submit, and peer UI accepts the first matching score paragraph. It does not establish the complete timer/status/question/control lifecycle."
+          ]
+        },
+        {
+          "component": "Hot Potato exact IDs, state and roster UI",
+          "evidence": [
+            "pending-round-lifecycle-hot-potato-state.js:3-112",
+            "game-defaults.js:18-36,75-82",
+            "games/hot-potato.js:6-24,30-110",
+            "browser/games/hot-potato.js:11-73,75-209",
+            "pending-round-lifecycle-cases.js:145-159"
+          ],
+          "observations": [
+            "The exact native sample question ID is question-1 and its correct option is question-1-option-1. It is not the slash-separated Quiz-factory option ID. Current peer award identity is 0:hot-potato:[\"question-1\",\"peer\"]:correct, consistent with makeAwardKey and the reducer.",
+            "Initial/reset assertion enumerates every18-key state value: ready/index-1/null currentQuestion/authored order/empty scores, answeredPlayers, leaderboard and awards/start0/null deadline/deadlinePassedfalse/round count/null error/local mode/generation.",
+            "Active assertion compares the full currentQuestion object and baseline maps/history, not merely its ID. questionStartedAt and deadline are bounded only if optional bounds are supplied; leave-return and isolation currently supply neither. The previous full-question omission is locally improved, but independent dynamic timing remains SE04/S02-04.",
+            "Untimed peer expects review, correct10-point peer record, exact scores/leaderboard/award and cleared deadline after native Reveal. questionStartedAt is omitted from the peer validator and can become an unchecked frozen value. The untimed10-point peer is not coverage of the separately required timed speed-bonus policy.",
+            "Empty roster UI now requires a visible Current participant select with zero options and an attached empty Leaderboard list. Peer UI requires selected peer and exact Peer: 10 points, but not the sole option's text Peer (peer), named leaderboard rows, feedback, answer/next controls or their state.",
+            "Owner reset UI starts with no participants: Start quiz is present but disabled until a participant is added. A complete oracle must reflect that actual disabled policy, rather than universally require enabled Start. Initial/pending/review UI includes roster, participant score, question, deadline, submit/reveal/next/end/reset and status; no full-context primary oracle exists for all these transitions."
+          ]
+        },
+        {
+          "component": "Jeopardy exact identities and native controls",
+          "evidence": [
+            "pending-round-lifecycle-jeopardy-state.js:3-106",
+            "game-defaults.js:38-44,83-97",
+            "games/jeopardy.js:2-22,34-72,88-153",
+            "browser/games/jeopardy.js:49-88,126-245",
+            "pending-round-lifecycle-controls.js:92-115"
+          ],
+          "observations": [
+            "Authored teams are team-1 Blue and team-2 Red. The actual board cells are cell-100 and cell-200. Native team commands are team-team-1/team-team-2, cell commands are cell-cell-100/cell-cell-200, and data-ns-cell equals the original cell ID. Controls.selectJeopardyCell matches these exact IDs.",
+            "Initial/reset assertion covers all20 state fields, including zero authored scores, empty used/award arrays, first active team, null active cell/question, wager0, false dailyDouble/revealed/expired, config timer policy, null due/winner and turn0.",
+            "Active assertion correctly authors team-1/cell-100/question phase/wager100/turn1 and relevant flags, but omits semantic checks of scores, usedCellIds, full activeQuestion, timerDuration, showTimer and awardedKeys. Optional due bounds are omitted by actual active callers. This is the unchanged SE04/S02-04 gap.",
+            "Settled peer assertion authors every state field: team-2 retains the turn, score200 for Red, Blue0, used cell-200 and the exact adjudication award; board phase/null active cell and question/null deadline/turn1/no winner are correct because cell-100 remains available.",
+            "The previous SE03 invented p/Team2 score selector is not present: current peer UI uses Scores ul>li containing Red: 200 and Blue: 0. Reset similarly checks both zero scores. These correct selectors do not prove board/team/cell cardinality, selected team, unused enabled cell100, used disabled cell200, timer/feedback, answer visibility or reset/control policy.",
+            "At deadline the owner retains question context and sets expired:true,deadline:null. Answer controls are disabled; Show answer remains the native next step. The primary files supply no complete expiry state/UI assertion for this context."
+          ]
+        },
+        {
+          "component": "Relay pending work, real settlement and first timeout",
+          "evidence": [
+            "pending-round-lifecycle-relay-state.js:3-114",
+            "games/relay-race.js:5-97",
+            "browser/games/relay-race.js:12-96",
+            "browser/games/round-games-view.js:36-64",
+            "pending-round-lifecycle-isolation.js:34-48",
+            "pending-round-lifecycle-leave-return.js:71-81",
+            "pending-round-lifecycle-cases.js:176-188"
+          ],
+          "observations": [
+            "The13-key initial/reset state is independently setup/local/generation, no error, authored lanes0, first active team, no question/turn0/null deadline and batonDue/correct/winner. Active state authors team-1/question-1/turn1, empty progress, no pending baton/correct/winner and an optionally bounded deadline.",
+            "Pass and first deadline enter waiting with correct:false, retaining original team-1/question-1/turn1/deadline and assigning batonDue=actual dispatch activity time+1200. Pending validator checks identity/lane values but only typeof batonDue; it does not validate the retained original deadline or native Pass/deadline+1200 timing.",
+            "With the two-team target2 primary, the first baton after timeout advances team-2 to1, cycles activeTeam back to team-1, starts question-1 at turn2, clears batonDue/correct, and assigns a new activity deadline+5000. assertRelayFirstTimeoutSettled has those exact logical values, but only typeof deadline. Full original due, transition uncertainty and independently bounded new due are still absent.",
+            "With target1 untimed-in-practice peer setup (timerDuration10, explicit Pass), the native baton settles only after1200ms; it ends with team-2 winner, lanes{team-1:0,team-2:1}, retained activeTeam-1/question-1/turn1/correctfalse and cleared deadline/batonDue. The peer validator covers every13-key value correctly.",
+            "Current isolation genuinely has observation-only polling for ended/team-2/lane1 before the complete peer validator and freeze. Thus the historical immediate-settlement NC07 mechanism is not present in this current consumer. No additional Pass, fixed sleep, retry or winner fallback is used. Actual observation calls still need the deferred mandatory evidence sink.",
+            "Current leave-return imports and invokes both pending and first-settled validators rather than merely defining them. Its readiness poll accepts either waiting or active turn2, after which the exact logical branch is checked. Dynamic deadline/baton policy and complete native first-timeout UI remain NC08/SE17/S02-07 deferred requirements.",
+            "Peer UI checks only Red: 1/1. Owner also renders Blue: 0/1, both progress controls, Red wins! feedback, blank due timer, absent Pass/answer controls and visible Reset. Primary/reset UI checks only the two0/2 lane labels. It does not establish full active/waiting/first-settled/peer UI invariance across Reset and the exact original due."
+          ]
+        },
+        {
+          "component": "Trivia full expiry/Next policy and timing",
+          "evidence": [
+            "pending-round-lifecycle-trivia-state.js:3-197",
+            "games/trivia-champ.js:6-164",
+            "browser/games/trivia-champ.js:12-143",
+            "pending-round-lifecycle-fixtures.js:3-26",
+            "pending-round-lifecycle-cases.js:39-52",
+            "pending-round-lifecycle-leave-return.js:82-101"
+          ],
+          "observations": [
+            "The21-key initial/reset validator independently checks all setup fields, empty scores/awards, indices-1/null IDs/turn0, normal bonus, no buzz/correct/winner and null clocks. Active checks round-1/q1/index0/turn1 and baseline scores/history/flags, but only clock types and deadline==questionDeadline, not finite native policy bounds.",
+            "enterQuestion sets startedAt to the actual native Start/Next activity time. A new round sets roundDeadline=time+round.timeLimit*1000; a same-round Next retains the roundDeadline. questionDeadline is the roundDeadline for null question.timeLimit, otherwise min(roundDeadline,time+question.timeLimit*1000). Effective deadline initially equals questionDeadline.",
+            "Question fixture is30second round with q1/q2 each5seconds; round fixture is5second round with a null-time-limit q1. q1/q2 IDs and prompts are independently authored, while their canonical answer options remain question-1-option-1 because the fixture spreads the base question without rewriting its option IDs. This is valid per-question identity, not a missing option migration.",
+            "Question/round deadline expiry enters review,correct:false,error:'Time expired.', preserving identity, scores, awards, buzz/bonus, startedAt and all deadlines. roundExpired distinguishes time>=roundDeadline. Current validators now check the exact initial identity/indices/turn and score/award/flags, but omit the retained clocks; corresponding native UI is not independently asserted.",
+            "Question Next should enter q2/index1/turn2, clear error/buzz/correct, retain scores/awards/roundDeadline, set new startedAt and enforce min(retained roundDue,nativeNext+5000). Current assertTriviaQuestionNext checks much of the identity/history, but does not assert roundDeadline equality, startedAt, finite nativeNext timing or the full deadline relationship.",
+            "The current leave-return:91 still passes preconsumed.due, which is q1 deadline, to originalRoundDue. q2's correct deadline after q1 expiry is later than q1's due under the authored30second round. The <=originalRoundDue assertion therefore rejects correct output. This is the preserved S02-01 wrong-argument mechanism, not a new Correction11 binding regression.",
+            "Round Next at review finds no later nonempty round and ends with tie winner team-1. nextRound spreads review and changes phase,deadline,roundDeadline,winnerId only. It retains error:'Time expired.', finite original questionDeadline, startedAt, q1/round-1/indices/turn1/scores/awards/correctfalse/roundExpiredtrue. Current assertTriviaRoundNextEnded incorrectly requires error:null at148 and questionDeadline:null at163. S02-02 remains source-confirmed in the immutable caller.",
+            "Trivia presenter prioritizes state.error over winner text. This round-expiry→Next ended path therefore still displays Time expired., not an invented cleared error or winner-only feedback. It renders no Next/answer controls in ended, blank active timer, retained round highlight/bonus/scores and Reset. None is fully checked by the primary UI helpers.",
+            "Peer normal-buzzer answer expects Red20 from two exact buzz/answer award keys, Blue0, team-2 buzz, q1/round-1/turn1/review/correcttrue. Those logical values and native score-list selectors are correct. Its startedAt/roundDeadline/questionDeadline/deadline remain unchecked before freezing, so the full peer policy requirement is not complete.",
+            "These traces do not cover the separate original9 full normal/lightning/jackpot scoring-policy matrix; that later slice is unchanged."
+          ]
+        }
+      ],
+      "consumerInterfaces": {
+        "primaryBindings": "Every symbol imported by pending-round-lifecycle-state.js from the five primary per-game state files exists as an explicit export. Actual leave-return imports assertRelayPendingBaton/assertRelayFirstTimeoutSettled and all four Trivia expiry/Next functions; reset imports the two Quiz checkpoint/expiry functions; isolation imports the state dispatch/reset/peer functions and Quiz checkpoint. Those primary named bindings exist. No missing primary export or supported dispatch branch was found.",
+        "ownerBindings": "mount/getRootLifecycle/bindHostRoot, createLocalActivity, createRuntimeSession, createQuizSession/reduceQuizSession, all five game creators/reducers, all five presenters, createRoundGamesView, cloneValue/QUESTION_KINDS and createCanonicalQuestion have actual current definitions and exports. local-activity actually routes the five game types; reveal-lifecycle actually consumes mount's lifecycle API.",
+        "nativeControlContracts": [
+          "getGameState(root,evidence) and readCorrelatedStateAndTime(root,evidence,label) require the evidence sink; root/document binding is not optional for the correlated read.",
+          "observeQuizActive(root,options,evidence); startHotPotatoRound(root,playerId,name,options,evidence); selectJeopardyCell(root,teamId,cellId,options,evidence); startRelayRound(root,evidence); passRelayBaton(root,evidence); startTriviaRound(root,evidence); clickTriviaNext(root,evidence); resetGame(root,evidence) explicitly exist.",
+          "Action controls consume executeAction(root,actionFn,{command,type},evidence,label). Quiz option identity uses change then form submit; HP roster creation uses two input events and add-participant submit, then native Start; Jeopardy uses exact native team/cell commands; Relay uses native Start/Pass; Trivia uses native Start/buzz/form submit/Next.",
+          "Control outputs are state/actionBracket/actionRecords with Start/Pass/Next convenience arrays where present. resetGame returns no tBefore/tAfter. All these supported controls reach explicit presenter handlers and reducers; generation/turn/question/round guards are actual production consumers, not inferred from the emitting code.",
+          "stageButtonGuard's current signature is unchanged; its body raw-stages the actual state/UI guard, calls assertAndRecordObservationErrors before document assertion, then stages/returns the guard with recordError/rethrow. The integration owner must complete the normalization/ledger chronology trace; this component does not issue a whole NF-A3 closure from the call alone."
+        ],
+        "deferredNotNewRegressions": [
+          "All case callbacks and journey calls still use old forms without the mandatory evidence argument in numerous state/control/snapshot calls. Authority explicitly keeps these12 callers immutable and defers clean cutover; this is not classified as a new helper regression.",
+          "reset/isolation consume old tBefore/tAfter result fields and use800ms slack despite current native action results. This remains a clean-cutover obligation, not a reason to add helper shims.",
+          "S02-01 and S02-02 are independently corroborated current immutable Trivia defects; they are preserved state/caller obligations rather than newly introduced Correction11 source findings."
+        ]
+      },
+      "retainedObligationDispositions": [
+        {
+          "identities": ["SE02", "NC06", "S02-07"],
+          "boundedDisposition": "Quiz expiry result/deadline contradiction locally corrected; complete identity/history/UI and native Reset+5000/new-expiry requirements remain REQUIRED_UNEXECUTED."
+        },
+        {
+          "identities": ["SE03", "original-3"],
+          "boundedDisposition": "Actual Blue/Red li score selectors and exact Jeopardy team/cell controls are present; full peer/control/UI expectations remain incomplete. Historical source credit is not runtime qualification."
+        },
+        {
+          "identities": ["SE04", "S02-03", "S02-04"],
+          "boundedDisposition": "Current leave-return/isolation invoke active dispatch, and leave-return invokes exact Relay transition validators. Jeopardy active semantics, required native bounds, and full Reset pending-state adoption remain incomplete."
+        },
+        {
+          "identities": ["SE05", "S02-05"],
+          "boundedDisposition": "HP full currentQuestion peer comparison is present; HP startedAt-equivalent, Trivia four clocks, Quiz exact attempt keys and complete peer UI remain independently unchecked."
+        },
+        {
+          "identities": ["SE06", "NC06"],
+          "boundedDisposition": "Some callers now supply bounds, but old result fields and800ms slack do not establish authorized native Reset+5000 policy."
+        },
+        {
+          "identities": ["SE07", "NC09", "RPC-10", "R16", "S02-01", "S02-02"],
+          "boundedDisposition": "Exact identity/history checks are fuller, but retained clocks/nativeNext policy remain incomplete; wrong q1-due argument and invented clearing on ended remain source-confirmed deferred defects. R16 remains Trivia expiry/Next, never LOC."
+        },
+        {
+          "identities": ["SE08", "S02-08"],
+          "boundedDisposition": "Missing Reset/HP roster no longer silently passes in these bodies; full canonical board/roster/control/feedback/timer checks remain incomplete."
+        },
+        {
+          "identities": ["SE09", "NC04", "S02-06"],
+          "boundedDisposition": "Current hidden/return checks remain generation/runtimeMode subsets, without complete accepted pending-context/state/UI preservation or consumed original expiry proof."
+        },
+        {
+          "identities": ["SE17", "NC08", "S02-07"],
+          "boundedDisposition": "Current exact Relay logical predicates are used, but complete original due/first-transition uncertainty and expiry state/UI remain REQUIRED_UNEXECUTED."
+        },
+        {
+          "identities": ["NC07"],
+          "boundedDisposition": "Current isolation includes genuine observation-only peer settlement before full logical validation/freeze. Native timing/domain and complete both-lane/feedback/control evidence still require cutover and execution."
+        }
+      ],
+      "newFindings": [],
+      "newFindingsMeaning": "No new patch-introduced defect is asserted in this immutable primary scope. This is not an overall clean verdict, nor a waiver of the source-confirmed deferred mechanisms or cross-component helper obligations.",
+      "outgoingSeamsForIntegration": [
+        {
+          "seam": "Snapshot and error normalization",
+          "requiredIntegration": "Read actual observation-browser/native-snapshot/native-observation consumers and assertAndRecordObservationErrors plus common-ledger bodies. Establish state-before-UI, earliest actual occurrence, guard normalization before later document error and complete raw state/UI on each validation failure. This component verified the caller signatures/call sites, not the full chronology implementation."
+        },
+        {
+          "seam": "Root/document/activity identity and native boundaries",
+          "requiredIntegration": "Bind every initial/pending/hidden/returned/reset/terminal/peer observation to exact tuple, current connected root, rootInstanceId, documentId/timeOrigin and root activity interval/history. Do not use document performance time as root activity time or add nominal800ms slack. Carry actual Pass/Reset/Start/Next action brackets into independently authored deadlines and uncertainty bounds."
+        },
+        {
+          "seam": "Original and new expiry consumption",
+          "requiredIntegration": "Consume the complete per-cell witness Start+4000 idle/running/expired UI and last-running/first-expired crossover, then separately bound the preserved original game's expiry. Quiz Reset checkpoints must be after the exact old due and before the independently bounded new due, followed by complete new expiry. Relay baton work must still be genuinely pending at native Reset, not merely at an earlier sample."
+        },
+        {
+          "seam": "Full UI and live evidence",
+          "requiredIntegration": "Connect native snapshot/live evidence to actual presenter-specific timer paragraphs, roster/leaderboard, both score/lane rows, board cells/team controls, status and enabled/visible control lifecycle. Scalar readiness polling or the current partial primary UI helpers is not a complete acceptance oracle."
+        },
+        {
+          "seam": "Saved authoring and surfaces",
+          "requiredIntegration": "The actual expected config is authored by fixtures/defaults/canonical question factories, while non-Quiz state intentionally lacks config. Establish saved normalized config equality, exact authored element IDs and each independent present/share/file cell through the separate surface/finalization owner. No source/surface/runtime equality is claimed here."
+        }
+      ],
+      "NF_A4Scope": {
+        "id": "NF-A4",
+        "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+        "consumerVisibleMechanism": "evaluateActionCandidates returns candidates from the public, replaceable window.__nsRecordedPackets (:146-147). storeHealth (:148) checks only the lifecycle store. In-place mutation of an original packet is detected, because that packet object is also the retained native-action detail. Replacing the array, or replacing an element with a forged object, leaves the retained and private stores untouched, so health stays true. extractActionBracket (observation.js:107-131) then builds the action bracket from the forged packet: rootEventsBefore/After, stateAfter and tCapture/tBubble, which witness.js:44-63 adopts as the Start baseline. This is the same public-store replacement model as N07-04, applied to the packet store.",
+        "lineEnd": 158,
+        "title": "Bind returned action packets to the integrity-checked native-action records",
+        "confidence": 0.6,
+        "lineStart": 146,
+        "repairNeeded": "Inside evaluateActionCandidates, derive candidates from, or verify each one against, the closure-retained native-action entries. For example, expose a private read of native-action details by sequence, or verify that each candidate is identical to the retained entry's detail and matches its private JSON clone. Report a recorder:store error when they diverge. evaluatePreActionCursor's lastSeq source (:36-37) needs the same binding.",
+        "priority": 2,
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+        "scopeDecision": "Original N07-04/N07-05 explicitly cover lifecycle store integrity. Extending identical checks to separately replaceable action-packet storage is not automatically a required cutover; no new repair scope authorized.",
+        "componentNote": "Authority body retained separately. No repair, waiver, seventh-finding expansion or complete action-packet-store-integrity conclusion is made."
+      },
+      "preservationAndLimits": {
+        "deliveryBlocker": "Genuine Native11 producer receipt remains absent and independently fatal to admission. This component is not a receipt or its reconstruction.",
+        "immutableArtifacts": "Original Native salvage report/provenance supplement, original producer receipts, authorities and all source remain untouched.",
+        "historicalObligations": "All original15, audit08 six, settled09 five, chronology two, current11 six and credited clock/history/CSS/identity/error/finalization invariants remain required. This bounded state component does not pretend to have read or dispositioned every unrelated full historical finding body; the integration owner owns their complete union and cross-seam dispositions.",
+        "laterScope": "Original7 exact Hot Potato speed-bonus, original8 Scattergories NFC duplicate/unique controls, and original9 full Trivia scoring-policy matrix remain unchanged required later slices. Gap4 remains unresolved and dependent gaps5-9 unchanged.",
+        "coverageLimit": "Complete personal full-body/EOF coverage is established for all six assigned primary files and the three assigned owners, with targeted full policy/presenter/consumer bodies. No full38-file audit or unrelated dependency/live/validation/import graph coverage is claimed.",
+        "dependencyLimit": "External linked node_modules is outside the recursive freeze. No dependency content, Reveal keyboard dispatcher or Playwright runtime was executed or represented as immutable here.",
+        "executionDisclosure": "Read/glob/grep only. No writes, edits, shell/git/eval/imports/checks/tests/build/lint/format/browser/installation/hash or count measurements/nested agents. No54-cell execution, source-ready claim or normal admission."
+      }
+    },
+    "notIndependentCompleteAudit": true
+  }
+]

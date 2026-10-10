@@ -1,0 +1,151 @@
+    </div>
+    <button onclick="window.print()">Print / Save as PDF</button>
+  </div>`
+    : ''
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="navslides-reveal-version" content="${REVEAL_RUNTIME_VERSION}">
+  <title>${title} — PDF</title>${baseUrl ? `\n  <base href="${escapeHtml(baseUrl)}/">` : ''}
+  <link rel="stylesheet" href="/vendor/katex/dist/katex.min.css">
+  <link rel="stylesheet" href="/vendor/highlight.js/styles/${escapeHtml(codeTheme)}.min.css">
+  <style>${safeStyleText(`
+    @page { size: ${resW}px ${resH}px; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    html { width: 100%; height: auto; overflow: visible !important; background: #000; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    body { width: 100%; height: auto; overflow: visible !important; background: #000; margin: 0; padding-top: ${includePrintBar ? 48 : 0}px; print-color-adjust: exact; -webkit-print-color-adjust: exact; display: block; }
+    .slide-page {
+      width: ${resW}px; height: ${resH}px; position: relative; overflow: hidden;
+      margin: 0 auto;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      break-after: page; page-break-after: always;
+      print-color-adjust: exact; -webkit-print-color-adjust: exact;
+    }
+    .slide-page:last-child { break-after: avoid; page-break-after: avoid; }
+    .slide-page h1 { font-size: 2.5em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .slide-page h2 { font-size: 1.6em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .slide-page h3 { font-size: 1.3em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .slide-page h4 { font-size: 1em;   font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .slide-page p  { margin: 0 0 6px; line-height: 1.5; }
+    .slide-page ul, .slide-page ol { padding-left: 24px; margin: 0 0 6px; }
+    .slide-page li { margin-bottom: 3px; line-height: 1.5; }
+    .slide-page a  { text-decoration: underline; }
+    .slide-page [data-ns-markdown] pre { white-space: pre; overflow: auto; background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: 6px; font-size: 13px; }
+    .slide-page [data-ns-markdown] code { font-family: 'Fira Code', monospace; }
+    .slide-page img { margin: 0 !important; border: none !important; background: none !important; box-shadow: none !important; max-width: none !important; max-height: none !important; }
+    #print-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      background: rgba(15,15,23,0.96); color: white; padding: 10px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-family: -apple-system, sans-serif; font-size: 13px;
+      backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    #print-bar button { padding: 7px 18px; background: #6366f1; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500; }
+    #print-bar button:hover { background: #5254cc; }
+    #print-bar .hint { color: rgba(255,255,255,0.5); font-size: 12px; }
+    @media print { #print-bar { display: none; } body { margin-top: 0; padding-top: 0; } }
+`)}  </style>${presentation.customCSS ? `\n  <style>\n${safeStyleText(presentation.customCSS)}\n  </style>` : ''}
+</head>
+<body>
+${printBarHtml}
+${pagesHtml}
+  <script src="/vendor/katex/dist/katex.min.js"></script>
+  <script src="${REVEAL_ASSET_PATHS.highlightJs}"></script>
+  <script src="/vendor/chart.js/dist/chart.umd.js"></script>
+  <script src="/vendor/qrcode/qrcode.min.js"></script>
+  <script>
+    window.__navslidesExportReady = false;
+    window.addEventListener('load', function() {
+      var iframePromises = [];
+      // Highlight code blocks
+      var printHighlighter = RevealHighlight().hljs;
+      document.querySelectorAll('pre:not([data-code-walkthrough]) code').forEach(function(el) {
+        printHighlighter.highlightElement(el);
+      });
+      // Render KaTeX math
+      document.querySelectorAll('span[data-math-latex]').forEach(function(el) {
+        try { katex.render(el.getAttribute('data-math-latex'), el, { throwOnError: false, displayMode: el.getAttribute('data-math-display') === 'true' }); } catch(e) {}
+      });
+      // Render Chart.js charts
+      document.querySelectorAll('canvas[data-chart-config]').forEach(function(el) {
+        try {
+          var config = JSON.parse(el.getAttribute('data-chart-config'));
+          config.options = config.options || {};
+          config.options.animation = false;
+          new Chart(el, config);
+        } catch(e) { console.error('Chart render error:', e); }
+      });
+      // Render QR codes
+      document.querySelectorAll('canvas[data-qr-config]').forEach(function(el) {
+        try {
+          var cfg = JSON.parse(el.getAttribute('data-qr-config'));
+          QRCode.toCanvas(el, cfg.data, {
+            color: { dark: cfg.fg, light: cfg.bg },
+            errorCorrectionLevel: cfg.err || 'M',
+            margin: 1,
+            width: Math.min(el.parentElement.offsetWidth, el.parentElement.offsetHeight, 500)
+          });
+        } catch(e) { console.error('QR render error:', e); }
+      });
+      // Initialize data-pdf-iframes via Blob URLs to prevent print layout merging
+      document.querySelectorAll('iframe[data-pdf-iframe]').forEach(function(el) {
+        try {
+          var html = decodeURIComponent(el.getAttribute('data-pdf-iframe'));
+          var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+          iframePromises.push(new Promise(function(resolve) {
+            var done = false;
+            var finish = function() { if (!done) { done = true; resolve(); } };
+            el.addEventListener('load', function() { setTimeout(finish, 120); }, { once: true });
+            setTimeout(finish, 3500);
+          }));
+          el.src = URL.createObjectURL(blob);
+        } catch(e) { console.error('Iframe PDF init error:', e); }
+      });
+      Promise.all(iframePromises.concat([
+        document.fonts && document.fonts.ready ? document.fonts.ready.catch(function(){}) : Promise.resolve()
+      ])).then(function() {
+        setTimeout(function() {
+          window.__navslidesExportReady = true;
+          if (${JSON.stringify(autoPrint)}) window.print();
+        }, ${Math.max(0, exportReadyDelayMs)});
+      });
+    });
+  </script>
+</body>
+</html>`
+}
+
+function exportPDF(presentation, options = {}) {
+  const html = generatePrintHTML(presentation, { teacherReveal: options.teacherReveal === true })
+  const blob = new Blob([html], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  window.open(url, '_blank')
+  setTimeout(() => URL.revokeObjectURL(url), 120000)
+}
+
+function presentInWindow(presentation, { startAt } = {}) {
+  const hash = startAt ? `#/${startAt.h}/${startAt.v}` : ''
+  if (presentation && presentation.id) {
+    // Use server endpoint so vendor assets (reveal.js, katex, etc.) resolve correctly
+    window.open(`/api/presentations/${presentation.id}/present${hash}`, '_blank')
+  } else {
+    // Fallback for cases without an ID (e.g. template preview)
+    const html = generateRevealHTML(presentation)
+    const blob = new Blob([html], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    window.open(`${url}${hash}`, '_blank')
+    setTimeout(() => URL.revokeObjectURL(url), 120000)
+  }
+}
+
+module.exports = {
+  generateRevealHTML,
+  generatePrintHTML,
+  downloadHTML,
+  exportPDF,
+  presentInWindow,
+  getBackgroundAttrs,
+  escapeHtml,
+}

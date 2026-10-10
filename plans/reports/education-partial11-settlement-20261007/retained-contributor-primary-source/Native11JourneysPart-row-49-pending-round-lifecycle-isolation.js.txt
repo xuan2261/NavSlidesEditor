@@ -1,0 +1,120 @@
+import { expect } from '@playwright/test'
+import { ISOLATION_CASES } from './pending-round-lifecycle-cases.js'
+import {
+  getRoot,
+  getGameState,
+  resetGame,
+} from './pending-round-lifecycle-controls.js'
+import {
+  preconsumeTimerToWindow,
+  measureQuizCheckpoint,
+} from './pending-round-lifecycle-clock.js'
+import { readCorrelatedStateAndTime } from './pending-round-lifecycle-observation.js'
+import {
+  startWitnessTimer,
+  waitForWitnessExpiry,
+} from './pending-round-lifecycle-witness.js'
+import {
+  assertCompleteResetState,
+  assertCompleteActiveState,
+  assertResetUI,
+  assertPeerNonBaseline,
+  assertPeerInvariance,
+  assertPeerUI,
+} from './pending-round-lifecycle-state.js'
+import { assertQuizCheckpoint } from './pending-round-lifecycle-quiz-state.js'
+
+export { ISOLATION_CASES }
+
+export async function runIsolationJourney(page, caseDef, evidence) {
+  const r1 = getRoot(page, 'p-slide', 'iso-1')
+  const r2 = getRoot(page, 'p-slide', 'iso-2')
+  const witness = getRoot(page, 'p-slide', 'witness-timer')
+
+  await caseDef.actPeer(r2)
+
+  if (caseDef.gameType === 'relay-race') {
+    await expect.poll(async () => {
+      const s = await getGameState(r2)
+      return Boolean(s && s.phase === 'ended' && s.winnerId === 'team-2' && s.positions?.['team-2'] === 1)
+    }).toBe(true)
+  }
+
+  const peerBeforeSample = await readCorrelatedStateAndTime(r2)
+  const peerBefore = peerBeforeSample.state
+  evidence.stage('peerBefore', peerBefore)
+  assertPeerNonBaseline(caseDef.gameType, peerBefore, caseDef.peerConfig)
+  await assertPeerUI(caseDef.gameType, r2)
+  const frozenPeer = JSON.parse(JSON.stringify(peerBefore))
+
+  await caseDef.actPrimary(r1)
+  const primaryInitialSample = await readCorrelatedStateAndTime(r1)
+  evidence.stage('primaryInitial', primaryInitialSample.state)
+  assertCompleteActiveState(caseDef.gameType, primaryInitialSample.state, caseDef.primaryConfig, 0)
+
+  const preconsumed = await preconsumeTimerToWindow(r1, page, evidence)
+  evidence.stage('preconsumed', preconsumed)
+  const primaryOldDue = preconsumed.due
+
+  const peerMidSample = await readCorrelatedStateAndTime(r2)
+  evidence.stage('peerMid', peerMidSample.state)
+  assertPeerInvariance(frozenPeer, peerMidSample.state)
+  await assertPeerUI(caseDef.gameType, r2)
+
+  const resetBracket = await resetGame(r1)
+  evidence.stage('resetBracket', resetBracket)
+  expect(primaryOldDue).toBeGreaterThan(resetBracket.tBefore)
+
+  const primaryResetSample = await readCorrelatedStateAndTime(r1)
+  const primaryReset = primaryResetSample.state
+  evidence.stage('primaryReset', primaryReset)
+  expect(primaryReset.generation).toBe(1)
+
+  const deadlineBounds = {
+    min: resetBracket.tBefore + 5000,
+    max: resetBracket.tAfter + 5000 + 800,
+  }
+  assertCompleteResetState(caseDef.gameType, primaryReset, 0, caseDef.primaryConfig, deadlineBounds)
+  await assertResetUI(caseDef.gameType, r1)
+
+  const peerAfterResetSample = await readCorrelatedStateAndTime(r2)
+  evidence.stage('peerAfterReset', peerAfterResetSample.state)
+  assertPeerInvariance(frozenPeer, peerAfterResetSample.state)
+  await assertPeerUI(caseDef.gameType, r2)
+
+  const witnessStart = await startWitnessTimer(witness, evidence)
+  evidence.stage('witnessStart', witnessStart)
+
+  const witnessFinal = await waitForWitnessExpiry(witness, evidence)
+  evidence.stage('witnessFinal', witnessFinal)
+
+  const nowSample = await readCorrelatedStateAndTime(r1)
+  evidence.stage('nowSample', nowSample)
+  expect(nowSample.activityNow).toBeGreaterThanOrEqual(primaryOldDue)
+
+  if (caseDef.gameType === 'quiz') {
+    const cp = await measureQuizCheckpoint(r1, page, primaryOldDue, primaryReset.deadline, evidence)
+    evidence.stage('quizCheckpoint', cp)
+    assertQuizCheckpoint(cp.checkpointState, caseDef.primaryConfig, 1, primaryReset.deadline)
+  } else {
+    const primarySettledSample = await readCorrelatedStateAndTime(r1)
+    evidence.stage('primarySettled', primarySettledSample.state)
+    const primarySettled = primarySettledSample.state
+    expect(primarySettled.generation).toBe(1)
+    assertCompleteResetState(caseDef.gameType, primarySettled, 0, caseDef.primaryConfig, deadlineBounds)
+    await assertResetUI(caseDef.gameType, r1)
+  }
+
+  const peerFinalSample = await readCorrelatedStateAndTime(r2)
+  const peerFinal = peerFinalSample.state
+  evidence.stage('peerFinal', peerFinal)
+  assertPeerInvariance(frozenPeer, peerFinal)
+  await assertPeerUI(caseDef.gameType, r2)
+
+  return {
+    peerBefore,
+    primaryReset,
+    peerFinal,
+    resetBracket,
+  }
+}

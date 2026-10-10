@@ -1,0 +1,183 @@
+    },
+    {
+      "mechanism": "validateManifest strictly enforces exact 3-key shape (slideId, elementId, gameType). matchRootTuples enforces 1:1 multiset equality. validateDocumentIdentity enforces documentId, timeOrigin, and normalized plannedUrl equality against bound journey identity. Raw observations and manifests are staged before assertions.",
+      "id": "Raw staging/document identity/root tuples",
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-evidence-domain.js:10-74,96-125",
+        "tests/e2e/education/pending-round-lifecycle-evidence.js:65-92"
+      ],
+      "disposition": "SOURCE_PRESERVED_LOCAL"
+    },
+    {
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-evidence.js:140-195",
+        "tests/e2e/education/pending-round-lifecycle-error-ledger.js:140-148"
+      ],
+      "mechanism": "finalize records runner error, prerequisite missing baseline, source invariant verification failures, and attachment error sequentially. getSerializedErrors captures all accumulated diagnostics. produceThrow exposes late errors and throws the authoritative normalized primary error.",
+      "id": "Late exposures/finalization",
+      "disposition": "SOURCE_PRESERVED_LOCAL"
+    },
+    {
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-cases.js:1-200",
+        "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js:1-87",
+        "tests/e2e/education/pending-round-lifecycle-leave-return.js:1-137",
+        "tests/e2e/education/pending-round-lifecycle-reset.js:1-110",
+        "tests/e2e/education/pending-round-lifecycle-isolation.js:1-124"
+      ],
+      "id": "Consumer compatibility of 12 unchanged callers",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "mechanism": "All helper exports and module bindings imported by the 12 Phase2 callers exist and maintain syntactically valid ESM signatures. Caller-side call sites require signature migration (passing evidence sinks, startRecord, etc.) under the deferred caller cutover protocol, but no missing exports or broken contracts exist in the helper modules."
+    }
+  ],
+  "newSourceBackedFindings": [
+    {
+      "id": "S10-C1",
+      "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+      "consumerVisibleMechanism": "Every non-setup recorder error (recorder:store) is recorded after all packet and raw getter errors. The browser can set it earlier: before the post-handler getters (native-history.js:80-82 vs :93), after capture getters but before bubble getters (:132 vs :134-136), or at any earlier record() call (native-observation.js:80-86). Pre-existing errors are also forwarded by later reads (observation-browser.js:59-61, :85, :149). Because the ledger assigns primary and order by arrival (error-ledger.js:94-101, 120-121), a later stateAfter/uiAfter or read getter failure becomes the thrown primary and serialized chronology is inverted. This confirms Evidence10 claim S10-C1 by independent trace, and the defect also covers capture-phase and pre-read occurrences.",
+      "repairNeeded": "At each browser site that sets __nsLifecycleRecorderError, attach an observation position: performance.now() at set time and, inside the action recorder, the packet sequence plus capture/bubble phase. Alternatively, copy the recorder error into the packet at the point where it was observed. Then have assertAndRecordObservationErrors interleave recorder occurrences with packet capture/bubble getter occurrences and raw-read getters by actual position. Setup must remain first and Node document validation last. Do not use a fixed category order.",
+      "priority": 2,
+      "lineStart": 81,
+      "confidence": 0.9,
+      "lineEnd": 86,
+      "title": "Order non-setup recorder errors by actual browser observation, not category",
+      "confirmations": [
+        "Evidence10 salvage",
+        "NF-A1",
+        "N10B-03",
+        "Caller slice S10-C1"
+      ]
+    },
+    {
+      "lineStart": 80,
+      "confidence": 0.85,
+      "file": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+      "priority": 2,
+      "consumerVisibleMechanism": "When the public store is found replaced, record() always assigns a new cause:null recorder:store envelope. It does not check for an existing error, unlike native-history.js:81/:135 and observation-browser.js:9/:86/:150. If observer setup failed (:127-129, recursive cause chain), a later store replacement plus any listener-driven record() (:142-152) erases the setup envelope and its cause chain. observation-errors.js:25-27 then treats the failure as non-setup and orders it after getters. With a healthy setup, each later record() also replaces the first, specific store error (for example a count-divergence message set by completePacket) with a generic later one, so the first occurrence is lost.",
+      "lineEnd": 87,
+      "repairNeeded": "In record(), set recorderReady=false but assign the recorder:store envelope only when no recorder error exists. Alternatively, retain earlier envelopes in an ordered list, so the first actual occurrence and its recursive setup cause chain survive.",
+      "id": "NF-A2",
+      "title": "Do not overwrite an existing recorder error in record()"
+    },
+    {
+      "id": "NF-A3",
+      "lineStart": 70,
+      "title": "Normalize button-guard snapshot failures before document validation",
+      "consumerVisibleMechanism": "stageButtonGuard reads __nsReadRootSnapshot (:29-31) and returns stateError/uiError (:57-60), but only stages them raw (:70). It then calls assertDocumentIdentity (:71) and returns the guard (:73) without ever calling recordError for those getter failures. resetGame (controls.js:166-168) and revealHotPotatoAnswers (controls.js:85) continue with no ledger entry for an observed state/UI getter failure. If document binding fails, the later Node validation error is thrown, and the earlier browser getter occurrences never reach the normalized ledger. This seam has existed unchanged since candidate07, so it was not introduced by Correction10, but it is within the N07-07 'ALL observed snapshot failures' obligation.",
+      "file": "tests/e2e/education/pending-round-lifecycle-native-action.js",
+      "confidence": 0.85,
+      "repairNeeded": "Route the guard through assertAndRecordObservationErrors(evidence, label || 'buttonGuard', guard, {url, documentId, timeOrigin}) after staging the raw guard, so that state and UI getter failures are recorded before document validation and the earliest occurrence is thrown. Wrap the helper in the same recordError/rethrow pattern used in observation.js.",
+      "priority": 2,
+      "lineEnd": 73
+    },
+    {
+      "priority": 2,
+      "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+      "lineStart": 40,
+      "lineEnd": 60,
+      "title": "Capture remaining Reveal dispatcher guards in keyboardEligible",
+      "mechanism": "keyboardEligible = !isInput && !inGame && !inAction && revealConditionPassed. Reveal keyboard.js:167 (speaker-notes focus), :193-195 (isOverlayOpen rejects Arrow keys), :197-199 (isPaused rejects non-resume keys), the config.keyboard/bindings precedence that replaces system arrow navigation, and reveal.js:595 (no listener when config.keyboard is falsy) are not observed. In a paused or overlay state, the staged navigateSlideKeyboard.focusInfo reports eligible while the ArrowDown/Up/Right sent at :80 is ignored by production, so the poll timeout is misattributed. Secondary: Boolean() where Reveal uses strict `=== false` (:146), and exact tag equality where Reveal uses /input|textarea/i (:166).",
+      "repairNeeded": "Add read-only discriminators to the same evaluate: Reveal.isOverlayOpen(), Reveal.isPaused() combined with the resume-key set (including config.keyboard togglePause keys) for the pressed keyCode, the speaker-notes className regex, config.keyboard truthiness, and whether config.keyboard or Reveal.getBindings() overrides the pressed arrow keyCode. Use Reveal's strict `=== false` condition semantics and its tagName regex. Do not force focus or change navigation policy.",
+      "id": "N10B-01"
+    },
+    {
+      "title": "Bind the initial slide read to its observed document before early return",
+      "mechanism": "The initial current-slide read at :19 is a separate page.evaluate that returns only slideId, with no url/documentId/timeOrigin. When it equals targetSlideId, :21 returns success without validating which document produced it. A replacement between the :7 docDomain read and :19 is therefore accepted, and no raw document evidence is staged for the read that decided the outcome.",
+      "repairNeeded": "Read slideId together with url/documentId/timeOrigin in one evaluate, stage it raw, call assertDocumentIdentity, and only then compare it with targetSlideId (the same seam as the poll at :85-105).",
+      "id": "N10B-02",
+      "priority": 3,
+      "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+      "lineStart": 19,
+      "lineEnd": 21
+    },
+    {
+      "confidence": 0.86,
+      "title": "Prevent phase-less caller errorLedger items from overwriting authoritative recorded phases",
+      "id": "S10-C2",
+      "repairNeeded": "In error-exposure.js, only update existing.phase during reconciliation if the caller wrapper provides an explicit, valid item.phase string. Do not allow a fallback or intrinsic err.phase from an unannotated caller wrapper to clobber an already-recorded explicit phase.",
+      "lineStart": 77,
+      "priority": 2,
+      "mechanism": "In ingestPreexistingErrors, when a caller errorLedger item lacks an explicit phase property, resolveWrapperMeta falls back to err.phase || `${phase}:errorLedger`. If the referenced error was already recorded earlier in the ledger with an authoritative explicit phase (e.g. 'portable:close'), reconcileEntry executes because existing.phase !== p, overwriting the recorded phase with the fallback/intrinsic phase and re-serializing the entry. This regresses the explicit recorded phase on exposure.",
+      "lineEnd": 85,
+      "file": "tests/e2e/education/pending-round-lifecycle-error-exposure.js"
+    }
+  ],
+  "additionalScopeCandidate": {
+    "consumerVisibleMechanism": "evaluateActionCandidates returns candidates from the public, replaceable window.__nsRecordedPackets (:146-147). storeHealth (:148) checks only the lifecycle store. In-place mutation of an original packet is detected, because that packet object is also the retained native-action detail. Replacing the array, or replacing an element with a forged object, leaves the retained and private stores untouched, so health stays true. extractActionBracket (observation.js:107-131) then builds the action bracket from the forged packet: rootEventsBefore/After, stateAfter and tCapture/tBubble, which witness.js:44-63 adopts as the Start baseline. This is the same public-store replacement model as N07-04, applied to the packet store.",
+    "lineEnd": 158,
+    "title": "Bind returned action packets to the integrity-checked native-action records",
+    "confidence": 0.6,
+    "id": "NF-A4",
+    "lineStart": 146,
+    "repairNeeded": "Inside evaluateActionCandidates, derive candidates from, or verify each one against, the closure-retained native-action entries. For example, expose a private read of native-action details by sequence, or verify that each candidate is identical to the retained entry's detail and matches its private JSON clone. Report a recorder:store error when they diverge. evaluatePreActionCursor's lastSeq source (:36-37) needs the same binding.",
+    "priority": 2,
+    "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+    "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+    "scopeDecision": "Original N07-04/N07-05 explicitly cover lifecycle store integrity. Extending identical checks to separately replaceable action-packet storage is not automatically a required cutover; no new repair scope authorized."
+  },
+  "crossReviewReconciliation": [
+    "All five settled09 specified local defect cases have repairs, but 09-S5 remains PARTIAL for phase-less caller wrapper reconciliation (S10-C2). Earlier Evidence10 local closure is not full phase-precedence proof.",
+    "Original N07-07 remains PARTIAL: S10-C1 chronology and NF-A3 guard normalization.",
+    "Original N07-08 remains PARTIAL: recursive setup cause serialization exists, but NF-A2 can overwrite it later.",
+    "Original N07-10 listed focus exclusions are repaired locally; full production eligibility remains PARTIAL (N10B-01).",
+    "N10B-02 is an additional initial-read document-binding defect, not an assertion that the corrected navigation poll seam regressed.",
+    "Caller signature migration remains deferred by authority; no shim or runtime compatibility claim."
+  ],
+  "deliveryBlockers": [
+    {
+      "id": "NATIVE10_GENUINE_DELIVERY_ABSENT",
+      "classification": "INDEPENDENT_DELIVERY_BLOCKER",
+      "evidence": [
+        "pending-substrate-10-terminal-delivery.json:1-78",
+        "pending-substrate-10-terminal-failure-counsel.json:27-45",
+        "pending-substrate-10-scope-preservation.json:340-364"
+      ],
+      "facts": "Both writers actually stopped. Native10 ended with transport stream_error/exit1 after1308.7s and has no genuine completion receipt. Evidence10 completed after819.01s and has a genuine receipt. The absent Native receipt remains fatal to ordinary admission even if source review were clean. No receipt was reconstructed, fabricated or substituted."
+    },
+    {
+      "id": "EVIDENCE10_RECEIPT_SCOPE_LIMITATIONS",
+      "classification": "DELIVERED_RECEIPT_LIMITATION_NOT_AUTOMATIC_SOURCE_DEFECT",
+      "evidence": [
+        ".tmp/acceptance-producer-pending-substrate-10-evidence.json:1-404",
+        "pending-substrate-10-terminal-failure-counsel.json:80-92",
+        "pending-substrate-08-subject-authority.json:1-187",
+        "pending-substrate-07-evidence-admission.json"
+      ],
+      "facts": [
+        "The genuine Evidence receipt was read fully and remains producer claims, not source or runtime proof.",
+        "Its E06-02..05 titles substitute narrower meanings: success keys, popup cleanup, tuple validation and UI getter installation. The governing meanings remain chronological frame dispatch, actual Error/sidecar separation, state-before-UI ordering and recursive provenance/cause propagation.",
+        "Its E06-01-B/C bodies abbreviate the original07 obligations and cannot amend them.",
+        "NC03 shortens the full preconsumption/checkpoint provenance obligation; NC05 substitutes a generic boundary-crossing statement for crossing the exact originally pending due; NC06 changes the cited canonical policy owner; NC09 substitutes a different SE16 paraphrase; NC10 changes the timing-failure explanation. These differ from canonical bodies and do not authorize scope changes.",
+        "NC11, RPC01..17, original1..9 and the current/prior mapping snapshots remain the preserved canonical identities as reported by governing counsel. The aggregate NC=false does not mean NC11 was changed.",
+        "The receipt's three generic deferral sentences do not contain the complete caller,54-cell and later-slice obligations. Its normal dual-gate/run statements confer no execution permission after failed delivery."
+      ]
+    }
+  ],
+  "deferredCallerObligations": {
+    "specificSourceGaps": [
+      "Mandatory evidence sink forwarding: all 12 Phase2 callers currently invoke getGameState, readCorrelatedStateAndTime, navigateSlide, resetGame, clickTriviaNext, observeQuizActive, startRelayRound, etc., without passing the required evidence sink argument, which fails assertEvidenceSink.",
+      "waitForWitnessExpiry argument shape cutover: callers pass (witness, evidence) (2 args), whereas witness.js:92-96 requires (root, startRecord, evidence) (3 args), expecting startRecord with actionBracket, deadline, runningSample and rootDomain.",
+      "Consumption of Start actionBracket and measured expiry: callers discard actionBracket and inspect un-synchronized timestamps instead of deriving and asserting deadline bounds via deriveDeadlineBounds / assertMeasuredWitnessInterval.",
+      "Quiz Reset+5000 deadline and checkpoint assertion: resetGame returns { state, actionBracket, actionRecords }; callers in reset.js and isolation.js expect legacy { tBefore, tAfter } and compute arbitrary +800ms slack, which must be migrated to strict checkpoint proof.",
+      "Relay peer settlement and first-timeout proof: callers must consume settled peer state, first-timeout identity and team/lane invariance across Reset and old due.",
+      "Trivia question/round expiry: clickTriviaNext and multi-round identity assertions must forward evidence and assert exact awards, scores, roundDeadline and questionDeadline.",
+      "Sink and manifest registration in acceptance.spec: acceptance.spec.js must call evidence.setExpectedRoots(manifest) prior to visitSurface, and pass the active Page or context appropriately to visitSurface and runner.",
+      "Absence of legacy shims: helper functions must not re-introduce legacy optional-sink shims or return wrappers to tolerate old caller signatures."
+    ],
+    "unchangedFullContract": "All12 caller clean cutover only after separately applicable authority and helper proofs; NC01..11, RPC01..17, original1..9, current/prior mapping snapshots remain unchanged. Independently prove pending/hidden/returned/reset/terminal/peer state AND native UI; reset/pass/start brackets, root/document/lifecycle uncertainty and deadline bounds; first-expiry/witness idle/running/expired crossover; after-old/before-new Quiz Reset+5000 without800ms slack; Relay peer/first-timeout/old-due invariance; full Trivia expiry/nativeNext question/round/history/awards/deadline/UI. All18 rows on present/share/file,54 cells, no representative substitute. Original7 Hot Potato bonus, original8 Scatter NFC uniqueness and original9 full Trivia scoring remain later slices; gaps5..9 unchanged."
+  },
+  "limitations": [
+    "[INFERENCE] Findings are source deductions, not exercised failures. No imports, tests, browser, build, lint or runtime checks ran.",
+    "Mapped code coverage is complete across three independent slices, not one reviewer re-reading the whole partition. Per-slice authority read limitations are retained in the original reports; prior full Evidence salvage supplies governing receipt/scope cross-checks.",
+    "Capture slice reports one wc -l command despite the no-shell contract. This was a read-only line-count deviation, not execution proof; no source writes reported.",
+    "Reveal keyboard owner is linked outside the recursive freeze; source read does not certify dependency immutability.",
+    "Review reports and settlement metadata only were written by Main; no helper/caller/production edits or producer dispatch."
+  ],
+  "admission": false,
+  "sourceReady": false,
+  "qualification": false,
+  "passClaimed": false,
+  "runtimeExecuted": false,
+  "staticallyAdmittedCells": 0,
+  "executedAcceptanceCells": 0
+}

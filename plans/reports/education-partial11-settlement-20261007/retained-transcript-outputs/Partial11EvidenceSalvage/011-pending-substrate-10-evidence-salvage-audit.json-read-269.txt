@@ -1,0 +1,207 @@
+        "pending-round-lifecycle-navigation.js:85-103"
+      ],
+      "mechanism": "Each complete pollDoc includes slideId, URL, documentId and timeOrigin. Both the raw poll and contextual navigation poll are staged before document binding is asserted, retaining the offending observed identity on rejection."
+    },
+    {
+      "id": "Native07-10 / N06-N07",
+      "title": "Match keyboard eligibility to production dispatch",
+      "disposition": "SOURCE_CORRECTED_FOR_ORIGINAL_LISTED_EXCLUSIONS",
+      "evidence": [
+        "pending-round-lifecycle-navigation.js:37-69",
+        "shared/src/education/browser/reveal-lifecycle.js:73-83",
+        "shared/src/htmlGenerator.js:462-466",
+        "node_modules/reveal.js/js/controllers/keyboard.js:140-243,244-359,360-414"
+      ],
+      "mechanism": "The helper observes input/textarea/contenteditable focus, game/action ancestry and the actual configured keyboardCondition/focused-deck policy without forcing focus. The production wrapper delegates the generated summary/video/audio condition, and the linked Reveal dispatcher explicitly receives and routes Arrow keys after its guards. This establishes the concrete originally reported exclusions, not complete dispatcher equivalence: Reveal also checks speaker-notes focus, modifiers, overlay/paused state and custom bindings. Linked dependency contents are not recursively frozen and runtime actionability is not certified."
+    },
+    {
+      "id": "Native07-11",
+      "title": "Preserve exact null commands when matching native packets",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-observation-domain.js:60-69",
+        "pending-round-lifecycle-native-action.js:7-16",
+        "pending-round-lifecycle-controls.js:44-50,54-79,144-151"
+      ],
+      "mechanism": "Only an absent cursor command normalizes to null; packet command must equal it exactly. Input/change actions still deliberately supply null. Root instance, element/slide/game tuple, documentId/timeOrigin, URL, event type and sequence checks are retained."
+    },
+    {
+      "id": "Native07-12",
+      "title": "Reject disconnected current nodes during action extraction",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-observation-browser.js:129-162",
+        "pending-round-lifecycle-observation-domain.js:41-58",
+        "pending-round-lifecycle-observation.js:111-131"
+      ],
+      "mechanism": "The browser observation captures node.isConnected. The consuming domain gate rejects disconnection before full current-node/cursor agreement and before bracket acceptance."
+    },
+    {
+      "id": "E06-01-A",
+      "title": "Leave sole Errors with empty caller arrays unchanged",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-error-ledger.js:87-117,140-147",
+        "pending-round-lifecycle-error-exposure.js:72-123"
+      ],
+      "mechanism": "A genuine Error remains the same normalized reference. Empty secondaryFailures and serialized-only diagnostics add no occurrence. Exposure refresh runs only for multiple entries; produceThrow returns a sole primary immediately. The precise required sole-Error case retains own keys, the existing empty array reference and the thrown Error reference."
+    },
+    {
+      "id": "E06-01-B",
+      "title": "Deduplicate caller ledger records by identity, not order",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:37-55,125-171",
+        "pending-round-lifecycle-error-ledger.js:102-117,140-147",
+        "pending-round-lifecycle-evidence.js:150-192"
+      ],
+      "mechanism": "Caller arrays and existing objects are retained. Ledgers append only when the identical ledger-owned serialization is absent, not when a numeric order is absent. Reconciliation updates the stable serialized object in place. Unrelated caller order collisions cannot suppress frame/source/attachment diagnostics, and repeated refreshes do not append replacement serializations. Late measured-attachment failure is recorded before produceThrow, independent of whether JSON attachment succeeds."
+    },
+    {
+      "id": "E06-01-C",
+      "title": "Ingest genuine failures attached through errorLedger",
+      "disposition": "SOURCE_CORRECTED_LOCAL_FOR_MAPPED_CASES",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:7-55,68-123",
+        "pending-round-lifecycle-error-ledger.js:11-48,87-117"
+      ],
+      "mechanism": "Genuine caller errorLedger occurrences are ingested first in established array order, before secondary-only occurrences and later external arrivals. Only actual Error references or wrappers containing actual Errors are ingested; serialized-only diagnostic objects remain in caller arrays without materialization. Shared references deduplicate by original/normalized identity. Wrapper phase and frameUrl/metadata are reconciled without mutating the Error or caller wrapper, and a resolved non-unknown occurrence phase wins over conflicting intrinsic Error.phase. The serializer retains its existing 'unknown' fallback sentinel; this report does not broaden that sentinel into a new phase contract."
+    }
+  ],
+  "additional08FindingDispositions": [
+    {
+      "id": "Native08-1",
+      "title": "Import the real assertHistoryPrefix binding",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-witness.js:8-15,51-58",
+        "pending-round-lifecycle-witness-domain.js:2-7",
+        "pending-round-lifecycle-history-domain.js:24-53"
+      ],
+      "mechanism": "The imported symbol resolves to the actual comparator; it is not assumed to appear implicitly through another module's export."
+    },
+    {
+      "id": "Native08-2",
+      "title": "Validate full retained-store content and event.time",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-native-observation.js:24-26,47-75,89-116",
+        "pending-round-lifecycle-history-domain.js:24-53",
+        "pending-round-lifecycle-observation-browser.js:5-17,61-65,83-98,148-159",
+        "pending-round-lifecycle-native-history.js:50-65,80-96,134-149"
+      ],
+      "mechanism": "Independent private content and the previously omitted event.time are compared before all mapped consumers project histories or derive activity intervals. Healthy initialized emptiness and valid projected sequence gaps are retained."
+    },
+    {
+      "id": "Native08-3",
+      "title": "Preserve snapshot-before-later-document-validation chronology",
+      "disposition": "SOURCE_CORRECTED_FOR_THIS_EXACT_OBLIGATION",
+      "evidence": [
+        "pending-round-lifecycle-observation-errors.js:12-23,47-89",
+        "pending-round-lifecycle-evidence.js:85-92"
+      ],
+      "mechanism": "Document validation may be attempted first, but its caught exception is not ingested until after the already observed getter envelopes. assertDocumentIdentity itself only validates/throws; it does not secretly record an occurrence. The separate action-boundary recorder chronology defect is not credited as repaired by this narrower ordering."
+    },
+    {
+      "id": "Native08-4",
+      "title": "Retain candidate sibling errors despite outer rejection",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-observation.js:104-135",
+        "pending-round-lifecycle-observation-errors.js:35-60,81-94",
+        "pending-round-lifecycle-observation-browser.js:146-159"
+      ],
+      "mechanism": "A selected exact match is passed to the outer error consumer before current-node validation. Without a match, all sequence-eligible candidates are processed in recorded sequence and all four capture/post state/UI siblings are ingested before outer rejection. Raw candidate evidence remains staged, and bracket acceptance still requires exact matching."
+    },
+    {
+      "id": "Evidence08-1",
+      "title": "Exclude serialized diagnostics from occurrence ingestion",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:26-34,72-123"
+      ],
+      "mechanism": "errorLedger, allErrors and secondaryFailures traversal require genuine Error references. A saved diagnostic containing a plain {name,message} nested object is retained without recordErrorFn, materializeEnvelope or a fabricated occurrence."
+    },
+    {
+      "id": "Evidence08-2",
+      "title": "Retain authoritative wrapper metadata for shared references",
+      "disposition": "SOURCE_CORRECTED_LOCAL_FOR_MAPPED_CASES",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:7-55,68-123",
+        "pending-round-lifecycle-error-ledger.js:13-48"
+      ],
+      "mechanism": "errorLedger wrappers are resolved before secondary traversal; existing shared entries are reconciled in place. The close-versus-intrinsic-phase conflict now serializes with the authoritative occurrence phase, and frameUrl survives without Error or caller-wrapper mutation or duplicate occurrence/serialization identity."
+    }
+  ],
+  "settled09DefectDispositions": [
+    {
+      "id": "09-S1",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-observation-browser.js:129-175",
+        "pending-round-lifecycle-observation.js:12-18"
+      ],
+      "mechanism": "evaluateActionCandidates closes after its root.evaluate call and before the next top-level export. Its return contract and the consuming observation import are preserved. No import or syntax check was executed."
+    },
+    {
+      "id": "09-S2",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-native-history.js:75-110",
+        "pending-round-lifecycle-observation-browser.js:146-159",
+        "pending-round-lifecycle-observation.js:104-132",
+        "pending-round-lifecycle-witness.js:31-76"
+      ],
+      "mechanism": "completePacket constructs const serializable = Object.assign({}, packet), removes only its live DOM root, then publishes BOTH __nsRecordedPackets and native-action diagnostic outputs. Complete capture/post snapshots and lifecycle-only history projections remain available to the consuming extraction and witness paths."
+    },
+    {
+      "id": "09-S3",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-observation-errors.js:35-60",
+        "pending-round-lifecycle-observation.js:104-135"
+      ],
+      "mechanism": "The no-match fallback no longer collapses to one candidate. It filters the sequence-eligible collection, orders by packet sequence and ingests each packet's genuine capture/post state/UI siblings before throwing. This sort concerns one packet-sequence namespace, not caller/common-ledger order numbers. The exact-match acceptance path is unchanged."
+    },
+    {
+      "id": "09-S4",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:37-55,160-171",
+        "pending-round-lifecycle-error-ledger.js:102-117"
+      ],
+      "mechanism": "Object.assign(existing.serialized, fresh) preserves the already-exposed serialization identity. Recursive refresh and later wrapper reconciliation therefore continue to reference the same owned diagnostic object; identity-based append does not create a second serialization for that occurrence."
+    },
+    {
+      "id": "09-S5",
+      "disposition": "SOURCE_CORRECTED_LOCAL_FOR_SPECIFIED_PHASE_CONFLICT",
+      "evidence": [
+        "pending-round-lifecycle-error-ledger.js:13-20",
+        "pending-round-lifecycle-error-exposure.js:7-55,72-123"
+      ],
+      "mechanism": "An authoritative resolved non-unknown wrapper phase takes precedence over an intrinsic differing Error.phase during initial serialization and in-place reconciliation. The actual Error's phase/reference and caller wrapper remain unchanged, and metadata/provenance are retained."
+    }
+  ],
+  "chronologyObligationDispositions": [
+    {
+      "id": "09-C1",
+      "disposition": "PARTIAL_REPAIR_REQUIRED",
+      "evidence": [
+        "pending-round-lifecycle-observation-errors.js:25-31,47-89",
+        "pending-round-lifecycle-native-history.js:75-100",
+        "pending-round-lifecycle-observation-browser.js:146-159",
+        "pending-round-lifecycle-error-ledger.js:102-128"
+      ],
+      "correctedCases": "Already completed packet getter failures are ingested before a genuinely later extraction store/not-ready/document error. A recorder:setup or RecorderSetupError is ingested before later snapshots. The earliest normalized return is propagated.",
+      "remainingDefect": "The implementation classifies every other recorder error as later than every getter sibling. completePacket can actually discover and retain a recorder:store failure at its bubbling health check before invoking the post-handler state/UI getters. If those later getters fail, the consumer reverses those actual occurrences and can choose the later getter as primary. This is still a category-selected chronology, contrary to the full obligation. See S10-C1.",
+      "boundedUnresolvedObligation": "Actual recorder/getter occurrence ordering across native capture, native post-handler completion and extraction must be preserved, not inferred solely from the setup/non-setup phase label."
+    },
+    {
+      "id": "09-C2",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:68-123",
+        "pending-round-lifecycle-error-ledger.js:102-117"
+      ],
+
+[Showing lines 126-330 of 1203. Use :331 to continue]

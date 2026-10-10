@@ -1,0 +1,44 @@
+{
+  "kind": "PREPARATION_DOCUMENT_STRUCTURE_VALIDATION_NOT_SOURCE_GATE",
+  "files": [
+    {
+      "file": "implementation-proposal.md",
+      "bytes": 8875,
+      "sha256": "f9ed95f0f1cbb219fe84d23819df2bfeb7e38fe13183178ea0bc8ce889c199cc"
+    },
+    {
+      "file": "preparation-advisory-note.json",
+      "bytes": 15970,
+      "sha256": "068738b226bb42510009136f8e6350e66f9269071aec031c4efcba82c739e73b"
+    },
+    {
+      "file": "read-only-observations.json",
+      "bytes": 407837,
+      "sha256": "b989fa3fa536ef484ac7f31ad62c6198b161fc4b5c99f1791ae8963d0715e9c9"
+    },
+    {
+      "file": "readiness-handoff.md",
+      "bytes": 4064,
+      "sha256": "a00de19ca0103d6ce5f23787d9184dd9f18a5cd2d8a6f00cd3ef97f38cd7bf0d"
+    },
+    {
+      "file": "runtime-closure-interpretation.json",
+      "bytes": 5767,
+      "sha256": "04522e1c307f1164fc10758bda95053ba8ad4ad798112c8ad2cba9267ab08d85"
+    },
+    {
+      "file": "runtime-metadata-closure.json",
+      "bytes": 48686,
+      "sha256": "faf0cadbaedd50d100beaa51961a777fa0209b7f349d1a615b77156cd451862b"
+    },
+    {
+      "file": "settlement-continuity-note.json",
+      "bytes": 11579,
+      "sha256": "1f11e8622e2a8242490289fb34da03262d4b430be8de66c157183a65db582ea4"
+    }
+  ],
+  "jsonParsed": 5,
+  "historicalEvidenceOverwritten": false,
+  "scope": "New report structure only; no project test/import/build",
+  "modelMetadata": "unknown"
+}

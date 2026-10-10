@@ -1,0 +1,112 @@
+{
+  "reviewKind": "FAILURE_SETTLEMENT_RECEIPT_COMPLETENESS_AUDIT_ONLY",
+  "subject": {
+    "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+    "subjectIdentityFromMain": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+    "receipt": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/.tmp/acceptance-producer-pending-substrate-11-evidence.json",
+    "identityRemeasured": false
+  },
+  "admission": false,
+  "sourceReady": false,
+  "qualification": false,
+  "passClaimed": false,
+  "runtimeExecuted": false,
+  "executedAcceptanceCells": 0,
+  "staticallyAdmittedCells": 0,
+  "receiptCompleteness": {
+    "decision": "GENUINE_EVIDENCE_DELIVERY_PRESENT_BUT_REQUIREMENTS_NOT_FULLY_SATISFIED",
+    "genuineEvidence11ReceiptPresent": true,
+    "genuineNative11ReceiptPresent": false,
+    "combinedDeliveryComplete": false,
+    "producerIdentity": {
+      "producer": "local8045/gemini-3.8-flash-high",
+      "partition": "evidence",
+      "correction": 11,
+      "matchesDispatch": true
+    },
+    "originalFindings": {
+      "native": {
+        "expected": 12,
+        "present": 12,
+        "titlesAndOrderPreserved": true,
+        "originalLineRangesPrioritiesAndConfidencesPreserved": true,
+        "fullOriginalBodiesPreserved": false,
+        "unchangedBodies": [
+          "N07-02",
+          "N07-04",
+          "N07-05",
+          "N07-08",
+          "N07-09",
+          "N07-10",
+          "N07-11",
+          "N07-12"
+        ],
+        "alteredBodies": [
+          "N07-01",
+          "N07-03",
+          "N07-06",
+          "N07-07"
+        ],
+        "preciseCurrentSourceEvidenceSupplied": false,
+        "dispositionClaims": {
+          "SOURCE_CORRECTED_LOCAL": [
+            "N07-01",
+            "N07-02",
+            "N07-03",
+            "N07-04",
+            "N07-05",
+            "N07-06",
+            "N07-09",
+            "N07-11",
+            "N07-12"
+          ],
+          "PARTIAL_REPAIR_REQUIRED": [
+            "N07-07",
+            "N07-08",
+            "N07-10"
+          ]
+        },
+        "interpretation": "The original report bodies describe historical candidate07 defects. The separate dispositions are producer assertions, not current source findings or verified repairs."
+      },
+      "evidence": {
+        "expected": 3,
+        "present": 3,
+        "ids": [
+          "E06-01-A",
+          "E06-01-B",
+          "E06-01-C"
+        ],
+        "titlesFullBodiesAndOriginalLineRangesPreserved": true,
+        "currentEvidenceClaimsSupplied": true,
+        "currentEvidenceClaimsVerifiedAgainstSource": false
+      },
+      "originalAbsolutePathProvenancePreserved": false,
+      "relativeFileSuffixesPreserved": true
+    },
+    "audit08Findings": {
+      "expected": 6,
+      "present": 6,
+      "ids": [
+        "Native08-1",
+        "Native08-2",
+        "Native08-3",
+        "Native08-4",
+        "Evidence08-1",
+        "Evidence08-2"
+      ],
+      "completeObligationRecords": false,
+      "detail": "All six are named separately. None reproduces the governing full finding body or original line range. The four Native records supply only an ID, shortened title, relative file and closure assertion; the two Evidence records additionally provide current source-evidence claims."
+    },
+    "settled09Defects": {
+      "expected": 5,
+      "present": 5,
+      "ids": [
+        "09-S1",
+        "09-S2",
+        "09-S3",
+        "09-S4",
+        "09-S5"
+      ],
+      "completeObligationRecords": false,
+
+[Showing lines 1-110 of 538. Use :111 to continue]

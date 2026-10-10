@@ -1,0 +1,55 @@
+import { expect } from '@playwright/test'
+
+/**
+ * Executes portable network inspection across all page frames.
+ * Records frame evaluation rejections at arrival without mutating Error objects.
+ * Throws the chronological primary error if any frame fails.
+ */
+export async function executePortableNetworkInspection({
+  page,
+  socketAttempts,
+  httpAttempts,
+  errors,
+  frameSuccesses,
+  frameFailures,
+  recordArrival,
+  getPrimaryError,
+  rawDiagnostics,
+  handle,
+}) {
+  for (const frame of page.frames()) {
+    try {
+      const sockets = await frame.evaluate(() => window.__releaseSockets || [])
+      socketAttempts.push(...sockets)
+      frameSuccesses.push(frame.url())
+    } catch (fErr) {
+      const rawError = fErr instanceof Error ? fErr : new Error(String(fErr))
+      const frameUrl = frame.url()
+      frameFailures.push({ url: frameUrl, error: rawError.message, rawError })
+      if (typeof recordArrival === 'function') {
+        recordArrival('portable:frame', rawError, { frameUrl })
+      }
+    }
+  }
+
+  const currentDiag = rawDiagnostics()
+  if (handle) {
+    handle.diagnostics = currentDiag
+  }
+
+  if (frameFailures.length > 0) {
+    const primary = typeof getPrimaryError === 'function' ? getPrimaryError() : null
+    throw primary || frameFailures[0].rawError
+  }
+
+  expect(socketAttempts).toEqual([])
+  expect(httpAttempts).toEqual([])
+  expect(errors).toEqual([])
+
+  return {
+    protocol: currentDiag.protocol,
+    httpAttempts: [...httpAttempts],
+    socketAttempts: [...socketAttempts],
+    errors: [...errors],
+  }
+}

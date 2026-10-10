@@ -1,0 +1,202 @@
+      {
+        "file": "tests/e2e/education/release-game-fixtures.js",
+        "exactCompleteContentRanges": [
+          "1-40",
+          "41-80"
+        ],
+        "EOFContentLine": 80,
+        "EOFMarker": "gameCases final brace; reader extent81 includes terminal empty line",
+        "fullBodyAndOmissionsExpanded": true,
+        "attributableReadRequests": [
+          ":1-180",
+          ":1-40:raw",
+          ":41-95:raw",
+          ":76-90:raw"
+        ],
+        "expandedLoadBearingDefinitions": "gameFixture, deckWith, gameCases plus the referenced registry, shared defaults, question factory and question-shape bodies were read."
+      },
+      {
+        "file": "tests/e2e/education/release-content-fields.js",
+        "exactCompleteContentRanges": [
+          "1-100",
+          "101-158"
+        ],
+        "EOFContentLine": 158,
+        "EOFMarker": "reachable final brace; reader extent159 includes terminal empty line",
+        "fullBodyAndOmissionsExpanded": true,
+        "attributableReadRequests": [
+          ":1-180",
+          ":1-100:raw",
+          ":101-180:raw",
+          ":149-175:raw"
+        ],
+        "expandedLoadBearingDefinitions": "Full withPresent/withPortable, setup/read/reload/contentFixture and control bodies; actual fixture API/editor/default data definitions used by these bodies were inspected."
+      }
+    ],
+    "completeIntegrationReads": [
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-evidence.js",
+        "contentRanges": [
+          "1-198"
+        ],
+        "request": ":1-199",
+        "EOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+        "contentRanges": [
+          "1-150"
+        ],
+        "request": ":1-160",
+        "EOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "contentRanges": [
+          "1-171"
+        ],
+        "request": ":1-199",
+        "EOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+        "contentRanges": [
+          "1-120"
+        ],
+        "request": ":1-199",
+        "EOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-live-root-observation.js",
+        "contentRanges": [
+          "1-157"
+        ],
+        "request": ":1-170:raw",
+        "EOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation.js",
+        "contentRanges": [
+          "1-152"
+        ],
+        "request": ":1-180:raw",
+        "EOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+        "contentRanges": [
+          "1-93"
+        ],
+        "request": ":1-110:raw",
+        "EOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+        "contentRanges": [
+          "1-163"
+        ],
+        "request": ":1-165:raw",
+        "EOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-snapshot.js",
+        "contentRanges": [
+          "1-106"
+        ],
+        "request": ":1-115:raw",
+        "EOF": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js",
+        "contentRanges": [
+          "1-95"
+        ],
+        "request": ":1-145",
+        "EOF": true
+      }
+    ],
+    "additionalOwnerReads": [
+      {
+        "file": "shared/src/education/game-defaults.js",
+        "requests": [
+          ":1-180",
+          ":1-169:raw",
+          ":170-310:raw"
+        ],
+        "fullBodyAndEOF": true,
+        "expandedInitialDeclarationReadOmissions": true,
+        "finalDefinition": "createDefaultGameConfig validates isGameSubtype and returns factories[type](); module.exports follows."
+      },
+      {
+        "file": "shared/src/education/game-registry.js",
+        "requests": [
+          ":1-180:raw"
+        ],
+        "fullBodyAndEOF": true,
+        "finalDefinition": "module.exports = { GAME_CATALOG, CANONICAL_GAME_TYPES, isGameSubtype, getGameCapabilities }"
+      },
+      {
+        "file": "shared/src/education/question-factory.js",
+        "requests": [
+          ":1-170:raw"
+        ],
+        "fullBodyAndEOF": true,
+        "finalDefinition": "module.exports = { createCanonicalQuestion }"
+      },
+      {
+        "file": "shared/src/education/question-shape.js",
+        "requests": [
+          ":1-185:raw"
+        ],
+        "fullBodyAndEOF": true,
+        "loadBearingSymbols": [
+          "QUESTION_KINDS",
+          "cloneValue"
+        ]
+      },
+      {
+        "file": "shared/src/education/presets/simulations.js",
+        "requests": [
+          ":1-170:raw"
+        ],
+        "fullBodyAndEOF": true,
+        "limit": "Preset construction/export bodies read; simulator content source-data, migration-validation and preset-factory dependency graph is not claimed recursively inspected."
+      },
+      {
+        "file": "client/src/data/element-defaults.js",
+        "requests": [
+          ":1-170:raw",
+          ":171-300:raw"
+        ],
+        "fullBodyAndEOF": true,
+        "loadBearingSymbols": [
+          "All nine CONTENT_TYPES default objects",
+          "ELEMENT_DEFAULTS",
+          "DEFAULT_POSITIONS"
+        ]
+      },
+      {
+        "file": "client/src/constants/game-element-types-constants.js",
+        "requests": [
+          ":1-160:raw"
+        ],
+        "fullBodyAndEOF": true,
+        "loadBearingSymbols": [
+          "buildGameElementDefaults"
+        ],
+        "limit": "Its revealjs-shared package import is disclosed; this component does not claim external package-resolution/runtime equivalence."
+      },
+      {
+        "file": "tests/e2e/education/release-observations.js",
+        "requests": [
+          ":1-180:raw"
+        ],
+        "fullBodyAndEOF": true,
+        "limit": "observe's full body read; loadRequiredCells and recordScenario owners are not counted as this component's coverage."
+      },
+      {
+        "file": "tests/e2e/education/game-surfaces-release.spec.js",
+        "requests": [
+          ":1-125:raw"
+
+[Showing lines 411-610 of 722. Use :611 to continue]

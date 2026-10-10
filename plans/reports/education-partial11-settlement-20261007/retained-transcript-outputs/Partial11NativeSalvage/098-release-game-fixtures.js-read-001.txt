@@ -1,0 +1,80 @@
+import registry from '../../../shared/src/education/game-registry.js'
+import defaults from '../../../shared/src/education/game-defaults.js'
+import shape from '../../../shared/src/education/question-shape.js'
+import factory from '../../../shared/src/education/question-factory.js'
+import simulations from '../../../shared/src/education/presets/simulations.js'
+const { CANONICAL_GAME_TYPES } = registry
+const { GAME_BASE_DEFAULTS, createDefaultGameConfig } = defaults
+const { QUESTION_KINDS } = shape
+const { createCanonicalQuestion } = factory
+const { SIMULATION_PRESETS } = simulations
+export { CANONICAL_GAME_TYPES, QUESTION_KINDS, SIMULATION_PRESETS }
+
+export function gameFixture(gameType, questionKind = null) {
+  const config = createDefaultGameConfig(gameType)
+  if (gameType === 'quiz')
+    config.questions = [
+      createCanonicalQuestion({
+        id: `release-${questionKind || 'single-choice'}`,
+        kind: questionKind || 'single-choice',
+        prompt: `Authored ${questionKind || 'single-choice'} question`,
+        points: 10,
+        feedback: {
+          correct: 'Authored success',
+          incorrect: 'Authored failure',
+          explanation: 'Teacher explanation',
+        },
+      }),
+    ]
+  if (['name-picker', 'lucky-wheel'].includes(gameType)) {
+    config.items = [{ id: 'release-only-choice', label: 'Authored winner', weight: 3 }]
+    config.animationDuration = 0
+    config.weighted = true
+  }
+  if (gameType === 'name-picker') config.pickerMode = 'button'
+  if (gameType === 'countdown') config.durationSeconds = 1
+  if (gameType === 'memory') {
+    config.shuffleOnStart = false
+    config.mismatchDelayMs = 100
+  }
+  if (gameType === 'scattergories') {
+    config.letterMode = 'manual'
+    config.letter = 'A'
+    config.categories = [{ id: 'food', label: 'Food' }]
+  }
+  if (gameType === 'relay-race') {
+    config.questionsPerRound = 1
+    config.shuffleTeams = false
+  }
+  if (gameType === 'trivia-champ') {
+    config.rounds[0].mode = 'buzzer'
+    config.lightningRound.enabled = true
+    config.jackpotRound.enabled = true
+  }
+  return {
+    ...GAME_BASE_DEFAULTS,
+    id: `release-${gameType}`,
+    gameType,
+    x: 80,
+    y: 40,
+    width: 800,
+    height: 460,
+    [gameType]: config,
+  }
+}
+
+export function deckWith(elements, id = 'release-slide') {
+  return {
+    title: 'Education release authored content',
+    theme: 'white',
+    transition: 'none',
+    resolution: { width: 960, height: 540 },
+    slides: [{ id, background: { type: 'color', color: '#ffffff' }, elements }],
+  }
+}
+
+export function gameCases() {
+  return CANONICAL_GAME_TYPES.flatMap((type) =>
+    type === 'quiz' ? QUESTION_KINDS.map((kind) => ({ type, kind })) : [{ type, kind: null }]
+  )
+}

@@ -1,0 +1,171 @@
+const { isGameSubtype } = require('./game-registry.js')
+
+const GAME_BASE_DEFAULTS = Object.freeze({
+  type: 'game',
+  gameType: 'name-picker',
+  width: 640,
+  height: 480,
+  zIndex: 5,
+  backgroundColor: '#1a1a2e',
+  accentColor: '#6366f1',
+  fontFamily: 'sans-serif',
+  showSoundEffects: true,
+})
+
+function cloneGameConfig(value) {
+  return structuredClone(value)
+}
+function sampleQuestion(id = 'question-1', count = 2, points = 10) {
+  const options = Array.from({ length: count }, (_, i) => ({
+    id: `${id}-option-${i + 1}`,
+    text: i === 0 ? 'Paris' : ['Rome', 'London', 'Berlin'][i - 1],
+  }))
+  return {
+    id,
+    kind: 'single-choice',
+    prompt: 'What is the capital of France?',
+    points,
+    timeLimit: 30,
+    options,
+    answerKey: { optionId: options[0].id },
+    feedback: {
+      correct: 'Correct!',
+      incorrect: 'Try again.',
+      explanation: 'Paris is the capital of France.',
+    },
+  }
+}
+function teams(scoreboard = false) {
+  return ['Blue', 'Red'].map((name, i) => ({
+    id: `team-${i + 1}`,
+    name,
+    color: ['#2196F3', '#FF5722'][i],
+    ...(scoreboard ? { initialScore: 0 } : {}),
+  }))
+}
+function pickerItems() {
+  return Array.from({ length: 8 }, (_, i) => ({
+    id: `item-${i + 1}`,
+    label: `Học sinh ${i + 1}`,
+    weight: 1,
+  }))
+}
+const text = (value) => ({ type: 'text', text: value })
+const factories = {
+  'name-picker': () => ({
+    pickerMode: 'wheel',
+    items: pickerItems(),
+    wheelSegments: 8,
+    wheelColors: [
+      '#FF5722',
+      '#2196F3',
+      '#4CAF50',
+      '#FFC107',
+      '#9C27B0',
+      '#00BCD4',
+      '#FF9800',
+      '#795548',
+    ],
+    diceCount: 2,
+    weighted: false,
+    excludeAfterPick: true,
+    animationDuration: 2500,
+    showConfetti: true,
+  }),
+  'hot-potato': () => ({
+    title: 'Hot Potato Quiz',
+    questions: [sampleQuestion()],
+    allowLate: false,
+    showLeaderboard: true,
+    shuffleQuestions: false,
+  }),
+  jeopardy: () => ({
+    title: 'Jeopardy',
+    teams: teams(),
+    categories: [
+      {
+        id: 'category-1',
+        title: 'Geography',
+        questions: [sampleQuestion('cell-100', 2, 100), sampleQuestion('cell-200', 2, 200)],
+      },
+    ],
+    dailyDouble: [],
+    showTimer: true,
+    timerDuration: 30,
+    negativePoints: false,
+    wagerLimit: 1000,
+  }),
+  'four-corners': () => ({
+    title: 'Four Corners',
+    questions: [sampleQuestion('question-1', 4)],
+    cornerCount: 4,
+    eliminateMode: 'wrong',
+    showTimer: true,
+    timerDuration: 30,
+  }),
+  'relay-race': () => ({
+    title: 'Relay Race',
+    teams: teams(),
+    questions: [sampleQuestion()],
+    questionsPerRound: 4,
+    shuffleTeams: true,
+    passOnWrong: true,
+    timerDuration: 30,
+  }),
+  'trivia-champ': () => ({
+    title: 'Trivia Championship',
+    teams: teams(),
+    questions: [sampleQuestion()],
+    rounds: [
+      {
+        id: 'round-1',
+        name: 'Round 1',
+        mode: 'individual',
+        questionIds: ['question-1'],
+        timeLimit: 30,
+      },
+    ],
+    buzzPoints: 10,
+    lightningRound: { enabled: false, timePerQ: 10 },
+    jackpotRound: { enabled: false, multiplier: 2 },
+  }),
+  scattergories: () => ({
+    title: 'Scattergories',
+    timePerRound: 60,
+    letterMode: 'random',
+    letter: 'A',
+    categories: ['Food', 'Animal', 'Country', 'Name', 'Thing', 'Color'].map((label, i) => ({
+      id: `category-${i + 1}`,
+      label,
+    })),
+    teams: teams(),
+    scoring: 'unique',
+  }),
+  poll: () => ({
+    title: 'Live Poll',
+    prompt: 'What do you think?',
+    options: [
+      { id: 'option-a', text: 'Option A' },
+      { id: 'option-b', text: 'Option B' },
+    ],
+    showResults: true,
+    allowVoteChange: true,
+    timerDuration: 30,
+  }),
+  'word-cloud': () => ({
+    title: 'Word Cloud',
+    prompt: 'Share one word or short phrase',
+    maxPhraseLength: 40,
+    maxSubmissionsPerPlayer: 5,
+    displayLimit: 50,
+    timerDuration: 30,
+  }),
+  matching: () => ({
+    title: 'Matching',
+    prompt: 'Match each item to its answer',
+    pairs: [
+      { promptId: 'prompt-1', prompt: 'France', targetId: 'target-1', target: 'Paris' },
+      { promptId: 'prompt-2', prompt: 'Italy', targetId: 'target-2', target: 'Rome' },
+    ],
+
+[Showing lines 1-169 of 284. Use :170 to continue]

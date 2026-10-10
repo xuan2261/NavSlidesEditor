@@ -1,0 +1,442 @@
+import SlideContent from './controllers/slidecontent'
+import SlideNumber from './controllers/slidenumber'
+import JumpToSlide from './controllers/jumptoslide'
+import Backgrounds from './controllers/backgrounds'
+import AutoAnimate from './controllers/autoanimate'
+import ScrollView from './controllers/scrollview'
+import PrintView from './controllers/printview'
+import Fragments from './controllers/fragments'
+import Overview from './controllers/overview'
+import Keyboard from './controllers/keyboard'
+import Location from './controllers/location'
+import Controls from './controllers/controls'
+import Progress from './controllers/progress'
+import Pointer from './controllers/pointer'
+import Plugins from './controllers/plugins'
+import Overlay from './controllers/overlay'
+import Touch from './controllers/touch'
+import Focus from './controllers/focus'
+import Notes from './controllers/notes'
+import Playback from './components/playback'
+import { defaultConfig } from './config.ts'
+import * as Util from './utils/util'
+import * as Device from './utils/device'
+import {
+	SLIDES_SELECTOR,
+	HORIZONTAL_SLIDES_SELECTOR,
+	VERTICAL_SLIDES_SELECTOR,
+	POST_MESSAGE_METHOD_BLACKLIST
+} from './utils/constants'
+import { version as VERSION } from '../package.json';
+export { VERSION };
+
+/**
+ * reveal.js
+ * https://revealjs.com
+ * MIT licensed
+ *
+ * Copyright (C) 2011-2026 Hakim El Hattab, https://hakim.se
+ */
+export default function( revealElement, options ) {
+
+	// Support initialization with no args, one arg
+	// [options] or two args [revealElement, options]
+	if( arguments.length < 2 ) {
+		options = arguments[0];
+		revealElement = document.querySelector( '.reveal' );
+	}
+
+	const Reveal = {};
+
+	// Configuration defaults, can be overridden at initialization time
+	let config = {},
+
+		// Flags if initialize() has been invoked for this reveal instance
+		initialized = false,
+
+		// Flags if reveal.js is loaded (has dispatched the 'ready' event)
+		ready = false,
+
+		// The horizontal and vertical index of the currently active slide
+		indexh,
+		indexv,
+
+		// The previous and current slide HTML elements
+		previousSlide,
+		currentSlide,
+
+		// Remember which directions that the user has navigated towards
+		navigationHistory = {
+			hasNavigatedHorizontally: false,
+			hasNavigatedVertically: false
+		},
+
+		// Slides may have a data-state attribute which we pick up and apply
+		// as a class to the body. This list contains the combined state of
+		// all current slides.
+		state = [],
+
+		// The current scale of the presentation (see width/height config)
+		scale = 1,
+
+		// CSS transform that is currently applied to the slides container,
+		// split into two groups
+		slidesTransform = { layout: '', overview: '' },
+
+		// Cached references to DOM elements
+		dom = {},
+
+		// Flags if the interaction event listeners are bound
+		eventsAreBound = false,
+
+		// The current slide transition state; idle or running
+		transition = 'idle',
+
+		// The current auto-slide duration
+		autoSlide = 0,
+
+		// Auto slide properties
+		autoSlidePlayer,
+		autoSlideTimeout = 0,
+		autoSlideStartTime = -1,
+		autoSlidePaused = false,
+
+		// Controllers for different aspects of our presentation. They're
+		// all given direct references to this Reveal instance since there
+		// may be multiple presentations running in parallel.
+		slideContent = new SlideContent( Reveal ),
+		slideNumber = new SlideNumber( Reveal ),
+		jumpToSlide = new JumpToSlide( Reveal ),
+		autoAnimate = new AutoAnimate( Reveal ),
+		backgrounds = new Backgrounds( Reveal ),
+		scrollView = new ScrollView( Reveal ),
+		printView = new PrintView( Reveal ),
+		fragments = new Fragments( Reveal ),
+		overview = new Overview( Reveal ),
+		keyboard = new Keyboard( Reveal ),
+		location = new Location( Reveal ),
+		controls = new Controls( Reveal ),
+		progress = new Progress( Reveal ),
+		pointer = new Pointer( Reveal ),
+		plugins = new Plugins( Reveal ),
+		overlay = new Overlay( Reveal ),
+		focus = new Focus( Reveal ),
+		touch = new Touch( Reveal ),
+		notes = new Notes( Reveal );
+
+	/**
+	 * Starts up the presentation.
+	 */
+	function initialize( initOptions ) {
+
+		if( !revealElement ) throw 'Unable to find presentation root (<div class="reveal">).';
+
+		if( initialized ) throw 'Reveal.js has already been initialized.';
+
+		initialized = true;
+
+		// Cache references to key DOM elements
+		dom.wrapper = revealElement;
+		dom.slides = revealElement.querySelector( '.slides' );
+
+		if( !dom.slides ) throw 'Unable to find slides container (<div class="slides">).';
+
+		// Compose our config object in order of increasing precedence:
+		// 1. Default reveal.js options
+		// 2. Options provided via Reveal.configure() prior to
+		//    initialization
+		// 3. Options passed to the Reveal constructor
+		// 4. Options passed to Reveal.initialize
+		// 5. Query params
+		config = { ...defaultConfig, ...config, ...options, ...initOptions, ...Util.getQueryHash() };
+
+		// Legacy support for the ?print-pdf query
+		if( /print-pdf/gi.test( window.location.search ) ) {
+			config.view = 'print';
+		}
+
+		setViewport();
+
+		// Force a layout when the whole page, incl fonts, has loaded
+		window.addEventListener( 'load', layout, false );
+
+		// Register plugins and load dependencies, then move on to #start()
+		plugins.load( config.plugins, config.dependencies ).then( start );
+
+		return new Promise( resolve => Reveal.on( 'ready', resolve ) );
+
+	}
+
+	/**
+	 * Encase the presentation in a reveal.js viewport. The
+	 * extent of the viewport differs based on configuration.
+	 */
+	function setViewport() {
+
+		// Embedded decks use the reveal element as their viewport
+		if( config.embedded === true ) {
+			dom.viewport = Util.closest( revealElement, '.reveal-viewport' ) || revealElement;
+		}
+		// Full-page decks use the body as their viewport
+		else {
+			dom.viewport = document.body;
+			document.documentElement.classList.add( 'reveal-full-page' );
+		}
+
+		dom.viewport.classList.add( 'reveal-viewport' );
+
+	}
+
+	/**
+	 * Starts up reveal.js by binding input events and navigating
+	 * to the current URL deeplink if there is one.
+	 */
+	function start() {
+
+		// Don't proceed if this instance has been destroyed
+		if( initialized === false ) return;
+
+		ready = true;
+
+		// Remove slides hidden with data-visibility
+		removeHiddenSlides();
+
+		// Make sure we've got all the DOM elements we need
+		setupDOM();
+
+		// Listen to messages posted to this window
+		setupPostMessage();
+
+		// Prevent the slides from being scrolled out of view
+		setupScrollPrevention();
+
+		// Adds bindings for fullscreen mode
+		setupFullscreen();
+
+		// Resets all vertical slides so that only the first is visible
+		resetVerticalSlides();
+
+		// Updates the presentation to match the current configuration values
+		configure();
+
+		// Create slide backgrounds
+		backgrounds.update( true );
+
+		// Activate the print/scroll view if configured
+		activateInitialView();
+
+		// Read the initial hash
+		location.readURL();
+
+		// Notify listeners that the presentation is ready but use a 1ms
+		// timeout to ensure it's not fired synchronously after #initialize()
+		setTimeout( () => {
+			// Enable transitions now that we're loaded
+			dom.slides.classList.remove( 'no-transition' );
+
+			dom.wrapper.classList.add( 'ready' );
+
+			dispatchEvent({
+				type: 'ready',
+				data: {
+					indexh,
+					indexv,
+					currentSlide
+				}
+			});
+		}, 1 );
+
+	}
+
+	/**
+	 * Activates the correct reveal.js view based on our config.
+	 * This is only invoked once during initialization.
+	 */
+	function activateInitialView() {
+
+		const activatePrintView = config.view === 'print';
+		const activateScrollView = config.view === 'scroll' || config.view === 'reader';
+
+		if( activatePrintView || activateScrollView ) {
+
+			if( activatePrintView ) {
+				removeEventListeners();
+			}
+			else {
+				touch.unbind();
+			}
+
+			// Avoid content flickering during layout
+			dom.viewport.classList.add( 'loading-scroll-mode' );
+
+			if( activatePrintView ) {
+				// The document needs to have loaded for the PDF layout
+				// measurements to be accurate
+				if( document.readyState === 'complete' ) {
+					printView.activate();
+				}
+				else {
+					window.addEventListener( 'load', () => printView.activate() );
+				}
+			}
+			else {
+				scrollView.activate();
+			}
+		}
+
+	}
+
+	/**
+	 * Removes all slides with data-visibility="hidden". This
+	 * is done right before the rest of the presentation is
+	 * initialized.
+	 *
+	 * If you want to show all hidden slides, initialize
+	 * reveal.js with showHiddenSlides set to true.
+	 */
+	function removeHiddenSlides() {
+
+		if( !config.showHiddenSlides ) {
+			Util.queryAll( dom.wrapper, 'section[data-visibility="hidden"]' ).forEach( slide => {
+				const parent = slide.parentNode;
+
+				// If this slide is part of a stack and that stack will be
+				// empty after removing the hidden slide, remove the entire
+				// stack
+				if( parent.childElementCount === 1 && /section/i.test( parent.nodeName ) ) {
+					parent.remove();
+				}
+				else {
+					slide.remove();
+				}
+
+			} );
+		}
+
+	}
+
+	/**
+	 * Finds and stores references to DOM elements which are
+	 * required by the presentation. If a required element is
+	 * not found, it is created.
+	 */
+	function setupDOM() {
+
+		// Prevent transitions while we're loading
+		dom.slides.classList.add( 'no-transition' );
+
+		if( Device.isMobile ) {
+			dom.wrapper.classList.add( 'no-hover' );
+		}
+		else {
+			dom.wrapper.classList.remove( 'no-hover' );
+		}
+
+		backgrounds.render();
+		slideNumber.render();
+		jumpToSlide.render();
+		controls.render();
+		progress.render();
+		notes.render();
+
+		// Overlay graphic which is displayed during the paused mode
+		dom.pauseOverlay = Util.createSingletonNode( dom.wrapper, 'div', 'pause-overlay', config.controls ? '<button class="resume-button">Resume presentation</button>' : null );
+
+		dom.statusElement = createStatusElement();
+
+		dom.wrapper.setAttribute( 'role', 'application' );
+	}
+
+	/**
+	 * Creates a hidden div with role aria-live to announce the
+	 * current slide content. Hide the div off-screen to make it
+	 * available only to Assistive Technologies.
+	 *
+	 * @return {HTMLElement}
+	 */
+	function createStatusElement() {
+
+		let statusElement = dom.wrapper.querySelector( '.aria-status' );
+		if( !statusElement ) {
+			statusElement = document.createElement( 'div' );
+			statusElement.style.position = 'absolute';
+			statusElement.style.height = '1px';
+			statusElement.style.width = '1px';
+			statusElement.style.overflow = 'hidden';
+			statusElement.style.clip = 'rect( 1px, 1px, 1px, 1px )';
+			statusElement.classList.add( 'aria-status' );
+			statusElement.setAttribute( 'aria-live', 'polite' );
+			statusElement.setAttribute( 'aria-atomic','true' );
+			dom.wrapper.appendChild( statusElement );
+		}
+		return statusElement;
+
+	}
+
+	/**
+	 * Announces the given text to screen readers.
+	 */
+	function announceStatus( value ) {
+
+		dom.statusElement.textContent = value;
+
+	}
+
+	/**
+	 * Converts the given HTML element into a string of text
+	 * that can be announced to a screen reader. Hidden
+	 * elements are excluded.
+	 */
+	function getStatusText( node ) {
+
+		let text = '';
+
+		// Text node
+		if( node.nodeType === 3 ) {
+			text += node.textContent.trim();
+		}
+		// Element node
+		else if( node.nodeType === 1 ) {
+
+			let isAriaHidden = node.getAttribute( 'aria-hidden' );
+			let isDisplayHidden = window.getComputedStyle( node )['display'] === 'none';
+			if( isAriaHidden !== 'true' && !isDisplayHidden ) {
+
+				// Capture alt text from img and video elements
+				if( node.tagName === 'IMG' || node.tagName === 'VIDEO' ) {
+					let altText = node.getAttribute( 'alt' );
+					if( altText ) {
+						text += ensurePunctuation( altText );
+					}
+				}
+
+				Array.from( node.childNodes ).forEach( child => {
+					text += getStatusText( child );
+				} );
+
+				// Add period after block-level text elements to improve
+				// screen reader experience
+				const textElements = ['P', 'DIV', 'UL', 'OL', 'LI', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE'];
+				if( textElements.includes( node.tagName ) && text.trim() !== '' ) {
+					text = ensurePunctuation( text );
+				}
+
+			}
+
+		}
+
+		text = text.trim();
+
+		return text === '' ? '' : text + ' ';
+
+	}
+
+	/**
+	 * Ensures text ends with proper punctuation by adding a period
+	 * if it doesn't already end with punctuation.
+	 */
+	function ensurePunctuation( text ) {
+
+		const trimmedText = text.trim();
+
+[Showing lines 1-440 of 2973. Use :441 to continue]

@@ -1,0 +1,163 @@
+import { OWNER_UI_OBSERVATION_INIT_SCRIPT } from './pending-round-lifecycle-ui-evidence.js'
+import {
+  ROOT_INSTANCE_INIT_SCRIPT,
+  ROOT_SNAPSHOT_INIT_SCRIPT,
+  COLLECT_PAIRS_INIT_SCRIPT,
+} from './pending-round-lifecycle-native-snapshot.js'
+import {
+  MUTATION_PARSER_INIT_SCRIPT,
+  HISTORY_FILTER_INIT_SCRIPT,
+  ACTION_RECORDER_INIT_SCRIPT,
+} from './pending-round-lifecycle-native-history.js'
+
+export const PASSIVE_OBSERVATION_INIT_SCRIPT = `
+${OWNER_UI_OBSERVATION_INIT_SCRIPT};
+${ROOT_INSTANCE_INIT_SCRIPT};
+${ROOT_SNAPSHOT_INIT_SCRIPT};
+${COLLECT_PAIRS_INIT_SCRIPT};
+${MUTATION_PARSER_INIT_SCRIPT};
+${HISTORY_FILTER_INIT_SCRIPT};
+${ACTION_RECORDER_INIT_SCRIPT};
+(() => {
+  const tInitScript = performance.now();
+  window.__nsDocumentId = String(performance.timeOrigin || tInitScript);
+  const retainedStore = [];
+  const privateStore = [];
+  window.__nsLifecycleEvents = retainedStore;
+  window.__nsRecordedPackets = [];
+  window.__nsPacketSequence = 0;
+  window.__nsLifecycleRecorderReady = false;
+  window.__nsLifecycleRecorderError = null;
+  const eventPackets = new WeakMap();
+  const completedEvents = new WeakMap();
+  let lastLifecycleTriggerTime = tInitScript;
+  let eventSeq = 0;
+
+  const serializeRecorderError = (e, ph) => {
+    if (!e) return null;
+    const isObj = typeof e === 'object';
+    const cause = isObj && e.cause ? serializeRecorderError(e.cause, ph + ':cause') : null;
+    const obsOrder = (isObj && typeof e.obsOrder === 'number') ? e.obsOrder : (window.__nsObsOrder = (window.__nsObsOrder || 0) + 1);
+    return {
+      origin: 'browser', phase: ph, name: (isObj && e.name) || 'Error',
+      message: (isObj && e.message) || String(e), stack: (isObj && e.stack) || null, cause,
+      documentId: window.__nsDocumentId || null, timeOrigin: performance.timeOrigin, url: window.location.href,
+      obsOrder,
+    };
+  };
+
+  window.__nsCheckStoreHealth = () => {
+    if (!Array.isArray(window.__nsLifecycleEvents) || window.__nsLifecycleEvents !== retainedStore) {
+      return { healthy: false, error: 'Lifecycle event store replaced or missing' };
+    }
+    if (retainedStore.length !== eventSeq || retainedStore.length !== privateStore.length) {
+      return { healthy: false, error: 'Lifecycle event store count diverged from bookkeeping' };
+    }
+    for (let i = 0; i < privateStore.length; i++) {
+      const p = privateStore[i];
+      const r = retainedStore[i];
+      if (!r || typeof r !== 'object') {
+        return { healthy: false, error: 'Lifecycle event invalid at index ' + i };
+      }
+      if (r.eventSeq !== p.eventSeq || r.type !== p.type) {
+        return { healthy: false, error: 'Lifecycle event type or sequence corrupted at index ' + i };
+      }
+      if (r.tMin !== p.tMin || r.tMax !== p.tMax || r.time !== p.time) {
+        return { healthy: false, error: 'Lifecycle event timing bounds corrupted at index ' + i };
+      }
+      if (r.visibilityState !== p.visibilityState) {
+        return { healthy: false, error: 'Lifecycle event visibilityState corrupted at index ' + i };
+      }
+      if ((r.domain ?? null) !== (p.domain ?? null)) {
+        return { healthy: false, error: 'Lifecycle event domain corrupted at index ' + i };
+      }
+      if (JSON.stringify(r.detail ?? null) !== JSON.stringify(p.detail ?? null)) {
+        return { healthy: false, error: 'Lifecycle event detail content corrupted at index ' + i };
+      }
+    }
+    return { healthy: true, error: null };
+  };
+
+  const record = (type, detail, tMin, tMax) => {
+    if (!Array.isArray(window.__nsLifecycleEvents) || window.__nsLifecycleEvents !== retainedStore) {
+      window.__nsLifecycleRecorderReady = false;
+      if (!window.__nsLifecycleRecorderError) {
+        window.__nsLifecycleRecorderError = {
+          origin: 'browser', phase: 'recorder:store', name: 'StoreIntegrityError',
+          message: 'Retained lifecycle event store was replaced or missing', stack: null, cause: null,
+          documentId: window.__nsDocumentId || null, timeOrigin: performance.timeOrigin, url: window.location.href,
+          obsOrder: (window.__nsObsOrder = (window.__nsObsOrder || 0) + 1),
+        };
+      }
+      return;
+    }
+    const seq = ++eventSeq;
+    const tMinVal = typeof tMin === 'number' ? tMin : performance.now();
+    const tMaxVal = typeof tMax === 'number' ? tMax : performance.now();
+    const visState = document.visibilityState;
+    const detailClone = detail ? JSON.parse(JSON.stringify(detail)) : null;
+    const domainVal = (detail && typeof detail === 'object' && detail.domain) || null;
+    const entry = {
+      eventSeq: seq,
+      type,
+      detail,
+      domain: domainVal,
+      tMin: tMinVal,
+      tMax: tMaxVal,
+      time: tMaxVal,
+      visibilityState: visState,
+    };
+    const privateEntry = {
+      eventSeq: seq,
+      type,
+      detail: detailClone,
+      domain: domainVal,
+      tMin: tMinVal,
+      tMax: tMaxVal,
+      time: tMaxVal,
+      visibilityState: visState,
+    };
+    privateStore.push(privateEntry);
+    retainedStore.push(entry);
+  };
+
+  const observer = new MutationObserver((mutations) => {
+    window.__nsProcessClassMutations?.(mutations, lastLifecycleTriggerTime, record);
+  });
+
+  let setupSucceeded = false;
+  try {
+    observer.observe(document, { attributes: true, subtree: true, attributeFilter: ['class'], attributeOldValue: true });
+    setupSucceeded = true;
+  } catch (err) {
+    window.__nsLifecycleRecorderError = serializeRecorderError(err, 'recorder:setup');
+    record('observer-error', window.__nsLifecycleRecorderError);
+  }
+
+  const advanceTrigger = (eventTime) => {
+    try {
+      const pending = observer.takeRecords();
+      if (pending?.length) window.__nsProcessClassMutations?.(pending, lastLifecycleTriggerTime, record);
+    } catch (e) {
+      record('observer-drain-error', { message: e?.message || String(e) });
+    }
+    lastLifecycleTriggerTime = eventTime;
+  };
+
+  for (const name of ['readystatechange', 'DOMContentLoaded']) {
+    document.addEventListener(name, () => advanceTrigger(performance.now()), true);
+  }
+  document.addEventListener('visibilitychange', () => {
+    const now = performance.now();
+    advanceTrigger(now);
+    record('visibilitychange', { state: document.visibilityState }, now, now);
+  }, true);
+  window.addEventListener('pagehide', () => record('pagehide', null), true);
+  window.addEventListener('pageshow', () => record('pageshow', null), true);
+  window.addEventListener('error', (event) => record('error', { message: event.message }), true);
+  if (window.Reveal?.on) window.Reveal.on('ready', () => advanceTrigger(performance.now()));
+
+  window.__nsSetupActionRecorder?.(eventPackets, completedEvents, record, advanceTrigger);
+  if (setupSucceeded) window.__nsLifecycleRecorderReady = true;
+})();
+`

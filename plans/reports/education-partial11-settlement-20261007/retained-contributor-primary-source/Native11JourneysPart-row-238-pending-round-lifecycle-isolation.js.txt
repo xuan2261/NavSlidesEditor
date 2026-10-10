@@ -1,0 +1,11 @@
+  evidence.stage('peerFinal', peerFinal)
+  assertPeerInvariance(frozenPeer, peerFinal)
+  await assertPeerUI(caseDef.gameType, r2)
+
+  return {
+    peerBefore,
+    primaryReset,
+    peerFinal,
+    resetBracket,
+  }
+}

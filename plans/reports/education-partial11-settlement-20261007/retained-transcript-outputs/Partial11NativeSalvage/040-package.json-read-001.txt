@@ -1,0 +1,128 @@
+{
+	"name": "reveal.js",
+	"version": "6.0.2",
+	"description": "The HTML Presentation Framework",
+	"homepage": "https://revealjs.com",
+	"subdomain": "revealjs",
+	"license": "MIT",
+	"main": "dist/reveal.js",
+	"module": "dist/reveal.mjs",
+	"types": "dist/reveal.d.ts",
+	"type": "module",
+	"files": [
+		"dist",
+		"css",
+		"js",
+		"LICENSE",
+		"README.md",
+		"index.html",
+		"demo.html"
+	],
+	"exports": {
+		".": {
+			"types": "./dist/reveal.d.ts",
+			"import": "./dist/reveal.mjs",
+			"require": "./dist/reveal.js",
+			"default": "./dist/reveal.js"
+		},
+		"./reveal.css": "./dist/reveal.css",
+		"./reset.css": "./dist/reset.css",
+		"./theme/*": "./dist/theme/*",
+		"./plugin/highlight/monokai.css": "./dist/plugin/highlight/monokai.css",
+		"./plugin/highlight": {
+			"types": "./dist/plugin/highlight.d.ts",
+			"import": "./dist/plugin/highlight.mjs",
+			"require": "./dist/plugin/highlight.js",
+			"default": "./dist/plugin/highlight.js"
+		},
+		"./plugin/markdown": {
+			"types": "./dist/plugin/markdown.d.ts",
+			"import": "./dist/plugin/markdown.mjs",
+			"require": "./dist/plugin/markdown.js",
+			"default": "./dist/plugin/markdown.js"
+		},
+		"./plugin/math": {
+			"types": "./dist/plugin/math.d.ts",
+			"import": "./dist/plugin/math.mjs",
+			"require": "./dist/plugin/math.js",
+			"default": "./dist/plugin/math.js"
+		},
+		"./plugin/notes": {
+			"types": "./dist/plugin/notes.d.ts",
+			"import": "./dist/plugin/notes.mjs",
+			"require": "./dist/plugin/notes.js",
+			"default": "./dist/plugin/notes.js"
+		},
+		"./plugin/search": {
+			"types": "./dist/plugin/search.d.ts",
+			"import": "./dist/plugin/search.mjs",
+			"require": "./dist/plugin/search.js",
+			"default": "./dist/plugin/search.js"
+		},
+		"./plugin/zoom": {
+			"types": "./dist/plugin/zoom.d.ts",
+			"import": "./dist/plugin/zoom.mjs",
+			"require": "./dist/plugin/zoom.js",
+			"default": "./dist/plugin/zoom.js"
+		}
+	},
+	"scripts": {
+		"dev": "npm run start",
+		"start": "vite",
+		"prepack": "npm run build",
+		"build:core": "tsc && vite build && vite build -c vite.config.styles.ts && node scripts/add-banner.js dist/reveal.js",
+		"build:es5": "npm run build && node scripts/build-es5.js",
+		"build:styles": "vite build -c vite.config.styles.ts",
+		"build": "tsc && vite build && vite build -c vite.config.styles.ts && vite build -c plugin/highlight/vite.config.ts && vite build -c plugin/markdown/vite.config.ts && vite build -c plugin/math/vite.config.ts && vite build -c plugin/notes/vite.config.ts && vite build -c plugin/search/vite.config.ts && vite build -c plugin/zoom/vite.config.ts && node scripts/add-banner.js dist/reveal.js",
+		"package": "node scripts/zip.js",
+		"test": "node scripts/test.js",
+		"react:build": "npm run --prefix react build",
+		"react:demo": "npm run --prefix react demo",
+		"react:test": "npm run --prefix react test"
+	},
+	"author": {
+		"name": "Hakim El Hattab",
+		"email": "hakim.elhattab@gmail.com",
+		"web": "https://hakim.se"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/hakimel/reveal.js.git"
+	},
+	"devEngines": {
+		"runtime": {
+			"name": "node",
+			"version": ">=22.12.0",
+			"onFail": "error"
+		}
+	},
+	"keywords": [
+		"reveal",
+		"slides",
+		"presentation"
+	],
+	"devDependencies": {
+		"esbuild": "^0.28.1",
+		"fitty": "^2.4.2",
+		"glob": "^13.0.6",
+		"highlight.js": "^11.11.1",
+		"jszip": "^3.10.1",
+		"marked": "^17.0.5",
+		"marked-smartypants": "^1.1.11",
+		"node-qunit-puppeteer": "^2.2.1",
+		"puppeteer": "^25.8.0",
+		"qunit": "^2.25.0",
+		"sass": "^1.98.0",
+		"typescript": "^6.0.2",
+		"vite": "^8.0.16",
+		"vite-plugin-dts": "^4.5.4"
+	},
+	"overrides": {
+		"@microsoft/api-extractor": {
+			"minimatch": "10.2.4"
+		},
+		"node-qunit-puppeteer": {
+			"puppeteer": "$puppeteer"
+		}
+	}
+}

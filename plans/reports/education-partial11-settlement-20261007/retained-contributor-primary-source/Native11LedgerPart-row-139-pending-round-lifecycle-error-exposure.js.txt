@@ -1,0 +1,17 @@
+    for (const e of entries) allList.push({ phase: e.phase, error: e.normalized, order: e.order })
+  }
+
+  if (!Array.isArray(primary.errorLedger)) {
+    primary.errorLedger = []
+    ledgerOwnedArrays.add(primary.errorLedger)
+  }
+  const ledList = primary.errorLedger
+  if (!ledgerOwnedArrays.has(ledList)) {
+    for (const e of entries) {
+      if (!ledList.includes(e.serialized)) ledList.push(e.serialized)
+    }
+  } else {
+    ledList.length = 0
+    for (const e of entries) ledList.push(e.serialized)
+  }
+}

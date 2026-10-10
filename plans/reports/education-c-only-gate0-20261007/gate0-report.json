@@ -1,0 +1,524 @@
+{
+  "kind": "GATE0_READ_ONLY_REPORT",
+  "date": "2026-10-07",
+  "verdict": "GATE0_COMPLETE_REPORT_DISPATCH_BLOCKED_BY_CURRENT_ROUTE_PROOF",
+  "meaning": "Read-only Gate0 work completed, not a producer GO or candidate permission.",
+  "baselineHEAD": "c5b5e896d9f06859b21e19122f81c7613067c386",
+  "baselinePreexistingStatus": [
+    " M client/src/components/SlidePanel.jsx",
+    " M client/src/components/editor/editor-navigator.jsx",
+    " M client/src/components/properties/action-controls.jsx",
+    " M client/src/components/ribbon/ribbon-format-tab-element-position-size-rotation-controls.jsx",
+    " M client/src/components/slide-panel/slide-navigator-item.jsx",
+    " M client/src/hooks/use-block-library.test.jsx",
+    " M client/src/pages/EditorPage.jsx",
+    " M docs/project-changelog.md",
+    " M plans/261001-0639-interactive-html-education-deep-tdd/phase-06-native-quiz.md",
+    " M plans/261001-0639-interactive-html-education-deep-tdd/plan.md",
+    " M tests/e2e/education/present-offline-helpers.js",
+    " M tests/e2e/education/release-surfaces.js",
+    "?? client/src/components/SlidePanel.child-duplication.test.jsx",
+    "?? client/src/components/properties/inherited-action-targets.test.jsx",
+    "?? plans/handoffs/education-producer-quota-20261005.md",
+    "?? plans/journals/2026-10-05-education-cook-blocked-by-pinned-producer-quota.md",
+    "?? plans/journals/2026-10-05-education-pinned-route-policy-verified-capacity-unconfirmed.md",
+    "?? tests/e2e/education/trigger-local-fixed-history-acceptance.spec.js",
+    "?? tests/e2e/education/trigger-reference-history-acceptance.spec.js",
+    "?? tests/e2e/education/trigger-reference-history-controls.js",
+    "?? tests/e2e/education/trigger-surfaces-acceptance.spec.js"
+  ],
+  "route": {
+    "requestedProvider": "local8045",
+    "requestedModel": "gemini-3.8-flash-high",
+    "verdict": "CURRENT_ROUTE_BINDING_NOT_PROVEN_PIN_AWARE_DISPATCH_SURFACE_NOT_EXPOSED",
+    "currentPublicToolSchema": {
+      "tool": "functions.task",
+      "types": ["explore", "worker"],
+      "providerModelRetryFallbackParameters": false,
+      "modelPinControllableByThisTool": false
+    },
+    "historicalEvidence": [
+      {
+        "file": "plans/handoffs/education-producer-quota-20261005.md",
+        "meaning": "Historical429 and auto_retry despite prompt retryfalse; not current availability."
+      },
+      {
+        "file": "plans/journals/2026-10-05-education-pinned-route-policy-verified-capacity-unconfirmed.md",
+        "meaning": "Historical process-local overlay reportedly no-retry/no-fallback; journal says not durable or live execution state."
+      }
+    ],
+    "guideMeaning": "jeikcode_config guide models/tools reads documentation, not current effective configured route. No reload or config read/write.",
+    "processNamesObserved": ["jeikcode", "omp"],
+    "processMeaning": "Name/PID metadata only, no command lines/config/env. Running OMP not proof tools can bind its session or that prior overlay persists.",
+    "currentPolicyVerified": false,
+    "servingAvailabilityVerified": false,
+    "producerInferenceRequestsSent": 0,
+    "providerSecretsRead": false,
+    "minimumNextEvidence": {
+      "kind": "ONE_CURRENT_REDACTED_ROUTE_BINDING_RECEIPT_FROM_PIN_AWARE_SURFACE",
+      "fields": [
+        "requested/effective providerlocal8045 and modelgemini-3.8-flash-high",
+        "current intended execution surface/session/job binding (nonsecret identifiers)",
+        "effective retry/fallback at caller, clientSDK/OMP, gateway and provider layers or explicit unknown layers",
+        "whether process-only overlay or persistent policy; snapshot time/expiry/version",
+        "non-inference dry-run dispatch plan attestation if surface supports it; no assertion it does when unobserved"
+      ],
+      "secretRule": "No API keys/tokens/Authorization/cookies/raw user config/process commandlines. Redacted receipt can be pasted or supplied as regular readableC file.",
+      "endpoint": "Optional redacted route/base endpoint; never enough alone to prove effective model/retry.",
+      "availabilityRule": "Remain unknown until separately authorized legitimate dispatch. Do not probe, poll inference or change provider."
+    },
+    "nextAction": "Need operator or accessible pin-aware execution surface proof; not another same Gate0 run and not more generic authorization. Do not substitute GPT review worker as producer."
+  },
+  "budget": {
+    "capacityObserved": {
+      "freeBytes": 18594795520,
+      "sizeBytes": 255382777856,
+      "time": "2026-10-07T20:47:56.7672036+07:00"
+    },
+    "sourceAllowlistFiles": 3775,
+    "sourceLogicalBytes": 41565529,
+    "regularDependenciesFiles": 31903,
+    "dependenciesLogicalBytes": 380461429,
+    "regularCopyLogicalBytes": 422026958,
+    "hypothetical4KiBRoundingBytes": 523440128,
+    "hypothetical4KiBRoundingNotPhysicalAllocationMeasurement": true,
+    "proposedCapsNotApproved": {
+      "candidateAndOwnedNewSourcesBytes": 2147483648,
+      "focusedLogsReceiptsAndFutureContractArtifactsBytes": 4294967296,
+      "untouchedCFreeFloorBytes": 4294967296
+    },
+    "conservativeReservedTotalBytes": 10737418240,
+    "observedSlackAfterProposedReservationsBytes": 7857377280,
+    "boundedPreparationCapacityAssessment": "OBSERVED_HEADROOM_FOR_PROPOSED_SOURCE_CANDIDATE_AND_BOUNDED_ARTIFACT_CAPS_ONLY",
+    "notQualified": [
+      "Full54 acceptance/artifact demand",
+      "desktop package/build/browser reinstall",
+      "actual filesystem allocation/compression/dedup",
+      "future capacity or memory/IO capacity"
+    ],
+    "stopPolicyProposal": "After future explicit authority, stop before write/copy if cap or4GiB floor threatened; no deletion/retry/reduced assertions. Do not auto-raise caps.",
+    "copyPlan": "Copy explicit dirty-current-C source allowlist and independently approved regular dependencies; no Git metadata, archives, data, reports, builds, credentials or linked-target traversal.",
+    "dependencyPlan": "Do not make canonical node_modules junction. Future approved candidate may copy regular dependencies and recreate only five reviewed internal candidate workspace links (or materialize); new candidate manifest/payload hashes and API closure still required. No npm install/ci now.",
+    "reproducibilityLimit": "Excluding generated assets/data means source-only candidate is not a runnable equivalent of current production. Generation/import/tests remain later-authority gates."
+  },
+  "safety": {
+    "sourceReparseNotFollowed": [],
+    "dependencyReparseNotFollowed": [
+      {
+        "path": "node_modules/image-size",
+        "target": "//?/C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/vendor-overrides/image-size-disabled",
+        "followed": false
+      },
+      {
+        "path": "node_modules/navslides-website",
+        "target": "//?/C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/website",
+        "followed": false
+      },
+      {
+        "path": "node_modules/revealjs-editor-client",
+        "target": "//?/C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/client",
+        "followed": false
+      },
+      {
+        "path": "node_modules/revealjs-editor-server",
+        "target": "//?/C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/server",
+        "followed": false
+      },
+      {
+        "path": "node_modules/revealjs-shared",
+        "target": "//?/C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/shared",
+        "followed": false
+      }
+    ],
+    "historicalPlaywrightReparseNotFollowed": [
+      {
+        "path": ".playwright/runs/2026-10-01T09-12-07-021Z-3392",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-01T09-12-07-021Z-3392",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-01T09-21-32-125Z-41352",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-01T09-21-32-125Z-41352",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-01T09-23-40-823Z-18064",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-01T09-23-40-823Z-18064",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-01T11-05-00-932Z-33300",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-01T11-05-00-932Z-33300",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-01T11-08-32-369Z-9560",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-01T11-08-32-369Z-9560",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-01T11-10-36-120Z-13000",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-01T11-10-36-120Z-13000",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-02T19-02-09-340Z-55492",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-02T19-02-09-340Z-55492",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-02T21-22-06-762Z-53060",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-02T21-22-06-762Z-53060",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-02T21-33-19-248Z-51256",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-02T21-33-19-248Z-51256",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-02T21-51-51-791Z-54640",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-02T21-51-51-791Z-54640",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-02T21-58-32-095Z-54688",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-02T21-58-32-095Z-54688",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-02T23-30-45-014Z-46428",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-02T23-30-45-014Z-46428",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-02T23-31-48-675Z-15700",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-02T23-31-48-675Z-15700",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-02T23-51-49-013Z-56248",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-02T23-51-49-013Z-56248",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-02T23-51-49-025Z-52516",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-02T23-51-49-025Z-52516",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-02T23-51-49-950Z-59812",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-02T23-51-49-950Z-59812",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T06-52-56-446Z-10400",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T06-52-56-446Z-10400",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T07-03-59-655Z-53008",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T07-03-59-655Z-53008",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T07-05-44-143Z-47772",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T07-05-44-143Z-47772",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T07-06-04-323Z-46936",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T07-06-04-323Z-46936",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T07-08-16-418Z-31748",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T07-08-16-418Z-31748",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T07-08-33-660Z-59948",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T07-08-33-660Z-59948",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T07-12-32-105Z-40460",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T07-12-32-105Z-40460",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T07-14-14-611Z-56120",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T07-14-14-611Z-56120",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T09-27-05-461Z-54008",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T09-27-05-461Z-54008",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T09-28-58-454Z-56028",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T09-28-58-454Z-56028",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T09-34-16-617Z-56568",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T09-34-16-617Z-56568",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T09-37-14-106Z-58012",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T09-37-14-106Z-58012",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T10-47-07-178Z-16520",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T10-47-07-178Z-16520",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T10-54-35-250Z-55728",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T10-54-35-250Z-55728",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T11-03-14-835Z-21772",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T11-03-14-835Z-21772",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T11-17-38-263Z-59380",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T11-17-38-263Z-59380",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T11-26-21-948Z-60328",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T11-26-21-948Z-60328",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T11-32-49-163Z-54332",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T11-32-49-163Z-54332",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T13-12-31-475Z-32568",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T13-12-31-475Z-32568",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T13-18-53-730Z-58968",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T13-18-53-730Z-58968",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T14-36-35-949Z-18420",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T14-36-35-949Z-18420",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T14-42-11-740Z-35136",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T14-42-11-740Z-35136",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T14-46-29-893Z-52488",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T14-46-29-893Z-52488",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T15-25-34-581Z-15244",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T15-25-34-581Z-15244",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T15-42-30-247Z-47232",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T15-42-30-247Z-47232",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T15-45-58-681Z-27524",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T15-45-58-681Z-27524",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T16-05-07-929Z-52060",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T16-05-07-929Z-52060",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T16-41-07-032Z-31800",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T16-41-07-032Z-31800",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T16-51-40-179Z-35576",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T16-51-40-179Z-35576",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/2026-10-03T17-21-32-121Z-15404",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/2026-10-03T17-21-32-121Z-15404",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/common-preliminary-20261004-r4-130932",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/common-preliminary-20261004-r4-130932",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/common-preliminary-20261004-r5-135511",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/common-preliminary-20261004-r5-135511",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/continuation-live-261003",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/continuation-live-261003",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/continuation-live-r2-261003",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/continuation-live-r2-261003",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/continuation-live-r3-261003",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/continuation-live-r3-261003",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/continuation-memory-261003",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/continuation-memory-261003",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/continuation-memory-r2-261003",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/continuation-memory-r2-261003",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/continuation-surfaces-261003",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/continuation-surfaces-261003",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/current-native-fields-34442",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/current-native-fields-34442",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/education-baseline-helper-preliminary-20261004",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/education-baseline-helper-preliminary-20261004",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/education-final-20261004-journeys-browser",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/education-final-20261004-journeys-browser",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/education-final-20261004-production-closure-browser-narrow",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/education-final-20261004-production-closure-browser-narrow",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/education-preliminary-print-puzzle-20261004",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/education-preliminary-print-puzzle-20261004",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/fields-preliminary-261003",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/fields-preliminary-261003",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/generated-preliminary-261003",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/generated-preliminary-261003",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/live-r4-261003",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/live-r4-261003",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/live-r5-261003",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/live-r5-261003",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/live-replay-mock-observer-261003",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/live-replay-mock-observer-261003",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/plugin-boundary-red-261003",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/plugin-boundary-red-261003",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/plugin-green-261003",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/plugin-green-261003",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/plugin-green-r2-261003",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/plugin-green-r2-261003",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/qualification-preliminary-fields-20261003-151138",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/qualification-preliminary-fields-20261003-151138",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/qualification-preliminary-live-20261003-151138",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/qualification-preliminary-live-20261003-151138",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/qualification-preliminary-media-20261003-151138",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/qualification-preliminary-media-20261003-151138",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/qualification-preliminary-static-20261003-151138",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/qualification-preliminary-static-20261003-151138",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/smoke-1790846796479",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/smoke-1790846796479",
+        "followed": false
+      },
+      {
+        "path": ".playwright/runs/smoke-1790846873915",
+        "target": "//?/D:/NavSlidesQualification/disk-cleanup-261004-160545/NavSlidesEditor/.playwright/runs/smoke-1790846873915",
+        "followed": false
+      }
+    ],
+    "errors": [],
+    "exclusionCorrection": "Prior focused source/dependency scan was not full root scan. Historical .playwright/runs has D targets; all remain excluded/unfollowed, not deleted.",
+    "DProbedOrRead": false,
+    "candidateCreated": false,
+    "sourceEdited": false,
+    "configEditedOrReloaded": false,
+    "secretsRead": false
+  },
+  "flags": {
+    "producerInvoked": false,
+    "dispatchAuthorized": false,
+    "sourceReady": false,
+    "admission": false,
+    "qualification": false,
+    "PASS": false,
+    "declaredCells": 54,
+    "admittedCells": 0,
+    "executedCells": 0,
+    "NF_A4RepairAuthorized": false,
+    "callerCutover": false,
+    "smoke": false
+  },
+  "next": "Supply current redacted route binding evidence or pin-aware surface. After evidence review, seek explicit source-only candidate creation/authoring authority;12caller/tests separate. Do not request Gate0 again.",
+  "frozen11StatusUnchanged": "FAILED_DELIVERY_NOT_ADMITTED_SOURCE_REPAIR_REQUIRED"
+}

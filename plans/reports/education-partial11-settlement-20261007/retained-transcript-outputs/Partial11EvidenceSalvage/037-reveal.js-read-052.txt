@@ -1,0 +1,252 @@
+				autoAnimate.run( previousSlide, currentSlide );
+			}
+		}
+
+		// Start or stop embedded content like videos and iframes
+		if( slideChanged ) {
+			slideContent.afterSlideChanged();
+
+			if( previousSlide ) {
+				slideContent.stopEmbeddedContent( previousSlide );
+				slideContent.stopEmbeddedContent( previousSlide.slideBackgroundElement );
+			}
+
+			slideContent.startEmbeddedContent( currentSlide );
+			slideContent.startEmbeddedContent( currentSlide.slideBackgroundElement );
+		}
+
+		requestAnimationFrame( () => {
+			announceStatus( getStatusText( currentSlide ) );
+		});
+
+		dispatchSlideChanged();
+
+	}
+
+	/**
+	 * Syncs the presentation with the current DOM. Useful
+	 * when new slides or control elements are added or when
+	 * the configuration has changed.
+	 */
+	function sync() {
+
+		// Subscribe to input
+		removeEventListeners();
+		addEventListeners();
+
+		// Force a layout to make sure the current config is accounted for
+		layout();
+
+		// Reflect the current autoSlide value
+		autoSlide = config.autoSlide;
+
+		// Start auto-sliding if it's enabled
+		cueAutoSlide();
+
+		// Re-create all slide backgrounds
+		backgrounds.create();
+
+		// Write the current hash to the URL
+		location.writeURL();
+
+		if( config.sortFragmentsOnSync === true ) {
+			fragments.sortAll();
+		}
+
+		// Re-apply slide state classes for the current indices.
+		// This ensures dynamically inserted/removed slides receive
+		// proper past/present/future classes on sync.
+		if( typeof indexh !== 'undefined' ) {
+			indexh = updateSlides( HORIZONTAL_SLIDES_SELECTOR, indexh );
+			indexv = updateSlides( VERTICAL_SLIDES_SELECTOR, indexv );
+		}
+
+		controls.update();
+		progress.update();
+
+		updateSlidesVisibility();
+
+		notes.update();
+		notes.updateVisibility();
+		overlay.update();
+		backgrounds.update( true );
+		slideNumber.update();
+		slideContent.formatEmbeddedContent();
+
+		// Start or stop embedded content depending on global config
+		if( config.autoPlayMedia === false ) {
+			slideContent.stopEmbeddedContent( currentSlide, { unloadIframes: false } );
+		}
+		else {
+			slideContent.startEmbeddedContent( currentSlide );
+		}
+
+		if( overview.isActive() ) {
+			overview.layout();
+		}
+
+		dispatchEvent({ type: 'sync' });
+
+	}
+
+	/**
+	 * Updates reveal.js to keep in sync with new slide attributes. For
+	 * example, if you add a new `data-background-image` you can call
+	 * this to have reveal.js render the new background image.
+	 *
+	 * Similar to #sync() but more efficient when you only need to
+	 * refresh a specific slide.
+	 *
+	 * @param {HTMLElement} slide
+	 */
+	function syncSlide( slide = currentSlide ) {
+
+		backgrounds.sync( slide );
+		fragments.sync( slide );
+
+		slideContent.load( slide );
+
+		backgrounds.update();
+		notes.update();
+
+		dispatchEvent({
+			type: 'slidesync',
+			data: {
+				slide
+			}
+		});
+
+	}
+
+	/**
+	 * Resets all vertical slides so that only the first
+	 * is visible.
+	 */
+	function resetVerticalSlides() {
+
+		getHorizontalSlides().forEach( horizontalSlide => {
+
+			Util.queryAll( horizontalSlide, 'section' ).forEach( ( verticalSlide, y ) => {
+
+				if( y > 0 ) {
+					verticalSlide.classList.remove( 'present' );
+					verticalSlide.classList.remove( 'past' );
+					verticalSlide.classList.add( 'future' );
+					verticalSlide.setAttribute( 'aria-hidden', 'true' );
+				}
+
+			} );
+
+		} );
+
+	}
+
+	/**
+	 * Randomly shuffles all slides in the deck.
+	 */
+	function shuffle( slides = getHorizontalSlides() ) {
+
+		slides.forEach( ( slide, i ) => {
+
+			// Insert the slide next to a randomly picked sibling slide
+			// slide. This may cause the slide to insert before itself,
+			// but that's not an issue.
+			let beforeSlide = slides[ Math.floor( Math.random() * slides.length ) ];
+			if( beforeSlide.parentNode === slide.parentNode ) {
+				slide.parentNode.insertBefore( slide, beforeSlide );
+			}
+
+			// Randomize the order of vertical slides (if there are any)
+			let verticalSlides = slide.querySelectorAll( 'section' );
+			if( verticalSlides.length ) {
+				shuffle( verticalSlides );
+			}
+
+		} );
+
+	}
+
+	/**
+	 * Updates one dimension of slides by showing the slide
+	 * with the specified index.
+	 *
+	 * @param {string} selector A CSS selector that will fetch
+	 * the group of slides we are working with
+	 * @param {number} index The index of the slide that should be
+	 * shown
+	 *
+	 * @return {number} The index of the slide that is now shown,
+	 * might differ from the passed in index if it was out of
+	 * bounds.
+	 */
+	function updateSlides( selector, index ) {
+
+		// Select all slides and convert the NodeList result to
+		// an array
+		let slides = Util.queryAll( dom.wrapper, selector ),
+			slidesLength = slides.length;
+
+		let printMode = scrollView.isActive() || printView.isActive();
+		let loopedForwards = false;
+		let loopedBackwards = false;
+
+		if( slidesLength ) {
+
+			// Should the index loop?
+			if( config.loop ) {
+				if( index >= slidesLength ) loopedForwards = true;
+
+				index %= slidesLength;
+
+				if( index < 0 ) {
+					index = slidesLength + index;
+					loopedBackwards = true;
+				}
+			}
+
+			// Enforce max and minimum index bounds
+			index = Math.max( Math.min( index, slidesLength - 1 ), 0 );
+
+			for( let i = 0; i < slidesLength; i++ ) {
+				let element = slides[i];
+
+				let reverse = config.rtl && !isVerticalSlide( element );
+
+				// Avoid .remove() with multiple args for IE11 support
+				element.classList.remove( 'past' );
+				element.classList.remove( 'present' );
+				element.classList.remove( 'future' );
+
+				// http://www.w3.org/html/wg/drafts/html/master/editing.html#the-hidden-attribute
+				element.setAttribute( 'hidden', '' );
+				element.setAttribute( 'aria-hidden', 'true' );
+
+				// If this element contains vertical slides
+				if( element.querySelector( 'section' ) ) {
+					element.classList.add( 'stack' );
+				}
+
+				// If we're printing static slides, all slides are "present"
+				if( printMode ) {
+					element.classList.add( 'present' );
+					continue;
+				}
+
+				if( i < index ) {
+					// Any element previous to index is given the 'past' class
+					element.classList.add( reverse ? 'future' : 'past' );
+
+					if( config.fragments ) {
+						// Show all fragments in prior slides
+						showFragmentsIn( element );
+					}
+				}
+				else if( i > index ) {
+					// Any element subsequent to index is given the 'future' class
+					element.classList.add( reverse ? 'past' : 'future' );
+
+					if( config.fragments ) {
+						// Hide all fragments in future slides
+						hideFragmentsIn( element );
+
+[Showing lines 1501-1750 of 2973. Use :1751 to continue]

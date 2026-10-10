@@ -1,0 +1,122 @@
+      "detail": "09-C1 is a title and REPAIR_REQUIRED assertion linked to S10-C1, without its source locations, full actual-arrival requirement or current evidence. 09-C2 retains the caller-ledger [a,b] ordering meaning and a repair claim, but not the complete preservation, deduplication and independent-order-namespace requirements."
+    },
+    "currentFindings": {
+      "expected": 6,
+      "present": 6,
+      "ids": [
+        "S10-C1",
+        "NF-A2",
+        "NF-A3",
+        "N10B-01",
+        "N10B-02",
+        "S10-C2"
+      ],
+      "completeObligationRecords": false,
+      "detail": "The five Native findings are ownership-only entries, not claims of Correction11 completion. They omit source paths/ranges and complete governing mechanisms/repair requirements. S10-C2 is also described in assignedRepairs with a file/range, mechanism and repair claim."
+    },
+    "originalE06Meanings": {
+      "E06-02": {
+        "preserved": true,
+        "meaning": "Chronological frame-error arrival dispatch",
+        "receiptLines": "369-372"
+      },
+      "E06-03": {
+        "preserved": true,
+        "meaning": "Actual Node Error identity with separate sidecar metadata",
+        "receiptLines": "373-376"
+      },
+      "E06-04": {
+        "preserved": true,
+        "meaning": "State-before-UI observation and dispatch within snapshots",
+        "receiptLines": "377-380"
+      },
+      "E06-05": {
+        "preserved": true,
+        "meaning": "Recursive rootInstanceId/timeOrigin/cause normalization and propagation",
+        "receiptLines": "381-384"
+      },
+      "qualification": "These are correctly named preservation claims, not independently established current behavior."
+    },
+    "deferredCallerObligations": {
+      "statusRetained": "REQUIRED_UNEXECUTED",
+      "all12CallerPathsListed": true,
+      "aggregate18Rows54CellsAndThreeSurfacesRetained": true,
+      "noCanaryAndNoExecutionClaimsRetained": true,
+      "completeDetailedObligationsRetained": false,
+      "canonicalNCAndHistoricalMappingsDoSupplySomeDetail": true
+    },
+    "NF_A4": {
+      "excludedFromRequiredRepairs": true,
+      "unresolvedDispositionPreserved": true,
+      "notClaimedRepairedDisprovedWaivedOrSourceClean": true,
+      "completeSourceMechanismRetained": false
+    },
+    "falseAndZeroReceiptFlags": {
+      "matchesRequiredClaims": true,
+      "sourceReady": false,
+      "qualification": false,
+      "passClaimed": false,
+      "runtimeExecuted": false,
+      "declaredCells": 54,
+      "staticallyAdmittedCells": 0,
+      "executedAcceptanceCells": 0
+    }
+  },
+  "canonicalMappingChecks": {
+    "authorityPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-08-subject-authority.json",
+    "method": "Read-only comparison of fully expanded artifact text, consistent with Main's supplied exact-field comparison; no programmatic comparison or checksum remeasurement.",
+    "NC": {
+      "receiptPath": "$.canonicalSubjectAuthority.NC",
+      "receiptLines": "421-488",
+      "authorityLines": "3-70",
+      "entries": 11,
+      "result": "MATCH",
+      "detail": "All IDs, titles, full bodies and REQUIRED_UNEXECUTED currentDisposition values are retained."
+    },
+    "RPC": {
+      "receiptPath": "$.canonicalSubjectAuthority.RPC",
+      "receiptLines": "489-507",
+      "authorityLines": "71-89",
+      "entries": 17,
+      "result": "MATCH"
+    },
+    "original": {
+      "receiptPath": "$.canonicalSubjectAuthority.original",
+      "receiptLines": "508-518",
+      "authorityLines": "90-100",
+      "entries": 9,
+      "result": "MATCH"
+    },
+    "originalCurrentMappingSnapshot": {
+      "receiptPath": "$.canonicalSubjectAuthority.originalCurrentMappingSnapshot",
+      "receiptLines": "519-555",
+      "authorityLines": "101-137",
+      "entries": 35,
+      "result": "MATCH",
+      "contents": "R01..R18 and RPC-01..RPC-17"
+    },
+    "originalPriorMappingSnapshot": {
+      "receiptPath": "$.canonicalSubjectAuthority.originalPriorMappingSnapshot",
+      "receiptLines": "556-603",
+      "authorityLines": "138-184",
+      "entries": 45,
+      "result": "MATCH",
+      "contents": "POC-01..POC-17, PBR-01..PBR-10, TIMED-01..TIMED-09 and original-1..original-9"
+    },
+    "historicalInterpretation": "The copied SOURCE_CORRECTED, OPEN, PARTIAL and references to older SE defects are immutable historical labels. Receipt line420 explicitly says historical status is NOT current closure. They neither establish current repairs nor justify fresh source findings. R16 retains the original Trivia expiry/Next subject, R17 readable splitting, and R18 receipt/closure accuracy; original-7/8/9 retain their later-slice meanings.",
+    "mappingDiscrepancies": []
+  },
+  "discrepancies": [
+    {
+      "id": "RC11-01",
+      "category": "ORIGINAL_BODY_FIDELITY",
+      "receiptPath": "$.assignedOriginalFindings.native",
+      "receiptLines": [
+        109,
+        131,
+        164,
+        175
+      ],
+      "requirement": "Producer prompt line15 requires full original finding bodies; the original Native07 report is the governing text.",
+
+[Showing lines 121-240 of 538. Use :241 to continue]

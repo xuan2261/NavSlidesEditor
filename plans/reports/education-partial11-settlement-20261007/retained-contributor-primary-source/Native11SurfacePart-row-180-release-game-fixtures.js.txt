@@ -1,0 +1,40 @@
+    config.letterMode = 'manual'
+    config.letter = 'A'
+    config.categories = [{ id: 'food', label: 'Food' }]
+  }
+  if (gameType === 'relay-race') {
+    config.questionsPerRound = 1
+    config.shuffleTeams = false
+  }
+  if (gameType === 'trivia-champ') {
+    config.rounds[0].mode = 'buzzer'
+    config.lightningRound.enabled = true
+    config.jackpotRound.enabled = true
+  }
+  return {
+    ...GAME_BASE_DEFAULTS,
+    id: `release-${gameType}`,
+    gameType,
+    x: 80,
+    y: 40,
+    width: 800,
+    height: 460,
+    [gameType]: config,
+  }
+}
+
+export function deckWith(elements, id = 'release-slide') {
+  return {
+    title: 'Education release authored content',
+    theme: 'white',
+    transition: 'none',
+    resolution: { width: 960, height: 540 },
+    slides: [{ id, background: { type: 'color', color: '#ffffff' }, elements }],
+  }
+}
+
+export function gameCases() {
+  return CANONICAL_GAME_TYPES.flatMap((type) =>
+    type === 'quiz' ? QUESTION_KINDS.map((kind) => ({ type, kind })) : [{ type, kind: null }]
+  )
+}

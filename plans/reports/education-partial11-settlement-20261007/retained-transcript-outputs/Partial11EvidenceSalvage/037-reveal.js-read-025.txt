@@ -1,0 +1,192 @@
+					}
+					else {
+						tops[ i ] = '';
+					}
+				}
+
+				// Pass 2: write top values to visible slides
+				for( let i = 0, len = visibleSlides.length; i < len; i++ ) {
+					visibleSlides[ i ].style.top = tops[ i ];
+				}
+
+				if( oldScale !== scale ) {
+					dispatchEvent({
+						type: 'resize',
+						data: {
+							oldScale,
+							scale,
+							size
+						}
+					});
+				}
+			}
+
+			checkResponsiveScrollView();
+
+			dom.viewport.style.setProperty( '--slide-scale', scale );
+			dom.viewport.style.setProperty( '--viewport-width', viewportWidth + 'px' );
+			dom.viewport.style.setProperty( '--viewport-height', viewportHeight + 'px' );
+
+			scrollView.layout();
+
+			progress.update();
+			backgrounds.updateParallax();
+
+			if( overview.isActive() ) {
+				overview.update();
+			}
+
+		}
+
+	}
+
+	/**
+	 * Applies layout logic to the contents of all slides in
+	 * the presentation.
+	 *
+	 * @param {string|number} width
+	 * @param {string|number} height
+	 */
+	function layoutSlideContents( width, height ) {
+		// Handle sizing of elements with the 'r-stretch' class
+		Util.queryAll( dom.slides, 'section > .stretch, section > .r-stretch' ).forEach( element => {
+
+			// Determine how much vertical space we can use
+			let remainingHeight = Util.getRemainingHeight( element, height );
+
+			// Consider the aspect ratio of media elements
+			if( /(img|video)/gi.test( element.nodeName ) ) {
+				const nw = element.naturalWidth || element.videoWidth,
+					  nh = element.naturalHeight || element.videoHeight;
+
+				const es = Math.min( width / nw, remainingHeight / nh );
+
+				element.style.width = ( nw * es ) + 'px';
+				element.style.height = ( nh * es ) + 'px';
+
+			}
+			else {
+				element.style.width = width + 'px';
+				element.style.height = remainingHeight + 'px';
+			}
+
+		} );
+
+	}
+
+	/**
+	 * Responsively activates the scroll mode when we reach the configured
+	 * activation width.
+	 */
+	function checkResponsiveScrollView() {
+
+		// Only proceed if...
+		// 1. The DOM is ready
+		// 2. Layouts aren't disabled via config
+		// 3. We're not currently printing
+		// 4. There is a scrollActivationWidth set
+		// 5. The deck isn't configured to always use the scroll view
+		if(
+			dom.wrapper &&
+			!config.disableLayout &&
+			!printView.isActive() &&
+			typeof config.scrollActivationWidth === 'number' &&
+			config.view !== 'scroll'
+		) {
+			const size = getComputedSlideSize();
+
+			if( size.presentationWidth > 0 && size.presentationWidth <= config.scrollActivationWidth ) {
+				if( !scrollView.isActive() ) {
+					backgrounds.create();
+					scrollView.activate()
+				};
+			}
+			else {
+				if( scrollView.isActive() ) scrollView.deactivate();
+			}
+		}
+
+	}
+
+	/**
+	 * Calculates the computed pixel size of our slides. These
+	 * values are based on the width and height configuration
+	 * options.
+	 *
+	 * @param {number} [presentationWidth=dom.wrapper.offsetWidth]
+	 * @param {number} [presentationHeight=dom.wrapper.offsetHeight]
+	 */
+	function getComputedSlideSize( presentationWidth, presentationHeight ) {
+
+		let width = config.width;
+		let height = config.height;
+
+		if( config.disableLayout ) {
+			width = dom.slides.offsetWidth;
+			height = dom.slides.offsetHeight;
+		}
+
+		const size = {
+			// Slide size
+			width: width,
+			height: height,
+
+			// Presentation size
+			presentationWidth: presentationWidth || dom.wrapper.offsetWidth,
+			presentationHeight: presentationHeight || dom.wrapper.offsetHeight
+		};
+
+		// Reduce available space by margin
+		size.presentationWidth -= ( size.presentationWidth * config.margin );
+		size.presentationHeight -= ( size.presentationHeight * config.margin );
+
+		// Slide width may be a percentage of available width
+		if( typeof size.width === 'string' && /%$/.test( size.width ) ) {
+			size.width = parseInt( size.width, 10 ) / 100 * size.presentationWidth;
+		}
+
+		// Slide height may be a percentage of available height
+		if( typeof size.height === 'string' && /%$/.test( size.height ) ) {
+			size.height = parseInt( size.height, 10 ) / 100 * size.presentationHeight;
+		}
+
+		return size;
+
+	}
+
+	/**
+	 * Stores the vertical index of a stack so that the same
+	 * vertical slide can be selected when navigating to and
+	 * from the stack.
+	 *
+	 * @param {HTMLElement} stack The vertical stack element
+	 * @param {string|number} [v=0] Index to memorize
+	 */
+	function setPreviousVerticalIndex( stack, v ) {
+
+		if( typeof stack === 'object' && typeof stack.setAttribute === 'function' ) {
+			stack.setAttribute( 'data-previous-indexv', v || 0 );
+		}
+
+	}
+
+	/**
+	 * Retrieves the vertical index which was stored using
+	 * #setPreviousVerticalIndex() or 0 if no previous index
+	 * exists.
+	 *
+	 * @param {HTMLElement} stack The vertical stack element
+	 */
+	function getPreviousVerticalIndex( stack ) {
+
+		if( typeof stack === 'object' && typeof stack.setAttribute === 'function' && stack.classList.contains( 'stack' ) ) {
+			// Prefer manually defined start-indexv
+			const attributeName = stack.hasAttribute( 'data-start-indexv' ) ? 'data-start-indexv' : 'data-previous-indexv';
+
+			return parseInt( stack.getAttribute( attributeName ) || 0, 10 );
+		}
+
+		return 0;
+
+
+[Showing lines 881-1070 of 2973. Use :1071 to continue]

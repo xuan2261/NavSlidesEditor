@@ -1,0 +1,5 @@
+export function gameCases() {
+  return CANONICAL_GAME_TYPES.flatMap((type) =>
+    type === 'quiz' ? QUESTION_KINDS.map((kind) => ({ type, kind })) : [{ type, kind: null }]
+  )
+}

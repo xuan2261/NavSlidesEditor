@@ -1,0 +1,114 @@
+import { expect } from '@playwright/test'
+
+export const RELAY_KEYS = [
+  'phase',
+  'error',
+  'positions',
+  'activeTeamId',
+  'questionId',
+  'turn',
+  'deadline',
+  'batonDue',
+  'correct',
+  'winnerId',
+  'generation',
+  'runtimeMode',
+]
+
+export function assertRelayKeys(state) {
+  expect(Object.keys(state).sort()).toEqual([...RELAY_KEYS].sort())
+}
+
+export function assertRelayInitialOrReset(state, expectedConfig, generation = 0) {
+  assertRelayKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(generation)
+  expect(state.phase).toBe('setup')
+  expect(state.error).toBeNull()
+  expect(state.positions).toEqual(Object.fromEntries(expectedConfig.teams.map((t) => [t.id, 0])))
+  expect(state.activeTeamId).toBe(expectedConfig.teams[0]?.id ?? 'team-1')
+  expect(state.questionId).toBeNull()
+  expect(state.turn).toBe(0)
+  expect(state.deadline).toBeNull()
+  expect(state.batonDue).toBeNull()
+  expect(state.correct).toBeNull()
+  expect(state.winnerId).toBeNull()
+}
+
+export function assertRelayActive(state, expectedConfig, generation = 0, deadlineBounds = null) {
+  assertRelayKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(generation)
+  expect(state.phase).toBe('active')
+  expect(state.error).toBeNull()
+  expect(state.positions).toEqual(Object.fromEntries(expectedConfig.teams.map((t) => [t.id, 0])))
+  expect(state.activeTeamId).toBe('team-1')
+  expect(state.questionId).toBe('question-1')
+  expect(state.turn).toBe(1)
+  expect(state.batonDue).toBeNull()
+  expect(state.correct).toBeNull()
+  expect(state.winnerId).toBeNull()
+  if (deadlineBounds) {
+    expect(typeof state.deadline).toBe('number')
+    expect(state.deadline).toBeGreaterThanOrEqual(deadlineBounds.min)
+    expect(state.deadline).toBeLessThanOrEqual(deadlineBounds.max)
+  }
+}
+
+export function assertRelayPendingBaton(state, generation = 0) {
+  assertRelayKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(generation)
+  expect(state.phase).toBe('waiting')
+  expect(state.error).toBeNull()
+  expect(state.positions).toEqual({ 'team-1': 0, 'team-2': 0 })
+  expect(state.activeTeamId).toBe('team-1')
+  expect(state.questionId).toBe('question-1')
+  expect(state.turn).toBe(1)
+  expect(state.correct).toBe(false)
+  expect(state.winnerId).toBeNull()
+  expect(typeof state.batonDue).toBe('number')
+}
+
+export function assertRelayFirstTimeoutSettled(state, generation = 0) {
+  assertRelayKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(generation)
+  expect(state.phase).toBe('active')
+  expect(state.error).toBeNull()
+  expect(state.positions).toEqual({ 'team-1': 0, 'team-2': 1 })
+  expect(state.activeTeamId).toBe('team-1')
+  expect(state.questionId).toBe('question-1')
+  expect(state.turn).toBe(2)
+  expect(state.batonDue).toBeNull()
+  expect(state.correct).toBeNull()
+  expect(state.winnerId).toBeNull()
+  expect(typeof state.deadline).toBe('number')
+}
+
+export function assertRelayPeerSettled(state) {
+  assertRelayKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(0)
+  expect(state.phase).toBe('ended')
+  expect(state.error).toBeNull()
+  expect(state.positions).toEqual({ 'team-1': 0, 'team-2': 1 })
+  expect(state.activeTeamId).toBe('team-1')
+  expect(state.questionId).toBe('question-1')
+  expect(state.turn).toBe(1)
+  expect(state.deadline).toBeNull()
+  expect(state.batonDue).toBeNull()
+  expect(state.correct).toBe(false)
+  expect(state.winnerId).toBe('team-2')
+}
+
+export async function assertRelayPeerUI(root) {
+  const lanes = root.locator('ol[aria-label="Team lanes"] > li > span')
+  await expect(lanes.filter({ hasText: 'Red: 1/1' })).toBeVisible()
+}
+
+export async function assertRelayResetUI(root, questionsPerRound = 2) {
+  const lanes = root.locator('ol[aria-label="Team lanes"] > li > span')
+  await expect(lanes.filter({ hasText: `Blue: 0/${questionsPerRound}` })).toBeVisible()
+  await expect(lanes.filter({ hasText: `Red: 0/${questionsPerRound}` })).toBeVisible()
+}

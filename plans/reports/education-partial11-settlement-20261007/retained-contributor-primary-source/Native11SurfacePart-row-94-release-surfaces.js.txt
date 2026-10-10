@@ -1,0 +1,27 @@
+export async function visitGeneratedSurfaces(
+…
+) {
+…
+  if (surfaces.includes('file')) {
+…
+  }
+}
+
+export async function selectGeneratedSlide(page, index) {
+  await page.evaluate((index) => window.Reveal.slide(index), index)
+  await expect(page.locator('.reveal .slides section.present').last()).toBeVisible()
+}
+
+export async function findFrame(page, selector) {
+  let selected
+  await expect.poll(async () => {
+    for (const frame of page.frames()) {
+      if (await frame.locator(selector).count()) {
+        selected = frame
+        return true
+      }
+    }
+    return false
+  }).toBe(true)
+  return selected
+}

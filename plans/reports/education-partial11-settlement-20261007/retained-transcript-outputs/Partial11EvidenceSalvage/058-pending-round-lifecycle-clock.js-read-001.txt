@@ -1,0 +1,102 @@
+import { expect } from '@playwright/test'
+import {
+  readCorrelatedStateAndTime,
+  assertEvidenceSink,
+} from './pending-round-lifecycle-observation.js'
+
+export async function readDocumentTime(page, evidence) {
+  assertEvidenceSink(evidence, true)
+  try {
+    const docTime = await page.evaluate(() => ({
+      time: performance.now(),
+      documentId: window.__nsDocumentId || null,
+      timeOrigin: performance.timeOrigin,
+      url: window.location.href,
+    }))
+    evidence.stage('documentTime_raw', docTime)
+    evidence.assertDocumentIdentity({
+      url: docTime.url,
+      documentId: docTime.documentId,
+      timeOrigin: docTime.timeOrigin,
+    })
+    evidence.stage('documentTime', docTime.time)
+    return docTime.time
+  } catch (err) {
+    evidence.recordError('readDocumentTime', err)
+    throw err
+  }
+}
+
+export async function preconsumeTimerToWindow(root, page, evidence) {
+  assertEvidenceSink(evidence)
+  const initialSample = await readCorrelatedStateAndTime(root, evidence, 'preconsumeInitialSample')
+  let sample = null
+  let pollCount = 0
+  await expect.poll(async () => {
+    pollCount++
+    const s = await readCorrelatedStateAndTime(root, evidence, `preconsumePoll_${pollCount}`)
+    if (/2\s*seconds?/i.test(s.timerText || '')) {
+      sample = s
+      return true
+    }
+    return false
+  }).toBe(true)
+
+  const state = sample.state
+  expect(state).not.toBeNull()
+  expect(typeof state.deadline).toBe('number')
+  expect(Number.isFinite(state.deadline)).toBe(true)
+
+  const remainingInterval = {
+    min: state.deadline - sample.activityInterval.max,
+    max: state.deadline - sample.activityInterval.min,
+  }
+  expect(Number.isFinite(remainingInterval.max)).toBe(true)
+  expect(Number.isFinite(remainingInterval.min)).toBe(true)
+  expect(remainingInterval.max).toBeGreaterThan(0)
+  expect(remainingInterval.min).toBeGreaterThan(0)
+  expect(remainingInterval.max).toBeLessThanOrEqual(4000)
+  return {
+    sample,
+    initialSample,
+    due: state.deadline,
+    remainingInterval,
+    capturedAt: sample.time,
+    remainingMs: remainingInterval.max,
+    remainingUpperBound: remainingInterval.max,
+    state,
+  }
+}
+
+export async function measureQuizCheckpoint(root, page, oldDue, newDue, evidence) {
+  assertEvidenceSink(evidence)
+  const sample = await readCorrelatedStateAndTime(root, evidence, 'quizCheckpointSample')
+  expect(sample.activityInterval.min).toBeGreaterThanOrEqual(oldDue)
+  expect(sample.activityInterval.max).toBeLessThan(newDue)
+
+  return {
+    sample,
+    checkpointTime: sample.time,
+    activityInterval: sample.activityInterval,
+    checkpointState: sample.state,
+  }
+}
+
+export async function measureBatonPendingAtReset(root, evidence) {
+  assertEvidenceSink(evidence)
+  const sample = await readCorrelatedStateAndTime(root, evidence, 'batonPendingSample')
+  const state = sample.state
+  expect(state).not.toBeNull()
+  expect(state.phase).toBe('waiting')
+  expect(state.correct).toBe(false)
+  expect(typeof state.batonDue).toBe('number')
+  expect(state.batonDue).toBeGreaterThan(sample.activityInterval.max)
+
+  return {
+    sample,
+    sampleTime: sample.time,
+    activityInterval: sample.activityInterval,
+    batonDue: state.batonDue,
+    state,
+  }
+}

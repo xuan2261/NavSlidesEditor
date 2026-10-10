@@ -1,0 +1,143 @@
+import { pathToFileURL } from 'node:url'
+
+/**
+ * Validates authored expectedRoots manifest entries before browser effects.
+ * Entries must be non-empty, unique, with valid { slideId, elementId, gameType }.
+ * @param {Array} manifest
+ * @returns {Array}
+ */
+export function validateManifest(manifest) {
+  if (!Array.isArray(manifest) || manifest.length === 0) {
+    throw new Error('Authored expectedRoots manifest is required and cannot be empty')
+  }
+  const seen = new Set()
+  for (const entry of manifest) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      throw new Error('Manifest entry must be a valid non-null object')
+    }
+    const keys = Object.keys(entry)
+    if (keys.length !== 3 || !keys.includes('slideId') || !keys.includes('elementId') || !keys.includes('gameType')) {
+      throw new Error('Manifest entry must have exact keys: slideId, elementId, gameType')
+    }
+    const { slideId, elementId, gameType } = entry
+    if (typeof slideId !== 'string' || slideId.trim() === '') {
+      throw new Error('Manifest entry missing non-empty string slideId')
+    }
+    if (typeof elementId !== 'string' || elementId.trim() === '') {
+      throw new Error('Manifest entry missing non-empty string elementId')
+    }
+    if (typeof gameType !== 'string' || gameType.trim() === '') {
+      throw new Error('Manifest entry missing non-empty string gameType')
+    }
+    const key = `${slideId}::${elementId}::${gameType}`
+    if (seen.has(key)) {
+      throw new Error(`Duplicate entry in authored expectedRoots manifest: ${key}`)
+    }
+    seen.add(key)
+  }
+  return manifest
+}
+
+/**
+ * Enforces 1:1 tuple multiset exact matching between expected and observed roots.
+ * @param {Array} expectedRoots
+ * @param {Array} observedRoots
+ */
+export function matchRootTuples(expectedRoots, observedRoots) {
+  if (!Array.isArray(observedRoots) || observedRoots.length === 0) {
+    throw new Error('No game roots found in page DOM during live collection')
+  }
+  if (observedRoots.length !== expectedRoots.length) {
+    throw new Error(
+      `Root cardinality mismatch: expected ${expectedRoots.length}, found ${observedRoots.length}`
+    )
+  }
+  const usedIndices = new Set()
+  for (const exp of expectedRoots) {
+    let matchedIndex = -1
+    for (let i = 0; i < observedRoots.length; i++) {
+      if (usedIndices.has(i)) continue
+      const obs = observedRoots[i]
+      if (
+        obs.slideId === exp.slideId &&
+        obs.elementId === exp.elementId &&
+        obs.gameType === exp.gameType
+      ) {
+        matchedIndex = i
+        break
+      }
+    }
+    if (matchedIndex === -1) {
+      throw new Error(
+        `Expected root {slideId: ${exp.slideId}, elementId: ${exp.elementId}, gameType: ${exp.gameType}} not found in observed roots`
+      )
+    }
+    usedIndices.add(matchedIndex)
+  }
+  return true
+}
+
+export function normalizeUrlForIdentity(urlString) {
+  if (typeof urlString !== 'string' || !urlString) {
+    throw new Error(`Invalid URL string for identity normalization: ${urlString}`)
+  }
+  const parsed = new URL(urlString)
+  parsed.hash = ''
+  return parsed.href
+}
+
+export function computePlannedUrl(surface, { parentUrl, id, token, file }) {
+  if (surface === 'present') {
+    return new URL(`/api/presentations/${id}/present`, parentUrl).href
+  }
+  if (surface === 'share') {
+    return new URL(`/share/${token}`, parentUrl).href
+  }
+  if (surface === 'file') {
+    return pathToFileURL(file).href
+  }
+  throw new Error(`Unsupported surface for planned URL: ${surface}`)
+}
+
+export function validateDocumentIdentity(snapshot, plannedUrl = null, boundIdentity = null) {
+  if (!snapshot || typeof snapshot !== 'object') {
+    throw new Error('Document identity snapshot is required')
+  }
+  const { url, documentId, timeOrigin } = snapshot
+  if (!url || typeof url !== 'string' || url === 'about:blank') {
+    throw new Error(`Invalid observed document url: ${url}`)
+  }
+  if (!documentId || typeof documentId !== 'string') {
+    throw new Error(`Invalid observed documentId: ${documentId}`)
+  }
+  if (typeof timeOrigin !== 'number' || !Number.isFinite(timeOrigin)) {
+    throw new Error(`Invalid observed timeOrigin: ${timeOrigin}`)
+  }
+  if (plannedUrl) {
+    const plannedNorm = normalizeUrlForIdentity(plannedUrl)
+    const observedNorm = normalizeUrlForIdentity(url)
+    if (plannedNorm !== observedNorm) {
+      throw new Error(`Document URL mismatch: expected ${plannedUrl}, observed ${url}`)
+    }
+  }
+  if (boundIdentity) {
+    if (boundIdentity.documentId !== documentId) {
+      throw new Error(
+        `Document identity documentId mismatch: expected ${boundIdentity.documentId}, observed ${documentId}`
+      )
+    }
+    if (boundIdentity.timeOrigin !== timeOrigin) {
+      throw new Error(
+        `Document identity timeOrigin mismatch: expected ${boundIdentity.timeOrigin}, observed ${timeOrigin}`
+      )
+    }
+    const boundNorm = normalizeUrlForIdentity(boundIdentity.url)
+    const observedNorm = normalizeUrlForIdentity(url)
+    if (boundNorm !== observedNorm) {
+      throw new Error(
+        `Document identity URL mismatch: expected ${boundIdentity.url}, observed ${url}`
+      )
+    }
+  }
+  return snapshot
+}

@@ -1,0 +1,9 @@
+  window.addEventListener('pagehide', () => record('pagehide', null), true);
+  window.addEventListener('pageshow', () => record('pageshow', null), true);
+  window.addEventListener('error', (event) => record('error', { message: event.message }), true);
+  if (window.Reveal?.on) window.Reveal.on('ready', () => advanceTrigger(performance.now()));
+
+  window.__nsSetupActionRecorder?.(eventPackets, completedEvents, record, advanceTrigger);
+  if (setupSucceeded) window.__nsLifecycleRecorderReady = true;
+})();
+`

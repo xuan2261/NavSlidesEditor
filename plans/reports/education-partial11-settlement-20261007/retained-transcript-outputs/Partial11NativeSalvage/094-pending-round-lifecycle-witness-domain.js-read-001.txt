@@ -1,0 +1,137 @@
+import { expect } from '@playwright/test'
+import {
+  stripHash,
+  assertHistoryPrefix,
+} from './pending-round-lifecycle-history-domain.js'
+
+export { stripHash, assertHistoryPrefix }
+
+export const COUNTDOWN_KEYS = [
+  'phase', 'remainingMs', 'durationSeconds', 'deadline',
+  'pauseReason', 'expiries', 'revision', 'generation', 'runtimeMode',
+]
+
+export function assertCountdownKeys(state) {
+  expect(Object.keys(state).sort()).toEqual([...COUNTDOWN_KEYS].sort())
+}
+
+export function assertCountdownIdle(state) {
+  assertCountdownKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(0)
+  expect(state.phase).toBe('idle')
+  expect(state.remainingMs).toBe(4000)
+  expect(state.durationSeconds).toBe(4)
+  expect(state.deadline).toBeNull()
+  expect(state.pauseReason).toBeNull()
+  expect(state.expiries).toBe(0)
+  expect(state.revision).toBe(0)
+}
+
+export function assertCountdownRunning(state, deadlineBounds) {
+  assertCountdownKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(0)
+  expect(state.phase).toBe('running')
+  expect(state.durationSeconds).toBe(4)
+  expect(state.pauseReason).toBeNull()
+  expect(state.expiries).toBe(0)
+  expect(state.revision).toBe(1)
+  expect(typeof state.remainingMs).toBe('number')
+  expect(Number.isFinite(state.remainingMs)).toBe(true)
+  expect(state.remainingMs).toBeGreaterThan(0)
+  expect(state.remainingMs).toBeLessThanOrEqual(4000)
+  expect(typeof state.deadline).toBe('number')
+  expect(state.deadline).toBeGreaterThanOrEqual(deadlineBounds.min)
+  expect(state.deadline).toBeLessThanOrEqual(deadlineBounds.max)
+}
+
+export function assertCountdownExpired(state) {
+  assertCountdownKeys(state)
+  expect(state.runtimeMode).toBe('local')
+  expect(state.generation).toBe(0)
+  expect(state.phase).toBe('expired')
+  expect(state.remainingMs).toBe(0)
+  expect(state.durationSeconds).toBe(4)
+  expect(state.deadline).toBeNull()
+  expect(state.pauseReason).toBeNull()
+  expect(state.expiries).toBe(1)
+  expect(state.revision).toBe(2)
+}
+
+export function assertWitnessDomainAgreement(sample, startRecord) {
+  const d = startRecord?.rootDomain
+  if (!d) throw new Error('Witness startRecord lacks rootDomain')
+  if (sample.rootInstanceId !== d.rootInstanceId) {
+    throw new Error(`Witness rootInstanceId mismatch: expected ${d.rootInstanceId}, got ${sample.rootInstanceId}`)
+  }
+  if (sample.elementId !== d.elementId || sample.slideId !== d.slideId || sample.gameType !== d.gameType) {
+    throw new Error(`Witness root tuple mismatch for element ${sample.elementId}`)
+  }
+  if (sample.documentId !== d.documentId || sample.timeOrigin !== d.timeOrigin) {
+    throw new Error(`Witness document domain mismatch: doc ${sample.documentId} vs ${d.documentId}`)
+  }
+  if (stripHash(sample.url) !== stripHash(d.url)) {
+    throw new Error(`Witness URL domain mismatch: ${sample.url} vs ${d.url}`)
+  }
+}
+
+export function assertWitnessContinuity(sample, startRecord) {
+  if (sample.paused || sample.provenance?.hasOngoingPause) {
+    throw new Error('Witness continuity failure: root is currently paused')
+  }
+  if (sample.hidden || sample.visibilityState !== 'visible') {
+    throw new Error(`Witness continuity failure: document not visible (hidden=${sample.hidden}, state=${sample.visibilityState})`)
+  }
+
+  const baselineRootEvents = startRecord?.baselineRootEvents
+  const baselineDocEvents = startRecord?.baselineDocVisibilityEvents
+  assertHistoryPrefix(sample.rootEvents, baselineRootEvents, 'rootEvents')
+  assertHistoryPrefix(sample.documentVisibilityEvents, baselineDocEvents, 'docVisibilityEvents')
+
+  if (sample.rootEvents.length !== baselineRootEvents.length) {
+    throw new Error(`Witness continuity failure: unexpected root events during run (current ${sample.rootEvents.length} !== baseline ${baselineRootEvents.length})`)
+  }
+  if (sample.documentVisibilityEvents.length !== baselineDocEvents.length) {
+    throw new Error(`Witness continuity failure: document visibility changed during run (current ${sample.documentVisibilityEvents.length} !== baseline ${baselineDocEvents.length})`)
+  }
+
+  const currentCompleted = sample.provenance?.completedPauseCount
+  const baselineCompleted = startRecord?.initialCompletedHiddenPairs
+  if (typeof currentCompleted !== 'number' || typeof baselineCompleted !== 'number' || currentCompleted !== baselineCompleted) {
+    throw new Error(`Witness continuity failure: unexpected pause count mismatch (${currentCompleted} vs ${baselineCompleted})`)
+  }
+}
+
+export function validateRunningWitnessPoll(sample, startRecord) {
+  assertWitnessDomainAgreement(sample, startRecord)
+  assertWitnessContinuity(sample, startRecord)
+  const s = sample.state
+  if (!s || typeof s !== 'object') throw new Error('Running witness poll lacks state')
+  assertCountdownKeys(s)
+  if (s.runtimeMode !== 'local') throw new Error(`Expected runtimeMode local, got ${s.runtimeMode}`)
+  if (s.generation !== (startRecord.runningSample?.state?.generation ?? 0)) {
+    throw new Error(`Witness generation mismatch: ${s.generation}`)
+  }
+  if (s.durationSeconds !== 4) throw new Error(`Expected durationSeconds 4, got ${s.durationSeconds}`)
+  if (s.revision !== 1) throw new Error(`Expected running revision 1, got ${s.revision}`)
+  if (typeof s.remainingMs !== 'number' || !Number.isFinite(s.remainingMs) || s.remainingMs <= 0 || s.remainingMs > 4000) {
+    throw new Error(`Invalid remainingMs: ${s.remainingMs}`)
+  }
+  if (s.expiries !== 0) throw new Error(`Expected expiries 0, got ${s.expiries}`)
+  if (s.pauseReason !== null) throw new Error(`Expected null pauseReason, got ${s.pauseReason}`)
+  if (s.deadline !== startRecord.deadline) {
+    throw new Error(`Witness deadline mismatch: expected ${startRecord.deadline}, got ${s.deadline}`)
+  }
+}
+
+export function validateExpiredWitnessPoll(sample, startRecord) {
+  assertWitnessDomainAgreement(sample, startRecord)
+  assertWitnessContinuity(sample, startRecord)
+  const s = sample.state
+  if (!s || typeof s !== 'object') throw new Error('Expired witness poll lacks state')
+  assertCountdownExpired(s)
+  if (s.generation !== (startRecord.runningSample?.state?.generation ?? 0)) {
+    throw new Error(`Witness generation mismatch at expiry: ${s.generation}`)
+  }
+}

@@ -1,0 +1,192 @@
+{
+  "kind": "REPORTED_COMPONENT_PRIMARY_COVERAGE_INDEX_ONLY",
+  "subjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+  "coverageBasis": "Actual persisted component manifests; not Main full-source read certification or frozen-input remeasurement.",
+  "components": [
+    {
+      "component": "state",
+      "file": "pending-round-lifecycle-state.js",
+      "evidence": {
+        "file": "pending-round-lifecycle-state.js",
+        "coveredRanges": [
+          [
+            1,
+            120
+          ]
+        ],
+        "requestedRead": "1-210:raw",
+        "eof": 120,
+        "eofText": "}",
+        "completeBody": true,
+        "outputReference": "Tool call Reading independent state dispatch; Locating primary file endpoints anchors the final assertPeerInvariance closure."
+      }
+    },
+    {
+      "component": "state",
+      "file": "pending-round-lifecycle-quiz-state.js",
+      "evidence": {
+        "file": "pending-round-lifecycle-quiz-state.js",
+        "coveredRanges": [
+          [
+            1,
+            106
+          ]
+        ],
+        "requestedRead": "1-230:raw",
+        "eof": 106,
+        "eofText": "}",
+        "completeBody": true,
+        "outputReference": "Tool call Reading complete quiz expectations; Locating primary file endpoints anchors the final assertQuizTerminalExpiry closure."
+      }
+    },
+    {
+      "component": "state",
+      "file": "pending-round-lifecycle-hot-potato-state.js",
+      "evidence": {
+        "file": "pending-round-lifecycle-hot-potato-state.js",
+        "coveredRanges": [
+          [
+            1,
+            112
+          ]
+        ],
+        "requestedRead": "1-220:raw",
+        "eof": 112,
+        "eofText": "}",
+        "completeBody": true,
+        "outputReference": "Tool call Reading hot potato expectations; Locating primary file endpoints anchors the final roster-peer UI closure."
+      }
+    },
+    {
+      "component": "state",
+      "file": "pending-round-lifecycle-jeopardy-state.js",
+      "evidence": {
+        "file": "pending-round-lifecycle-jeopardy-state.js",
+        "coveredRanges": [
+          [
+            1,
+            106
+          ]
+        ],
+        "requestedRead": "1-220:raw",
+        "eof": 106,
+        "eofText": "}",
+        "completeBody": true,
+        "outputReference": "Tool call Reading jeopardy expectations; Locating primary file endpoints anchors the reset UI closure."
+      }
+    },
+    {
+      "component": "state",
+      "file": "pending-round-lifecycle-relay-state.js",
+      "evidence": {
+        "file": "pending-round-lifecycle-relay-state.js",
+        "coveredRanges": [
+          [
+            1,
+            114
+          ]
+        ],
+        "requestedRead": "1-230:raw",
+        "eof": 114,
+        "eofText": "}",
+        "completeBody": true,
+        "outputReference": "Tool call Reading relay expectations; Locating primary file endpoints anchors the reset UI closure."
+      }
+    },
+    {
+      "component": "state",
+      "file": "pending-round-lifecycle-trivia-state.js",
+      "evidence": {
+        "file": "pending-round-lifecycle-trivia-state.js",
+        "coveredRanges": [
+          [
+            1,
+            197
+          ]
+        ],
+        "requestedRead": "1-250:raw;187-210:raw",
+        "eof": 197,
+        "eofText": "}",
+        "completeBody": true,
+        "outputReference": "Tool calls Reading trivia expectations and Confirming trivia complete EOF; Confirming primary EOF anchors explicitly returns lines190-197."
+      }
+    },
+    {
+      "component": "surface",
+      "file": "pending-round-lifecycle-surfaces.js",
+      "evidence": {
+        "file": "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+        "exactCompleteContentRanges": [
+          "1-100",
+          "101-193"
+        ],
+        "EOFContentLine": 193,
+        "additionalEOFRead": "194-205 returned no further content",
+        "fullBodyAndOmissionsExpanded": true,
+        "attributableReadRequests": [
+          ":1-199",
+          ":1-100:raw",
+          ":101-193:raw",
+          ":194-205:raw"
+        ]
+      }
+    },
+    {
+      "component": "surface",
+      "file": "pending-round-lifecycle-evidence-domain.js",
+      "evidence": {
+        "file": "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+        "exactCompleteContentRanges": [
+          "1-143"
+        ],
+        "EOFContentLine": 143,
+        "EOFMarker": "Final return snapshot and closing brace; overrun raw read through160",
+        "fullBodyAndOmissionsExpanded": true,
+        "attributableReadRequests": [
+          ":1-199",
+          ":1-160:raw",
+          ":102-145:raw"
+        ]
+      }
+    },
+    {
+      "component": "surface",
+      "file": "release-surfaces.js",
+      "evidence": {
+        "file": "tests/e2e/education/release-surfaces.js",
+        "exactCompleteContentRanges": [
+          "1-100",
+          "101-199"
+        ],
+        "EOFContentLine": 199,
+        "EOFMarker": "findFrame final return selected and closing brace; second raw read through210 covers reader-reported terminal empty line200",
+        "fullBodyAndOmissionsExpanded": true,
+        "attributableReadRequests": [
+          ":1-199",
+          ":1-100:raw",
+          ":101-210:raw",
+          ":98-143:raw"
+        ]
+      }
+    },
+    {
+      "component": "surface",
+      "file": "present-offline-helpers.js",
+      "evidence": {
+        "file": "tests/e2e/education/present-offline-helpers.js",
+        "exactCompleteContentRanges": [
+          "1-28"
+        ],
+        "EOFContentLine": 28,
+        "EOFMarker": "launchPresentSlidePopup final catch/closing brace; raw read through35",
+        "fullBodyAndOmissionsExpanded": true,
+        "attributableReadRequests": [
+          ":1-199",
+          ":1-35:raw"
+        ]
+      }
+    },
+    {
+      "component": "surface",
+
+[Showing lines 1-190 of 586. Use :191 to continue]

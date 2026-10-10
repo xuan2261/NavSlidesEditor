@@ -1,0 +1,27 @@
+.
+  - utils/                       4d ago
+    - util.ts          7.3KB     4d ago
+    - loader.ts        1.0KB     4d ago
+    - device.ts        295B      4d ago
+    - constants.ts     950B      4d ago
+    - color.ts         1.8KB     4d ago
+  - reveal.d.ts        20.9KB    4d ago
+  - index.ts           2.0KB     4d ago
+  - config.ts          21.3KB    4d ago
+  - controllers/                 4d ago
+    - touch.js         8.0KB     4d ago
+    - slidenumber.js   3.6KB     4d ago
+    - slidecontent.js  20.8KB    4d ago
+    - scrollview.js    27.3KB    4d ago
+    - progress.js      2.1KB     4d ago
+    - printview.js     7.5KB     4d ago
+    - pointer.js       2.8KB     4d ago
+    - plugins.js       5.3KB     4d ago
+    - overview.js      6.4KB     4d ago
+    - overlay.js       10.7KB    4d ago
+    - notes.js         2.8KB     4d ago
+    - … 7 more
+    - autoanimate.js   19.9KB    4d ago
+  - reveal.js          78.5KB    4d ago
+  - components/                  4d ago
+    - playback.js      3.8KB     4d ago

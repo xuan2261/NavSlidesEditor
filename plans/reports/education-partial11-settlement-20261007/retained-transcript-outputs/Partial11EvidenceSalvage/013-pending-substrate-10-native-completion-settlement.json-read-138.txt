@@ -1,0 +1,122 @@
+    {
+      "id": "09-S5",
+      "disposition": "PARTIAL_REPAIR_REQUIRED",
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-error-ledger.js:13",
+        "tests/e2e/education/pending-round-lifecycle-error-exposure.js:7-14,37-56,77-85"
+      ],
+      "mechanism": "serializeError now respects effectivePhase (preferring the passed wrapper/caller phase over err.phase). However, in ingestPreexistingErrors (error-exposure.js:77-85), when a caller errorLedger item lacks an explicit phase, resolveWrapperMeta falls back to err.phase or '${phase}:errorLedger'. If that error was already recorded with an authoritative explicit phase (e.g. 'portable:close'), reconcileEntry overwrites the existing entry's authoritative phase with the fallback, re-serializing it and losing the original recorded phase. See finding S10-C2."
+    }
+  ],
+  "chronologyObligationDispositions": [
+    {
+      "evidence": "Setup-before-snapshot survives: observation-errors.js:25-33 records a recorder:setup envelope first. Document validation stays last (:87-89). Every non-setup recorder error, however, is placed after all packet and raw getter errors (:81-83), which is a fixed category order. S10-C1 is independently CONFIRMED from source, and the scope is broader than claimed. (a) completePacket sets the recorder:store envelope at native-history.js:80-82, before the post-handler getters in afterSnap at :93. (b) The capture handler sets it at :134-136, after stateBefore/uiBefore (:132) but before stateAfter/uiAfter. (c) record() sets it at native-observation.js:80-86 whenever the public store is found replaced, which can be before the capture getters themselves. (d) Correlated and cursor reads forward a pre-existing window.__nsLifecycleRecorderError (observation-browser.js:85, :59-61), whose occurrence precedes that read's getters (:78, :32). The envelopes have no observation time or packet-phase marker, so Node cannot recover the actual position.",
+      "mechanism": "error-ledger.js:94-101, 120-121 assigns order and primary by arrival. Example: the store is truncated before a Start click, so capture sets recorder:store at tCap and a stateAfter getter then throws at bubble. extractActionBracket records packet:stateAfter first and throws it as primary, even though the recorder:store failure occurred first. See NF-A1.",
+      "id": "09-C1",
+      "title": "Packet getter vs later extraction recorder/document occurrence; setup-before-later-snapshot; no universal category sort (S10-C1)",
+      "disposition": "REPAIR_REQUIRED"
+    },
+    {
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-error-exposure.js:72-105"
+      ],
+      "mechanism": "actualRef.errorLedger is traversed before secondaryFailures. When errorLedger contains [a, b] and secondaryFailures contains [b], 'a' is recorded first, then 'b' is recorded with its wrapper metadata. The subsequent secondaryFailures loop encounters 'b', locates its existing entry, and performs reconcileEntry without re-appending or changing chronological order, preserving caller-ledger [a, b] sequence. Numeric namespaces are never sorted.",
+      "id": "09-C2",
+      "disposition": "SOURCE_CORRECTED_LOCAL"
+    }
+  ],
+  "preservationDispositions": [
+    {
+      "evidence": [
+        "tests/e2e/education/release-portable-inspection.js:20-33",
+        "tests/e2e/education/release-surfaces.js:80-82,100-110"
+      ],
+      "id": "E06-02 (chronological frame dispatch)",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "mechanism": "release-portable-inspection.js dispatches frame evaluation rejections at arrival order via recordArrival('portable:frame', rawError, { frameUrl }). release-surfaces.js records pageerror events at arrival ('portable:pageerror'). Chronological arrival order is preserved in the common ledger."
+    },
+    {
+      "mechanism": "Raw Error instances are passed without property mutation; frameUrl and diagnostic context are carried as sidecar metadata in recordArrival and stored on entry.metadata and serialized error object, leaving the actual Error reference clean.",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "id": "E06-03 (actual Error/sidecar separation)",
+      "evidence": [
+        "tests/e2e/education/release-portable-inspection.js:25-31,40-43",
+        "tests/e2e/education/pending-round-lifecycle-error-ledger.js:87-103"
+      ]
+    },
+    {
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-live-root-observation.js:119-124",
+        "tests/e2e/education/pending-round-lifecycle-live-evidence.js:38-43"
+      ],
+      "id": "E06-04 (state-before-UI ordering)",
+      "mechanism": "live-root-observation evaluates and pushes snapshot.stateError before snapshot.uiError into rootErrors. live-evidence iterates rootErrors sequentially, recording state errors ahead of UI errors in the common ledger.",
+      "disposition": "SOURCE_PRESERVED_LOCAL"
+    },
+    {
+      "id": "E06-05 (recursive provenance/cause propagation)",
+      "mechanism": "serializeError recursively normalizes error causes with namespaced phases (${effectivePhase}:cause) and preserves rootInstanceId, documentId, and timeOrigin. materializeEnvelope recursively instantiates Error causes and preserves domain properties. evidence.js finalize extracts rootInstanceId and timeOrigin onto primaryError record.",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-error-ledger.js:20,30-45,61-68",
+        "tests/e2e/education/pending-round-lifecycle-evidence.js:173-178"
+      ]
+    },
+    {
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "id": "Real surface callback/ownership",
+      "mechanism": "visitSurface manages present, share, and file surfaces. It binds document identity and planned URLs, sets active page on evidence sink, provides clean { page, surface, file, inspectNetwork, diagnostics, error } contexts to visitor callbacks, and executes safeClose in finally blocks.",
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-surfaces.js:40-190"
+      ]
+    },
+    {
+      "mechanism": "freshPortable sets up reduced motion, network route interception, WebSocket mocks, and onPageCreated callback hooks. Setup and navigation errors record portable:setup / portable:navigation and safe-close contexts. If inspectNetwork fails, no-sink consumers fall back to throwing primary or raw frame errors. Strict success return structure { protocol, httpAttempts, socketAttempts, errors } is maintained.",
+      "id": "Portable setup/navigation/close and no-sink",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "evidence": [
+        "tests/e2e/education/release-surfaces.js:18-142",
+        "tests/e2e/education/release-portable-inspection.js:8-54"
+      ]
+    },
+    {
+      "mechanism": "validateManifest strictly enforces exact 3-key shape (slideId, elementId, gameType). matchRootTuples enforces 1:1 multiset equality. validateDocumentIdentity enforces documentId, timeOrigin, and normalized plannedUrl equality against bound journey identity. Raw observations and manifests are staged before assertions.",
+      "id": "Raw staging/document identity/root tuples",
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-evidence-domain.js:10-74,96-125",
+        "tests/e2e/education/pending-round-lifecycle-evidence.js:65-92"
+      ],
+      "disposition": "SOURCE_PRESERVED_LOCAL"
+    },
+    {
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-evidence.js:140-195",
+        "tests/e2e/education/pending-round-lifecycle-error-ledger.js:140-148"
+      ],
+      "mechanism": "finalize records runner error, prerequisite missing baseline, source invariant verification failures, and attachment error sequentially. getSerializedErrors captures all accumulated diagnostics. produceThrow exposes late errors and throws the authoritative normalized primary error.",
+      "id": "Late exposures/finalization",
+      "disposition": "SOURCE_PRESERVED_LOCAL"
+    },
+    {
+      "evidence": [
+        "tests/e2e/education/pending-round-lifecycle-cases.js:1-200",
+        "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js:1-87",
+        "tests/e2e/education/pending-round-lifecycle-leave-return.js:1-137",
+        "tests/e2e/education/pending-round-lifecycle-reset.js:1-110",
+        "tests/e2e/education/pending-round-lifecycle-isolation.js:1-124"
+      ],
+      "id": "Consumer compatibility of 12 unchanged callers",
+      "disposition": "SOURCE_PRESERVED_LOCAL",
+      "mechanism": "All helper exports and module bindings imported by the 12 Phase2 callers exist and maintain syntactically valid ESM signatures. Caller-side call sites require signature migration (passing evidence sinks, startRecord, etc.) under the deferred caller cutover protocol, but no missing exports or broken contracts exist in the helper modules."
+    }
+  ],
+  "newSourceBackedFindings": [
+    {
+      "id": "S10-C1",
+      "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+      "consumerVisibleMechanism": "Every non-setup recorder error (recorder:store) is recorded after all packet and raw getter errors. The browser can set it earlier: before the post-handler getters (native-history.js:80-82 vs :93), after capture getters but before bubble getters (:132 vs :134-136), or at any earlier record() call (native-observation.js:80-86). Pre-existing errors are also forwarded by later reads (observation-browser.js:59-61, :85, :149). Because the ledger assigns primary and order by arrival (error-ledger.js:94-101, 120-121), a later stateAfter/uiAfter or read getter failure becomes the thrown primary and serialized chronology is inverted. This confirms Evidence10 claim S10-C1 by independent trace, and the defect also covers capture-phase and pre-read occurrences.",
+      "repairNeeded": "At each browser site that sets __nsLifecycleRecorderError, attach an observation position: performance.now() at set time and, inside the action recorder, the packet sequence plus capture/bubble phase. Alternatively, copy the recorder error into the packet at the point where it was observed. Then have assertAndRecordObservationErrors interleave recorder occurrences with packet capture/bubble getter occurrences and raw-read getters by actual position. Setup must remain first and Node document validation last. Do not use a fixed category order.",
+      "priority": 2,
+      "lineStart": 81,
+
+[Showing lines 461-580 of 723. Use :581 to continue]

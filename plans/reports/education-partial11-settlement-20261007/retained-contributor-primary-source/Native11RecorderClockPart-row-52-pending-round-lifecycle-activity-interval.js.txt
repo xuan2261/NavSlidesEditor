@@ -1,0 +1,102 @@
+import { expect } from '@playwright/test'
+
+function assertFiniteInterval(interval, name = 'interval') {
+  if (!interval || typeof interval !== 'object') {
+    throw new Error(`${name} must be an object`)
+  }
+  if (typeof interval.min !== 'number' || !Number.isFinite(interval.min)) {
+    throw new Error(`${name}.min must be a finite number`)
+  }
+  if (typeof interval.max !== 'number' || !Number.isFinite(interval.max)) {
+    throw new Error(`${name}.max must be a finite number`)
+  }
+  if (interval.min > interval.max) {
+    throw new Error(`${name}.min (${interval.min}) cannot exceed ${name}.max (${interval.max})`)
+  }
+}
+
+/**
+ * Computes completed hidden duration interval from correlated pause/resume pairs.
+ * @param {Array<{pause: {min: number, max: number}, resume: {min: number, max: number}}>} completedPairs
+ * @returns {{min: number, max: number}}
+ */
+export function computeCompletedHiddenInterval(completedPairs = []) {
+  let min = 0
+  let max = 0
+  for (const pair of completedPairs) {
+    assertFiniteInterval(pair?.pause, 'pair.pause')
+    assertFiniteInterval(pair?.resume, 'pair.resume')
+    const durationMin = Math.max(0, pair.resume.min - pair.pause.max)
+    const durationMax = Math.max(0, pair.resume.max - pair.pause.min)
+    min += durationMin
+    max += durationMax
+  }
+  return { min, max }
+}
+
+/**
+ * Computes activity interval for a root given raw read interval and pause state.
+ * @param {Object} params
+ * @param {{min: number, max: number}} params.rawInterval
+ * @param {boolean} params.paused
+ * @param {{min: number, max: number}|null} [params.ongoingPause]
+ * @param {{min: number, max: number}} params.completedHidden
+ * @returns {{min: number, max: number}}
+ */
+export function computeActivityInterval({ rawInterval, paused, ongoingPause, completedHidden }) {
+  assertFiniteInterval(completedHidden, 'completedHidden')
+  if (paused) {
+    if (!ongoingPause) {
+      throw new Error('Paused root requires valid ongoingPause anchor')
+    }
+    assertFiniteInterval(ongoingPause, 'ongoingPause')
+    return {
+      min: ongoingPause.min - completedHidden.max,
+      max: ongoingPause.max - completedHidden.min,
+    }
+  }
+  if (!rawInterval) {
+    throw new Error('Active root requires valid rawInterval')
+  }
+  assertFiniteInterval(rawInterval, 'rawInterval')
+  return {
+    min: rawInterval.min - completedHidden.max,
+    max: rawInterval.max - completedHidden.min,
+  }
+}
+
+/**
+ * Derives strict deadline bounds from a native action bracket without arbitrary slack.
+ * @param {Object} actionBracket
+ * @param {number} durationMs
+ * @returns {{min: number, max: number}}
+ */
+export function deriveDeadlineBounds(actionBracket, durationMs) {
+  if (typeof durationMs !== 'number' || !Number.isFinite(durationMs) || durationMs <= 0) {
+    throw new Error(`durationMs must be a finite positive number, got: ${durationMs}`)
+  }
+  if (!actionBracket?.activityInterval) {
+    throw new Error('Action bracket must contain activityInterval')
+  }
+  assertFiniteInterval(actionBracket.activityInterval, 'actionBracket.activityInterval')
+  return {
+    min: actionBracket.activityInterval.min + durationMs,
+    max: actionBracket.activityInterval.max + durationMs,
+  }
+}
+
+/**
+ * Asserts positive pending work across the entire native action bracket.
+ * @param {number} oldDue
+ * @param {Object} actionBracket
+ */
+export function assertPositivePendingAtAction(oldDue, actionBracket) {
+  if (typeof oldDue !== 'number' || !Number.isFinite(oldDue)) {
+    throw new Error(`oldDue must be a finite number, got: ${oldDue}`)
+  }
+  if (!actionBracket?.activityInterval) {
+    throw new Error('Action bracket must contain activityInterval')
+  }
+  assertFiniteInterval(actionBracket.activityInterval, 'actionBracket.activityInterval')
+  expect(oldDue).toBeGreaterThan(actionBracket.activityInterval.max)
+}

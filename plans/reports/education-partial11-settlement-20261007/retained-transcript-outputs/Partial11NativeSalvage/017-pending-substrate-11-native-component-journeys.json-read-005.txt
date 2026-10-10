@@ -1,0 +1,202 @@
+      {
+        "ids": [
+          "RPC-04",
+          "RPC-05"
+        ],
+        "meaning": "Complete consumed return and justified original root-activity bounds remain required."
+      },
+      {
+        "ids": [
+          "RPC-06",
+          "RPC-07",
+          "RPC-08"
+        ],
+        "meaning": "Exact pending-at-Reset, Quiz old/new checkpoint/new expiry, authored config and full reset UI remain required."
+      },
+      {
+        "ids": [
+          "RPC-09",
+          "RPC-10"
+        ],
+        "meaning": "Exact Relay first transition and Trivia expiry/native Next, respectively; never relabel as packing/LOC."
+      },
+      {
+        "ids": [
+          "RPC-11",
+          "RPC-12"
+        ],
+        "meaning": "Primary protection beyond old due and full independently accepted divergent peer state AND UI remain required."
+      },
+      {
+        "ids": [
+          "RPC-13",
+          "RPC-14",
+          "RPC-15"
+        ],
+        "meaning": "Per-cell witness crossover, every preassert observation and complete failure-safe artifacts/source/error ownership remain required."
+      },
+      {
+        "ids": [
+          "RPC-16"
+        ],
+        "meaning": "Physical-file limits/readability are Main's recorded scope evidence, not a recount or substituted state correctness proof."
+      },
+      {
+        "ids": [
+          "RPC-17"
+        ],
+        "meaning": "Truthful source/receipt identity preservation remains distinct from producer source claims and missing genuine Native delivery."
+      }
+    ],
+    "originalImplications": [
+      {
+        "ids": [
+          "original-1",
+          "original-2",
+          "original-3"
+        ],
+        "meaning": "Preserve source layout, observe-active Quiz rather than Finish-as-Start, and real authored Jeopardy team/cell native selection; live geometry/complete native UI unexecuted."
+      },
+      {
+        "ids": [
+          "original-4",
+          "original-5",
+          "original-6"
+        ],
+        "meaning": "All leave-return, exact pending/reset and divergent same-game isolation state/UI/native clock obligations remain required."
+      },
+      {
+        "ids": [
+          "original-7"
+        ],
+        "meaning": "Exact measured Hot Potato speed-bonus formula remains an unchanged required other slice; untimed peer score10 does not close it."
+      },
+      {
+        "ids": [
+          "original-8"
+        ],
+        "meaning": "Scatter NFC composed/decomposed duplicate plus unique controls remains an unchanged required other slice."
+      },
+      {
+        "ids": [
+          "original-9"
+        ],
+        "meaning": "Full Trivia wrong/correct/default/nondefault/zero/nonbuzzer/duplicate-award scoring matrix remains an unchanged required other slice; pending peer score20 is not that matrix."
+      }
+    ],
+    "snapshots": "Both canonical snapshots were read in full. Their POC/PBR/TIMED/R/RPC/original subject identities remain authoritative; this component supplies current observations separately and does not replace historical snapshot values. Genuine Evidence11 receipt mapping equality/completeness is not independently audited by this slice."
+  },
+  "matrix": {
+    "status": "REQUIRED_UNEXECUTED",
+    "independentCells": "Each row below remains separately required on present, share and file; no representative canary replaces any cell.",
+    "rows": [
+      {
+        "concern": "leave-return",
+        "case": "quiz",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "leave-return",
+        "case": "hot-potato",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "leave-return",
+        "case": "jeopardy",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "leave-return",
+        "case": "relay-race",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "leave-return",
+        "case": "trivia-champ-q",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "leave-return",
+        "case": "trivia-champ-r",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "reset",
+        "case": "quiz",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "reset",
+        "case": "hot-potato",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "reset",
+        "case": "jeopardy",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "reset",
+        "case": "relay-race-deadline",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "reset",
+        "case": "relay-race-baton",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+      {
+        "concern": "reset",
+        "case": "trivia-champ-q",
+        "surfaces": {
+          "present": "REQUIRED_UNEXECUTED",
+          "share": "REQUIRED_UNEXECUTED",
+          "file": "REQUIRED_UNEXECUTED"
+        }
+      },
+
+[Showing lines 811-1010 of 1107. Use :1011 to continue]

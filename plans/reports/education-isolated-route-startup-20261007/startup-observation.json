@@ -1,0 +1,91 @@
+{
+  "kind": "ONE_ISOLATED_BOUNDED_STARTUP_NO_PROMPT",
+  "startedUTC": "2026-10-07T14:58:30.576181+00:00",
+  "elapsedSeconds": 12.031,
+  "command": [
+    "C:/Users/Z10PAD8C_Xuan2261/.local/bin/jeikcode.exe",
+    "--provider",
+    "local8045",
+    "--model",
+    "gemini-3.8-flash-high"
+  ],
+  "cwd": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/plans/reports/education-isolated-route-startup-20261007/startup-sandbox",
+  "pid": 2380,
+  "endedNaturally": false,
+  "processExitCode": 1,
+  "processReaped": true,
+  "stdinBytesWritten": 0,
+  "promptSubmitted": false,
+  "stdoutBytes": 552,
+  "stderrBytes": 0,
+  "rawOutputPersisted": false,
+  "redactedIndicators": [
+    {
+      "indicator": "target_model_token",
+      "count": 0,
+      "matchedTokensOnly": []
+    },
+    {
+      "indicator": "target_provider_token",
+      "count": 0,
+      "matchedTokensOnly": []
+    },
+    {
+      "indicator": "other_default_model_token",
+      "count": 0,
+      "matchedTokensOnly": []
+    },
+    {
+      "indicator": "stdin_not_terminal",
+      "count": 0,
+      "matchedTokensOnly": []
+    },
+    {
+      "indicator": "terminal_unavailable",
+      "count": 0,
+      "matchedTokensOnly": []
+    },
+    {
+      "indicator": "api_or_inference_error_token",
+      "count": 0,
+      "matchedTokensOnly": []
+    },
+    {
+      "indicator": "provider_or_model_error",
+      "count": 0,
+      "matchedTokensOnly": []
+    },
+    {
+      "indicator": "retry_policy_token",
+      "count": 0,
+      "matchedTokensOnly": []
+    }
+  ],
+  "routeLabelTokens": [],
+  "modelPinRequested": "local8045/gemini-3.8-flash-high",
+  "liveRouteBindingProven": false,
+  "retryFallbackAllLayersProven": false,
+  "inferenceRequestedByAgent": false,
+  "networkTrafficObserved": false,
+  "noNetworkOrStartupInferenceCertified": false,
+  "networkLimit": "No prompt/API call sent by agent; startup executable network behavior was not independently captured. Do not equate zero prompt bytes with zero network traffic.",
+  "configByteDigestsEqualAcrossStartup": {
+    "config.toml": true,
+    "models.yml": true
+  },
+  "configEditedByAgent": false,
+  "globalModelSwitchedByAgent": false,
+  "sandboxFiles": [],
+  "sessionGlobalSideEffects": "Not fully observed: startup may create caches/logs/session metadata outside sandbox. No cleanup or deletion performed.",
+  "DPathsOpenedByAgent": false,
+  "DPathsOpenedInternallyByExecutableCertifiedFalse": false,
+  "childPATHLegacyDEntriesExcluded": 0,
+  "sourceEdited": false,
+  "candidateCreated": false,
+  "testsExecuted": false,
+  "declaredCells": 54,
+  "admittedCells": 0,
+  "executedCells": 0,
+  "NF_A4RepairAuthorized": false,
+  "verdict": "STARTUP_OBSERVED_BUT_ROUTE_AND_POLICY_UNPROVEN"
+}

@@ -1,0 +1,43 @@
+		getBackgroundsElement: () => backgrounds.element,
+
+		// API for registering and retrieving plugins
+		registerPlugin: plugins.registerPlugin.bind( plugins ),
+		hasPlugin: plugins.hasPlugin.bind( plugins ),
+		getPlugin: plugins.getPlugin.bind( plugins ),
+		getPlugins: plugins.getRegisteredPlugins.bind( plugins )
+
+	};
+
+	// Our internal API which controllers have access to
+	Util.extend( Reveal, {
+		...API,
+
+		// Methods for announcing content to screen readers
+		announceStatus,
+		getStatusText,
+
+		// Controllers
+		focus,
+		scroll: scrollView,
+		progress,
+		controls,
+		location,
+		overview,
+		keyboard,
+		fragments,
+		backgrounds,
+		slideContent,
+		slideNumber,
+
+		onUserInput,
+		closeOverlay: overlay.close.bind( overlay ),
+		updateSlidesVisibility,
+		layoutSlideContents,
+		transformSlides,
+		cueAutoSlide,
+		cancelAutoSlide
+	} );
+
+	return API;
+
+};

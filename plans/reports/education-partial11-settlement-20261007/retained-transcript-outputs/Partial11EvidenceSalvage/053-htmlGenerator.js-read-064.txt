@@ -1,0 +1,172 @@
+            return `<span style="${escapeHtml(`color:${color};${weight}`)}">${escapeHtml(sec || `Section ${i + 1}`)}</span>`
+          })
+          .join('')
+        const pageSpan = pageLabel
+          ? `<span style="margin-left:12px;flex-shrink:0;">${pageLabel}</span>`
+          : ''
+        footerHtml = `      <div class="reveal-footer" style="position:absolute;bottom:6px;left:16px;right:16px;z-index:900;display:flex;justify-content:center;align-items:center;pointer-events:none;box-sizing:border-box;"><div style="display:flex;flex:1;justify-content:space-evenly;align-items:center;">${seqSpans}</div>${pageSpan}</div>`
+      } else {
+        const sectionLabel = showFooter && slide.section ? escapeHtml(slide.section) : ''
+        footerHtml =
+          sectionLabel || pageLabel
+            ? `      <div class="reveal-footer" style="position:absolute;bottom:8px;left:16px;right:16px;z-index:900;display:flex;justify-content:space-between;align-items:center;pointer-events:none;box-sizing:border-box;"><span>${sectionLabel}</span><span>${pageLabel}</span></div>`
+            : ''
+      }
+      const gridHtml = showPresentGrid
+        ? `      <div style="position:absolute;inset:0;z-index:950;pointer-events:none;background-image:linear-gradient(to right,rgba(255,255,255,0.12) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,0.12) 1px,transparent 1px);background-size:${presentGridSize}px ${presentGridSize}px;"></div>`
+        : ''
+
+      const fxCanvas = getFxCanvasHtml(slide.background)
+      const bgStyle = getSectionBackgroundStyle(slide.background, usesTokens)
+      const sectionHtml = `    <section data-ns-effective-slide-id="${escapeHtml(effectiveSlideId)}"${autoAnimateAttr}${transitionAttrs}${bgAttrs}${slideIdxAttr} style="${escapeHtml(`padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));${getSlideTransitionStyle(slide)}${bgStyle}`)}">\n${fxCanvas}${elementsHtml}\n${footerHtml}\n${gridHtml}\n      ${notes}\n    </section>`
+
+      // Vertical slides support: if slide has children, wrap in a vertical section stack
+      if (slide.children && slide.children.length > 0) {
+        const childSections = slide.children
+          .map((sourceChild, childIndex) => {
+            const child = resolveSlideForRender(sourceChild, presentation)
+            const childSlideId = effectiveSlideIdentity(child, slideIndex, childIndex + 1)
+            const childBg = getBackgroundAttrs(child.background)
+            const childKey = `${slideIndex}.${childIndex}`
+            const childIdxAttr =
+              slideOverrideIdx && slideOverrideIdx.has(childKey)
+                ? ` data-slide-idx="${childKey}"`
+                : ''
+            const childFxCanvas = getFxCanvasHtml(child.background)
+            const childAutoAnimate = child.autoAnimate ? ' data-auto-animate' : ''
+            const childTransitionAttrs = getSlideTransitionAttrs(child)
+            const childNotesText = includeSpeakerNotes ? getSlideNotes(child) : ''
+            const childNotes = childNotesText
+              ? `<aside class="notes">${escapeHtml(childNotesText)}</aside>`
+              : ''
+            const childElements = renderSlideElements(child, {
+              forPrint: false,
+              baseUrl: options.baseUrl,
+              educationView,
+              gameConfigs: gameConfigsBySlide.get(childSlideId),
+              slideBackground: getPresentChartBackground(child, deckTokens, usesTokens),
+            })
+            const childBgStyle = getSectionBackgroundStyle(child.background, usesTokens)
+            return `    <section data-ns-effective-slide-id="${escapeHtml(childSlideId)}"${childAutoAnimate}${childTransitionAttrs}${childBg}${childIdxAttr} style="${escapeHtml(`padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));${getSlideTransitionStyle(child)}${childBgStyle}`)}">\n${childFxCanvas}${childElements}\n      ${childNotes}\n    </section>`
+          })
+          .join('\n')
+        return `  <section>\n${sectionHtml}\n${childSections}\n  </section>`
+      }
+
+      return sectionHtml
+    })
+    .join('\n')
+
+  return `<!doctype html>
+<html data-ns-education-view="${educationView}" data-ns-presentation-id="${escapeHtml(presentation.id || '')}" data-ns-content-revision="${escapeHtml(presentation.updatedAt || '')}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="navslides-reveal-version" content="${REVEAL_RUNTIME_VERSION}">
+  <title>${escapeHtml(presentation.title || 'Presentation')}</title>
+  <link rel="stylesheet" href="${REVEAL_ASSET_PATHS.resetCss}">
+  <link rel="stylesheet" href="${REVEAL_ASSET_PATHS.revealCss}">
+  <link rel="stylesheet" href="${revealThemePath(presentation.theme || 'black')}">
+  <link rel="stylesheet" href="/vendor/highlight.js/styles/${escapeHtml(codeTheme)}.min.css">
+  <link rel="stylesheet" href="/vendor/katex/dist/katex.min.css">
+  <link rel="stylesheet" href="/reveal-overrides.css">
+${hasEducationRuntime ? `  <link rel="stylesheet" href="${EDUCATION_ASSET_PATHS.runtimeCss}">` : ''}
+
+  <style>${safeStyleText(`
+    html, body { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; background: #000; }
+    /* Reset reveal.js section padding/alignment so absolute positions match the 960x540 editor canvas exactly */
+    .reveal .slides section { padding: 0 !important; text-align: left !important; line-height: normal !important; overflow: hidden; }
+${transitionMetadataCss}    /* Neutralise theme typography overrides so presentation matches editor exactly */
+    /* font-family only on section (inherited) so KaTeX's explicit rules take precedence */
+    .reveal .slides section { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .reveal .slides section * { text-transform: none !important; letter-spacing: normal !important; }
+    /* Explicit heading sizes ΓÇö override theme so present mode matches editor exactly */
+    .reveal .slides section h1 { font-size: 2.5em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .reveal .slides section h2 { font-size: 1.6em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .reveal .slides section h3 { font-size: 1.3em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .reveal .slides section h4 { font-size: 1em;   font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .reveal .slides section p  { margin: 0 0 6px; line-height: 1.5; }
+    .reveal .slides section ul,
+    .reveal .slides section ol { padding-left: 24px; margin: 0 0 6px; }
+    .reveal .slides section li { margin-bottom: 3px; line-height: 1.5; }
+    .reveal .slides section a  { text-decoration: underline; }
+    /* Neutralize Reveal image decoration; native games own their media bounds. */
+    .reveal .slides section img { margin: 0 !important; border: none !important; background: none !important; box-shadow: none !important; }
+    .reveal .slides section img:not([data-ns-game] img) { max-width: none !important; max-height: none !important; }
+    /* Footer ΓÇö explicit CSS rule with high specificity so reveal.js theme cannot override */
+    .reveal .slides section .reveal-footer,
+    .reveal .slides section .reveal-footer * { font-family: ${footerFontFamily} !important; font-size: ${footerFontSize}px !important; color: ${footerColor} !important; }
+${
+  hasActions
+    ? `    .reveal .slides .ns-element-action { outline: none; }
+    .reveal .slides .ns-element-action:focus-visible { outline: 3px solid #60a5fa; outline-offset: -3px; }
+    #ns-action-feedback { position:fixed;left:50%;bottom:20px;z-index:2000;transform:translateX(-50%);padding:8px 12px;border-radius:4px;background:rgba(0,0,0,.82);color:#fff;font:14px/1.2 sans-serif; }
+    #ns-action-feedback:empty { display:none; }
+`
+    : ''
+}`)}  </style>
+${tokenInfo ? `${tokenInfo.styleBlock}\n` : ''}  ${getPresenterToolsHead(presenterTools)}${presentation.customCSS ? `\n  <style>\n${safeStyleText(presentation.customCSS)}\n  </style>` : ''}
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+${slidesHtml}
+    </div>
+  </div>
+  <script type="application/json" data-ns-interaction-variables>${runtimeMetadata.variablesJson}</script>
+  ${getPresenterToolsBody(presenterTools)}
+${hasActions ? '  <div id="ns-action-feedback" role="status" aria-live="polite"></div>\n' : ''}  <script src="${REVEAL_ASSET_PATHS.revealJs}"></script>
+  <script src="${REVEAL_ASSET_PATHS.notesJs}"></script>
+  <script src="${REVEAL_ASSET_PATHS.highlightJs}"></script>
+  <script src="/vendor/katex/dist/katex.min.js"></script>
+  ${getPresenterToolsScripts(presenterTools)}
+${hasEducationRuntime ? `  <script src="${EDUCATION_ASSET_PATHS.runtimeJs}"></script>` : ''}
+  <script data-navslides-runtime="local">
+${
+  hasMediaElements
+    ? `    var disposeMedia = (${attachMediaPlaybackRoot.toString()})(document.querySelector('.reveal .slides'), ${attachMediaPlayback.toString()});
+    window.addEventListener('pagehide', disposeMedia, { once: true });
+`
+    : ''
+}
+    var params = new URLSearchParams(window.location.search);
+    var revealConfig = {
+      hash: true,
+      width: ${resW},
+      height: ${resH},
+      margin: 0,
+      minScale: 0,
+      maxScale: 10,
+      center: false,
+      transition: '${presentationTransition}',${transitionSpeedConfig}
+      keyboardCondition: function(event) {
+        var interactive = 'summary,video,audio';
+        return !(event.target && event.target.closest && event.target.closest(interactive)) &&
+          !(document.activeElement && document.activeElement.closest(interactive));
+      },
+      plugins: [ RevealNotes, RevealHighlight${getPresenterToolsPlugins(presenterTools)} ]${getPresenterToolsConfig(presenterTools) ? ',\n' + getPresenterToolsConfig(presenterTools) : ''}
+    };
+    ${Number.isFinite(Number(presentation.autoSlide)) && Number(presentation.autoSlide) > 0 ? `revealConfig.autoSlide = ${Number(presentation.autoSlide)};` : ''}
+    ${Number(presentation.autoSlide) > 0 && presentation.autoSlideLoop ? `revealConfig.loop = true;` : ''}
+    ${Number(presentation.autoSlide) > 0 && presentation.kioskMode ? `revealConfig.autoSlideStoppable = false;` : ''}
+    ${['default', 'linear', 'grid'].includes(presentation.navigationMode) ? `revealConfig.navigationMode = '${presentation.navigationMode}';` : ''}
+    if (params.get('scroll') === 'true') { revealConfig.view = 'scroll'; revealConfig.scrollProgress = true; }
+    Reveal.initialize(revealConfig);
+    Reveal.on('ready', function() {
+      document.querySelectorAll('span[data-math-latex]').forEach(function(el) {
+        try {
+          katex.render(el.getAttribute('data-math-latex'), el, {
+            displayMode: el.getAttribute('data-math-display') === 'true',
+            throwOnError: false
+          });
+        } catch(e) {}
+      });
+${options.portable ? '' : buildLivePresenterRuntime({ presentationId: presentation.id, hasGames: hasGameElements })}${hasActions ? buildActionRuntimeScript(resolvedPresentation) : ''}
+    });
+  </script>${getPresenterToolsInlineJS(presenterTools)}${fxRuntimeScript ? `\n${fxRuntimeScript}` : ''}
+</body>
+</html>`
+}
+
+
+[Showing lines 321-490 of 822. Use :491 to continue]

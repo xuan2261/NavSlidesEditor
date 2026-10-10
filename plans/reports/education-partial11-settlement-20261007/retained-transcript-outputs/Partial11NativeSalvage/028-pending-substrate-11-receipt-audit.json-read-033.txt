@@ -1,0 +1,132 @@
+        },
+        {
+          "id": "N07-07",
+          "authorityLine": 60,
+          "originalEnding": "propagate the earliest normalized returned occurrence rather than the domain wrapper.",
+          "receiptEnding": "propagate the earliest applicable normalized Error."
+        }
+      ],
+      "impact": "Four of twelve original Native bodies are rewritten or shortened. This is a receipt-fidelity discrepancy, not a conclusion that the changed source violates these obligations."
+    },
+    {
+      "id": "RC11-02",
+      "category": "ORIGINAL_PATH_PROVENANCE",
+      "receiptPath": "$.assignedOriginalFindings.{native,evidence}[*].file_path",
+      "receiptLines": [
+        66,
+        78,
+        90,
+        104,
+        115,
+        126,
+        137,
+        148,
+        159,
+        170,
+        181,
+        192,
+        203,
+        214,
+        225
+      ],
+      "requirement": "Full original finding paths and precise separate current source evidence are required by producer prompt line15.",
+      "actual": "All fifteen file_path values use tests/e2e/education/... rather than the governing reports' D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/... paths.",
+      "impact": "File suffixes and original line ranges remain identifiable, but the receipt does not preserve the original subject-root provenance or explicitly distinguish those historical locations from current locations."
+    },
+    {
+      "id": "RC11-03",
+      "category": "CURRENT_EVIDENCE_COMPLETENESS",
+      "receiptPath": "$.assignedOriginalFindings.native[*]",
+      "receiptLines": "100-233",
+      "requirement": "Producer prompt line15 requires precise current source evidence/dispositions for the original findings.",
+      "actual": "Every Native original entry has an old finding body/location and a disposition, but no precise current source evidence. Nine are asserted SOURCE_CORRECTED_LOCAL and three PARTIAL_REPAIR_REQUIRED.",
+      "impact": "The receipt cannot substantiate these current Native dispositions. The absent Native11 receipt cannot be replaced by these sibling assertions; this audit does not decide whether any of the assertions are true or stale."
+    },
+    {
+      "id": "RC11-04",
+      "category": "08_09_CHRONOLOGY_CURRENT_RECORD_COMPLETENESS",
+      "receiptPath": "$.assigned08And09FindingsAndChronology",
+      "receiptLines": "235-367",
+      "requirement": "Dispatch authority lines245-255 requires complete08/09 findings and chronology; producer prompt line15 requires separately recorded08/09/chronology and new11 findings.",
+      "actual": "The expected 6+5+2+6 identities are all enumerated, but the section is substantially title/disposition-only rather than a complete governing obligation record.",
+      "specificOmissions": [
+        "Native08-1..4: governing full bodies, source ranges and precise current evidence are missing; original Native audit titles are also shortened.",
+        "Evidence08-1..2: governing full bodies and original ranges are missing, although current evidence claims are supplied.",
+        "09-S1..3: source locations, mechanisms, full required repairs and current evidence are absent. In particular,09-S2 does not retain the explicit BOTH packet-storage and native-action diagnostic publication obligation.",
+        "09-S4/S5: original source ranges and full repair constraints are omitted despite concise stable-identity/phase claims.",
+        "09-C1: no full actual-arrival chronology record, including earlier setup versus later extraction distinctions and the prohibition on fixed category sorting.",
+        "09-C2: no full shared-reference/authoritative-wrapper/caller-object preservation and independent numeric-order namespace constraints.",
+        "S10-C1/NF-A2/NF-A3/N10B-01/N10B-02: no source paths/ranges or full consumer-visible mechanisms/required repairs; NATIVE_PARTITION_OWNED is ownership, not a completed repair disposition."
+      ],
+      "impact": "Enumeration is complete, but delivery detail is not. No omitted mechanism is promoted here into a newly observed source defect."
+    },
+    {
+      "id": "RC11-05",
+      "category": "DEFERRED_SCOPE_COMPLETENESS",
+      "receiptPath": "$.deferredCallerObligations",
+      "receiptLines": "401-418",
+      "requirement": "Producer prompt lines15 and18 expressly requires complete deferred obligations, not three generic sentences. Governing settled09 counsel lines240-253 preserves the detailed later acceptance scope.",
+      "actual": "The dedicated section lists twelve immutable files and an aggregate explanation, but does not reproduce the entire detailed caller/later-slice contract. The canonical NC bodies and historical snapshots elsewhere preserve some relevant detail, not all requirements.",
+      "missingExplicitObligations": [
+        "Complete clean twelve-caller sink/root-manifest/document forwarding and real Page callback/signature cutover; consumption of all action results, activity intervals, startRecord and measured expiry; no old aliases/shims.",
+        "The exact eighteen-row matrix: six leave-return rows (Quiz, Hot Potato, Jeopardy, Relay, Trivia question, Trivia round), seven reset rows (Quiz, Hot Potato, Jeopardy, Relay deadline, Relay baton, Trivia question, Trivia round), and five isolation rows (Quiz, Hot Potato, Jeopardy, Relay, Trivia), each independently on present/share/file.",
+        "Independently authored complete initial/pending/hidden/returned/reset/terminal/peer states AND native UI, measured consumed-return/original-expiry bounds, and original pending work at actual native Pass/Reset with exact due crossing.",
+        "Strict native Reset+5000 Quiz due, after-old/before-new checkpoint and new expiry without the old arbitrary800ms slack, together with the exact canonical terminal shape and complete reset controls/UI.",
+        "Full Relay peer validation/settlement and full first-timeout identity/team/question/lane/native UI invariance, including no extra Pass, fixed sleep, retry or arbitrary winner fallback.",
+        "Full Trivia question/round expiry and native Next retained identity/history/scores/awards/deadline/UI plus independently bounded next-question timing policy.",
+        "Every cell's full idle/running/expired witness state and UI, native Start+4000 bounds, original last-running/first-expired crossover interval and exact raw failure samples staged before assertions.",
+        "Earliest Present/share/file setup, exact root/document tuples and cardinality, native focus/geometry/control routing, complete live PNG/diagnostics, portable before/after network enforcement, source GET/config equality and failure-safe setup/close/attachment finalization.",
+        "Ordered gaps5..9 remain unchanged and required. The exact other-slice original7 Hot Potato speed-bonus, original8 Scattergories NFC duplicate/unique control and original9 full Trivia scoring policy matrix must remain explicit later obligations; their identities are retained in the canonical mappings, but not elaborated in the deferred section."
+      ],
+      "impact": "The receipt preserves REQUIRED_UNEXECUTED aggregate status but does not deliver the complete deferred scope expressly requested."
+    },
+    {
+      "id": "RC11-06",
+      "category": "EXCLUDED_SCOPE_RECORD_COMPLETENESS",
+      "receiptPath": "$.NF_A4_ScopeDisposition",
+      "receiptLines": "393-400",
+      "authorityPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-dispatch-authority.json",
+      "authorityLines": "210-222",
+      "actual": "The unresolved disposition, exclusion and scopeDecision are correctly retained. Line399 says 'Retained verbatim with source mechanism', but the receipt omits the actual mechanism, file/range and the public-packet-store versus retained-native-action distinction.",
+      "missingMechanism": "Governing authority describes replacement of __nsRecordedPackets or an element with a forged packet while lifecycle-store health remains true; the extraction/witness consumer can then adopt its bracket and baseline. It also identifies the corresponding lastSeq binding seam.",
+      "impact": "The NF-A4 scope state is not incorrectly waived or repaired, but its claimed complete mechanism retention is not satisfied. No source inspection or applicability resolution is performed here."
+    },
+    {
+      "id": "RC11-07",
+      "category": "PRESERVATION_RECORD_MISMATCH",
+      "receiptPath": "$.exactOwnedChanges.lineCounts['tests/e2e/education/pending-round-lifecycle-error-ledger.js']",
+      "receiptLines": "31",
+      "authorityPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-scope-preservation.json",
+      "authorityLines": [
+        "263-270",
+        "343-349"
+      ],
+      "claimed": 160,
+      "mainMeasured": 150,
+      "actual": "The genuine receipt claims160 ledger lines; Main's preserved inventory records150 and explicitly lists this discrepancy.",
+      "impact": "This count claim is inaccurate relative to Main's preservation record. Both values are below200; no helper line-limit violation follows from this discrepancy. The receipt remains verbatim and no count was independently measured."
+    },
+    {
+      "id": "RC11-08",
+      "category": "INDEPENDENT_COMBINED_DELIVERY_BLOCKER",
+      "receiptPath": "$.partition and $.assigned08And09FindingsAndChronology.new11Findings",
+      "receiptLines": [
+        "2-4",
+        "328-365"
+      ],
+      "authorityPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-dispatch-authority.json",
+      "authorityLines": [
+        "71-74",
+        "245-255"
+      ],
+      "actual": "Only the genuine Evidence11 receipt was delivered. Main reports Native11's terminal exit1 after807.30s from stream_error, with no genuine Native11 receipt. The scope-preservation record's sole addition is the Evidence11 receipt.",
+      "impact": "Missing genuine Native11 delivery independently prevents admission even if every Evidence claim and every source repair were otherwise correct. Evidence ownership entries, Main preservation, terminal transcripts or this audit cannot reconstruct or substitute for that receipt.",
+      "source": "Main's supplied terminal facts and the read preservation/dispatch records; failure not rerun."
+    }
+  ],
+  "preservationComparison": {
+    "authorityPath": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-scope-preservation.json",
+    "basis": "Existing Main preservation record, not independently remeasured bytes/counts.",
+    "matches": [
+
+[Showing lines 261-390 of 538. Use :391 to continue]

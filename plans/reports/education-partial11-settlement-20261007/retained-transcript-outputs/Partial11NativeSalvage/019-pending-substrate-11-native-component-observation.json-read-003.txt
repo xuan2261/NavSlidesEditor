@@ -1,0 +1,142 @@
+        "eofReached": true,
+        "coverage": "Complete 257-line document, including all six findings, both chronology bodies, semantic contract and complete excluded NF-A4 body."
+      },
+      {
+        "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-terminal-failure-counsel.json",
+        "reads": [
+          "1-180:raw",
+          "181-360:raw",
+          "361-560:raw"
+        ],
+        "eofReached": true,
+        "coverage": "Complete 541-line counsel."
+      },
+      {
+        "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-07-native-admission.json",
+        "reads": [
+          "1-58:raw",
+          "59-114:raw"
+        ],
+        "coverage": "All twelve complete original finding bodies, titles and source locations. The report's final closing line was not needed for these bodies; no whole-document EOF claim."
+      },
+      {
+        "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-07-evidence-admission.json",
+        "reads": [
+          "1-95:raw"
+        ],
+        "eofReached": true,
+        "coverage": "Complete original three ledger finding bodies and report."
+      },
+      {
+        "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-08-native-salvage-audit.json",
+        "reads": [
+          "1-19:raw",
+          "20-48:raw"
+        ],
+        "coverage": "All four complete Native08 finding bodies; no whole-document EOF claim."
+      },
+      {
+        "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-08-evidence-salvage-audit.json",
+        "reads": [
+          "1-75:raw"
+        ],
+        "eofReached": true,
+        "coverage": "Both complete Evidence08 finding bodies and report."
+      },
+      {
+        "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-09-native-salvage-audit.json",
+        "reads": [
+          "4-49:raw"
+        ],
+        "coverage": "All five complete settled09 finding bodies, titles and historical source locations. Chronology09 bodies were read in full in the dispatch authority; no whole-document EOF claim."
+      }
+    ],
+    "otherAuthorityOwnership": "The integration owner retains the prompt's complete broader governing-document, canonical mapping, receipt and full38-file obligations. This component does not represent grep discovery of the10 settlement, another audit's manifest, or historical credits as personal full source/authority coverage."
+  },
+  "perObligation": [
+    {
+      "id": "S10-C1",
+      "disposition": "REPAIR_REQUIRED_COMPONENT_EVIDENCE",
+      "sourceBackedCredits": [
+        "native-snapshot.js:23-54,57-79 allocates obsOrder when serializing getter failures and observes state before UI.",
+        "native-observation.js:36-46,81-91,130-133 witnesses setup/listener recorder envelopes at their browser creation sites, while preserving documentId/timeOrigin/URL.",
+        "native-history.js:114-154 reads capture state/UI before capture health; :75-95 drains/checks bubble health before post state/UI. Packet sequence is allocated only after capture getters/health and is not used as their time witness.",
+        "observation-browser.js:59-64,85-87,149-151 forwards an existing recorder envelope with its existing order; newly detected health failures allocate a new order.",
+        "observation-errors.js:27-32,63-87 uses those numeric witnesses to interleave ordinary same-document recorder/getter failures, rather than always placing recorder:store after getters.",
+        "Node document validation is captured without immediate recording at observation-errors.js:12-23, then recorded last at :77-88. evidence.js:85-90 confirms assertDocumentIdentity itself does not record into the ledger."
+      ],
+      "remainingMechanisms": [
+        "A forwarded browser recorder occurrence becomes a distinct Node envelope on each Playwright evaluate result. The common ledger deduplicates only reference identity and therefore records it again; there is no document-scoped occurrence identity crossing.",
+        "When a matched packet is passed, other cursor-eligible candidates are omitted even if the outer extraction/current-root gate subsequently rejects. Complete fallback coverage exists only when no matched packet is supplied.",
+        "recorderReady's order is fabricated as recorderError.obsOrder + 0.01, or a fixed category rank, rather than witnessed at its observation site.",
+        "The numerical sort does not validate that all compared envelopes belong to the same document/timeOrigin namespace. See the separately bounded domain analysis; no mixed-document execution is asserted."
+      ],
+      "evidence": [
+        "observation-errors.js:25-32,43-60,77-87",
+        "observation.js:103-118",
+        "observation-browser.js:59-64,149-159",
+        "error-ledger.js:77-102",
+        "node_modules/playwright-core/lib/coreBundle.js:12028-12098,57767-57769,57797-57802,60407-60413"
+      ]
+    },
+    {
+      "id": "NF-A3",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "native-action.js:19-69 captures complete raw guard and getter envelopes.",
+        "native-action.js:70-84 stages raw, calls the common normalization helper with the actual document domain, validates document identity, and records/rethrows the returned failure.",
+        "observation-errors.js:71-88 records state/UI siblings before the captured document exception, and :90-92 throws the earliest normalized return.",
+        "controls.js:82-89 and163-171 are actual reveal/reset consumers with unchanged stageButtonGuard signature."
+      ],
+      "mechanism": "For a guard with both state and UI errors plus a later document mismatch, both getter occurrences and the mismatch are recorded before the helper throws. State precedes UI under the snapshot witness; the document occurrence is last. The catch re-records the same normalized Error reference, which the ledger deduplicates. The separate cross-evaluation occurrence problem remains under S10-C1, not a claim that guard siblings are still absent."
+    },
+    {
+      "id": "N10B-01",
+      "disposition": "REPAIR_REQUIRED_COMPONENT_EVIDENCE",
+      "sourceBackedCredits": [
+        "navigation.js:47-54 observes the actual arrow/keyCode and input/textarea/contenteditable/speaker-notes exclusions.",
+        "navigation.js:67-73 includes keyboard truthiness and focused-deck handling; strict !== false replaces Boolean coercion for the function return.",
+        "navigation.js:81-103 captures paused/resume codes and overlay arrow rejection.",
+        "navigation.js:90-98 detects configured binding keys independently of whether their values perform useful navigation, matching keyboard.js:209-231.",
+        "reveal-lifecycle.js:73-83 supplies game/action exclusions and prior-condition delegation; htmlGenerator.js:462-466 supplies summary/video/audio exclusions."
+      ],
+      "remainingMechanisms": [
+        "navigation.js:76 invokes the configured condition with a synthetic {target: active} during diagnostic evaluation. This violates the retained no-condition-callback probing contract, and is not the actual event later supplied by production keyboard.js:146.",
+        "navigation.js:105 probes public reveal.getBindings and reveal.keyboard.getBindings, but neither is exposed by the inspected Reveal public API. The actual registered bindings reside in the private keyboard controller and are consumed by keyboard.js:234-257, so this discriminator cannot observe registered-arrow overrides through the inspected API."
+      ],
+      "dependencyQualification": "The API/dispatcher mismatch is source-proven against the required linked owners read here. htmlGenerator serves /vendor/reveal.js/dist/reveal.js. The recursively frozen subject did not yield that dist asset in targeted searches. No equivalence of a deployed/generated dist bundle to the external linked source, or immutable dependency identity, is claimed."
+    },
+    {
+      "id": "N10B-02",
+      "disposition": "SOURCE_CORRECTED_LOCAL",
+      "evidence": [
+        "navigation.js:19-24 reads initial slideId, URL, documentId and timeOrigin atomically.",
+        "navigation.js:25-31 stages raw/full contextual evidence and validates before :32 already-at-target return.",
+        "navigation.js:145-166 preserves the atomic poll read and raw staging before document validation.",
+        "navigation.js:173-175 records failure."
+      ],
+      "mechanism": "A replacement document cannot be accepted solely because its initial slide ID matches the target: the actual deciding observation is validated before the return. No navigation or polling was executed."
+    },
+    {
+      "id": "NF-A2",
+      "disposition": "SOURCE_CORRECTED_LOCAL_SUPPORTING_CROSSING",
+      "evidence": [
+        "native-observation.js:81-91 changes readiness but assigns a recorder:store envelope only if no previous recorder error exists.",
+        "native-observation.js:36-46 and130-133 preserve the recursive setup cause and actual observed domain.",
+        "native-history.js:81-83,135-137 and observation-browser.js:9-11,85-87,149-151 retain an existing recorder error."
+      ],
+      "mechanism": "Later record() replacement/missing-store failures no longer overwrite the first setup/store envelope. Preservation of its browser reference is source-confirmed. Repeated Node materialization of that preserved browser occurrence is a separate unresolved S10-C1 crossing, not evidence that the browser preservation fix failed."
+    },
+    {
+      "id": "S10-C2",
+      "disposition": "SOURCE_CORRECTED_LOCAL_SUPPORTING_CROSSING",
+      "evidence": [
+        "error-exposure.js:7-21 separates explicit wrapper phase from intrinsic/fallback phase.",
+        "error-exposure.js:34-53 reconciles phase only from a nonempty explicit string and enriches metadata independently, updating the existing serialization object.",
+        "error-exposure.js:69-81,84-103,106-122 applies that distinction in errorLedger, shared secondaryFailures and allErrors reconciliation.",
+        "error-ledger.js:11-17 makes supplied authoritative phase survive serialization."
+      ],
+      "mechanism": "All three existing-occurrence exposure branches preserve an explicitly recorded phase against phase-less wrappers, including wrappers with metadata. Actual Error references and caller wrappers remain unchanged by phase reconciliation. This local crossing credit does not replace the Evidence component's full independent obligations."
+    },
+
+[Showing lines 281-420 of 746. Use :421 to continue]

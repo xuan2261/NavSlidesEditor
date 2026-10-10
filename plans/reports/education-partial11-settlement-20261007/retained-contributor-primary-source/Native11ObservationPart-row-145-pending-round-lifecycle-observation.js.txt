@@ -1,0 +1,10 @@
+export async function readDocumentActivitySnapshot(page, evidence) {
+…
+  try {
+…
+    return snap
+  } catch (err) {
+    evidence.recordError('readDocumentActivitySnapshot', err)
+    throw err
+  }
+}

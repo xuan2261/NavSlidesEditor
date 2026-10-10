@@ -1,0 +1,16 @@
+            }
+          )
+        } catch (err) {
+          runnerError = err
+        } finally {
+          await evidence.finalize(
+            request,
+            testPresentation.id,
+            savedBeforeJSON,
+            runnerError
+          )
+        }
+      })
+    }
+  }
+}

@@ -1,0 +1,106 @@
+// Browser passive snapshot script literals and root-instance metadata.
+
+export const ROOT_INSTANCE_INIT_SCRIPT = `
+(() => {
+  if (window.__nsGetRootInstanceId) return;
+  const rootMap = new WeakMap();
+  let nextId = 0;
+  window.__nsGetRootInstanceId = (node) => {
+    if (!node || node.nodeType !== 1) return null;
+    let id = rootMap.get(node);
+    if (!id) {
+      id = 'root-inst-' + (++nextId);
+      rootMap.set(node, id);
+    }
+    return id;
+  };
+})();
+`
+
+export const ROOT_SNAPSHOT_INIT_SCRIPT = `
+(() => {
+  if (window.__nsReadRootSnapshot) return;
+  const serializeBrowserError = (err, phase, root, gameType) => {
+    if (!err) return null;
+    const elementId = root?.dataset?.nsElementId || null;
+    const slide = root?.closest?.('[data-ns-effective-slide-id]');
+    const slideId = slide?.dataset?.nsEffectiveSlideId || null;
+    const rootInstanceId = window.__nsGetRootInstanceId?.(root) || null;
+    const documentId = window.__nsDocumentId || null;
+    const timeOrigin = performance.timeOrigin;
+    const url = window.location.href;
+    const gType = gameType || root?.dataset?.nsGameType || root?.dataset?.nsGame || null;
+    const buildEnvelope = (e, ph) => {
+      if (!e) return null;
+      const isObj = typeof e === 'object';
+      const cause = isObj && e.cause ? buildEnvelope(e.cause, ph + ':cause') : null;
+      return {
+        origin: 'browser',
+        phase: ph,
+        name: (isObj && e.name) || 'Error',
+        message: (isObj && e.message) || String(e),
+        stack: (isObj && e.stack) || null,
+        cause,
+        rootInstanceId,
+        slideId,
+        elementId,
+        gameType: gType,
+        documentId,
+        timeOrigin,
+        url,
+        obsOrder: (isObj && typeof e.obsOrder === 'number') ? e.obsOrder : (window.__nsObsOrder = (window.__nsObsOrder || 0) + 1),
+      };
+    };
+    return buildEnvelope(err, phase);
+  };
+
+  window.__nsReadRootSnapshot = (root, gameType) => {
+    const staticView = root?.querySelector?.('[data-ns-game-static]');
+    const isMounted = Boolean(staticView && staticView.hidden);
+    let state = null;
+    let stateError = null;
+    if (isMounted && window.NavSlidesEducation?.mount) {
+      try {
+        state = window.NavSlidesEducation.mount(root)?.getState?.() ?? null;
+      } catch (err) {
+        stateError = serializeBrowserError(err, 'state', root, gameType);
+      }
+    }
+    let ui = null;
+    let uiError = null;
+    const hasUIGetter = typeof window.__nsOwnerUIEvidence === 'function';
+    if (hasUIGetter) {
+      try {
+        ui = window.__nsOwnerUIEvidence(root, gameType);
+      } catch (err) {
+        uiError = serializeBrowserError(err, 'ui', root, gameType);
+      }
+    }
+    return { isMounted, hasUIGetter, state, stateError, ui, uiError };
+  };
+})();
+`
+
+export const COLLECT_PAIRS_INIT_SCRIPT = `
+(() => {
+  if (window.__nsCollectPauseResumePairs) return;
+  window.__nsCollectPauseResumePairs = (events, maxTime) => {
+    const pairs = [];
+    let pending = null;
+    for (const ev of events) {
+      if (typeof maxTime === 'number' && ev.tMin > maxTime) continue;
+      if (ev.type === 'root-pause') {
+        pending = { min: ev.tMin, max: ev.tMax };
+      } else if (ev.type === 'root-resume' && pending) {
+        pairs.push({ pause: pending, resume: { min: ev.tMin, max: ev.tMax } });
+        pending = null;
+      }
+    }
+    return { pairs, pending };
+  };
+})();
+`
+
+export {
+  MUTATION_PARSER_INIT_SCRIPT,
+} from './pending-round-lifecycle-native-history.js'

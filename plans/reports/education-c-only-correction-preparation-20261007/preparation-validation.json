@@ -1,0 +1,48 @@
+{
+  "kind": "DRAFT_DOCUMENT_AND_CURRENT_C_INPUT_VALIDATION_NOT_PROJECT_CHECK_OR_ADMISSION",
+  "scope": "C-only preparation; source/dependencies not imported or executed",
+  "currentFingerprintsVerified": 8260,
+  "fingerprintClassificationCounts": {
+    "GENERATED_OR_BUILD_OUTPUT_REGULAR_FILE": 446,
+    "CURRENT_REGULAR_INPUT_SELECTED": 2746,
+    "NESTED_DEPENDENCY_REGULAR_FILE": 5068
+  },
+  "canonicalHistoricalFindingBodyReferencesResolved": 34,
+  "exactRequiredPaths": 38,
+  "present": 2,
+  "absent": 36,
+  "draftHelperPaths": 26,
+  "separatelyDeferredCallerPaths": 12,
+  "manifestVersionMatches": 8,
+  "reviewCorrectionsAdopted": [
+    "GET-only current global setup",
+    "start/dev not auto-build",
+    "reporter selection not mkdir",
+    "fresh observed capacity not hardcoded budget",
+    "nested dependency/generated fingerprint classification",
+    "N10B-01 historical accessor supersession",
+    "full34historical body bindings",
+    "scope26helpers excludes12callers"
+  ],
+  "DProbedOrRead": false,
+  "candidateCreated": false,
+  "sourceEdited": false,
+  "producerInvoked": false,
+  "projectTestsRun": false,
+  "configImported": false,
+  "serverStarted": false,
+  "callerCutover": false,
+  "smoke": false,
+  "qualification": false,
+  "declaredCells": 54,
+  "admittedCells": 0,
+  "executedCells": 0,
+  "branchHEADAndPreexistingStatusPreserved": true,
+  "preservationLimit": "Rechecked selected current C file hashes and exact path/status baseline; not complete freeze or full dependency immutability.",
+  "remainingDispatchBlockers": [
+    "No explicit new implementation/candidate creation authority",
+    "Pinned compliant route/current availability not proved",
+    "Capacity budget not approved",
+    "Fresh isolated caller authoring and test gate scope not approved"
+  ]
+}

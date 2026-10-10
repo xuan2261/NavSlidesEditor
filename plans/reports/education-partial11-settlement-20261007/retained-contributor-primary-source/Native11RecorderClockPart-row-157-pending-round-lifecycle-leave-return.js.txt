@@ -1,0 +1,117 @@
+import { expect } from '@playwright/test'
+import { LEAVE_RETURN_CASES } from './pending-round-lifecycle-cases.js'
+import {
+  getRoot,
+  getGameState,
+  navigateSlide,
+  clickTriviaNext,
+} from './pending-round-lifecycle-controls.js'
+import { preconsumeTimerToWindow } from './pending-round-lifecycle-clock.js'
+import { readCorrelatedStateAndTime } from './pending-round-lifecycle-observation.js'
+import {
+  startWitnessTimer,
+  waitForWitnessExpiry,
+} from './pending-round-lifecycle-witness.js'
+import { assertCompleteActiveState } from './pending-round-lifecycle-state.js'
+import {
+  assertRelayPendingBaton,
+  assertRelayFirstTimeoutSettled,
+} from './pending-round-lifecycle-relay-state.js'
+import {
+  assertTriviaQuestionExpiry,
+  assertTriviaQuestionNext,
+  assertTriviaRoundExpiry,
+  assertTriviaRoundNextEnded,
+} from './pending-round-lifecycle-trivia-state.js'
+
+export { LEAVE_RETURN_CASES }
+
+export async function runLeaveReturnJourney(page, caseDef, evidence) {
+  const root = getRoot(page, 'p-slide', 'g-pri')
+  const witness = getRoot(page, 'c-slide', 'witness-timer')
+
+  const initialRes = await caseDef.startFn(root)
+  const initial = initialRes.state || initialRes
+  evidence.stage('initial', initial)
+  assertCompleteActiveState(caseDef.gameType, initial, caseDef.config, 0)
+
+  const preconsumed = await preconsumeTimerToWindow(root, page, evidence)
+  evidence.stage('preconsumed', preconsumed)
+
+  const beforeSample = await readCorrelatedStateAndTime(root)
+  evidence.stage('beforeSample', beforeSample)
+  const before = beforeSample.state
+  assertCompleteActiveState(caseDef.gameType, before, caseDef.config, 0)
+
+  await navigateSlide(page, 'down', 'c-slide')
+
+  const hiddenSample = await readCorrelatedStateAndTime(root)
+  evidence.stage('hiddenSample', hiddenSample)
+  expect(hiddenSample.state.generation).toBe(before.generation)
+  expect(hiddenSample.state.runtimeMode).toBe('local')
+  expect(hiddenSample.paused).toBe(true)
+
+  const witnessStart = await startWitnessTimer(witness, evidence)
+  evidence.stage('witnessStart', witnessStart)
+
+  const witnessFinal = await waitForWitnessExpiry(witness, evidence)
+  evidence.stage('witnessFinal', witnessFinal)
+
+  const measuredWitnessInterval = witnessFinal.expiryTime - witnessStart.startTime
+  expect(measuredWitnessInterval).toBeGreaterThanOrEqual(3800)
+
+  await navigateSlide(page, 'up', 'p-slide')
+
+  const returnedSample = await readCorrelatedStateAndTime(root)
+  evidence.stage('returnedSample', returnedSample)
+  const returned = returnedSample.state
+  expect(returned.generation).toBe(before.generation)
+  expect(returned.runtimeMode).toBe('local')
+
+  if (caseDef.isRelay) {
+    await expect.poll(async () => {
+      const s = await getGameState(root)
+      return s.phase === 'waiting' || (s.phase === 'active' && s.turn === 2)
+    }).toBe(true)
+    const relayState = await getGameState(root)
+    if (relayState.phase === 'waiting') {
+      assertRelayPendingBaton(relayState, before.generation)
+    } else {
+      assertRelayFirstTimeoutSettled(relayState, before.generation)
+    }
+  } else if (caseDef.isTriviaQuestion) {
+    await expect.poll(async () => {
+      const s = await getGameState(root)
+      return s.phase === 'review' && s.roundExpired === false && s.error === 'Time expired.'
+    }).toBe(true)
+    const reviewState = await getGameState(root)
+    assertTriviaQuestionExpiry(reviewState, before.generation)
+    await clickTriviaNext(root)
+    const nextState = await getGameState(root)
+    assertTriviaQuestionNext(nextState, before.generation, preconsumed.due)
+  } else if (caseDef.isTriviaRound) {
+    await expect.poll(async () => {
+      const s = await getGameState(root)
+      return s.phase === 'review' && s.roundExpired === true && s.error === 'Time expired.'
+    }).toBe(true)
+    const reviewState = await getGameState(root)
+    assertTriviaRoundExpiry(reviewState, before.generation)
+    await clickTriviaNext(root)
+    const nextState = await getGameState(root)
+    assertTriviaRoundNextEnded(nextState, before.generation)
+  } else if (caseDef.gameType === 'quiz') {
+    await expect.poll(async () => {
+      const s = await getGameState(root)
+      return s.status === 'terminal' && s.lastResult?.error === 'deadline'
+    }).toBe(true)
+    const s = await getGameState(root)
+    expect(s.status).toBe('terminal')
+    expect(s.lastResult?.error).toBe('deadline')
+    expect(s.lastResult?.terminal).toBe(true)
+    expect(s.generation).toBe(before.generation)
+  } else if (caseDef.gameType === 'hot-potato') {
+    await expect.poll(async () => {
+      const s = await getGameState(root)
+      return s.phase === 'review' && s.deadlinePassed === true
+
+[Showing lines 1-115 of 145. Use :116 to continue]

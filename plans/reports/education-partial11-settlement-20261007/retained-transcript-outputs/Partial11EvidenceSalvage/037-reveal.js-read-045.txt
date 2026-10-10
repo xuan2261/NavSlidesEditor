@@ -1,0 +1,93 @@
+
+		// Fragment methods
+		navigateFragment: fragments.goto.bind( fragments ),
+		prevFragment: fragments.prev.bind( fragments ),
+		nextFragment: fragments.next.bind( fragments ),
+
+		// Event binding
+		on,
+		off,
+
+		// Legacy event binding methods left in for backwards compatibility
+		addEventListener: on,
+		removeEventListener: off,
+
+		// Forces an update in slide layout
+		layout,
+
+		// Randomizes the order of slides
+		shuffle,
+
+		// Returns an object with the available routes as booleans (left/right/top/bottom)
+		availableRoutes,
+
+		// Returns an object with the available fragments as booleans (prev/next)
+		availableFragments: fragments.availableRoutes.bind( fragments ),
+
+		// Toggles a help overlay with keyboard shortcuts
+		toggleHelp: overlay.toggleHelp.bind( overlay ),
+
+		// Toggles the overview mode on/off
+		toggleOverview: overview.toggle.bind( overview ),
+
+		// Toggles the scroll view on/off
+		toggleScrollView: scrollView.toggle.bind( scrollView ),
+
+		// Toggles the "black screen" mode on/off
+		togglePause,
+
+		// Toggles the auto slide mode on/off
+		toggleAutoSlide,
+
+		// Toggles visibility of the jump-to-slide UI
+		toggleJumpToSlide,
+
+		// Slide navigation checks
+		isFirstSlide,
+		isLastSlide,
+		isLastVerticalSlide,
+		isVerticalSlide,
+		isVerticalStack,
+
+		// State checks
+		isPaused,
+		isAutoSliding,
+		isSpeakerNotes: notes.isSpeakerNotesWindow.bind( notes ),
+		isOverview: overview.isActive.bind( overview ),
+		isFocused: focus.isFocused.bind( focus ),
+		isOverlayOpen: overlay.isOpen.bind( overlay ),
+		isScrollView: scrollView.isActive.bind( scrollView ),
+		isPrintView: printView.isActive.bind( printView ),
+
+		// Checks if reveal.js has been loaded and is ready for use
+		isReady: () => ready,
+
+		// Slide preloading
+		loadSlide: slideContent.load.bind( slideContent ),
+		unloadSlide: slideContent.unload.bind( slideContent ),
+
+		// Start/stop all media inside of the current slide
+		startEmbeddedContent: () => slideContent.startEmbeddedContent( currentSlide ),
+		stopEmbeddedContent: () => slideContent.stopEmbeddedContent( currentSlide, { unloadIframes: false } ),
+
+		// Lightbox previews
+		previewIframe: overlay.previewIframe.bind( overlay ),
+		previewImage: overlay.previewImage.bind( overlay ),
+		previewVideo: overlay.previewVideo.bind( overlay ),
+
+		showPreview: overlay.previewIframe.bind( overlay ), // deprecated in favor of showIframeLightbox
+		hidePreview: overlay.close.bind( overlay ),
+
+		// Adds or removes all internal event listeners
+		addEventListeners,
+		removeEventListeners,
+		dispatchEvent,
+
+		// Facility for persisting and restoring the presentation state
+		getState,
+		setState,
+
+		// Presentation progress on range of 0-1
+		getProgress,
+
+[Showing lines 2760-2850 of 2973. Use :2851 to continue]

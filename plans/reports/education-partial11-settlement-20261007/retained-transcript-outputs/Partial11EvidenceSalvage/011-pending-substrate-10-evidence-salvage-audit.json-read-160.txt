@@ -1,0 +1,142 @@
+      },
+      {
+        "file": "shared/src/education/browser/mount.js",
+        "ranges": [
+          "90-150"
+        ],
+        "coverage": "Relevant reset/destroy/pause/resume lifecycle consumer, through module end"
+      },
+      {
+        "file": "shared/src/education/browser/local-activity.js",
+        "ranges": [
+          "1-180"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; Quiz/countdown/Relay state and clock dispatch"
+      },
+      {
+        "file": "shared/src/education/countdown-state.js",
+        "ranges": [
+          "1-190"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; independent authored countdown policy"
+      },
+      {
+        "file": "shared/src/education/browser/countdown-presenter.js",
+        "ranges": [
+          "1-200"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; native UI and timer scheduling"
+      },
+      {
+        "file": "shared/src/education/quiz-session.js",
+        "ranges": [
+          "1-165"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; independently authored deadline/reset/expiry policy"
+      },
+      {
+        "file": "shared/src/education/games/relay-race.js",
+        "ranges": [
+          "1-150"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; actual1200ms baton and first-transition policy"
+      },
+      {
+        "file": "shared/src/education/game-defaults.js",
+        "ranges": [
+          "1-183",
+          "181-360"
+        ],
+        "coverage": "Default factory declarations and bodies through EOF, including used game configurations"
+      },
+      {
+        "file": "shared/src/education/game-registry.js",
+        "ranges": [
+          "1-180"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; fixture subtype authority"
+      },
+      {
+        "file": "shared/src/education/question-shape.js",
+        "ranges": [
+          "1-180"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; question IDs/kinds/cloning/time-limit policy"
+      },
+      {
+        "file": "shared/src/education/question-factory.js",
+        "ranges": [
+          "1-180"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; authored canonical question producer"
+      },
+      {
+        "file": "shared/src/education/presets/simulations.js",
+        "ranges": [
+          "1-160"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF of directly imported fixture preset module; simulation physics not qualified"
+      },
+      {
+        "file": "shared/src/htmlGenerator.js",
+        "ranges": [
+          "437-485"
+        ],
+        "coverage": "Relevant generated Reveal configuration and actual keyboardCondition policy"
+      },
+      {
+        "file": "node_modules/reveal.js/js/controllers/keyboard.js",
+        "ranges": [
+          "140-243",
+          "244-359",
+          "360-414"
+        ],
+        "coverage": "Actual consuming onDocumentKeyDown dispatcher, including guards, custom precedence and Arrow routing; accessed through preserved dependency junction"
+      }
+    ],
+    "authorityAndReceiptSources": {
+      "base": "D:/NavSlidesQualification/edu-resume-261004/",
+      "documents": [
+        {
+          "file": "pending-substrate-10-evidence-salvage-prompt.md",
+          "coverage": "Complete mapped salvage contract, including appended settled09/actual10/deferred requirements; reread1-80"
+        },
+        {
+          "file": "pending-substrate-10-evidence-prompt.md",
+          "coverage": "Producer requirements read; claims do not amend salvage authority"
+        },
+        {
+          "file": "pending-substrate-10-terminal-failure-counsel.json",
+          "ranges": [
+            "1-90",
+            "91-180",
+            "181-272"
+          ],
+          "coverage": "COMPLETE"
+        },
+        {
+          "file": "pending-substrate-10-scope-preservation.json",
+          "ranges": [
+            "1-77",
+            "78-300",
+            "301-364"
+          ],
+          "coverage": "COMPLETE"
+        },
+        {
+          "file": "pending-substrate-10-partial-freeze.json",
+          "ranges": [
+            "1-80"
+          ],
+          "coverage": "Header/source identity inspected; not all4327 manifest rows. Complete helper/caller inventory read from scope-preservation record as permitted by contract."
+        },
+        {
+          "file": "pending-substrate-10-terminal-delivery.json",
+          "ranges": [
+            "1-100"
+          ],
+          "coverage": "COMPLETE"
+        },
+        {
+
+[Showing lines 941-1080 of 1203. Use :1081 to continue]

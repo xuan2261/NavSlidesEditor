@@ -1,0 +1,27 @@
+{
+  "verdict": "REPAIR_REQUIRED",
+  "scope": {
+    "mode": "INDEPENDENT_READ_ONLY_STATIC_SALVAGE",
+    "partition": "Evidence11, with complete Native15 and immutable Phase2 consumer review",
+    "reviewer": "Same-session-model independent source reviewer; not a producer, Fable/Astra reviewer, admission gate or runtime qualifier",
+    "summary": "All five enumerated settled09 defects have local source repairs in partial10. The specified caller-ledger a,b chronology is repaired. The Native chronology change repairs later-extraction-versus-earlier-packet ordering and preserves recorder-setup precedence, but still uses a category rule that reverses an earlier action-boundary recorder failure and later post-handler getter failures. That remaining source defect prevents a source-clean verdict. Missing genuine Native10 delivery independently prevents admission."
+  },
+  "exactSubject": {
+    "root": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-10-partial",
+    "status": "PARTIAL_SALVAGE_NOT_ADMISSION",
+    "fullSubjectHash": "0d20458eefe089ec90d2386b973a474cfb514cfba07ed4839d3a250720dc502a",
+    "hashAuthority": "Main's supplied freeze/scope-preservation record; not recomputed by this reviewer",
+    "sourcePathConvention": "Source references below are relative to this frozen root. Unqualified helper filenames are under tests/e2e/education/.",
+    "baselineRegularInputs": 4326,
+    "preservedRegularInputs": 4327,
+    "baselineUnchanged": 4320,
+    "changedHelpers": [
+      "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+      "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+      "tests/e2e/education/pending-round-lifecycle-native-history.js",
+      "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+      "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+      "tests/e2e/education/pending-round-lifecycle-observation-errors.js"
+    ],
+
+[Showing lines 1-25 of 1203. Use :26 to continue]

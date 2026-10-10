@@ -1,0 +1,426 @@
+{
+  "status": "DRAFT_NOT_AUTHORIZED_NOT_DISPATCHED",
+  "name": "C_ONLY_NEW_SUBJECT_CORRECTION_PROPOSAL",
+  "correctionNumber": "UNASSIGNED_PENDING_USER_APPROVAL",
+  "proposal": "Fresh pending-round substrate implementation from current C baseline in isolated regular candidate; not Native11 retry/resume or byte reconstruction.",
+  "notAuthorizedThisRequest": [
+    "candidate creation/source copy",
+    "source edits",
+    "producer dispatch",
+    "dependency installs",
+    "build/import/test/server",
+    "runtime acceptance",
+    "caller cutover",
+    "smoke/qualification"
+  ],
+  "model": "local8045/gemini-3.8-flash-high",
+  "reviewerLimitation": "Current task tool GPT reviewers are not model-pinned substantive producer. Available API lacks model routing parameter; cannot silently substitute.",
+  "canonicalBaseline": {
+    "root": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001",
+    "HEAD": "c5b5e896d9f06859b21e19122f81c7613067c386",
+    "branch": "feat/education-gemini38-cook-261001",
+    "dirtyChangesMustBeIncludedAndPreserved": true,
+    "sourceVersion": "CURRENT_C_NOT_FROZEN11",
+    "inputFingerprints": "current-c-input-fingerprints.json"
+  },
+  "historicalReferenceOnly": {
+    "failed11Settlement": "../education-partial11-settlement-20261007/combined-correction11-failure-settlement.json",
+    "receiptReconstruction": false,
+    "historicalPassCurrent": false,
+    "oldHashNeverNewHash": "e8a558fc... is recorded frozen11 identity only."
+  },
+  "candidateRootProposedNotCreated": "C:/Work/NavSlidesQualification/education-new-subject-20261007",
+  "candidateCreationRequirements": [
+    "Fresh unused C regular directory after budget approval; check every ancestry/reparse target. Never access D or copy linked targets blindly.",
+    "Carry actual dirty/untracked baseline source, not git archive HEAD or clean assumption. Record inclusion/exclusion list and current source hashes.",
+    "Exclude node_modules/build/data/reports by explicit plan; for dependencies exactC manifest/lock/target checks and immutability boundaries recorded; no silent install/update.",
+    "Reserve storage headroom for candidate/logs/receipts and later gates; current11.4GiB free not full-build capacity certification.",
+    "Use unique C outputs/temp/data; no shared cleanup or overwriting previous artifacts."
+  ],
+  "gate0_preDispatch": {
+    "required": [
+      "Explicit new-subject and source-authoring authorization",
+      "Candidate scope/file ownership plus missing-caller phase decision",
+      "Compliant pinned producer route and current availability, no retries/fallback",
+      "Approved source-copy/storage budget",
+      "Reviewed C-only command/environment with no D PATH search",
+      "Deadline/capacity stop policy unchanged"
+    ],
+    "historicalLimitsNotIncreased": {
+      "producerMaxTime": "45m",
+      "hostTimeoutSeconds": 2760,
+      "retry": false,
+      "fallback": false
+    },
+    "missingRouteProof": true,
+    "credentialRule": "Do not read/write provider secrets or change active configuration to make dispatch work.",
+    "redactedRouteEvidenceOnly": "Use explicit nonsecret/redacted current effective route evidence; do not inspect provider secrets, load user configuration, follow D paths, edit settings or perform inference availability probe. If no pin-aware tool surface is available stop; no GPT substitute.",
+    "capacityObservation": {
+      "reportedCFreeBytes": 18847141888,
+      "reportedCSizeBytes": 255382777856,
+      "observedLocalTime": "2026-10-07T20:36:05.0911354+07:00",
+      "copiedCandidateBudgetVerified": false,
+      "meaning": "About17.55GiB observed free, not future capacity/budget certification. No cleanup or candidate creation approved.",
+      "supersedes": "Initial hardcoded capacity draft was not a verified exact observation and is withdrawn."
+    }
+  },
+  "draftProducerWriteScope": {
+    "native": [
+      "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+      "tests/e2e/education/pending-round-lifecycle-native-snapshot.js",
+      "tests/e2e/education/pending-round-lifecycle-activity-interval.js",
+      "tests/e2e/education/pending-round-lifecycle-observation.js",
+      "tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+      "tests/e2e/education/pending-round-lifecycle-clock.js",
+      "tests/e2e/education/pending-round-lifecycle-controls.js",
+      "tests/e2e/education/pending-round-lifecycle-witness.js",
+      "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+      "tests/e2e/education/pending-round-lifecycle-native-action.js",
+      "tests/e2e/education/pending-round-lifecycle-witness-domain.js",
+      "tests/e2e/education/pending-round-lifecycle-history-domain.js",
+      "tests/e2e/education/pending-round-lifecycle-native-history.js",
+      "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+      "tests/e2e/education/pending-round-lifecycle-navigation.js"
+    ],
+    "evidence": [
+      "tests/e2e/education/pending-round-lifecycle-ui-evidence.js",
+      "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+      "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+      "tests/e2e/education/pending-round-lifecycle-evidence.js",
+      "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+      "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+      "tests/e2e/education/release-surfaces.js",
+      "tests/e2e/education/present-offline-helpers.js",
+      "tests/e2e/education/pending-round-lifecycle-live-root-observation.js",
+      "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+      "tests/e2e/education/release-portable-inspection.js"
+    ],
+    "note": "Future helper scope26 =24 absent helpers +2 present helpers inside isolated candidate ONLY; all12 missing caller paths are outside writer scope.36 missing paths does not authorize36 creations.",
+    "immutableCanonical": [
+      "Current entire education/coordinator worktrees including callers, source, configs, reports, package/lock"
+    ],
+    "productionRuntimeEdits": "NOT_PROPOSED; if new inspection reveals production repair needed, stop and seek separate scope.",
+    "phase2MissingCallerProposal": {
+      "files": [
+        "pending-round-lifecycle-acceptance.spec.js",
+        "pending-round-lifecycle-cases.js",
+        "pending-round-lifecycle-fixtures.js",
+        "pending-round-lifecycle-leave-return.js",
+        "pending-round-lifecycle-reset.js",
+        "pending-round-lifecycle-isolation.js",
+        "pending-round-lifecycle-state.js",
+        "pending-round-lifecycle-quiz-state.js",
+        "pending-round-lifecycle-hot-potato-state.js",
+        "pending-round-lifecycle-jeopardy-state.js",
+        "pending-round-lifecycle-relay-state.js",
+        "pending-round-lifecycle-trivia-state.js"
+      ],
+      "status": "Separate later authoring authority required; cannot claim old immutable caller objects available.",
+      "meaning": "Newly authored cases must retain original54 criteria and full independent oracles, never rebuild old bytes from transcripts.",
+      "historicalImmutableMeaning": "Historical immutable callers are unavailable onC. This protects original criteria/objects as history, not claims current actual caller files are present; newly authored replacement callers need separate explicit authority."
+    }
+  },
+  "sixInheritedRepairObligations": [
+    {
+      "id": "S10-C1",
+      "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+      "consumerVisibleMechanism": "Every non-setup recorder error (recorder:store) is recorded after all packet and raw getter errors. The browser can set it earlier: before the post-handler getters (native-history.js:80-82 vs :93), after capture getters but before bubble getters (:132 vs :134-136), or at any earlier record() call (native-observation.js:80-86). Pre-existing errors are also forwarded by later reads (observation-browser.js:59-61, :85, :149). Because the ledger assigns primary and order by arrival (error-ledger.js:94-101, 120-121), a later stateAfter/uiAfter or read getter failure becomes the thrown primary and serialized chronology is inverted. This confirms Evidence10 claim S10-C1 by independent trace, and the defect also covers capture-phase and pre-read occurrences.",
+      "repairNeeded": "At each browser site that sets __nsLifecycleRecorderError, attach an observation position: performance.now() at set time and, inside the action recorder, the packet sequence plus capture/bubble phase. Alternatively, copy the recorder error into the packet at the point where it was observed. Then have assertAndRecordObservationErrors interleave recorder occurrences with packet capture/bubble getter occurrences and raw-read getters by actual position. Setup must remain first and Node document validation last. Do not use a fixed category order.",
+      "priority": 2,
+      "lineStart": 81,
+      "confidence": 0.9,
+      "lineEnd": 86,
+      "title": "Order non-setup recorder errors by actual browser observation, not category",
+      "confirmations": ["Evidence10 salvage", "NF-A1", "N10B-03", "Caller slice S10-C1"]
+    },
+    {
+      "lineStart": 80,
+      "confidence": 0.85,
+      "file": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+      "priority": 2,
+      "consumerVisibleMechanism": "When the public store is found replaced, record() always assigns a new cause:null recorder:store envelope. It does not check for an existing error, unlike native-history.js:81/:135 and observation-browser.js:9/:86/:150. If observer setup failed (:127-129, recursive cause chain), a later store replacement plus any listener-driven record() (:142-152) erases the setup envelope and its cause chain. observation-errors.js:25-27 then treats the failure as non-setup and orders it after getters. With a healthy setup, each later record() also replaces the first, specific store error (for example a count-divergence message set by completePacket) with a generic later one, so the first occurrence is lost.",
+      "lineEnd": 87,
+      "repairNeeded": "In record(), set recorderReady=false but assign the recorder:store envelope only when no recorder error exists. Alternatively, retain earlier envelopes in an ordered list, so the first actual occurrence and its recursive setup cause chain survive.",
+      "id": "NF-A2",
+      "title": "Do not overwrite an existing recorder error in record()"
+    },
+    {
+      "id": "NF-A3",
+      "lineStart": 70,
+      "title": "Normalize button-guard snapshot failures before document validation",
+      "consumerVisibleMechanism": "stageButtonGuard reads __nsReadRootSnapshot (:29-31) and returns stateError/uiError (:57-60), but only stages them raw (:70). It then calls assertDocumentIdentity (:71) and returns the guard (:73) without ever calling recordError for those getter failures. resetGame (controls.js:166-168) and revealHotPotatoAnswers (controls.js:85) continue with no ledger entry for an observed state/UI getter failure. If document binding fails, the later Node validation error is thrown, and the earlier browser getter occurrences never reach the normalized ledger. This seam has existed unchanged since candidate07, so it was not introduced by Correction10, but it is within the N07-07 'ALL observed snapshot failures' obligation.",
+      "file": "tests/e2e/education/pending-round-lifecycle-native-action.js",
+      "confidence": 0.85,
+      "repairNeeded": "Route the guard through assertAndRecordObservationErrors(evidence, label || 'buttonGuard', guard, {url, documentId, timeOrigin}) after staging the raw guard, so that state and UI getter failures are recorded before document validation and the earliest occurrence is thrown. Wrap the helper in the same recordError/rethrow pattern used in observation.js.",
+      "priority": 2,
+      "lineEnd": 73
+    },
+    {
+      "priority": 2,
+      "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+      "lineStart": 40,
+      "lineEnd": 60,
+      "title": "Capture remaining Reveal dispatcher guards in keyboardEligible",
+      "mechanism": "keyboardEligible = !isInput && !inGame && !inAction && revealConditionPassed. Reveal keyboard.js:167 (speaker-notes focus), :193-195 (isOverlayOpen rejects Arrow keys), :197-199 (isPaused rejects non-resume keys), the config.keyboard/bindings precedence that replaces system arrow navigation, and reveal.js:595 (no listener when config.keyboard is falsy) are not observed. In a paused or overlay state, the staged navigateSlideKeyboard.focusInfo reports eligible while the ArrowDown/Up/Right sent at :80 is ignored by production, so the poll timeout is misattributed. Secondary: Boolean() where Reveal uses strict `=== false` (:146), and exact tag equality where Reveal uses /input|textarea/i (:166).",
+      "repairNeeded": "Add read-only discriminators to the same evaluate: Reveal.isOverlayOpen(), Reveal.isPaused() combined with the resume-key set (including config.keyboard togglePause keys) for the pressed keyCode, the speaker-notes className regex, config.keyboard truthiness, and whether config.keyboard or Reveal.getBindings() overrides the pressed arrow keyCode. Use Reveal's strict `=== false` condition semantics and its tagName regex. Do not force focus or change navigation policy.",
+      "id": "N10B-01"
+    },
+    {
+      "title": "Bind the initial slide read to its observed document before early return",
+      "mechanism": "The initial current-slide read at :19 is a separate page.evaluate that returns only slideId, with no url/documentId/timeOrigin. When it equals targetSlideId, :21 returns success without validating which document produced it. A replacement between the :7 docDomain read and :19 is therefore accepted, and no raw document evidence is staged for the read that decided the outcome.",
+      "repairNeeded": "Read slideId together with url/documentId/timeOrigin in one evaluate, stage it raw, call assertDocumentIdentity, and only then compare it with targetSlideId (the same seam as the poll at :85-105).",
+      "id": "N10B-02",
+      "priority": 3,
+      "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+      "lineStart": 19,
+      "lineEnd": 21
+    },
+    {
+      "confidence": 0.86,
+      "title": "Prevent phase-less caller errorLedger items from overwriting authoritative recorded phases",
+      "id": "S10-C2",
+      "repairNeeded": "In error-exposure.js, only update existing.phase during reconciliation if the caller wrapper provides an explicit, valid item.phase string. Do not allow a fallback or intrinsic err.phase from an unannotated caller wrapper to clobber an already-recorded explicit phase.",
+      "lineStart": 77,
+      "priority": 2,
+      "mechanism": "In ingestPreexistingErrors, when a caller errorLedger item lacks an explicit phase property, resolveWrapperMeta falls back to err.phase || `${phase}:errorLedger`. If the referenced error was already recorded earlier in the ledger with an authoritative explicit phase (e.g. 'portable:close'), reconcileEntry executes because existing.phase !== p, overwriting the recorded phase with the fallback/intrinsic phase and re-serializing the entry. This regresses the explicit recorded phase on exposure.",
+      "lineEnd": 85,
+      "file": "tests/e2e/education/pending-round-lifecycle-error-exposure.js"
+    }
+  ],
+  "five09FindingsRequiredRegressions": [
+    {
+      "id": "09-S1",
+      "priority": "P1",
+      "owner": "Native",
+      "source": "tests/e2e/education/pending-round-lifecycle-observation-browser.js:129-174; observation.js:12-18",
+      "mechanism": "evaluateActionCandidates has no closing function brace after its root.evaluate call and before the next export. An export declaration therefore occurs inside an unfinished function body, blocking ESM parsing and the observation/controls/clock/witness/surface import graph.",
+      "required_repair": "Restore the correct function boundary without changing evaluation or public contracts. This is a source-proven syntax blocker, not an executed import failure."
+    },
+    {
+      "id": "09-S2",
+      "priority": "P1",
+      "owner": "Native",
+      "source": "tests/e2e/education/pending-round-lifecycle-native-history.js:75-109; observation.js:103-135; witness.js:31-76",
+      "mechanism": "completePacket uses undeclared serializable after marking the event completed. Neither completed native packet storage nor the native-action diagnostic is published, and the document bubbling path cannot recover an event already marked completed.",
+      "required_repair": "Restore the actual packet copy before removing its live DOM root and publish BOTH __nsRecordedPackets evidence and the native-action recorder diagnostic. Preserve complete capture/post snapshots, lifecycle-only projections and uncertainty bounds; do not remove diagnostics or weaken continuity."
+    },
+    {
+      "id": "09-S3",
+      "priority": "P2",
+      "owner": "Native",
+      "source": "tests/e2e/education/pending-round-lifecycle-observation-errors.js:32-45; observation.js:105-130; observation-browser.js:146-159",
+      "mechanism": "Without an exact matched packet, the fallback consumes only the first sequence-eligible candidate. Genuine later relevant candidate state/UI siblings remain raw-only when outer rejection or no-match failure terminates extraction.",
+      "required_repair": "Preserve the normal exact-match acceptance path. On the fallback/rejection path, ingest every relevant cursor-eligible packet's genuine siblings in recorded packet sequence and capture-before-post/state-before-UI order before the outer gate can throw. Retain raw evidence and exact occurrence normalization; do not manufacture failures or broaden packet acceptance."
+    },
+    {
+      "id": "09-S4",
+      "priority": "P2",
+      "owner": "Evidence",
+      "source": "tests/e2e/education/pending-round-lifecycle-error-exposure.js:39-54,95-101,169-174; error-ledger.js:98-115",
+      "mechanism": "Recursive recording exposes an occurrence's serialization into a retained caller array. Wrapper reconciliation replaces that serialization object, and later identity-based refresh appends the replacement too. Internal occurrence deduplication survives, but caller-visible diagnostics contain two ledger-created records for one occurrence.",
+      "required_repair": "Keep one stable ledger-owned exposed serialization identity per occurrence, reconciling it without replacing or truncating caller arrays/objects. Preserve identity-based deduplication across unrelated numeric order collisions and complete late-error exposure."
+    },
+    {
+      "id": "09-S5",
+      "priority": "P2",
+      "owner": "Evidence",
+      "source": "tests/e2e/education/pending-round-lifecycle-error-exposure.js:89-101; error-ledger.js:11-16",
+      "mechanism": "Reconciliation assigns the authoritative wrapper phase to the entry, then serializeError chooses err.phase over that phase. Entries and serialized/exposed diagnostics disagree for a genuine Error carrying an intrinsic different phase.",
+      "required_repair": "Make authoritative occurrence-wrapper phase survive serialization and reconciliation, with frameUrl/metadata retained, while preserving the actual Error reference and caller wrapper unchanged. Do not fix this by mutating the Error's phase or dropping provenance."
+    }
+  ],
+  "two09ChronologyObligations": [
+    {
+      "id": "09-C1",
+      "classification": "Unresolved original Native chronology obligation, additional to the five enumerated findings",
+      "source": "tests/e2e/education/pending-round-lifecycle-observation-errors.js:25-45,67-73; observation-browser.js:146-158; native-history.js:95-106",
+      "assessment": "Already captured native packet getter failures precede a newly detected extraction store-integrity/not-ready failure. The consumer records the outer recorder/not-ready categories first, making the later failure primary and ordering earlier packet siblings after it. Recording snapshots before the subsequent Node document exception is locally repaired, but that narrower repair does not establish complete actual-arrival chronology.",
+      "required_repair": "Retain every independent error, but ingest previously observed packet siblings before a genuinely later extraction store/not-ready occurrence. Respect actual source observation order for other paths too; an earlier recorder-setup failure must not be blindly moved behind later snapshots. Propagate the earliest applicable common-ledger normalized Error, not a category-selected wrapper. Do not invent timestamps or apply a universal packet-first/recorder-first category sort."
+    },
+    {
+      "id": "09-C2",
+      "classification": "Unresolved original E06-01-C chronological ingestion obligation, additional to the five enumerated findings",
+      "source": "tests/e2e/education/pending-round-lifecycle-error-exposure.js:7-23,35-54,73-105; error-ledger.js:94-106",
+      "assessment": "For secondaryFailures=[b] and caller errorLedger=[{error:a,phase:'a'},{error:b,phase:'b'}], metadata pre-scan does not ingest occurrences. The secondary loop records b first and the ledger loop later records a, producing primary,b,a instead of the established caller-ledger a,b chronology. Later metadata reconciliation cannot repair that occurrence order.",
+      "required_repair": "Ingest established genuine caller-ledger occurrences in their established order before later secondary-only occurrences and subsequent frame/source/attachment arrivals, with shared-reference deduplication and authoritative wrapper data. Preserve caller arrays/objects and unrelated serialized diagnostics. Never sort independent caller/common-ledger numeric order namespaces into fictional global chronology."
+    }
+  ],
+  "current11MechanismsToAvoid": [
+    {
+      "obligation": "S10-C1/09-C1",
+      "mechanism": "Persistent browser recorder envelope returned through separate evaluate calls is not a stable Node reference. Invocation-local Set/WeakMap/reference dedupe cannot correlate the same forwarded occurrence. Normalization loses obsOrder without scoped occurrence lookup.",
+      "source": "native-observation:30,36-46,81-91,133-134; observation-browser:8-20,62-65,85-87,149-159; observation-errors:25-32; error-ledger:50-68,77,84-102",
+      "newPersonalTransportEvidence": "addedPrimary/Native11LedgerPart-row-103-coreBundle.js.txt:1-106; row-109:1-12; row-112:1-5; Native11ObservationPart-row-181-coreBundle.js.txt:1-139. New Map per parse, fresh Error/object materialization; evaluate parses each result independently. These are retained excerpts, not full75813/75814-line bundle certification.",
+      "credit": "Same Node-reference catch echoes deduplicate; actual local browser witnesses supplied."
+    },
+    {
+      "obligation": "S10-C1/09-C1",
+      "mechanism": "Fresh readiness Error assigned recorder obsOrder+0.01 or a fixed category rank is not actual readiness observation-site evidence.",
+      "source": "observation-errors:43-48,81-84",
+      "constraint": "No new mixed-document defect or comparison of unrelated numeric namespaces."
+    },
+    {
+      "obligation": "N07-07/Native08-4/09-C1",
+      "mechanism": "Exact matchedPacket path normalizes only selected packet; other relevant eligible snapshot errors remain raw-only when outer document/current-root subsequently rejects.",
+      "source": "observation:104-116,128-130; observation-errors:51-67; observation-domain:41-70",
+      "constraint": "Preserve literal no-match repair and successful exact acceptance; do not invent uniqueness or widen acceptance."
+    },
+    {
+      "obligation": "N07-07/Native08-3 inherited chronology",
+      "mechanism": "live-evidence stages raw roots then records later Node document exception before previously observed browser state/UI failures; rootFailure prefers document error. Siblings retained but primary/arrival chronology wrong.",
+      "source": "live-root-observation:89-123,155; native-snapshot:57-79; live-evidence:28-53; error-ledger:100-102,120-121",
+      "constraint": "Inherited seam, not introduced11 regression; global preexisting primary distinct."
+    },
+    {
+      "obligation": "N10B-01/N07-10",
+      "mechanism": "navigation:76 invokes priorCondition with synthetic {target:active}, unlike production actual KeyboardEvent. Missing key/modifiers and possible effects violate passive diagnosis.",
+      "source": "navigation:70-79,134-143; keyboard:140-147; dispatch:234",
+      "constraint": "No callback probing, forced focus, overlay closure, unpause or navigation policy mutation authorized."
+    },
+    {
+      "obligation": "N10B-01/N07-10",
+      "mechanism": "Private registered arrow bindings consume events, but public Reveal exposes neither reveal.getBindings nor reveal.keyboard.getBindings; optional lookup defaults null and can report no override.",
+      "source": "navigation:104-117; keyboard:129-133,235-257; Reveal public2740-2940/internal2940-2973",
+      "newPersonalEvidence": "Native11ObservationPart-row-136-index.ts.txt:1-74 singleton Object.assign handoff consumed. It does not introduce missing public binding accessor or prove deployed/generated equivalence.",
+      "constraint": "No accessor invented; deployed/generated equivalence unresolved."
+    }
+  ],
+  "mappingRequirement": "Maintain original15+08six+09five+2chronology+6current dispositions with exact body/ID/location/provenance. Historical locations are not currentC locations; newly implemented seam has new actual source evidence.",
+  "semanticLocks": [
+    "Browser-observed occurrence order and identities survive evaluate/normalization; no invented observation-order+.01 timestamps.",
+    "First recorder occurrence and recursive cause survive store replacement; no destructive object/array mutation.",
+    "Capture/post state-before-UI siblings retained before genuine later root/document failure; matched eligible siblings cannot be lost on subsequent rejection.",
+    "Common ledger deduplicates actual occurrences, stable exposed serialization, authoritative explicit wrapper phase in ALL3 paths, caller namespaces not globally sorted.",
+    "Configured keyboard callbacks are not invoked with synthetic event as a read-only guard. Diagnose actual public/registered dispatcher evidence; do not invent public getBindings API.",
+    "Initial slide/document sample atomic before early return; raw evidence retained before validation.",
+    "Mandatory error sink, real production Page/document/root ownership, clocks/history/witness provenance and late finalization remain required."
+  ],
+  "scopeExcluded": {
+    "NF_A4": {
+      "id": "NF-A4",
+      "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+      "fullAuthority": "nativeRaw/014-pending-substrate-11-dispatch-authority.json-read-001.txt:210-222",
+      "mechanism": "evaluateActionCandidates146-147 reads replaceable public __nsRecordedPackets. lifecycle storeHealth148 does not authenticate replacement packet array/forged element. In-place original packet mutation differs because retained native-action detail sees it. Replacement can supply forged histories/state/tCapture/tBubble to extraction107-131 and witness44-63 baseline; evaluatePreActionCursor36-37 lastSeq shares public-store boundary.",
+      "scopeDecision": "Lifecycle integrity does not automatically authorize separate packet-store integrity repair.",
+      "excludedFromRequiredRepairs": true,
+      "seventhRepair": false,
+      "repaired": false,
+      "disproved": false,
+      "waived": false,
+      "completePacketStoreIntegrityClaimed": false
+    },
+    "broaderUnconditionalKeyRejection": {
+      "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+      "source": "navigation:116-143",
+      "mechanism": "await page.keyboard.press(key) actually occurs at original143 even when diagnostic keyboardEligible=false;137-139 merely stage fields.",
+      "scopeDecision": "Passive accurate diagnosis does not authorize unconditional rejection/skipping or rerouting ineligible keys. No seventh repair."
+    },
+    "seventhRepair": false,
+    "scoringPhysicsChanges": false
+  },
+  "tddStagesProposedNotExecuted": [
+    "After specific test authority: design isolated focused contract tests for each inherited mechanism, capture authentic initial failures/errors without old PASS substitution.",
+    "Pinned producer implements substrate in owned candidate files only; independent observation/error-exposure contracts agreed before parallel partition.",
+    "Stop both writers before any verification; genuine terminal receipts state partial/missing results truthfully.",
+    "Require explicit gate permission for focused test/import verification; no existing e2e wrapper that performs cleanup/server build by accident.",
+    "Two independent full current-source audits read actual candidate/import owners plus all preserved finding contracts, verdicts/source refs not manifest.",
+    "Only after both source gates and new authority may full54 case authoring/execution/caller integration be considered."
+  ],
+  "receipts": {
+    "genuineNewProducerDeliveryOnly": true,
+    "doNotRepairHistoricalReceipts": true,
+    "required": [
+      "effective provider/model/route policy and terminal status",
+      "exact current candidate input/output identity",
+      "all34 disposition full bodies/source provenance/credits/unresolved",
+      "all original canonical NC11/RPC17/original9 maps and historical snapshots where available",
+      "actual file counts measured new subject, not 4327/4329 copied",
+      "full54 required/unexecuted scope and NF-A4 exclusion",
+      "commands executed/notexecuted and tests/errors/coverage limits",
+      "truthful failed/partial receipt if delivery fails; no retry without new authority"
+    ]
+  },
+  "deferredScope": {
+    "status": "REQUIRED_UNEXECUTED",
+    "surfaces": ["present", "share", "file"],
+    "leaveReturnRows": [
+      "Quiz",
+      "Hot Potato",
+      "Jeopardy",
+      "Relay",
+      "Trivia question",
+      "Trivia round"
+    ],
+    "resetRows": [
+      "Quiz",
+      "Hot Potato",
+      "Jeopardy",
+      "Relay deadline",
+      "Relay baton",
+      "Trivia question",
+      "Trivia round"
+    ],
+    "isolationRows": ["Quiz", "Hot Potato", "Jeopardy", "Relay", "Trivia"],
+    "rows": 18,
+    "cells": 54,
+    "everyRowEverySurfaceRequired": true,
+    "representativeSubstitution": false,
+    "requirements": [
+      "All12 immutable callers stay required; later clean cutover only under separate authority/helper gates. Mandatory sink, authored manifest/document binding, actual Page, all actionRecords/actionBracket/activityInterval, witness startRecord/measured expiry. Remove obsolete signatures/tBefore/tAfter/activityNow without aliases or shims.",
+      "Every row/surface independently authored full initial/pending/hidden/returned/reset/terminal/peer state AND native UI. Exact tuple/root/document/cardinality; raw-before-validation; earliest setup; actual focus/geometry/controls and same-domain lifecycle uncertainty.",
+      "Actual native Pass/Reset/Start/Next boundaries, exact positive originally pending work, original due crossing and consumed original first expiry; earlier sampled baton due insufficient.",
+      "Quiz native Reset+5000; after-old/before-new checkpoint, bounded new expiry and canonical terminal/full reset state/controls/UI; no800 slack.",
+      "Relay full turn/question/team/both lanes/native UI, exact original deadline/baton due; genuinely settled peer ended/team-2 before freeze; full first timeout and old-due invariance. No extra Pass/sleep/retry/arbitrary winner fallback.",
+      "Trivia question/round expiry and actual native Next; full retained identity/indices/history/scores/awards/clocks/deadline/UI; independently bounded next-question policy. S02-01 q1 due versus q2 due and S02-02 exhausted round timeout/deadline oracle contradictions remain deferred, not weakened.",
+      "Every cell full idle/running/expired state AND native UI witness, original clock provenance and uncertainty, source/manifest binding, production Page and real native controls. Network, screenshots, collector, source GET, attachment and close/finalization errors retained chronologically through mandatory sink, with no successful representative substitution.",
+      "Later gaps5-9 and original7 exact HP speed bonus, original8 NFC duplicate-versus-unique Scatter policy and original9 complete Trivia scoring matrix remain required separate slices. Static reads are not executed acceptance or permission for canonical integration, cutover or qualification."
+    ],
+    "exactPriorPayloadRef": "native11-complete-settlement-report.json#/deferredScope retained in full, not replaced by this summary"
+  },
+  "historicalTruncation": "Unrecoverable original truncated explanation suffix remains explicitly bound; new criteria must not be silently invented or relaxed.",
+  "flags": {
+    "authorizedDispatch": false,
+    "candidateCreated": false,
+    "sourceModified": false,
+    "producerInvoked": false,
+    "admission": false,
+    "sourceReady": false,
+    "qualification": false,
+    "passClaimed": false,
+    "declaredCells": 54,
+    "admittedCells": 0,
+    "executedAcceptanceCells": 0,
+    "NF_A4RepairAuthorized": false,
+    "callerCutover": false,
+    "smoke": false
+  },
+  "forbidden": [
+    "D access/recovery/overwrite",
+    "historical receipt reconstruction",
+    "retry/resume11",
+    "automaticCorrection12dispatch",
+    "fallbackproducer",
+    "timeout/retries/assertions/scoring/physics manipulation",
+    "scratch/archive deletion",
+    "canonical integration/caller cutover/smoke/qualification",
+    "merge/commit/push/deploy"
+  ],
+  "authorizedThisPreparationRequest": [
+    "Read-only current C source/dependency preparation",
+    "Write new preparation reports and draft authority/prompts"
+  ],
+  "interpretation": "Historical permissions for this completed preparation, not executable authority for reviewers/generator/future dispatch.",
+  "generatorUtilityStatus": "Inspected preparation-only artifact. It is not a preapproved gate0 command; no automatic rerun.",
+  "historicalRepairWordingSupersession": {
+    "id": "N10B-01",
+    "originalTextKeptForFidelity": true,
+    "nonOperativeHistoricalClause": "Use Reveal.getBindings()",
+    "operativeRequirement": "Passive actual dispatcher/config/public registration evidence from current inspected owner. No assumed public accessor, no synthetic keyboardCondition callback invocation. If private registrations are not safely observable, mark bounded unresolved and seek scope, do not fabricate API or change navigation policy."
+  },
+  "historicalDispositionLedger": {
+    "file": "inherited-34-disposition-ledger.json",
+    "entries": 34,
+    "unresolvedBodyReferences": [],
+    "meaning": "Full historical finding bodies resolved separately where available.34 is preservation ledger, not distinct repairs. New subject current evidence not evaluated."
+  }
+}

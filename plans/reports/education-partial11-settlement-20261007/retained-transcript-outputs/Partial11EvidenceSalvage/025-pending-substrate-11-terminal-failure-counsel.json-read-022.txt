@@ -1,0 +1,102 @@
+        "pending-round-lifecycle-trivia-state.js"
+      ],
+      "coverage_rule": "Read every assigned helper through its complete source extent, not only changed files, declarations or receipt-cited ranges. Read all12 caller files for actual consumer compatibility and deferred obligations; do not require deferred migration to have landed or authorize changing it. Follow imported/re-exported symbols and full relevant producer/consumer bodies across partitions until every load-bearing obligation is grounded. Include failure, rejection, cleanup, no-sink and repeated/late exposure branches, not merely nominal success paths.",
+      "production_seams": "Read the actual referenced production activity-clock/lifecycle/root/state/UI/navigation policies needed for the verdict. For N10B-01, inspect the linked Reveal keyboard dispatcher completely and its actual reveal-lifecycle/htmlGenerator owners read-only. Cite the dependency as external linked source, not hash-frozen subject content. If its applicable identity/content cannot be established from available evidence, bound the uncertainty; do not execute callbacks, infer dispatcher equivalence or fabricate immutable dependency evidence.",
+      "read_manifest": "Each report lists every required helper and caller with covered ranges through its actual extent, plus cross-partition and production/dependency files and the symbols/branches relied upon. A grep hit, declaration-only read, title-only obligation list or prior audit is not current full-read evidence."
+    },
+    "obligations": {
+      "native_original12_in_original_order": [
+        {
+          "index": 1,
+          "title": "N06-N02: Keep Start diagnostics out of lifecycle continuity",
+          "requirement": "Consistent lifecycle-only projections while retaining both packet publication and native-action diagnostics."
+        },
+        {
+          "index": 2,
+          "title": "Declare firstExpiredSample before the witness polling callback",
+          "requirement": "Actual bound accumulator and complete last-running/first-expired result, not an undeclared assignment."
+        },
+        {
+          "index": 3,
+          "title": "N06-N02: Validate capture-to-post history before adopting Start",
+          "requirement": "Independent complete capture/post histories, valid prefix/length checks and first-running validation before baseline promotion; no missing-history empty fallback."
+        },
+        {
+          "index": 4,
+          "title": "N06-N03: Bind history health to actual recorder bookkeeping",
+          "requirement": "Independent private lifecycle-store identity/count/sequence/content health before every consumer; distinguish legitimate initialized emptiness from missing/replaced/truncated storage."
+        },
+        {
+          "index": 5,
+          "title": "N06-N03: Compare complete retained history content",
+          "requirement": "Mandatory recorder sequence and complete ordered time/bounds/type/visibility/detail/domain content, including event.time."
+        },
+        {
+          "index": 6,
+          "title": "Retain lifecycle mutations drained at native action boundaries",
+          "requirement": "Retain all actually observed boundary-drained mutations and their later delivery upper bounds; do not filter or clamp away uncertainty."
+        },
+        {
+          "index": 7,
+          "title": "N06-N05: Normalize and retain all observed snapshot failures",
+          "requirement": "All genuine state/UI, capture/post, recorder and document occurrences reach the common ledger in actual observation order; propagate the earliest applicable normalized Error."
+        },
+        {
+          "index": 8,
+          "title": "N06-N05: Preserve the recorder exception's actual cause chain",
+          "requirement": "Real recursive causes, phase/origin/stack and observed domain survive normalization and later recorder failures."
+        },
+        {
+          "index": 9,
+          "title": "N06-N01: Stage each navigation poll's actual document first",
+          "requirement": "Raw slide/URL/documentId/timeOrigin from the actual poll are staged before binding validation can throw."
+        },
+        {
+          "index": 10,
+          "title": "N06-N07: Match keyboard eligibility to production dispatch",
+          "requirement": "Actual configuration/focus/production dispatch discriminators, without forcing focus or altering routing policy."
+        },
+        {
+          "index": 11,
+          "title": "Preserve exact null commands when matching native packets",
+          "requirement": "Exact command and tuple/document/type matching; null is not a wildcard."
+        },
+        {
+          "index": 12,
+          "title": "Reject disconnected current nodes during action extraction",
+          "requirement": "Actual connected-current-root rejection before accepting packet/root identity."
+        }
+      ],
+      "evidence_original3": [
+        {
+          "id": "E06-01-A",
+          "requirement": "A sole actual Error with an existing empty secondaryFailures array preserves its exact reference and own keys; no synthetic multi-error exposure."
+        },
+        {
+          "id": "E06-01-B",
+          "requirement": "Identity-based, not unrelated numeric-order-based, deduplication; retain caller arrays/objects and complete duplicate-free repeated/late exposure."
+        },
+        {
+          "id": "E06-01-C",
+          "requirement": "Ingest genuine caller-errorLedger occurrences in established chronology with authoritative wrappers and provenance; preserve serialized-only diagnostics and exclude ledger-owned exposures."
+        }
+      ],
+      "audit08_all6": [
+        {
+          "id": "Native08-1",
+          "requirement": "Actual assertHistoryPrefix import/binding at both Start continuity calls."
+        },
+        {
+          "id": "Native08-2",
+          "requirement": "Independent complete private retained-store content/time integrity, including event.time, diagnostics and other roots, before passive/cursor/correlated/capture/post/clock consumers; preserve healthy emptiness and projected/full sequence distinctions."
+        },
+        {
+          "id": "Native08-3",
+          "requirement": "Already observed browser snapshot failures precede the genuinely later Node document-binding exception, which is independently retained."
+        },
+        {
+          "id": "Native08-4",
+          "requirement": "Relevant candidate packet siblings reach the normalized ledger despite outer health/document rejection; raw staging and success-only matching are insufficient."
+        },
+
+[Showing lines 201-300 of 541. Use :301 to continue]

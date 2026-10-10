@@ -1,0 +1,13 @@
+  try {
+    Object.defineProperty(window, '__nsOwnerUIEvidence', {
+      value: getUIEvidence,
+      writable: false,
+      configurable: false,
+      enumerable: true,
+    })
+  } catch (e) {
+    window.__nsOwnerUIEvidence = getUIEvidence
+  }
+})()
+`
+

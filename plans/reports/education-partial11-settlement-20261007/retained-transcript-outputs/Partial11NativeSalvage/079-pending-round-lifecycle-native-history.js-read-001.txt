@@ -1,0 +1,185 @@
+// Browser initialization scripts for observing class mutations, filtering domain histories, and recording action packets.
+
+export const MUTATION_PARSER_INIT_SCRIPT = `
+(() => {
+  if (window.__nsProcessClassMutations) return;
+  window.__nsProcessClassMutations = (mutations, triggerMin, recordFn) => {
+    const deliveryMax = performance.now();
+    const byTarget = new Map();
+    for (const m of mutations) {
+      const target = m.target;
+      if (target?.nodeType !== 1 || !target.hasAttribute('data-ns-game') || m.attributeName !== 'class') continue;
+      if (!byTarget.has(target)) byTarget.set(target, []);
+      byTarget.get(target).push(m);
+    }
+    for (const [target, list] of byTarget) {
+      const elementId = target.dataset?.nsElementId || null;
+      const gameType = target.dataset?.nsGameType || target.dataset?.nsGame || null;
+      const slide = target.closest('[data-ns-effective-slide-id]');
+      const slideId = slide?.dataset?.nsEffectiveSlideId || null;
+      const rootInstanceId = window.__nsGetRootInstanceId?.(target) || null;
+      const documentId = window.__nsDocumentId || null;
+      const timeOrigin = performance.timeOrigin;
+      const url = window.location.href;
+      for (let i = 0; i < list.length; i++) {
+        const prevClass = list[i].oldValue || '';
+        const nextClass = i + 1 < list.length ? (list[i + 1].oldValue || '') : (target.className || '');
+        const wasPaused = prevClass.includes('ns-education-paused');
+        const isPaused = nextClass.includes('ns-education-paused');
+        if (wasPaused === isPaused) continue;
+        recordFn(isPaused ? 'root-pause' : 'root-resume', {
+          rootInstanceId,
+          elementId,
+          slideId,
+          gameType,
+          documentId,
+          timeOrigin,
+          url,
+          triggerMin,
+          deliveryMax,
+        }, triggerMin, deliveryMax);
+      }
+    }
+  };
+})();
+`
+
+export const HISTORY_FILTER_INIT_SCRIPT = `
+(() => {
+  if (window.__nsExtractDomainHistories) return;
+  const cloneEv = (e) => Object.assign({}, e, { detail: e.detail ? Object.assign({}, e.detail) : null });
+  window.__nsExtractDomainHistories = (events, rootInstanceId, elementId, slideId, maxTime) => {
+    if (!Array.isArray(events)) return { rootEvents: null, docEvents: null };
+    const health = window.__nsCheckStoreHealth ? window.__nsCheckStoreHealth() : { healthy: true };
+    if (!health.healthy) return { rootEvents: null, docEvents: null };
+    const filtered = typeof maxTime === 'number' ? events.filter(e => e.tMin <= maxTime) : events;
+    return {
+      rootEvents: filtered.filter(ev =>
+        (ev.type === 'root-pause' || ev.type === 'root-resume') &&
+        ev.detail?.rootInstanceId === rootInstanceId &&
+        ev.detail?.elementId === elementId &&
+        ev.detail?.slideId === slideId
+      ).map(cloneEv),
+      docEvents: filtered.filter(ev =>
+        ev.type === 'visibilitychange' || ev.type === 'pagehide' || ev.type === 'pageshow'
+      ).map(cloneEv),
+    };
+  };
+})();
+`
+
+export const ACTION_RECORDER_INIT_SCRIPT = `
+(() => {
+  if (window.__nsSetupActionRecorder) return;
+  window.__nsSetupActionRecorder = (eventPackets, completedEvents, recordFn, advanceTriggerFn) => {
+    const completePacket = (event, packet, tBub) => {
+      if (completedEvents.has(event)) return;
+      completedEvents.set(event, true);
+      packet.tBubble = tBub;
+      advanceTriggerFn(tBub);
+      const storeHealthBub = window.__nsCheckStoreHealth ? window.__nsCheckStoreHealth() : { healthy: true };
+      if (!storeHealthBub.healthy && !window.__nsLifecycleRecorderError) {
+        window.__nsLifecycleRecorderError = { origin: 'browser', phase: 'recorder:store', name: 'StoreIntegrityError', message: storeHealthBub.error || 'Corrupted store', stack: null, cause: null, documentId: window.__nsDocumentId || null, timeOrigin: performance.timeOrigin, url: window.location.href, obsOrder: (window.__nsObsOrder = (window.__nsObsOrder || 0) + 1) };
+      }
+      const bubEvents = storeHealthBub.healthy ? (window.__nsLifecycleEvents || []) : [];
+      const bubHistory = window.__nsCollectPauseResumePairs(
+        bubEvents.filter(ev =>
+          ev.detail?.rootInstanceId === packet.rootInstanceId &&
+          ev.detail?.elementId === packet.elementId &&
+          ev.detail?.slideId === packet.slideId
+        ),
+        tBub
+      );
+      const afterSnap = window.__nsReadRootSnapshot(packet.root, packet.gameType);
+      const historiesBub = window.__nsExtractDomainHistories(
+        window.__nsLifecycleEvents, packet.rootInstanceId, packet.elementId, packet.slideId, tBub
+      );
+      Object.assign(packet, {
+        isMountedAfter: afterSnap.isMounted, hasUIGetter: afterSnap.hasUIGetter,
+        stateAfter: afterSnap.state, stateAfterError: afterSnap.stateError,
+        uiAfter: afterSnap.ui, uiAfterError: afterSnap.uiError,
+        pausedAfter: packet.root.classList.contains('ns-education-paused'),
+        visibilityAfter: document.visibilityState, hiddenAfter: document.hidden,
+        completedPairsAfter: bubHistory.pairs, pendingPauseAfter: bubHistory.pending,
+        hasLifecycleEvents: Array.isArray(window.__nsLifecycleEvents) && Boolean(storeHealthBub.healthy),
+        rootEventsAfter: historiesBub.rootEvents, docEventsAfter: historiesBub.docEvents,
+      });
+      const serializable = Object.assign({}, packet);
+      delete serializable.root;
+      window.__nsRecordedPackets.push(serializable);
+      recordFn('native-action', serializable, packet.tCapture, tBub);
+    };
+
+    const nativeCaptureHandler = (event) => {
+      const tCap = performance.now();
+      advanceTriggerFn(tCap);
+      const target = event.target;
+      const root = target?.closest?.('[data-ns-game][data-ns-element-id]');
+      if (!root) return;
+      const elementId = root.dataset?.nsElementId || null;
+      const gameType = root.dataset?.nsGameType || root.dataset?.nsGame || null;
+      const slide = root.closest('[data-ns-effective-slide-id]');
+      const slideId = slide?.dataset?.nsEffectiveSlideId || null;
+      let cmd = null;
+      if (event.type === 'submit') {
+        const submitter = event.submitter || root.ownerDocument?.activeElement;
+        cmd = submitter?.getAttribute?.('data-ns-command') || submitter?.dataset?.nsCommand;
+        if (!cmd) cmd = target?.getAttribute?.('data-ns-command') || target?.dataset?.nsCommand;
+        if (!cmd) cmd = 'submit';
+      }
+      if (!cmd) cmd = target?.getAttribute?.('data-ns-command') || target?.dataset?.nsCommand || null;
+      if (!cmd && target?.dataset?.nsCell) cmd = 'cell-' + target.dataset.nsCell;
+      const beforeSnap = window.__nsReadRootSnapshot(root, gameType);
+      const rootInstanceId = window.__nsGetRootInstanceId(root);
+      const storeHealthCap = window.__nsCheckStoreHealth ? window.__nsCheckStoreHealth() : { healthy: true };
+      if (!storeHealthCap.healthy && !window.__nsLifecycleRecorderError) {
+        window.__nsLifecycleRecorderError = { origin: 'browser', phase: 'recorder:store', name: 'StoreIntegrityError', message: storeHealthCap.error || 'Corrupted store', stack: null, cause: null, documentId: window.__nsDocumentId || null, timeOrigin: performance.timeOrigin, url: window.location.href, obsOrder: (window.__nsObsOrder = (window.__nsObsOrder || 0) + 1) };
+      }
+      const capEvents = storeHealthCap.healthy ? (window.__nsLifecycleEvents || []) : [];
+      const capHistory = window.__nsCollectPauseResumePairs(
+        capEvents.filter(ev =>
+          ev.detail?.rootInstanceId === rootInstanceId &&
+          ev.detail?.elementId === elementId &&
+          ev.detail?.slideId === slideId
+        ),
+        tCap
+      );
+      const historiesCap = window.__nsExtractDomainHistories(
+        window.__nsLifecycleEvents, rootInstanceId, elementId, slideId, tCap
+      );
+      const seq = ++window.__nsPacketSequence;
+      const packet = {
+        sequence: seq, eventType: event.type, elementId, slideId, gameType, command: cmd,
+        isTrusted: Boolean(event.isTrusted), documentId: window.__nsDocumentId,
+        timeOrigin: performance.timeOrigin, url: window.location.href, rootInstanceId, root, tCapture: tCap,
+        isMountedBefore: beforeSnap.isMounted, hasUIGetter: beforeSnap.hasUIGetter,
+        stateBefore: beforeSnap.state, stateBeforeError: beforeSnap.stateError,
+        uiBefore: beforeSnap.ui, uiBeforeError: beforeSnap.uiError,
+        pausedBefore: root.classList.contains('ns-education-paused'),
+        visibilityBefore: document.visibilityState, hiddenBefore: document.hidden,
+        completedPairsBefore: capHistory.pairs, pendingPauseBefore: capHistory.pending,
+        hasLifecycleEvents: Array.isArray(window.__nsLifecycleEvents) && Boolean(storeHealthCap.healthy),
+        rootEventsBefore: historiesCap.rootEvents, docEventsBefore: historiesCap.docEvents,
+      };
+      eventPackets.set(event, packet);
+      const rootBubbleHandler = (e) => {
+        if (e === event) {
+          completePacket(event, packet, performance.now());
+          root.removeEventListener(event.type, rootBubbleHandler, false);
+        }
+      };
+      root.addEventListener(event.type, rootBubbleHandler, false);
+    };
+
+    const nativeBubbleHandler = (event) => {
+      const packet = eventPackets.get(event);
+      if (packet) completePacket(event, packet, performance.now());
+    };
+
+    for (const name of ['click', 'keydown', 'change', 'input', 'submit']) {
+      document.addEventListener(name, nativeCaptureHandler, true);
+      document.addEventListener(name, nativeBubbleHandler, false);
+    }
+  };
+})();
+`

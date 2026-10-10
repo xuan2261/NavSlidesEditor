@@ -1,0 +1,192 @@
+{
+  "mode": "FULL_SOURCE_STATIC_SALVAGE_NOT_ADMISSION",
+  "perspective": "Native15 primary trace; independent Evidence11 seams required",
+  "verdict": "UNRESOLVED",
+  "completionStatus": "INCOMPLETE_REVIEW_RETURNED_AT_EXPLICIT_USER_WRAP_UP",
+  "summary": "The current authority/receipt-reading step is complete. A complete, independently evidenced full26/full12 source verdict cannot be certified from the retained review record. The user's subsequent instruction to finish the current step and return the final report stops further investigation. This report does not treat historical source credits, producer dispositions, or another review's read manifest as this reviewer's current-source proof. Missing genuine Native11 delivery remains an independently fatal admission blocker.",
+  "exactSubject": {
+    "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+    "fullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+    "identityAuthority": "Main's preserved subject records; not remeasured",
+    "baselineRegularInputs": 4327,
+    "preservedRegularInputs": 4328,
+    "allBaselineInputsRetained": true,
+    "existingAuthorizedHelpersModified": 8,
+    "immutableCallers": 12,
+    "all26HelpersStrictlyBelow200PhysicalLines": true,
+    "soleAddition": ".tmp/acceptance-producer-pending-substrate-11-evidence.json",
+    "preservationFactsIndependentlyRemeasured": false,
+    "externalDependencyJunction": {
+      "target": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules",
+      "recursivelyFrozen": false,
+      "immutableDispatcherIdentityEstablishedByThisReport": false
+    }
+  },
+  "dispositionEvidenceRule": "Every UNRESOLVED below means current frozen-source correctness has not been established by a complete attributable read/consumer trace in this final report. It does not mean the historical defect necessarily persists. Canonical reports remain controlling; titles below index those obligations and do not replace their full governing bodies.",
+  "originalFindingDispositions": [
+    {
+      "id": "N07-01",
+      "title": "N06-N02: Keep Start diagnostics out of lifecycle continuity",
+      "disposition": "UNRESOLVED",
+      "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 1",
+      "currentSourceEvidence": [],
+      "requiredProof": "Lifecycle-only continuity projections retain both packet publication and native-action diagnostic outputs."
+    },
+    {
+      "id": "N07-02",
+      "title": "Declare firstExpiredSample before the witness polling callback",
+      "disposition": "UNRESOLVED",
+      "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 2",
+      "currentSourceEvidence": [],
+      "requiredProof": "Bound accumulator and complete last-running/first-expired result."
+    },
+    {
+      "id": "N07-03",
+      "title": "N06-N02: Validate capture-to-post history before adopting Start",
+      "disposition": "UNRESOLVED",
+      "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 3",
+      "currentSourceEvidence": [],
+      "requiredProof": "Independent complete capture/post histories, prefix/length checks and valid first-running state before promotion; no missing-history empty fallback."
+    },
+    {
+      "id": "N07-04",
+      "title": "N06-N03: Bind history health to actual recorder bookkeeping",
+      "disposition": "UNRESOLVED",
+      "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 4",
+      "currentSourceEvidence": [],
+      "requiredProof": "Private store identity/count/sequence/content health before every consumer, distinguishing initialized emptiness from absent/replaced/truncated storage."
+    },
+    {
+      "id": "N07-05",
+      "title": "N06-N03: Compare complete retained history content",
+      "disposition": "UNRESOLVED",
+      "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 5",
+      "currentSourceEvidence": [],
+      "requiredProof": "Mandatory sequence and complete ordered time/bounds/type/visibility/detail/domain content, including event.time."
+    },
+    {
+      "id": "N07-06",
+      "title": "Retain lifecycle mutations drained at native action boundaries",
+      "disposition": "UNRESOLVED",
+      "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 6",
+      "currentSourceEvidence": [],
+      "requiredProof": "All actually observed boundary-drained events survive with their later upper uncertainty bounds."
+    },
+    {
+      "id": "N07-07",
+      "title": "N06-N05: Normalize and retain all observed snapshot failures",
+      "disposition": "UNRESOLVED",
+      "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 7",
+      "currentSourceEvidence": [],
+      "requiredProof": "Every genuine state/UI, capture/post, recorder and document occurrence enters the common ledger in actual observation order, with earliest normalized primary propagation."
+    },
+    {
+      "id": "N07-08",
+      "title": "N06-N05: Preserve the recorder exception's actual cause chain",
+      "disposition": "UNRESOLVED",
+      "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 8",
+      "currentSourceEvidence": [],
+      "requiredProof": "Real recursive causes, phase/origin/stack and observed domain survive normalization and later recorder failures."
+    },
+    {
+      "id": "N07-09",
+      "title": "N06-N01: Stage each navigation poll's actual document first",
+      "disposition": "UNRESOLVED",
+      "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 9",
+      "currentSourceEvidence": [],
+      "requiredProof": "Actual poll slideId/url/documentId/timeOrigin staged before binding validation."
+    },
+    {
+      "id": "N07-10",
+      "title": "N06-N07: Match keyboard eligibility to production dispatch",
+      "disposition": "UNRESOLVED",
+      "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 10",
+      "currentSourceEvidence": [],
+      "requiredProof": "Actual configuration/focus/dispatch discriminators without forcing focus or modifying navigation."
+    },
+    {
+      "id": "N07-11",
+      "title": "Preserve exact null commands when matching native packets",
+      "disposition": "UNRESOLVED",
+      "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 11",
+      "currentSourceEvidence": [],
+      "requiredProof": "Exact command, tuple, document and type matching; null must not become a wildcard."
+    },
+    {
+      "id": "N07-12",
+      "title": "Reject disconnected current nodes during action extraction",
+      "disposition": "UNRESOLVED",
+      "governingAuthority": "pending-substrate-07-native-admission.json, original Native finding 12",
+      "currentSourceEvidence": [],
+      "requiredProof": "Connected-current-root rejection before accepting packet/root identity."
+    },
+    {
+      "id": "E06-01-A",
+      "title": "Leave sole Errors with empty caller arrays unchanged",
+      "disposition": "UNRESOLVED",
+      "governingAuthority": "pending-substrate-07-evidence-admission.json, original Evidence finding 1",
+      "currentSourceEvidence": [],
+      "requiredProof": "Sole genuine Error keeps exact reference and own keys despite an existing empty secondaryFailures array."
+    },
+    {
+      "id": "E06-01-B",
+      "title": "Deduplicate caller entries by occurrence identity",
+      "disposition": "UNRESOLVED",
+      "governingAuthority": "pending-substrate-07-evidence-admission.json, original Evidence finding 2",
+      "currentSourceEvidence": [],
+      "requiredProof": "Identity-based duplicate-free repeated/late exposure, preserving caller arrays/objects and unrelated numeric namespaces."
+    },
+    {
+      "id": "E06-01-C",
+      "title": "Ingest genuine failures attached through errorLedger",
+      "disposition": "UNRESOLVED",
+      "governingAuthority": "pending-substrate-07-evidence-admission.json, original Evidence finding 3",
+      "currentSourceEvidence": [],
+      "requiredProof": "Genuine caller-ledger occurrences enter established chronology with authoritative wrappers/provenance; serialized-only diagnostics remain unchanged and ledger-owned exposures excluded."
+    }
+  ],
+  "additional08FindingDispositions": [
+    {
+      "id": "Native08-1",
+      "title": "Import assertHistoryPrefix before validating Start bracket",
+      "disposition": "UNRESOLVED",
+      "currentSourceEvidence": [],
+      "governingAuthority": "pending-substrate-08-native-salvage-audit.json"
+    },
+    {
+      "id": "Native08-2",
+      "title": "Validate complete retained-store content integrity",
+      "disposition": "UNRESOLVED",
+      "currentSourceEvidence": [],
+      "governingAuthority": "pending-substrate-08-native-salvage-audit.json"
+    },
+    {
+      "id": "Native08-3",
+      "title": "Preserve snapshot-before-document failure chronology",
+      "disposition": "UNRESOLVED",
+      "currentSourceEvidence": [],
+      "governingAuthority": "pending-substrate-08-native-salvage-audit.json"
+    },
+    {
+      "id": "Native08-4",
+      "title": "Retain packet sibling failures before outer rejection",
+      "disposition": "UNRESOLVED",
+      "currentSourceEvidence": [],
+      "governingAuthority": "pending-substrate-08-native-salvage-audit.json"
+    },
+    {
+      "id": "Evidence08-1",
+      "title": "E06-01-C Exclude serialized diagnostics from occurrence ingestion",
+      "disposition": "UNRESOLVED",
+      "currentSourceEvidence": [],
+      "governingAuthority": "pending-substrate-08-evidence-salvage-audit.json"
+    },
+    {
+      "id": "Evidence08-2",
+      "title": "E06-01-C Retain ledger metadata for already-ingested references",
+      "disposition": "UNRESOLVED",
+      "currentSourceEvidence": [],
+      "governingAuthority": "pending-substrate-08-evidence-salvage-audit.json"
+    }
+
+[Showing lines 1-190 of 755. Use :191 to continue]

@@ -1,0 +1,10 @@
+  return {
+    ...state,
+    attempts: [...state.attempts, attempt],
+    score: state.score + outcome.pointsAwarded,
+    status: terminal ? 'terminal' : 'active',
+    lastResult: outcome,
+  }
+}
+
+module.exports = { createQuizSession, reduceQuizSession }

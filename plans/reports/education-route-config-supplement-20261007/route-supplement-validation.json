@@ -1,0 +1,16 @@
+{
+  "kind": "REDACTED_CONFIG_REPORT_VALIDATION_NOT_ACTIVE_ROUTE_OR_SOURCE_GATE",
+  "twoRegistriesDeclareTarget": true,
+  "secretsNotEmittedOrCopied": true,
+  "configBytesStableDuringFinalValidationWindow": true,
+  "configNeverWrittenByThisRequest": true,
+  "configWindowLimit": "Observation-window digest only; no initial config byte snapshot proof for entire request.",
+  "gitBranchHEADAndObservedStatusVerified": true,
+  "stagedPaths": 0,
+  "producerInvoked": false,
+  "inferenceRequests": 0,
+  "DRead": false,
+  "candidateCreated": false,
+  "sourceEdited": false,
+  "remainingBlocker": "Actual isolated-session binding and end-to-end no-retry/no-fallback policy verification."
+}

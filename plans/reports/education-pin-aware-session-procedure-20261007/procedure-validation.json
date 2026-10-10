@@ -1,0 +1,18 @@
+{
+  "kind": "STATIC_SESSION_PROCEDURE_VALIDATION_NOT_RUNTIME_PIN_PROOF",
+  "procedureWritten": true,
+  "exactProposedCommand": "C:/Users/Z10PAD8C_Xuan2261/.local/bin/jeikcode.exe --help",
+  "commandExecuted": false,
+  "interactiveApprovalTool": "UNSUPPORTED_NO_APPROVAL_COLLECTED",
+  "binaryFlagsVerified": false,
+  "CLIOrSessionStarted": false,
+  "inferenceSent": false,
+  "configChanged": false,
+  "sourceChanged": false,
+  "DRead": false,
+  "gitBranchHEADStatusPreserved": true,
+  "existingModifiedPaths": 12,
+  "existingUntrackedPaths": 9,
+  "acceptanceExecuted": 0,
+  "nextPrerequisite": "User approve exact --help command in chat."
+}

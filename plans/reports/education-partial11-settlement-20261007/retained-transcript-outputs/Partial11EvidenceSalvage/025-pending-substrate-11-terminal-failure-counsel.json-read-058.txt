@@ -1,0 +1,132 @@
+          "title": "N06-N01: Stage each navigation poll's actual document first",
+          "requirement": "Raw slide/URL/documentId/timeOrigin from the actual poll are staged before binding validation can throw."
+        },
+        {
+          "index": 10,
+          "title": "N06-N07: Match keyboard eligibility to production dispatch",
+          "requirement": "Actual configuration/focus/production dispatch discriminators, without forcing focus or altering routing policy."
+        },
+        {
+          "index": 11,
+          "title": "Preserve exact null commands when matching native packets",
+          "requirement": "Exact command and tuple/document/type matching; null is not a wildcard."
+        },
+        {
+          "index": 12,
+          "title": "Reject disconnected current nodes during action extraction",
+          "requirement": "Actual connected-current-root rejection before accepting packet/root identity."
+        }
+      ],
+      "evidence_original3": [
+        {
+          "id": "E06-01-A",
+          "requirement": "A sole actual Error with an existing empty secondaryFailures array preserves its exact reference and own keys; no synthetic multi-error exposure."
+        },
+        {
+          "id": "E06-01-B",
+          "requirement": "Identity-based, not unrelated numeric-order-based, deduplication; retain caller arrays/objects and complete duplicate-free repeated/late exposure."
+        },
+        {
+          "id": "E06-01-C",
+          "requirement": "Ingest genuine caller-errorLedger occurrences in established chronology with authoritative wrappers and provenance; preserve serialized-only diagnostics and exclude ledger-owned exposures."
+        }
+      ],
+      "audit08_all6": [
+        {
+          "id": "Native08-1",
+          "requirement": "Actual assertHistoryPrefix import/binding at both Start continuity calls."
+        },
+        {
+          "id": "Native08-2",
+          "requirement": "Independent complete private retained-store content/time integrity, including event.time, diagnostics and other roots, before passive/cursor/correlated/capture/post/clock consumers; preserve healthy emptiness and projected/full sequence distinctions."
+        },
+        {
+          "id": "Native08-3",
+          "requirement": "Already observed browser snapshot failures precede the genuinely later Node document-binding exception, which is independently retained."
+        },
+        {
+          "id": "Native08-4",
+          "requirement": "Relevant candidate packet siblings reach the normalized ledger despite outer health/document rejection; raw staging and success-only matching are insufficient."
+        },
+        {
+          "id": "Evidence08-1",
+          "requirement": "Serialized-only caller diagnostic objects remain unchanged and never become fabricated occurrences."
+        },
+        {
+          "id": "Evidence08-2",
+          "requirement": "Already-ingested shared genuine references retain authoritative wrapper phase/metadata without duplicate occurrences, serialization identity churn or caller-object mutation."
+        }
+      ],
+      "settled09_all5": [
+        {
+          "id": "09-S1",
+          "owner": "Native",
+          "requirement": "Correct evaluateActionCandidates function boundary before the next export; preserve evaluation and public contracts."
+        },
+        {
+          "id": "09-S2",
+          "owner": "Native",
+          "requirement": "Construct the complete serializable packet before removing its live root; publish BOTH recorded packet evidence and native-action diagnostics with complete capture/post snapshots, lifecycle projections and uncertainty."
+        },
+        {
+          "id": "09-S3",
+          "owner": "Native",
+          "requirement": "On rejection/no-match fallback, ingest EVERY genuinely relevant cursor-eligible packet's independent siblings in actual packet/capture/post/state/UI order while preserving exact successful matching and raw evidence."
+        },
+        {
+          "id": "09-S4",
+          "owner": "Evidence",
+          "requirement": "One stable ledger-owned exposed serialization object per occurrence across recursive ingestion, reconciliation and late exposure, without replacing/truncating caller arrays or conflating numeric namespaces."
+        },
+        {
+          "id": "09-S5",
+          "owner": "Evidence",
+          "requirement": "Authoritative occurrence-wrapper phase survives initial serialization and reconciliation despite conflicting intrinsic Error.phase; retain sidecar provenance without mutating the Error or caller wrapper."
+        }
+      ],
+      "chronology_all2": [
+        {
+          "id": "09-C1",
+          "owner": "Native",
+          "requirement": "Already captured packet getter errors precede genuinely later extraction store/not-ready/document failures; genuinely earlier setup/listener recorder errors retain their earlier positions. No universal packet-first/recorder-first category order or invented timing; throw the earliest applicable normalized Error."
+        },
+        {
+          "id": "09-C2",
+          "owner": "Evidence",
+          "requirement": "Established caller errorLedger a,b order precedes secondary-only and later frame/source/attachment arrivals. Metadata pre-scan is not occurrence ingestion; shared-reference dedupe and authoritative wrappers must preserve actual order without sorting unrelated numeric namespaces."
+        }
+      ],
+      "current11_all6": [
+        {
+          "id": "S10-C1",
+          "owner": "Native",
+          "requirement": "Trace actual observation-site order across setup, earlier listener/store failures, capture state/UI getters, capture health, bubble health, post state/UI getters, pre-existing recorder errors forwarded by cursor/correlated reads and newly detected extraction failures. Internal witnesses must carry domain/provenance and survive forwarding; packet sequence alone or boundary timestamps are insufficient. Preserve all matched/fallback siblings and later independent Node validation."
+        },
+        {
+          "id": "NF-A2",
+          "owner": "Native",
+          "requirement": "Later record() store/readiness failure must not overwrite the first actual recorder error or its recursive setup/store cause chain; forwarded diagnostics are not fabricated new occurrences."
+        },
+        {
+          "id": "NF-A3",
+          "owner": "Native",
+          "requirement": "stageButtonGuard stages raw evidence and normalizes both already observed state/UI getter failures before later document validation. Retain the later document failure and propagate the earliest applicable common-ledger normalized Error without changing exported signatures or controls callers."
+        },
+        {
+          "id": "N10B-01",
+          "owner": "Native",
+          "requirement": "Capture keyboard truthiness, strict keyboardCondition === false semantics, focused-deck policy, input/textarea/contenteditable/speaker-notes exclusions, overlay behavior, paused/resume-key rules for the actual key, and configured/registered custom-binding precedence. A matching custom binding consumes system-arrow dispatch even if its value is useless; never invoke callbacks to discover effects or force focus/unpause/close overlays."
+        },
+        {
+          "id": "N10B-02",
+          "owner": "Native",
+          "requirement": "Initial slideId and actual URL/documentId/timeOrigin are read atomically, staged and validated BEFORE the already-target early return. Preserve corrected poll staging and validation."
+        },
+        {
+          "id": "S10-C2",
+          "owner": "Evidence",
+          "requirement": "Phase-less wrappers cannot downgrade an explicitly authoritative recorded phase via intrinsic Error.phase or ingestion fallback. Explicit valid wrapper phase reconciliation and metadata enrichment remain supported without turning metadata into phase authority. Apply consistently to errorLedger, shared-reference secondaryFailures and allErrors while preserving actual Error identity, stable serialization, genuine chronology and late exposure."
+        }
+      ],
+
+[Showing lines 251-380 of 541. Use :381 to continue]

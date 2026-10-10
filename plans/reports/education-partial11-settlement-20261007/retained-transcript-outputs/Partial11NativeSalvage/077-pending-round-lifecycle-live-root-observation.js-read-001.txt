@@ -1,0 +1,157 @@
+/**
+ * In-browser live root observation and error-envelope extraction.
+ * Reuses installed native readonly snapshot, root-instance token, and document seams.
+ */
+
+export async function evaluateLiveRootObservation(page) {
+  return await page.evaluate(() => {
+    const documentIdentity = {
+      documentId: window.__nsDocumentId || null,
+      timeOrigin:
+        typeof performance?.timeOrigin === 'number' && Number.isFinite(performance.timeOrigin)
+          ? performance.timeOrigin
+          : null,
+      url: location.href,
+    }
+
+    const nodes = Array.from(document.querySelectorAll('[data-ns-game]'))
+    const roots = []
+    const rootErrors = []
+
+    function serializeBrowserCause(err, phase, meta) {
+      if (!err) return null
+      if (err.origin === 'browser' && err.phase) {
+        if (meta.rootInstanceId && !err.rootInstanceId) err.rootInstanceId = meta.rootInstanceId
+        if (meta.timeOrigin !== undefined && err.timeOrigin === undefined) err.timeOrigin = meta.timeOrigin
+        return err
+      }
+      return {
+        origin: 'browser',
+        name: err.name || 'Error',
+        message: err.message || String(err),
+        stack: err.stack || null,
+        cause: err.cause ? serializeBrowserCause(err.cause, `${phase}:cause`, meta) : null,
+        phase,
+        elementId: meta.elementId,
+        slideId: meta.slideId,
+        gameType: meta.gameType,
+        rootInstanceId: meta.rootInstanceId,
+        documentId: meta.documentId,
+        timeOrigin: meta.timeOrigin,
+        url: meta.url,
+      }
+    }
+
+    for (const node of nodes) {
+      const tMin = performance.now()
+      const slide = node.closest('[data-ns-effective-slide-id]')
+      const slideId = slide?.dataset?.nsEffectiveSlideId ?? null
+      const elementId = node.dataset?.nsElementId ?? null
+      const gameType = node.dataset?.nsGameType || node.dataset?.nsGame || null
+      const rootInstanceId =
+        typeof window.__nsGetRootInstanceId === 'function' ? window.__nsGetRootInstanceId(node) : null
+
+      const meta = {
+        slideId,
+        elementId,
+        gameType,
+        rootInstanceId,
+        documentId: documentIdentity.documentId,
+        timeOrigin: documentIdentity.timeOrigin,
+        url: documentIdentity.url,
+      }
+
+      if (!rootInstanceId) {
+        rootErrors.push({
+          origin: 'browser',
+          name: 'PrerequisiteError',
+          message: `window.__nsGetRootInstanceId unavailable or returned null for root elementId=${elementId}`,
+          stack: null,
+          cause: null,
+          phase: 'prerequisite:rootInstance',
+          ...meta,
+        })
+      }
+
+      if (typeof window.__nsReadRootSnapshot !== 'function') {
+        rootErrors.push({
+          origin: 'browser',
+          name: 'PrerequisiteError',
+          message: 'window.__nsReadRootSnapshot is not defined',
+          stack: null,
+          cause: null,
+          phase: 'prerequisite:snapshot',
+          ...meta,
+        })
+      }
+
+      let snapshot = null
+      if (typeof window.__nsReadRootSnapshot === 'function') {
+        snapshot = window.__nsReadRootSnapshot(node, gameType)
+      }
+
+      let state = snapshot?.state ?? null
+      let ui = snapshot?.ui ?? null
+
+      if (snapshot) {
+        if (!snapshot.isMounted) {
+          rootErrors.push({
+            origin: 'browser',
+            name: 'MountError',
+            message: `Root elementId=${elementId} is not mounted; static view is visible`,
+            stack: null,
+            cause: null,
+            phase: 'mount',
+            ...meta,
+          })
+        }
+        if (!snapshot.hasUIGetter) {
+          rootErrors.push({
+            origin: 'browser',
+            name: 'PrerequisiteError',
+            message: 'window.__nsOwnerUIEvidence is not defined',
+            stack: null,
+            cause: null,
+            phase: 'ui',
+            ...meta,
+          })
+        }
+        if (snapshot.stateError) {
+          rootErrors.push(serializeBrowserCause(snapshot.stateError, 'state', meta))
+        }
+        if (snapshot.uiError) {
+          rootErrors.push(serializeBrowserCause(snapshot.uiError, 'ui', meta))
+        }
+        if (snapshot.isMounted && !snapshot.stateError && (state === null || state === undefined)) {
+          rootErrors.push({
+            origin: 'browser',
+            name: 'StateError',
+            message: `getState() returned null/undefined for root elementId=${elementId}`,
+            stack: null,
+            cause: null,
+            phase: 'state',
+            ...meta,
+          })
+        }
+      }
+
+      const tMax = performance.now()
+      const rawInterval = { min: tMin, max: tMax }
+
+      roots.push({
+        slideId,
+        elementId,
+        gameType,
+        rootInstanceId,
+        rawInterval,
+        state,
+        ui,
+        hidden: Boolean(node.hidden),
+        paused: node.classList.contains('ns-education-paused'),
+        documentIdentity,
+      })
+    }
+
+    return { roots, rootErrors, documentIdentity }
+  })
+}

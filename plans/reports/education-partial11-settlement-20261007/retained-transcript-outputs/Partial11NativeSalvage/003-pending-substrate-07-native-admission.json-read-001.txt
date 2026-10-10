@@ -1,0 +1,115 @@
+{
+  "confidence": 0.99,
+  "explanation": "REJECT — correction07 native helper partition is not statically admissible. This is a source-only verdict against the frozen candidate07, not runtime qualification: no edits, git commands, builds, tests, browser interactions, or execution checks were performed; the parent's reported pre-interaction module-loading failure is not evidence of a helper runtime result.\n\nCorrected N06 IDs: N06-N04 has finite, strictly positive, bounded remainingMs checks on the initial running sample and every running poll; N06-N06 captures computed/inherited CSS visibility and an ordered same-read rawInterval, with raw staging and document validation; N06-N08 preserves the canonical NC11, RPC17, original9 identities and historical mapping snapshots, including unchanged original-7 Hot Potato speed-bonus, original-8 Scattergories NFC duplicate/unique policy, and original-9 full Trivia scoring matrix. Remaining/partial IDs: N06-N01 adds the required callable document gates and fixes the passive/clock/button entry paths, but navigation still discards offending poll identity evidence; N06-N02 anchors rootDomain to Start and validates the initial sample before promotion, but the new history routing rejects Start's own diagnostic event, capture/post continuity is not checked, and required histories still have empty fallbacks; N06-N03 distinguishes absent correlated histories and checks lengths, but cannot establish store integrity or complete retained content; N06-N05 improves recursive snapshot envelopes and recorder normalization plus independent document retention, but snapshot failures are not independently normalized/recorded and recorder causes are discarded; N06-N07 adds native enabled-state and focus observations, but its keyboard-eligibility discriminator does not match the production dispatch. Additional correction07 regressions include the removed firstExpiredSample declaration, null-command exactness, and connected-node rejection.\n\nPhysical-line evidence: the parent freeze records no >=200 helper files; all 15 assigned native files were read through their source extent, with the largest assigned helper recorded as native-history.js at 193 physical lines. The native receipt's listed counts agree with those freeze measurements; receipt counts were not treated as independent measurement, and no recount was executed. The consumed accumulator/ledger/exposure source forwards optional metadata, preserves actual Node Error references, and maintains caller-owned secondary arrays; that source inspection is not an executed error-exposure qualification.\n\nDeferred REQUIRED_UNEXECUTED Phase2 obligations remain outside this helper admission: all 12 byte-unchanged caller files need the clean real-Page/surface callback and mandatory sink/signature cutover, including supplying startRecord to waitForWitnessExpiry and consuming returned actionRecords and measured activity bounds; complete consumed-return pending context and original-expiry bounds; positive pending work at native Reset; strict native Reset+5000 Quiz due/expiry bounds without existing extra slack; genuine Relay peer settlement and complete first-timeout identity/UI; full Trivia expiry/Next identity and timing; per-cell native Start+4000 witness crossover and exact failure evidence; real Present/share/file lifecycle setup, live diagnostics/PNG/close ownership, and complete source GET/JSON finalization. Historical authority labels are not current closure claims. All 54 acceptance cells remain declared but unexecuted and unadmitted, gaps5-9 remain required, and original-7/8/9 remain unchanged required other slices.",
+  "findings": [
+    {
+      "body": "N06-N02 — completePacket freezes rootEventsAfter before calling recordFn('native-action', serializable, ...), but this new history filter accepts every event with the root tuple, including that subsequently recorded native-action. evaluateCorrelatedStateAndTime likewise includes native-action in rootEvents. Consequently the first running sample after an ordinary Start contains at least Start's own extra event, while witness.js:43 uses the pre-emission rootEventsAfter as its baseline and witness-domain.js:92-94 rejects the length difference. The normal startWitnessTimer path therefore rejects correct running behavior before returning. Use consistent lifecycle-event filtering on both packet and correlated-read histories, keeping action diagnostics separate from pause/resume continuity.",
+      "confidence": 1,
+      "file_path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/pending-round-lifecycle-native-history.js",
+      "line_end": 58,
+      "line_start": 54,
+      "priority": 1,
+      "title": "N06-N02: Keep Start diagnostics out of lifecycle continuity"
+    },
+    {
+      "body": "Correction07 removes correction06's local declaration of firstExpiredSample, but the complete function and module contain no replacement declaration. Once a valid expired sample reaches this branch, assigning firstExpiredSample throws ReferenceError in this ES module; subsequent reads also reference an unbound identifier. Even with a valid supplied startRecord and corrected history routing, waitForWitnessExpiry cannot produce the required expiry/crossover result. Restore a function-scoped firstExpiredSample initialized before the polling callback. This is source-proven, not an observed browser execution.",
+      "confidence": 1,
+      "file_path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/pending-round-lifecycle-witness.js",
+      "line_end": 86,
+      "line_start": 82,
+      "priority": 1,
+      "title": "Declare firstExpiredSample before the witness polling callback"
+    },
+    {
+      "body": "N06-N02 — the Start record adopts only post-handler histories, silently replaces missing histories with empty arrays, and never compares rootEventsBefore/docEventsBefore against rootEventsAfter/docEventsAfter. validatePacketPrerequisites does not establish history health or this continuity either. Thus a visibility/root-history discontinuity occurring across Start can become the accepted baseline instead of rejecting the Start bracket, and missing packet histories can become a supposedly initialized empty baseline. The native history filter also returns event-object references rather than independently frozen capture/post content. Require valid independently copied capture/post histories and their complete continuity before constructing startRecord; retain legitimate observed empty histories without substituting them for missing provenance.",
+      "confidence": 0.99,
+      "file_path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/pending-round-lifecycle-witness.js",
+      "line_end": 45,
+      "line_start": 43,
+      "priority": 1,
+      "title": "N06-N02: Validate capture-to-post history before adopting Start"
+    },
+    {
+      "body": "N06-N03 — eventSeq is incremented privately, but no consumer receives or checks the expected store identity, count, or full sequence against that bookkeeping. The recorder still writes directly to the replaceable public window.__nsLifecycleEvents, and observed health is only Array.isArray. Replacing a nonempty store with [] or clearing it therefore leaves recorderReady true and hasLifecycleEvents true; correlated validation accepts the arrays and buildCorrelatedSample computes zero completed hidden time. Missing/non-array storage additionally makes this record function silently stop without marking the recorder unhealthy. Introduce actual retained-store health/sequence validation so replacement or truncation rejects while an untouched initialized empty store remains valid.",
+      "confidence": 1,
+      "file_path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/pending-round-lifecycle-native-observation.js",
+      "line_end": 38,
+      "line_start": 32,
+      "priority": 1,
+      "title": "N06-N03: Bind history health to actual recorder bookkeeping"
+    },
+    {
+      "body": "N06-N03 — assertHistoryPrefix compares only type and, when both happen to provide it, eventSeq. Replacing an event with the same type/sequence but changed tMin, tMax, visibilityState, or detail/domain passes; dropping eventSeq also bypasses the sequence comparison. The witness consumer adds only length and completed-pair-count checks, so same-length replacement/corruption remains accepted, including changes to the hidden-duration content used for activity-clock conversion. Compare the complete independently frozen ordered event content and require the recorder's actual sequence fields rather than treating optional identifiers as complete history continuity.",
+      "confidence": 1,
+      "file_path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/pending-round-lifecycle-history-domain.js",
+      "line_end": 42,
+      "line_start": 34,
+      "priority": 1,
+      "title": "N06-N03: Compare complete retained history content"
+    },
+    {
+      "body": "N06-N02/N06-N03 — capture and bubble call advanceTriggerFn(tCap/tBub) before extracting histories. Draining pending class mutations invokes __nsProcessClassMutations, which assigns deliveryMax using a later performance.now(), so a mutation already drained at the boundary can have tMax greater than that boundary. This new tMax <= maxTime filter then omits it from rootEventsBefore/rootEventsAfter, although pause-pair collection uses tMin and can include the same event, and a subsequent correlated read includes it. A genuine pre-Start child hidden/resume history can therefore disappear from Start's baseline and produce a false continuity failure or inconsistent clock provenance. Freeze all actually observed boundary history while retaining its uncertainty interval instead of dropping drained events because delivery completed later.",
+      "confidence": 0.99,
+      "file_path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/pending-round-lifecycle-native-history.js",
+      "line_end": 52,
+      "line_start": 50,
+      "priority": 2,
+      "title": "Retain lifecycle mutations drained at native action boundaries"
+    },
+    {
+      "body": "N06-N05 — the new common error consumer handles only recorderError, recorderReady, and document identity; it never records stateError/uiError or the ordered before/after packet equivalents. When state and UI getters both fail, the raw siblings are staged, but validateObservationPrerequisites or validatePacketPrerequisites subsequently throws a new 'Invalid state...' Node wrapper and short-circuits the UI failure. With a recorder or document failure, these snapshot occurrences are skipped entirely. The ledger's browser-envelope identity normalization cannot help because those envelopes never reach recordError. Record every actual snapshot occurrence in its observed order, retain independent document/recorder failures, and propagate the earliest normalized returned occurrence rather than the domain wrapper.",
+      "confidence": 1,
+      "file_path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+      "line_end": 22,
+      "line_start": 17,
+      "priority": 2,
+      "title": "N06-N05: Normalize and retain all observed snapshot failures"
+    },
+    {
+      "body": "N06-N05 — correction06 preserved the recorder exception's cause; this replacement explicitly sets cause:null. An observer setup exception with a real cause now loses that occurrence before the otherwise improved direct ledger normalization can see it. The recorder envelope also does not use the recursive browser-envelope construction required for this seam. Serialize the actual cause chain with browser origin, phase, observed domain, and stack instead of discarding it.",
+      "confidence": 1,
+      "file_path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/pending-round-lifecycle-native-observation.js",
+      "line_end": 60,
+      "line_start": 57,
+      "priority": 2,
+      "title": "N06-N05: Preserve the recorder exception's actual cause chain"
+    },
+    {
+      "body": "N06-N01/N06-N07 — each navigation poll validates pollDoc before staging it, and the eventual stage retains only slideId rather than the observed url/documentId/timeOrigin. If a poll sees a replaced or wrong document, assertDocumentIdentity throws and no raw poll snapshot is retained; even successful polls lose the document discriminator. This violates the required raw-before-validation observed-document seam and prevents failure evidence from reconstructing the actual offending navigation poll. Stage the complete pollDoc before asserting its binding, then accept its slide result.",
+      "confidence": 1,
+      "file_path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/pending-round-lifecycle-navigation.js",
+      "line_end": 70,
+      "line_start": 65,
+      "priority": 2,
+      "title": "N06-N01: Stage each navigation poll's actual document first"
+    },
+    {
+      "body": "N06-N07 — keyboardEligible is computed solely as absence of a [data-ns-game] ancestor. The unchanged production reveal-lifecycle.js:73-82 also rejects focus inside [data-ns-action] and honors the prior keyboardCondition/focused-deck policy; Reveal's keyboard dispatcher additionally ignores focused input, textarea, and contenteditable elements. On the keyboard fallback path these actual ineligible focus states are therefore recorded as eligible before an ignored Arrow key, misidentifying the required failure discriminator. Capture eligibility consistent with the real dispatch and its configuration/focus conditions without forcing focus or changing navigation policy.",
+      "confidence": 1,
+      "file_path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/pending-round-lifecycle-navigation.js",
+      "line_end": 44,
+      "line_start": 38,
+      "priority": 2,
+      "title": "N06-N07: Match keyboard eligibility to production dispatch"
+    },
+    {
+      "body": "Correction07 changes correction06's exact p.command === cursor.command match into a wildcard whenever the cursor command is null or undefined. Native input/change cursors deliberately carry command:null, so a same-root/domain/type packet with a non-null command now passes this matcher and can be selected by extractActionBracket as the action's evidence. That relaxes the frozen exact-command contract and can correlate the wrong native packet. Preserve exact null command equality while keeping the existing tuple/document/type checks.",
+      "confidence": 1,
+      "file_path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+      "line_end": 67,
+      "line_start": 63,
+      "priority": 2,
+      "title": "Preserve exact null commands when matching native packets"
+    },
+    {
+      "body": "Correction07 removes correction06's explicit !currentNode.isConnected rejection, although evaluateActionCandidates still supplies the actual isConnected discriminator. A detached node observation retaining the cursor's tuple, document, URL, and WeakMap identity now passes assertCurrentNodeAgreement and allows a matching recorded packet to be accepted as current-root evidence. Restore the connected-node requirement before identity agreement so a root removed between the native action and extraction cannot be treated as the currently mounted node.",
+      "confidence": 0.97,
+      "file_path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-07/tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+      "line_end": 45,
+      "line_start": 41,
+      "priority": 2,
+      "title": "Reject disconnected current nodes during action extraction"
+    }
+  ],
+  "overall_correctness": "incorrect"
+}

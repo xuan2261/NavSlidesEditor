@@ -1,0 +1,120 @@
+import { expect } from '@playwright/test'
+import {
+  assertQuizResetActive,
+  assertQuizInitialActive,
+  assertQuizPeerAccepted,
+} from './pending-round-lifecycle-quiz-state.js'
+import {
+  assertHotPotatoInitialOrReset,
+  assertHotPotatoActive,
+  assertHotPotatoPeerSettled,
+  assertHotPotatoRosterEmptyUI,
+  assertHotPotatoRosterPeerUI,
+} from './pending-round-lifecycle-hot-potato-state.js'
+import {
+  assertJeopardyInitialOrReset,
+  assertJeopardyActive,
+  assertJeopardyPeerSettled,
+  assertJeopardyPeerUI,
+  assertJeopardyResetUI,
+} from './pending-round-lifecycle-jeopardy-state.js'
+import {
+  assertRelayInitialOrReset,
+  assertRelayActive,
+  assertRelayPeerSettled,
+  assertRelayPeerUI,
+  assertRelayResetUI,
+} from './pending-round-lifecycle-relay-state.js'
+import {
+  assertTriviaInitialOrReset,
+  assertTriviaActive,
+  assertTriviaPeerSettled,
+  assertTriviaPeerUI,
+  assertTriviaResetUI,
+} from './pending-round-lifecycle-trivia-state.js'
+
+export function assertCompleteResetState(gameType, state, oldGen, config, deadlineBounds = null) {
+  const newGen = oldGen + 1
+  if (gameType === 'quiz') {
+    assertQuizResetActive(state, config, newGen, deadlineBounds)
+  } else if (gameType === 'hot-potato') {
+    assertHotPotatoInitialOrReset(state, config, newGen)
+  } else if (gameType === 'jeopardy') {
+    assertJeopardyInitialOrReset(state, config, newGen)
+  } else if (gameType === 'relay-race') {
+    assertRelayInitialOrReset(state, config, newGen)
+  } else if (gameType === 'trivia-champ') {
+    assertTriviaInitialOrReset(state, config, newGen)
+  } else {
+    throw new Error(`Unsupported game type for reset assertion: ${gameType}`)
+  }
+}
+
+export function assertCompleteActiveState(gameType, state, config, generation = 0, deadlineBounds = null, startBounds = null) {
+  if (gameType === 'quiz') {
+    assertQuizInitialActive(state, config, generation, deadlineBounds)
+  } else if (gameType === 'hot-potato') {
+    assertHotPotatoActive(state, config, generation, deadlineBounds, startBounds)
+  } else if (gameType === 'jeopardy') {
+    assertJeopardyActive(state, config, generation, deadlineBounds)
+  } else if (gameType === 'relay-race') {
+    assertRelayActive(state, config, generation, deadlineBounds)
+  } else if (gameType === 'trivia-champ') {
+    assertTriviaActive(state, config, generation)
+  } else {
+    throw new Error(`Unsupported game type for active assertion: ${gameType}`)
+  }
+}
+
+export function assertPeerNonBaseline(gameType, state, config) {
+  if (gameType === 'quiz') {
+    assertQuizPeerAccepted(state, config)
+  } else if (gameType === 'hot-potato') {
+    assertHotPotatoPeerSettled(state, config)
+  } else if (gameType === 'jeopardy') {
+    assertJeopardyPeerSettled(state)
+  } else if (gameType === 'relay-race') {
+    assertRelayPeerSettled(state)
+  } else if (gameType === 'trivia-champ') {
+    assertTriviaPeerSettled(state)
+  } else {
+    throw new Error(`Unsupported game type for peer assertion: ${gameType}`)
+  }
+}
+
+export async function assertPeerUI(gameType, root) {
+  if (gameType === 'quiz') {
+    const resultText = root.locator('p:has-text("10 / 10"), p:has-text("Score: 10")')
+    await expect(resultText.first()).toBeVisible()
+  } else if (gameType === 'hot-potato') {
+    await assertHotPotatoRosterPeerUI(root)
+  } else if (gameType === 'jeopardy') {
+    await assertJeopardyPeerUI(root)
+  } else if (gameType === 'relay-race') {
+    await assertRelayPeerUI(root)
+  } else if (gameType === 'trivia-champ') {
+    await assertTriviaPeerUI(root)
+  }
+}
+
+export async function assertResetUI(gameType, root) {
+  const resetBtn = root.locator(
+    gameType === 'quiz' ? 'button[data-ns-command="quiz-reset"]' : 'button[data-ns-command="reset"]'
+  )
+  await expect(resetBtn).toBeVisible()
+  if (gameType === 'hot-potato') {
+    await assertHotPotatoRosterEmptyUI(root)
+  } else if (gameType === 'jeopardy') {
+    await assertJeopardyResetUI(root)
+  } else if (gameType === 'relay-race') {
+    await assertRelayResetUI(root)
+  } else if (gameType === 'trivia-champ') {
+    await assertTriviaResetUI(root)
+  } else if (gameType === 'quiz') {
+    await expect(root.getByRole('button', { name: 'Submit answer', exact: true })).toBeEnabled()
+  }
+}
+
+export function assertPeerInvariance(frozenSnapshot, currentSnapshot) {
+  expect(currentSnapshot).toEqual(frozenSnapshot)
+}

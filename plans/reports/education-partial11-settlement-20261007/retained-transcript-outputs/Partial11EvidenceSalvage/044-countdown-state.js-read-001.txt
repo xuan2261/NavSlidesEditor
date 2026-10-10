@@ -1,0 +1,90 @@
+const { createUtilityConfig, utilityNow, isCurrentCommand } = require('./utility-config.js')
+
+function createCountdownState(config, { now } = {}) {
+  const authored = createUtilityConfig('countdown', config),
+    durationMs = authored.durationSeconds * 1000
+  return {
+    phase: authored.autoStart ? 'running' : 'idle',
+    remainingMs: durationMs,
+    durationSeconds: authored.durationSeconds,
+    deadline: authored.autoStart ? utilityNow(now) + durationMs : null,
+    pauseReason: null,
+    expiries: 0,
+    revision: 0,
+    generation: 0,
+  }
+}
+function countdownRemaining(state, now) {
+  return state.phase === 'running'
+    ? Math.max(0, state.deadline - utilityNow(now))
+    : state.remainingMs
+}
+function reduceCountdown(config, state, command, { now } = {}) {
+  if (
+    !isCurrentCommand(state, command) ||
+    (command.revision !== undefined && command.revision !== state.revision)
+  )
+    return state
+  if (command.type === 'reset')
+    return {
+      ...createCountdownState(config, { now }),
+      generation: state.generation + 1,
+      revision: state.revision + 1,
+    }
+  if (command.type === 'duration') {
+    if (
+      !Number.isInteger(command.durationSeconds) ||
+      command.durationSeconds < 1 ||
+      command.durationSeconds > 86400
+    )
+      throw new RangeError('Countdown duration must be a whole number from 1 to 86400 seconds.')
+    return {
+      ...state,
+      phase: 'idle',
+      durationSeconds: command.durationSeconds,
+      remainingMs: command.durationSeconds * 1000,
+      deadline: null,
+      pauseReason: null,
+      expiries: 0,
+      revision: state.revision + 1,
+    }
+  }
+  if (
+    (command.type === 'start' && state.phase === 'idle') ||
+    (command.type === 'resume' && state.phase === 'paused' && state.pauseReason === 'user') ||
+    (command.type === 'show' && state.phase === 'paused' && state.pauseReason === 'lifecycle')
+  ) {
+    return {
+      ...state,
+      phase: 'running',
+      deadline: utilityNow(now) + state.remainingMs,
+      pauseReason: null,
+      revision: state.revision + 1,
+    }
+  }
+  if (state.phase !== 'running' || !['tick', 'expire', 'pause', 'hide'].includes(command.type))
+    return state
+  const remainingMs = countdownRemaining(state, now)
+  if (remainingMs === 0)
+    return {
+      ...state,
+      phase: 'expired',
+      remainingMs: 0,
+      deadline: null,
+      pauseReason: null,
+      expiries: state.expiries + 1,
+      revision: state.revision + 1,
+    }
+  if (command.type === 'pause' || command.type === 'hide') {
+    return {
+      ...state,
+      phase: 'paused',
+      remainingMs,
+      deadline: null,
+      pauseReason: command.type === 'pause' ? 'user' : 'lifecycle',
+      revision: state.revision + 1,
+    }
+  }
+  return remainingMs === state.remainingMs ? state : { ...state, remainingMs }
+}
+module.exports = { createCountdownState, reduceCountdown, countdownRemaining }

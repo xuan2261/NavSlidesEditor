@@ -1,0 +1,63 @@
+    "Original N07-08 remains PARTIAL: recursive setup cause serialization exists, but NF-A2 can overwrite it later.",
+    "Original N07-10 listed focus exclusions are repaired locally; full production eligibility remains PARTIAL (N10B-01).",
+    "N10B-02 is an additional initial-read document-binding defect, not an assertion that the corrected navigation poll seam regressed.",
+    "Caller signature migration remains deferred by authority; no shim or runtime compatibility claim."
+  ],
+  "deliveryBlockers": [
+    {
+      "id": "NATIVE10_GENUINE_DELIVERY_ABSENT",
+      "classification": "INDEPENDENT_DELIVERY_BLOCKER",
+      "evidence": [
+        "pending-substrate-10-terminal-delivery.json:1-78",
+        "pending-substrate-10-terminal-failure-counsel.json:27-45",
+        "pending-substrate-10-scope-preservation.json:340-364"
+      ],
+      "facts": "Both writers actually stopped. Native10 ended with transport stream_error/exit1 after1308.7s and has no genuine completion receipt. Evidence10 completed after819.01s and has a genuine receipt. The absent Native receipt remains fatal to ordinary admission even if source review were clean. No receipt was reconstructed, fabricated or substituted."
+    },
+    {
+      "id": "EVIDENCE10_RECEIPT_SCOPE_LIMITATIONS",
+      "classification": "DELIVERED_RECEIPT_LIMITATION_NOT_AUTOMATIC_SOURCE_DEFECT",
+      "evidence": [
+        ".tmp/acceptance-producer-pending-substrate-10-evidence.json:1-404",
+        "pending-substrate-10-terminal-failure-counsel.json:80-92",
+        "pending-substrate-08-subject-authority.json:1-187",
+        "pending-substrate-07-evidence-admission.json"
+      ],
+      "facts": [
+        "The genuine Evidence receipt was read fully and remains producer claims, not source or runtime proof.",
+        "Its E06-02..05 titles substitute narrower meanings: success keys, popup cleanup, tuple validation and UI getter installation. The governing meanings remain chronological frame dispatch, actual Error/sidecar separation, state-before-UI ordering and recursive provenance/cause propagation.",
+        "Its E06-01-B/C bodies abbreviate the original07 obligations and cannot amend them.",
+        "NC03 shortens the full preconsumption/checkpoint provenance obligation; NC05 substitutes a generic boundary-crossing statement for crossing the exact originally pending due; NC06 changes the cited canonical policy owner; NC09 substitutes a different SE16 paraphrase; NC10 changes the timing-failure explanation. These differ from canonical bodies and do not authorize scope changes.",
+        "NC11, RPC01..17, original1..9 and the current/prior mapping snapshots remain the preserved canonical identities as reported by governing counsel. The aggregate NC=false does not mean NC11 was changed.",
+        "The receipt's three generic deferral sentences do not contain the complete caller,54-cell and later-slice obligations. Its normal dual-gate/run statements confer no execution permission after failed delivery."
+      ]
+    }
+  ],
+  "deferredCallerObligations": {
+    "specificSourceGaps": [
+      "Mandatory evidence sink forwarding: all 12 Phase2 callers currently invoke getGameState, readCorrelatedStateAndTime, navigateSlide, resetGame, clickTriviaNext, observeQuizActive, startRelayRound, etc., without passing the required evidence sink argument, which fails assertEvidenceSink.",
+      "waitForWitnessExpiry argument shape cutover: callers pass (witness, evidence) (2 args), whereas witness.js:92-96 requires (root, startRecord, evidence) (3 args), expecting startRecord with actionBracket, deadline, runningSample and rootDomain.",
+      "Consumption of Start actionBracket and measured expiry: callers discard actionBracket and inspect un-synchronized timestamps instead of deriving and asserting deadline bounds via deriveDeadlineBounds / assertMeasuredWitnessInterval.",
+      "Quiz Reset+5000 deadline and checkpoint assertion: resetGame returns { state, actionBracket, actionRecords }; callers in reset.js and isolation.js expect legacy { tBefore, tAfter } and compute arbitrary +800ms slack, which must be migrated to strict checkpoint proof.",
+      "Relay peer settlement and first-timeout proof: callers must consume settled peer state, first-timeout identity and team/lane invariance across Reset and old due.",
+      "Trivia question/round expiry: clickTriviaNext and multi-round identity assertions must forward evidence and assert exact awards, scores, roundDeadline and questionDeadline.",
+      "Sink and manifest registration in acceptance.spec: acceptance.spec.js must call evidence.setExpectedRoots(manifest) prior to visitSurface, and pass the active Page or context appropriately to visitSurface and runner.",
+      "Absence of legacy shims: helper functions must not re-introduce legacy optional-sink shims or return wrappers to tolerate old caller signatures."
+    ],
+    "unchangedFullContract": "All12 caller clean cutover only after separately applicable authority and helper proofs; NC01..11, RPC01..17, original1..9, current/prior mapping snapshots remain unchanged. Independently prove pending/hidden/returned/reset/terminal/peer state AND native UI; reset/pass/start brackets, root/document/lifecycle uncertainty and deadline bounds; first-expiry/witness idle/running/expired crossover; after-old/before-new Quiz Reset+5000 without800ms slack; Relay peer/first-timeout/old-due invariance; full Trivia expiry/nativeNext question/round/history/awards/deadline/UI. All18 rows on present/share/file,54 cells, no representative substitute. Original7 Hot Potato bonus, original8 Scatter NFC uniqueness and original9 full Trivia scoring remain later slices; gaps5..9 unchanged."
+  },
+  "limitations": [
+    "[INFERENCE] Findings are source deductions, not exercised failures. No imports, tests, browser, build, lint or runtime checks ran.",
+    "Mapped code coverage is complete across three independent slices, not one reviewer re-reading the whole partition. Per-slice authority read limitations are retained in the original reports; prior full Evidence salvage supplies governing receipt/scope cross-checks.",
+    "Capture slice reports one wc -l command despite the no-shell contract. This was a read-only line-count deviation, not execution proof; no source writes reported.",
+    "Reveal keyboard owner is linked outside the recursive freeze; source read does not certify dependency immutability.",
+    "Review reports and settlement metadata only were written by Main; no helper/caller/production edits or producer dispatch."
+  ],
+  "admission": false,
+  "sourceReady": false,
+  "qualification": false,
+  "passClaimed": false,
+  "runtimeExecuted": false,
+  "staticallyAdmittedCells": 0,
+  "executedAcceptanceCells": 0
+}

@@ -1,0 +1,5 @@
+for (const surface of ['present', 'share', 'file']) {
+  for (const { type, cases, runner } of CONCERNS) {
+…
+  }
+}

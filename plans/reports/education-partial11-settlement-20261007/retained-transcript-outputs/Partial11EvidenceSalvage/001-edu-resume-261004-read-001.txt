@@ -1,0 +1,242 @@
+.
+  - pending-substrate-11-receipt-audit.json                                   29.5KB    just now
+  - pending-substrate-11-terminal-failure-counsel.json                        41.0KB    just now
+  - pending-substrate-11-evidence-salvage-prompt.md                           10.9KB    4m ago
+  - pending-substrate-11-native-salvage-prompt.md                             10.8KB    4m ago
+  - pending-substrate-11-helper-caller-manifest.json                          11.2KB    4m ago
+  - pending-substrate-11-terminal-settlement.json                             3.6KB     6m ago
+  - pending-substrate-11-partial-freeze.json                                  858.3KB   6m ago
+  - pending-substrate-11-scope-preservation.json                              12.8KB    6m ago
+  - pending-substrate-candidate-11-partial/                                             6m ago
+    - website/                                                                          6m ago
+    - vitest.config.mjs                                                       1.2KB     6m ago
+    - vitest-setup-storage-isolation.js                                       4.3KB     6m ago
+    - vitest-setup-jsdom-pointer-event-polyfills-for-radix-ui.js              1.5KB     6m ago
+    - vendor-overrides/                                                                 6m ago
+    - tests/                                                                            6m ago
+    - shared/                                                                           6m ago
+    - server/                                                                           7m ago
+    - scripts/                                                                          7m ago
+    - runtime-versions.json                                                   455B      7m ago
+    - render.yaml                                                             272B      7m ago
+    - … 41 more
+    - .agents/                                                                          8m ago
+  - pending-substrate-11-evidence-terminal.jsonl                              3.7MB     9m ago
+  - pending-substrate-11-native-terminal.jsonl                                4.2MB     9m ago
+  - pending-substrate-11-evidence-normal-gate-prompt.md                       5.3KB     20m ago
+  - pending-substrate-11-native-normal-gate-prompt.md                         5.3KB     20m ago
+  - pending-substrate-11-main-smoke-preparation.json                          1.7KB     21m ago
+  - pending-substrate-11-recorder-boundary.mjs                                5.9KB     21m ago
+  - pending-substrate-11-browser-smoke.mjs                                    11.4KB    21m ago
+  - pending-substrate-11-ledger-boundary.mjs                                  10.7KB    21m ago
+  - pending-substrate-11-module-smoke.mjs                                     9.5KB     21m ago
+  - pending-substrate-11-dispatched.json                                      781B      23m ago
+  - producer11-native-session/                                                          24m ago
+    - 2026-10-06T01-39-37-603Z_01a10edd-c602-7000-a27f-52c332d86c13.jsonl     909.0KB   10m ago
+  - producer11-evidence-session/                                                        24m ago
+    - 2026-10-06T01-39-37-497Z_01a10edd-c599-7000-a66d-f333c291f7e1.jsonl     799.7KB   11m ago
+  - pending-substrate-11-dispatch-intent.json                                 505B      24m ago
+  - pending-substrate-11-evidence-prompt.md                                   9.7KB     25m ago
+  - pending-substrate-11-native-prompt.md                                     10.8KB    25m ago
+  - pending-substrate-11-dispatch-authority.json                              24.4KB    25m ago
+  - pending-substrate-11-scope-counsel.json                                   17.0KB    27m ago
+  - pending-substrate-11-input-baseline.json                                  857.4KB   27m ago
+  - pending-substrate-11-seed.json                                            619B      27m ago
+  - pending-substrate-correction-11/                                                    27m ago
+    - .tmp/                                                                             12m ago
+    - website/                                                                          27m ago
+    - vitest.config.mjs                                                       1.2KB     27m ago
+    - vitest-setup-storage-isolation.js                                       4.3KB     27m ago
+    - vitest-setup-jsdom-pointer-event-polyfills-for-radix-ui.js              1.5KB     27m ago
+    - vendor-overrides/                                                                 27m ago
+    - tests/                                                                            27m ago
+    - shared/                                                                           28m ago
+    - server/                                                                           28m ago
+    - scripts/                                                                          29m ago
+    - runtime-versions.json                                                   455B      29m ago
+    - … 41 more
+    - .agents/                                                                          30m ago
+  - pending-substrate-11-route-proof.json                                     924B      30m ago
+  - pending-substrate-10-combined-settlement.json                             3.2KB     36m ago
+  - pending-substrate-10-native-completion-settlement.json                    56.8KB    36m ago
+  - pending-substrate-10-native-completion-Native10CallerSeamSlice.json       18.1KB    39m ago
+  - pending-substrate-10-native-completion-Native10WitnessNavSlice.json       21.3KB    43m ago
+  - pending-substrate-10-native-completion-Native10CaptureHistorySlice.json   23.3KB    45m ago
+  - pending-substrate-10-native-salvage-audit.json                            16.4KB    7h ago
+  - pending-substrate-10-evidence-salvage-audit.json                          61.2KB    7h ago
+  - pending-substrate-10-terminal-settlement.json                             13.2KB    14h ago
+  - pending-substrate-10-evidence-salvage-prompt.md                           9.2KB     14h ago
+  - pending-substrate-10-native-salvage-prompt.md                             9.8KB     14h ago
+  - pending-substrate-10-partial-freeze.json                                  1.7MB     14h ago
+  - pending-substrate-10-scope-preservation.json                              13.1KB    14h ago
+  - pending-substrate-candidate-10-partial/                                             14h ago
+    - website/                                                                          14h ago
+    - vendor-overrides/                                                                 14h ago
+    - tests/                                                                            14h ago
+    - shared/                                                                           14h ago
+    - server/                                                                           14h ago
+    - scripts/                                                                          14h ago
+    - PPTX/                                                                             14h ago
+    - plugins/                                                                          14h ago
+    - plans/                                                                            14h ago
+    - native/                                                                           14h ago
+    - guides/                                                                           14h ago
+    - … 41 more
+    - .dockerignore                                                           311B      17h ago
+  - pending-substrate-10-terminal-failure-counsel.json                        28.8KB    14h ago
+  - pending-substrate-10-terminal-delivery.json                               2.2KB     14h ago
+  - pending-substrate-10-native-terminal.jsonl                                3.2MB     14h ago
+  - pending-substrate-10-evidence-delivery.json                               944B      14h ago
+  - pending-substrate-10-evidence-terminal.jsonl                              3.4MB     14h ago
+  - pending-substrate-10-linked-keyboard-owner.json                           648B      14h ago
+  - pending-substrate-10-main-smoke-preparation.json                          1.7KB     14h ago
+  - pending-substrate-10-recorder-boundary.mjs                                5.9KB     14h ago
+  - pending-substrate-10-browser-smoke.mjs                                    11.4KB    14h ago
+  - pending-substrate-10-ledger-boundary.mjs                                  8.7KB     14h ago
+  - pending-substrate-10-module-smoke.mjs                                     9.5KB     14h ago
+  - producer10-evidence-session/                                                        14h ago
+    - 2026-10-05T11-17-10-094Z_01a10bc8-2b4d-7000-8a9c-899df43b749b.jsonl     708.9KB   14h ago
+  - producer10-native-session/                                                          14h ago
+    - 2026-10-05T11-17-10-034Z_01a10bc8-2b11-7000-a304-c1d19514e39d.jsonl     698.4KB   14h ago
+  - pending-substrate-10-dispatched.json                                      2.0KB     14h ago
+  - pending-substrate-10-evidence-prompt.md                                   11.1KB    14h ago
+  - pending-substrate-10-native-prompt.md                                     14.4KB    14h ago
+  - pending-substrate-10-route-proof.json                                     1.0KB     14h ago
+  - pending-substrate-10-input-baseline.json                                  860.9KB   14h ago
+  - pending-substrate-10-seed.json                                            9.6KB     14h ago
+  - pending-substrate-10-dispatch-authority.json                              9.5KB     14h ago
+  - timed-resume5/                                                                      14h ago
+    - .tmp/                                                                             14h ago
+    - website/                                                                          14h ago
+    - vendor-overrides/                                                                 14h ago
+    - tests/                                                                            14h ago
+    - shared/                                                                           14h ago
+    - server/                                                                           14h ago
+    - scripts/                                                                          14h ago
+    - PPTX/                                                                             14h ago
+    - plugins/                                                                          14h ago
+    - plans/                                                                            14h ago
+    - native/                                                                           14h ago
+    - … 41 more
+    - .dockerignore                                                           311B      17h ago
+  - pending-substrate-09-terminal-settlement.json                             2.2KB     16h ago
+  - pending-substrate-09-settled-rejection-counsel.json                       31.1KB    16h ago
+  - pending-substrate-09-post-review-integrity.json                           781B      16h ago
+  - pending-substrate-09-settled-rejection-counsel-brief.md                   5.1KB     16h ago
+  - pending-substrate-09-native-salvage-audit.json                            30.2KB    16h ago
+  - pending-substrate-09-evidence-salvage-audit.json                          25.5KB    16h ago
+  - pending-substrate-09-terminal-evidence-preservation.json                  1.3KB     16h ago
+  - pending-substrate-09-terminal-evidence/                                             16h ago
+    - 634.bash.log                                                            3.3MB     17h ago
+    - 635.bash.log                                                            2.4MB     17h ago
+  - pending-substrate-09-evidence-salvage-prompt.md                           4.6KB     16h ago
+  - pending-substrate-09-native-salvage-prompt.md                             5.1KB     16h ago
+  - pending-substrate-09-scope-preservation.json                              6.1KB     16h ago
+  - pending-substrate-09-coordinator-preserved-inputs.json                    2.0MB     16h ago
+  - pending-substrate-09-partial-freeze.json                                  9.3KB     16h ago
+  - pending-substrate-candidate-09-partial/                                             16h ago
+    - website/                                                                          16h ago
+    - vendor-overrides/                                                                 16h ago
+    - tests/                                                                            16h ago
+    - shared/                                                                           16h ago
+    - server/                                                                           16h ago
+    - scripts/                                                                          16h ago
+    - PPTX/                                                                             16h ago
+    - plugins/                                                                          16h ago
+    - plans/                                                                            16h ago
+    - native/                                                                           16h ago
+    - guides/                                                                           16h ago
+    - … 41 more
+    - .dockerignore                                                           311B      17h ago
+  - pending-substrate-09-terminal-failure-counsel.json                        14.5KB    16h ago
+  - pending-substrate-09-terminal-failure-counsel-brief.md                    3.1KB     17h ago
+  - pending-substrate-09-main-smoke-preparation.json                          2.3KB     17h ago
+  - pending-substrate-09-evidence-source-gate-prompt.md                       5.4KB     17h ago
+  - pending-substrate-09-native-source-gate-prompt.md                         5.7KB     17h ago
+  - pending-substrate-09-recorder-boundary.mjs                                5.9KB     17h ago
+  - pending-substrate-09-ledger-boundary.mjs                                  5.7KB     17h ago
+  - pending-substrate-09-browser-smoke.mjs                                    11.4KB    17h ago
+  - pending-substrate-09-module-smoke.mjs                                     9.5KB     17h ago
+  - pending-substrate-09-evidence-sessions/                                             17h ago
+    - 2026-10-05T08-41-45-363Z_01a10b39-e292-7000-80f1-39c9fb1074c0.jsonl     553.3KB   17h ago
+  - pending-substrate-09-native-sessions/                                               17h ago
+    - 2026-10-05T08-41-45-306Z_01a10b39-e25a-7000-937b-ba50dc9f77b3.jsonl     782.3KB   17h ago
+  - pending-substrate-09-owned-jobs.json                                      3.0KB     17h ago
+  - pending-substrate-09-owned-jobs-intent.json                               1.7KB     17h ago
+  - pending-substrate-09-evidence-prompt.md                                   8.7KB     17h ago
+  - pending-substrate-09-native-prompt.md                                     12.0KB    17h ago
+  - pending-substrate-09-dispatch-authority.json                              2.9KB     17h ago
+  - pending-substrate-09-route-proof.json                                     701B      17h ago
+  - pending-substrate-09-input-baseline.json                                  860.7KB   17h ago
+  - pending-substrate-09-seed.json                                            7.3KB     17h ago
+  - timed-resume4/                                                                      17h ago
+    - .tmp/                                                                             17h ago
+    - website/                                                                          17h ago
+    - vitest-setup-jsdom-pointer-event-polyfills-for-radix-ui.js              1.5KB     17h ago
+    - vitest-setup-storage-isolation.js                                       4.3KB     17h ago
+    - vitest.config.mjs                                                       1.2KB     17h ago
+    - vendor-overrides/                                                                 17h ago
+    - tests/                                                                            17h ago
+    - shared/                                                                           17h ago
+    - server/                                                                           17h ago
+    - PPTX/                                                                             17h ago
+    - scripts/                                                                          17h ago
+    - … 41 more
+    - .agents/                                                                          17h ago
+  - pending-substrate-08-coordinator-salvage-audit.json                       9.3KB     17h ago
+  - pending-substrate-08-settled-rejection-counsel.json                       13.6KB    17h ago
+  - pending-substrate-08-native-salvage-audit.json                            14.5KB    17h ago
+  - pending-substrate-08-evidence-salvage-audit.json                          9.1KB     17h ago
+  - pending-substrate-08-native-settlement.json                               938B      17h ago
+  - pending-substrate-08-failed-delivery-counsel.json                         3.9KB     17h ago
+  - pending-substrate-08-coordinator-preserved-inputs.json                    1.9MB     17h ago
+  - pending-substrate-08-scope-preservation.json                              6.3KB     17h ago
+  - pending-substrate-08-partial-freeze.json                                  9.0KB     17h ago
+  - pending-substrate-candidate-08-partial/                                             17h ago
+    - .tmp/                                                                             17h ago
+    - website/                                                                          17h ago
+    - vitest-setup-jsdom-pointer-event-polyfills-for-radix-ui.js              1.5KB     17h ago
+    - vitest-setup-storage-isolation.js                                       4.3KB     17h ago
+    - vitest.config.mjs                                                       1.2KB     17h ago
+    - vendor-overrides/                                                                 17h ago
+    - tests/                                                                            17h ago
+    - shared/                                                                           17h ago
+    - server/                                                                           17h ago
+    - scripts/                                                                          17h ago
+    - PPTX/                                                                             17h ago
+    - … 41 more
+    - .agents/                                                                          17h ago
+  - pending-substrate-08-evidence-source-gate-prompt.md                       4.1KB     22h ago
+  - pending-substrate-08-native-source-gate-prompt.md                         4.3KB     22h ago
+  - pending-substrate-08-evidence-settlement.json                             514B      22h ago
+  - pending-substrate-08-main-smoke-preparation.json                          2.4KB     22h ago
+  - pending-substrate-08-ledger-boundary.mjs                                  3.7KB     22h ago
+  - pending-substrate-08-module-smoke.mjs                                     9.5KB     22h ago
+  - pending-substrate-08-browser-smoke.mjs                                    11.5KB    22h ago
+  - pending-substrate-08-evidence-sessions/                                             22h ago
+    - 2026-10-05T03-45-10-380Z_01a10a2a-5aeb-7000-9002-064e9e8e3126.jsonl     526.4KB   22h ago
+  - pending-substrate-08-native-sessions/                                               22h ago
+    - 2026-10-05T03-45-10-380Z_01a10a2a-5aeb-7000-a0b5-4fce014daf4e.jsonl     844.7KB   21h ago
+  - pending-substrate-08-owned-jobs.json                                      3.1KB     22h ago
+  - pending-substrate-08-evidence-prompt.md                                   11.0KB    22h ago
+  - pending-substrate-08-native-prompt.md                                     22.5KB    22h ago
+  - pending-substrate-08-dispatch-authority.json                              2.6KB     22h ago
+  - pending-substrate-08-subject-authority.json                               17.6KB    22h ago
+  - pending-substrate-08-input-baseline.json                                  861.0KB   22h ago
+  - pending-substrate-08-route-proof.json                                     848B      22h ago
+  - pending-substrate-08-seed.json                                            7.6KB     22h ago
+  - timed-resume3/                                                                      22h ago
+    - website/                                                                          22h ago
+    - vendor-overrides/                                                                 22h ago
+    - tests/                                                                            22h ago
+    - shared/                                                                           22h ago
+    - server/                                                                           22h ago
+    - scripts/                                                                          22h ago
+    - PPTX/                                                                             22h ago
+    - plugins/                                                                          22h ago
+    - plans/                                                                            22h ago
+    - native/                                                                           22h ago
+    - guides/                                                                           22h ago
+    - … 41 more
+
+[776 more lines in listing. Use :241 to continue]

@@ -1,0 +1,38 @@
+{
+  "transcriptLine": 3306,
+  "timestamp": "2026-10-06T03:03:32.980Z",
+  "toolCallId": "call_ffaG5RiCKRx6YPHkSV3IgzVZ|fc_0654735fd9f2be16016ac464b4a2ac87d0a42639f521ada454",
+  "data": {
+    "reportKind": "PROVENANCE_CORRECTION_SUPPLEMENT_ONLY",
+    "originalReportDisposition": "PRESERVE_VERBATIM_WITH_THIS_SUPPLEMENT",
+    "correction": {
+      "incorrectAttribution": "The original report attributed the wrap-up notice to an explicit user instruction that stopped further investigation.",
+      "correctAttribution": "The '[budget notice] You have used 200 requests ... Wrap up now: finish the current step and yield your final report...' text was a harness request-cap notice, not an explicit user instruction to stop Main's task or narrow the acceptance criteria.",
+      "provenance": "Main reports locating the notice at history://Partial11NativeSalvage, line19. This supplemental step does not independently reread that history.",
+      "affectedOriginalFields": ["completionStatus", "summary", "limitations[1]"],
+      "replacementCompletionStatus": "INCOMPLETE_REVIEW_RETURNED_FOLLOWING_HARNESS_REQUEST_CAP_NOTICE",
+      "replacementSummary": "The original report returned an incomplete source review following a harness request-cap notice. That notice did not constitute explicit user authorization to stop Main's task or narrow the required full26/full12 acceptance criteria. Complete independent source coverage and a source verdict remain unestablished by that report; missing genuine Native11 delivery remains a separate fatal admission blocker.",
+      "replacementLimitation": "The wrap-up notice was harness-originated, not an explicit user scope change. The original assignment's full coverage, obligation evidence and settlement requirements remain unchanged and unsatisfied by this incomplete review."
+    },
+    "coverageAndEvidencePreservation": {
+      "originalIncompleteCoverageLimitsRemain": true,
+      "originalCertifiedRangesUnchanged": true,
+      "newSourceReadsPerformed": false,
+      "newRangesClaimed": false,
+      "completeFull26Full12AuditClaimed": false,
+      "originalReportSatisfiesRequiredCompleteIndependentSalvageAudit": false,
+      "sourceVerdict": "UNRESOLVED",
+      "acceptanceNarrowedByUser": false
+    },
+    "scope": "Attribution correction only. No source audit restart, source inspection, execution, checks, receipt reconstruction or file writes.",
+    "admission": false,
+    "sourceReady": false,
+    "qualification": false,
+    "passClaimed": false,
+    "runtimeExecuted": false,
+    "declaredCells": 54,
+    "staticallyAdmittedCells": 0,
+    "executedAcceptanceCells": 0,
+    "filesWritten": false
+  }
+}

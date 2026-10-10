@@ -1,0 +1,102 @@
+import { test as base, expect } from '@playwright/test'
+
+const API_BASE = process.env.PLAYWRIGHT_API_BASE_URL || '/api'
+const ALLOWED_BASE_URL = /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/|$)/
+const TRANSIENT_STATUSES = new Set([429, 502, 503, 504])
+
+export function getBaseUrl() {
+  return process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://127.0.0.1:4173'
+}
+
+function assertLoopback(apiBase = API_BASE) {
+  const baseUrl = getBaseUrl()
+  const apiBaseUrl = apiBase.startsWith('http') ? apiBase : baseUrl
+  if (!ALLOWED_BASE_URL.test(baseUrl) || !ALLOWED_BASE_URL.test(apiBaseUrl)) {
+    throw new Error(
+      `Refusing API write: PLAYWRIGHT_TEST_BASE_URL=${baseUrl}, API_BASE=${apiBase} is not a loopback address. ` +
+        `E2E tests perform destructive ops (create/update/delete) and must never run against shared/prod.`
+    )
+  }
+}
+
+function responseStatus(response) {
+  return typeof response.status === 'function' ? response.status() : response.status
+}
+
+async function withApiRetry(action, attempts = 5) {
+  let lastResponse
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    lastResponse = await action()
+    if (!TRANSIENT_STATUSES.has(responseStatus(lastResponse)) || attempt === attempts) {
+      return lastResponse
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250 * attempt))
+  }
+  return lastResponse
+}
+
+/**
+ * Helper: create a presentation via API (bypasses UI).
+ */
+export async function apiCreatePresentation(
+  request,
+  title = 'E2E Test Presentation',
+  apiBase = API_BASE
+) {
+  assertLoopback(apiBase)
+  const res = await withApiRetry(() =>
+    request.post(`${apiBase}/presentations`, {
+      headers: { connection: 'close' },
+      data: {
+        title,
+        theme: 'black',
+        transition: 'slide',
+      },
+    })
+  )
+  if (!res.ok()) {
+    console.error('API Error:', res.status(), await res.text())
+  }
+  expect(res.ok()).toBeTruthy()
+  return res.json()
+}
+
+/**
+ * Helper: delete presentation permanently via API.
+ */
+export async function apiDeletePresentation(request, id, apiBase = API_BASE) {
+  assertLoopback(apiBase)
+  if (!id) return
+  const softDelete = await withApiRetry(() =>
+    request.delete(`${apiBase}/presentations/${id}`, {
+      headers: { connection: 'close' },
+    })
+  )
+  const hardDelete = await withApiRetry(() =>
+    request.delete(`${apiBase}/presentations/${id}/permanent`, { headers: { connection: 'close' } })
+  )
+  const acceptable = new Set([200, 404])
+  const softStatus = responseStatus(softDelete)
+  const hardStatus = responseStatus(hardDelete)
+  if (!acceptable.has(softStatus) || !acceptable.has(hardStatus)) {
+    throw new Error(`Cleanup failed for ${id}: soft=${softStatus} hard=${hardStatus}`)
+  }
+}
+
+/**
+ * Helper: get a presentation by ID.
+ */
+export async function apiGetPresentation(request, id) {
+  assertLoopback()
+  const res = await withApiRetry(() =>
+    request.get(`${API_BASE}/presentations/${id}`, {
+      headers: { connection: 'close' },
+    })
+  )
+  if (!res.ok()) {
+    throw new Error(`Failed to fetch presentation ${id}: ${res.status()} ${await res.text()}`)
+  }
+  return res.json()
+}
+
+[Showing lines 1-100 of 187. Use :101 to continue]

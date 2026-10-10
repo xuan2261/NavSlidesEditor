@@ -1,0 +1,102 @@
+import { expect } from '@playwright/test'
+import { pathToFileURL } from 'node:url'
+import { apiCreateShareLink } from '../fixtures/test-fixtures.js'
+import { launchPresentPopup } from './present-offline-helpers.js'
+import { executePortableNetworkInspection } from './release-portable-inspection.js'
+
+export async function downloadArtifact(page, testInfo, menu, filename) {
+  await page.getByRole('button', { name: 'File menu', exact: true }).click()
+  const pending = page.waitForEvent('download', { timeout: 120000 })
+  await page.getByRole('menuitem', { name: menu, exact: true }).click()
+  const download = await pending
+  const file = testInfo.outputPath(filename)
+  await download.saveAs(file)
+  expect(await download.failure()).toBeNull()
+  return file
+}
+
+export async function freshPortable(browser, file, { initScripts = [], onPageCreated, evidence } = {}) {
+  let context = null
+  let page = null
+  let handle = null
+  const httpAttempts = []
+  const socketAttempts = []
+  const errors = []
+  const pageErrors = []
+  const frameSuccesses = []
+  const frameFailures = []
+
+  const recordArrival = (phase, err, meta) => {
+    if (evidence?.recordError) {
+      evidence.recordError(phase, err, meta)
+    }
+  }
+  const getPrimaryError = () => evidence?.getPrimaryError?.() || null
+
+  function rawDiagnostics() {
+    let protocol = null
+    try {
+      const u = page?.url?.()
+      if (u) protocol = new URL(u).protocol
+    } catch {
+      protocol = null
+    }
+    return {
+      protocol,
+      httpAttempts: [...httpAttempts],
+      socketAttempts: [...socketAttempts],
+      errors: [...errors],
+      pageErrors: [...pageErrors],
+      frameSuccesses: [...frameSuccesses],
+      frameFailures: [...frameFailures],
+    }
+  }
+
+  try {
+    context = await browser.newContext({ reducedMotion: 'reduce' })
+    await context.route(/^https?:\/\//i, (route) => {
+      httpAttempts.push(route.request().url())
+      return route.abort('blockedbyclient')
+    })
+    await context.routeWebSocket(/.*/, (socket) => {
+      socketAttempts.push(socket.url())
+      return socket.close({ code: 1008, reason: 'blockedbyclient' })
+    })
+    await context.addInitScript(() => {
+      window.__releaseSockets = []
+      const NativeSocket = window.WebSocket
+      window.WebSocket = class extends NativeSocket {
+        constructor(url, protocols) {
+          window.__releaseSockets.push(String(url))
+          super(url, protocols)
+        }
+      }
+    })
+    for (const script of initScripts) await context.addInitScript(script)
+    page = await context.newPage()
+    page.on('websocket', (socket) => socketAttempts.push(socket.url()))
+    page.on('pageerror', (error) => {
+      errors.push(error?.message || String(error))
+      pageErrors.push(error)
+      recordArrival('portable:pageerror', error)
+    })
+
+    async function inspectNetwork() {
+      return await executePortableNetworkInspection({
+        page,
+        socketAttempts,
+        httpAttempts,
+        errors,
+        frameSuccesses,
+        frameFailures,
+        recordArrival,
+        getPrimaryError,
+        rawDiagnostics,
+        handle,
+      })
+    }
+
+    handle = { page, context, file, diagnostics: rawDiagnostics(), inspectNetwork }
+  } catch (setupError) {
+
+[Showing lines 1-100 of 200. Use :101 to continue]

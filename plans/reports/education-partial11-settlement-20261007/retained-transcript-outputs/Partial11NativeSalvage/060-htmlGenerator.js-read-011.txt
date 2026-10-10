@@ -1,0 +1,352 @@
+            const childIdxAttr =
+              slideOverrideIdx && slideOverrideIdx.has(childKey)
+                ? ` data-slide-idx="${childKey}"`
+                : ''
+            const childFxCanvas = getFxCanvasHtml(child.background)
+            const childAutoAnimate = child.autoAnimate ? ' data-auto-animate' : ''
+            const childTransitionAttrs = getSlideTransitionAttrs(child)
+            const childNotesText = includeSpeakerNotes ? getSlideNotes(child) : ''
+            const childNotes = childNotesText
+              ? `<aside class="notes">${escapeHtml(childNotesText)}</aside>`
+              : ''
+            const childElements = renderSlideElements(child, {
+              forPrint: false,
+              baseUrl: options.baseUrl,
+              educationView,
+              gameConfigs: gameConfigsBySlide.get(childSlideId),
+              slideBackground: getPresentChartBackground(child, deckTokens, usesTokens),
+            })
+            const childBgStyle = getSectionBackgroundStyle(child.background, usesTokens)
+            return `    <section data-ns-effective-slide-id="${escapeHtml(childSlideId)}"${childAutoAnimate}${childTransitionAttrs}${childBg}${childIdxAttr} style="${escapeHtml(`padding:0;width:${resW}px;height:${resH}px;overflow:hidden;font-size:calc(16px * var(--font-zoom, 1));${getSlideTransitionStyle(child)}${childBgStyle}`)}">\n${childFxCanvas}${childElements}\n      ${childNotes}\n    </section>`
+          })
+          .join('\n')
+        return `  <section>\n${sectionHtml}\n${childSections}\n  </section>`
+      }
+
+      return sectionHtml
+    })
+    .join('\n')
+
+  return `<!doctype html>
+<html data-ns-education-view="${educationView}" data-ns-presentation-id="${escapeHtml(presentation.id || '')}" data-ns-content-revision="${escapeHtml(presentation.updatedAt || '')}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="navslides-reveal-version" content="${REVEAL_RUNTIME_VERSION}">
+  <title>${escapeHtml(presentation.title || 'Presentation')}</title>
+  <link rel="stylesheet" href="${REVEAL_ASSET_PATHS.resetCss}">
+  <link rel="stylesheet" href="${REVEAL_ASSET_PATHS.revealCss}">
+  <link rel="stylesheet" href="${revealThemePath(presentation.theme || 'black')}">
+  <link rel="stylesheet" href="/vendor/highlight.js/styles/${escapeHtml(codeTheme)}.min.css">
+  <link rel="stylesheet" href="/vendor/katex/dist/katex.min.css">
+  <link rel="stylesheet" href="/reveal-overrides.css">
+${hasEducationRuntime ? `  <link rel="stylesheet" href="${EDUCATION_ASSET_PATHS.runtimeCss}">` : ''}
+
+  <style>${safeStyleText(`
+    html, body { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; background: #000; }
+    /* Reset reveal.js section padding/alignment so absolute positions match the 960x540 editor canvas exactly */
+    .reveal .slides section { padding: 0 !important; text-align: left !important; line-height: normal !important; overflow: hidden; }
+${transitionMetadataCss}    /* Neutralise theme typography overrides so presentation matches editor exactly */
+    /* font-family only on section (inherited) so KaTeX's explicit rules take precedence */
+    .reveal .slides section { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .reveal .slides section * { text-transform: none !important; letter-spacing: normal !important; }
+    /* Explicit heading sizes ΓÇö override theme so present mode matches editor exactly */
+    .reveal .slides section h1 { font-size: 2.5em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .reveal .slides section h2 { font-size: 1.6em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .reveal .slides section h3 { font-size: 1.3em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .reveal .slides section h4 { font-size: 1em;   font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .reveal .slides section p  { margin: 0 0 6px; line-height: 1.5; }
+    .reveal .slides section ul,
+    .reveal .slides section ol { padding-left: 24px; margin: 0 0 6px; }
+    .reveal .slides section li { margin-bottom: 3px; line-height: 1.5; }
+    .reveal .slides section a  { text-decoration: underline; }
+    /* Neutralize Reveal image decoration; native games own their media bounds. */
+    .reveal .slides section img { margin: 0 !important; border: none !important; background: none !important; box-shadow: none !important; }
+    .reveal .slides section img:not([data-ns-game] img) { max-width: none !important; max-height: none !important; }
+    /* Footer ΓÇö explicit CSS rule with high specificity so reveal.js theme cannot override */
+    .reveal .slides section .reveal-footer,
+    .reveal .slides section .reveal-footer * { font-family: ${footerFontFamily} !important; font-size: ${footerFontSize}px !important; color: ${footerColor} !important; }
+${
+  hasActions
+    ? `    .reveal .slides .ns-element-action { outline: none; }
+    .reveal .slides .ns-element-action:focus-visible { outline: 3px solid #60a5fa; outline-offset: -3px; }
+    #ns-action-feedback { position:fixed;left:50%;bottom:20px;z-index:2000;transform:translateX(-50%);padding:8px 12px;border-radius:4px;background:rgba(0,0,0,.82);color:#fff;font:14px/1.2 sans-serif; }
+    #ns-action-feedback:empty { display:none; }
+`
+    : ''
+}`)}  </style>
+${tokenInfo ? `${tokenInfo.styleBlock}\n` : ''}  ${getPresenterToolsHead(presenterTools)}${presentation.customCSS ? `\n  <style>\n${safeStyleText(presentation.customCSS)}\n  </style>` : ''}
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+${slidesHtml}
+    </div>
+  </div>
+  <script type="application/json" data-ns-interaction-variables>${runtimeMetadata.variablesJson}</script>
+  ${getPresenterToolsBody(presenterTools)}
+${hasActions ? '  <div id="ns-action-feedback" role="status" aria-live="polite"></div>\n' : ''}  <script src="${REVEAL_ASSET_PATHS.revealJs}"></script>
+  <script src="${REVEAL_ASSET_PATHS.notesJs}"></script>
+  <script src="${REVEAL_ASSET_PATHS.highlightJs}"></script>
+  <script src="/vendor/katex/dist/katex.min.js"></script>
+  ${getPresenterToolsScripts(presenterTools)}
+${hasEducationRuntime ? `  <script src="${EDUCATION_ASSET_PATHS.runtimeJs}"></script>` : ''}
+  <script data-navslides-runtime="local">
+${
+  hasMediaElements
+    ? `    var disposeMedia = (${attachMediaPlaybackRoot.toString()})(document.querySelector('.reveal .slides'), ${attachMediaPlayback.toString()});
+    window.addEventListener('pagehide', disposeMedia, { once: true });
+`
+    : ''
+}
+    var params = new URLSearchParams(window.location.search);
+    var revealConfig = {
+      hash: true,
+      width: ${resW},
+      height: ${resH},
+      margin: 0,
+      minScale: 0,
+      maxScale: 10,
+      center: false,
+      transition: '${presentationTransition}',${transitionSpeedConfig}
+      keyboardCondition: function(event) {
+        var interactive = 'summary,video,audio';
+        return !(event.target && event.target.closest && event.target.closest(interactive)) &&
+          !(document.activeElement && document.activeElement.closest(interactive));
+      },
+      plugins: [ RevealNotes, RevealHighlight${getPresenterToolsPlugins(presenterTools)} ]${getPresenterToolsConfig(presenterTools) ? ',\n' + getPresenterToolsConfig(presenterTools) : ''}
+    };
+    ${Number.isFinite(Number(presentation.autoSlide)) && Number(presentation.autoSlide) > 0 ? `revealConfig.autoSlide = ${Number(presentation.autoSlide)};` : ''}
+    ${Number(presentation.autoSlide) > 0 && presentation.autoSlideLoop ? `revealConfig.loop = true;` : ''}
+    ${Number(presentation.autoSlide) > 0 && presentation.kioskMode ? `revealConfig.autoSlideStoppable = false;` : ''}
+    ${['default', 'linear', 'grid'].includes(presentation.navigationMode) ? `revealConfig.navigationMode = '${presentation.navigationMode}';` : ''}
+    if (params.get('scroll') === 'true') { revealConfig.view = 'scroll'; revealConfig.scrollProgress = true; }
+    Reveal.initialize(revealConfig);
+    Reveal.on('ready', function() {
+      document.querySelectorAll('span[data-math-latex]').forEach(function(el) {
+        try {
+          katex.render(el.getAttribute('data-math-latex'), el, {
+            displayMode: el.getAttribute('data-math-display') === 'true',
+            throwOnError: false
+          });
+        } catch(e) {}
+      });
+${options.portable ? '' : buildLivePresenterRuntime({ presentationId: presentation.id, hasGames: hasGameElements })}${hasActions ? buildActionRuntimeScript(resolvedPresentation) : ''}
+    });
+  </script>${getPresenterToolsInlineJS(presenterTools)}${fxRuntimeScript ? `\n${fxRuntimeScript}` : ''}
+</body>
+</html>`
+}
+
+function getBackgroundAttrs(bg) {
+  if (!bg) return ''
+  // 'fx' backgrounds render via a per-slide <canvas> (injected separately), so
+  // emit no reveal bg attr — the section stays transparent over the canvas.
+  if (bg.type === 'fx') return ''
+  if (bg.type === 'color' && bg.color) return ` data-background-color="${escapeHtml(bg.color)}"`
+  const imageSrc = bg.type === 'image' ? bg.image || bg.src : ''
+  if (imageSrc)
+    return ` data-background-image="${escapeHtml(absoluteSrc(imageSrc))}" data-background-size="${escapeHtml(bg.size || 'cover')}" data-background-position="${escapeHtml(bg.position || 'center')}"`
+  const gradient = formatGradientCss(bg)
+  if (gradient) return ` data-background-gradient="${escapeHtml(gradient)}"`
+  return ''
+}
+
+/** True if any slide (or vertical child) uses an `'fx'` background with a known module. */
+function presentationUsesFx(presentation) {
+  const slides = presentation.slides || []
+  for (const slide of slides) {
+    const groups = [slide, ...(slide.children || [])]
+    for (const s of groups) {
+      const fx = s && s.background && s.background.type === 'fx' && s.background.fx
+      if (fx && getFxModule(fx.name)) return true
+    }
+  }
+  return false
+}
+
+/**
+ * Build the absolutely-positioned <canvas> for an `'fx'` background. Sits at
+ * z-index 0 behind slide elements; the runtime starts/stops its rAF loop.
+ */
+function getFxCanvasHtml(bg) {
+  if (!bg || bg.type !== 'fx' || !bg.fx || !getFxModule(bg.fx.name)) return ''
+  const params = escapeHtml(JSON.stringify(bg.fx.params || {}))
+  return `<canvas data-fx-name="${escapeHtml(bg.fx.name)}" data-fx-params='${params}' style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>`
+}
+
+function downloadHTML(presentation) {
+  const html = generateRevealHTML(presentation)
+  const blob = new Blob([html], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.html`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ΓöÇΓöÇΓöÇ PDF export (print-ready HTML, one page per fragment state) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+function getBgPrintStyle(bg, deckTokens) {
+  const tokenBg = deckTokens?.colors?.bg || '#1e1e2e'
+  if (!bg || bg.type === 'none') return `background-color:${tokenBg};`
+  if (bg.type === 'color') return `background-color:${bg.color || tokenBg};`
+  if (bg.type === 'gradient') return `background:${formatGradientCss(bg) || tokenBg};`
+  if (bg.type === 'fx') {
+    // Canvas can't print — fall back to a solid color (author override, then the
+    // theme bg token, then default).
+    const fallback =
+      (bg.fx && bg.fx.fallbackColor) ||
+      (deckTokens && deckTokens.colors && deckTokens.colors.bg) ||
+      '#1e1e2e'
+    return `background-color:${fallback};`
+  }
+  const imageSrc = bg.type === 'image' ? bg.image || bg.src : ''
+  if (imageSrc) {
+    const src = absoluteSrc(imageSrc)
+    return `background-image:url('${src}');background-size:${bg.size || 'cover'};background-position:${bg.position || 'center'};`
+  }
+  return 'background-color:#1e1e2e;'
+}
+
+function generatePrintHTML(presentation, options = {}) {
+  const autoPrint = options.autoPrint !== false
+  const includePrintBar = options.includePrintBar !== false
+  const fragmentMode = options.fragmentMode || 'expanded'
+  const exportReadyDelayMs = Number(options.exportReadyDelayMs ?? (autoPrint ? 3000 : 300))
+  const showFooter = presentation.showFooter || false
+  const showPageNumbers = presentation.showPageNumbers || false
+  const pageNumberFormat = presentation.pageNumberFormat || 'c/t'
+  const codeTheme = presentation.codeTheme || 'monokai'
+  const footerFontSize = Number(presentation.footerFontSize) || 14
+  const footerFontFamily = presentation.footerFontFamily || '-apple-system,sans-serif'
+  const footerColor = presentation.footerColor || 'rgba(255,255,255,0.65)'
+  const footerMode = presentation.footerMode || 'basic'
+  const sequenceSections = presentation.sequenceSections || []
+  const footerInactiveColor = presentation.footerInactiveColor || 'rgba(255,255,255,0.25)'
+  const resW = Number(presentation.resolution?.width) || 960
+  const resH = Number(presentation.resolution?.height) || 540
+  const printDeckTokens = mergeTokens(DEFAULT_TOKENS, presentation.designTokens)
+  const pages = []
+  let printPageCounter = 0
+  presentation.slides.forEach((sourceSlide) => {
+    const slide = resolveSlideForRender(sourceSlide, presentation)
+    if (fragmentMode === 'final') {
+      pages.push({ slide, maxIdx: Infinity, countPageNumber: true })
+      return
+    }
+
+    // Expand each slide into one page per fragment step (initial + one per unique index)
+    const fragIndices = [
+      ...new Set(
+        (slide.elements || [])
+          .filter((el) => !(el.hidden || false))
+          .filter((el) => el.fragment)
+          .map((el) => el.fragmentIndex || 1)
+      ),
+    ].sort((a, b) => a - b)
+    pages.push({ slide, maxIdx: -Infinity, countPageNumber: true }) // initial: no fragments
+    fragIndices.forEach((idx) => pages.push({ slide, maxIdx: idx, countPageNumber: false }))
+  })
+  const totalPages = pages.length
+
+  const pagesHtml = pages
+    // eslint-disable-next-line unused-imports/no-unused-vars
+    .map(({ slide, maxIdx, countPageNumber }, pageIndex) => {
+      const slidePrintTokens = mergeTokens(printDeckTokens, slide?.designTokens)
+      const bgStyle = getBgPrintStyle(slide.background, slidePrintTokens)
+
+      const elementsHtml = renderSlideElements(slide, {
+        forPrint: true,
+        baseUrl: options.baseUrl,
+        maxFragIdx: maxIdx,
+        exportElementIds: options.exportElementIds,
+        teacherReveal: options.teacherReveal === true,
+        designTokens: slidePrintTokens,
+        slideBackground: getPrintChartBackground(slide, printDeckTokens),
+      })
+
+      // Per-slide page numbering
+      const slideHasPageNum = slide.showPageNumber !== false
+      if (slideHasPageNum && countPageNumber) printPageCounter++
+      const pageLabel =
+        showPageNumbers && slideHasPageNum
+          ? pageNumberFormat === 'c/t'
+            ? `${printPageCounter} / ${(presentation.slides || []).filter((s) => s.showPageNumber !== false).length}`
+            : `${printPageCounter}`
+          : ''
+
+      let footerHtml = ''
+      if (footerMode === 'sequence' && sequenceSections.length > 0 && showFooter) {
+        const activeIdx = slide.activeSection
+        const seqSpans = sequenceSections
+          .map((sec, i) => {
+            const isActive = activeIdx === i
+            const color = isActive ? footerColor : footerInactiveColor
+            const weight = isActive ? 'font-weight:700;' : 'font-weight:400;'
+            return `<span style="${escapeHtml(`color:${color};${weight}`)}">${escapeHtml(sec || `Section ${i + 1}`)}</span>`
+          })
+          .join('')
+        const pageSpan = pageLabel
+          ? `<span style="margin-left:12px;flex-shrink:0;">${pageLabel}</span>`
+          : ''
+        footerHtml = `<div style="${escapeHtml(`position:absolute;bottom:6px;left:16px;right:16px;z-index:900;display:flex;justify-content:center;align-items:center;font-size:calc(${footerFontSize}px * var(--font-zoom, 1));font-family:${footerFontFamily};pointer-events:none;box-sizing:border-box;`)}"><div style="display:flex;flex:1;justify-content:space-evenly;align-items:center;">${seqSpans}</div>${pageSpan}</div>`
+      } else {
+        const sectionLabel = showFooter && slide.section ? escapeHtml(slide.section) : ''
+        footerHtml =
+          sectionLabel || pageLabel
+            ? `<div style="${escapeHtml(`position:absolute;bottom:8px;left:16px;right:16px;z-index:900;display:flex;justify-content:space-between;align-items:center;font-size:calc(${footerFontSize}px * var(--font-zoom, 1));color:${footerColor};font-family:${footerFontFamily};pointer-events:none;box-sizing:border-box;`)}"><span>${sectionLabel}</span><span>${pageLabel}</span></div>`
+            : ''
+      }
+
+      return `<div class="slide-page" style="${escapeHtml(`${bgStyle}font-size:calc(16px * var(--font-zoom, 1));`)}">\n${elementsHtml}\n${footerHtml}\n</div>`
+    })
+    .join('\n')
+
+  const title = escapeHtml(presentation.title || 'Presentation')
+  // Determine base URL for resolving relative asset paths (images, vendor, etc.)
+  // When PDF HTML is opened via blob: URL, relative paths like /uploads/... won't resolve
+  const baseUrl =
+    options.baseUrl ||
+    (typeof window !== 'undefined' && window.location && window.location.origin !== 'null'
+      ? window.location.origin
+      : '')
+  const printBarHtml = includePrintBar
+    ? `  <div id="print-bar">
+    <div>
+      <strong>${title}</strong>
+      <span class="hint"> &nbsp;┬╖&nbsp; ${totalPages} page${totalPages !== 1 ? 's' : ''} (${fragmentMode === 'final' ? 'final fragment state' : 'fragments expanded'})
+        &nbsp;┬╖&nbsp; enable <em>Background graphics</em> in print settings</span>
+    </div>
+    <button onclick="window.print()">Print / Save as PDF</button>
+  </div>`
+    : ''
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="navslides-reveal-version" content="${REVEAL_RUNTIME_VERSION}">
+  <title>${title} — PDF</title>${baseUrl ? `\n  <base href="${escapeHtml(baseUrl)}/">` : ''}
+  <link rel="stylesheet" href="/vendor/katex/dist/katex.min.css">
+  <link rel="stylesheet" href="/vendor/highlight.js/styles/${escapeHtml(codeTheme)}.min.css">
+  <style>${safeStyleText(`
+    @page { size: ${resW}px ${resH}px; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    html { width: 100%; height: auto; overflow: visible !important; background: #000; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    body { width: 100%; height: auto; overflow: visible !important; background: #000; margin: 0; padding-top: ${includePrintBar ? 48 : 0}px; print-color-adjust: exact; -webkit-print-color-adjust: exact; display: block; }
+    .slide-page {
+      width: ${resW}px; height: ${resH}px; position: relative; overflow: hidden;
+      margin: 0 auto;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      break-after: page; page-break-after: always;
+      print-color-adjust: exact; -webkit-print-color-adjust: exact;
+    }
+    .slide-page:last-child { break-after: avoid; page-break-after: avoid; }
+    .slide-page h1 { font-size: 2.5em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .slide-page h2 { font-size: 1.6em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .slide-page h3 { font-size: 1.3em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+    .slide-page h4 { font-size: 1em;   font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
+
+[Showing lines 351-700 of 822. Use :701 to continue]

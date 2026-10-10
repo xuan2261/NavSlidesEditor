@@ -1,0 +1,77 @@
+        "priority": 2,
+        "confidence": 0.99,
+        "body": "E06-01 remains open. In the caller-owned errorLedger branch, any existing item with the same order suppresses the new serialized occurrence, even when it is a different record. For example, with a preserved caller errorLedger containing an unrelated record at order 2, recording a primary and then a frame/close failure gives the latter order 2 and prevents its serialized record from being exposed. The original caller record survives, but the new occurrence's phase, stack and frameUrl sidecar are missing from primary.errorLedger; if the measured JSON attachment also fails, that exposed ledger cannot provide the required complete diagnostics. Caller orders and this ledger's orders are independent namespaces; preserve existing objects and track this ledger's appended serialized objects by identity instead of deduplicating by order.",
+        "disposition": "SOURCE_CORRECTED_LOCAL",
+        "currentEvidence": "error-exposure.js:158-170 tracks appended serialized records by identity (!ledList.includes(e.serialized)) rather than numeric order, avoiding suppression across order namespaces."
+      },
+      {
+        "id": "E06-01-C",
+        "title": "E06-01 Ingest genuine failures attached through errorLedger",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "line_start": 31,
+        "line_end": 43,
+        "priority": 2,
+        "confidence": 0.98,
+        "body": "E06-01 remains incomplete for caller-attached failures held in errorLedger. ingestPreexistingErrors only visits secondaryFailures and allErrors, so a primary Error whose caller-owned errorLedger contains a genuine failure reference (for example, { error: closeError, phase: 'close', order: 2 }) never adds that failure to entries. A subsequently arriving frame/source/attachment Error is therefore recorded ahead of the already attached closeError, and getSerializedErrors/getSecondaryErrors omit closeError altogether. Merely retaining the original errorLedger array during refresh does not satisfy ingestion or chronological common-ledger exposure. Ingest genuine error references from caller-owned errorLedger entries, while leaving purely serialized diagnostic objects intact and skipping ledger-owned exposures.",
+        "disposition": "SOURCE_CORRECTED_LOCAL",
+        "currentEvidence": "error-exposure.js:68-84 extracts wrappers and ingests genuine Error references from actualRef.errorLedger before secondaryFailures, skipping purely serialized objects lacking Error instances."
+      }
+    ],
+    "native": [
+      {
+        "id": "N07-01",
+        "title": "N06-N02: Keep Start diagnostics out of lifecycle continuity",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-native-history.js",
+        "line_start": 54,
+        "line_end": 58,
+        "priority": 1,
+        "confidence": 1.0,
+        "body": "N06-N02 — completePacket freezes rootEventsAfter before calling recordFn('native-action', serializable, ...), but this new history filter accepts every event with the root tuple, including that subsequently recorded native-action. evaluateCorrelatedStateAndTime likewise includes native-action in rootEvents. Consequently the first running sample after an ordinary Start contains at least Start's own extra event, while witness.js:43 uses the pre-emission rootEventsAfter as its baseline and witness-domain.js:92-94 rejects the length difference. The normal startWitnessTimer path therefore rejects correct running behavior before returning. Use consistent lifecycle-event filtering on both packet and correlated-read histories, keeping action diagnostics out of continuity.",
+        "disposition": "SOURCE_CORRECTED_LOCAL (Native partition)"
+      },
+      {
+        "id": "N07-02",
+        "title": "Declare firstExpiredSample before the witness polling callback",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-witness.js",
+        "line_start": 82,
+        "line_end": 86,
+        "priority": 1,
+        "confidence": 1.0,
+        "body": "Correction07 removes correction06's local declaration of firstExpiredSample, but the complete function and module contain no replacement declaration. Once a valid expired sample reaches this branch, assigning firstExpiredSample throws ReferenceError in this ES module; subsequent reads also reference an unbound identifier. Even with a valid supplied startRecord and corrected history routing, waitForWitnessExpiry cannot produce the required expiry/crossover result. Restore a function-scoped firstExpiredSample initialized before the polling callback. This is source-proven, not an observed browser execution.",
+        "disposition": "SOURCE_CORRECTED_LOCAL (Native partition)"
+      },
+      {
+        "id": "N07-03",
+        "title": "N06-N02: Validate capture-to-post history before adopting Start",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-witness.js",
+        "line_start": 43,
+        "line_end": 45,
+        "priority": 1,
+        "confidence": 0.99,
+        "body": "N06-N02 — the Start record adopts only post-handler histories, silently replaces missing histories with empty arrays, and never compares rootEventsBefore/docEventsBefore against rootEventsAfter/docEventsAfter. validatePacketPrerequisites does not establish history health or this continuity either. Thus a visibility/root-history discontinuity occurring across Start can become the accepted baseline instead of rejecting the Start bracket, and missing packet histories can become a supposedly initialized empty baseline. The native history filter also returns event-object references rather than independently frozen capture/post content. Require valid independently copied capture/post histories and their complete continuity before constructing startRecord.",
+        "disposition": "SOURCE_CORRECTED_LOCAL (Native partition)"
+      },
+      {
+        "id": "N07-04",
+        "title": "N06-N03: Bind history health to actual recorder bookkeeping",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+        "line_start": 32,
+        "line_end": 38,
+        "priority": 1,
+        "confidence": 1.0,
+        "body": "N06-N03 — eventSeq is incremented privately, but no consumer receives or checks the expected store identity, count, or full sequence against that bookkeeping. The recorder still writes directly to the replaceable public window.__nsLifecycleEvents, and observed health is only Array.isArray. Replacing a nonempty store with [] or clearing it therefore leaves recorderReady true and hasLifecycleEvents true; correlated validation accepts the arrays and buildCorrelatedSample computes zero completed hidden time. Missing/non-array storage additionally makes this record function silently stop without marking the recorder unhealthy. Introduce actual retained-store health/sequence validation so replacement or truncation rejects while an untouched initialized empty store remains valid.",
+        "disposition": "SOURCE_CORRECTED_LOCAL (Native partition)"
+      },
+      {
+        "id": "N07-05",
+        "title": "N06-N03: Compare complete retained history content",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-history-domain.js",
+        "line_start": 34,
+        "line_end": 42,
+        "priority": 1,
+        "confidence": 1.0,
+        "body": "N06-N03 — assertHistoryPrefix compares only type and, when both happen to provide it, eventSeq. Replacing an event with the same type/sequence but changed tMin, tMax, visibilityState, or detail/domain passes; dropping eventSeq also bypasses the sequence comparison. The witness consumer adds only length and completed-pair-count checks, so same-length replacement/corruption remains accepted, including changes to the hidden-duration content used for activity-clock conversion. Compare the complete independently frozen ordered event content and require the recorder's actual sequence fields rather than treating optional identifiers as complete history continuity.",
+        "disposition": "SOURCE_CORRECTED_LOCAL (Native partition)"
+      },
+
+[Showing lines 81-155 of 605. Use :156 to continue]

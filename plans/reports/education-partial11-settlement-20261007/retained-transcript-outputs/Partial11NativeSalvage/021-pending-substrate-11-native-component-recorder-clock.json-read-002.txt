@@ -1,0 +1,222 @@
+    },
+    {
+      "id": "09-S3",
+      "disposition": "SOURCE_CORRECTED_LOCAL for complete no-match fallback retention",
+      "evidence": "observation-errors.js:56-68 ingests all sequence-eligible candidate siblings, rather than selecting only the first. observation.js:111-126 invokes that before recorder/document/current-root/no-match rejection can terminate extraction."
+    },
+    {
+      "id": "09-C1",
+      "disposition": "Actual browser ordering SOURCE_CORRECTED_LOCAL; forwarded-occurrence semantics remain attached to S10-C1 defect",
+      "evidence": "Setup/listener/capture-health/bubble-health/getter/read-detected failures carry actual __nsObsOrder witnesses. The consumer orders witnessed errors at27-32,81-87 and keeps later Node document validation last. See currentSourceDefects for why retaining the same numeric witness alone does not preserve occurrence identity across transported copies."
+    },
+    {
+      "id": "Evidence08-1",
+      "disposition": "OUTGOING_EXPOSURE_COMPONENT; not certified here",
+      "evidence": "Requires full serialized-only caller ingestion branches in error-exposure.js."
+    },
+    {
+      "id": "Evidence08-2 / 09-S4 / 09-S5 / 09-C2",
+      "disposition": "OUTGOING_EXPOSURE_COMPONENT; no complete wrapper/chronology disposition here",
+      "evidence": "error-ledger.js was fully read for actual Native ingestion/identity dispatch, but the complete error-exposure.js loops are owned elsewhere. Local explicit-phase serialization is not treated as certification of reconciliation, stable caller-visible identity or caller-ledger chronology."
+    }
+  ],
+  "preservedMechanisms": [
+    {
+      "name": "Actual observation-site chronology rather than packet-category chronology",
+      "evidence": "native-history.js capture: advanceTrigger at115, state/UI snapshot at132, health detection at134-136, packet sequence allocation at150. Bubble: drain at79, health detection at80-82, post state/UI at93. Each caught getter gets its witness from native-snapshot.js:32-52; setup/listener failures get it from native-observation.js. Thus packet.sequence and tCapture/tBubble are not substituted for individual error observation positions. Existing recorder envelopes are returned with their original witness; newly detected read-health failures get a later witness in observation-browser.js:9-10,62-63,86-87,150-151.",
+      "limit": "This establishes local ordering of the returned error set, not cross-read occurrence deduplication or every Evidence-side exposure."
+    },
+    {
+      "name": "Lifecycle projections and action publications are distinct",
+      "evidence": "native-history.js:47-69 and observation-browser.js:90-98 exclude native-action from root/document continuity while native-history.js:107-110 preserves both publications. Private eventSeq counts all records, so projected lifecycle histories may validly have nonadjacent sequences; history-domain.js compares matching sequence values without demanding adjacency."
+    },
+    {
+      "name": "Independent capture/post/baseline copies and legitimate empty histories",
+      "evidence": "native-history.js:50-66 clones each event and its detail per extraction. Actual root/document lifecycle details at24-40 are primitive fields, so those detail copies are complete for these projections. The filter returns null for missing/unhealthy histories at52-54, not fake empty arrays. witness.js:44-60 rejects missing histories and clones accepted baseline arrays; initialized healthy empty histories are retained legitimately."
+    },
+    {
+      "name": "Finite activity and deadline operands, with no fabricated slack",
+      "evidence": "activity-interval.js:3-16 validates finite ordered interval endpoints. Completed-hidden computation at23-35 uses conservative pause/resume uncertainty; activity conversion at46-66 subtracts completed-hidden bounds from active raw time or the ongoing-pause anchor. deriveDeadlineBounds at74-86 requires a finite positive duration and finite action interval; assertPositivePendingAtAction at93-102 requires a finite due and due>action interval maximum. clock.js:45-58 validates finite due and strictly positive finite remaining bounds <=4000. witness-domain.js:31-47,106-126 preserves finite strictly positive bounded running remainingMs.",
+      "limit": "No execution is claimed. measureBatonPendingAtReset and measureQuizCheckpoint are sampled helpers, not substitutes for deferred native Reset brackets and independently authored new-deadline proofs."
+    },
+    {
+      "name": "Start baseline and original expiry crossover",
+      "evidence": "witness.js:19-29 validates full idle state and native idle display/status/start/pause/resume controls. Native Start is captured at31, and deadlineBounds derives exact Start activity+4000 at32. Full capture/post continuity precedes baseline adoption at44-70. Full first-running state/domain/history/deadline validation precedes promotion at72-76. waitForWitnessExpiry at92-149 retains the last validated running sample and the first validated expired sample; returns expiryObservationInterval=[lastRunning.activity.min,firstExpired.activity.max] and activityElapsedInterval=[max(0,lastRunning.activity.min-start.activity.max),firstExpired.activity.max-start.activity.min]. assertMeasuredWitnessInterval at151-166 checks original duration containment and last-running/first-expired crossover against the original deadline."
+    },
+    {
+      "name": "Production countdown command consumption matches witness states",
+      "evidence": "local-activity.js:94-101 explicitly routes countdown construction/reduction with clock.now. mount.js:44-64 injects local runtimeMode and routes activity.reduce through createRuntimeSession; runtime-session.js:23-42 uses the activity clock and forwards commands. countdown-state.js:52-64 consumes native start, enters running with deadline=utilityNow(now)+remainingMs and revision+1;65-88 consumes tick/expire and enters exact expired state with one expiry/revision increment. countdown-presenter.js:69-74 registers start/pause/resume listeners, and76-108 renders state and schedules generation/revision-bound tick dispatch. Its status/display values agree with the witness's idle/running/expired assertions."
+    },
+    {
+      "name": "Production hidden-time clock and root lifecycle alignment",
+      "evidence": "runtime-session.js:23-25 freezes activity time at pausedAt while subtracting totalHiddenMs;104-118 pauses/rearms timers and accumulates actual hidden duration. mount.js:114-127 invokes presenter.pause before session.pause and adds the root paused class; resume first restores session activity, then presenter.resume and removes that class. Countdown uses utilityNow, which rejects nonfinite/nonmonotonic-domain-invalid values in utility-config.js:12-17. These are inspected source mechanisms, not measured browser alignment."
+    },
+    {
+      "name": "Controls retain actual native packet contracts and CSS/layout guards",
+      "evidence": "controls.js input/change/submit/click actions consistently call executeAction and return stateAfter plus actionBracket/actionRecords. native-action.js:7-17 consumes the mandatory cursor and extracts the actual packet. Button guards retain actual state/UI, command, enabled/layout/computed-style observations and raw read timing at21-69, and stage them before validation at71-84. controls.js exports clickTriviaNext at157-161; the immutable leave-return caller imports that same existing name, so this inspected subject has no missing clickTriviaNext export."
+    },
+    {
+      "name": "Recursive provenance and actual normalized Error propagation",
+      "evidence": "native-snapshot.js:23-52 retains actual recursive causes and rootInstanceId/tuple/documentId/timeOrigin/URL/browser origin/phase/stack. native-observation.js:36-46 does the same for recorder setup causes. error-ledger.js:50-69 recursively materializes browser envelopes without replacing actual Node Error inputs;84-98 preserves actual Node references. observation-errors.js:5-9,86-92 throws its exact earliest normalized return, and outer observation/native-action catches re-record that same normalized reference rather than replacing it."
+    }
+  ],
+  "outgoingIntegrationSeams": [
+    {
+      "seam": "Native recorder identity/order -> Node common ledger -> repeated/late collection",
+      "requiredIntegration": "Resolve the current-source repeated-forwarding defect using both Native observation bodies and the actual Evidence ingestion/exposure consumers. The document-local observation witness is sufficient for local relative order but currently is not an occurrence identity at the common-ledger boundary. Preserve actual Error/caller-reference rules and do not correlate unrelated numeric namespaces.",
+      "personallyReadBodies": "native-observation, native-snapshot, native-history, observation, observation-browser, observation-errors, error-ledger, relevant accumulator/collector/surface/acceptance bodies."
+    },
+    {
+      "seam": "Button guard -> controls -> document validation",
+      "requiredIntegration": "Retain NF-A3 source repair: resetGame and revealHotPotatoAnswers consume the same stageButtonGuard signature; both raw getter siblings are normalized before deferred document failure. The extra subsequent assertDocumentIdentity on the success path is not a missing-error repair or a changed signature."
+    },
+    {
+      "seam": "Published packet -> current-root matcher -> activity bracket -> witness baseline",
+      "requiredIntegration": "Trace both publication outputs, full lifecycle health, strict command/tuple/document/current-connected-node checks, activity conversion and all Start history copies together. NF-A4 must remain a separate unresolved/excluded packet-store binding limitation; lifecycle health cannot be claimed as complete packet-store integrity."
+    },
+    {
+      "seam": "Witness exports/results -> immutable journey callers",
+      "requiredIntegration": "witness exports startWitnessTimer(root,evidence), waitForWitnessExpiry(root,startRecord,evidence), and assertMeasuredWitnessInterval. The fully read leave-return caller still uses waitForWitnessExpiry(witness,evidence) at57, omits required sinks elsewhere, and uses expiryTime-startTime>=3800 at60-61 instead of the returned strict crossover. These are unchanged deferred caller obligations, not new helper regressions or authorization to change callers. Other journey consumers belong to their assigned component."
+    },
+    {
+      "seam": "Controls re-export -> navigation -> actual linked Reveal dispatcher",
+      "requiredIntegration": "Navigation component/integration owner must dispose N07-09,N07-10,N10B-01,N10B-02 from actual navigation and production dispatch bodies. No conclusion can be inferred merely from controls.js:20."
+    },
+    {
+      "seam": "Native normalized Error -> Evidence wrapper reconciliation/all three exposures",
+      "requiredIntegration": "The Evidence component must independently establish S10-C2,09-C2,E06-01-A/B/C,Evidence08-1/2,09-S4/S5 and stable repeated/late exposures. This component's full ledger read is ingestion/normalization evidence, not a substitute for those full consumer loops."
+    }
+  ],
+  "NF_A4Scope": {
+    "id": "NF-A4",
+    "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+    "excludedFrom11Repairs": true,
+    "completeRecordedExcludedScopeCandidate": {
+      "consumerVisibleMechanism": "evaluateActionCandidates returns candidates from the public, replaceable window.__nsRecordedPackets (:146-147). storeHealth (:148) checks only the lifecycle store. In-place mutation of an original packet is detected, because that packet object is also the retained native-action detail. Replacing the array, or replacing an element with a forged object, leaves the retained and private stores untouched, so health stays true. extractActionBracket (observation.js:107-131) then builds the action bracket from the forged packet: rootEventsBefore/After, stateAfter and tCapture/tBubble, which witness.js:44-63 adopts as the Start baseline. This is the same public-store replacement model as N07-04, applied to the packet store.",
+      "lineEnd": 158,
+      "title": "Bind returned action packets to the integrity-checked native-action records",
+      "confidence": 0.6,
+      "id": "NF-A4",
+      "lineStart": 146,
+      "repairNeeded": "Inside evaluateActionCandidates, derive candidates from, or verify each one against, the closure-retained native-action entries. For example, expose a private read of native-action details by sequence, or verify that each candidate is identical to the retained entry's detail and matches its private JSON clone. Report a recorder:store error when they diverge. evaluatePreActionCursor's lastSeq source (:36-37) needs the same binding.",
+      "priority": 2,
+      "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+      "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+      "scopeDecision": "Original N07-04/N07-05 explicitly cover lifecycle store integrity. Extending identical checks to separately replaceable action-packet storage is not automatically a required cutover; no new repair scope authorized."
+    },
+    "currentSourceRelationship": "Personally read observation-browser.js:36-37,146-148 and native-history.js:107-110. They retain the recorded mechanism: lifecycle-store health does not bind a replaced packet array or replaced packet element to the private native-action record. No repair, waiver, seventh required repair or complete packet-store-integrity claim is made."
+  },
+  "readEvidence": {
+    "provenance": "Personal functions.read calls in this continuation session against the exact frozen root. Requested bounded ranges below returned complete bodies through their terminal content; no primary or assigned-owner function-body omission remained. terminalContentLine identifies the last substantive source line using source read/grep anchors, not an independently measured physical line count. Source tool outputs are the full-body evidence; this component summary must not substitute for the integration owner's required inspection of full source evidence.",
+    "primaryFiles": [
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+        "requestedReadRanges": [
+          "1-210",
+          "155-220:raw"
+        ],
+        "coveredBodyRange": "1-163",
+        "terminalContentLine": 163,
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-snapshot.js",
+        "requestedReadRanges": [
+          "1-210"
+        ],
+        "coveredBodyRange": "1-106",
+        "terminalContentLine": 106,
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-history.js",
+        "requestedReadRanges": [
+          "1-220"
+        ],
+        "coveredBodyRange": "1-185",
+        "terminalContentLine": 185,
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-history-domain.js",
+        "requestedReadRanges": [
+          "1-220"
+        ],
+        "coveredBodyRange": "1-53",
+        "terminalContentLine": 53,
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-activity-interval.js",
+        "requestedReadRanges": [
+          "1-220"
+        ],
+        "coveredBodyRange": "1-102",
+        "terminalContentLine": 102,
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-clock.js",
+        "requestedReadRanges": [
+          "1-220"
+        ],
+        "coveredBodyRange": "1-102",
+        "terminalContentLine": 102,
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-controls.js",
+        "requestedReadRanges": [
+          "1-220",
+          "128-210:raw"
+        ],
+        "coveredBodyRange": "1-171",
+        "terminalContentLine": 171,
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-witness.js",
+        "requestedReadRanges": [
+          "1-220"
+        ],
+        "coveredBodyRange": "1-166",
+        "terminalContentLine": 166,
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-witness-domain.js",
+        "requestedReadRanges": [
+          "1-220"
+        ],
+        "coveredBodyRange": "1-137",
+        "terminalContentLine": 137,
+        "EOFReached": true
+      }
+    ],
+    "assignedOwnerFiles": [
+      {
+        "file": "shared/src/education/runtime-session.js",
+        "requestedReadRanges": [
+          "1-220"
+        ],
+        "coveredBodyRange": "1-138",
+        "terminalContentLine": 138,
+        "EOFReached": true
+      },
+      {
+        "file": "shared/src/education/browser/local-activity.js",
+        "requestedReadRanges": [
+          "1-220"
+        ],
+        "coveredBodyRange": "1-124",
+        "terminalContentLine": 124,
+        "EOFReached": true
+      },
+      {
+        "file": "shared/src/education/countdown-state.js",
+        "requestedReadRanges": [
+          "1-220"
+        ],
+        "coveredBodyRange": "1-90",
+
+[Showing lines 221-440 of 659. Use :441 to continue]

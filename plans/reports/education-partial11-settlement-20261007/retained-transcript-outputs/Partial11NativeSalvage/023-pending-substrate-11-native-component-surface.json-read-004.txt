@@ -1,0 +1,112 @@
+        ],
+        "fullBodyAndEOF": true,
+        "loadBearingSymbols": [
+          "Actual visitGeneratedSurfaces Page-first consumer callback"
+        ]
+      }
+    ],
+    "governingReads": [
+      {
+        "file": "pending-substrate-11-native-coverage-continuation-counsel.json",
+        "ranges": [
+          "1-235"
+        ],
+        "requests": [
+          ":1-260",
+          ":155-184:raw",
+          ":185-235:raw"
+        ],
+        "complete": true,
+        "note": "Initial bare omissions and truncated long retained clauses were expanded."
+      },
+      {
+        "file": "pending-substrate-11-native-salvage-prompt.md",
+        "request": ":1-240:raw",
+        "completeThroughEOF": true
+      },
+      {
+        "file": "pending-substrate-11-dispatch-authority.json",
+        "ranges": [
+          "1-220",
+          "221-257"
+        ],
+        "complete": true
+      },
+      {
+        "file": "pending-substrate-11-terminal-failure-counsel.json",
+        "ranges": [
+          "1-185",
+          "186-370",
+          "371-541"
+        ],
+        "complete": true
+      },
+      {
+        "file": "pending-substrate-11-helper-caller-manifest.json",
+        "ranges": [
+          "1-150",
+          "151-302"
+        ],
+        "complete": true
+      },
+      {
+        "file": "pending-substrate-11-scope-preservation.json",
+        "ranges": [
+          "1-190",
+          "191-354"
+        ],
+        "complete": true
+      },
+      {
+        "file": "pending-substrate-07-evidence-admission.json",
+        "request": ":1-60:raw",
+        "completeThroughEOF": true
+      },
+      {
+        "file": "pending-substrate-08-evidence-salvage-audit.json",
+        "request": ":1-45:raw",
+        "completeThroughEOF": true
+      },
+      {
+        "file": "pending-substrate-09-evidence-salvage-audit.json",
+        "ranges": [
+          "4-43",
+          "44-52"
+        ],
+        "completeRelevantFindingBodies": true,
+        "wholeDocumentCoverageClaimed": false
+      },
+      {
+        "file": "pending-substrate-10-evidence-salvage-audit.json",
+        "range": "334-450",
+        "completeRelevantPreservationBodies": true,
+        "wholeDocumentCoverageClaimed": false
+      },
+      {
+        "file": "pending-substrate-07-native-admission.json",
+        "range": "59-76",
+        "completeRelevantFindingBodies": [
+          "Original Native findings7 and8"
+        ],
+        "wholeDocumentCoverageClaimed": false
+      },
+      {
+        "file": "pending-substrate-08-native-salvage-audit.json",
+        "range": "29-46",
+        "completeRelevantFindingBodies": [
+          "Snapshot-before-document chronology",
+          "Packet sibling retention"
+        ],
+        "wholeDocumentCoverageClaimed": false
+      }
+    ]
+  },
+  "deliveryAndEvidenceLimits": {
+    "missingNativeReceipt": "Main's inventory and governing counsel record genuine Native11 receipt absent. This remains independently fatal to admission. This component neither reconstructs delivery nor substitutes its report for a receipt.",
+    "evidenceReceipt": "Genuine Evidence11 receipt remains immutable; recorded160-versus150 ledger physical-line discrepancy is a receipt-accuracy limitation, not itself a source defect. This component did not personally read the full genuine receipt and does not claim receipt-completeness or canonical-mapping certification; those remain integration-owner coverage.",
+    "historicalArtifacts": "Original Native incomplete report and provenance supplement were not rewritten or treated as user scope reduction; prior credits are distinguished from current inspected mechanisms.",
+    "externalDependency": "Linked node_modules target C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/node_modules is outside recursive freeze. No external node_modules dispatcher body was read by this component, and immutable dependency/runtime equivalence is not claimed.",
+    "coverageBoundary": "All five primary files and four assigned primary owners were fully read. Cross-component reads are permitted integration overlap, not reassignment of primary ownership. This component does not claim all38-file/all-governing-document coverage or an overall SOURCE_REVIEW_CLEAN verdict."
+  },
+  "executionDisclosure": "Only bounded read and grep inspection. No source/receipt/artifact writes, shell, git, eval/import, commands, hash/count measurements, tests/checks/builds/lint/format, browser actions, callback execution, installation or nested agents. No runtime verification performed."
+}

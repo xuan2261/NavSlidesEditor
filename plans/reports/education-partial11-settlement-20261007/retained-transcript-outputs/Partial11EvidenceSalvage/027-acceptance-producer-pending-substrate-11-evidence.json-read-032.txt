@@ -1,0 +1,152 @@
+{
+  "producer": "local8045/gemini-3.8-flash-high",
+  "partition": "evidence",
+  "correction": 11,
+  "workingRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-correction-11",
+  "sourceReady": false,
+  "qualification": false,
+  "passClaimed": false,
+  "runtimeExecuted": false,
+  "declaredCells": 54,
+  "staticallyAdmittedCells": 0,
+  "executedAcceptanceCells": 0,
+  "exactOwnedChanges": {
+    "modifiedFiles": [
+      "tests/e2e/education/pending-round-lifecycle-error-exposure.js"
+    ],
+    "preservedFiles": [
+      "tests/e2e/education/pending-round-lifecycle-ui-evidence.js",
+      "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+      "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+      "tests/e2e/education/pending-round-lifecycle-evidence.js",
+      "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+      "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+      "tests/e2e/education/release-surfaces.js",
+      "tests/e2e/education/present-offline-helpers.js",
+      "tests/e2e/education/pending-round-lifecycle-live-root-observation.js",
+      "tests/e2e/education/release-portable-inspection.js"
+    ],
+    "lineCounts": {
+      "tests/e2e/education/pending-round-lifecycle-ui-evidence.js": 152,
+      "tests/e2e/education/pending-round-lifecycle-error-ledger.js": 160,
+      "tests/e2e/education/pending-round-lifecycle-live-evidence.js": 120,
+      "tests/e2e/education/pending-round-lifecycle-evidence.js": 198,
+      "tests/e2e/education/pending-round-lifecycle-surfaces.js": 193,
+      "tests/e2e/education/pending-round-lifecycle-evidence-domain.js": 143,
+      "tests/e2e/education/release-surfaces.js": 199,
+      "tests/e2e/education/present-offline-helpers.js": 28,
+      "tests/e2e/education/pending-round-lifecycle-live-root-observation.js": 157,
+      "tests/e2e/education/pending-round-lifecycle-error-exposure.js": 171,
+      "tests/e2e/education/release-portable-inspection.js": 55
+    },
+    "symbolsAndContracts": {
+      "resolveWrapperMeta": "Distinguishes explicit wrapper phase (non-Error wrapper item.phase string) from intrinsic err.phase and default ingestion fallbacks. Returns { phase, explicitPhase, metadata }.",
+      "extractWrapper": "Populates wrapper map preserving explicitPhase and metadata without conferring phase authority to phase-less wrappers.",
+      "reconcileEntry": "Reconciles existing entry phase ONLY if caller wrapper provides explicit, valid explicitPhase string differing from existing.phase. Enriches metadata without conferring phase authority. Updates existing.serialized in place maintaining stable object identity.",
+      "ingestPreexistingErrors": "Consistently applies explicit wrapper phase reconciliation and metadata enrichment across errorLedger, secondaryFailures, and allErrors loops. Phase-less wrappers and wrappers containing Errors with conflicting intrinsic phases never overwrite authoritative recorded phases (e.g. portable:close)."
+    }
+  },
+  "assignedRepairs": {
+    "S10-C2": {
+      "id": "S10-C2",
+      "priority": 2,
+      "title": "Prevent phase-less caller errorLedger items from overwriting authoritative recorded phases",
+      "file": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+      "lines": "7-124",
+      "mechanism": "In ingestPreexistingErrors, when a caller errorLedger item lacks an explicit phase property, resolveWrapperMeta previously fell back to err.phase || `${phase}:errorLedger`. If the referenced error was already recorded earlier in the ledger with an authoritative explicit phase (e.g. 'portable:close'), reconcileEntry executed because existing.phase !== p, overwriting the recorded phase with the fallback/intrinsic phase and re-serializing the entry. This regressed the explicit recorded phase on exposure.",
+      "repair": "Repaired in tests/e2e/education/pending-round-lifecycle-error-exposure.js: resolveWrapperMeta now isolates explicitPhase (requiring an explicit non-empty string on a wrapper object, not the Error instance itself). reconcileEntry updates existing.phase only when explicitPhase is provided and differs from existing.phase. Ingest loops for errorLedger, secondaryFailures, and allErrors pass explicitPhase to reconcileEntry; phase-less wrappers enrich metadata while preserving existing authoritative phases intact. Caller Error instances, wrappers, and arrays remain unmutated.",
+      "disposition": "SOURCE_CORRECTED_LOCAL"
+    }
+  },
+  "assignedOriginalFindings": {
+    "evidence": [
+      {
+        "id": "E06-01-A",
+        "title": "E06-01 Leave sole Errors with empty caller arrays unchanged",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+        "line_start": 140,
+        "line_end": 144,
+        "priority": 2,
+        "confidence": 1.0,
+        "body": "E06-01 remains open. ingestPreexistingErrors marks every caller-owned secondaryFailures array, including an empty array, in callerOwnedSecondaryArrays. Consequently, recording one actual Error whose existing secondaryFailures is [] and then calling produceThrow bypasses the sole-entry return and calls refreshLedgerExposure, which adds allErrors and errorLedger properties despite there being no secondary occurrence. This changes the original Error's own keys in the accumulator's finalization path and regresses correction06's unconditional single-entry return. Return the original Error without exposure mutation whenever the ledger contains exactly one occurrence; an existing empty caller array is not evidence of multiple failures.",
+        "disposition": "SOURCE_CORRECTED_LOCAL",
+        "currentEvidence": "error-ledger.js:140-144 returns entries[0].normalized directly without invoking refreshLedgerExposure when entries.length === 1, preserving sole error own keys and reference intact."
+      },
+      {
+        "id": "E06-01-B",
+        "title": "E06-01 Deduplicate caller ledger records by identity, not order",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "line_start": 107,
+        "line_end": 112,
+        "priority": 2,
+        "confidence": 0.99,
+        "body": "E06-01 remains open. In the caller-owned errorLedger branch, any existing item with the same order suppresses the new serialized occurrence, even when it is a different record. For example, with a preserved caller errorLedger containing an unrelated record at order 2, recording a primary and then a frame/close failure gives the latter order 2 and prevents its serialized record from being exposed. The original caller record survives, but the new occurrence's phase, stack and frameUrl sidecar are missing from primary.errorLedger; if the measured JSON attachment also fails, that exposed ledger cannot provide the required complete diagnostics. Caller orders and this ledger's orders are independent namespaces; preserve existing objects and track this ledger's appended serialized objects by identity instead of deduplicating by order.",
+        "disposition": "SOURCE_CORRECTED_LOCAL",
+        "currentEvidence": "error-exposure.js:158-170 tracks appended serialized records by identity (!ledList.includes(e.serialized)) rather than numeric order, avoiding suppression across order namespaces."
+      },
+      {
+        "id": "E06-01-C",
+        "title": "E06-01 Ingest genuine failures attached through errorLedger",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+        "line_start": 31,
+        "line_end": 43,
+        "priority": 2,
+        "confidence": 0.98,
+        "body": "E06-01 remains incomplete for caller-attached failures held in errorLedger. ingestPreexistingErrors only visits secondaryFailures and allErrors, so a primary Error whose caller-owned errorLedger contains a genuine failure reference (for example, { error: closeError, phase: 'close', order: 2 }) never adds that failure to entries. A subsequently arriving frame/source/attachment Error is therefore recorded ahead of the already attached closeError, and getSerializedErrors/getSecondaryErrors omit closeError altogether. Merely retaining the original errorLedger array during refresh does not satisfy ingestion or chronological common-ledger exposure. Ingest genuine error references from caller-owned errorLedger entries, while leaving purely serialized diagnostic objects intact and skipping ledger-owned exposures.",
+        "disposition": "SOURCE_CORRECTED_LOCAL",
+        "currentEvidence": "error-exposure.js:68-84 extracts wrappers and ingests genuine Error references from actualRef.errorLedger before secondaryFailures, skipping purely serialized objects lacking Error instances."
+      }
+    ],
+    "native": [
+      {
+        "id": "N07-01",
+        "title": "N06-N02: Keep Start diagnostics out of lifecycle continuity",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-native-history.js",
+        "line_start": 54,
+        "line_end": 58,
+        "priority": 1,
+        "confidence": 1.0,
+        "body": "N06-N02 — completePacket freezes rootEventsAfter before calling recordFn('native-action', serializable, ...), but this new history filter accepts every event with the root tuple, including that subsequently recorded native-action. evaluateCorrelatedStateAndTime likewise includes native-action in rootEvents. Consequently the first running sample after an ordinary Start contains at least Start's own extra event, while witness.js:43 uses the pre-emission rootEventsAfter as its baseline and witness-domain.js:92-94 rejects the length difference. The normal startWitnessTimer path therefore rejects correct running behavior before returning. Use consistent lifecycle-event filtering on both packet and correlated-read histories, keeping action diagnostics out of continuity.",
+        "disposition": "SOURCE_CORRECTED_LOCAL (Native partition)"
+      },
+      {
+        "id": "N07-02",
+        "title": "Declare firstExpiredSample before the witness polling callback",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-witness.js",
+        "line_start": 82,
+        "line_end": 86,
+        "priority": 1,
+        "confidence": 1.0,
+        "body": "Correction07 removes correction06's local declaration of firstExpiredSample, but the complete function and module contain no replacement declaration. Once a valid expired sample reaches this branch, assigning firstExpiredSample throws ReferenceError in this ES module; subsequent reads also reference an unbound identifier. Even with a valid supplied startRecord and corrected history routing, waitForWitnessExpiry cannot produce the required expiry/crossover result. Restore a function-scoped firstExpiredSample initialized before the polling callback. This is source-proven, not an observed browser execution.",
+        "disposition": "SOURCE_CORRECTED_LOCAL (Native partition)"
+      },
+      {
+        "id": "N07-03",
+        "title": "N06-N02: Validate capture-to-post history before adopting Start",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-witness.js",
+        "line_start": 43,
+        "line_end": 45,
+        "priority": 1,
+        "confidence": 0.99,
+        "body": "N06-N02 — the Start record adopts only post-handler histories, silently replaces missing histories with empty arrays, and never compares rootEventsBefore/docEventsBefore against rootEventsAfter/docEventsAfter. validatePacketPrerequisites does not establish history health or this continuity either. Thus a visibility/root-history discontinuity occurring across Start can become the accepted baseline instead of rejecting the Start bracket, and missing packet histories can become a supposedly initialized empty baseline. The native history filter also returns event-object references rather than independently frozen capture/post content. Require valid independently copied capture/post histories and their complete continuity before constructing startRecord.",
+        "disposition": "SOURCE_CORRECTED_LOCAL (Native partition)"
+      },
+      {
+        "id": "N07-04",
+        "title": "N06-N03: Bind history health to actual recorder bookkeeping",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+        "line_start": 32,
+        "line_end": 38,
+        "priority": 1,
+        "confidence": 1.0,
+        "body": "N06-N03 — eventSeq is incremented privately, but no consumer receives or checks the expected store identity, count, or full sequence against that bookkeeping. The recorder still writes directly to the replaceable public window.__nsLifecycleEvents, and observed health is only Array.isArray. Replacing a nonempty store with [] or clearing it therefore leaves recorderReady true and hasLifecycleEvents true; correlated validation accepts the arrays and buildCorrelatedSample computes zero completed hidden time. Missing/non-array storage additionally makes this record function silently stop without marking the recorder unhealthy. Introduce actual retained-store health/sequence validation so replacement or truncation rejects while an untouched initialized empty store remains valid.",
+        "disposition": "SOURCE_CORRECTED_LOCAL (Native partition)"
+      },
+      {
+        "id": "N07-05",
+        "title": "N06-N03: Compare complete retained history content",
+        "file_path": "tests/e2e/education/pending-round-lifecycle-history-domain.js",
+        "line_start": 34,
+        "line_end": 42,
+
+[Showing lines 1-150 of 605. Use :151 to continue]

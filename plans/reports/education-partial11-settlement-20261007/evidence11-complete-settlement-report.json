@@ -1,0 +1,778 @@
+{
+  "reportType": "SAME_LOGICAL_EVIDENCE11_COMPLETE_SETTLEMENT",
+  "logicalAudit": "Partial11EvidenceSalvage",
+  "reviewer": "GPT same logical Evidence11 execution reviewer; not Kongming, producer, third opinion or Native11 sibling conclusion",
+  "settlementStatus": "SETTLEMENT_REPORT_COMPLETE_FULL_CONTRACT_COVERAGE_BLOCKED",
+  "sourceVerdict": "REPAIR_REQUIRED",
+  "deliveryVerdict": "MISSING_NATIVE_FAILED_INDEPENDENTLY_FATAL",
+  "fullContractCoverage": false,
+  "exactSubject": {
+    "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+    "recordedHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+    "hashAuthority": "Recorded Main preservation identity, not remeasured",
+    "freshDRead": false,
+    "dependencyBoundary": "node_modules junction outside recursive freeze; retained source does not certify fresh linked bytes or runtime-dist equivalence"
+  },
+  "preservation": {
+    "onlyNewFile": "evidence11-complete-settlement-report.json",
+    "originalsModified": false,
+    "substantiveLocal8045Touched": false,
+    "ownReportsConsolidated": [
+      "evidence11-integrated-report.json",
+      "evidence11-coverage-final-report.json",
+      "evidence11-scope-citation-addendum.json",
+      "evidence11-authority-explanations-addendum.json"
+    ],
+    "independence": "Shared authentic original contributor source TXT bodies were personally read, not contributor findings or Native11 current reports. Historical Native07/08/09 yields are governing historical authority only. No retained-native-contributors finding or Native11 report consulted. Earlier accountable Evidence reads remain explicitly attributed rather than relabeled as fresh D reads."
+  },
+  "referenceConvention": {
+    "P": "retained-contributor-primary-source/",
+    "H": "retained-historical-authority-deliveries/",
+    "E": "retained-transcript-outputs/Partial11EvidenceSalvage/",
+    "A": "retained-original-authority-deliveries/",
+    "sourceLines": "Original frozen source coordinates, not TXT wrapper numbering; raw Jeopardy first chunk ends225, row127 supplies226-245.",
+    "canonicalBodies": "Historical full finding body objects are incorporated by exact JSON pointer below, including title, body, file_path, line_start, line_end, priority and confidence. These immutable historical identities do not imply current PASS. All current evidence refers to frozen11 unless explicitly labeled historical."
+  },
+  "personalPrimaryReadLog": [
+    {
+      "path": "shared/src/education/utility-config.js",
+      "body": "P/Native11RecorderClockPart-row-115-utility-config.js.txt:1-21 EOF",
+      "trace": "createUtilityConfig normalizes then validates allowed utilities and throws invalid results; utilityNow rejects nonfinite/negative clocks; generation check permits absent command generation. Imports game-schema and game-validation-utils remain missing."
+    },
+    {
+      "path": "shared/src/education/browser/dom.js",
+      "body": "P/Native11StatePart-row-142-dom.js.txt:1-18 EOF",
+      "trace": "node assigns text/attributes; listen captures generation, forwards only same-generation events and session owns removal; button sets type and native command. No handler invoked by review."
+    },
+    {
+      "path": "shared/src/education/quiz-config.js",
+      "body": "P/Native11StatePart-row-139-quiz-config.js.txt:1-69 EOF",
+      "trace": "Defaults, attemptLimit1-10, booleans, feedback mode, canonical question validation and unique IDs; normalization validates and clones full configuration."
+    },
+    {
+      "path": "shared/src/education/answer-evaluator.js",
+      "body": "P/Native11StatePart-row-140-answer-evaluator.js.txt:1-79 EOF",
+      "trace": "Validates canonical question and answer payload before evaluating seven kinds; NFC trim/case policy, exact multichoice membership/cardinality, ordering, matching and bounded hotspot geometry. Invalid payload returns invalid rather than award."
+    },
+    {
+      "path": "shared/src/education/normalize-game-config.js",
+      "body": "P/Native11StatePart-row-151-normalize-game-config.js.txt:1-80 EOF",
+      "trace": "Nested authored values override flat before defaults; skips undefined, clones and migrates, strips transients; Trivia embedded-round/flat-question precedence; subtype validation errors acquire subtype path. Missing projection/validation bodies prevent full configuration certification."
+    },
+    {
+      "path": "shared/src/education/browser/quiz-presenter.js",
+      "body": "P/Native11StatePart-row-88-quiz-presenter.js.txt:1-194 EOF",
+      "trace": "Generation/question command identity and clock.now; armTimer token cancels on inactive/null deadline, schedules bounded ticks, dispatches expiry at due; native form/Next/Reset/extend handlers; full terminal/control/progress/score/timer/reveal render and answer description. Answer-controls and public-projection imports are absent; read is not UI execution."
+    },
+    {
+      "path": "shared/src/education/games/hot-potato.js",
+      "body": "P/Native11StatePart-row-86-hot-potato.js.txt:1-110 EOF",
+      "trace": "Full ready/active/review/ended state, question order, question-start/deadline, late policy, per-player answer/scores/leaderboard and generation/question guard. Speed bonus is base plus rounded remaining fraction of base; award key deduplicates correct awards. Original7 remains deferred independent scoring qualification, not closed by this source read."
+    },
+    {
+      "path": "shared/src/education/games/jeopardy.js",
+      "body": "P/Native11StatePart-row-87-jeopardy.js.txt:1-153 EOF",
+      "trace": "Full board/wager/question/ended, team/cell/turn/generation guards, timer deadline, expiry/reveal, daily-double limits, adjudication key, clamped score, used cells and winner. Deadline marks expired and nulls deadline without automatic adjudication."
+    },
+    {
+      "path": "shared/src/education/games/trivia-champ.js",
+      "body": "P/Native11StatePart-row-75-trivia-champ.js.txt:1-130,131-164 EOF",
+      "trace": "Full setup/no-play/active/review/ended identity, scores/awards/buzz/bonus; round due=time+round limit, question due=min(round due,time+question limit); Next retains round due within round and uses a fresh due on next round; generation/turn/round/question exact guards. Expiry preserves review context and roundExpired; lightning caps by startedAt, jackpot/normal award policies and buzz deduplication read. Validation imports remain missing; original9 full scoring matrix remains unexecuted."
+    },
+    {
+      "path": "shared/src/education/browser/games/hot-potato.js",
+      "body": "P/Native11StatePart-row-102-hot-potato.js.txt:1-209 EOF",
+      "trace": "Full roster/form/current participant and leaderboard UI; native Start/reveal/Next/end commands; generation/question identity, duplicate-player guard, allowLate feedback and controls, deadline schedule and participant cleanup. Session clock takes precedence."
+    },
+    {
+      "path": "shared/src/education/browser/games/jeopardy.js",
+      "body": "P/Native11StatePart-row-103-jeopardy.js.txt:1-130,131-225; P/Native11StatePart-row-127-jeopardy.js.txt:original226-245 EOF",
+      "trace": "Native focus/key propagation blockers; board/team/cell disabling, wager validation, answer/reveal/adjudicate/close controls, score rows, deadline schedule, timer visibility and final winner/expired feedback. Row103 footer expressly requires226 continuation; row127 completes the body, not a second entire245-line owner."
+    },
+    {
+      "path": "shared/src/education/browser/games/relay-race.js",
+      "body": "P/Native11StatePart-row-89-relay-race.js.txt:1-96 EOF",
+      "trace": "Command carries generation/turn/question; setup Start, active answer/Pass, independent team lanes and baton label; waiting schedules batonDue while active schedules deadline; full winner/waiting/active feedback. No fixed sleep or extra Pass executed."
+    },
+    {
+      "path": "shared/src/education/browser/games/trivia-champ.js",
+      "body": "P/Native11StatePart-row-90-trivia-champ.js.txt:1-143 EOF",
+      "trace": "Generation/turn/round/question commands; authored round list/current marker, scores/bonus/buzz team, native scoring mode/buzz/answer/Next controls; active deadline scheduling, review explanation, full terminal feedback. Next export is not missing."
+    },
+    {
+      "path": "shared/src/education/browser/games/round-games-view.js",
+      "body": "P/Native11StatePart-row-104-round-games-view.js.txt:1-88 EOF",
+      "trace": "Build disposes old UI listeners; native Reset; schedule key includes generation/turn-or-round/phase/due, cancels prior timers, rechecks remaining before dispatching captured command and renders actual state; ticks bounded by250/due. This actual scheduling body was read, not inferred from presenter imports."
+    },
+    {
+      "path": "shared/src/education/question-schema.js",
+      "body": "P/Native11StatePart-row-152-question-schema.js.txt:1-103 EOF",
+      "trace": "Canonical shape/key/feedback validation, strict migration and unambiguous correctIndex; context IDs and cloned canonical drafts."
+    },
+    {
+      "path": "shared/src/education/question-answer-payload.js",
+      "body": "P/Native11StatePart-row-153-question-answer-payload.js.txt:1-114 EOF",
+      "trace": "Full key checks, ID membership/duplicate/completeness, complete matching pairs, fill-blank policy and bounded hotspot payload."
+    },
+    {
+      "path": "shared/src/education/question-shape.js",
+      "body": "P/Native11StatePart-row-162-question-shape.js.txt:1-150 EOF",
+      "trace": "Full shape, unique stable IDs/options, media checks, matching side uniqueness, finite points/time, clone and validationError; content-safety imported body absent."
+    },
+    {
+      "path": "shared/src/education/question-answer-key.js",
+      "body": "P/Native11StatePart-row-163-question-answer-key.js.txt:1-96 EOF",
+      "trace": "Private answer payload and complete bounded rectangle/circle validation, region uniqueness and selected-option nonempty content."
+    },
+    {
+      "path": "shared/src/education/game-legacy-migration.js",
+      "body": "P/Native11StatePart-row-164-game-legacy-migration.js.txt:1-173 EOF",
+      "trace": "Identified authored collections, strict Jeopardy ambiguity rejection/daily-double migration, Trivia single embedded-versus-reference source, team defaults and subtype collections; validation utility absent."
+    },
+    {
+      "path": "shared/src/education/game-score-policy.js",
+      "body": "P/Native11StatePart-row-141-game-score-policy.js.txt:1-34 EOF",
+      "trace": "Award identity generation/gameType/contextId/awardKind; ledger Set deduplication and finite clamp. Source policy read is not scoring matrix acceptance."
+    }
+  ],
+  "historicalAuthorityReadLog": {
+    "allTenYieldFilesReadToEOF": true,
+    "files": [
+      "H/Evidence07SourceGate-yield-88.json:1-16",
+      "H/Evidence07SourceGate-yield-91.json:1-16",
+      "H/Evidence07SourceGate-yield-94.json:1-16",
+      "H/Evidence07SourceGate-yield-97.json:1-13",
+      "H/Evidence07SourceGate-yield-101.json:1-41",
+      "H/Native07SourceGate-yield-135.json:1-90,91-122",
+      "H/Evidence08SalvageAudit-yield-113.json:1-32",
+      "H/Native08SalvageAudit-yield-119.json:1-50",
+      "H/Partial09EvidenceSalvage-yield-170.json:1-59",
+      "H/Partial09NativeSalvage-yield-175.json:1-59"
+    ],
+    "canonicalFindingBodiesComplete": true,
+    "explanationRecoveryCorrection": "Actual delivered bytes, not the directory name or request premise, govern. Evidence07 yield97 contains a complete substantive explanation; yield101's explanation still literally contains '(line truncated to 2000 chars)'. Native07 yield135, Evidence08 yield113, Native08 yield119 and both09 yields also literally retain that truncation marker. Reading every file to EOF closes unread-delivery coverage, but does NOT recover those removed explanation suffixes byte-for-byte. Prior six governing counsel bodies read in the same logical audit supply full operative contract explanations; they cannot be mislabeled as restored original strings.",
+    "operativeGoverningFullBodiesPreviouslyPersonallyRead": [
+      "A/Correction11ScopeCounsel-yield-76.json:1-138",
+      "A/Correction11FailureCounsel-yield-80.json:1-548",
+      "A/Correction11FailureCounsel-yield-109.json:1-242",
+      "A/Correction11ReceiptAudit-yield-71.json:1-545",
+      "A/Terminal10FailureCounsel-yield-93.json:1-279",
+      "A/Settled09RejectionCounsel-yield-140.json:1-286"
+    ],
+    "authorityOrder": "Stops and preservation precede read-only salvage; normal progression requires genuine combined delivery and two independent full-source GO gates before conditional checks/smoke. One bounded six-repair11 attempt, fixed ownership15/11, immutable callers/inputs, no new helper/interface/shim, below200 physical lines, pinned producer/bounds and no retries remain governing. Coverage continuation is not new substantive authority."
+  },
+  "archivedAuditRecovery": {
+    "authenticFullBody": "E/yield-4068.json /data",
+    "personallyReadRanges": [
+      "1-60",
+      "61-220",
+      "221-400",
+      "401-580",
+      "581-760",
+      "761-900",
+      "901-1023 EOF"
+    ],
+    "closedArchivedArtifactGaps": ["original261-314", "original501-779"],
+    "meaning": "Authentic original full yield now supplies earlier artifact body. Its reviewCompleteness and limitations expressly deny full governing/owner/receipt completion at that earlier stop. Recovery does not retroactively certify initial coverage. Its clickTriviaNext contradiction is retracted and NAV-02 scope/citation corrected below.",
+    "newestFailedYield": "E/yield-11482.json:1-71 EOF",
+    "newestYieldDisposition": "Null-filled failed report is preserved, not full source proof, complete exactSubject, populated34 dispositions or successful complete review."
+  },
+  "requiredFindingDispositions34": [
+    {
+      "id": "N07-01",
+      "title": "N06-N02: Keep Start diagnostics out of lifecycle continuity",
+      "canonical": "H/Native07SourceGate-yield-135.json#/data/findings/0",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["native-history.js:47-67,107-110", "observation-browser.js:90-98"],
+      "mechanism": "Lifecycle-only projections align; BOTH packet storage and native-action diagnostic retained."
+    },
+    {
+      "id": "N07-02",
+      "title": "Declare firstExpiredSample before the witness polling callback",
+      "canonical": "H/Native07SourceGate-yield-135.json#/data/findings/1",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["witness.js:100,113-147"],
+      "mechanism": "Declared accumulator and complete last-running/first-expired crossover returned."
+    },
+    {
+      "id": "N07-03",
+      "title": "N06-N02: Validate capture-to-post history before adopting Start",
+      "canonical": "H/Native07SourceGate-yield-135.json#/data/findings/2",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["witness.js:44-76", "native-history.js:50-65"],
+      "mechanism": "Independent histories and prefix/length gates before promotion; legitimate empty is not missing provenance."
+    },
+    {
+      "id": "N07-04",
+      "title": "N06-N03: Bind history health to actual recorder bookkeeping",
+      "canonical": "H/Native07SourceGate-yield-135.json#/data/findings/3",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_LIFECYCLE_STORE_ONLY",
+      "currentEvidence": [
+        "native-observation.js:49-122",
+        "observation-browser.js:5-17,61-65,82-98,148-159"
+      ],
+      "mechanism": "Private identity/count/sequence/content health, initialized empty valid; NF-A4 separate excluded packet scope."
+    },
+    {
+      "id": "N07-05",
+      "title": "N06-N03: Compare complete retained history content",
+      "canonical": "H/Native07SourceGate-yield-135.json#/data/findings/4",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["history-domain.js:24-53", "native-observation.js:49-79"],
+      "mechanism": "Full event content/time/domain/detail comparison; projected sequence gaps allowed."
+    },
+    {
+      "id": "N07-06",
+      "title": "Retain lifecycle mutations drained at native action boundaries",
+      "canonical": "H/Native07SourceGate-yield-135.json#/data/findings/5",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["native-history.js:6-40,55,79,115", "native-snapshot.js:87-100"],
+      "mechanism": "Observed drained mutations retained with later delivery uncertainty, not discarded by upper-bound clamp."
+    },
+    {
+      "id": "N07-07",
+      "title": "N06-N05: Normalize and retain all observed snapshot failures",
+      "canonical": "H/Native07SourceGate-yield-135.json#/data/findings/6",
+      "disposition": "PARTIAL_REPAIR_REQUIRED",
+      "currentEvidence": [
+        "observation-errors.js:25-93",
+        "observation.js:104-136",
+        "live-evidence.js:28-54",
+        "error-ledger.js:83-102"
+      ],
+      "mechanism": "Local siblings normalized, but exact-match filtering omits other eligible observed siblings on outer rejection; live chronology, synthetic readiness and serialized occurrence identity remain unclosed."
+    },
+    {
+      "id": "N07-08",
+      "title": "N06-N05: Preserve the recorder exception's actual cause chain",
+      "canonical": "H/Native07SourceGate-yield-135.json#/data/findings/7",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_FOR_ACTUAL_ERROR_CAUSES",
+      "currentEvidence": ["native-observation.js:36-46,132-135", "error-ledger.js:11-68"],
+      "mechanism": "Recursive real setup causes/domain/stack retained; falsy primitive limit remains."
+    },
+    {
+      "id": "N07-09",
+      "title": "N06-N01: Stage each navigation poll's actual document first",
+      "canonical": "H/Native07SourceGate-yield-135.json#/data/findings/8",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["navigation.js:149-167"],
+      "mechanism": "Full actual poll document staged before validation."
+    },
+    {
+      "id": "N07-10",
+      "title": "N06-N07: Match keyboard eligibility to production dispatch",
+      "canonical": "H/Native07SourceGate-yield-135.json#/data/findings/9",
+      "disposition": "REPAIR_REQUIRED",
+      "currentEvidence": [
+        "navigation.js:74-80,104-117,143",
+        "node_modules/reveal.js/js/controllers/keyboard.js:129-255",
+        "node_modules/reveal.js/js/reveal.js:2738-2973"
+      ],
+      "mechanism": "Passive application callback invocation and unavailable public registered-binding accessors fail discriminator; reject-before-keypress proposal separately scope unresolved."
+    },
+    {
+      "id": "N07-11",
+      "title": "Preserve exact null commands when matching native packets",
+      "canonical": "H/Native07SourceGate-yield-135.json#/data/findings/10",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["observation-domain.js:60-69"],
+      "mechanism": "Exact command equality including null, not wildcard."
+    },
+    {
+      "id": "N07-12",
+      "title": "Reject disconnected current nodes during action extraction",
+      "canonical": "H/Native07SourceGate-yield-135.json#/data/findings/11",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["observation-domain.js:41-58", "observation-browser.js:136-145"],
+      "mechanism": "Connectedness required before current identity agreement."
+    },
+    {
+      "id": "E06-01-A",
+      "title": "E06-01 Leave sole Errors with empty caller arrays unchanged",
+      "canonical": "H/Evidence07SourceGate-yield-88.json#/data",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["error-ledger.js:93-117,140-147", "error-exposure.js:84-103"],
+      "mechanism": "Sole actual Error returns unchanged despite empty caller secondary array."
+    },
+    {
+      "id": "E06-01-B",
+      "title": "E06-01 Deduplicate caller ledger records by identity, not order",
+      "canonical": "H/Evidence07SourceGate-yield-91.json#/data",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_FOR_NODE_REFERENCE_CASE",
+      "currentEvidence": ["error-exposure.js:34-53,125-171", "error-ledger.js:83-115"],
+      "mechanism": "Stable owned exposed identities append only when absent; independent numeric namespaces not conflated; browser reserialization identity remains separate."
+    },
+    {
+      "id": "E06-01-C",
+      "title": "E06-01 Ingest genuine failures attached through errorLedger",
+      "canonical": "H/Evidence07SourceGate-yield-94.json#/data",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_FOR_GENUINE_CALLER_ERROR_CASES",
+      "currentEvidence": ["error-exposure.js:65-122", "error-ledger.js:100-115"],
+      "mechanism": "Genuine caller-ledger failures ingested with explicit wrapper phase/metadata; serialized-only diagnostics excluded."
+    },
+    {
+      "id": "Native08-1",
+      "title": "Import assertHistoryPrefix before validating the Start bracket",
+      "canonical": "H/Native08SalvageAudit-yield-119.json#/data/findings/0",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["witness.js:8-15,51-58", "witness-domain.js:2-7"],
+      "mechanism": "Comparator binding imported, not inferred from exporter existence."
+    },
+    {
+      "id": "Native08-2",
+      "title": "N06-N03: Validate complete retained-store content integrity",
+      "canonical": "H/Native08SalvageAudit-yield-119.json#/data/findings/1",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_LIFECYCLE_STORE_ONLY",
+      "currentEvidence": [
+        "native-observation.js:49-79,98-121",
+        "history-domain.js:24-53",
+        "native-history.js:53-54,80-99,134-157"
+      ],
+      "mechanism": "Independent full retained content checked before mapped clock/history consumers, diagnostics and other roots included."
+    },
+    {
+      "id": "Native08-3",
+      "title": "N06-N05: Preserve snapshot-before-document failure chronology",
+      "canonical": "H/Native08SalvageAudit-yield-119.json#/data/findings/2",
+      "disposition": "PARTIAL_REPAIR_REQUIRED_LIVE_COLLECTOR_SEAM",
+      "currentEvidence": [
+        "observation-errors.js:12-23,77-91",
+        "live-evidence.js:28-54",
+        "live-root-observation.js:88-123,155-157"
+      ],
+      "mechanism": "Shared helper dispatches caught document error last; live collector still records later Node document failure before already observed getter errors."
+    },
+    {
+      "id": "Native08-4",
+      "title": "N06-N05: Retain packet sibling failures before outer rejection",
+      "canonical": "H/Native08SalvageAudit-yield-119.json#/data/findings/3",
+      "disposition": "PARTIAL_REPAIR_REQUIRED_EXACT_MATCH_OUTER_REJECTION",
+      "currentEvidence": ["observation.js:104-136", "observation-errors.js:51-68,77-91"],
+      "mechanism": "Fallback loop credit retained; exact matched packet argument suppresses normalization of other observed eligible candidates when later gates reject."
+    },
+    {
+      "id": "Evidence08-1",
+      "title": "E06-01-C Exclude serialized diagnostics from occurrence ingestion",
+      "canonical": "H/Evidence08SalvageAudit-yield-113.json#/data/findings/0",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["error-exposure.js:26-29,70-75,86-89,106-109"],
+      "mechanism": "Only actual Error references enter caller occurrence ingestion; serialized diagnostics remain preserved data."
+    },
+    {
+      "id": "Evidence08-2",
+      "title": "E06-01-C Retain ledger metadata for already-ingested references",
+      "canonical": "H/Evidence08SalvageAudit-yield-113.json#/data/findings/1",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_FOR_MAPPED_SHARED_REFERENCES",
+      "currentEvidence": ["error-exposure.js:7-53,65-122", "error-ledger.js:11-47"],
+      "mechanism": "Shared genuine reference reconciles explicit phase/sidecar without duplicate occurrence or replacement of owned serialization."
+    },
+    {
+      "id": "09-S1",
+      "title": "Close evaluateActionCandidates before the next export",
+      "canonical": "H/Partial09EvidenceSalvage-yield-170.json#/data/findings/0",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_PARSE_TESTED",
+      "currentEvidence": ["observation-browser.js:129-175", "observation.js:12-18"],
+      "mechanism": "Function boundary present by source read; no import/check executed."
+    },
+    {
+      "id": "09-S2",
+      "title": "Restore the serializable packet binding before publication",
+      "canonical": "H/Partial09EvidenceSalvage-yield-170.json#/data/findings/1",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["native-history.js:107-110"],
+      "mechanism": "Actual packet copy precedes root removal; BOTH public packet and native-action diagnostic publication retained."
+    },
+    {
+      "id": "09-S3",
+      "title": "Retain all relevant candidate errors before outer rejection",
+      "canonical": "H/Partial09EvidenceSalvage-yield-170.json#/data/findings/4",
+      "disposition": "PARTIAL_REPAIR_REQUIRED_EXACT_MATCH_SEAM",
+      "currentEvidence": ["observation-errors.js:51-75", "observation.js:104-136"],
+      "mechanism": "No-match fallback visits all candidates, but explicit exact match narrows normalized siblings before outer failure; do not broaden bracket acceptance."
+    },
+    {
+      "id": "09-S4",
+      "title": "Keep the exposed serialization identity stable during reconciliation",
+      "canonical": "H/Partial09EvidenceSalvage-yield-170.json#/data/findings/2",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["error-exposure.js:34-53,162-169"],
+      "mechanism": "Object.assign updates existing owned serialized object; caller exposure retains identity."
+    },
+    {
+      "id": "09-S5",
+      "title": "Preserve the authoritative wrapper phase in reconciled diagnostics",
+      "canonical": "H/Partial09EvidenceSalvage-yield-170.json#/data/findings/3",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_FOR_SPECIFIED_CONFLICT",
+      "currentEvidence": ["error-ledger.js:11-21", "error-exposure.js:34-53,74-79,94-100,112-119"],
+      "mechanism": "Explicit wrapper phase survives all three genuine paths without mutating original Error; metadata-only does not grant phase authority."
+    },
+    {
+      "id": "09-C1",
+      "title": "Actual browser/extraction observation chronology",
+      "canonical": "E/009-pending-substrate-09-settled-rejection-counsel.json-read-001.txt:72-78; E/015-pending-substrate-11-dispatch-authority.json-read-001.txt:124-128",
+      "disposition": "REPAIR_REQUIRED",
+      "currentEvidence": [
+        "observation-errors.js:43-49,81-91",
+        "error-ledger.js:83-102",
+        "live-evidence.js:28-54"
+      ],
+      "mechanism": "No invented readiness rank, duplicate forwarding or later-document preemption permitted; domain-bounded actual observation order required."
+    },
+    {
+      "id": "09-C2",
+      "title": "Caller-ledger established chronology and shared-reference ingestion",
+      "canonical": "E/009-pending-substrate-09-settled-rejection-counsel.json-read-001.txt:79-85; E/015-pending-substrate-11-dispatch-authority.json-read-001.txt:131-135",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["error-exposure.js:65-122", "error-ledger.js:100-115"],
+      "mechanism": "Actual caller ledger array order before secondary-only arrivals; reference dedupe, full wrappers preserved, no unrelated numeric sorting."
+    },
+    {
+      "id": "S10-C1",
+      "title": "Full real observation-site order and forwarded occurrence identity",
+      "canonical": "E/015-pending-substrate-11-dispatch-authority.json-read-001.txt:139-155",
+      "disposition": "REPAIR_REQUIRED",
+      "currentEvidence": [
+        "native-snapshot.js:23-54",
+        "native-history.js:80-99,132-157",
+        "observation-errors.js:43-49,81-91",
+        "error-ledger.js:83-102",
+        "live-evidence.js:28-54"
+      ],
+      "mechanism": "Browser stamps improve interleaving but readiness fractional rank, reserialized occurrence identity and live local chronology fail closure."
+    },
+    {
+      "id": "NF-A2",
+      "title": "Preserve first recorder cause through later health failure",
+      "canonical": "E/015-pending-substrate-11-dispatch-authority.json-read-001.txt:156-166",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["native-observation.js:36-46,81-93,132-135"],
+      "mechanism": "Later store failure lowers readiness without replacing first genuine recursive setup envelope."
+    },
+    {
+      "id": "NF-A3",
+      "title": "Guard raw staging and sibling normalization before document rejection",
+      "canonical": "E/015-pending-substrate-11-dispatch-authority.json-read-001.txt:167-177",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["native-action.js:19-84", "observation-errors.js:12-23,70-91"],
+      "mechanism": "Raw guard first, both getters retained before later caught document exception, earliest normalized Error thrown; signature unchanged."
+    },
+    {
+      "id": "N10B-01",
+      "title": "Passive production actual-key discriminators",
+      "canonical": "E/015-pending-substrate-11-dispatch-authority.json-read-001.txt:178-187",
+      "disposition": "REPAIR_REQUIRED",
+      "currentEvidence": [
+        "navigation.js:47-143",
+        "reveal-lifecycle.js:73-83",
+        "shared/src/htmlGenerator.js:462-466",
+        "node_modules/reveal.js/js/reveal.js:2738-2973"
+      ],
+      "mechanism": "Application callback invoked passively; optional unavailable public binding lookup silently implies no override. No callback/focus/pause/overlay/policy mutation allowed; uncertainty retained instead."
+    },
+    {
+      "id": "N10B-02",
+      "title": "Atomic initial navigation document before early return",
+      "canonical": "E/015-pending-substrate-11-dispatch-authority.json-read-001.txt:188-197",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": ["navigation.js:19-32,149-167"],
+      "mechanism": "Initial slide/URL/documentId/timeOrigin staged atomically and validated before target return; poll staging preserved."
+    },
+    {
+      "id": "S10-C2",
+      "title": "Explicit authoritative phase across all genuine caller paths",
+      "canonical": "E/015-pending-substrate-11-dispatch-authority.json-read-001.txt:198-208",
+      "disposition": "SOURCE_MECHANISM_LOCALLY_CORRECTED_NOT_EXECUTED",
+      "currentEvidence": [
+        "error-exposure.js:7-20,34-53,69-81,84-103,105-122",
+        "error-ledger.js:11-21,100-115"
+      ],
+      "mechanism": "errorLedger, secondaryFailures and allErrors require explicit valid nonempty phase to change authority; metadata only enriches; stable serialization and original objects retained."
+    }
+  ],
+  "currentSeamFindings": [
+    {
+      "id": "E11-EXACT-MATCH-SIBLING-RETENTION",
+      "status": "REPAIR_REQUIRED_ORIGINAL_ALL_OBSERVED_OBLIGATION",
+      "trace": "observation-browser146-160 returns all sequence-eligible candidates; observation104-105 stages all,107 selects exact match,111-115 supplies explicit packet; observation-errors51-61 chooses that packet instead of raw candidates. Other genuine eligible sibling errors remain raw-only if document, current-node/tuple/domain or phase validation later rejects. observation134-136 catch and128 matched pass do not normalize omitted siblings. Domain relevance must remain bounded; preserve exact acceptance, normalize applicable occurrences before rejection, no universal numeric sort."
+    },
+    {
+      "id": "E11-LIVE-ROOT-DOCUMENT-PREEMPTION",
+      "status": "REPAIR_REQUIRED_ORIGINAL_CHRONOLOGY_OBLIGATION",
+      "trace": "live-root-observation88-123 observes state then UI,155 returns; live-evidence28-29 stages completed result,31-36 records later Node document error before38-42 forwards getter errors,51 selects document first. Ledger100-102 append order/120-122 primary makes later error primary absent older ledger entry. Retain independent document error after already observed applicable getters; preexisting global primary/concurrent branches bound universal claims."
+    },
+    {
+      "id": "E11-SALVAGE-NAV-01",
+      "status": "REPAIR_REQUIRED_EXISTING_N10B-01",
+      "trace": "navigation74-80 invokes configured condition with fabricated target-only object at76; production dispatch later invokes condition on real key. Passive callback prohibition genuinely applies."
+    },
+    {
+      "id": "REGISTERED_BINDINGS",
+      "status": "REPAIR_REQUIRED_EXISTING_N10B-01",
+      "trace": "Reveal API2738-2973 exposes add/removeKeyBinding2899-2900, not getBindings/keyboard; internal extension2941-2969 is not returned API2971. Consumer navigation104-117 optional probes miss overrides consumed by keyboard235-255. Preserve uncertainty, no silent public-interface addition."
+    },
+    {
+      "id": "E11-SALVAGE-CHRON-01",
+      "status": "REPAIR_REQUIRED_EXISTING_S10-C1",
+      "trace": "observation-errors43-49 newly creates readiness Error and gives recorder.obsOrder+0.01 or category rank;81-91 sorts/records by fictional detection position rather than genuine later site."
+    },
+    {
+      "id": "FORWARDED_OCCURRENCE_IDENTITY",
+      "status": "REPAIR_REQUIRED_ORIGINAL_OCCURRENCE_OBLIGATION",
+      "trace": "Separate evaluations serialize retained browser envelope into different Node objects; ledger83-98 only reference/WeakMap dedupes; materialize50-68 and serialize11-47 do not preserve obsOrder as durable occurrence identity. Same retained occurrence can append again. Require same-domain occurrence witness, not message equality or cross-document clock order."
+    },
+    {
+      "id": "E11-SALVAGE-NAV-02",
+      "status": "SCOPE_APPLICABILITY_UNRESOLVED",
+      "actualDispatch": "navigation.js:143",
+      "trace": "116-117 computes eligibility,118-133 returns it,135-142 stages only;143 unconditionally presses. Reject-before-keypress remains proposal, NOT automatic extra required repair or scope expansion."
+    }
+  ],
+  "retractions": {
+    "Reveal.isPausedMissing": "RETRACTED: public API exposes isPaused2813, owner1204-1208",
+    "clickTriviaNextMissing": "RETRACTED: controls157-161 exports clickTriviaNext; missing required caller evidence sink is deferred cutover, not missing export"
+  },
+  "receipt": {
+    "genuineEvidenceReceipt": "E/027-acceptance-producer-pending-substrate-11-evidence.json-read-007.txt:original1-145; read-008:146-280; read-009:281-435; read-010:436-604 closure,605 trailing blank",
+    "full605EarlierPersonalReadInSameAudit": true,
+    "receiptReconstructed": false,
+    "combinedDeliveryComplete": false,
+    "RC11": [
+      {
+        "id": "RC11-01",
+        "status": "CONFIRMED_DIRECT_COMPARISON",
+        "evidence": "receipt109,131,164,175 versus original Native bodies01,03,06,07",
+        "detail": "Four original bodies rewritten/shortened, including legitimate-empty provenance and earliest normalized return; fidelity defect not automatically source defect."
+      },
+      {
+        "id": "RC11-02",
+        "status": "CONFIRMED_DIRECT_PATH_COMPARISON",
+        "evidence": "all15 receipt file_path fields66-225 versus historical07 records",
+        "detail": "Relative suffixes lose original candidate07 absolute-root identity."
+      },
+      {
+        "id": "RC11-03",
+        "status": "CONFIRMED_ALL12_ENTRY_READ",
+        "evidence": "receipt assignedOriginalFindings.native100-233",
+        "detail": "All12 omit precise current Native source evidence; nine corrected/three partial assertions not independent proof."
+      },
+      {
+        "id": "RC11-04",
+        "status": "CONFIRMED_FULL_BODY_COMPARISON",
+        "evidence": "receipt235-367 versus08 six/09 five/chronology two/current six bodies",
+        "detail": "Identities listed but full ranges/bodies/mechanisms/current evidence omitted, five Native current ownership-only. BOTH publication, complete fallback/actual order and three-path phase/stability obligations retained here, not amended into receipt."
+      },
+      {
+        "id": "RC11-05",
+        "status": "CONFIRMED_DEFERRED_SCOPE_COMPARISON",
+        "evidence": "receipt401-418 versus full counsel deferred scope",
+        "detail": "Twelve immutable paths and generic paragraph omit full18-row matrix, state/UI, exact consumed native pending bounds, Quiz5000/no800ms, Relay/Trivia, witness4000, surface/finalization and later-slice detail."
+      },
+      {
+        "id": "RC11-06",
+        "status": "CONFIRMED_NF_A4_BODY_COMPARISON",
+        "evidence": "receipt393-400 versus dispatch210-222",
+        "detail": "Excluded/unresolved retained, claimed verbatim mechanism absent; public replacement/retained native-action divergence and lastSeq seam omitted."
+      },
+      {
+        "id": "RC11-07",
+        "status": "CONFIRMED_RECORDED_PRESERVATION_COMPARISON",
+        "evidence": "receipt31 count160 versus Main preservation263-270,343-349 count150",
+        "detail": "Accuracy discrepancy, both below200; no fresh count, no inferred physical-limit source failure."
+      },
+      {
+        "id": "RC11-08",
+        "status": "INDEPENDENT_FATAL_DELIVERY_BLOCKER",
+        "evidence": "terminal-settlement6-28,30-53; scope-preservation6-12",
+        "detail": "Native bg_6 exit1 after807.3s stream_error, not timeout, no genuine receipt; Evidence bg_7 exit0 after745.76s with genuine receipt sole addition. Source credits/full review/counsel cannot replace missing Native delivery."
+      }
+    ],
+    "canonicalMappings": {
+      "authority": "E/006-pending-substrate-08-subject-authority.json-read-001.txt:1-187",
+      "earlierDirectComparison": "NC11, RPC17, original9, current snapshot35, prior snapshot45 MATCH against primary full receipt chain; no mismatch inferred from condensed overlays",
+      "disposition": "All REQUIRED_UNEXECUTED; historical labels not current closure",
+      "identityLocks": "R16 Trivia expiry/Next; R17 readable splitting; R18 receipt/closure; original7 HP bonus,8 Scatter NFC,9 full Trivia scoring"
+    }
+  },
+  "credits": {
+    "scope": "Earlier own full26 helper/12 caller and20 mapped-owner body reads retained, with new20 primary owner body logs above; no manifest substituted for source proof",
+    "preserved": [
+      "Finite-positive bounded activity operands, initial running before promotion and complete expiry crossover",
+      "Full private lifecycle store health/content and independent histories, drained uncertainty preserved",
+      "NF-A2 first actual recorder cause; NF-A3 guard raw and sibling normalization",
+      "N10B-02 atomic initial document and raw poll staging",
+      "S10-C2 explicit phase across three paths, stable owned serialization, original Node Error/caller objects and sidecars",
+      "Sequential frame/pageerror arrival dispatch, state-before-UI, recursive real Error/domain/cause retention",
+      "Actual Page-containing surface contexts, early portable handle ownership, strict four success keys, no-sink actual Error and finally close",
+      "Late live/network/source GET/config/close/attachment failures exposed independently"
+    ],
+    "bounds": "These are local static credits. Exact-match and live-order seams narrow prior blanket all-sibling/chronology closure. Falsy primitives/causes remain source-visible limits, not diff-proven11 regression or automatic extra scope. No runtime result inferred."
+  },
+  "NF_A4": {
+    "status": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+    "excludedFromSixAuthorizedRepairs": true,
+    "seventhRepair": false,
+    "repaired": false,
+    "disproved": false,
+    "waived": false,
+    "authority": "E/015-pending-substrate-11-dispatch-authority.json-read-001.txt:210-222",
+    "mechanism": "Public __nsRecordedPackets array/element replacement can diverge from closure-retained native-action detail while lifecycle health stays true; extraction146-158 and witness44-63 adopt forged bracket. In-place mutation of original shared detail is detected, separate replacement is not. Pre-action lastSeq36-37 has corresponding binding seam. Not source-clean, not authorized packet-store extension."
+  },
+  "exhaustedRemainingCoverage": {
+    "search": "Exact filename regex searches of contributor280 index and own Evidence index found no game-schema/game-validation-utils or seven page-helper original paths. New presenter/config import gaps likewise absent from both inspected inventories. Index locates deliveries but certifies no bodies. Original source bodies above read before declaring remaining absence; no workload stop.",
+    "priorMissingLoadBearingBodiesRemaining": [
+      {
+        "path": "shared/src/education/game-schema.js",
+        "neededBy": "utility-config2; normalize-game-config3; Trivia2; mount3/Relay2",
+        "missing": "1-through-EOF, extent unknown"
+      },
+      {
+        "path": "shared/src/education/game-validation-utils.js",
+        "neededBy": "utility-config3; normalize-game-config4; game-legacy-migration2; Trivia3; mount5/Relay3",
+        "missing": "1-through-EOF, extent unknown"
+      },
+      {
+        "path": "tests/e2e/pages/canvas-helper.js",
+        "neededBy": "editor-page2,38",
+        "missing": "1-through-EOF, extent unknown"
+      },
+      {
+        "path": "tests/e2e/pages/ribbon-insert-helper.js",
+        "neededBy": "editor-page3,25",
+        "missing": "1-through-EOF, extent unknown"
+      },
+      {
+        "path": "tests/e2e/pages/properties-panel-helper.js",
+        "neededBy": "editor-page4,22",
+        "missing": "1-through-EOF, extent unknown"
+      },
+      {
+        "path": "tests/e2e/pages/slide-panel-helper.js",
+        "neededBy": "editor-page5,32",
+        "missing": "1-through-EOF, extent unknown"
+      },
+      {
+        "path": "tests/e2e/pages/ribbon-tab-toolbar-helper.js",
+        "neededBy": "editor-page6,23",
+        "missing": "1-through-EOF, extent unknown"
+      },
+      {
+        "path": "tests/e2e/pages/menu-bar-dropdown-helper.js",
+        "neededBy": "editor-page7,24/export/share",
+        "missing": "1-through-EOF, extent unknown"
+      },
+      {
+        "path": "tests/e2e/pages/text-editor-prosemirror-and-find-replace-helper.js",
+        "neededBy": "editor-page8,45",
+        "missing": "1-through-EOF, extent unknown"
+      }
+    ],
+    "additionalExactImportedBodiesNotDelivered": [
+      {
+        "path": "shared/src/education/game-config-projection.js",
+        "neededBy": "normalize-game-config6 stripTransients/stripElementGameFields",
+        "missing": "1-through-EOF, extent unknown"
+      },
+      {
+        "path": "shared/src/education/browser/quiz-answer-controls.js",
+        "neededBy": "quiz-presenter2 and four native game presenters",
+        "missing": "1-through-EOF, extent unknown"
+      },
+      {
+        "path": "shared/src/education/quiz-public-projection.js",
+        "neededBy": "quiz-presenter3 projectQuizQuestion",
+        "missing": "1-through-EOF, extent unknown"
+      },
+      {
+        "path": "shared/src/education/card-content.js",
+        "neededBy": "games/hot-potato3 shuffleCardIds",
+        "missing": "1-through-EOF, extent unknown"
+      },
+      {
+        "path": "shared/src/content-safety.js",
+        "neededBy": "question-shape1 isSafeMediaSrc",
+        "missing": "1-through-EOF, extent unknown"
+      }
+    ],
+    "furtherUncertifiedGraph": "Earlier inspected htmlGenerator imports1-40, Reveal imports1-30, simulations dependencies1-3, mount variable/live/rendering and unrelated activities remain outside closed transitive graph. Absent parent descendants cannot be invented. Optional release-content-fields.spec.js Path not found is not mandatory defect; actual no-sink release-content-fields.js previously read.",
+    "historicalExplanationSuffixes": "Literal2000-character truncation persists in five report-yield explanation fields, plus duplicated Evidence07 yield101 explanation; Evidence07 complete yield97 supplies its operative explanation. Full finding bodies and six governing counsel bodies available/read; no claim of byte restoration of removed suffixes.",
+    "archivedArtifactGapCount": 0,
+    "remainingPreviouslyEnumeratedBodyCount": 9,
+    "additionalExactMissingBodyCount": 5,
+    "fullContractCertification": "BLOCKED_BY_GENUINE_MISSING_DEPENDENCIES_AND_UNRECOVERED_ORIGINAL_EXPLANATION_SUFFIXES, not by ignoring available owner bodies"
+  },
+  "deferred": {
+    "status": "REQUIRED_UNEXECUTED",
+    "matrix": {
+      "surfaces": ["present", "share", "file"],
+      "leaveReturn": ["Quiz", "Hot Potato", "Jeopardy", "Relay", "Trivia question", "Trivia round"],
+      "reset": [
+        "Quiz",
+        "Hot Potato",
+        "Jeopardy",
+        "Relay deadline",
+        "Relay baton",
+        "Trivia question",
+        "Trivia round"
+      ],
+      "isolation": ["Quiz", "Hot Potato", "Jeopardy", "Relay", "Trivia"],
+      "declared": 54,
+      "admitted": 0,
+      "executed": 0,
+      "rule": "Each18 independent rows on each3 actual surfaces, no representative canary or historical PASS"
+    },
+    "callerCutover": "All12 together only after separate applicable authority/helper gates; forward mandatory sink/authored roots/document binding/actual Page; consume every native action/activity result/startRecord/measured expiry; no aliases/shims. Immutable old sink-less calls, missing expectedRoots and obsolete result fields remain deferred, not fresh helper-export regression.",
+    "stateAndUI": "Independently authored complete initial/pending/hidden/returned/reset/terminal/peer state AND native UI, full owner identities/questions/turns/teams/history/scores; measured consumed return and bounded original expiry, not generation/eventual scalar.",
+    "pendingBoundaries": "Actual same-domain native Pass/Reset/Start brackets, exact positive originally pending work at Reset and crossing original due with root/document/lifecycle/deadline uncertainty; sampled prior batonDue not substitution.",
+    "Quiz": "Native Reset+5000, after-old/before-new checkpoint, bounded new expiry, exact canonical terminal state/controls/UI; no arbitrary800ms or unbound tBefore/tAfter.",
+    "Relay": "Genuinely settled peer before freeze; full independent team/lane/question/turn/identity/UI, exact original due, first-timeout transition and peer invariance across Reset/old due; no extra Pass/sleep/retry/winner fallback.",
+    "Trivia": "Complete question/round expiry and native Next identity/indices/history/scores/awards/deadlines/startedAt/UI, independently bounded next-question/round timing. Newly read owner policy constrains expectations but proves no acceptance cell or full scoring matrix.",
+    "witness": "Every cell full idle/running/expired state/UI, native Start+4000 bounds, last-running/first-expired crossover, same root/document continuity and raw intermediate/missed/failure evidence before rejection.",
+    "surfaces": "Earliest Present/share/file setup, exact tuple/document/cardinality, actual native geometry/focus/control routing, complete live PNG/diagnostics, portable network-before/after, sourceGET equality and independent saved config; failure-safe setup/navigation/live/close/attachment with earliest common-ledger cause.",
+    "otherSlices": [
+      "original7 exact Hot Potato speed-bonus",
+      "original8 Scattergories NFC duplicate/unique scoring and control",
+      "original9 full Trivia scoring policy matrix"
+    ],
+    "orderedGaps": "Gap4 open; dependent gaps5-9 and final qualification blocked, unchanged."
+  },
+  "flags": {
+    "admission": false,
+    "sourceReady": false,
+    "sourceGatePassed": false,
+    "qualification": false,
+    "PASS": false,
+    "passClaimed": false,
+    "runtimeProgression": false,
+    "runtimeExecuted": false,
+    "fullContractComplete": false,
+    "commandsRun": false,
+    "testsRun": false,
+    "importsRun": false,
+    "evalRun": false,
+    "callbacksInvoked": false,
+    "hashRemeasured": false,
+    "sourceFixed": false,
+    "producerRetry": false,
+    "Correction12": false,
+    "callerCutover": false,
+    "smoke": false,
+    "local8045Touched": false,
+    "merge": false,
+    "push": false,
+    "deploy": false
+  },
+  "counts": {
+    "requiredFindingDispositions": 34,
+    "receiptCategories": 8,
+    "newPrimaryOwnerBodiesPersonallyRead": 20,
+    "historicalYieldFilesRead": 10,
+    "archivedGapIntervalsRemaining": 0,
+    "previousMissingOwnerBodiesClosed": 13,
+    "previousMissingOwnerBodiesRemaining": 9,
+    "additionalExactMissingBodies": 5,
+    "declaredCells": 54,
+    "admittedCells": 0,
+    "executedCells": 0
+  },
+  "conclusion": "Same Evidence11 settlement report is populated and complete as a bounded failure settlement, not full-contract source certification. Available original source and historical deliveries were exhausted and actual bodies traced; authentic4068 recovery closes archived artifact gaps without retroactive initial completeness. Source REPAIR_REQUIRED and missing failed Native genuine delivery independently prohibit progression. Remaining missing dependency bodies and literal historical explanation suffixes are explicit, not reconstructed. No substantive producer, source/receipt repair, execution or new authority was exercised."
+}

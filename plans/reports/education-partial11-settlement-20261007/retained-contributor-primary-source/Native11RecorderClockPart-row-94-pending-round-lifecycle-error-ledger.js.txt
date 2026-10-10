@@ -1,0 +1,150 @@
+import { ingestPreexistingErrors, refreshLedgerExposure } from './pending-round-lifecycle-error-exposure.js'
+
+/**
+ * Serializes an error into a structured object for JSON attachment.
+ * @param {any} err
+ * @param {string} phase
+ * @param {number} order
+ * @param {any} metadata
+ * @returns {Object}
+ */
+export function serializeError(err, phase = 'unknown', order = 1, metadata = null) {
+  const isErr = err instanceof Error
+  const effectivePhase = phase && phase !== 'unknown' ? phase : err?.phase || 'unknown'
+  const serialized = {
+    order,
+    phase: effectivePhase,
+    name: isErr ? err.name : err?.name || 'Error',
+    message: isErr ? err.message : err?.message || String(err),
+    stack: isErr ? err.stack || null : err?.stack || null,
+    cause: (isErr && err.cause) || err?.cause ? serializeError(err.cause, `${effectivePhase}:cause`, order) : null,
+    origin: err?.origin || (isErr ? 'node' : 'unknown'),
+  }
+  if (err && typeof err === 'object') {
+    if (err.elementId) serialized.elementId = err.elementId
+    if (err.slideId) serialized.slideId = err.slideId
+    if (err.gameType) serialized.gameType = err.gameType
+    if (err.documentId) serialized.documentId = err.documentId
+    if (err.url) serialized.url = err.url
+    serialized.rootInstanceId = err.rootInstanceId || metadata?.rootInstanceId || null
+    serialized.timeOrigin =
+      err.timeOrigin !== undefined && err.timeOrigin !== null
+        ? err.timeOrigin
+        : (metadata?.timeOrigin !== undefined && metadata?.timeOrigin !== null ? metadata.timeOrigin : null)
+  } else {
+    serialized.rootInstanceId = metadata?.rootInstanceId || null
+    serialized.timeOrigin =
+      metadata?.timeOrigin !== undefined && metadata?.timeOrigin !== null ? metadata.timeOrigin : null
+  }
+  if (metadata && typeof metadata === 'object') {
+    if (metadata.frameUrl) serialized.frameUrl = metadata.frameUrl
+    if (metadata.elementId && !serialized.elementId) serialized.elementId = metadata.elementId
+    if (metadata.slideId && !serialized.slideId) serialized.slideId = metadata.slideId
+    if (metadata.gameType && !serialized.gameType) serialized.gameType = metadata.gameType
+    if (metadata.documentId && !serialized.documentId) serialized.documentId = metadata.documentId
+    if (metadata.url && !serialized.url) serialized.url = metadata.url
+  }
+  return serialized
+}
+
+function materializeEnvelope(env) {
+  if (env instanceof Error) return env
+  const msg = env?.message || String(env)
+  const norm = new Error(msg)
+  if (env?.name) norm.name = env.name
+  if (env?.stack) norm.stack = env.stack
+  if (env?.cause) {
+    norm.cause = env.cause instanceof Error ? env.cause : materializeEnvelope(env.cause)
+  }
+  norm.origin = env?.origin || 'browser'
+  if (env?.phase) norm.phase = env.phase
+  if (env?.elementId) norm.elementId = env.elementId
+  if (env?.slideId) norm.slideId = env.slideId
+  if (env?.gameType) norm.gameType = env.gameType
+  if (env?.documentId) norm.documentId = env.documentId
+  if (env?.url) norm.url = env.url
+  if (env?.rootInstanceId) norm.rootInstanceId = env.rootInstanceId
+  if (env?.timeOrigin !== undefined && env?.timeOrigin !== null) norm.timeOrigin = env.timeOrigin
+  return norm
+}
+
+/**
+ * Creates a chronological error ledger that tracks primary and secondary errors.
+ * Deduplicates identical error references (===) and retains chronological order.
+ */
+export function createErrorLedger() {
+  const entries = []
+  const envelopeToNorm = new WeakMap()
+  const ledgerOwnedArrays = new WeakSet()
+  const callerOwnedSecondaryArrays = new WeakSet()
+
+  return {
+    recordError(phase, error, metadata = null) {
+      if (!error) return null
+      for (const entry of entries) {
+        if (entry.original === error || entry.normalized === error) {
+          return entry.normalized
+        }
+      }
+      if (typeof error === 'object' && envelopeToNorm.has(error)) {
+        return envelopeToNorm.get(error)
+      }
+
+      const isErr = error instanceof Error
+      const actualRef = isErr || typeof error === 'object' ? error : new Error(String(error))
+      const normalized = isErr ? actualRef : materializeEnvelope(actualRef)
+      if (typeof error === 'object') {
+        envelopeToNorm.set(error, normalized)
+      }
+
+      const order = entries.length + 1
+      const serialized = serializeError(normalized, phase, order, metadata)
+      entries.push({ original: actualRef, normalized, serialized, phase, order, metadata: metadata || null })
+
+      ingestPreexistingErrors({
+        actualRef,
+        phase,
+        entries,
+        recordErrorFn: (p, err, m) => this.recordError(p, err, m),
+        ledgerOwnedArrays,
+        callerOwnedSecondaryArrays,
+        serializeErrorFn: serializeError,
+      })
+
+      if (entries.length > 1) {
+        refreshLedgerExposure(entries[0].normalized, entries, ledgerOwnedArrays, callerOwnedSecondaryArrays)
+      }
+      return normalized
+    },
+
+    getPrimaryError() {
+      return entries[0]?.normalized ?? null
+    },
+
+    getSerializedErrors() {
+      return entries.map((entry) => entry.serialized)
+    },
+
+    getSecondaryErrors() {
+      return entries.slice(1).map((entry) => entry.normalized)
+    },
+
+    hasErrors() {
+      return entries.length > 0
+    },
+
+    getEntries() {
+      return [...entries]
+    },
+
+    produceThrow() {
+      if (entries.length === 0) return null
+      const primary = entries[0].normalized
+      if (entries.length === 1) {
+        return primary
+      }
+      refreshLedgerExposure(primary, entries, ledgerOwnedArrays, callerOwnedSecondaryArrays)
+      return primary
+    },
+  }
+}

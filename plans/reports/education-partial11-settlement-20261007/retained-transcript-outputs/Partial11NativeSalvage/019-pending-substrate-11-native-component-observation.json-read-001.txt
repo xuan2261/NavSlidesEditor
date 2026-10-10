@@ -1,0 +1,142 @@
+{
+  "component": "Native11 coverage continuation — observation and navigation",
+  "auditRole": "Non-overlapping primary coverage component of the existing Native11 salvage audit; not another independent opinion, substantive producer, admission decision, or whole-audit verdict.",
+  "exactSubject": {
+    "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+    "recordedFullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+    "identityBasis": "Existing preservation authority only; no hash, count, or freeze remeasurement.",
+    "sourcePrefix": "tests/e2e/education/"
+  },
+  "flags": {
+    "admission": false,
+    "sourceReady": false,
+    "qualification": false,
+    "passClaimed": false,
+    "runtimeExecuted": false,
+    "declaredCells": 54,
+    "staticallyAdmittedCells": 0,
+    "executedAcceptanceCells": 0
+  },
+  "primaryCoverageComplete": true,
+  "readEvidence": {
+    "method": "Personal read-tool inspection of explicit bounded :raw ranges, with grep only for source anchors and discovery. Full primary bodies and primary owner bodies were read without declaration elisions. Ranges extending past the last content line reached EOF. Last-content anchors are source locations, not newly measured physical-line totals. Tool outputs are retained in this component's conversation; selectors below identify the complete attributable source outputs for integration rereading.",
+    "primaryFiles": [
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-observation.js",
+        "requestedReads": [
+          "1-210:raw"
+        ],
+        "completeContentRange": "1-152",
+        "lastContentLine": 152,
+        "eofReached": true
+      },
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+        "requestedReads": [
+          "1-210:raw"
+        ],
+        "completeContentRange": "1-175",
+        "lastContentLine": 175,
+        "eofReached": true
+      },
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+        "requestedReads": [
+          "1-230:raw"
+        ],
+        "completeContentRange": "1-187",
+        "lastContentLine": 187,
+        "eofReached": true
+      },
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+        "requestedReads": [
+          "1-210:raw"
+        ],
+        "completeContentRange": "1-93",
+        "lastContentLine": 93,
+        "eofReached": true
+      },
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-native-action.js",
+        "requestedReads": [
+          "1-210:raw"
+        ],
+        "completeContentRange": "1-84",
+        "lastContentLine": 84,
+        "eofReached": true
+      },
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+        "requestedReads": [
+          "1-220:raw"
+        ],
+        "completeContentRange": "1-176",
+        "lastContentLine": 176,
+        "eofReached": true
+      }
+    ],
+    "primaryOwners": [
+      {
+        "path": "shared/src/education/browser/reveal-lifecycle.js",
+        "requestedReads": [
+          "1-240:raw"
+        ],
+        "completeContentRange": "1-145",
+        "eofReached": true,
+        "loadBearingBodies": "Complete attachRevealLifecycle, including prior keyboard-condition capture, education focus wrapper, configure, event subscriptions, reconciliation, and destroy restoration."
+      },
+      {
+        "path": "node_modules/reveal.js/js/controllers/keyboard.js",
+        "requestedReads": [
+          "1-220:raw",
+          "221-440:raw"
+        ],
+        "completeContentRange": "1-415",
+        "eofReached": true,
+        "externalLinkedDependency": true,
+        "loadBearingBodies": "Complete constructor, configure, bind/unbind, add/remove key binding, triggerKey, shortcut/binding getters, and complete onDocumentKeyDown dispatch."
+      },
+      {
+        "path": "shared/src/htmlGenerator.js",
+        "requestedReads": [
+          "1-216:raw",
+          "217-400:raw",
+          "401-563:raw",
+          "564-740:raw",
+          "741-850:raw"
+        ],
+        "completeContentRange": "1-822",
+        "eofReached": true,
+        "loadBearingBodies": "Complete file, including full generateRevealHTML body at 217-489, keyboardCondition at 462-466, plugin/config construction, actual Reveal.initialize at 474, helper definitions and exports. No generator omission remains."
+      }
+    ],
+    "supplementaryCrossingBodies": [
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+        "requestedReads": [
+          "1-205:raw"
+        ],
+        "completeContentRange": "1-163",
+        "eofReached": true
+      },
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-native-snapshot.js",
+        "requestedReads": [
+          "1-210:raw"
+        ],
+        "completeContentRange": "1-106",
+        "eofReached": true
+      },
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-native-history.js",
+        "requestedReads": [
+          "1-210:raw"
+        ],
+        "completeContentRange": "1-185",
+        "eofReached": true
+      },
+      {
+        "path": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+
+[Showing lines 1-140 of 746. Use :141 to continue]

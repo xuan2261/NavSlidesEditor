@@ -1,0 +1,11 @@
+{
+  "verdict": "REPAIR_REQUIRED",
+  "scope": {
+    "mode": "INDEPENDENT_READ_ONLY_STATIC_SALVAGE",
+    "partition": "Evidence11, with complete Native15 and immutable Phase2 consumer review",
+    "reviewer": "Same-session-model independent source reviewer; not a producer, Fable/Astra reviewer, admission gate or runtime qualifier",
+    "summary": "All five enumerated settled09 defects have local source repairs in partial10. The specified caller-ledger a,b chronology is repaired. The Native chronology change repairs later-extraction-versus-earlier-packet ordering and preserves recorder-setup precedence, but still uses a category rule that reverses an earlier action-boundary recorder failure and later post-handler getter failures. That remaining source defect prevents a source-clean verdict. Missing genuine Native10 delivery independently prevents admission."
+  },
+  "exactSubject": {
+
+[Showing lines 1-9 of 1203. Use :10 to continue]

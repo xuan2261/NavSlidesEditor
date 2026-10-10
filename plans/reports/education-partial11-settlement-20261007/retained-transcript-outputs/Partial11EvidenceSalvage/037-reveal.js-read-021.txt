@@ -1,0 +1,192 @@
+		plugins = new Plugins( Reveal ),
+		overlay = new Overlay( Reveal ),
+		focus = new Focus( Reveal ),
+		touch = new Touch( Reveal ),
+		notes = new Notes( Reveal );
+
+	/**
+	 * Starts up the presentation.
+	 */
+	function initialize( initOptions ) {
+
+		if( !revealElement ) throw 'Unable to find presentation root (<div class="reveal">).';
+
+		if( initialized ) throw 'Reveal.js has already been initialized.';
+
+		initialized = true;
+
+		// Cache references to key DOM elements
+		dom.wrapper = revealElement;
+		dom.slides = revealElement.querySelector( '.slides' );
+
+		if( !dom.slides ) throw 'Unable to find slides container (<div class="slides">).';
+
+		// Compose our config object in order of increasing precedence:
+		// 1. Default reveal.js options
+		// 2. Options provided via Reveal.configure() prior to
+		//    initialization
+		// 3. Options passed to the Reveal constructor
+		// 4. Options passed to Reveal.initialize
+		// 5. Query params
+		config = { ...defaultConfig, ...config, ...options, ...initOptions, ...Util.getQueryHash() };
+
+		// Legacy support for the ?print-pdf query
+		if( /print-pdf/gi.test( window.location.search ) ) {
+			config.view = 'print';
+		}
+
+		setViewport();
+
+		// Force a layout when the whole page, incl fonts, has loaded
+		window.addEventListener( 'load', layout, false );
+
+		// Register plugins and load dependencies, then move on to #start()
+		plugins.load( config.plugins, config.dependencies ).then( start );
+
+		return new Promise( resolve => Reveal.on( 'ready', resolve ) );
+
+	}
+
+	/**
+	 * Encase the presentation in a reveal.js viewport. The
+	 * extent of the viewport differs based on configuration.
+	 */
+	function setViewport() {
+
+		// Embedded decks use the reveal element as their viewport
+		if( config.embedded === true ) {
+			dom.viewport = Util.closest( revealElement, '.reveal-viewport' ) || revealElement;
+		}
+		// Full-page decks use the body as their viewport
+		else {
+			dom.viewport = document.body;
+			document.documentElement.classList.add( 'reveal-full-page' );
+		}
+
+		dom.viewport.classList.add( 'reveal-viewport' );
+
+	}
+
+	/**
+	 * Starts up reveal.js by binding input events and navigating
+	 * to the current URL deeplink if there is one.
+	 */
+	function start() {
+
+		// Don't proceed if this instance has been destroyed
+		if( initialized === false ) return;
+
+		ready = true;
+
+		// Remove slides hidden with data-visibility
+		removeHiddenSlides();
+
+		// Make sure we've got all the DOM elements we need
+		setupDOM();
+
+		// Listen to messages posted to this window
+		setupPostMessage();
+
+		// Prevent the slides from being scrolled out of view
+		setupScrollPrevention();
+
+		// Adds bindings for fullscreen mode
+		setupFullscreen();
+
+		// Resets all vertical slides so that only the first is visible
+		resetVerticalSlides();
+
+		// Updates the presentation to match the current configuration values
+		configure();
+
+		// Create slide backgrounds
+		backgrounds.update( true );
+
+		// Activate the print/scroll view if configured
+		activateInitialView();
+
+		// Read the initial hash
+		location.readURL();
+
+		// Notify listeners that the presentation is ready but use a 1ms
+		// timeout to ensure it's not fired synchronously after #initialize()
+		setTimeout( () => {
+			// Enable transitions now that we're loaded
+			dom.slides.classList.remove( 'no-transition' );
+
+			dom.wrapper.classList.add( 'ready' );
+
+			dispatchEvent({
+				type: 'ready',
+				data: {
+					indexh,
+					indexv,
+					currentSlide
+				}
+			});
+		}, 1 );
+
+	}
+
+	/**
+	 * Activates the correct reveal.js view based on our config.
+	 * This is only invoked once during initialization.
+	 */
+	function activateInitialView() {
+
+		const activatePrintView = config.view === 'print';
+		const activateScrollView = config.view === 'scroll' || config.view === 'reader';
+
+		if( activatePrintView || activateScrollView ) {
+
+			if( activatePrintView ) {
+				removeEventListeners();
+			}
+			else {
+				touch.unbind();
+			}
+
+			// Avoid content flickering during layout
+			dom.viewport.classList.add( 'loading-scroll-mode' );
+
+			if( activatePrintView ) {
+				// The document needs to have loaded for the PDF layout
+				// measurements to be accurate
+				if( document.readyState === 'complete' ) {
+					printView.activate();
+				}
+				else {
+					window.addEventListener( 'load', () => printView.activate() );
+				}
+			}
+			else {
+				scrollView.activate();
+			}
+		}
+
+	}
+
+	/**
+	 * Removes all slides with data-visibility="hidden". This
+	 * is done right before the rest of the presentation is
+	 * initialized.
+	 *
+	 * If you want to show all hidden slides, initialize
+	 * reveal.js with showHiddenSlides set to true.
+	 */
+	function removeHiddenSlides() {
+
+		if( !config.showHiddenSlides ) {
+			Util.queryAll( dom.wrapper, 'section[data-visibility="hidden"]' ).forEach( slide => {
+				const parent = slide.parentNode;
+
+				// If this slide is part of a stack and that stack will be
+				// empty after removing the hidden slide, remove the entire
+				// stack
+				if( parent.childElementCount === 1 && /section/i.test( parent.nodeName ) ) {
+					parent.remove();
+				}
+				else {
+					slide.remove();
+
+[Showing lines 121-310 of 2973. Use :311 to continue]

@@ -1,0 +1,11 @@
+  )
+)
+const CANONICAL_GAME_TYPES = Object.freeze(Object.keys(GAME_CATALOG))
+function isGameSubtype(type) {
+  return typeof type === 'string' && Object.prototype.hasOwnProperty.call(GAME_CATALOG, type)
+}
+function getGameCapabilities(type) {
+  if (!isGameSubtype(type)) throw new Error(`Unknown game subtype: ${String(type)}`)
+  return GAME_CATALOG[type].runtimeCapabilities
+}
+module.exports = { GAME_CATALOG, CANONICAL_GAME_TYPES, isGameSubtype, getGameCapabilities }

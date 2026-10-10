@@ -1,0 +1,11 @@
+export async function assertTriviaPeerUI(root) {
+  const scores = root.locator('ul[aria-label="Scores"] > li')
+  await expect(scores.filter({ hasText: 'Red: 20' })).toBeVisible()
+  await expect(scores.filter({ hasText: 'Blue: 0' })).toBeVisible()
+}
+
+export async function assertTriviaResetUI(root) {
+  const scores = root.locator('ul[aria-label="Scores"] > li')
+  await expect(scores.filter({ hasText: 'Blue: 0' })).toBeVisible()
+  await expect(scores.filter({ hasText: 'Red: 0' })).toBeVisible()
+}

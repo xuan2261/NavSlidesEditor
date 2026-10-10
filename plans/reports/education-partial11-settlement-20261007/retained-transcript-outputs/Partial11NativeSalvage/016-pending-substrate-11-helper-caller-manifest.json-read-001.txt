@@ -1,0 +1,302 @@
+{
+  "kind": "MAIN_PRESERVATION_NOT_SOURCE_REVIEW",
+  "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+  "fullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+  "regularInputCount": 4328,
+  "baselineInputCount": 4327,
+  "helperInventory": [
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+      "partition": "native",
+      "bytes": 6755,
+      "sha256": "059d135998bf4c5a6b987642397d03bbe07c94d4d8622ba8bcd6b77af2abd8e7",
+      "physicalLines": 163,
+      "modified": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-native-snapshot.js",
+      "partition": "native",
+      "bytes": 3486,
+      "sha256": "83e673bb8d33e3089cef4a02d787a94908626069e369cc64e1e789941f0ac3f0",
+      "physicalLines": 106,
+      "modified": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-activity-interval.js",
+      "partition": "native",
+      "bytes": 3818,
+      "sha256": "cf0e95c0c91762b7d8f7496550415ef86a0d19109439de233a16e5dbd00af970",
+      "physicalLines": 102,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-observation.js",
+      "partition": "native",
+      "bytes": 6261,
+      "sha256": "380306605dc77438490bdcfcee21edddcc69935d083ba1ee6346020a7ceb1f98",
+      "physicalLines": 152,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+      "partition": "native",
+      "bytes": 8879,
+      "sha256": "8541dd687a3797a97d91b17349db9b0519b8488dd8822a23d2dc912523805d50",
+      "physicalLines": 187,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-clock.js",
+      "partition": "native",
+      "bytes": 3207,
+      "sha256": "269dbce7a6f32ec84196f2e0531a8bab7a2d75a9588eb9e755c420fa037dfa42",
+      "physicalLines": 102,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-controls.js",
+      "partition": "native",
+      "bytes": 10328,
+      "sha256": "dc1bda1b339f92e285894a1747e803b0022334aa99c665bba224f832c63dc378",
+      "physicalLines": 171,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-witness.js",
+      "partition": "native",
+      "bytes": 7460,
+      "sha256": "f195c190891c16a03d30dc34f602ee73db935a428bdb92f536f92bc6aeb6b0a2",
+      "physicalLines": 166,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+      "partition": "native",
+      "bytes": 8994,
+      "sha256": "7dafb20272996c7bb409a0a02822f0d3cfac10628123294a5f6cf49b0064495c",
+      "physicalLines": 175,
+      "modified": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-native-action.js",
+      "partition": "native",
+      "bytes": 3217,
+      "sha256": "1b7075453e9d3a4f257643bcfed83cc00d6b45af5d7193087357cb5bb315aa3c",
+      "physicalLines": 84,
+      "modified": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-witness-domain.js",
+      "partition": "native",
+      "bytes": 6229,
+      "sha256": "5138ae4024eeb5cc2e27b428d8ca7cb74b6c00acfe0194ce22e51705fea3dd9b",
+      "physicalLines": 137,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-history-domain.js",
+      "partition": "native",
+      "bytes": 2544,
+      "sha256": "cfbef7b4373c31d5d79235d6513200dfe48e67b6dcd60233189fdccc4a352234",
+      "physicalLines": 53,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-native-history.js",
+      "partition": "native",
+      "bytes": 9574,
+      "sha256": "d21f13b910593055d62ff920ad095bb74d2ab0cd905b2dd56dd0ba2ff5cf5237",
+      "physicalLines": 185,
+      "modified": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+      "partition": "native",
+      "bytes": 3511,
+      "sha256": "7d270243929f810bc378e33717b4e3ff789135c20b8a3e2479995e5712071939",
+      "physicalLines": 93,
+      "modified": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+      "partition": "native",
+      "bytes": 6868,
+      "sha256": "093f50cccbfd3b2c66f837f7a3283a40f12b8800f8c5235423999cc66f37b49f",
+      "physicalLines": 176,
+      "modified": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-ui-evidence.js",
+      "partition": "evidence",
+      "bytes": 6998,
+      "sha256": "e1576cc86c01ad806ea3873594fb7cf1e49c6f60d554804812626d2c5b7d380a",
+      "physicalLines": 152,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+      "partition": "evidence",
+      "bytes": 5581,
+      "sha256": "8c26a63e2dd32c08f7f87d07134a73c9e2feaca280e571038ff2d2fa20c51bb3",
+      "physicalLines": 150,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+      "partition": "evidence",
+      "bytes": 4434,
+      "sha256": "22e6e6ee2a86ceaf08880100491d7ba8dcf38bdaee21c5a0fbafcfe5fd3aee05",
+      "physicalLines": 120,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-evidence.js",
+      "partition": "evidence",
+      "bytes": 6509,
+      "sha256": "95f6b2ee0f542e5cbf87720200359c21f6feec25cb05d076088a31d504c97773",
+      "physicalLines": 198,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+      "partition": "evidence",
+      "bytes": 7249,
+      "sha256": "73bd9c4e76626354cfc6f116a2e84fee2e31e1d04755ff52b74c90062209eb7f",
+      "physicalLines": 193,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+      "partition": "evidence",
+      "bytes": 5183,
+      "sha256": "b5137758f15027593f12fdc5b656b34b3b7fb0251c9a80a70d9bc4a45b7cff17",
+      "physicalLines": 143,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/release-surfaces.js",
+      "partition": "evidence",
+      "bytes": 6405,
+      "sha256": "f120ef62ce90de26180de0f61bd7b3870d546813c45d2d0bfd0583798df2a2f4",
+      "physicalLines": 199,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/present-offline-helpers.js",
+      "partition": "evidence",
+      "bytes": 1023,
+      "sha256": "2c5b3c20b3b060f23b55f02444bd5e3b78185b2ab29592b6d970193e2e4cb0c1",
+      "physicalLines": 28,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-live-root-observation.js",
+      "partition": "evidence",
+      "bytes": 4988,
+      "sha256": "3803665ccc0c77bca92ad04d4b2149ec2c4089f7f64b7f18b4baad5d1765c21a",
+      "physicalLines": 157,
+      "modified": false
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-error-exposure.js",
+      "partition": "evidence",
+      "bytes": 7061,
+      "sha256": "596bee660c503c244bcef78e1143d1f632adb52d9bac3004391eca6878680ba2",
+      "physicalLines": 171,
+      "modified": true
+    },
+    {
+      "file": "tests/e2e/education/release-portable-inspection.js",
+      "partition": "evidence",
+      "bytes": 1549,
+      "sha256": "40d425681c113bdcb731b316bcff860bd77de458cbd29fc1f1d5fd87fbf0009a",
+      "physicalLines": 55,
+      "modified": false
+    }
+  ],
+  "immutableCallers": [
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js",
+      "baselineSha256": "97cdec0d4534a55072a44bd1040572bfbe20fb96cc8eb06fdb4277a4a161898c",
+      "currentSha256": "97cdec0d4534a55072a44bd1040572bfbe20fb96cc8eb06fdb4277a4a161898c",
+      "preserved": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-cases.js",
+      "baselineSha256": "ec5abd70eb01f62a9e239df9578f84bebc2d6bff5fdda6372660cfbac515c715",
+      "currentSha256": "ec5abd70eb01f62a9e239df9578f84bebc2d6bff5fdda6372660cfbac515c715",
+      "preserved": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-fixtures.js",
+      "baselineSha256": "5a6bfc6014f2ab08147d108126e7e2672ef9a3d9ecffca3eee5adec3b71f0ea5",
+      "currentSha256": "5a6bfc6014f2ab08147d108126e7e2672ef9a3d9ecffca3eee5adec3b71f0ea5",
+      "preserved": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-leave-return.js",
+      "baselineSha256": "0443836362a15f3509f17402e97555fe939426c283001fbfe830ca385fb7ce16",
+      "currentSha256": "0443836362a15f3509f17402e97555fe939426c283001fbfe830ca385fb7ce16",
+      "preserved": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-reset.js",
+      "baselineSha256": "7bc17beaa84dce4d5ec0105111628de4df79b2fb7b73acdb738df4a979c98e6f",
+      "currentSha256": "7bc17beaa84dce4d5ec0105111628de4df79b2fb7b73acdb738df4a979c98e6f",
+      "preserved": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-isolation.js",
+      "baselineSha256": "03a345e97eac463d6ac88f66c30b1d1e1319d9b4e1b8ce9f57c4c01a09336ea3",
+      "currentSha256": "03a345e97eac463d6ac88f66c30b1d1e1319d9b4e1b8ce9f57c4c01a09336ea3",
+      "preserved": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-state.js",
+      "baselineSha256": "aaaef338f6f080330e62b52a220346f2844295a987c412f5e5259628cab8e787",
+      "currentSha256": "aaaef338f6f080330e62b52a220346f2844295a987c412f5e5259628cab8e787",
+      "preserved": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-quiz-state.js",
+      "baselineSha256": "af355aac1122b8cd5fab89895bd0cb57958081f62abe75175aa1059040209ad0",
+      "currentSha256": "af355aac1122b8cd5fab89895bd0cb57958081f62abe75175aa1059040209ad0",
+      "preserved": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-hot-potato-state.js",
+      "baselineSha256": "554a00cdb66736f2ec3ba3baaaa3de05365a91181c4bba5494d367dbd6138390",
+      "currentSha256": "554a00cdb66736f2ec3ba3baaaa3de05365a91181c4bba5494d367dbd6138390",
+      "preserved": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-jeopardy-state.js",
+      "baselineSha256": "ecbca8372c6fcbe249255690ff5188264ef02d7cc6dd41c3d55358ef95bd96c4",
+      "currentSha256": "ecbca8372c6fcbe249255690ff5188264ef02d7cc6dd41c3d55358ef95bd96c4",
+      "preserved": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-relay-state.js",
+      "baselineSha256": "a2527eca0f839743e8dfabe9aa919cdce16bd028eea40cc094a175c5b4a1084d",
+      "currentSha256": "a2527eca0f839743e8dfabe9aa919cdce16bd028eea40cc094a175c5b4a1084d",
+      "preserved": true
+    },
+    {
+      "file": "tests/e2e/education/pending-round-lifecycle-trivia-state.js",
+      "baselineSha256": "1ac360f82a0f69c08c3c89f459f6f123da896663020e112863a01c812f199f24",
+      "currentSha256": "1ac360f82a0f69c08c3c89f459f6f123da896663020e112863a01c812f199f24",
+      "preserved": true
+    }
+  ],
+  "genuineReceipts": [
+    "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/.tmp/acceptance-producer-pending-substrate-11-evidence.json"
+  ],
+  "native11ReceiptAbsent": true,
+  "dependency": {
+    "target": "C:\\Work\\worktrees\\NavSlidesEditor-education-gemini38-cook-261001\\node_modules",
+    "recursiveFreeze": false
+  },
+  "sourceReady": false,
+  "qualification": false,
+  "executedAcceptanceCells": 0
+}

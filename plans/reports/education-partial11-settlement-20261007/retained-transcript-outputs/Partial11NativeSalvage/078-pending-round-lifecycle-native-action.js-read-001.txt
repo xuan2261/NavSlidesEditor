@@ -1,0 +1,84 @@
+import {
+  assertEvidenceSink,
+  capturePreActionCursor,
+  extractActionBracket,
+} from './pending-round-lifecycle-observation.js'
+import { assertAndRecordObservationErrors } from './pending-round-lifecycle-observation-errors.js'
+export async function executeAction(root, actionFn, { command = null, type = null } = {}, evidence, label) {
+  assertEvidenceSink(evidence)
+  const cursor = await capturePreActionCursor(root, { command, type }, evidence, `${label}Pre`)
+  try {
+    await actionFn()
+  } catch (err) {
+    evidence.recordError(`${label}:actionFn`, err)
+    throw err
+  }
+  return extractActionBracket(root, cursor, evidence, label)
+}
+
+export async function stageButtonGuard(root, selector, label, evidence) {
+  assertEvidenceSink(evidence, true)
+  const guard = await root.evaluate((node, sel) => {
+    const tMin = performance.now()
+    const b = node.querySelector(sel)
+    const elementId = node.dataset?.nsElementId || null
+    const gameType = node.dataset?.nsGameType || node.dataset?.nsGame || null
+    const slide = node.closest('[data-ns-effective-slide-id]')
+    const slideId = slide?.dataset?.nsEffectiveSlideId || null
+    const rootInstanceId = window.__nsGetRootInstanceId?.(node) || null
+    const snap = window.__nsReadRootSnapshot?.(node, gameType) || {
+      isMounted: false, hasUIGetter: false, state: null, stateError: null, ui: null, uiError: null,
+    }
+    let visible = false
+    let layoutVisible = false
+    let cssVisible = false
+    if (b) {
+      layoutVisible = Boolean(b.offsetWidth > 0 || b.offsetHeight > 0 || b.getClientRects?.().length > 0)
+      const style = window.getComputedStyle(b)
+      cssVisible = style.visibility !== 'hidden' && style.display !== 'none'
+      visible = layoutVisible && cssVisible
+    }
+    const tMax = performance.now()
+    return {
+      buttonFound: Boolean(b),
+      buttonCommand: b?.getAttribute('data-ns-command') || b?.dataset?.nsCommand || null,
+      buttonDisabled: b?.disabled ?? null,
+      buttonVisible: visible,
+      layoutVisible,
+      cssVisible,
+      buttonValue: b?.value ?? null,
+      buttonText: b?.textContent?.trim() ?? null,
+      elementId,
+      slideId,
+      gameType,
+      rootInstanceId,
+      isMounted: snap.isMounted,
+      hasUIGetter: snap.hasUIGetter,
+      state: snap.state,
+      stateError: snap.stateError,
+      ui: snap.ui,
+      uiError: snap.uiError,
+      paused: node.classList.contains('ns-education-paused'),
+      documentId: window.__nsDocumentId || null,
+      timeOrigin: performance.timeOrigin,
+      url: window.location.href,
+      rawInterval: { min: tMin, max: tMax },
+      time: (tMin + tMax) / 2,
+      rawTime: tMax,
+    }
+  }, selector)
+  try {
+    evidence.stage(label ? `${label}_raw` : 'buttonGuard_raw', guard)
+    assertAndRecordObservationErrors(evidence, label || 'buttonGuard', guard, {
+      url: guard.url,
+      documentId: guard.documentId,
+      timeOrigin: guard.timeOrigin,
+    })
+    evidence.assertDocumentIdentity({ url: guard.url, documentId: guard.documentId, timeOrigin: guard.timeOrigin })
+    evidence.stage(label || 'buttonGuard', guard)
+    return guard
+  } catch (err) {
+    evidence.recordError(label || 'buttonGuard', err)
+    throw err
+  }
+}

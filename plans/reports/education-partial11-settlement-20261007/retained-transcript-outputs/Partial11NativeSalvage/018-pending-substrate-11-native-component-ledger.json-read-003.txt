@@ -1,0 +1,129 @@
+          "57797-57807",
+          "60407-60420",
+          "61716-61719",
+          "57767-57769",
+          "raw:57767-57769"
+        ],
+        "completeRelevantBodies": [
+          "parseSerializedValue and innerParseSerializedValue",
+          "JSHandle.evaluate",
+          "Frame.evaluate",
+          "Page.evaluate",
+          "parseResult"
+        ],
+        "wholeFileRead": false,
+        "externalLinkedDependency": true
+      },
+      {
+        "file": "node_modules/playwright-core/package.json",
+        "readSelector": "1-80",
+        "fullBody": true,
+        "eofObserved": true,
+        "observedPackage": "playwright-core 1.63.0",
+        "externalLinkedDependency": true
+      }
+    ],
+    "governingReads": [
+      {
+        "file": "pending-substrate-11-native-coverage-continuation-counsel.json",
+        "readSelectors": [
+          "initial declaration read",
+          "1-240",
+          "raw:188-189"
+        ],
+        "fullBodyAndEOF": true,
+        "extentEvidence": "Raw expanded obligation read identifies 235 lines; 1-240 covers the complete document."
+      },
+      {
+        "file": "pending-substrate-11-native-salvage-prompt.md",
+        "readSelectors": [
+          "1-240",
+          "raw:1-110"
+        ],
+        "fullBodyAndEOF": true,
+        "omissionsExpanded": true
+      },
+      {
+        "file": "pending-substrate-11-dispatch-authority.json",
+        "readSelectors": [
+          "raw:1-240",
+          "raw:241-280"
+        ],
+        "coveredSourceLines": "1-257 through EOF",
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "pending-substrate-11-terminal-failure-counsel.json",
+        "readSelectors": [
+          "raw:1-180",
+          "raw:181-360",
+          "raw:361-560"
+        ],
+        "coveredSourceLines": "1-541 through EOF",
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "pending-substrate-07-evidence-admission.json",
+        "readSelector": "raw:1-220",
+        "fullBodyAndEOF": true,
+        "includes": "Complete three canonical Evidence finding bodies and original E06-02..05 meanings."
+      },
+      {
+        "file": "pending-substrate-08-evidence-salvage-audit.json",
+        "readSelector": "raw:1-36",
+        "fullBodyAndEOF": true,
+        "includes": "Both full applicable findings and credited preservation meanings."
+      },
+      {
+        "file": "pending-substrate-09-native-salvage-audit.json",
+        "readSelector": "raw:32-40",
+        "includes": "Complete applicable stable-serialization finding body only; not whole historical audit."
+      },
+      {
+        "file": "pending-substrate-09-evidence-salvage-audit.json",
+        "readSelector": "raw:32-40",
+        "includes": "Complete applicable authoritative-phase finding body only; not whole historical audit."
+      },
+      {
+        "file": "pending-substrate-07-native-admission.json",
+        "readSelector": "raw:59-76",
+        "includes": "Complete applicable original snapshot-normalization and recursive-recorder-cause finding bodies only."
+      },
+      {
+        "file": "pending-substrate-10-native-completion-settlement.json",
+        "readSelectors": [
+          "raw:573-612",
+          "raw:634-643"
+        ],
+        "includes": "Complete applicable S10-C1,NF-A2,NF-A3,S10-C2 finding bodies only."
+      },
+      {
+        "file": "skill://ak-code-review",
+        "readSelector": "1-180",
+        "purpose": "Read-only evidence-backed review constraints."
+      }
+    ],
+    "inspectionToolsUsed": [
+      "read",
+      "grep",
+      "glob"
+    ],
+    "sourceOrReceiptWrites": 0,
+    "commandsChecksTestsBuildsBrowserActionsNestedAgents": 0
+  },
+  "deliveryAndScopePreservation": {
+    "missingNativeReceipt": "Genuine Native11 producer receipt remains absent and independently fatal to admission. This component cannot replace, reconstruct or create it.",
+    "evidenceReceipt": "Genuine Evidence11 delivery and the separately recorded 160-versus-150 ledger-line discrepancy remain authority facts. This component did not reread the complete genuine receipt or certify receipt completeness; that governing obligation belongs to the integration owner.",
+    "originalArtifacts": "Original incomplete Native report and provenance supplement remain immutable. This component changes coverage evidence only.",
+    "deferredCoverage": "All 18 independent rows across present/share/file remain 54 REQUIRED_UNEXECUTED cells. All false flags and zero admitted/executed cells remain unchanged. Full state AND native UI, pending work/Pass/Reset/Start brackets, Quiz Reset+5000 checkpoint/new-expiry, complete Relay peer/first-timeout/old-due invariance, Trivia expiry/nativeNext identities/history/scores/awards/deadlines/UI and full Start+4000 idle/running/expired witness requirements are retained without canary substitution.",
+    "laterGaps": "Gap4 remains unresolved; dependent gaps5-9 are unchanged. Original7 Hot Potato exact speed bonus, original8 Scatter NFC duplicate/unique controls and original9 full Trivia scoring matrix remain required other slices."
+  },
+  "limitations": [
+    "This is one non-overlapping primary coverage component, not a completed whole-audit verdict or complete 38-file audit manifest.",
+    "Cross-source overlap was used only to establish incoming/outgoing mechanisms and actual consuming bodies.",
+    "No patch-introduction claim is made without a permitted diff; the forwarded-occurrence finding is a current unmet governing obligation.",
+    "The observed Playwright transport owners were read through the subject's external node_modules link. They are not recursively frozen source, and their package version/content is an attributable read observation, not immutable dependency identity or runtime equivalence certification.",
+    "Canonical NC/RPC/original mappings, every unrelated original finding, the complete genuine Evidence11 receipt and remaining owners/callers require the integration owner's independently attributable full coverage; this component does not borrow those reads or invent closure.",
+    "No source, receipts or artifacts were changed; no runtime verification or acceptance execution occurred."
+  ]
+}

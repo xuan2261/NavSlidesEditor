@@ -1,0 +1,13 @@
+{
+  "kind": "ACTUAL_INSTALLED_BINARY_HELP_CAPTURE_NOT_ROUTE_EXECUTION_PROOF",
+  "command": ["C:/Users/Z10PAD8C_Xuan2261/.local/bin/jeikcode.exe", "--help"],
+  "exitCode": 0,
+  "stdoutArtifact": "jeikcode-help.stdout.txt",
+  "stderrArtifact": "jeikcode-help.stderr.txt",
+  "configChangedByAgent": false,
+  "chatSessionStartedByAgent": false,
+  "inferenceRequestedByAgent": false,
+  "candidateCreatedByAgent": false,
+  "DPathsOpenedByAgent": false,
+  "limit": "Help output proves supported root CLI syntax only; not effective provider/model binding, remote retry policy or startup byte-level side-effect audit."
+}

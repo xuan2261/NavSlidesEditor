@@ -1,0 +1,164 @@
+{
+  "reportKind": "PREPARATION_ONLY_SETTLEMENT_CONTINUITY_REVIEW",
+  "date": "2026-10-08",
+  "cwd": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001",
+  "status": "PREPARATION_ONLY_NO_NEW_SUBJECT_EVALUATION",
+  "modelMetadata": {
+    "model": "unknown",
+    "engine": "unknown",
+    "reason": "Engine không cung cấp explicit model information; không tự nhận model. Coordinator lưu engine actual riêng."
+  },
+  "authority": {
+    "operative": "USER 20261008 supersedes all historical model pins only FOR NEW WORK; selected session/subagent allowed.",
+    "historicalPins": "Giữ nguyên như provenance của công việc cũ, không áp lại thành ràng buộc model cho preparation mới.",
+    "scope": "Chỉ đọc C reports và CLAUDE.md; tạo đúng file note này nếu chưa tồn tại.",
+    "notGranted": "Không retry/resume, source implementation, candidate, test/build/import/install, D access, model probe, host/config hoặc Git writes; không đánh giá/audit nguồn mới."
+  },
+  "readEvidence": {
+    "pathBase": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001/",
+    "completeFiles": [
+      { "path": "CLAUDE.md", "fullLineRange": "1-181" },
+      {
+        "path": "plans/reports/education-partial11-settlement-20261007/combined-correction11-failure-settlement.json",
+        "fullLineRange": "1-2617",
+        "blocks": "1-100,101-200,201-300,301-400,401-550,551-700,701-850,851-1000,1001-1100,1101-1200,1201-1300,1301-1400,1401-1500,1501-1600,1601-1700,1701-1800,1801-1900,1901-2000,2001-2100,2101-2200,2201-2300,2301-2400,2401-2500,2501-2617"
+      },
+      {
+        "path": "plans/reports/education-partial11-settlement-20261007/combined-correction11-failure-settlement.md",
+        "fullLineRange": "1-49"
+      },
+      {
+        "path": "plans/reports/education-partial11-settlement-20261007/native11-complete-settlement-v2.json",
+        "fullLineRange": "1-287",
+        "blocks": "1-35,36-55,56-75,76-95,96-130,131-170,171-205,206-245,246-287"
+      },
+      {
+        "path": "plans/reports/education-partial11-settlement-20261007/evidence11-complete-settlement-report.json",
+        "fullLineRange": "1-191",
+        "blocks": "1-30,31-50,51-70,71-90,91-110,111-135,136-160,161-191"
+      },
+      {
+        "path": "plans/reports/education-partial11-settlement-20261007/report-validation.json",
+        "fullLineRange": "1-22"
+      },
+      {
+        "path": "plans/reports/education-c-only-correction-preparation-20261007/inherited-34-disposition-ledger.json",
+        "fullLineRange": "1-533",
+        "blocks": "1-100,101-160,161-220,221-280,281-340,341-390,391-440,441-490,491-533"
+      }
+    ],
+    "method": "Đọc đến EOF bằng blocks. Các initial larger reads bị tool condense đã được đọc lại bằng smaller blocks đầy đủ; không dùng condensed output thay full read.",
+    "attribution": "Đây là full report reads mới, không phải source/receipt/primary transcript reads mới; mọi source-coordinate và prior personal-read claim chỉ kế thừa đúng attribution trong reports."
+  },
+  "settlementContinuity": {
+    "combined": "FAILED_DELIVERY_NOT_ADMITTED_SOURCE_REPAIR_REQUIRED",
+    "boundedSettlementComplete": true,
+    "fullContractCoverageComplete": false,
+    "Native11": "Recorded exit1 stream_error sau807.3s; timeout không established; thiếu genuine Native producer receipt, độc lập source correctness.",
+    "Evidence11": "Recorded exit0 sau745.76s; genuine Evidence receipt có, chỉ chứng minh Evidence delivery, không combined completion/correctness.",
+    "references": "combined JSON:4-7,79-99,219-260,848-901; markdown:3-5,28-49; native v2:6-17,270-284; evidence:5-14,188-191",
+    "notReopened": "Không resume audit cũ, không thay receipt, không biến settlement COMPLETE thành GO hoặc source-clean."
+  },
+  "ledger34Distinctions": {
+    "reference": "prep inherited ledger:1-533; combined JSON:1029-1318,1933-2311",
+    "composition": "15 original07 (12 Native +3 Evidence),6 additional08,5 settled09,2 chronology,6 current11 =34 preserved records, không34 distinct defects/repair permissions.",
+    "identityRule": "N07/Native08/Evidence08/09-S là order/title crosswalk aliases, không fabricated canonical IDs; canonical bodies, historical locations và explicit authority IDs giữ nguyên.",
+    "localFrozen11Credits": [
+      "N07-01",
+      "N07-02",
+      "N07-03",
+      "N07-06",
+      "N07-09",
+      "N07-11",
+      "N07-12",
+      "E06-01-A",
+      "E06-01-C",
+      "Native08-1",
+      "Evidence08-1",
+      "09-S1",
+      "09-S4",
+      "NF-A2",
+      "NF-A3",
+      "N10B-02"
+    ],
+    "boundedFrozen11Credits": {
+      "N07-04,N07-05,Native08-2": "Lifecycle store/content only; projected gaps legitimate; không NF-A4 packet-integrity closure.",
+      "N07-08": "Actual cause retention local, không cross-evaluate identity; Evidence giữ falsy primitive limitation.",
+      "E06-01-B,Evidence08-2": "Node/shared-reference exposure và metadata only, không serialized browser occurrence proof.",
+      "Native08-3": "Common normalizer local credit; live collector chronology vẫn partial.",
+      "09-S2": "BOTH packet-storage và native-action diagnostic publication, không packet-store integrity.",
+      "09-S3": "Native literal no-match fallback corrected; Evidence broader obligation vẫn partial exact-match seam; giữ hai distinctions, không blanket closure.",
+      "09-S5": "Specified non-unknown phase conflict only; không thêm unknown-sentinel defect.",
+      "09-C2": "Mapped caller-ledger arrival order trước secondary-only; metadata prescan không ingestion; không sort independent numeric namespaces.",
+      "S10-C2": "Explicit phase authority cả errorLedger/secondaryFailures/allErrors, stable serialization và original objects."
+    },
+    "openFrozen11Obligations": ["N07-07", "N07-10", "Native08-4", "09-C1", "S10-C1", "N10B-01"],
+    "newSubject": "Cả34 vẫn NOT_EVALUATED_NEW_SOURCE_NOT_AUTHORED; credits/dispositions chỉ thuộc frozen11, không chứng minh current C/new subject corrected và không yêu cầu tái tạo old defects."
+  },
+  "sixInheritedMechanisms": [
+    {
+      "obligation": "S10-C1/09-C1",
+      "mechanism": "Forwarded browser envelope qua separate evaluate tạo Node references mới; invocation-local Set/WeakMap không dedupe durable same occurrence; obsOrder không retained như scoped identity.",
+      "reportLines": "combined:223-229; native v2:98; evidence:111"
+    },
+    {
+      "obligation": "S10-C1/09-C1",
+      "mechanism": "Fresh readiness Error dùng recorder.obsOrder+0.01/category rank không phải actual readiness observation-site witness; không so unrelated namespaces.",
+      "reportLines": "combined:230-235; native v2:99; evidence:110"
+    },
+    {
+      "obligation": "N07-07/Native08-4/09-C1",
+      "mechanism": "Exact matchedPacket chỉ normalize selected packet; relevant eligible siblings còn raw-only khi later outer/document/current-root rejection. Giữ literal no-match credit và exact acceptance; không widen acceptance.",
+      "reportLines": "combined:236-241; native v2:100; evidence:106"
+    },
+    {
+      "obligation": "N07-07/Native08-3",
+      "mechanism": "Live collector ghi later Node document exception trước browser state/UI failures đã observed; siblings retained nhưng primary/arrival sai. Inherited seam, không diff-proven11 regression; preexisting global primary khác.",
+      "reportLines": "combined:242-247; native v2:101; evidence:107"
+    },
+    {
+      "obligation": "N10B-01/N07-10",
+      "mechanism": "priorCondition bị invoke với synthetic target-only object thay real KeyboardEvent; vi phạm passive diagnosis, thiếu key/modifiers/có thể effects. Không callback probing/focus/overlay/pause/policy mutation.",
+      "reportLines": "combined:248-253; native v2:102; evidence:108"
+    },
+    {
+      "obligation": "N10B-01/N07-10",
+      "mechanism": "Private registered bindings consume arrows nhưng public Reveal không expose getBindings/reveal.keyboard.getBindings; optional null lookup có thể false no override. Không invent accessor hoặc runtime equivalence.",
+      "reportLines": "combined:254-260; native v2:103; evidence:109"
+    }
+  ],
+  "exclusionsAndDeferred": {
+    "references": "combined:721-810; native v2:129-142,251-277; evidence:112-114,137-186",
+    "NF_A4": "Excluded SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED: replaceable public packet array/forged element khác retained native-action binding; lifecycle health không authenticate extraction/witness baseline/lastSeq. Không repaired/disproved/waived, không seventh repair.",
+    "keypressPolicy": "Actual press tại navigation143 dù diagnostic false;137-139 chỉ stage. Reject/skip/reroute mọi ineligible key là scope-unresolved proposal, không tự cấp phép.",
+    "retractions": "Giữ retracted false missing Reveal.isPaused và clickTriviaNext.",
+    "acceptance": "18 rows x present/share/file =54 required/unexecuted,0 admitted,0 executed. All12 immutable callers; full state AND native UI, native pending bounds, witness/finalization và later scoring slices không được thay bằng representative/static credits.",
+    "identityLocks": "NC11/RPC17/original9 mappings MATCH_ATTRIBUTED không PASS; R16 Trivia expiry/Next, R17 splitting, R18 receipt/closure; original7 HP bonus,8 Scatter NFC,9 full Trivia matrix giữ nghĩa."
+  },
+  "provenanceAndReceiptLimits": {
+    "references": "combined:35-78,100-218,360-720,811-847; native v2:25-60,177-249; evidence:53-68,115-172; validation:1-22",
+    "retention": "Authentic C retained transcript outputs có row/timestamp/toolCall provenance; inventory/null/incorporation không read certificate. Prior26 helpers+12 callers và owner reads không relabel thành reads của note này.",
+    "DAndHash": "Historical Incorrect function là access/enumeration failure, không proof data loss; frozen hash recorded only, không remeasured/current-byte certification. Note này không truy cập D.",
+    "coverage": "Archived4068 gaps closed không retroactive initial audit completeness; latest11482 nulls không completion. Missing retained dependencies không proof physical implementation absence; Native exact-path aliases khác missing owner bodies. Dependency junction không recursively frozen; external excerpts không full bundle/deployed equivalence.",
+    "historicalProse": "Literal-truncated original explanation suffixes không restored/certified; operative counsel/full finding bodies không thay byte restoration. Không repeat-work permission từ suffix gap.",
+    "extentCorrection": "Jeopardy browser1-245 EOF,226-245 continuation gồm terminal newline; không244/255.",
+    "receipt": "RC11-01..07 là body fidelity/path provenance/current evidence/detail/deferred/excluded/preservation accuracy defects, không tự suy source defect. RC11-08 thiếu genuine Native delivery độc lập. Reviewer reports/transcripts/contributors/Evidence receipt không substitute hoặc reconstruct Native receipt.",
+    "validation": "Historical report structure/provenance/status validation only: raw1756, CRLF279, yields16 recorded matches; CRLF text representations không byte-identical frozen source. Không source/acceptance gate; không initial byte-hash snapshot; note không rerun validation/hash/Git."
+  },
+  "boundary": {
+    "preparationOnly": true,
+    "newSourceEvaluated": false,
+    "newSourceGate": false,
+    "GO": false,
+    "admission": false,
+    "certification": false,
+    "sourceReady": false,
+    "runtimeExecuted": false,
+    "producerRetried": false,
+    "sourceImplementationAuthorized": false,
+    "filesWritten": [
+      "plans/reports/education-c-only-new-subject-readiness-20261008/settlement-continuity-note.json"
+    ],
+    "verification": "Create target absence checked before write; saved-text readback only, không parser/test/build/import hoặc source audit."
+  }
+}

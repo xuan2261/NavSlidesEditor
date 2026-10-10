@@ -1,0 +1,89 @@
+{
+  "status": "FAILED_DELIVERY_NOT_ADMITTED_PENDING_FAILURE_SETTLEMENT",
+  "correction": 11,
+  "bothWritersTerminal": true,
+  "producer": "local8045/gemini-3.8-flash-high",
+  "native": {
+    "partition": "native",
+    "job": "bg_6",
+    "terminal": true,
+    "exitCode": 1,
+    "wallSeconds": 807.3,
+    "terminalArtifact": "artifact://726",
+    "terminalCopy": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-native-terminal.jsonl",
+    "terminalBytes": 4392453,
+    "terminalSha256": "3cd0d4bd0519d4903025c1442291243bdbe4c65b89d5321f6ea2c19442e0d5c2",
+    "session": {
+      "type": "session",
+      "version": 3,
+      "id": "01a10edd-c602-7000-a27f-52c332d86c13",
+      "timestamp": "2026-10-06T01:39:37.603Z",
+      "cwd": "D:\\NavSlidesQualification\\edu-resume-261004\\pending-substrate-correction-11"
+    },
+    "actualRoute": [
+      "local8045/gemini-3.8-flash-high"
+    ],
+    "stopReason": "error",
+    "errorMessage": "Stream interrupted before completion, please retry | fn=create_openai_sse_stream_with_anchor | at=src\\proxy\\mappers\\openai\\streaming.rs:334 | params={ model=gemini-3.8-flash-high session=5430eeed859cad61:sess-5de42b3d36ca2be1 messages=164 buffer_bytes=0 } | raw=error decoding response body: request or response body error: error reading a body from connection (stream_error)",
+    "genuineReceiptPresent": false
+  },
+  "evidence": {
+    "partition": "evidence",
+    "job": "bg_7",
+    "terminal": true,
+    "exitCode": 0,
+    "wallSeconds": 745.76,
+    "terminalArtifact": "artifact://727",
+    "terminalCopy": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-evidence-terminal.jsonl",
+    "terminalBytes": 3864950,
+    "terminalSha256": "8125ec0c68839683e929e13be704d84fbcca56284c79c36680462dc37692cfc2",
+    "session": {
+      "type": "session",
+      "version": 3,
+      "id": "01a10edd-c599-7000-a66d-f333c291f7e1",
+      "timestamp": "2026-10-06T01:39:37.497Z",
+      "cwd": "D:\\NavSlidesQualification\\edu-resume-261004\\pending-substrate-correction-11"
+    },
+    "actualRoute": [
+      "local8045/gemini-3.8-flash-high"
+    ],
+    "stopReason": "stop",
+    "errorMessage": null,
+    "genuineReceiptPresent": true,
+    "receipt": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/.tmp/acceptance-producer-pending-substrate-11-evidence.json",
+    "canonicalMappings": {
+      "NC": true,
+      "RPC": true,
+      "original": true,
+      "originalCurrentMappingSnapshot": true,
+      "originalPriorMappingSnapshot": true
+    },
+    "lineCountDiscrepancies": [
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+        "claimed": 160,
+        "measured": 150
+      }
+    ]
+  },
+  "retry": false,
+  "fallback": false,
+  "deadlineRearmed": false,
+  "newProducerDispatchedAfterTerminal": false,
+  "admission": false,
+  "sourceReady": false,
+  "qualification": false,
+  "passClaimed": false,
+  "runtimeExecuted": false,
+  "declaredCells": 54,
+  "staticallyAdmittedCells": 0,
+  "executedAcceptanceCells": 0,
+  "scopePreservation": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-scope-preservation.json",
+  "partialFreeze": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-partial-freeze.json",
+  "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+  "fullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+  "regularInputCount": 4328,
+  "sourceReviewStatus": "NOT_ESTABLISHED",
+  "nativeDeliveryCannotBeReconstructed": true,
+  "newSubstantiveCorrectionRequiresExplicitUserAuthorization": true
+}

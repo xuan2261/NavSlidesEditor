@@ -1,0 +1,23 @@
+      "Quiz Reset+5000 deadline and checkpoint assertion: resetGame returns { state, actionBracket, actionRecords }; callers in reset.js and isolation.js expect legacy { tBefore, tAfter } and compute arbitrary +800ms slack, which must be migrated to strict checkpoint proof.",
+      "Relay peer settlement and first-timeout proof: callers must consume settled peer state, first-timeout identity and team/lane invariance across Reset and old due.",
+      "Trivia question/round expiry: clickTriviaNext and multi-round identity assertions must forward evidence and assert exact awards, scores, roundDeadline and questionDeadline.",
+      "Sink and manifest registration in acceptance.spec: acceptance.spec.js must call evidence.setExpectedRoots(manifest) prior to visitSurface, and pass the active Page or context appropriately to visitSurface and runner.",
+      "Absence of legacy shims: helper functions must not re-introduce legacy optional-sink shims or return wrappers to tolerate old caller signatures."
+    ],
+    "unchangedFullContract": "All12 caller clean cutover only after separately applicable authority and helper proofs; NC01..11, RPC01..17, original1..9, current/prior mapping snapshots remain unchanged. Independently prove pending/hidden/returned/reset/terminal/peer state AND native UI; reset/pass/start brackets, root/document/lifecycle uncertainty and deadline bounds; first-expiry/witness idle/running/expired crossover; after-old/before-new Quiz Reset+5000 without800ms slack; Relay peer/first-timeout/old-due invariance; full Trivia expiry/nativeNext question/round/history/awards/deadline/UI. All18 rows on present/share/file,54 cells, no representative substitute. Original7 Hot Potato bonus, original8 Scatter NFC uniqueness and original9 full Trivia scoring remain later slices; gaps5..9 unchanged."
+  },
+  "limitations": [
+    "[INFERENCE] Findings are source deductions, not exercised failures. No imports, tests, browser, build, lint or runtime checks ran.",
+    "Mapped code coverage is complete across three independent slices, not one reviewer re-reading the whole partition. Per-slice authority read limitations are retained in the original reports; prior full Evidence salvage supplies governing receipt/scope cross-checks.",
+    "Capture slice reports one wc -l command despite the no-shell contract. This was a read-only line-count deviation, not execution proof; no source writes reported.",
+    "Reveal keyboard owner is linked outside the recursive freeze; source read does not certify dependency immutability.",
+    "Review reports and settlement metadata only were written by Main; no helper/caller/production edits or producer dispatch."
+  ],
+  "admission": false,
+  "sourceReady": false,
+  "qualification": false,
+  "passClaimed": false,
+  "runtimeExecuted": false,
+  "staticallyAdmittedCells": 0,
+  "executedAcceptanceCells": 0
+}

@@ -1,0 +1,112 @@
+{
+  "component": "Native11 coverage continuation — Evidence ledger and collection",
+  "auditIdentity": "Component of the existing authorized Native11 static salvage audit; not another independent opinion, substantive attempt, correction or admission gate.",
+  "exactSubject": {
+    "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+    "recordedFullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+    "identityBasis": "Existing preservation authority, without remeasurement.",
+    "sourcePrefix": "tests/e2e/education/"
+  },
+  "primaryScope": [
+    "pending-round-lifecycle-ui-evidence.js",
+    "pending-round-lifecycle-error-ledger.js",
+    "pending-round-lifecycle-error-exposure.js",
+    "pending-round-lifecycle-live-evidence.js",
+    "pending-round-lifecycle-live-root-observation.js",
+    "pending-round-lifecycle-evidence.js"
+  ],
+  "wholeAuditVerdictProvided": false,
+  "flags": {
+    "admission": false,
+    "sourceReady": false,
+    "qualification": false,
+    "passClaimed": false,
+    "runtimeExecuted": false,
+    "declaredCells": 54,
+    "staticallyAdmittedCells": 0,
+    "executedAcceptanceCells": 0
+  },
+  "componentObservations": [
+    {
+      "obligation": "S10-C2 — all three exposure reconciliation paths",
+      "disposition": "Specified phase-less-wrapper downgrade mechanism is source-corrected in all three paths.",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:7-21 separates explicitPhase from resolved intrinsic/fallback phase.",
+        "pending-round-lifecycle-error-exposure.js:34-53 changes existing.phase only for a nonempty explicitPhase; metadata reconciliation does not confer phase authority.",
+        "pending-round-lifecycle-error-exposure.js:69-82 errorLedger path passes explicitPhase, not its resolved fallback, to reconcileEntry.",
+        "pending-round-lifecycle-error-exposure.js:84-103 secondaryFailures path separates wrapper/secondary explicit phase from intrinsic/fallback p and passes only explicitPhase to reconciliation.",
+        "pending-round-lifecycle-error-exposure.js:105-122 allErrors path passes explicitP rather than resolved p to reconciliation."
+      ],
+      "mechanism": "For a previously recorded Error with authoritative phase portable:close, a phase-less caller wrapper carrying either a conflicting intrinsic Error.phase or metadata alone does not replace that entry phase. An explicit nonempty authoritative wrapper phase still reconciles. Actual Error.phase and original caller wrapper fields are not assigned by these reconciliation branches. Metadata is merged into the entry sidecar; serialization is refreshed in place.",
+      "boundary": "This credits the specified downgrade repair, not every conceivable phase-precedence policy. serializeError explicitly treats the string unknown as its fallback sentinel at error-ledger.js:13."
+    },
+    {
+      "obligation": "Original E06-01-A — Leave sole Errors with empty caller arrays unchanged",
+      "disposition": "Specified original case source-preserved.",
+      "originalBodyRead": "pending-substrate-07-evidence-admission.json:1-48, including the complete first finding body and explanation.",
+      "evidence": [
+        "pending-round-lifecycle-error-ledger.js:82-103 preserves an actual Error as both actualRef and normalized.",
+        "pending-round-lifecycle-error-ledger.js:114-116 refreshes exposure only when entries.length > 1.",
+        "pending-round-lifecycle-error-ledger.js:140-148 returns a sole primary unconditionally.",
+        "pending-round-lifecycle-error-exposure.js:84-103 records no occurrence from an empty secondaryFailures array."
+      ],
+      "mechanism": "Recording one actual Error with secondaryFailures=[] and calling produceThrow returns that same Error and does not create allErrors/errorLedger or append to its empty array. An existing empty caller array is not interpreted as evidence of a second failure."
+    },
+    {
+      "obligation": "Original E06-01-B; settled09-S4 — identity deduplication and stable exposed serialization",
+      "disposition": "Node-reference and stable-serialization mechanisms source-preserved; browser-forwarding identity is separately incomplete.",
+      "originalBodiesRead": [
+        "pending-substrate-07-evidence-admission.json:1-48, complete second finding body.",
+        "pending-substrate-09-native-salvage-audit.json:32-40, complete stable-serialization finding."
+      ],
+      "evidence": [
+        "pending-round-lifecycle-error-ledger.js:84-92 deduplicates original/normalized references and same-object envelopes.",
+        "pending-round-lifecycle-error-exposure.js:44-47 uses Object.assign(existing.serialized, fresh), not serialized-object replacement.",
+        "pending-round-lifecycle-error-exposure.js:125-171 retains caller-owned arrays and appends serializations only when their object identity is absent.",
+        "pending-round-lifecycle-error-exposure.js:163-169 does not compare caller numeric order to ledger numeric order."
+      ],
+      "mechanism": "An unrelated caller diagnostic at order 2 does not suppress this ledger's independently owned order-2 serialization. Recursive ingestion may expose a serialization before later wrapper reconciliation; reconciliation keeps that same outer serialization identity, preventing the two-owned-records regression. Caller array objects and caller records are retained rather than replaced or truncated. Ledger-owned arrays can be rebuilt and are excluded from occurrence ingestion.",
+      "boundary": "These are reference-based guarantees inside Node. They do not establish deduplication of a browser occurrence after separate Playwright evaluations; see the remaining mechanism below."
+    },
+    {
+      "obligation": "Original E06-01-C; Evidence08-1/2; 09-C2 — genuine caller-ledger chronology and wrapper provenance",
+      "disposition": "Specified genuine-reference caller-ledger mechanisms source-preserved.",
+      "originalBodiesRead": [
+        "pending-substrate-07-evidence-admission.json:1-48, complete third finding body.",
+        "pending-substrate-08-evidence-salvage-audit.json:1-32, both complete findings and preservation meanings.",
+        "pending-substrate-11-dispatch-authority.json:111-148, settled09 source defects and complete chronology obligations."
+      ],
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:65-67 pre-scans wrappers for phase/metadata without treating that scan as occurrence ingestion.",
+        "pending-round-lifecycle-error-exposure.js:69-82 actually traverses genuine errorLedger references before secondaryFailures at :84-103 and allErrors at :105-122.",
+        "pending-round-lifecycle-error-exposure.js:27,72,88,108 restricts caller-array ingestion to actual Errors or wrappers whose error is an actual Error.",
+        "pending-round-lifecycle-error-ledger.js:100-103 assigns occurrence order upon ingestion; there is no numeric-namespace sort."
+      ],
+      "mechanism": "For primary.errorLedger=[{error:a,phase:'a'},{error:b,phase:'b'}] and secondaryFailures=[b], recording primary yields primary,a,b; the secondary traversal finds b already present instead of moving it ahead of a. Later frame/source/attachment recording follows that established ingestion. Purely serialized caller records, including nested error:{name,message} diagnostics, remain array data and do not become fabricated Errors. Shared genuine references receive wrapper phase/frameUrl metadata without mutating the supplied Error or wrapper."
+    },
+    {
+      "obligation": "Settled09-S5 — authoritative phase survives serialization",
+      "disposition": "Specified close-versus-intrinsic-phase case source-preserved.",
+      "originalBodiesRead": [
+        "pending-substrate-09-evidence-salvage-audit.json:32-40, complete phase finding.",
+        "pending-substrate-10-native-completion-settlement.json:634-643, complete subsequent S10-C2 finding."
+      ],
+      "evidence": [
+        "pending-round-lifecycle-error-ledger.js:11-21 uses the passed non-unknown occurrence phase ahead of intrinsic err.phase and namespaces cause serialization beneath that phase.",
+        "pending-round-lifecycle-error-exposure.js:34-53 passes existing.phase and existing.metadata to serialization and updates the owned serialization in place."
+      ],
+      "mechanism": "A genuine Error intrinsically marked state, exposed by a wrapper explicitly marked close, retains its actual Error reference and intrinsic property while entry/serialized occurrence phase becomes close. frameUrl stays sidecar data."
+    },
+    {
+      "obligation": "Original E06-02 — chronological frame-error arrival dispatch",
+      "disposition": "Original meaning source-preserved in the inspected frame path.",
+      "evidence": [
+        "release-portable-inspection.js:20-33 awaits each frame and records its failure inside that iteration's catch before advancing to the next frame.",
+        "release-surfaces.js:29-34 forwards recordArrival immediately to evidence.recordError.",
+        "release-surfaces.js:78-82 records pageerror on arrival.",
+        "pending-round-lifecycle-evidence.js:60-61 also forwards active Page pageerror synchronously."
+      ],
+      "mechanism": "Frame rejections are not first accumulated and then replayed in a later category-based pass. executePortableNetworkInspection retains the actual Node Error and passes frameUrl separately. The strict success object remains exactly protocol,httpAttempts,socketAttempts,errors at release-portable-inspection.js:49-54.",
+      "boundary": "This is static dispatch evidence, not exercised frame timing or runtime qualification."
+
+[Showing lines 1-110 of 549. Use :111 to continue]

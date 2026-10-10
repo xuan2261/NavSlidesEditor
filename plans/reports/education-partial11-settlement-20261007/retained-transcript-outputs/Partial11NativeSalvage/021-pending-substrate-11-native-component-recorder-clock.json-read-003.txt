@@ -1,0 +1,219 @@
+        "terminalContentLine": 90,
+        "EOFReached": true
+      },
+      {
+        "file": "shared/src/education/browser/countdown-presenter.js",
+        "requestedReadRanges": [
+          "1-220"
+        ],
+        "coveredBodyRange": "1-114",
+        "terminalContentLine": 114,
+        "EOFReached": true
+      }
+    ],
+    "integrationSourceReads": [
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation.js",
+        "requestedReadRanges": [
+          "1-220"
+        ],
+        "coveredBodyRange": "1-152",
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+        "requestedReadRanges": [
+          "1-220"
+        ],
+        "coveredBodyRange": "1-175",
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+        "requestedReadRanges": [
+          "1-220"
+        ],
+        "coveredBodyRange": "1-187",
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+        "requestedReadRanges": [
+          "1-220"
+        ],
+        "coveredBodyRange": "1-93",
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-native-action.js",
+        "requestedReadRanges": [
+          "1-220"
+        ],
+        "coveredBodyRange": "1-84",
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+        "requestedReadRanges": [
+          "1-210"
+        ],
+        "coveredBodyRange": "1-150",
+        "EOFReached": true
+      },
+      {
+        "file": "shared/src/education/browser/mount.js",
+        "requestedReadRanges": [
+          "1-230"
+        ],
+        "coveredBodyRange": "1-138",
+        "EOFReached": true
+      },
+      {
+        "file": "shared/src/education/utility-config.js",
+        "requestedReadRanges": [
+          "1-200"
+        ],
+        "coveredBodyRange": "1-21",
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-evidence.js",
+        "requestedReadRanges": [
+          "1-120",
+          "109-198:raw",
+          "198-210:raw"
+        ],
+        "coveredBodyRange": "1-198",
+        "EOFReached": true,
+        "omissionsExpanded": "The initial structured read elided later accumulator method bodies;109-198:raw explicitly expanded complete collectLive/finalize bodies and198-210:raw covered terminal content/EOF."
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+        "requestedReadRanges": [
+          "1-150:raw"
+        ],
+        "coveredBodyRange": "1-120",
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+        "requestedReadRanges": [
+          "39-122:raw",
+          "123-194:raw"
+        ],
+        "coveredBodyRange": "39-194",
+        "EOFReached": true,
+        "fullFileRead": false,
+        "purpose": "Complete visitSurface dispatch branches and failure/finally bodies; pre-function helpers/imports were not claimed as full coverage."
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-leave-return.js",
+        "requestedReadRanges": [
+          "1-115:raw",
+          "116-160:raw"
+        ],
+        "coveredBodyRange": "1-144",
+        "EOFReached": true
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js",
+        "requestedReadRanges": [
+          "1-120:raw"
+        ],
+        "coveredBodyRange": "1-95",
+        "EOFReached": true
+      }
+    ],
+    "governingReads": [
+      {
+        "file": "pending-substrate-11-native-coverage-continuation-counsel.json",
+        "ranges": [
+          "1-240",
+          "175-210:raw"
+        ],
+        "coverage": "Full235-line document through EOF; truncated deferred-scope line expanded."
+      },
+      {
+        "file": "pending-substrate-11-native-salvage-prompt.md",
+        "ranges": [
+          "1-220",
+          "1-110:raw"
+        ],
+        "coverage": "Complete prompt through EOF, including all long authority/deferred/retained-obligation lines."
+      },
+      {
+        "file": "pending-substrate-11-dispatch-authority.json",
+        "ranges": [
+          "1-220:raw",
+          "221-300:raw"
+        ],
+        "coverage": "Complete257-line document through EOF, including full current six, chronology contract and excluded NF-A4 body."
+      },
+      {
+        "file": "pending-substrate-11-terminal-failure-counsel.json",
+        "ranges": [
+          "1-190:raw",
+          "191-370:raw",
+          "371-550:raw"
+        ],
+        "coverage": "Complete541-line document through EOF."
+      },
+      {
+        "file": "pending-substrate-07-native-admission.json",
+        "ranges": [
+          "1-120:raw"
+        ],
+        "coverage": "Complete original report and all12 full governing Native finding bodies."
+      },
+      {
+        "file": "pending-substrate-08-native-salvage-audit.json",
+        "ranges": [
+          "1-60:raw"
+        ],
+        "coverage": "Complete report and all4 full governing Native08 finding bodies."
+      },
+      {
+        "file": "pending-substrate-09-native-salvage-audit.json",
+        "ranges": [
+          "1-32:raw"
+        ],
+        "coverage": "Complete applicable Native09 finding bodies09-S1/09-S2/09-S3 and the report's disposition context; unrelated Evidence09 bodies were not claimed as read."
+      },
+      {
+        "file": "pending-substrate-11-native-prompt.md",
+        "ranges": [
+          "1-80:raw"
+        ],
+        "coverage": "Complete prompt including explicit forwarded-occurrence identity/deduplication and retained witness obligations."
+      },
+      {
+        "file": "pending-substrate-10-native-completion-settlement.json",
+        "ranges": [
+          "258-315:raw"
+        ],
+        "coverage": "Applicable full N07-01..N07-08 identity/mechanism mapping context; canonical remaining Native IDs were additionally located by grep. Historical closure labels were not used as current certification."
+      }
+    ],
+    "skillRead": "skill://ak-code-review:1-220"
+  },
+  "deliveryAndScopeLimits": {
+    "missingNativeReceipt": "Genuine Native11 producer receipt remains absent and independently fatal to admission. This component is not a reconstructed/replacement receipt.",
+    "originalArtifacts": "Original Native11 incomplete audit and provenance supplement remain immutable; no retrospective attribution or completeness claim is made.",
+    "independence": "No Evidence11 independent audit output was borrowed for source dispositions or read coverage.",
+    "externalDependency": "The linked node_modules owner is outside the recursive freeze. This component did not read that external owner and makes no immutable-content or dispatcher-equivalence claim.",
+    "historicalEvidence": "Historical reports supply complete obligations and IDs, not current PASS or runtime evidence.",
+    "integrationOwnership": "This component certifies only its attributable primary/owner reads and listed seam reads. The integration owner still must inspect complete full-source evidence, finish all other component coverage and personally integrate crossing conclusions; this is not a full38 audit verdict."
+  },
+  "deferredScopeRetained": {
+    "status": "REQUIRED_UNEXECUTED",
+    "cells": "All18 independent rows on present/share/file remain54 declared, zero admitted/executed cells. No representative canary substitute.",
+    "callerCutover": "All12 immutable callers require later separately authorized clean cutover with mandatory sink/root-manifest/document binding, real Page context, actual action/activity results and consumed startRecord/measured expiry. Existing old call signatures are not relabeled as new helper regressions.",
+    "witness": "Every cell retains complete idle/running/expired state AND native UI, actual native Start+4000 bounds, original last-running/first-expired crossover, same-root/document lifecycle continuity and exact raw failure staging before assertions.",
+    "pendingAndReset": "Complete independent initial/pending/hidden/returned/reset/terminal/peer state AND native UI; actual native Pass/Reset/Start brackets; root/document/lifecycle uncertainty; original consumed return/expiry; positive exact originally pending work at Reset and crossing the original due.",
+    "Quiz": "Native Reset+5000, after-old/before-new checkpoint and bounded new expiry, complete terminal/controls/UI without800ms slack.",
+    "Relay": "Exact original pending due, genuine settled peer, complete first-timeout/team/lane/question/identity/UI and peer invariance, without extra Pass, fixed sleep, retry or winner fallback.",
+    "Trivia": "Complete question/round expiry and native Next identity/history/scores/awards/deadline/UI, including independent next-question policy bounds.",
+    "surfacesAndFinalization": "Earliest lifecycle setup, exact tuple/document/root cardinality, native focus/geometry/controls, complete live PNG/diagnostics, portable before/after network enforcement, source GET/config equality and failure-safe setup/close/attachments remain required.",
+    "canonicalAndLaterScope": "NC01-NC11,RPC-01-RPC-17,original-1-original-9,both historical mappings and all state/evidence SE meanings remain unchanged. Original7 Hot Potato exact speed bonus,original8 Scatter NFC duplicate/unique controls andoriginal9 full Trivia scoring remain required other slices. Gap4 unresolved; dependent gaps5-9 unchanged."
+  }
+}

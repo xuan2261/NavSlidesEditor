@@ -1,0 +1,27 @@
+export async function visitSurface(options, visit) {
+…
+  if (surface === 'file') {
+…
+    try {
+…
+    } finally {
+      if (stashedHandle) {
+        try {
+…
+        } catch (netAfterErr) {
+…
+        } finally {
+          evidence.stage('portableDiagnosticsAfterSettled', stashedHandle.diagnostics)
+        }
+        try {
+          await evidence.collectLive(stashedHandle.page)
+        } catch (liveErr) {
+          evidence.recordError('surface:file:collectLive', liveErr)
+        }
+        await safeClose(stashedHandle.context, evidence, 'surface:file:close')
+      }
+    }
+  }
+
+  throw new Error(`Unsupported surface: ${surface}`)
+}

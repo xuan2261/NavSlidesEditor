@@ -1,0 +1,19 @@
+        ? winner
+          ? `${winner.name} wins!`
+          : 'Game complete.'
+        : !state.activeTeamId
+          ? 'Add an authored team to play.'
+          : state.phase === 'wager'
+            ? 'Choose a Daily Double wager.'
+            : state.revealed
+              ? 'Answer revealed. The host records Correct or Incorrect.'
+              : state.expired
+                ? 'Time expired. Show the answer, then record the result or complete without points.'
+                : state.phase === 'question'
+                  ? 'Question in progress.'
+                  : 'Select a team and an available cell.'
+    )
+  }
+  return { render, pause: () => answers?.cancel?.() }
+}
+module.exports = { presentJeopardy }

@@ -1,0 +1,102 @@
+import { apiCreateShareLink } from '../fixtures/test-fixtures.js'
+import { launchPresentPopup } from './present-offline-helpers.js'
+import { downloadArtifact, freshPortable } from './release-surfaces.js'
+import { PASSIVE_OBSERVATION_INIT_SCRIPT } from './pending-round-lifecycle-observation.js'
+import { computePlannedUrl, validateManifest } from './pending-round-lifecycle-evidence-domain.js'
+
+function validateSurfaceSink(evidence) {
+  if (
+    !evidence ||
+    typeof evidence.stage !== 'function' ||
+    typeof evidence.recordError !== 'function' ||
+    typeof evidence.setActivePage !== 'function' ||
+    typeof evidence.collectLive !== 'function' ||
+    typeof evidence.bindDocumentIdentity !== 'function' ||
+    typeof evidence.assertDocumentIdentity !== 'function' ||
+    typeof evidence.getExpectedRoots !== 'function' ||
+    typeof evidence.getPrimaryError !== 'function' ||
+    typeof evidence.produceThrow !== 'function'
+  ) {
+    throw new Error('Mandatory evidence sink validation failed: missing required callable lifecycle methods')
+  }
+  const manifest = evidence.getExpectedRoots()
+  validateManifest(manifest)
+}
+
+async function safeClose(closeTarget, evidence, phase) {
+  try {
+    if (closeTarget) {
+      await closeTarget.close()
+    }
+  } catch (closeErr) {
+    if (evidence?.recordError) {
+      evidence.recordError(phase, closeErr)
+    } else {
+      throw closeErr
+    }
+  }
+}
+
+export async function visitSurface(options, visit) {
+  const { page, request, browser, id, testInfo, surface, evidence } = options
+  validateSurfaceSink(evidence)
+
+  if (surface === 'present') {
+    const plannedUrl = computePlannedUrl('present', { parentUrl: page.url(), id })
+    await page.context().addInitScript(PASSIVE_OBSERVATION_INIT_SCRIPT)
+    let popupPage = null
+    page.once('popup', (popup) => {
+      popupPage = popup
+      evidence.setActivePage(popup, { surface: 'present', plannedUrl })
+      evidence.stage('presentPopupCreated', { url: popup.url(), plannedUrl })
+    })
+    try {
+      const { popup } = await launchPresentPopup(page)
+      popupPage = popup
+      await popup.waitForFunction(() => window.Reveal?.isReady())
+      const docIdentity = await popup.evaluate(() => ({
+        url: window.location.href,
+        documentId: window.__nsDocumentId || null,
+        timeOrigin: window.performance?.timeOrigin || null,
+      }))
+      evidence.stage('presentDocumentIdentityObserved', docIdentity)
+      evidence.bindDocumentIdentity(docIdentity)
+      return await visit({
+        page: popup,
+        surface: 'present',
+        file: null,
+        inspectNetwork: null,
+        diagnostics: null,
+        error: null,
+      })
+    } catch (err) {
+      evidence.recordError('surface:present', err)
+      throw err
+    } finally {
+      if (popupPage) {
+        try {
+          await evidence.collectLive(popupPage)
+        } catch (liveErr) {
+          evidence.recordError('surface:present:collectLive', liveErr)
+        }
+        await safeClose(popupPage, evidence, 'surface:present:close')
+      }
+    }
+  }
+
+  if (surface === 'share') {
+    await page.context().addInitScript(PASSIVE_OBSERVATION_INIT_SCRIPT)
+    const share = await apiCreateShareLink(request, id)
+    const plannedUrl = computePlannedUrl('share', { parentUrl: page.url(), token: share.token })
+    const sharePage = await page.context().newPage()
+    evidence.setActivePage(sharePage, { surface: 'share', token: share.token, plannedUrl })
+    evidence.stage('sharePageCreated', { token: share.token, plannedUrl })
+    try {
+      await sharePage.goto(`/share/${share.token}`)
+      await sharePage.waitForFunction(() => window.Reveal?.isReady())
+      const docIdentity = await sharePage.evaluate(() => ({
+        url: window.location.href,
+        documentId: window.__nsDocumentId || null,
+        timeOrigin: window.performance?.timeOrigin || null,
+
+[Showing lines 1-100 of 194. Use :101 to continue]

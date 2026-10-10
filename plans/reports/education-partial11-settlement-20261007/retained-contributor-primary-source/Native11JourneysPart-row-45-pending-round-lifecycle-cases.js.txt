@@ -1,0 +1,199 @@
+import { makeQuizFixture, makeHotPotatoFixture, makeJeopardyFixture, makeRelayFixture, makeTriviaFixture } from './pending-round-lifecycle-fixtures.js'
+import {
+  observeQuizActive, startHotPotatoRound, selectJeopardyCell,
+  startRelayRound, passRelayBaton, startTriviaRound, buzzTriviaTeam,
+  answerQuizQuestion, answerHotPotatoQuestion, revealHotPotatoAnswers,
+  adjudicateJeopardy, answerTriviaOption,
+} from './pending-round-lifecycle-controls.js'
+
+export const LEAVE_RETURN_CASES = [
+  {
+    name: 'quiz',
+    gameType: 'quiz',
+    makeFixture: (id) => makeQuizFixture(5, id),
+    config: makeQuizFixture(5).quiz,
+    startFn: (r) => observeQuizActive(r, { timed: true }),
+  },
+  {
+    name: 'hot-potato',
+    gameType: 'hot-potato',
+    makeFixture: (id) => makeHotPotatoFixture(5, id),
+    config: makeHotPotatoFixture(5)['hot-potato'],
+    startFn: (r) => startHotPotatoRound(r, 'p1', 'Player 1', { timed: true }),
+  },
+  {
+    name: 'jeopardy',
+    gameType: 'jeopardy',
+    makeFixture: (id) => makeJeopardyFixture(5, true, id),
+    config: makeJeopardyFixture(5, true).jeopardy,
+    startFn: (r) => selectJeopardyCell(r, 'team-1', 'cell-100', { timed: true }),
+  },
+  {
+    name: 'relay-race',
+    gameType: 'relay-race',
+    isRelay: true,
+    makeFixture: (id) => makeRelayFixture(5, true, 2, id),
+    config: makeRelayFixture(5, true, 2)['relay-race'],
+    startFn: startRelayRound,
+  },
+  {
+    name: 'trivia-champ-q',
+    gameType: 'trivia-champ',
+    isTriviaQuestion: true,
+    makeFixture: (id) => makeTriviaFixture(30, 5, 5, id),
+    config: makeTriviaFixture(30, 5, 5)['trivia-champ'],
+    startFn: startTriviaRound,
+  },
+  {
+    name: 'trivia-champ-r',
+    gameType: 'trivia-champ',
+    isTriviaRound: true,
+    makeFixture: (id) => makeTriviaFixture(5, null, null, id),
+    config: makeTriviaFixture(5, null)['trivia-champ'],
+    startFn: startTriviaRound,
+  }]
+
+export const RESET_CASES = [
+  {
+    name: 'quiz',
+    gameType: 'quiz',
+    isQuiz: true,
+    makeFixture: (id) => makeQuizFixture(5, id),
+    config: makeQuizFixture(5).quiz,
+    preparePending: async (r) => {
+      const s = await observeQuizActive(r, { timed: true })
+      return { state: s }
+    },
+  },
+  {
+    name: 'hot-potato',
+    gameType: 'hot-potato',
+    makeFixture: (id) => makeHotPotatoFixture(5, id),
+    config: makeHotPotatoFixture(5)['hot-potato'],
+    preparePending: async (r) => {
+      const res = await startHotPotatoRound(r, 'p1', 'Player 1', { timed: true })
+      return { state: res.state, startBracket: res.startBracket }
+    },
+  },
+  {
+    name: 'jeopardy',
+    gameType: 'jeopardy',
+    makeFixture: (id) => makeJeopardyFixture(5, true, id),
+    config: makeJeopardyFixture(5, true).jeopardy,
+    preparePending: async (r) => {
+      const res = await selectJeopardyCell(r, 'team-1', 'cell-100', { timed: true })
+      return { state: res.state, selectBracket: res.selectBracket }
+    },
+  },
+  {
+    name: 'relay-race-deadline',
+    gameType: 'relay-race',
+    makeFixture: (id) => makeRelayFixture(5, true, 2, id),
+    config: makeRelayFixture(5, true, 2)['relay-race'],
+    preparePending: async (r) => {
+      const res = await startRelayRound(r)
+      return { state: res.state, startBracket: res.startBracket }
+    },
+  },
+  {
+    name: 'relay-race-baton',
+    gameType: 'relay-race',
+    isBaton: true,
+    makeFixture: (id) => makeRelayFixture(5, true, 2, id),
+    config: makeRelayFixture(5, true, 2)['relay-race'],
+    preparePending: async (r) => {
+      await startRelayRound(r)
+      const passRes = await passRelayBaton(r)
+      return { passBracket: passRes.passBracket }
+    },
+  },
+  {
+    name: 'trivia-champ-q',
+    gameType: 'trivia-champ',
+    makeFixture: (id) => makeTriviaFixture(30, 5, 5, id),
+    config: makeTriviaFixture(30, 5, 5)['trivia-champ'],
+    preparePending: async (r) => {
+      const res = await startTriviaRound(r)
+      return { state: res.state, startBracket: res.startBracket }
+    },
+  },
+  {
+    name: 'trivia-champ-r',
+    gameType: 'trivia-champ',
+    makeFixture: (id) => makeTriviaFixture(5, null, null, id),
+    config: makeTriviaFixture(5, null)['trivia-champ'],
+    preparePending: async (r) => {
+      const res = await startTriviaRound(r)
+      return { state: res.state, startBracket: res.startBracket }
+    },
+  }]
+
+export const ISOLATION_CASES = [
+  {
+    name: 'quiz',
+    gameType: 'quiz',
+    f1: (id) => makeQuizFixture(5, id),
+    f2: (id) => makeQuizFixture(null, id),
+    primaryConfig: makeQuizFixture(5).quiz,
+    peerConfig: makeQuizFixture(null).quiz,
+    actPeer: async (r) => {
+      await observeQuizActive(r)
+      await answerQuizQuestion(r, 'release-single-choice/option-1')
+    },
+    actPrimary: (r) => observeQuizActive(r, { timed: true }),
+  },
+  {
+    name: 'hot-potato',
+    gameType: 'hot-potato',
+    f1: (id) => makeHotPotatoFixture(5, id),
+    f2: (id) => makeHotPotatoFixture(null, id),
+    primaryConfig: makeHotPotatoFixture(5)['hot-potato'],
+    peerConfig: makeHotPotatoFixture(null)['hot-potato'],
+    actPeer: async (r) => {
+      await startHotPotatoRound(r, 'peer', 'Peer', { timed: false })
+      await answerHotPotatoQuestion(r, 'question-1-option-1')
+      await revealHotPotatoAnswers(r)
+    },
+    actPrimary: (r) => startHotPotatoRound(r, 'prim', 'Primary', { timed: true }),
+  },
+  {
+    name: 'jeopardy',
+    gameType: 'jeopardy',
+    f1: (id) => makeJeopardyFixture(5, true, id),
+    f2: (id) => makeJeopardyFixture(30, false, id),
+    primaryConfig: makeJeopardyFixture(5, true).jeopardy,
+    peerConfig: makeJeopardyFixture(30, false).jeopardy,
+    actPeer: async (r) => {
+      await selectJeopardyCell(r, 'team-2', 'cell-200', { timed: false })
+      await adjudicateJeopardy(r, true)
+    },
+    actPrimary: (r) => selectJeopardyCell(r, 'team-1', 'cell-100', { timed: true }),
+  },
+  {
+    name: 'relay-race',
+    gameType: 'relay-race',
+    f1: (id) => makeRelayFixture(5, true, 2, id),
+    f2: (id) => makeRelayFixture(10, true, 1, id),
+    primaryConfig: makeRelayFixture(5, true, 2)['relay-race'],
+    peerConfig: makeRelayFixture(10, true, 1)['relay-race'],
+    actPeer: async (r) => {
+      await startRelayRound(r)
+      await passRelayBaton(r)
+    },
+    actPrimary: (r) => startRelayRound(r),
+  },
+  {
+    name: 'trivia-champ',
+    gameType: 'trivia-champ',
+    f1: (id) => makeTriviaFixture(30, 5, 5, id),
+    f2: (id) => makeTriviaFixture(60, 30, null, id),
+    primaryConfig: makeTriviaFixture(30, 5, 5)['trivia-champ'],
+    peerConfig: makeTriviaFixture(60, 30, null)['trivia-champ'],
+    actPeer: async (r) => {
+      await startTriviaRound(r)
+      await buzzTriviaTeam(r, 'team-2')
+      await answerTriviaOption(r, 'question-1-option-1')
+    },
+    actPrimary: (r) => startTriviaRound(r),
+  },
+]

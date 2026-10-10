@@ -1,0 +1,8 @@
+        }
+      : { ...state, error: 'Time expired. Pass the baton to continue.' }
+  const question = config.questions.find((candidate) => candidate.id === state.questionId)
+  const result = evaluateAnswer(question, command.answer)
+  if (!result.valid) return { ...state, error: result.error }
+  return { ...state, phase: 'waiting', correct: result.correct, batonDue: time + 1200, error: null }
+}
+module.exports = { createRelayRaceState, reduceRelayRace }

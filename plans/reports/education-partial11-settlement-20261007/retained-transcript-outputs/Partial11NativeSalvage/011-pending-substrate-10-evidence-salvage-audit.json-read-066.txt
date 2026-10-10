@@ -1,0 +1,222 @@
+        "recordedPhysicalLines": 144
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-leave-return.js",
+        "ranges": [
+          "1-145"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 144
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-reset.js",
+        "ranges": [
+          "1-111"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 110
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-isolation.js",
+        "ranges": [
+          "1-121"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 120
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-state.js",
+        "ranges": [
+          "1-121"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 120
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-quiz-state.js",
+        "ranges": [
+          "1-107"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 106
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-hot-potato-state.js",
+        "ranges": [
+          "1-113"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 112
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-jeopardy-state.js",
+        "ranges": [
+          "1-107"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 106
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-relay-state.js",
+        "ranges": [
+          "1-115"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 114
+      },
+      {
+        "file": "tests/e2e/education/pending-round-lifecycle-trivia-state.js",
+        "ranges": [
+          "1-198"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF",
+        "recordedPhysicalLines": 197
+      }
+    ],
+    "importedFixtureProductionAndConsumerSources": [
+      {
+        "file": "tests/e2e/fixtures/test-fixtures.js",
+        "ranges": [
+          "1-69",
+          "70-155",
+          "156-187"
+        ],
+        "coverage": "FULL_BODY; real loopback/retry/API GET/create/update/share/fixture producers inspected, not invoked"
+      },
+      {
+        "file": "tests/e2e/education/release-game-fixtures.js",
+        "ranges": [
+          "1-80"
+        ],
+        "coverage": "ALL_DECLARATIONS_AND_BODIES; EOF footer lists only final trailing line81"
+      },
+      {
+        "file": "tests/e2e/education/release-content-fields.js",
+        "ranges": [
+          "1-175",
+          "120-160"
+        ],
+        "coverage": "Portable no-sink callback/cleanup consumer explicitly inspected at133-141; no broader content-field qualification"
+      },
+      {
+        "file": "tests/e2e/pages/editor-page.js",
+        "ranges": [
+          "1-133"
+        ],
+        "coverage": "Consumed constructor, ready and gotoPresentation implementations; unrelated later editor helpers not certified"
+      },
+      {
+        "file": "shared/src/education/runtime-session.js",
+        "ranges": [
+          "1-190"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; activity clock, pause/resume/reset and resource/timer ownership"
+      },
+      {
+        "file": "shared/src/education/browser/reveal-lifecycle.js",
+        "ranges": [
+          "1-170"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; actual root visibility/lifecycle and keyboard-condition wrapper"
+      },
+      {
+        "file": "shared/src/education/browser/mount.js",
+        "ranges": [
+          "90-150"
+        ],
+        "coverage": "Relevant reset/destroy/pause/resume lifecycle consumer, through module end"
+      },
+      {
+        "file": "shared/src/education/browser/local-activity.js",
+        "ranges": [
+          "1-180"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; Quiz/countdown/Relay state and clock dispatch"
+      },
+      {
+        "file": "shared/src/education/countdown-state.js",
+        "ranges": [
+          "1-190"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; independent authored countdown policy"
+      },
+      {
+        "file": "shared/src/education/browser/countdown-presenter.js",
+        "ranges": [
+          "1-200"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; native UI and timer scheduling"
+      },
+      {
+        "file": "shared/src/education/quiz-session.js",
+        "ranges": [
+          "1-165"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; independently authored deadline/reset/expiry policy"
+      },
+      {
+        "file": "shared/src/education/games/relay-race.js",
+        "ranges": [
+          "1-150"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; actual1200ms baton and first-transition policy"
+      },
+      {
+        "file": "shared/src/education/game-defaults.js",
+        "ranges": [
+          "1-183",
+          "181-360"
+        ],
+        "coverage": "Default factory declarations and bodies through EOF, including used game configurations"
+      },
+      {
+        "file": "shared/src/education/game-registry.js",
+        "ranges": [
+          "1-180"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; fixture subtype authority"
+      },
+      {
+        "file": "shared/src/education/question-shape.js",
+        "ranges": [
+          "1-180"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; question IDs/kinds/cloning/time-limit policy"
+      },
+      {
+        "file": "shared/src/education/question-factory.js",
+        "ranges": [
+          "1-180"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF; authored canonical question producer"
+      },
+      {
+        "file": "shared/src/education/presets/simulations.js",
+        "ranges": [
+          "1-160"
+        ],
+        "coverage": "FULL_BODY_THROUGH_EOF of directly imported fixture preset module; simulation physics not qualified"
+      },
+      {
+        "file": "shared/src/htmlGenerator.js",
+        "ranges": [
+          "437-485"
+        ],
+        "coverage": "Relevant generated Reveal configuration and actual keyboardCondition policy"
+      },
+      {
+        "file": "node_modules/reveal.js/js/controllers/keyboard.js",
+        "ranges": [
+          "140-243",
+          "244-359",
+          "360-414"
+        ],
+        "coverage": "Actual consuming onDocumentKeyDown dispatcher, including guards, custom precedence and Arrow routing; accessed through preserved dependency junction"
+      }
+    ],
+    "authorityAndReceiptSources": {
+      "base": "D:/NavSlidesQualification/edu-resume-261004/",
+      "documents": [
+        {
+
+[Showing lines 821-1040 of 1203. Use :1041 to continue]

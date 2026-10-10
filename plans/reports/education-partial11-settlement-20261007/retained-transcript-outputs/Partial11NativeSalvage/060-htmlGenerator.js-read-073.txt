@@ -1,0 +1,172 @@
+          });
+        } catch(e) {}
+      });
+${options.portable ? '' : buildLivePresenterRuntime({ presentationId: presentation.id, hasGames: hasGameElements })}${hasActions ? buildActionRuntimeScript(resolvedPresentation) : ''}
+    });
+  </script>${getPresenterToolsInlineJS(presenterTools)}${fxRuntimeScript ? `\n${fxRuntimeScript}` : ''}
+</body>
+</html>`
+}
+
+function getBackgroundAttrs(bg) {
+  if (!bg) return ''
+  // 'fx' backgrounds render via a per-slide <canvas> (injected separately), so
+  // emit no reveal bg attr — the section stays transparent over the canvas.
+  if (bg.type === 'fx') return ''
+  if (bg.type === 'color' && bg.color) return ` data-background-color="${escapeHtml(bg.color)}"`
+  const imageSrc = bg.type === 'image' ? bg.image || bg.src : ''
+  if (imageSrc)
+    return ` data-background-image="${escapeHtml(absoluteSrc(imageSrc))}" data-background-size="${escapeHtml(bg.size || 'cover')}" data-background-position="${escapeHtml(bg.position || 'center')}"`
+  const gradient = formatGradientCss(bg)
+  if (gradient) return ` data-background-gradient="${escapeHtml(gradient)}"`
+  return ''
+}
+
+/** True if any slide (or vertical child) uses an `'fx'` background with a known module. */
+function presentationUsesFx(presentation) {
+  const slides = presentation.slides || []
+  for (const slide of slides) {
+    const groups = [slide, ...(slide.children || [])]
+    for (const s of groups) {
+      const fx = s && s.background && s.background.type === 'fx' && s.background.fx
+      if (fx && getFxModule(fx.name)) return true
+    }
+  }
+  return false
+}
+
+/**
+ * Build the absolutely-positioned <canvas> for an `'fx'` background. Sits at
+ * z-index 0 behind slide elements; the runtime starts/stops its rAF loop.
+ */
+function getFxCanvasHtml(bg) {
+  if (!bg || bg.type !== 'fx' || !bg.fx || !getFxModule(bg.fx.name)) return ''
+  const params = escapeHtml(JSON.stringify(bg.fx.params || {}))
+  return `<canvas data-fx-name="${escapeHtml(bg.fx.name)}" data-fx-params='${params}' style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>`
+}
+
+function downloadHTML(presentation) {
+  const html = generateRevealHTML(presentation)
+  const blob = new Blob([html], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.html`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ΓöÇΓöÇΓöÇ PDF export (print-ready HTML, one page per fragment state) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+function getBgPrintStyle(bg, deckTokens) {
+  const tokenBg = deckTokens?.colors?.bg || '#1e1e2e'
+  if (!bg || bg.type === 'none') return `background-color:${tokenBg};`
+  if (bg.type === 'color') return `background-color:${bg.color || tokenBg};`
+  if (bg.type === 'gradient') return `background:${formatGradientCss(bg) || tokenBg};`
+  if (bg.type === 'fx') {
+    // Canvas can't print — fall back to a solid color (author override, then the
+    // theme bg token, then default).
+    const fallback =
+      (bg.fx && bg.fx.fallbackColor) ||
+      (deckTokens && deckTokens.colors && deckTokens.colors.bg) ||
+      '#1e1e2e'
+    return `background-color:${fallback};`
+  }
+  const imageSrc = bg.type === 'image' ? bg.image || bg.src : ''
+  if (imageSrc) {
+    const src = absoluteSrc(imageSrc)
+    return `background-image:url('${src}');background-size:${bg.size || 'cover'};background-position:${bg.position || 'center'};`
+  }
+  return 'background-color:#1e1e2e;'
+}
+
+function generatePrintHTML(presentation, options = {}) {
+  const autoPrint = options.autoPrint !== false
+  const includePrintBar = options.includePrintBar !== false
+  const fragmentMode = options.fragmentMode || 'expanded'
+  const exportReadyDelayMs = Number(options.exportReadyDelayMs ?? (autoPrint ? 3000 : 300))
+  const showFooter = presentation.showFooter || false
+  const showPageNumbers = presentation.showPageNumbers || false
+  const pageNumberFormat = presentation.pageNumberFormat || 'c/t'
+  const codeTheme = presentation.codeTheme || 'monokai'
+  const footerFontSize = Number(presentation.footerFontSize) || 14
+  const footerFontFamily = presentation.footerFontFamily || '-apple-system,sans-serif'
+  const footerColor = presentation.footerColor || 'rgba(255,255,255,0.65)'
+  const footerMode = presentation.footerMode || 'basic'
+  const sequenceSections = presentation.sequenceSections || []
+  const footerInactiveColor = presentation.footerInactiveColor || 'rgba(255,255,255,0.25)'
+  const resW = Number(presentation.resolution?.width) || 960
+  const resH = Number(presentation.resolution?.height) || 540
+  const printDeckTokens = mergeTokens(DEFAULT_TOKENS, presentation.designTokens)
+  const pages = []
+  let printPageCounter = 0
+  presentation.slides.forEach((sourceSlide) => {
+    const slide = resolveSlideForRender(sourceSlide, presentation)
+    if (fragmentMode === 'final') {
+      pages.push({ slide, maxIdx: Infinity, countPageNumber: true })
+      return
+    }
+
+    // Expand each slide into one page per fragment step (initial + one per unique index)
+    const fragIndices = [
+      ...new Set(
+        (slide.elements || [])
+          .filter((el) => !(el.hidden || false))
+          .filter((el) => el.fragment)
+          .map((el) => el.fragmentIndex || 1)
+      ),
+    ].sort((a, b) => a - b)
+    pages.push({ slide, maxIdx: -Infinity, countPageNumber: true }) // initial: no fragments
+    fragIndices.forEach((idx) => pages.push({ slide, maxIdx: idx, countPageNumber: false }))
+  })
+  const totalPages = pages.length
+
+  const pagesHtml = pages
+    // eslint-disable-next-line unused-imports/no-unused-vars
+    .map(({ slide, maxIdx, countPageNumber }, pageIndex) => {
+      const slidePrintTokens = mergeTokens(printDeckTokens, slide?.designTokens)
+      const bgStyle = getBgPrintStyle(slide.background, slidePrintTokens)
+
+      const elementsHtml = renderSlideElements(slide, {
+        forPrint: true,
+        baseUrl: options.baseUrl,
+        maxFragIdx: maxIdx,
+        exportElementIds: options.exportElementIds,
+        teacherReveal: options.teacherReveal === true,
+        designTokens: slidePrintTokens,
+        slideBackground: getPrintChartBackground(slide, printDeckTokens),
+      })
+
+      // Per-slide page numbering
+      const slideHasPageNum = slide.showPageNumber !== false
+      if (slideHasPageNum && countPageNumber) printPageCounter++
+      const pageLabel =
+        showPageNumbers && slideHasPageNum
+          ? pageNumberFormat === 'c/t'
+            ? `${printPageCounter} / ${(presentation.slides || []).filter((s) => s.showPageNumber !== false).length}`
+            : `${printPageCounter}`
+          : ''
+
+      let footerHtml = ''
+      if (footerMode === 'sequence' && sequenceSections.length > 0 && showFooter) {
+        const activeIdx = slide.activeSection
+        const seqSpans = sequenceSections
+          .map((sec, i) => {
+            const isActive = activeIdx === i
+            const color = isActive ? footerColor : footerInactiveColor
+            const weight = isActive ? 'font-weight:700;' : 'font-weight:400;'
+            return `<span style="${escapeHtml(`color:${color};${weight}`)}">${escapeHtml(sec || `Section ${i + 1}`)}</span>`
+          })
+          .join('')
+        const pageSpan = pageLabel
+          ? `<span style="margin-left:12px;flex-shrink:0;">${pageLabel}</span>`
+          : ''
+        footerHtml = `<div style="${escapeHtml(`position:absolute;bottom:6px;left:16px;right:16px;z-index:900;display:flex;justify-content:center;align-items:center;font-size:calc(${footerFontSize}px * var(--font-zoom, 1));font-family:${footerFontFamily};pointer-events:none;box-sizing:border-box;`)}"><div style="display:flex;flex:1;justify-content:space-evenly;align-items:center;">${seqSpans}</div>${pageSpan}</div>`
+      } else {
+        const sectionLabel = showFooter && slide.section ? escapeHtml(slide.section) : ''
+        footerHtml =
+          sectionLabel || pageLabel
+            ? `<div style="${escapeHtml(`position:absolute;bottom:8px;left:16px;right:16px;z-index:900;display:flex;justify-content:space-between;align-items:center;font-size:calc(${footerFontSize}px * var(--font-zoom, 1));color:${footerColor};font-family:${footerFontFamily};pointer-events:none;box-sizing:border-box;`)}"><span>${sectionLabel}</span><span>${pageLabel}</span></div>`
+            : ''
+
+[Showing lines 481-650 of 822. Use :651 to continue]

@@ -1,0 +1,4 @@
+function createDefaultGameConfig(type) {
+…
+}
+module.exports = { GAME_BASE_DEFAULTS, createDefaultGameConfig, cloneGameConfig }

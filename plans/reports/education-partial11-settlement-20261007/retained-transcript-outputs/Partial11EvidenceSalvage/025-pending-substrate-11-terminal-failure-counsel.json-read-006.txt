@@ -1,0 +1,147 @@
+{
+  "decision": {
+    "correction11": "FAILED_DELIVERY_NOT_ADMITTED; failure settlement remains pending.",
+    "two_independent_full_source_static_salvage_audits": "PERMITTED as reachable read-only failure settlement on the already preserved combined partial11 subject. They are not normal source gates, substantive producers, receipt-completion attempts or runtime verification.",
+    "new_user_authority_required_for_this_bounded_salvage": false,
+    "new_user_authority_required_for_further_substantive_work": true,
+    "source_verdict_now": "NOT_ESTABLISHED. This counsel has not inspected changed source or performed either salvage audit.",
+    "automatic_substantive_attempt": "PROHIBITED, irrespective of the eventual salvage result.",
+    "admission": false,
+    "sourceReady": false,
+    "qualification": false,
+    "passClaimed": false,
+    "runtimeExecuted": false,
+    "declaredCells": 54,
+    "staticallyAdmittedCells": 0,
+    "executedAcceptanceCells": 0
+  },
+  "summary": "The established09/10 terminal-failure protocol permits Main to obtain two independent full-partition static salvage audits of this newly stopped, preserved11 subject before finishing settlement. Current11 authority explicitly incorporates failure settlement and distinguishes any permitted read-only salvage from normal admission and replacement production; it contains no contrary preservation-only restriction. Missing genuine Native11 delivery remains independently fatal to admission even if both audits identify no source blocker. Native reasoning about preparing a receipt is neither delivery nor completion.",
+  "authority_comparison": [
+    {
+      "evidence": "pending-substrate-09-terminal-failure-counsel.json:4-8 and allowed_next_actions, orders2-7.",
+      "interpretation": "Exactly-one09 authority was exhausted by failed Native delivery, but full-input preservation, independent Native15/Evidence11 static salvage and combined settlement remained reachable without a new substantive authorization. Both actual stops and a preserved combined subject were prerequisites, not sufficient admission evidence."
+    },
+    {
+      "evidence": "pending-substrate-10-terminal-failure-counsel.json:3-8, permitted_settlement_actions_for_main and salvage_bounds.",
+      "interpretation": "The same protocol expressly permitted two independent full-source salvage audits after failed Native10 delivery. Its distinction between stopping substantive production and completing reachable read-only settlement is directly applicable. A later recommendation to pause after completed09 salvage did not prohibit auditing a newly stopped10 subject."
+    },
+    {
+      "evidence": "pending-substrate-11-dispatch-authority.json:66-73; pending-substrate-11-scope-counsel.json:49-58,81-88; both complete11 producer prompts.",
+      "interpretation": "The user's recorded 'continue' authorized exactly one fresh bounded Correction11, not repetition until success. Missing genuine delivery closes the ordinary successful-stop/complete-delivery/dual-normal-GO path. The11 failure protocol nevertheless requires preservation and reachable settlement, explicitly retains failure-settlement salvage, and prohibits reconstruction, repair and execution. Applying the established09/10 protocol does not grant another producer attempt or waive the ordinary gates."
+    },
+    {
+      "evidence": "pending-substrate-11-terminal-settlement.json:1-89; pending-substrate-11-scope-preservation.json:1-354; pending-substrate-11-partial-freeze.json:1-14.",
+      "interpretation": "Main's records establish both actual stops and identify the already preserved combined partial11 subject. The freeze and scope prerequisites for bounded failure-settlement review are recorded as met. This counsel read those observations rather than rerunning status, preservation, hashes or counts."
+    }
+  ],
+  "subject": {
+    "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+    "recordedFullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+    "kind": "FAILED_DELIVERY_PARTIAL_SOURCE_PRESERVATION_NOT_ADMISSION",
+    "preservation_facts_from_Main": {
+      "baselineRegularInputs": 4327,
+      "preservedRegularInputs": 4328,
+      "allBaselineInputsRetained": true,
+      "soleAddition": ".tmp/acceptance-producer-pending-substrate-11-evidence.json",
+      "authorizedExistingHelpersModified": 8,
+      "missingInputs": 0,
+      "unexpectedAdditions": 0,
+      "all12CallersImmutable": true,
+      "all26HelpersStrictlyBelow200PhysicalLines": true
+    },
+    "dependency_limit": "The external node_modules junction is not recursively frozen. Its recorded target and any prior linked-owner observations are not proof of immutable dependency contents or complete production dispatcher equivalence.",
+    "meaning": "These records establish preservation and reported scope compliance, not the correctness of surviving edits, genuine Native delivery, source readiness or runtime behavior."
+  },
+  "delivery_and_receipt_limits": {
+    "native": {
+      "job": "bg_6",
+      "actualExitCode": 1,
+      "actualWallSeconds": 807.3,
+      "failure": "Actual transport stream_error, not a timeout conclusion.",
+      "genuineReceiptPresent": false,
+      "last_reasoning": "The supplied observation that Native was preparing a receipt is retained as reasoning only. It cannot establish a successful write, a genuine receipt, obligation closure or completed delivery.",
+      "non_substitution": "No Main report, reviewer report, transcript extraction, Evidence receipt, historical receipt or favorable salvage verdict can replace the absent genuine Native11 receipt."
+    },
+    "evidence": {
+      "job": "bg_7",
+      "actualExitCode": 0,
+      "actualWallSeconds": 745.76,
+      "genuineReceiptPresent": true,
+      "receipt": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/.tmp/acceptance-producer-pending-substrate-11-evidence.json",
+      "canonical_mappings": "Main records exact equality for NC, RPC, original, originalCurrentMappingSnapshot and originalPriorMappingSnapshot. Do not carry forward10's mapping discrepancies as if they were observed11 discrepancies.",
+      "original_E06_meanings": "The11 receipt now names E06-02 chronological frame arrival, E06-03 actual Error/sidecar separation, E06-04 state-before-UI ordering and E06-05 recursive domain/cause propagation. Preserve those governing meanings;10's substituted titles are not evidence of the same limitation in11.",
+      "physical_line_discrepancy": {
+        "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+        "receiptClaim": 160,
+        "MainRecordedMeasurement": 150,
+        "disposition": "Retain the genuine receipt verbatim and record the discrepancy separately. Both values are below200; the inconsistency is a receipt accuracy limitation, not an independently established source defect."
+      },
+      "coverage_limitations": [
+        {
+          "evidence": "Receipt:235-363, assigned08And09FindingsAndChronology.",
+          "limitation": "Several retained08/09/chronology entries are titles and dispositions rather than the complete governing finding bodies. Reviewers must use the original authorities, not infer full closure from these abbreviated entries."
+        },
+        {
+          "evidence": "Receipt:393-400, NF_A4_ScopeDisposition;11 dispatch authority, excludedScopeCandidate.",
+          "limitation": "The receipt retains NF-A4's unresolved/excluded disposition but does not reproduce the complete recorded source mechanism. Supply the full authority separately; its claim of verbatim retention is not a replacement for that body."
+        },
+        {
+          "evidence": "Receipt:401-418, deferredCallerObligations; both11 prompts, Complete deferred scope;10 failure counsel, preservation_and_deferred_scope.",
+          "limitation": "The receipt lists immutable callers and a general deferral paragraph. Its canonical mappings retain substantial obligation text, but the deferred section is not a complete independent enumeration of all journey, timing, state/UI, surface/finalization and later-slice obligations. No required obligation is narrowed by that abbreviation."
+        }
+      ],
+      "claims_not_verdicts": "S10-C2 closure, other local source credits and ancillary Native dispositions remain producer claims pending independent current-subject review. Successful Evidence delivery does not establish complete combined delivery or source correctness."
+    },
+    "separation_rule": "Transport failure, absent delivery, receipt inaccuracies/abbreviations, scope-preservation observations and source findings are separate categories. Do not convert any one into blanket source correctness or blanket source rejection."
+  },
+  "permitted_steps": [
+    {
+      "order": 1,
+      "decision": "PERMITTED; already recorded.",
+      "action": "Use Main's retained terminal copies, genuine receipt inventory, scope-preservation record and distinctly identified partial11 freeze as settlement evidence. Preserve original and historical records unchanged. Do not repeat the failure or checksum/count measurements merely to reconfirm the supplied observations.",
+      "basis": "11 terminal settlement and scope-preservation records;11 failure protocol:84-86."
+    },
+    {
+      "order": 2,
+      "decision": "PERMITTED for Main, not dispatched by this counsel.",
+      "action": "Commission exactly two distinct independent read-only salvage reviewers against the identical frozen partial11 subject: one Native15 review and one Evidence11 review. Issue explicitly salvage-only contracts, not the prepared normal-gate prompts whose successful-delivery prerequisites are unsatisfied.",
+      "basis": "09 terminal-failure counsel:6;10 terminal-failure counsel:5,8;11 failure protocol:87-88."
+    },
+    {
+      "order": 3,
+      "decision": "PERMITTED within the full contract below.",
+      "action": "Each reviewer reads complete assigned source, unchanged helpers included, all12 immutable caller consumers and relevant cross-partition/production seams. Require current-subject, obligation-by-obligation static evidence and exact bounded uncertainties. Reviewers neither repair source nor manufacture receipts.",
+      "basis": "10 permitted_settlement_actions_for_main, orders4-5;11 scope counsel:58,87."
+    },
+    {
+      "order": 4,
+      "decision": "PERMITTED; required to finish a source-informed settlement.",
+      "action": "After both reports are complete, Main settles11 with separate delivery blockers, receipt limitations, preservation findings, source credits, source repairs and unresolved scope/evidence. Retain complete independent reports. Even source-clean salvage leaves11 failed and unadmitted; gap4 and dependent gaps5-9 remain unresolved/blocked.",
+      "basis": "10 permitted_settlement_actions_for_main, order6;11 failure protocol:86-88."
+    },
+    {
+      "order": 5,
+      "decision": "NOT PERMITTED automatically.",
+      "action": "Pause substantive work after settlement. A later repair/completion attempt requires a new explicit, separately bounded user authorization based on the actual settled11 blocker list. This counsel supplies no such authorization and dispatches no attempt.",
+      "basis": "11 dispatch authority:73;11 failure protocol:84,88."
+    }
+  ],
+  "full_salvage_contract": {
+    "purpose": "Establish source-backed remaining obligations and preserved local improvements for failed-delivery settlement only. Never claim normal GO, ADMIT, completed delivery, runtime correctness or qualification.",
+    "independence": "Two distinct reviewers produce separate independent reports on the same recorded combined subject. Each owns full assigned-partition coverage and traces relevant cross-partition seams; together they cover all26 helpers. One coordinator opinion, one producer receipt or one partition review does not substitute for both reports.",
+    "authority_read_coverage": {
+      "root": "D:/NavSlidesQualification/edu-resume-261004/",
+      "must_read_completely": [
+        "pending-substrate-07-native-admission.json",
+        "pending-substrate-07-evidence-admission.json",
+        "pending-substrate-08-native-salvage-audit.json",
+        "pending-substrate-08-evidence-salvage-audit.json",
+        "pending-substrate-08-subject-authority.json",
+        "pending-substrate-09-native-salvage-audit.json",
+        "pending-substrate-09-evidence-salvage-audit.json",
+        "pending-substrate-09-settled-rejection-counsel.json",
+        "pending-substrate-09-terminal-failure-counsel.json",
+        "pending-substrate-10-terminal-failure-counsel.json",
+        "pending-substrate-10-native-completion-settlement.json",
+
+[Showing lines 1-145 of 541. Use :146 to continue]

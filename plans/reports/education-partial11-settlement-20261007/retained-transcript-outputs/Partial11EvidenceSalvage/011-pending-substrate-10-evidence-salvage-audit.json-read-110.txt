@@ -1,0 +1,173 @@
+          "244-359",
+          "360-414"
+        ],
+        "coverage": "Actual consuming onDocumentKeyDown dispatcher, including guards, custom precedence and Arrow routing; accessed through preserved dependency junction"
+      }
+    ],
+    "authorityAndReceiptSources": {
+      "base": "D:/NavSlidesQualification/edu-resume-261004/",
+      "documents": [
+        {
+          "file": "pending-substrate-10-evidence-salvage-prompt.md",
+          "coverage": "Complete mapped salvage contract, including appended settled09/actual10/deferred requirements; reread1-80"
+        },
+        {
+          "file": "pending-substrate-10-evidence-prompt.md",
+          "coverage": "Producer requirements read; claims do not amend salvage authority"
+        },
+        {
+          "file": "pending-substrate-10-terminal-failure-counsel.json",
+          "ranges": [
+            "1-90",
+            "91-180",
+            "181-272"
+          ],
+          "coverage": "COMPLETE"
+        },
+        {
+          "file": "pending-substrate-10-scope-preservation.json",
+          "ranges": [
+            "1-77",
+            "78-300",
+            "301-364"
+          ],
+          "coverage": "COMPLETE"
+        },
+        {
+          "file": "pending-substrate-10-partial-freeze.json",
+          "ranges": [
+            "1-80"
+          ],
+          "coverage": "Header/source identity inspected; not all4327 manifest rows. Complete helper/caller inventory read from scope-preservation record as permitted by contract."
+        },
+        {
+          "file": "pending-substrate-10-terminal-delivery.json",
+          "ranges": [
+            "1-100"
+          ],
+          "coverage": "COMPLETE"
+        },
+        {
+          "file": "pending-substrate-10-linked-keyboard-owner.json",
+          "ranges": [
+            "1-100"
+          ],
+          "coverage": "COMPLETE"
+        },
+        {
+          "file": "pending-substrate-10-dispatch-authority.json",
+          "ranges": [
+            "1-150"
+          ],
+          "coverage": "Complete dispatch/ownership and settled defect requirements"
+        },
+        {
+          "file": "pending-substrate-07-evidence-admission.json",
+          "ranges": [
+            "1-100"
+          ],
+          "coverage": "COMPLETE; all three original finding bodies"
+        },
+        {
+          "file": "pending-substrate-07-native-admission.json",
+          "ranges": [
+            "1-115"
+          ],
+          "coverage": "COMPLETE; all twelve original finding bodies"
+        },
+        {
+          "file": "pending-substrate-08-evidence-salvage-audit.json",
+          "ranges": [
+            "1-100"
+          ],
+          "coverage": "COMPLETE original audit and both added Evidence findings"
+        },
+        {
+          "file": "pending-substrate-08-native-salvage-audit.json",
+          "ranges": [
+            "1-150"
+          ],
+          "coverage": "COMPLETE original audit and all four added Native findings"
+        },
+        {
+          "file": "pending-substrate-08-settled-rejection-counsel.json",
+          "ranges": [
+            "1-119"
+          ],
+          "coverage": "COMPLETE"
+        },
+        {
+          "file": "pending-substrate-08-subject-authority.json",
+          "ranges": [
+            "1-85",
+            "86-170",
+            "171-187",
+            "1-75"
+          ],
+          "coverage": "Canonical original definitions and current/prior mapping authority inspected; no historical status treated as current closure"
+        },
+        {
+          "file": "pending-substrate-09-settled-rejection-counsel.json",
+          "ranges": [
+            "1-100",
+            "101-200",
+            "201-279",
+            "261-279"
+          ],
+          "coverage": "Complete ranged archived counsel inspection; used with complete09 audits and counsel10, not as current source proof"
+        },
+        {
+          "file": "pending-substrate-09-native-salvage-audit.json",
+          "ranges": [
+            "1-145"
+          ],
+          "coverage": "COMPLETE; five settled defects and preservation/chronology obligations"
+        },
+        {
+          "file": "pending-substrate-09-evidence-salvage-audit.json",
+          "ranges": [
+            "1-145"
+          ],
+          "coverage": "COMPLETE; five settled defects and both chronology obligations"
+        }
+      ],
+      "genuineEvidenceReceipt": {
+        "file": ".tmp/acceptance-producer-pending-substrate-10-evidence.json",
+        "root": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-10-partial",
+        "ranges": [
+          "1-60",
+          "61-120",
+          "121-180",
+          "181-240",
+          "241-300",
+          "301-360",
+          "361-404"
+        ],
+        "coverage": "COMPLETE; treated solely as producer claims and delivery inventory"
+      },
+      "genuineNativeReceipt": {
+        "present": false,
+        "authority": "Terminal-delivery, scope-preservation and terminal-failure counsel inventory facts; no reconstruction or retry"
+      }
+    }
+  },
+  "limitations": [
+    "This is static source review only. Failure mechanisms and repaired source paths are deductions from inspected code, not exercised module/browser results.",
+    "No files were written or edited; no shell/git commands, imports, module checks, tests, builds, compilation, lint, formatters, browser operations, hash/count recomputation or nested agents were used.",
+    "No normal source gate, ADMIT, sourceReady, qualification or execution permission follows from this salvage.",
+    "The linked Reveal keyboard owner is outside the recursively hash-frozen regular-file subject. The reported predispatch owner SHA256 is ef2e12980b2003d9894c78d89ed53c5131564621d29e2018d60e7da0c8983285, and recursiveDependencyFreeze=false. This reviewer read its real dispatcher but did not recompute its hash or certify all dependency contents.",
+    "Complete mapped helper/caller body coverage does not certify all4327 inputs, every transitive import, simulation physics, complete scoring policies or runtime keyboard/actionability behavior. The latter remain their expressly separate scopes.",
+    "The remaining Native chronology obligation is bounded and source-backed; it is not marked conditionally clean. Main retains preservation, settlement and any later authorization decisions.",
+    "Receipt abbreviations, substituted titles and absent Native delivery are kept separate from source correctness. Genuine receipts were not edited to make them appear complete.",
+    "No prepared verification script was executed, and no verification run is recommended under the failed10 authorization."
+  ],
+  "admission": false,
+  "sourceReady": false,
+  "qualification": false,
+  "passClaimed": false,
+  "runtimeExecuted": false,
+  "declaredCells": 54,
+  "staticallyAdmittedCells": 0,
+  "executedAcceptanceCells": 0,
+  "confidence": 0.97
+}

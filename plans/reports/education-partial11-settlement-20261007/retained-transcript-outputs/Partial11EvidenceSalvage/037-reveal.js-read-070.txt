@@ -1,0 +1,202 @@
+			if( autoSlidePlayer ) {
+				autoSlidePlayer.setPlaying( false );
+			}
+		}
+
+	}
+
+	function resumeAutoSlide() {
+
+		if( autoSlide && autoSlidePaused ) {
+			autoSlidePaused = false;
+			dispatchEvent({ type: 'autoslideresumed' });
+			cueAutoSlide();
+		}
+
+	}
+
+	function navigateLeft({skipFragments=false}={}) {
+
+		navigationHistory.hasNavigatedHorizontally = true;
+
+		// Scroll view navigation is handled independently
+		if( scrollView.isActive() ) return scrollView.prev();
+
+		// Reverse for RTL
+		if( config.rtl ) {
+			if( ( overview.isActive() || skipFragments || fragments.next() === false ) && availableRoutes().left ) {
+				slide( indexh + 1, config.navigationMode === 'grid' ? indexv : undefined );
+			}
+		}
+		// Normal navigation
+		else if( ( overview.isActive() || skipFragments || fragments.prev() === false ) && availableRoutes().left ) {
+			slide( indexh - 1, config.navigationMode === 'grid' ? indexv : undefined );
+		}
+
+	}
+
+	function navigateRight({skipFragments=false}={}) {
+
+		navigationHistory.hasNavigatedHorizontally = true;
+
+		// Scroll view navigation is handled independently
+		if( scrollView.isActive() ) return scrollView.next();
+
+		// Reverse for RTL
+		if( config.rtl ) {
+			if( ( overview.isActive() || skipFragments || fragments.prev() === false ) && availableRoutes().right ) {
+				slide( indexh - 1, config.navigationMode === 'grid' ? indexv : undefined );
+			}
+		}
+		// Normal navigation
+		else if( ( overview.isActive() || skipFragments || fragments.next() === false ) && availableRoutes().right ) {
+			slide( indexh + 1, config.navigationMode === 'grid' ? indexv : undefined );
+		}
+
+	}
+
+	function navigateUp({skipFragments=false}={}) {
+
+		// Scroll view navigation is handled independently
+		if( scrollView.isActive() ) return scrollView.prev();
+
+		// Prioritize hiding fragments
+		if( ( overview.isActive() || skipFragments || fragments.prev() === false ) && availableRoutes().up ) {
+			slide( indexh, indexv - 1 );
+		}
+
+	}
+
+	function navigateDown({skipFragments=false}={}) {
+
+		navigationHistory.hasNavigatedVertically = true;
+
+		// Scroll view navigation is handled independently
+		if( scrollView.isActive() ) return scrollView.next();
+
+		// Prioritize revealing fragments
+		if( ( overview.isActive() || skipFragments || fragments.next() === false ) && availableRoutes().down ) {
+			slide( indexh, indexv + 1 );
+		}
+
+	}
+
+	/**
+	 * Navigates backwards, prioritized in the following order:
+	 * 1) Previous fragment
+	 * 2) Previous vertical slide
+	 * 3) Previous horizontal slide
+	 */
+	function navigatePrev({skipFragments=false}={}) {
+
+		// Scroll view navigation is handled independently
+		if( scrollView.isActive() ) return scrollView.prev();
+
+		// Prioritize revealing fragments
+		if( skipFragments || fragments.prev() === false ) {
+			if( availableRoutes().up ) {
+				navigateUp({skipFragments});
+			}
+			else {
+				// Fetch the previous horizontal slide, if there is one
+				let previousSlide;
+
+				if( config.rtl ) {
+					previousSlide = Util.queryAll( dom.wrapper, HORIZONTAL_SLIDES_SELECTOR + '.future' ).pop();
+				}
+				else {
+					previousSlide = Util.queryAll( dom.wrapper, HORIZONTAL_SLIDES_SELECTOR + '.past' ).pop();
+				}
+
+				// When going backwards and arriving on a stack we start
+				// at the bottom of the stack
+				if( previousSlide && previousSlide.classList.contains( 'stack' ) ) {
+					let v = ( previousSlide.querySelectorAll( 'section' ).length - 1 ) || undefined;
+					let h = indexh - 1;
+					slide( h, v );
+				}
+				else if( config.rtl ) {
+					navigateRight({skipFragments});
+				}
+				else {
+					navigateLeft({skipFragments});
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * The reverse of #navigatePrev().
+	 */
+	function navigateNext({skipFragments=false}={}) {
+
+		navigationHistory.hasNavigatedHorizontally = true;
+		navigationHistory.hasNavigatedVertically = true;
+
+		// Scroll view navigation is handled independently
+		if( scrollView.isActive() ) return scrollView.next();
+
+		// Prioritize revealing fragments
+		if( skipFragments || fragments.next() === false ) {
+
+			let routes = availableRoutes();
+
+			// When looping is enabled `routes.down` is always available
+			// so we need a separate check for when we've reached the
+			// end of a stack and should move horizontally
+			if( routes.down && routes.right && config.loop && isLastVerticalSlide() ) {
+				routes.down = false;
+			}
+
+			if( routes.down ) {
+				navigateDown({skipFragments});
+			}
+			else if( config.rtl ) {
+				navigateLeft({skipFragments});
+			}
+			else {
+				navigateRight({skipFragments});
+			}
+		}
+
+	}
+
+
+	// --------------------------------------------------------------------//
+	// ----------------------------- EVENTS -------------------------------//
+	// --------------------------------------------------------------------//
+
+	/**
+	 * Called by all event handlers that are based on user
+	 * input.
+	 *
+	 * @param {object} [event]
+	 */
+	function onUserInput( event ) {
+
+		if( config.autoSlideStoppable ) {
+			pauseAutoSlide();
+		}
+
+	}
+
+	/**
+	* Listener for post message events posted to this window.
+	*/
+	function onPostMessage( event ) {
+
+		let data = event.data;
+
+		// Make sure we're dealing with JSON
+		if( typeof data === 'string' && data.charAt( 0 ) === '{' && data.charAt( data.length - 1 ) === '}' ) {
+			data = JSON.parse( data );
+
+			// Check if the requested method can be found
+			if( data.method && typeof Reveal[data.method] === 'function' ) {
+
+				if( POST_MESSAGE_METHOD_BLACKLIST.test( data.method ) === false ) {
+
+					const result = Reveal[data.method].apply( Reveal, data.args );
+
+[Showing lines 2401-2600 of 2973. Use :2601 to continue]

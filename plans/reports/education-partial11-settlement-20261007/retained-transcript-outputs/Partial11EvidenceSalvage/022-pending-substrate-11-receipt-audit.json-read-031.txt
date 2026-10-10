@@ -1,0 +1,113 @@
+    "Producer repair/evidence statements remain claims. Their accuracy, including the three Native PARTIAL_REPAIR_REQUIRED labels, cannot be resolved by this inspection.",
+    "Main's terminal and preservation facts are retained without reproducing the Native failure or reconstructing a missing receipt.",
+    "The dependency junction limitation prevents any recursive dependency-byte-freeze claim.",
+    "The missing Native11 receipt and the enumerated Evidence receipt incompleteness do not authorize retry/resume11, another correction, timeout changes, caller cutover or canonical integration."
+  ],
+  "readEvidence": [
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial/.tmp/acceptance-producer-pending-substrate-11-evidence.json",
+      "fullRead": true,
+      "reads": [
+        "1-210:raw",
+        "211-420:raw",
+        "421-640:raw"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Final closing braces for originalPriorMappingSnapshot, canonicalSubjectAuthority and the receipt object were returned.",
+      "note": "The initial declaration-only rendering omitted content and truncated long lines; it was not used as a complete read. Raw reads expanded the entire receipt."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-08-subject-authority.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "qualification:false, executedAcceptanceCells:0, final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-dispatch-authority.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "genuineNewReceiptsOnly:true, receiptRequirements closure, final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-evidence-prompt.md",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final delivery instruction"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Deliver full genuine ...acceptance-producer-pending-substrate-11-evidence.json then STOP."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-11-scope-preservation.json",
+      "fullRead": true,
+      "reads": [
+        ":raw lines1-300",
+        "301-380:raw through EOF"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "evidenceReceiptLineCountDiscrepancies followed by sourceReady:false, qualification:false, executedAcceptanceCells:0 and final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-07-native-admission.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Twelfth finding closure, overall_correctness:incorrect, final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-07-evidence-admission.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Third finding closure, overall_correctness:incorrect, final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-08-native-salvage-audit.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure",
+        ":-5:raw EOF confirmation"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Fourth finding closure, overall_correctness:incorrect, final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-08-evidence-salvage-audit.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Second finding closure, overall_correctness:incorrect, final closing brace."
+    },
+    {
+      "path": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-09-settled-rejection-counsel.json",
+      "fullRead": true,
+      "reads": [
+        ":raw from beginning through final object closure"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Final execution_disclosure field and closing brace."
+    },
+    {
+      "path": "skill://ak-code-review",
+      "fullRead": true,
+      "reads": [
+        "Full skill document returned"
+      ],
+      "EOFObserved": true,
+      "EOFMarker": "Final paragraph ending 'Never claim correctness beyond the inspected scope.' preceded the complete optional-triage closing section; the actual last paragraph ends 'Ordinary review remains unchanged.'"
+    }
+  ],
+  "conclusion": "Evidence11 genuinely delivered a substantial receipt, preserved all five canonical mapping fields and restored the original E06-02..05 meanings, but did not satisfy complete receipt requirements. Four Native original bodies are altered, original absolute path provenance and precise current Native evidence are missing, later finding records and deferred scope are abbreviated, the NF-A4 mechanism is not actually retained, and the ledger line-count claim disagrees with Main. Missing genuine Native11 delivery independently blocks admission. No current source correctness, blanket clean status or qualification is claimed."
+}

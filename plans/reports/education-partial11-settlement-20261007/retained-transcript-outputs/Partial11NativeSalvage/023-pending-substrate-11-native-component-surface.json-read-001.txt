@@ -1,0 +1,212 @@
+{
+  "component": "Native11 continuation — evidence surfaces and ownership",
+  "auditIdentity": "A bounded component of the already authorized Native11 static salvage audit, not another independent opinion, producer, correction, admission gate or whole-audit verdict.",
+  "exactSubject": {
+    "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+    "recordedFullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+    "identityBasis": "Main's preserved identity and scope records; not remeasured."
+  },
+  "flags": {
+    "admission": false,
+    "sourceReady": false,
+    "qualification": false,
+    "passClaimed": false,
+    "runtimeExecuted": false,
+    "declaredCells": 54,
+    "staticallyAdmittedCells": 0,
+    "executedAcceptanceCells": 0
+  },
+  "primaryCoverage": {
+    "complete": true,
+    "files": [
+      "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+      "tests/e2e/education/pending-round-lifecycle-evidence-domain.js",
+      "tests/e2e/education/release-surfaces.js",
+      "tests/e2e/education/present-offline-helpers.js",
+      "tests/e2e/education/release-portable-inspection.js"
+    ],
+    "primaryOwnersComplete": [
+      "tests/e2e/fixtures/test-fixtures.js",
+      "tests/e2e/pages/editor-page.js",
+      "tests/e2e/education/release-game-fixtures.js",
+      "tests/e2e/education/release-content-fields.js"
+    ],
+    "preservationDistinction": "Main's full helper inventory records all five primary files as modified=false for Correction11. No finding below is presented as a newly introduced Correction11 defect in those five files."
+  },
+  "loadBearingSignatures": [
+    {
+      "symbol": "visitSurface(options, visit)",
+      "source": "tests/e2e/education/pending-round-lifecycle-surfaces.js:40-193",
+      "contract": "options supplies page, request, browser, id, testInfo, surface and a mandatory evidence sink. The callback receives an object with exactly the authored fields page, surface, file, inspectNetwork, diagnostics and error. Present/share supply their actual Page and null file/inspection/diagnostics/error; file supplies its actual Page, downloaded path, inspector closure, successful before-inspection diagnostics and null error. This is not the generic Page-first release callback."
+    },
+    {
+      "symbol": "validateSurfaceSink(evidence)",
+      "source": "tests/e2e/education/pending-round-lifecycle-surfaces.js:7-24",
+      "contract": "Requires stage, recordError, setActivePage, collectLive, bindDocumentIdentity, assertDocumentIdentity, getExpectedRoots, getPrimaryError and produceThrow; validates the authored manifest before surface effects."
+    },
+    {
+      "symbol": "freshPortable(browser, file, { initScripts = [], onPageCreated, evidence } = {})",
+      "source": "tests/e2e/education/release-surfaces.js:18-143",
+      "contract": "Returns the actual {page, context, file, diagnostics, inspectNetwork} handle. Sink absence remains supported. onPageCreated receives that same handle before navigation; callback-owner cleanup intentionally differs from the no-callback path."
+    },
+    {
+      "symbol": "visitGeneratedSurfaces({page, request, browser, id, testInfo, surfaces = ['present','share','file']}, visit)",
+      "source": "tests/e2e/education/release-surfaces.js:145-180",
+      "contract": "Generic no-sink callbacks remain visit(actualPage, surface, artifacts[, network]); file receives [file] and inspection network data. Do not migrate this API to visitSurface's context-object convention."
+    },
+    {
+      "symbol": "launchPresentPopup(page) / launchPresentSlidePopup(page, slideIndex)",
+      "source": "tests/e2e/education/present-offline-helpers.js:5-28",
+      "contract": "Return {popup, url}; use the native Present menu and From beginning control. Slide helper navigates the returned URL with the slide hash."
+    },
+    {
+      "symbol": "executePortableNetworkInspection({...})",
+      "source": "tests/e2e/education/release-portable-inspection.js:8-55",
+      "contract": "Consumes the actual Page, shared attempt/error/frame arrays, recordArrival/getPrimaryError callbacks, rawDiagnostics and actual handle. Successful result has exactly protocol, httpAttempts, socketAttempts and errors; raw handle diagnostics intentionally have additional pageErrors/frameSuccesses/frameFailures."
+    },
+    {
+      "symbol": "withPortable(page, browser, testInfo, filename, inspect, options = {})",
+      "source": "tests/e2e/education/release-content-fields.js:133-142",
+      "contract": "Passes options to freshPortable, invokes inspect(portable.page, file), returns {file, observed, network}, closes the actual portable.context in finally after a handle is returned."
+    },
+    {
+      "symbol": "API and editor owners",
+      "source": "tests/e2e/fixtures/test-fixtures.js:7-36,89-130; tests/e2e/pages/editor-page.js:14-55,77-84",
+      "contract": "apiGetPresentation(request,id) performs the real GET and throws on a failed response; apiCreateShareLink(request,id) performs the real share POST and returns parsed JSON. Both use the existing loopback guard and bounded transient-status retry owner. EditorPage stores the actual Page; gotoPresentation installs its tutorial/E2E script, navigates /editor/:id and awaits the actual canvas locator through waitForReady."
+    }
+  ],
+  "preservedMechanisms": [
+    {
+      "obligation": "Earliest passive lifecycle setup and actual Page ownership",
+      "evidence": [
+        "pending-round-lifecycle-surfaces.js:44-85",
+        "pending-round-lifecycle-surfaces.js:87-123",
+        "pending-round-lifecycle-surfaces.js:125-143",
+        "release-surfaces.js:56-99,114-124",
+        "present-offline-helpers.js:5-15"
+      ],
+      "observation": "Present registers the passive script on the parent BrowserContext before the native popup action, retains the popup from the early popup event, attaches the active-page error listener and stages creation before later readiness/document operations. Share registers the context init script before creating its page and attaches active ownership before goto. File registers the supplied passive script before context.newPage and transfers the complete handle to the callback before file navigation. Its callback first assigns stashedHandle, so later metadata/staging/navigation failures still leave the finally block with the actual context to close.",
+      "boundary": "This proves static registration/ownership ordering, not execution timing or external Playwright/Reveal dispatcher equivalence."
+    },
+    {
+      "obligation": "Raw document identity and exact root manifest/cardinality",
+      "evidence": [
+        "pending-round-lifecycle-evidence-domain.js:9-39,46-78,80-143",
+        "pending-round-lifecycle-surfaces.js:57-63,95-103,139-145",
+        "pending-round-lifecycle-evidence.js:49-90",
+        "pending-round-lifecycle-live-evidence.js:21-57"
+      ],
+      "observation": "Manifests require a nonempty array, exact three-key entries, nonempty string fields and uniqueness checking. Observed roots require equal cardinality and one-use exact slideId/elementId/gameType tuple matches. Present/share/file stage actual URL/documentId/timeOrigin before binding. Identity validation rejects about:blank/missing discriminators, compares normalized planned URLs with hashes ignored and checks the bound documentId/timeOrigin/normalized URL on subsequent reads. Bound identity is copied and cannot be rebound.",
+      "boundary": "Tuple/document validation remains connected; it does not make the immutable acceptance caller compatible, nor establish complete browser-versus-Node failure chronology in the live-root consumer."
+    },
+    {
+      "obligation": "Early portable handle transfer and failure-safe lifecycle-surface cleanup",
+      "evidence": [
+        "release-surfaces.js:98-143",
+        "pending-round-lifecycle-surfaces.js:128-190"
+      ],
+      "observation": "freshPortable's callback branch deliberately leaves cleanup to the transferred owner. visitSurface stores the handle before any further callback work. After navigation, document binding, before-network enforcement or visit failure, its finally still performs after-network inspection, stages settled diagnostics, collects live evidence and closes the actual context. Each after-inspection/live/close failure is independently recorded rather than replacing the runner error. Present/share likewise collect live evidence before safeClose; safeClose records a close occurrence."
+    },
+    {
+      "obligation": "Portable setup/navigation failures and no-sink ownership",
+      "evidence": [
+        "release-surfaces.js:29-54,56-143,169-179",
+        "release-content-fields.js:124-142",
+        "game-surfaces-release.spec.js:69-88"
+      ],
+      "observation": "Sink callbacks are optional. Setup failures close an allocated context; no-callback navigation/readiness failures also close it. A close failure is attached to the actual setup/navigation Error's secondaryFailures and is separately dispatched when a sink exists. Generic generated-surface and content-field consumers continue to use actual returned Page/context handles and close in finally. Frame inspection without a sink still throws the first retained actual frame Error. No alternate fake handle or successful fallback was added.",
+      "boundary": "The callback-transfer path and generic no-sink cleanup have specific pre-existing failure limits enumerated separately below; this is not an unconditional claim that every generic helper failure exposes all errors."
+    },
+    {
+      "obligation": "E06-02 — chronological frame arrival dispatch",
+      "evidence": [
+        "release-portable-inspection.js:20-33",
+        "release-surfaces.js:77-82",
+        "pending-round-lifecycle-error-ledger.js:82-117"
+      ],
+      "observation": "Each sequentially awaited frame rejection is dispatched immediately in its catch before inspection proceeds to the next frame. Page errors dispatch synchronously in their event callback. The ledger assigns occurrence order at recordError arrival. This preserves the original chronological-arrival meaning rather than substituting popup/success-key semantics."
+    },
+    {
+      "obligation": "E06-03 — actual Node Error identity and separate sidecar",
+      "evidence": [
+        "release-portable-inspection.js:25-30,40-42",
+        "release-surfaces.js:29-34",
+        "pending-round-lifecycle-error-ledger.js:11-72,82-117"
+      ],
+      "observation": "An actual frame Error is retained as rawError and forwarded unchanged; frameUrl is supplied as separate metadata. materializeEnvelope returns an actual Error unchanged. serializeError reads frameUrl from metadata without assigning it to the original Error. Without a sink, the thrown fallback is frameFailures[0].rawError. With a sink, the common-ledger primary can be an earlier independent occurrence."
+    },
+    {
+      "obligation": "Strict portable success shape and cumulative before/after enforcement",
+      "evidence": [
+        "release-portable-inspection.js:35-55",
+        "release-surfaces.js:36-54,84-99",
+        "pending-round-lifecycle-surfaces.js:145-181"
+      ],
+      "observation": "Inspection refreshes actual handle diagnostics before a frame-error throw or empty-network assertions. Frame failures remain cumulative across inspections. Success requires empty socketAttempts, httpAttempts and errors and returns exactly {protocol,httpAttempts,socketAttempts,errors}. Pending lifecycle file journeys inspect before and after the visit while routes block HTTP(S)/WebSocket activity from context setup onward. The callback diagnostics field is the strict before-result, not a substituted raw object."
+    },
+    {
+      "obligation": "E06-04 and E06-05 — local snapshot order and recursive provenance",
+      "evidence": [
+        "pending-round-lifecycle-native-snapshot.js:23-82",
+        "pending-round-lifecycle-live-root-observation.js:89-126",
+        "pending-round-lifecycle-error-ledger.js:11-72",
+        "pending-round-lifecycle-evidence.js:164-179"
+      ],
+      "observation": "The shared snapshot reader invokes state before UI; live-root dispatch lists actual stateError before uiError. Browser recursive envelopes carry phase/stack/cause/rootInstanceId/document/timeOrigin/URL and materialization/serialization retain those fields. Primary measured evidence propagates rootInstanceId/timeOrigin. These local credits do not excuse the separate live-root document-before-browser ordering defect."
+    },
+    {
+      "obligation": "Late live/source/attachment/common-ledger finalization",
+      "evidence": [
+        "pending-round-lifecycle-evidence.js:112-198",
+        "pending-round-lifecycle-live-evidence.js:59-120",
+        "pending-round-lifecycle-error-ledger.js:114-150",
+        "pending-round-lifecycle-error-exposure.js:125-171",
+        "test-fixtures.js:89-100"
+      ],
+      "observation": "collectLive independently catches diagnostics versus screenshot/PNG-attachment failures, so diagnostics failure does not skip the screenshot attempt. finalize records runner failure, missing baseline prerequisite, actual source GET/comparison failure and measured JSON-attachment failure. JSON attachment failure is recorded before produceThrow. Multi-error exposures refresh on later occurrences, preserving stable serialized identities and identity-based caller-ledger append behavior; a sole occurrence returns the actual Error without synthetic allErrors/errorLedger exposure. A failed GET is not represented as successful source equality."
+    },
+    {
+      "obligation": "S10-C2 exposure seam, 09-S4/09-S5 and original E06-01 preservation",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:7-53,65-123,125-171",
+        "pending-round-lifecycle-error-ledger.js:11-47,82-150"
+      ],
+      "observation": "All three ingestion exposures reconcile an existing entry's phase only from an explicit nonempty wrapper phase; metadata enrichment alone calls reconciliation with no new phase authority. serializeError uses the recorded explicit occurrence phase ahead of intrinsic Error.phase. Reconciliation updates the same serialized object via Object.assign. Genuine caller errorLedger references are ingested in caller order before secondaryFailures and allErrors; serialized-only objects are not materialized as occurrences. These are personally read cross-component observations, not borrowed independent Evidence11 conclusions.",
+      "boundary": "The integration owner remains accountable for the complete obligations and non-surface seams."
+    }
+  ],
+  "componentDefects": [
+    {
+      "id": "SURFACE-SEAM-LIVE-CHRONOLOGY",
+      "classification": "Retained current-source obligation defect in a cross-component consuming body; not a newly introduced Correction11 finding in an assigned primary file.",
+      "priority": 2,
+      "confidence": 1,
+      "file": "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+      "lines": "31-41,51-53",
+      "governingObligations": [
+        "Original Native07 finding 7 / N06-N05 — Normalize and retain all observed snapshot failures",
+        "Native08 snapshot-before-document chronology",
+        "E06-04 local snapshot dispatch does not establish global browser/Node chronology"
+      ],
+      "trigger": "evaluateLiveRootObservation returns already observed stateError/uiError and an actual document identity that fails the bound identity assertion, such as a replacement document still containing game roots.",
+      "mechanism": "collectLiveRootStates stages the complete result, then records the later Node documentIdentity exception before iterating rootData.rootErrors. The ledger makes that document exception primary/order-first; rootFailure additionally selects docIdentityError before the normalized browser errors. Both browser siblings survive, but their chronology and governing primary are wrong.",
+      "actualPath": "visitSurface finally -> evidence.collectLive -> collectLivePageDiagnostics -> collectLiveRootStates -> ledger.recordError. The actual browser producer calls __nsReadRootSnapshot before it returns rootErrors/documentIdentity; the subsequent Node assertion cannot precede those getter occurrences.",
+      "evidence": [
+        "pending-round-lifecycle-live-root-observation.js:6-157",
+        "pending-round-lifecycle-native-snapshot.js:57-82",
+        "pending-round-lifecycle-live-evidence.js:28-53",
+        "pending-round-lifecycle-error-ledger.js:94-117,120-121",
+        "pending-substrate-07-native-admission.json:59-66",
+        "pending-substrate-08-native-salvage-audit.json:29-36"
+      ],
+      "repairMechanism": "Preserve raw staging and every independent failure, normalize the already observed browser occurrences before the later Node document validation occurrence, and select the earliest applicable normalized failure rather than a document-first category. No repair performed or additional correction authorized.",
+      "integrationRequirement": "Reconcile this finding with the evidence-ledger/collection component and the historical preservation credits. The scope inventory records live-evidence.js as unchanged, so do not label it an introduced Correction11 regression."
+    }
+  ],
+  "retainedFailurePathLimits": [
+    {
+      "id": "GENERIC-PRESENT-EARLY-HANDLE-LIMIT",
+      "evidence": [
+        "present-offline-helpers.js:12-15",
+
+[Showing lines 1-210 of 722. Use :211 to continue]

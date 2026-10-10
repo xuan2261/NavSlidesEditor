@@ -1,0 +1,44 @@
+AI coding assistant in your terminal
+
+Usage: jeikcode [OPTIONS] [COMMAND]
+
+Commands:
+  status      Show current login status
+  upgrade     Upgrade jeikcode in-place to the latest released version
+  rollback    Roll back to the previous version (swap with .bak on disk)
+  mcp         Manage MCP server entries in .mcp.json
+  daemon      Start the HTTP daemon for IDE integration
+  webui       Start the local browser webui
+  serve       Start a headless JeikCode server for remote attach (web UI + API)
+  attach      Attach a local client to a running JeikCode server (open web UI)
+  telemetry   Telemetry controls
+  plugin      Manage skill/command plugins
+  uninstall   Uninstall JeikCode: remove the binary, PATH edit, and data
+  init        Build (or refresh) the workspace code graph index and save it under `.jeikcode/codegraph/` so agent graph tools start fast
+  hooks       Manage hooks (list, test, enable/disable)
+  schedule    Manage local scheduled tasks (add/list/remove/enable/disable)
+  server      Manage host services installed by `--host` (list/uninstall)
+  completion  Generate a shell completion script on stdout
+  help        Print this message or the help of the given subcommand(s)
+
+Options:
+  -c, --continue                      Continue the previous session instead of starting a new one
+      --provider <PROVIDER>           Provider to use (overrides config default)
+      --model <MODEL>                 Model to use (overrides config provider model)
+      --lang <LANG>                   Set interface language (e.g. en, zh-CN, zh)
+      --config <CONFIG>               Path to config file
+      --seed-config <PATH>            FIRST-RUN ONLY: seed the user's config from this file when they don't yet have one (`~/.jeikcode/config.toml` absent). Copies it in once, then never touches it again — the user owns the writable copy. On read/parse failure, falls back to normal onboarding (never blocks startup). For offline/managed deploys (e.g. a bundled `jeikcode-default-config.toml` shipped next to the binary): point this at that file via the launcher. Env: `JEIKCODE_SEED_CONFIG`. No-op when the user already has a config, so it's safe to always pass. Env `JEIKCODE_SEED_CONFIG` is honored as a fallback when the flag is absent
+  -C, --dir <DIR>                     Working directory (defaults to current directory)
+  -p, --prompt <PROMPT>               Prompt to run in headless (non-interactive) mode
+      --prompt-file <PATH>            Read the prompt from a file
+  -v, --verbose                       Show tool calls, token usage, and turn summary on stderr
+      --dev                           Disable auto-update for this launch
+      --no-telemetry                  Disable telemetry for this invocation
+  -y, --dangerously-skip-permissions  Skip all permission prompts -- auto-approve every tool call
+      --host <HOST>                   Headless serve: bind address (alias: `--hosts`). When set without a subcommand (or with top-level `--port` / `--token` / `--no-token`), starts serve instead of the TUI. Example: `jeikcode --host 0.0.0.0 --port 4096 --token sk-my-secret` [aliases: --hosts]
+      --port <PORT>                   Headless serve: listen port (top-level shorthand for `serve --port`)
+      --token <TOKEN>                 Headless serve: fixed access token (OpenAI + Anthropic API key). Clients: `Authorization: Bearer`, `x-api-key`, or `api-key`. Mutually exclusive with `--no-token`. When omitted, a random token is minted [env: JEIKCODE_SERVER_TOKEN=]
+      --no-token                      Headless serve: disable webui access-token auth (INSECURE)
+      --yolo                          Headless serve: YOLO mode — auto-approve every tool and hide `request_user_input` so API automation never stalls on a modal
+  -h, --help                          Print help
+  -V, --version                       Print version

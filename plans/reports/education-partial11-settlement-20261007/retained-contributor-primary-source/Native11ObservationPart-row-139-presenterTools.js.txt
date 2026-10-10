@@ -1,0 +1,104 @@
+function getPresenterToolsScripts(presenterTools) {
+  if (!presenterTools) return ''
+  const parts = []
+
+  if (presenterTools.slideMenu) {
+    parts.push('<script src="/vendor/reveal-plugins/menu/menu.js"></script>')
+  }
+  if (presenterTools.chalkboard) {
+    parts.push('<script src="/vendor/reveal-plugins/chalkboard/plugin.js"></script>')
+    parts.push('<script src="/vendor/reveal-plugins/customcontrols/plugin.js"></script>')
+  }
+
+  return parts.join('\n  ')
+}
+
+function getPresenterToolsPlugins(presenterTools) {
+  if (!presenterTools) return ''
+  const plugins = []
+  if (presenterTools.slideMenu) plugins.push('RevealMenu')
+  if (presenterTools.chalkboard) plugins.push('RevealChalkboard', 'RevealCustomControls')
+  return plugins.length > 0 ? ', ' + plugins.join(', ') : ''
+}
+
+function getPresenterToolsConfig(presenterTools) {
+  if (!presenterTools) return ''
+  const parts = []
+
+  if (presenterTools.slideMenu) {
+    parts.push(`
+    menu: {
+      side: 'left', width: 'normal', numbers: true,
+      titleSelector: 'h1, h2, h3',
+      useTextContentForMissingTitles: true,
+      hideMissingTitles: false, markers: true,
+      themes: false, transitions: false,
+      openButton: true, openSlideNumber: true,
+      keyboard: true, sticky: true, autoOpen: true,
+      loadIcons: false,
+      custom: [{
+        title: 'Tools',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+        content: '<ul class="slide-menu-items">' +
+          '<li class="slide-menu-item" data-action="fullscreen"><span class="km">f</span>Fullscreen</li>' +
+          '<li class="slide-menu-item" data-action="speaker"><span class="km">s</span>Speaker View</li>' +
+          '<li class="slide-menu-item" data-action="overview"><span class="km">o</span>Slide Overview</li>' +
+          '<li class="slide-menu-item" data-action="pdf"><span class="km">e</span>PDF Export Mode</li>' +
+          '<li class="slide-menu-item" data-action="scroll"><span class="km">r</span>Scroll View Mode</li>' +
+          '<li class="slide-menu-item" data-action="help"><span class="km">?</span>Keyboard Help</li>' +
+        '</ul>'
+      }]
+    },`)
+  }
+
+  if (presenterTools.chalkboard) {
+    parts.push(`
+    chalkboard: {
+      boardmarkerWidth: 4, chalkWidth: 5, chalkEffect: 0.2,
+      toggleChalkboardButton: false, toggleNotesButton: false,
+      boardmarkers: [
+        { color: 'rgba(0,0,0,1)', cursor: 'crosshair' },       /* Black */
+        { color: 'rgba(100,100,100,1)', cursor: 'crosshair' }, /* Gray */
+        { color: 'rgba(255,255,255,1)', cursor: 'crosshair' }, /* White */
+        { color: 'rgba(220,20,60,1)', cursor: 'crosshair' },   /* Red */
+        { color: 'rgba(50,205,50,1)', cursor: 'crosshair' },   /* Green */
+        { color: 'rgba(30,144,255,1)', cursor: 'crosshair' },  /* Blue */
+        { color: 'rgba(255,220,0,1)', cursor: 'crosshair' },   /* Yellow */
+        { color: 'rgba(255,140,0,1)', cursor: 'crosshair' },   /* Orange */
+        { color: 'rgba(150,0,150,1)', cursor: 'crosshair' },   /* Purple */
+        { color: 'rgba(255,105,180,1)', cursor: 'crosshair' }  /* Pink */
+      ],
+      chalks: [
+        { color: 'rgba(255,255,255,0.7)', cursor: 'crosshair' }, /* White */
+        { color: 'rgba(200,200,200,0.7)', cursor: 'crosshair' }, /* Gray */
+        { color: 'rgba(237,20,28,0.7)', cursor: 'crosshair' },   /* Red */
+        { color: 'rgba(20,237,28,0.7)', cursor: 'crosshair' },   /* Green */
+        { color: 'rgba(96,154,244,0.7)', cursor: 'crosshair' },  /* Blue */
+        { color: 'rgba(255,220,0,0.7)', cursor: 'crosshair' },   /* Yellow */
+        { color: 'rgba(220,133,41,0.7)', cursor: 'crosshair' },  /* Orange */
+        { color: 'rgba(220,0,220,0.7)', cursor: 'crosshair' },   /* Purple */
+        { color: 'rgba(255,182,193,0.7)', cursor: 'crosshair' }, /* Pink */
+        { color: 'rgba(0,255,255,0.7)', cursor: 'crosshair' }    /* Cyan */
+      ]
+    },
+    customcontrols: {
+      controls: [
+        {
+          icon: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
+          title: 'Toggle notes canvas (C)',
+          action: 'RevealChalkboard.toggleNotesCanvas();'
+        },
+        {
+          icon: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M2 17h20"/><path d="M6 21h12"/></svg>',
+          title: 'Toggle chalkboard (B)',
+          action: 'RevealChalkboard.toggleChalkboard();'
+        }
+      ]
+    },`)
+  }
+
+  return parts.join('')
+}
+
+
+[Showing lines 126-227 of 325. Use :228 to continue]

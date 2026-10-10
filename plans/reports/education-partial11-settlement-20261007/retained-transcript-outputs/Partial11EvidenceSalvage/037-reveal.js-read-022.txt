@@ -1,0 +1,192 @@
+				}
+
+			} );
+		}
+
+	}
+
+	/**
+	 * Finds and stores references to DOM elements which are
+	 * required by the presentation. If a required element is
+	 * not found, it is created.
+	 */
+	function setupDOM() {
+
+		// Prevent transitions while we're loading
+		dom.slides.classList.add( 'no-transition' );
+
+		if( Device.isMobile ) {
+			dom.wrapper.classList.add( 'no-hover' );
+		}
+		else {
+			dom.wrapper.classList.remove( 'no-hover' );
+		}
+
+		backgrounds.render();
+		slideNumber.render();
+		jumpToSlide.render();
+		controls.render();
+		progress.render();
+		notes.render();
+
+		// Overlay graphic which is displayed during the paused mode
+		dom.pauseOverlay = Util.createSingletonNode( dom.wrapper, 'div', 'pause-overlay', config.controls ? '<button class="resume-button">Resume presentation</button>' : null );
+
+		dom.statusElement = createStatusElement();
+
+		dom.wrapper.setAttribute( 'role', 'application' );
+	}
+
+	/**
+	 * Creates a hidden div with role aria-live to announce the
+	 * current slide content. Hide the div off-screen to make it
+	 * available only to Assistive Technologies.
+	 *
+	 * @return {HTMLElement}
+	 */
+	function createStatusElement() {
+
+		let statusElement = dom.wrapper.querySelector( '.aria-status' );
+		if( !statusElement ) {
+			statusElement = document.createElement( 'div' );
+			statusElement.style.position = 'absolute';
+			statusElement.style.height = '1px';
+			statusElement.style.width = '1px';
+			statusElement.style.overflow = 'hidden';
+			statusElement.style.clip = 'rect( 1px, 1px, 1px, 1px )';
+			statusElement.classList.add( 'aria-status' );
+			statusElement.setAttribute( 'aria-live', 'polite' );
+			statusElement.setAttribute( 'aria-atomic','true' );
+			dom.wrapper.appendChild( statusElement );
+		}
+		return statusElement;
+
+	}
+
+	/**
+	 * Announces the given text to screen readers.
+	 */
+	function announceStatus( value ) {
+
+		dom.statusElement.textContent = value;
+
+	}
+
+	/**
+	 * Converts the given HTML element into a string of text
+	 * that can be announced to a screen reader. Hidden
+	 * elements are excluded.
+	 */
+	function getStatusText( node ) {
+
+		let text = '';
+
+		// Text node
+		if( node.nodeType === 3 ) {
+			text += node.textContent.trim();
+		}
+		// Element node
+		else if( node.nodeType === 1 ) {
+
+			let isAriaHidden = node.getAttribute( 'aria-hidden' );
+			let isDisplayHidden = window.getComputedStyle( node )['display'] === 'none';
+			if( isAriaHidden !== 'true' && !isDisplayHidden ) {
+
+				// Capture alt text from img and video elements
+				if( node.tagName === 'IMG' || node.tagName === 'VIDEO' ) {
+					let altText = node.getAttribute( 'alt' );
+					if( altText ) {
+						text += ensurePunctuation( altText );
+					}
+				}
+
+				Array.from( node.childNodes ).forEach( child => {
+					text += getStatusText( child );
+				} );
+
+				// Add period after block-level text elements to improve
+				// screen reader experience
+				const textElements = ['P', 'DIV', 'UL', 'OL', 'LI', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE'];
+				if( textElements.includes( node.tagName ) && text.trim() !== '' ) {
+					text = ensurePunctuation( text );
+				}
+
+			}
+
+		}
+
+		text = text.trim();
+
+		return text === '' ? '' : text + ' ';
+
+	}
+
+	/**
+	 * Ensures text ends with proper punctuation by adding a period
+	 * if it doesn't already end with punctuation.
+	 */
+	function ensurePunctuation( text ) {
+
+		const trimmedText = text.trim();
+
+		if( trimmedText === '' ) {
+			return text;
+		}
+
+		return !/[.!?]$/.test(trimmedText) ? trimmedText + '.' : trimmedText;
+
+	}
+
+	/**
+	 * This is an unfortunate necessity. Some actions – such as
+	 * an input field being focused in an iframe or using the
+	 * keyboard to expand text selection beyond the bounds of
+	 * a slide – can trigger our content to be pushed out of view.
+	 * This scrolling can not be prevented by hiding overflow in
+	 * CSS (we already do) so we have to resort to repeatedly
+	 * checking if the slides have been offset :(
+	 */
+	function setupScrollPrevention() {
+
+		setInterval( () => {
+			if( !scrollView.isActive() && dom.wrapper.scrollTop !== 0 || dom.wrapper.scrollLeft !== 0 ) {
+				dom.wrapper.scrollTop = 0;
+				dom.wrapper.scrollLeft = 0;
+			}
+		}, 1000 );
+
+	}
+
+	/**
+	 * After entering fullscreen we need to force a layout to
+	 * get our presentations to scale correctly. This behavior
+	 * is inconsistent across browsers but a force layout seems
+	 * to normalize it.
+	 */
+	function setupFullscreen() {
+
+		document.addEventListener( 'fullscreenchange', onFullscreenChange );
+		document.addEventListener( 'webkitfullscreenchange', onFullscreenChange );
+
+	}
+
+	/**
+	 * Registers a listener to postMessage events, this makes it
+	 * possible to call all reveal.js API methods from another
+	 * window. For example:
+	 *
+	 * revealWindow.postMessage( JSON.stringify({
+	 *   method: 'slide',
+	 *   args: [ 2 ]
+	 * }), '*' );
+	 */
+	function setupPostMessage() {
+
+		if( config.postMessage ) {
+			window.addEventListener( 'message', onPostMessage, false );
+		}
+
+	}
+
+
+[Showing lines 311-500 of 2973. Use :501 to continue]

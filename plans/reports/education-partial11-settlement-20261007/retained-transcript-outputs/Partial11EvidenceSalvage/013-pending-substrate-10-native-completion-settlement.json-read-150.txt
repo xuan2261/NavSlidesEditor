@@ -1,0 +1,63 @@
+      "repairNeeded": "Add read-only discriminators to the same evaluate: Reveal.isOverlayOpen(), Reveal.isPaused() combined with the resume-key set (including config.keyboard togglePause keys) for the pressed keyCode, the speaker-notes className regex, config.keyboard truthiness, and whether config.keyboard or Reveal.getBindings() overrides the pressed arrow keyCode. Use Reveal's strict `=== false` condition semantics and its tagName regex. Do not force focus or change navigation policy.",
+      "id": "N10B-01"
+    },
+    {
+      "title": "Bind the initial slide read to its observed document before early return",
+      "mechanism": "The initial current-slide read at :19 is a separate page.evaluate that returns only slideId, with no url/documentId/timeOrigin. When it equals targetSlideId, :21 returns success without validating which document produced it. A replacement between the :7 docDomain read and :19 is therefore accepted, and no raw document evidence is staged for the read that decided the outcome.",
+      "repairNeeded": "Read slideId together with url/documentId/timeOrigin in one evaluate, stage it raw, call assertDocumentIdentity, and only then compare it with targetSlideId (the same seam as the poll at :85-105).",
+      "id": "N10B-02",
+      "priority": 3,
+      "file": "tests/e2e/education/pending-round-lifecycle-navigation.js",
+      "lineStart": 19,
+      "lineEnd": 21
+    },
+    {
+      "confidence": 0.86,
+      "title": "Prevent phase-less caller errorLedger items from overwriting authoritative recorded phases",
+      "id": "S10-C2",
+      "repairNeeded": "In error-exposure.js, only update existing.phase during reconciliation if the caller wrapper provides an explicit, valid item.phase string. Do not allow a fallback or intrinsic err.phase from an unannotated caller wrapper to clobber an already-recorded explicit phase.",
+      "lineStart": 77,
+      "priority": 2,
+      "mechanism": "In ingestPreexistingErrors, when a caller errorLedger item lacks an explicit phase property, resolveWrapperMeta falls back to err.phase || `${phase}:errorLedger`. If the referenced error was already recorded earlier in the ledger with an authoritative explicit phase (e.g. 'portable:close'), reconcileEntry executes because existing.phase !== p, overwriting the recorded phase with the fallback/intrinsic phase and re-serializing the entry. This regresses the explicit recorded phase on exposure.",
+      "lineEnd": 85,
+      "file": "tests/e2e/education/pending-round-lifecycle-error-exposure.js"
+    }
+  ],
+  "additionalScopeCandidate": {
+    "consumerVisibleMechanism": "evaluateActionCandidates returns candidates from the public, replaceable window.__nsRecordedPackets (:146-147). storeHealth (:148) checks only the lifecycle store. In-place mutation of an original packet is detected, because that packet object is also the retained native-action detail. Replacing the array, or replacing an element with a forged object, leaves the retained and private stores untouched, so health stays true. extractActionBracket (observation.js:107-131) then builds the action bracket from the forged packet: rootEventsBefore/After, stateAfter and tCapture/tBubble, which witness.js:44-63 adopts as the Start baseline. This is the same public-store replacement model as N07-04, applied to the packet store.",
+    "lineEnd": 158,
+    "title": "Bind returned action packets to the integrity-checked native-action records",
+    "confidence": 0.6,
+    "id": "NF-A4",
+    "lineStart": 146,
+    "repairNeeded": "Inside evaluateActionCandidates, derive candidates from, or verify each one against, the closure-retained native-action entries. For example, expose a private read of native-action details by sequence, or verify that each candidate is identical to the retained entry's detail and matches its private JSON clone. Report a recorder:store error when they diverge. evaluatePreActionCursor's lastSeq source (:36-37) needs the same binding.",
+    "priority": 2,
+    "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+    "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+    "scopeDecision": "Original N07-04/N07-05 explicitly cover lifecycle store integrity. Extending identical checks to separately replaceable action-packet storage is not automatically a required cutover; no new repair scope authorized."
+  },
+  "crossReviewReconciliation": [
+    "All five settled09 specified local defect cases have repairs, but 09-S5 remains PARTIAL for phase-less caller wrapper reconciliation (S10-C2). Earlier Evidence10 local closure is not full phase-precedence proof.",
+    "Original N07-07 remains PARTIAL: S10-C1 chronology and NF-A3 guard normalization.",
+    "Original N07-08 remains PARTIAL: recursive setup cause serialization exists, but NF-A2 can overwrite it later.",
+    "Original N07-10 listed focus exclusions are repaired locally; full production eligibility remains PARTIAL (N10B-01).",
+    "N10B-02 is an additional initial-read document-binding defect, not an assertion that the corrected navigation poll seam regressed.",
+    "Caller signature migration remains deferred by authority; no shim or runtime compatibility claim."
+  ],
+  "deliveryBlockers": [
+    {
+      "id": "NATIVE10_GENUINE_DELIVERY_ABSENT",
+      "classification": "INDEPENDENT_DELIVERY_BLOCKER",
+      "evidence": [
+        "pending-substrate-10-terminal-delivery.json:1-78",
+        "pending-substrate-10-terminal-failure-counsel.json:27-45",
+        "pending-substrate-10-scope-preservation.json:340-364"
+      ],
+      "facts": "Both writers actually stopped. Native10 ended with transport stream_error/exit1 after1308.7s and has no genuine completion receipt. Evidence10 completed after819.01s and has a genuine receipt. The absent Native receipt remains fatal to ordinary admission even if source review were clean. No receipt was reconstructed, fabricated or substituted."
+    },
+    {
+      "id": "EVIDENCE10_RECEIPT_SCOPE_LIMITATIONS",
+      "classification": "DELIVERED_RECEIPT_LIMITATION_NOT_AUTOMATIC_SOURCE_DEFECT",
+      "evidence": [
+
+[Showing lines 620-680 of 723. Use :681 to continue]

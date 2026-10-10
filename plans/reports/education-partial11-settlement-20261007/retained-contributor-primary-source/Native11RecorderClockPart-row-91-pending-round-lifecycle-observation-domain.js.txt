@@ -1,0 +1,187 @@
+import {
+  computeCompletedHiddenInterval,
+  computeActivityInterval,
+} from './pending-round-lifecycle-activity-interval.js'
+import {
+  stripHash,
+  collectPauseResumePairs,
+} from './pending-round-lifecycle-history-domain.js'
+
+export { stripHash, collectPauseResumePairs }
+
+export function assertValidCursor(cursor) {
+  if (!cursor || typeof cursor !== 'object' || typeof cursor.sequence !== 'number' || !Number.isFinite(cursor.sequence)) {
+    throw new Error('Valid cursor with finite sequence is required')
+  }
+  if (!cursor.type || typeof cursor.type !== 'string' || !cursor.rootInstanceId || typeof cursor.rootInstanceId !== 'string') {
+    throw new Error('Cursor must contain non-empty type and rootInstanceId')
+  }
+  if (!cursor.elementId || !cursor.slideId || !cursor.gameType) {
+    throw new Error(`Cursor lacks complete tuple: elem=${cursor.elementId} slide=${cursor.slideId} type=${cursor.gameType}`)
+  }
+  if (!cursor.documentId || typeof cursor.timeOrigin !== 'number' || !cursor.url) {
+    throw new Error('Cursor lacks complete document domain')
+  }
+}
+
+export function validateCursorPrerequisites(cursor) {
+  assertValidCursor(cursor)
+  if (cursor.recorderError) {
+    const err = new Error('Passive recorder setup failed: ' + (cursor.recorderError.message || 'unknown'))
+    err.cause = cursor.recorderError
+    throw err
+  }
+  if (cursor.recorderReady === false) throw new Error('Passive lifecycle recorder not ready from window')
+  if (!cursor.isMounted) throw new Error(`Root ${cursor.elementId} is not mounted at cursor`)
+  if (!cursor.hasUIGetter) throw new Error('window.__nsOwnerUIEvidence getter unavailable at cursor')
+  assertPhaseStateAndUI('cursorState', cursor.state, cursor.stateError)
+  assertPhaseStateAndUI('cursorUI', cursor.ui, cursor.uiError)
+}
+
+export function assertCurrentNodeAgreement(currentNode, cursor) {
+  if (!currentNode || typeof currentNode !== 'object') throw new Error('Current node observation is required')
+  if (!currentNode.isConnected) {
+    throw new Error(`Current root ${currentNode.elementId || cursor.elementId} is disconnected from DOM at action extraction`)
+  }
+  if (currentNode.rootInstanceId !== cursor.rootInstanceId) {
+    throw new Error(`Root instance mismatch at action extraction: current ${currentNode.rootInstanceId} vs cursor ${cursor.rootInstanceId}`)
+  }
+  if (currentNode.elementId !== cursor.elementId || currentNode.slideId !== cursor.slideId || currentNode.gameType !== cursor.gameType) {
+    throw new Error(`Current node tuple mismatch: elem=${currentNode.elementId} vs cursor=${cursor.elementId}`)
+  }
+  if (currentNode.documentId !== cursor.documentId || currentNode.timeOrigin !== cursor.timeOrigin) {
+    throw new Error(`Document domain mismatch: current doc=${currentNode.documentId} vs cursor doc=${cursor.documentId}`)
+  }
+  if (stripHash(currentNode.url) !== stripHash(cursor.url)) {
+    throw new Error(`URL domain mismatch: current ${currentNode.url} vs cursor ${cursor.url}`)
+  }
+}
+
+export function matchPacketToCursor(p, cursor) {
+  if (!p || p.sequence <= cursor.sequence) return false
+  if (p.rootInstanceId !== cursor.rootInstanceId) return false
+  if (p.elementId !== cursor.elementId || p.slideId !== cursor.slideId || p.gameType !== cursor.gameType) return false
+  if (p.documentId !== cursor.documentId || p.timeOrigin !== cursor.timeOrigin) return false
+  if (stripHash(p.url) !== stripHash(cursor.url)) return false
+  if (cursor.type && p.eventType !== cursor.type) return false
+  const expectedCommand = cursor.command !== undefined ? cursor.command : null
+  if (p.command !== expectedCommand) return false
+  return true
+}
+
+function assertPhaseStateAndUI(label, val, err) {
+  if (err || val === null || (label.startsWith('ui') && typeof val !== 'object')) {
+    const ex = new Error(`Invalid ${label}: ${err?.message || 'null'}`)
+    ex.cause = err
+    throw ex
+  }
+}
+
+export function validateObservationPrerequisites(raw) {
+  if (!raw || typeof raw !== 'object') throw new Error('Raw observation result must be an object')
+  if (raw.recorderError) {
+    const err = new Error('Passive recorder setup failed: ' + (raw.recorderError.message || 'unknown'))
+    err.cause = raw.recorderError
+    throw err
+  }
+  if (raw.recorderReady === false) throw new Error('Passive lifecycle recorder not ready from window')
+  if (raw.recorderReady && (!raw.hasLifecycleEvents || !Array.isArray(raw.rootEvents) || !Array.isArray(raw.documentVisibilityEvents))) {
+    throw new Error('Lifecycle event store is missing, invalid, or truncated')
+  }
+  if (!raw.isMounted) throw new Error(`Root ${raw.elementId || 'unknown'} is not mounted (static-hidden prerequisite not met)`)
+  if (!raw.hasUIGetter) throw new Error('window.__nsOwnerUIEvidence getter function is not available')
+  assertPhaseStateAndUI('state', raw.state, raw.stateError)
+  assertPhaseStateAndUI('ui', raw.ui, raw.uiError)
+}
+
+export function validatePacketPrerequisites(packet) {
+  if (!packet || typeof packet !== 'object') throw new Error('Action packet must be an object')
+  if (!packet.isTrusted) throw new Error('Native action packet is not trusted')
+  if (!packet.isMountedBefore || !packet.isMountedAfter) throw new Error('Root was not mounted before/after native action')
+  if (!packet.hasUIGetter) throw new Error('window.__nsOwnerUIEvidence getter unavailable during action')
+  assertPhaseStateAndUI('stateBefore', packet.stateBefore, packet.stateBeforeError)
+  assertPhaseStateAndUI('stateAfter', packet.stateAfter, packet.stateAfterError)
+  assertPhaseStateAndUI('uiBefore', packet.uiBefore, packet.uiBeforeError)
+  assertPhaseStateAndUI('uiAfter', packet.uiAfter, packet.uiAfterError)
+}
+
+export function buildCorrelatedSample(rawData) {
+  if (!rawData.hasLifecycleEvents || !Array.isArray(rawData.rootEvents)) {
+    throw new Error('Cannot build correlated sample without valid lifecycle event history')
+  }
+  const { pairs: completedPairs, pending: pendingPause } = collectPauseResumePairs(rawData.rootEvents)
+  const ongoingPause = rawData.paused ? pendingPause : null
+  const hiddenOffsetInterval = computeCompletedHiddenInterval(completedPairs)
+  const activityInterval = computeActivityInterval({
+    rawInterval: rawData.rawInterval,
+    paused: rawData.paused,
+    ongoingPause,
+    completedHidden: hiddenOffsetInterval,
+  })
+  return Object.assign({}, rawData, {
+    timerText: rawData.ui?.timerText || null,
+    activityInterval,
+    hiddenOffsetInterval,
+    provenance: {
+      hasLifecycleEvents: rawData.hasLifecycleEvents,
+      rootEventsCount: rawData.rootEvents?.length || 0,
+      totalEventsCount: rawData.eventsCount || 0,
+      completedPauseCount: completedPairs.length,
+      hasOngoingPause: Boolean(ongoingPause),
+    },
+  })
+}
+
+export function buildActionBracket(packet) {
+  const completedPairsBefore = packet.completedPairsBefore || []
+  const completedHiddenBefore = computeCompletedHiddenInterval(completedPairsBefore)
+  const pausedBefore = Boolean(packet.pausedBefore)
+  const ongoingPauseBefore = pausedBefore ? packet.pendingPauseBefore : null
+  if (pausedBefore && !ongoingPauseBefore) {
+    throw new Error(`Action started while root ${packet.elementId} was paused, but lacks ongoing pause anchor`)
+  }
+  const captureActivity = computeActivityInterval({
+    rawInterval: { min: packet.tCapture, max: packet.tCapture },
+    paused: pausedBefore,
+    ongoingPause: ongoingPauseBefore,
+    completedHidden: completedHiddenBefore,
+  })
+
+  const completedPairsAfter = packet.completedPairsAfter || []
+  const completedHiddenAfter = computeCompletedHiddenInterval(completedPairsAfter)
+  const pausedAfter = Boolean(packet.pausedAfter)
+  const ongoingPauseAfter = pausedAfter ? packet.pendingPauseAfter : null
+  if (pausedAfter && !ongoingPauseAfter) {
+    throw new Error(`Action ended while root ${packet.elementId} was paused, but lacks ongoing pause anchor`)
+  }
+  const bubbleActivity = computeActivityInterval({
+    rawInterval: { min: packet.tBubble, max: packet.tBubble },
+    paused: pausedAfter,
+    ongoingPause: ongoingPauseAfter,
+    completedHidden: completedHiddenAfter,
+  })
+
+  return Object.assign({}, packet, {
+    effectiveSlideId: packet.slideId,
+    rawInterval: { min: packet.tCapture, max: packet.tBubble },
+    activityInterval: {
+      min: Math.min(captureActivity.min, bubbleActivity.min),
+      max: Math.max(captureActivity.max, bubbleActivity.max),
+    },
+    captureActivity,
+    bubbleActivity,
+    hiddenOffsetInterval: completedHiddenAfter,
+    rootEventsBefore: packet.rootEventsBefore,
+    docEventsBefore: packet.docEventsBefore,
+    rootEventsAfter: packet.rootEventsAfter,
+    docEventsAfter: packet.docEventsAfter,
+    provenance: {
+      tCapture: packet.tCapture,
+      tBubble: packet.tBubble,
+      sequence: packet.sequence,
+      pausedBefore,
+      pausedAfter,
+      hasLifecycleEvents: packet.hasLifecycleEvents,
+    },
+  })
+}

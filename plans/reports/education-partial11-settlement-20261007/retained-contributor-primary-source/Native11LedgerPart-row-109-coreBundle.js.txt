@@ -1,0 +1,12 @@
+async function serializeArgumentWithCallbacks(owner, page, arg) {
+…
+}
+function parseResult(value2) {
+  return parseSerializedValue(value2, void 0);
+}
+function assertMaxArguments(count, max) {
+  if (count > max)
+    throw new Error("Too many arguments. If you need to pass more than 1 argument to the function wrap them in an object.");
+}
+
+[Showing lines 57766-57772 of 75813. Use :57773 to continue]

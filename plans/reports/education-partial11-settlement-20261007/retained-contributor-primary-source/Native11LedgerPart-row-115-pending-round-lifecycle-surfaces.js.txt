@@ -1,0 +1,193 @@
+import { apiCreateShareLink } from '../fixtures/test-fixtures.js'
+import { launchPresentPopup } from './present-offline-helpers.js'
+import { downloadArtifact, freshPortable } from './release-surfaces.js'
+import { PASSIVE_OBSERVATION_INIT_SCRIPT } from './pending-round-lifecycle-observation.js'
+import { computePlannedUrl, validateManifest } from './pending-round-lifecycle-evidence-domain.js'
+
+function validateSurfaceSink(evidence) {
+  if (
+    !evidence ||
+    typeof evidence.stage !== 'function' ||
+    typeof evidence.recordError !== 'function' ||
+    typeof evidence.setActivePage !== 'function' ||
+    typeof evidence.collectLive !== 'function' ||
+    typeof evidence.bindDocumentIdentity !== 'function' ||
+    typeof evidence.assertDocumentIdentity !== 'function' ||
+    typeof evidence.getExpectedRoots !== 'function' ||
+    typeof evidence.getPrimaryError !== 'function' ||
+    typeof evidence.produceThrow !== 'function'
+  ) {
+    throw new Error('Mandatory evidence sink validation failed: missing required callable lifecycle methods')
+  }
+  const manifest = evidence.getExpectedRoots()
+  validateManifest(manifest)
+}
+
+async function safeClose(closeTarget, evidence, phase) {
+  try {
+    if (closeTarget) {
+      await closeTarget.close()
+    }
+  } catch (closeErr) {
+    if (evidence?.recordError) {
+      evidence.recordError(phase, closeErr)
+    } else {
+      throw closeErr
+    }
+  }
+}
+
+export async function visitSurface(options, visit) {
+  const { page, request, browser, id, testInfo, surface, evidence } = options
+  validateSurfaceSink(evidence)
+
+  if (surface === 'present') {
+    const plannedUrl = computePlannedUrl('present', { parentUrl: page.url(), id })
+    await page.context().addInitScript(PASSIVE_OBSERVATION_INIT_SCRIPT)
+    let popupPage = null
+    page.once('popup', (popup) => {
+      popupPage = popup
+      evidence.setActivePage(popup, { surface: 'present', plannedUrl })
+      evidence.stage('presentPopupCreated', { url: popup.url(), plannedUrl })
+    })
+    try {
+      const { popup } = await launchPresentPopup(page)
+      popupPage = popup
+      await popup.waitForFunction(() => window.Reveal?.isReady())
+      const docIdentity = await popup.evaluate(() => ({
+        url: window.location.href,
+        documentId: window.__nsDocumentId || null,
+        timeOrigin: window.performance?.timeOrigin || null,
+      }))
+      evidence.stage('presentDocumentIdentityObserved', docIdentity)
+      evidence.bindDocumentIdentity(docIdentity)
+      return await visit({
+        page: popup,
+        surface: 'present',
+        file: null,
+        inspectNetwork: null,
+        diagnostics: null,
+        error: null,
+      })
+    } catch (err) {
+      evidence.recordError('surface:present', err)
+      throw err
+    } finally {
+      if (popupPage) {
+        try {
+          await evidence.collectLive(popupPage)
+        } catch (liveErr) {
+          evidence.recordError('surface:present:collectLive', liveErr)
+        }
+        await safeClose(popupPage, evidence, 'surface:present:close')
+      }
+    }
+  }
+
+  if (surface === 'share') {
+    await page.context().addInitScript(PASSIVE_OBSERVATION_INIT_SCRIPT)
+    const share = await apiCreateShareLink(request, id)
+    const plannedUrl = computePlannedUrl('share', { parentUrl: page.url(), token: share.token })
+    const sharePage = await page.context().newPage()
+    evidence.setActivePage(sharePage, { surface: 'share', token: share.token, plannedUrl })
+    evidence.stage('sharePageCreated', { token: share.token, plannedUrl })
+    try {
+      await sharePage.goto(`/share/${share.token}`)
+      await sharePage.waitForFunction(() => window.Reveal?.isReady())
+      const docIdentity = await sharePage.evaluate(() => ({
+        url: window.location.href,
+        documentId: window.__nsDocumentId || null,
+        timeOrigin: window.performance?.timeOrigin || null,
+      }))
+      evidence.stage('shareDocumentIdentityObserved', docIdentity)
+      evidence.bindDocumentIdentity(docIdentity)
+      return await visit({
+        page: sharePage,
+        surface: 'share',
+        file: null,
+        inspectNetwork: null,
+        diagnostics: null,
+        error: null,
+      })
+    } catch (err) {
+      evidence.recordError('surface:share', err)
+      throw err
+    } finally {
+      try {
+        await evidence.collectLive(sharePage)
+      } catch (liveErr) {
+        evidence.recordError('surface:share:collectLive', liveErr)
+      }
+      await safeClose(sharePage, evidence, 'surface:share:close')
+    }
+  }
+
+  if (surface === 'file') {
+    const file = await downloadArtifact(page, testInfo, 'Export HTML', 'portable.html')
+    const plannedUrl = computePlannedUrl('file', { file })
+    let stashedHandle = null
+    try {
+      const portable = await freshPortable(browser, file, {
+        initScripts: [PASSIVE_OBSERVATION_INIT_SCRIPT],
+        evidence,
+        onPageCreated: async (earlyPortableHandle) => {
+          stashedHandle = earlyPortableHandle
+          evidence.setActivePage(earlyPortableHandle.page, { surface: 'file', file, plannedUrl })
+          evidence.stage('portablePageCreated', { file, plannedUrl, diagnostics: earlyPortableHandle.diagnostics })
+        },
+      })
+      if (!stashedHandle) stashedHandle = portable
+      const docIdentity = await stashedHandle.page.evaluate(() => ({
+        url: window.location.href,
+        documentId: window.__nsDocumentId || null,
+        timeOrigin: window.performance?.timeOrigin || null,
+      }))
+      evidence.stage('fileDocumentIdentityObserved', docIdentity)
+      evidence.bindDocumentIdentity(docIdentity)
+      evidence.stage('portableDiagnosticsBefore', stashedHandle.diagnostics)
+      let networkBefore = null
+      try {
+        networkBefore = await stashedHandle.inspectNetwork()
+        evidence.stage('portableNetworkBefore', { networkBefore, file })
+      } catch (netErr) {
+        evidence.recordError('surface:file:inspectNetworkBefore', netErr)
+        throw netErr
+      } finally {
+        evidence.stage('portableDiagnosticsBeforeSettled', stashedHandle.diagnostics)
+      }
+      return await visit({
+        page: stashedHandle.page,
+        surface: 'file',
+        file,
+        inspectNetwork: stashedHandle.inspectNetwork,
+        diagnostics: networkBefore,
+        error: null,
+      })
+    } catch (err) {
+      if (stashedHandle?.diagnostics) {
+        evidence.stage('portableDiagnosticsError', stashedHandle.diagnostics)
+      }
+      evidence.recordError('surface:file', err)
+      throw err
+    } finally {
+      if (stashedHandle) {
+        try {
+          const networkAfter = await stashedHandle.inspectNetwork()
+          evidence.stage('portableNetworkAfter', networkAfter)
+        } catch (netAfterErr) {
+          evidence.recordError('surface:file:inspectNetworkAfter', netAfterErr)
+        } finally {
+          evidence.stage('portableDiagnosticsAfterSettled', stashedHandle.diagnostics)
+        }
+        try {
+          await evidence.collectLive(stashedHandle.page)
+        } catch (liveErr) {
+          evidence.recordError('surface:file:collectLive', liveErr)
+        }
+        await safeClose(stashedHandle.context, evidence, 'surface:file:close')
+      }
+    }
+  }
+
+  throw new Error(`Unsupported surface: ${surface}`)
+}

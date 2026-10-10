@@ -1,0 +1,151 @@
+/**
+ * In-browser owner UI observation script defining readonly window.__nsOwnerUIEvidence.
+ * Pure DOM getter with no external lexical dependencies.
+ */
+export const OWNER_UI_OBSERVATION_INIT_SCRIPT = `
+(() => {
+  if (typeof window === 'undefined') return
+  function getUIEvidence(node, gameType) {
+    if (!node || node.nodeType !== 1) return null
+    const result = {
+      buttons: [],
+      inputs: [],
+      timerText: null,
+      statusText: null,
+      details: {},
+    }
+    for (const btn of node.querySelectorAll('button')) {
+      result.buttons.push({
+        command: btn.dataset?.nsCommand || btn.getAttribute('data-ns-command') || null,
+        cell: btn.dataset?.nsCell || null,
+        text: btn.textContent?.trim() || '',
+        disabled: Boolean(btn.disabled),
+        visible: btn.offsetParent !== null && !btn.hidden,
+        pressed: btn.getAttribute('aria-pressed'),
+      })
+    }
+    for (const input of node.querySelectorAll('input, select')) {
+      result.inputs.push({
+        tag: input.tagName.toLowerCase(),
+        type: input.getAttribute('type') || null,
+        value: input.value,
+        disabled: Boolean(input.disabled),
+        visible: input.offsetParent !== null && !input.hidden,
+        checked: input.type === 'radio' || input.type === 'checkbox' ? Boolean(input.checked) : null,
+        label: input.getAttribute('aria-label') || null,
+      })
+    }
+    const statusEl = node.querySelector('[role="status"], [role="alert"]')
+    result.statusText = statusEl ? statusEl.textContent?.trim() || null : null
+    const standardTimer = node.querySelector('[role="timer"], [data-ns-countdown], output')
+    if (standardTimer) result.timerText = standardTimer.textContent?.trim() || null
+    if (gameType === 'quiz' || !result.timerText) {
+      for (const p of node.querySelectorAll('p')) {
+        const txt = p.textContent?.trim() || ''
+        if (/^Time remaining:\\s*\\d+\\s*seconds?$/i.test(txt) || txt === 'No time limit') {
+          result.timerText = txt
+          break
+        }
+      }
+    }
+    if (gameType === 'quiz') {
+      const scoreEl = Array.from(node.querySelectorAll('p')).find((p) => p.textContent?.startsWith('Score:'))
+      const progressEl = Array.from(node.querySelectorAll('p')).find(
+        (p) => p.textContent?.startsWith('Question ') || p.textContent?.includes('questions completed')
+      )
+      const options = Array.from(node.querySelectorAll('input[type="radio"], input[type="checkbox"], [data-ns-answer-option]')).map((opt) => ({
+        value: opt.value || opt.dataset?.nsOptionId || opt.textContent?.trim() || '',
+        checked: Boolean(opt.checked),
+        disabled: Boolean(opt.disabled),
+        text: opt.closest('label')?.textContent?.trim() || opt.textContent?.trim() || '',
+      }))
+      result.details.quiz = {
+        scoreText: scoreEl ? scoreEl.textContent?.trim() : null,
+        progressText: progressEl ? progressEl.textContent?.trim() : null,
+        feedbackText: result.statusText,
+        options,
+      }
+    } else if (gameType === 'hot-potato') {
+      const select = node.querySelector('select[aria-label="Current participant"]')
+      const options = select ? Array.from(select.options).map((opt) => ({ value: opt.value, text: opt.text })) : []
+      const participantScoreEl = node.querySelector('p[aria-label="Participant score"]')
+      const leaderboardEl = node.querySelector('ol[aria-label="Leaderboard"]')
+      const leaderboardRows = leaderboardEl
+        ? Array.from(leaderboardEl.querySelectorAll('li')).map((li) => li.textContent?.trim() || '')
+        : []
+      result.details.hotPotato = {
+        options,
+        participantScoreText: participantScoreEl ? participantScoreEl.textContent?.trim() : null,
+        leaderboardRows,
+        leaderboardHidden: leaderboardEl ? Boolean(leaderboardEl.hidden) : true,
+      }
+    } else if (gameType === 'relay-race') {
+      const track = node.querySelector('ol[aria-label="Team lanes"]')
+      const lanes = track
+        ? Array.from(track.querySelectorAll('li')).map((li) => {
+            const span = li.querySelector('span')
+            const progress = li.querySelector('progress')
+            return {
+              label: span ? span.textContent?.trim() || '' : '',
+              value: progress ? Number(progress.value) : null,
+              max: progress ? Number(progress.max) : null,
+            }
+          })
+        : []
+      result.details.relayRace = { lanes, feedbackText: result.statusText }
+    } else if (gameType === 'jeopardy') {
+      const cells = Array.from(node.querySelectorAll('button[data-ns-cell]')).map((cell) => ({
+        cellId: cell.dataset.nsCell,
+        disabled: Boolean(cell.disabled),
+        text: cell.textContent?.trim() || '',
+      }))
+      const teamControls = Array.from(node.querySelectorAll('button[data-ns-command^="team-"]')).map((btn) => ({
+        command: btn.dataset.nsCommand,
+        pressed: btn.getAttribute('aria-pressed') === 'true',
+        disabled: Boolean(btn.disabled),
+        text: btn.textContent?.trim() || '',
+      }))
+      const scoresUl = node.querySelector('ul[aria-label="Scores"]')
+      const scoreRows = scoresUl ? Array.from(scoresUl.querySelectorAll('li')).map((li) => li.textContent?.trim() || '') : []
+      const promptEl = node.querySelector('h4')
+      const promptText = promptEl ? promptEl.textContent?.trim() || null : null
+      const answeringEl = Array.from(node.querySelectorAll('p')).find((p) => p.textContent?.startsWith('Answering team:'))
+      const answeringTeamText = answeringEl ? answeringEl.textContent?.trim() || null : null
+      const wagerInput = node.querySelector('input[type="number"]')
+      const wagerText = wagerInput ? wagerInput.value : null
+      result.details.jeopardy = {
+        cells,
+        teamControls,
+        scoreRows,
+        promptText,
+        answeringTeamText,
+        wagerText,
+        hasBoard: cells.length > 0,
+      }
+    } else if (gameType === 'trivia-champ') {
+      const boardUl = node.querySelector('ul[aria-label="Scores"]')
+      const scoreRows = boardUl ? Array.from(boardUl.querySelectorAll('li')).map((li) => li.textContent?.trim() || '') : []
+      const roundsOl = node.querySelector('ol[aria-label="Authored rounds"]')
+      const rounds = roundsOl
+        ? Array.from(roundsOl.querySelectorAll('li')).map((li) => ({
+            text: li.textContent?.trim() || '',
+            current: li.getAttribute('aria-current') === 'step',
+          }))
+        : []
+      const bonusEl = Array.from(node.querySelectorAll('p')).find((p) => p.textContent?.startsWith('Scoring:'))
+      result.details.triviaChamp = { scoreRows, rounds, bonusText: bonusEl ? bonusEl.textContent?.trim() : null }
+    }
+    return result
+  }
+  try {
+    Object.defineProperty(window, '__nsOwnerUIEvidence', {
+      value: getUIEvidence,
+      writable: false,
+      configurable: false,
+      enumerable: true,
+    })
+  } catch (e) {
+    window.__nsOwnerUIEvidence = getUIEvidence
+  }
+})()
+`

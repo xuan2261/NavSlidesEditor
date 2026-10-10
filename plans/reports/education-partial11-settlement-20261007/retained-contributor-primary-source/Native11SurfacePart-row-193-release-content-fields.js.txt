@@ -1,0 +1,10 @@
+export async function reachable(node) {
+  await expect(node).toBeVisible()
+  expect(
+    await node.evaluate((element) => {
+      const r = element.getBoundingClientRect()
+      const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+      return hit === element || element.contains(hit)
+    })
+  ).toBe(true)
+}

@@ -1,0 +1,188 @@
+    },
+    {
+      "identity": "Evidence08-1: Serialized diagnostics excluded from occurrences",
+      "disposition": "LOCALLY_CORRECTED",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:70-75,108-113"
+      ]
+    },
+    {
+      "identity": "Evidence08-2: Authoritative shared-reference phase/metadata",
+      "disposition": "LOCALLY_CORRECTED_IN_INSPECTED_EXPOSURE_PATHS",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:7-53,65-122",
+        "pending-round-lifecycle-error-ledger.js:11-16"
+      ]
+    }
+  ],
+  "settled09DefectDispositions5": [
+    {
+      "id": "09-S1",
+      "identity": "Restore evaluateActionCandidates function boundary",
+      "disposition": "LOCALLY_CORRECTED_BY_SOURCE_READ_NOT_PARSE_CHECK",
+      "evidence": [
+        "pending-round-lifecycle-observation-browser.js:132-166"
+      ]
+    },
+    {
+      "id": "09-S2",
+      "identity": "Restore actual serializable packet and both outputs",
+      "disposition": "LOCALLY_CORRECTED",
+      "evidence": [
+        "pending-round-lifecycle-native-history.js:108-111"
+      ]
+    },
+    {
+      "id": "09-S3",
+      "identity": "Retain all relevant candidate errors before outer rejection",
+      "disposition": "LOCALLY_CORRECTED_FOR_FALLBACK_RETENTION; actual chronology still requires repair",
+      "evidence": [
+        "pending-round-lifecycle-observation-errors.js:51-72"
+      ]
+    },
+    {
+      "id": "09-S4",
+      "identity": "Preserve stable ledger-owned exposed serialization identity",
+      "disposition": "LOCALLY_CORRECTED",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:44-53,160-170"
+      ]
+    },
+    {
+      "id": "09-S5",
+      "identity": "Keep authoritative wrapper phase when reserializing shared errors",
+      "disposition": "LOCALLY_CORRECTED",
+      "evidence": [
+        "pending-round-lifecycle-error-ledger.js:11-16",
+        "pending-round-lifecycle-error-exposure.js:34-53"
+      ]
+    }
+  ],
+  "chronologyObligationDispositions2": [
+    {
+      "id": "09-C1",
+      "disposition": "REPAIR_REQUIRED",
+      "evidence": [
+        "pending-round-lifecycle-native-snapshot.js:51",
+        "pending-round-lifecycle-native-history.js:81-83,134-136",
+        "pending-round-lifecycle-observation-errors.js:43-49,81-88"
+      ],
+      "assessment": "Actual observation stamps improve packet/extraction ordering, but fractional synthetic readiness ranking is not actual chronology."
+    },
+    {
+      "id": "09-C2",
+      "disposition": "LOCALLY_CORRECTED_IN_INSPECTED_CALLER_INGESTION",
+      "evidence": [
+        "pending-round-lifecycle-error-exposure.js:69-104"
+      ],
+      "assessment": "Caller errorLedger genuine references are recorded in established array order before secondary-only occurrences. No independent numeric namespaces are sorted into a fictional caller chronology."
+    }
+  ],
+  "creditedPreservationDispositions": [
+    {
+      "identity": "N06-N04 finite-positive activity operands",
+      "evidence": [
+        "pending-round-lifecycle-activity-interval.js:3-15,46-65,75-100",
+        "pending-round-lifecycle-clock.js:45-59",
+        "pending-round-lifecycle-witness-domain.js:31-46"
+      ],
+      "assessment": "Finite intervals, positive bounded remaining time and deadline bounds retained locally."
+    },
+    {
+      "identity": "N06-N06 CSS/layout guard state",
+      "evidence": [
+        "pending-round-lifecycle-native-action.js:33-48"
+      ],
+      "assessment": "layoutVisible and computed visibility/display evidence retained."
+    },
+    {
+      "identity": "E06-02 chronological frame-error arrival dispatch",
+      "evidence": [
+        "release-portable-inspection.js:20-33",
+        "release-surfaces.js:29-34,78-95"
+      ],
+      "assessment": "Frame evaluation rejects route at sequential arrival to common ledger."
+    },
+    {
+      "identity": "E06-03 actual Node Error identity/separate sidecar",
+      "evidence": [
+        "release-portable-inspection.js:25-30",
+        "pending-round-lifecycle-error-ledger.js:94-104"
+      ],
+      "assessment": "Actual Error reference is retained; frameUrl is sidecar metadata rather than Error mutation."
+    },
+    {
+      "identity": "E06-04 state-before-UI snapshot observation",
+      "evidence": [
+        "pending-round-lifecycle-native-snapshot.js:59-81",
+        "pending-round-lifecycle-live-root-observation.js:119-124"
+      ],
+      "assessment": "State then UI observation and live envelope ordering retained. The unchanged live collector separately records document validation before browser errors; no claim that11 repaired that older chronology path."
+    },
+    {
+      "identity": "E06-05 recursive rootInstanceId/timeOrigin/cause propagation",
+      "evidence": [
+        "pending-round-lifecycle-error-ledger.js:11-64",
+        "pending-round-lifecycle-evidence.js:166-181"
+      ],
+      "assessment": "Recursive normalization/serialization and primary record domain fields retained for inspected non-falsy envelopes."
+    },
+    {
+      "identity": "Strict portable result/no-sink consumers",
+      "evidence": [
+        "release-portable-inspection.js:40-55",
+        "release-surfaces.js:129-177",
+        "release-content-fields.js:147-157"
+      ],
+      "assessment": "Strict success keys protocol/httpAttempts/socketAttempts/errors retained; absent sink throws actual first frame Error and outer generic consumer closes context."
+    },
+    {
+      "identity": "Early portable ownership and late finalization",
+      "evidence": [
+        "pending-round-lifecycle-surfaces.js:130-189",
+        "release-surfaces.js:99-143",
+        "pending-round-lifecycle-evidence.js:139-196"
+      ],
+      "assessment": "Early handle stashing, network-before/after, live collection, close errors, source GET mismatch and attachment failure route into the common ledger. Full failure-path qualification is not claimed."
+    },
+    {
+      "identity": "Main preservation facts",
+      "evidence": [
+        "pending-substrate-11-helper-caller-manifest.json:1-302"
+      ],
+      "assessment": "Main reports all4327 baseline files retained among4328 regular files, eight allowed helper changes, all12 callers unchanged, all26 helpers below200 physical lines and only the genuine Evidence11 receipt added. No hash/count measurement was performed."
+    }
+  ],
+  "deliveryBlockers": [
+    {
+      "id": "NATIVE11_GENUINE_RECEIPT_ABSENT",
+      "status": "BLOCKING_INDEPENDENT_OF_SOURCE_VERDICT",
+      "detail": "Main's preserved manifest/context report actual Native11 transport stream_error exit1 and no genuine Native11 receipt. No receipt was reconstructed or substituted."
+    },
+    {
+      "id": "EVIDENCE11_RECEIPT_COMPLETENESS",
+      "status": "NOT_FULLY_ESTABLISHED_BY_THIS_AUDIT",
+      "detail": "Genuine Evidence11 receipt exists according to Main; Main's separate receipt audit reports requirement omissions and ledger physical-line discrepancy160 versus150. This audit did not complete a fresh full receipt read and cannot certify its completeness."
+    },
+    {
+      "id": "AUDIT_COMPLETENESS",
+      "status": "BLOCKING_COMPLETE_SALVAGE_REPORT_CLAIM",
+      "detail": "Complete required owner bodies, report reacquisition and verbatim canonical mapping/obligation assembly remain incomplete after mandatory interruption."
+    }
+  ],
+  "receiptCompleteness": {
+    "genuineEvidence11ReceiptPresent": "MAIN_REPORTED_TRUE",
+    "genuineNative11ReceiptPresent": false,
+    "combinedDeliveryComplete": false,
+    "fullEvidence11ReceiptReadByThisAudit": false,
+    "ledgerLinecountDiscrepancy": {
+      "claimed": 160,
+      "mainMeasured": 150,
+      "classification": "Delivery discrepancy, not itself a source defect"
+    },
+    "sourceRepairClaimsNotAcceptedAsProof": true
+  },
+  "canonicalMappingChecks": {
+    "completeIndependentComparison": false,
+
+[Showing lines 315-500 of 1018. Use :501 to continue]

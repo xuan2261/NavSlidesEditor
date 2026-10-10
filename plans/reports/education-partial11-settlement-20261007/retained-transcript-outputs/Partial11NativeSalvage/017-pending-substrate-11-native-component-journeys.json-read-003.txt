@@ -1,0 +1,202 @@
+        "requestedRanges": [
+          "1-230:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "shared/src/education/games/trivia-champ.js",
+        "requestedRanges": [
+          "1-240"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "shared/src/education/browser/games/trivia-champ.js",
+        "requestedRanges": [
+          "1-210:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "shared/src/education/quiz-config.js",
+        "requestedRanges": [
+          "1-220:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "shared/src/education/normalize-game-config.js",
+        "requestedRanges": [
+          "1-230:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "shared/src/education/countdown-state.js",
+        "requestedRanges": [
+          "1-230:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "shared/src/education/browser/countdown-presenter.js",
+        "requestedRanges": [
+          "1-210:raw"
+        ],
+        "fullBodyAndEOF": true
+      },
+      {
+        "file": "shared/src/education/browser/quiz-presenter.js",
+        "requestedRanges": [
+          "1-220:raw"
+        ],
+        "fullBodyAndEOF": true
+      }
+    ],
+    "governingEvidence": [
+      {
+        "file": "pending-substrate-11-native-coverage-continuation-counsel.json",
+        "ranges": [
+          "1-260",
+          "169-182:raw",
+          "183-192:raw"
+        ],
+        "full": true,
+        "note": "First document read; cropped deferred-scope string expanded raw."
+      },
+      {
+        "file": "pending-substrate-11-native-salvage-prompt.md",
+        "ranges": [
+          "1-230:raw"
+        ],
+        "full": true
+      },
+      {
+        "file": "pending-substrate-11-dispatch-authority.json",
+        "ranges": [
+          "1-180:raw",
+          "181-280:raw"
+        ],
+        "full": true
+      },
+      {
+        "file": "pending-substrate-11-terminal-failure-counsel.json",
+        "ranges": [
+          "1-180:raw",
+          "181-360:raw",
+          "361-560:raw"
+        ],
+        "full": true
+      },
+      {
+        "file": "pending-substrate-11-native-prompt.md",
+        "ranges": [
+          "1-200:raw"
+        ],
+        "full": true
+      },
+      {
+        "file": "pending-substrate-11-helper-caller-manifest.json",
+        "ranges": [
+          "1-240:raw",
+          "241-320:raw"
+        ],
+        "full": true
+      },
+      {
+        "file": "pending-substrate-11-scope-preservation.json",
+        "ranges": [
+          "1-180:raw",
+          "181-370:raw"
+        ],
+        "full": true
+      },
+      {
+        "file": "pending-substrate-08-subject-authority.json",
+        "ranges": [
+          "1-100:raw",
+          "101-220:raw"
+        ],
+        "full": true
+      },
+      {
+        "file": "pending-substrate-07-native-admission.json",
+        "ranges": [
+          "1-150:raw"
+        ],
+        "full": true,
+        "completeFindingBodies": 12
+      },
+      {
+        "file": "pending-substrate-07-evidence-admission.json",
+        "ranges": [
+          "1-150:raw"
+        ],
+        "full": true,
+        "completeFindingBodies": 3
+      },
+      {
+        "file": "pending-grounded-01-state-evidence-detailed-ledger.json",
+        "ranges": [
+          "1-200:raw",
+          "201-260:raw"
+        ],
+        "full": false,
+        "completeRelevantBodyCoverage": "All original SE01–SE17 findings; remaining unrelated matrix/terminal material is not claimed as a full-document read."
+      },
+      {
+        "file": "pending-interface-02-state-evidence-detailed-ledger.json",
+        "ranges": [
+          "1-100:raw",
+          "101-230:raw"
+        ],
+        "full": true,
+        "completeRelevantBodyCoverage": "S02-01–S02-16 and retained original-subject mapping explanation."
+      }
+    ]
+  },
+  "interfaceInventory": [
+    {
+      "boundary": "Acceptance → surface → journey",
+      "actual": "acceptance.spec.js:62-80 supplies visitSurface(options, async context => runner(context.page,c,evidence)); surfaces.js returns structured contexts with Page,surface,file,inspectNetwork,diagnostics,error.",
+      "observation": "The actual context.page forwarding is present; do not resurrect NC01's historical undefined-Page bug. Acceptance ignores visitSurface's returned journey value. Mandatory expected-roots configuration is absent before surface validation.",
+      "seam": "acceptance.spec.js:41-79; evidence.js:setExpectedRoots/getExpectedRoots; surfaces.js:validateSurfaceSink; evidence-domain.js:validateManifest."
+    },
+    {
+      "boundary": "Case descriptors → controls",
+      "actual": "controls require evidence in the final positional argument. getGameState(root,evidence); observeQuizActive(root,options,evidence); startHotPotatoRound(root,id,name,options,evidence); selectJeopardyCell(root,team,cell,options,evidence); Relay/Trivia start/pass/Next(root,evidence); answer/buzz/adjudicate retain their option/id arguments followed by evidence.",
+      "observation": "cases.js:9-199 closures accept only r and do not pass evidence; journey startFn/preparePending/actPeer/actPrimary invocations likewise supply only root. Passing evidence to a runner does not propagate it through these closures.",
+      "classification": "Deliberately deferred old caller cutover, not a new helper regression."
+    },
+    {
+      "boundary": "Journeys → observations/navigation",
+      "actual": "readCorrelatedStateAndTime(root,evidence,label); getGameState(root,evidence); navigateSlide(page,direction,targetSlideId,evidence). Sink/document binding is mandatory.",
+      "observation": "Journeys omit evidence on direct correlated-state reads, getGameState polls and native navigation. preconsumeTimerToWindow and checkpoint/baton helpers do receive evidence in some paths.",
+      "classification": "Deferred consumer migration."
+    },
+    {
+      "boundary": "Controls → Reset/Pass/Start results",
+      "actual": "resetGame returns {state,actionBracket,actionRecords}; Start helpers additionally return raw [tCapture,tBubble] startBracket arrays; Pass returns passBracket array and complete actionBracket. Action brackets expose captureActivity,bubbleActivity,activityInterval,rawInterval,domain,states/UI and histories.",
+      "observation": "reset.js:45-64 and isolation.js:64-75 treat the compound Reset return as an obsolete {tBefore,tAfter} object. Preparation closures return only state plus selected arrays, or only passBracket; journeys do not consume those arrays or complete actionRecords. actPeer/actPrimary discard returned action results.",
+      "classification": "Deferred old result/signature migration; no new public-binding defect identified."
+    },
+    {
+      "boundary": "Correlated result → old-due crossing",
+      "actual": "evaluateCorrelatedStateAndTime returns time/rawInterval and domain/state/UI/history fields; buildCorrelatedSample adds activityInterval,hiddenOffsetInterval,provenance. It does not define activityNow.",
+      "observation": "reset.js:77 and isolation.js:93 use nowSample.activityNow. The actual complete interval must be consumed instead; the interval's lower bound must establish crossing the original due.",
+      "classification": "Deferred obsolete result-field consumption."
+    },
+    {
+      "boundary": "Witness Start → expiry consumer",
+      "actual": "startWitnessTimer(root,evidence) returns startRecord,actionBracket,deadlineBounds,idleState,runningState and deadline. waitForWitnessExpiry(root,startRecord,evidence) requires the actual startRecord and returns lastRunningSample,firstExpiredSample,expiryObservationInterval,activityElapsedInterval. assertMeasuredWitnessInterval consumes the complete result.",
+      "observation": "leave-return.js:57, reset.js:72 and isolation.js:88 still call waitForWitnessExpiry(witness,evidence), putting the sink in the startRecord position and leaving evidence absent. No journey calls assertMeasuredWitnessInterval. Leave-return uses only expiryTime-startTime >=3800; reset/isolation only stage the witness results.",
+      "classification": "Explicitly deferred old signature/result cutover, not the historical firstExpiredSample helper regression."
+    },
+    {
+      "boundary": "Fixture builder → generator APIs",
+      "actual": "pending fixtures import gameFixture/deckWith. gameFixture imports real CJS registry/defaults/shape/factory/simulations exports. Quiz overrides a canonical single-choice question; other pending game fixtures derive real defaults. buildDeck explicitly dispatches all three concern types and throws for unknown values.",
+      "observation": "All imported fixture/generator bindings inspected exist. No missing exported binding was found in this scope. Simulation presets are exposed by release-game-fixtures but are not used to build these pending decks."
+    },
+    {
+
+[Showing lines 411-610 of 1107. Use :611 to continue]

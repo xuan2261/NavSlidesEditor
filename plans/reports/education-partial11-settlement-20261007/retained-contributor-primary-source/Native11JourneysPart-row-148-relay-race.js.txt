@@ -1,0 +1,4 @@
+function reduceRelayRace(config, state, command, { now = () => 0, random = Math.random } = {}) {
+…
+}
+module.exports = { createRelayRaceState, reduceRelayRace }

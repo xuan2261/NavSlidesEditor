@@ -1,0 +1,575 @@
+[
+  {
+    "transcript": "C:\\Users\\Z10PAD8C_Xuan2261\\.omp\\agent\\sessions\\--C--Work-NavSlidesEditor--\\2026-10-04T11-03-27-941Z_01a10695-43c5-7000-80a5-281eb32934b4\\Native11RecorderClockPart.jsonl",
+    "transcriptLine": 173,
+    "timestamp": "2026-10-06T03:16:33.368Z",
+    "toolCallId": "call_MRxarSG0L8TePUED3Xt9O0KF|fc_02ada268240572ea016ac4672c8b9c87d09eb6595a290bc75e",
+    "data": {
+      "component": "Native11 continuation — recorder/history/activity/clock/controls/witness",
+      "auditIdentity": "Continuation component of the already authorized Native11 static salvage audit, not an additional independent opinion or substantive producer.",
+      "exactSubject": {
+        "frozenRoot": "D:/NavSlidesQualification/edu-resume-261004/pending-substrate-candidate-11-partial",
+        "recordedFullSubjectHash": "e8a558fc31049d076410c3a2c9a1d18457029550f5588bb3af0f25a09eee2a1f",
+        "identityBasis": "Governing continuation and terminal-failure records; no identity, checksum, count or line-count remeasurement."
+      },
+      "completion": {
+        "all9AssignedPrimaryBodiesRead": true,
+        "all4AssignedOwnerBodiesRead": true,
+        "primaryEOFReached": true,
+        "ownerEOFReached": true,
+        "standaloneWholeAuditVerdictIssued": false,
+        "sourceOrReceiptWrites": false,
+        "commandsOrExecution": false,
+        "nestedAgents": false
+      },
+      "flags": {
+        "admission": false,
+        "sourceReady": false,
+        "qualification": false,
+        "passClaimed": false,
+        "runtimeExecuted": false,
+        "declaredCells": 54,
+        "staticallyAdmittedCells": 0,
+        "executedAcceptanceCells": 0
+      },
+      "componentSummary": "The inspected source preserves complete lifecycle-store health, independent lifecycle-only histories, both native-action publication outputs, drained-boundary uncertainty, finite interval operands, Start baseline validation and the original last-running/first-expired crossover. NF-A2 and NF-A3 have source-backed local repairs. S10-C1 now has actual document-local observation-order witnesses at the relevant browser sites, but its explicit forwarded-occurrence identity requirement remains unsatisfied at the Native-to-Node/common-ledger seam: repeated reads of one retained recorder envelope are normalized as separate occurrences. This is a current-source retained-obligation defect, not a claim that its entire mechanism was first introduced in Correction11.",
+      "currentSourceDefects": [
+        {
+          "id": "Native11-component-recorder-forwarding",
+          "governingIds": ["S10-C1", "N07-07"],
+          "priority": "P2",
+          "title": "Preserve retained recorder occurrence identity across browser-to-Node forwarding",
+          "sourceDisposition": "REPAIR_REQUIRED for the forwarding/deduplication sub-obligation",
+          "introductionAssessment": "No diff, prior-source execution or regression-introduction claim is made. The mechanism is established in the current frozen source and contradicts the expressly retained Correction11 forwarding contract.",
+          "locations": [
+            {
+              "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+              "lines": [3, 20],
+              "symbol": "evaluatePassiveEvents"
+            },
+            {
+              "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+              "lines": [25, 40],
+              "symbol": "assertAndRecordObservationErrors"
+            },
+            {
+              "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+              "lines": [76, 102],
+              "symbol": "createErrorLedger.recordError"
+            }
+          ],
+          "trigger": "A genuine setup/listener/action recorder error remains in window.__nsLifecycleRecorderError while the document remains open, and that same diagnostic is forwarded by more than one browser read. The current acceptance callback and surface cleanup provide a concrete double-read path: acceptance.spec.js:73-79 invokes evidence.collectLive in its callback finally, then surfaces.js:75-82,115-121 or172-187 invokes collectLive again before closing the same Page/context.",
+          "consumerVisibleMechanism": "Each page.evaluate/root.evaluate transports a fresh Node-side object for the retained browser envelope. Its existing obsOrder/documentId/timeOrigin are forwarded, but observation-errors.js uses only a fresh invocation-local Set of object references. The common ledger likewise deduplicates only entry.original/entry.normalized identity and WeakMap envelope identity; it has no retained browser-occurrence correlation, and materializeEnvelope does not retain obsOrder. Therefore the second exposure of the same browser recorder failure is assigned a new ledger order, a new normalized Error and a new serialization. The final error set contains a fabricated second recorder occurrence, potentially after later independent errors, even though the browser retained only one first recorder error.",
+          "fullTrace": [
+            "native-observation.js:30,36-46,84-91,133-134 stores the first recorder envelope and assigns its observation witness.",
+            "observation-browser.js:8-20 forwards the retained envelope through page.evaluate; cursor/correlated/extraction readers also forward it at63-64,85-87 and149-151.",
+            "observation.js:42-58 stages the passive result and dispatches it to assertAndRecordObservationErrors.",
+            "observation-errors.js:25-40 deduplicates references only within that invocation, then dispatches to evidence.recordError.",
+            "evidence.js:101-105 delegates to the same createErrorLedger instance.",
+            "error-ledger.js:84-102 treats the second transported envelope as a new reference and appends another occurrence.",
+            "evidence.js:113-125 -> live-evidence.js:59-73 -> observation.js:42-58 is the cleanup passive-reader path.",
+            "acceptance.spec.js:73-79 and surfaces.js:75-82,115-121,172-187 call that collector twice for a retained live document."
+          ],
+          "repairNeeded": "Under later substantive authority, preserve and correlate an internal genuine browser-occurrence identity through forwarding, scoped to its actual document/timeOrigin, so re-exposing the retained recorder envelope reuses the existing normalized occurrence. Do not deduplicate unrelated actual Node Errors, generic message matches or unrelated caller/common-ledger numeric orders; do not mutate caller objects or change public signatures.",
+          "confidence": 0.98
+        }
+      ],
+      "current6Relevance": [
+        {
+          "id": "S10-C1",
+          "disposition": "PARTIAL_SOURCE_REPAIR; forwarding identity remains REPAIR_REQUIRED",
+          "evidence": "Actual observation-site ordering is now represented by the document-local __nsObsOrder counter. Recorder setup/listener errors receive it in native-observation.js:36-46,84-91,133; state/UI envelopes receive it in native-snapshot.js:32-52; capture and bubble health failures receive it in native-history.js:135-136 and81-82. observation-errors.js:27-32,81-87 uses the actual witness instead of universal recorder-first/packet-first ordering. The remaining forwarded-envelope occurrence defect is detailed above."
+        },
+        {
+          "id": "NF-A2",
+          "disposition": "SOURCE_CORRECTED_LOCAL",
+          "evidence": "native-observation.js:81-93 marks readiness false for replaced/missing storage but creates a recorder envelope only inside if (!window.__nsLifecycleRecorderError). It therefore preserves a prior setup envelope and its recursive cause, or an earlier specific store error, rather than overwriting it with a later generic record() failure. native-history.js:81-82,135-136 retains equivalent first-error guards.",
+          "limit": "Browser-side first-error preservation does not repair the separate Node-side repeated-forwarding duplication."
+        },
+        {
+          "id": "NF-A3",
+          "disposition": "SOURCE_CORRECTED_LOCAL",
+          "evidence": "native-action.js:71-84 stages the complete raw guard, routes it through assertAndRecordObservationErrors with its observed document domain, then validates/accepts the guard. The common consumer ingests stateError and uiError before its deferred documentIdentity candidate and throws its earliest normalized return. controls.js:85 and166 remain the actual reveal/reset guard consumers; the exported guard signature is unchanged."
+        },
+        {
+          "id": "N10B-01",
+          "disposition": "PRIMARY_OWNER_ELSEWHERE; no dispatcher-equivalence conclusion from this component",
+          "evidence": "controls.js:20 re-exports navigateSlide from navigation.js. Navigation and the linked production dispatcher are an outgoing seam, not this component's assigned primary body.",
+          "limit": "No external linked node_modules file was read by this component, and no immutable-dependency or complete keyboard-dispatch claim is made."
+        },
+        {
+          "id": "N10B-02",
+          "disposition": "PRIMARY_OWNER_ELSEWHERE; no initial-navigation disposition from this component",
+          "evidence": "controls.js:20 and the caller's navigation use remain outgoing integration seams. This component did not inspect navigation.js."
+        },
+        {
+          "id": "S10-C2",
+          "disposition": "PRIMARY_OWNER_ELSEWHERE; phase-authority conclusion requires the exposure component",
+          "evidence": "error-ledger.js:11-21 now serializes the provided occurrence phase ahead of intrinsic Error.phase, and observation.js/native-action.js re-record already normalized thrown Errors by identity. This component did not read the complete error-exposure.js reconciliation loops and does not certify all three exposures."
+        }
+      ],
+      "originalNativeFindingDispositions": [
+        {
+          "id": "N07-01",
+          "originalTitle": "N06-N02: Keep Start diagnostics out of lifecycle continuity",
+          "disposition": "SOURCE_CORRECTED_LOCAL",
+          "evidence": "native-history.js:47-69 limits root projections to root-pause/root-resume and document projections to visibilitychange/pagehide/pageshow; observation-browser.js:90-98 uses the same classifications. native-history.js:107-110 retains both packet publication and the native-action diagnostic, which is excluded from continuity rather than deleted."
+        },
+        {
+          "id": "N07-02",
+          "originalTitle": "Declare firstExpiredSample before the witness polling callback",
+          "disposition": "SOURCE_CORRECTED_LOCAL",
+          "evidence": "witness.js:98-100 declares lastRunningSample, firstExpiredSample and pollCount before polling. At106-115, only validated running/expired samples update the accumulators. At131-148 the result contains both original samples and the crossover intervals;151-166 consumes the original authored-duration containment."
+        },
+        {
+          "id": "N07-03",
+          "originalTitle": "N06-N02: Validate capture-to-post history before adopting Start",
+          "disposition": "SOURCE_CORRECTED_LOCAL",
+          "evidence": "witness.js:8-15 imports the real comparator through witness-domain.js:2-7. witness.js:44-58 requires all four capture/post arrays and complete prefix/equal-length agreement. Baseline copies are then made at59-60. The first running sample is checked against Start-derived bounds and domain/continuity at72-76 before promotion. native-history.js:50-66 independently clones capture and post projections."
+        },
+        {
+          "id": "N07-04",
+          "originalTitle": "N06-N03: Bind history health to actual recorder bookkeeping",
+          "disposition": "SOURCE_CORRECTED_LOCAL for lifecycle storage",
+          "evidence": "native-observation.js:24-34 holds closure-private retainedStore/privateStore/eventSeq. At48-55 it checks actual public array identity and both expected lengths. record() writes the closure-retained store and marks a missing/replaced public binding unhealthy at81-93. Empty initialized arrays with eventSeq=0 pass legitimately. The packet-array binding is explicitly separate NF-A4 scope."
+        },
+        {
+          "id": "N07-05",
+          "originalTitle": "N06-N03: Compare complete retained history content",
+          "disposition": "SOURCE_CORRECTED_LOCAL",
+          "evidence": "native-observation.js:56-76 compares every retained event against independent private content: eventSeq,type,tMin,tMax,time,visibilityState,domain and serialized complete detail. record() independently JSON-clones detail at99 and preserves the separate private entry at112-123. history-domain.js:24-53 requires arrays and numeric matching sequences and compares type,timing including time,visibility and detail. Full-store health also checks domain before projection; the prefix comparator does not itself separately compare a top-level domain field."
+        },
+        {
+          "id": "N07-06",
+          "originalTitle": "Retain lifecycle mutations drained at native action boundaries",
+          "disposition": "SOURCE_CORRECTED_LOCAL",
+          "evidence": "native-observation.js:137-145 drains with the prior lastLifecycleTriggerTime before advancing it. native-history.js:6-40 records original triggerMin and later performance.now() deliveryMax. Capture/bubble drain before projection at115/79; history inclusion is tMin<=boundary at55, not tMax<=boundary. native-snapshot.js:87-100 and history-domain.js:9-22 use the same lower-bound inclusion, while activity-interval.js:23-35 retains both uncertainty operands."
+        },
+        {
+          "id": "N07-07",
+          "originalTitle": "N06-N05: Normalize and retain all observed snapshot failures",
+          "disposition": "Snapshot sibling/guard retention SOURCE_CORRECTED_LOCAL; complete occurrence semantics remain PARTIAL_REPAIR_REQUIRED",
+          "evidence": "native-snapshot.js:61-79 observes state before UI. observation-errors.js:51-75 handles matched/fallback capture/post and direct siblings before throwing at90-92. observation.js stages cursor/correlated/candidate raw results before this gate. native-action.js:71-84 repairs the guard seam. Repeated retained recorder forwarding still creates duplicated normalized occurrences as detailed in currentSourceDefects."
+        },
+        {
+          "id": "N07-08",
+          "originalTitle": "N06-N05: Preserve the recorder exception's actual cause chain",
+          "disposition": "SOURCE_CORRECTED_LOCAL for browser retention and recursive normalization",
+          "evidence": "native-observation.js:36-46 recursively serializes the actual cause with browser origin, phase, stack and observed document/timeOrigin/URL;133-134 applies it to setup failures, and84 prevents a later record() overwrite. error-ledger.js:50-69 recursively materializes causes and11-47 recursively serializes them while keeping root/timeOrigin provenance."
+        },
+        {
+          "id": "N07-09",
+          "originalTitle": "N06-N01: Stage each navigation poll's actual document first",
+          "disposition": "OUTGOING_PRIMARY_SEAM; not independently disposed here",
+          "evidence": "The navigation module is re-exported at controls.js:20. Its actual initial/poll bodies belong to the navigation component."
+        },
+        {
+          "id": "N07-10",
+          "originalTitle": "N06-N07: Match keyboard eligibility to production dispatch",
+          "disposition": "OUTGOING_PRIMARY_SEAM; not independently disposed here",
+          "evidence": "Requires navigation.js and actual linked Reveal dispatch owner inspection; not replaced with a controls export observation."
+        },
+        {
+          "id": "N07-11",
+          "originalTitle": "Preserve exact null commands when matching native packets",
+          "disposition": "SOURCE_CORRECTED_LOCAL",
+          "evidence": "observation-domain.js:60-70 retains exact tuple/root/document/URL/event-type matching and strict packet command equality, normalizing only an absent cursor command to null. controls.js:48,57-58,76,152 deliberately emits input/change actions without a command; native-action.js:7 retains command=null, and native-history.js:124-132 retains null where there is no actual command/cell."
+        },
+        {
+          "id": "N07-12",
+          "originalTitle": "Reject disconnected current nodes during action extraction",
+          "disposition": "SOURCE_CORRECTED_LOCAL",
+          "evidence": "observation-browser.js:136-145 captures actual isConnected; observation-domain.js:41-58 rejects a disconnected node before complete identity agreement; observation.js:116 invokes this before packet acceptance."
+        }
+      ],
+      "additional08And09RelevantDispositions": [
+        {
+          "id": "Native08-1 / 08-F1",
+          "disposition": "SOURCE_CORRECTED_LOCAL",
+          "evidence": "witness.js:8-15 imports assertHistoryPrefix; witness-domain.js:2-7 imports/re-exports its actual implementation; witness.js:51,55 calls the real binding."
+        },
+        {
+          "id": "Native08-2 / 08-F2",
+          "disposition": "SOURCE_CORRECTED_LOCAL for the lifecycle store",
+          "evidence": "Complete private original content and event.time checks are present in native-observation.js:48-77,99-123 and history-domain.js:24-53. Health is checked before passive/cursor/correlated/extraction consumers in observation-browser.js:5-20,61-65,82-98,148-158, before action pair calculations in native-history.js:80-92,134-146 and before independent projections at52-54. Diagnostics and other-root records remain part of the full private check, not only witness baseline checks."
+        },
+        {
+          "id": "Native08-3 / 08-F3",
+          "disposition": "SOURCE_CORRECTED_LOCAL for snapshot-before-document chronology",
+          "evidence": "observation-errors.js:12-23 catches the document exception without recording it. The candidate is assigned Infinity at77-79; all browser siblings are recorded first at81-88. evidence.js:85-91 confirms assertDocumentIdentity itself only validates/throws and does not silently ingest the exception earlier."
+        },
+        {
+          "id": "Native08-4 / 08-F4",
+          "disposition": "SOURCE_CORRECTED_LOCAL for packet-sibling retention",
+          "evidence": "observation.js:107-115 selects/stages a match and passes it into the outer error consumer. With no match, observation-errors.js:56-60 processes every cursor-eligible candidate in sequence, and63-68 retains its four independent getter siblings before outer throw. Exact-match packet acceptance remains separate."
+        },
+        {
+          "id": "09-S1",
+          "disposition": "SOURCE_CORRECTED_LOCAL",
+          "evidence": "observation-browser.js:129-162 now closes evaluateActionCandidates before the next export at164. This is source inspection, not an executed import/syntax check."
+        },
+        {
+          "id": "09-S2",
+          "disposition": "SOURCE_CORRECTED_LOCAL",
+          "evidence": "native-history.js:107-110 declares the actual Object.assign packet copy, removes only its live root, publishes it to __nsRecordedPackets and records the native-action diagnostic. Completion de-duplication remains at75-77; neither output references an undeclared variable."
+        },
+        {
+          "id": "09-S3",
+          "disposition": "SOURCE_CORRECTED_LOCAL for complete no-match fallback retention",
+          "evidence": "observation-errors.js:56-68 ingests all sequence-eligible candidate siblings, rather than selecting only the first. observation.js:111-126 invokes that before recorder/document/current-root/no-match rejection can terminate extraction."
+        },
+        {
+          "id": "09-C1",
+          "disposition": "Actual browser ordering SOURCE_CORRECTED_LOCAL; forwarded-occurrence semantics remain attached to S10-C1 defect",
+          "evidence": "Setup/listener/capture-health/bubble-health/getter/read-detected failures carry actual __nsObsOrder witnesses. The consumer orders witnessed errors at27-32,81-87 and keeps later Node document validation last. See currentSourceDefects for why retaining the same numeric witness alone does not preserve occurrence identity across transported copies."
+        },
+        {
+          "id": "Evidence08-1",
+          "disposition": "OUTGOING_EXPOSURE_COMPONENT; not certified here",
+          "evidence": "Requires full serialized-only caller ingestion branches in error-exposure.js."
+        },
+        {
+          "id": "Evidence08-2 / 09-S4 / 09-S5 / 09-C2",
+          "disposition": "OUTGOING_EXPOSURE_COMPONENT; no complete wrapper/chronology disposition here",
+          "evidence": "error-ledger.js was fully read for actual Native ingestion/identity dispatch, but the complete error-exposure.js loops are owned elsewhere. Local explicit-phase serialization is not treated as certification of reconciliation, stable caller-visible identity or caller-ledger chronology."
+        }
+      ],
+      "preservedMechanisms": [
+        {
+          "name": "Actual observation-site chronology rather than packet-category chronology",
+          "evidence": "native-history.js capture: advanceTrigger at115, state/UI snapshot at132, health detection at134-136, packet sequence allocation at150. Bubble: drain at79, health detection at80-82, post state/UI at93. Each caught getter gets its witness from native-snapshot.js:32-52; setup/listener failures get it from native-observation.js. Thus packet.sequence and tCapture/tBubble are not substituted for individual error observation positions. Existing recorder envelopes are returned with their original witness; newly detected read-health failures get a later witness in observation-browser.js:9-10,62-63,86-87,150-151.",
+          "limit": "This establishes local ordering of the returned error set, not cross-read occurrence deduplication or every Evidence-side exposure."
+        },
+        {
+          "name": "Lifecycle projections and action publications are distinct",
+          "evidence": "native-history.js:47-69 and observation-browser.js:90-98 exclude native-action from root/document continuity while native-history.js:107-110 preserves both publications. Private eventSeq counts all records, so projected lifecycle histories may validly have nonadjacent sequences; history-domain.js compares matching sequence values without demanding adjacency."
+        },
+        {
+          "name": "Independent capture/post/baseline copies and legitimate empty histories",
+          "evidence": "native-history.js:50-66 clones each event and its detail per extraction. Actual root/document lifecycle details at24-40 are primitive fields, so those detail copies are complete for these projections. The filter returns null for missing/unhealthy histories at52-54, not fake empty arrays. witness.js:44-60 rejects missing histories and clones accepted baseline arrays; initialized healthy empty histories are retained legitimately."
+        },
+        {
+          "name": "Finite activity and deadline operands, with no fabricated slack",
+          "evidence": "activity-interval.js:3-16 validates finite ordered interval endpoints. Completed-hidden computation at23-35 uses conservative pause/resume uncertainty; activity conversion at46-66 subtracts completed-hidden bounds from active raw time or the ongoing-pause anchor. deriveDeadlineBounds at74-86 requires a finite positive duration and finite action interval; assertPositivePendingAtAction at93-102 requires a finite due and due>action interval maximum. clock.js:45-58 validates finite due and strictly positive finite remaining bounds <=4000. witness-domain.js:31-47,106-126 preserves finite strictly positive bounded running remainingMs.",
+          "limit": "No execution is claimed. measureBatonPendingAtReset and measureQuizCheckpoint are sampled helpers, not substitutes for deferred native Reset brackets and independently authored new-deadline proofs."
+        },
+        {
+          "name": "Start baseline and original expiry crossover",
+          "evidence": "witness.js:19-29 validates full idle state and native idle display/status/start/pause/resume controls. Native Start is captured at31, and deadlineBounds derives exact Start activity+4000 at32. Full capture/post continuity precedes baseline adoption at44-70. Full first-running state/domain/history/deadline validation precedes promotion at72-76. waitForWitnessExpiry at92-149 retains the last validated running sample and the first validated expired sample; returns expiryObservationInterval=[lastRunning.activity.min,firstExpired.activity.max] and activityElapsedInterval=[max(0,lastRunning.activity.min-start.activity.max),firstExpired.activity.max-start.activity.min]. assertMeasuredWitnessInterval at151-166 checks original duration containment and last-running/first-expired crossover against the original deadline."
+        },
+        {
+          "name": "Production countdown command consumption matches witness states",
+          "evidence": "local-activity.js:94-101 explicitly routes countdown construction/reduction with clock.now. mount.js:44-64 injects local runtimeMode and routes activity.reduce through createRuntimeSession; runtime-session.js:23-42 uses the activity clock and forwards commands. countdown-state.js:52-64 consumes native start, enters running with deadline=utilityNow(now)+remainingMs and revision+1;65-88 consumes tick/expire and enters exact expired state with one expiry/revision increment. countdown-presenter.js:69-74 registers start/pause/resume listeners, and76-108 renders state and schedules generation/revision-bound tick dispatch. Its status/display values agree with the witness's idle/running/expired assertions."
+        },
+        {
+          "name": "Production hidden-time clock and root lifecycle alignment",
+          "evidence": "runtime-session.js:23-25 freezes activity time at pausedAt while subtracting totalHiddenMs;104-118 pauses/rearms timers and accumulates actual hidden duration. mount.js:114-127 invokes presenter.pause before session.pause and adds the root paused class; resume first restores session activity, then presenter.resume and removes that class. Countdown uses utilityNow, which rejects nonfinite/nonmonotonic-domain-invalid values in utility-config.js:12-17. These are inspected source mechanisms, not measured browser alignment."
+        },
+        {
+          "name": "Controls retain actual native packet contracts and CSS/layout guards",
+          "evidence": "controls.js input/change/submit/click actions consistently call executeAction and return stateAfter plus actionBracket/actionRecords. native-action.js:7-17 consumes the mandatory cursor and extracts the actual packet. Button guards retain actual state/UI, command, enabled/layout/computed-style observations and raw read timing at21-69, and stage them before validation at71-84. controls.js exports clickTriviaNext at157-161; the immutable leave-return caller imports that same existing name, so this inspected subject has no missing clickTriviaNext export."
+        },
+        {
+          "name": "Recursive provenance and actual normalized Error propagation",
+          "evidence": "native-snapshot.js:23-52 retains actual recursive causes and rootInstanceId/tuple/documentId/timeOrigin/URL/browser origin/phase/stack. native-observation.js:36-46 does the same for recorder setup causes. error-ledger.js:50-69 recursively materializes browser envelopes without replacing actual Node Error inputs;84-98 preserves actual Node references. observation-errors.js:5-9,86-92 throws its exact earliest normalized return, and outer observation/native-action catches re-record that same normalized reference rather than replacing it."
+        }
+      ],
+      "outgoingIntegrationSeams": [
+        {
+          "seam": "Native recorder identity/order -> Node common ledger -> repeated/late collection",
+          "requiredIntegration": "Resolve the current-source repeated-forwarding defect using both Native observation bodies and the actual Evidence ingestion/exposure consumers. The document-local observation witness is sufficient for local relative order but currently is not an occurrence identity at the common-ledger boundary. Preserve actual Error/caller-reference rules and do not correlate unrelated numeric namespaces.",
+          "personallyReadBodies": "native-observation, native-snapshot, native-history, observation, observation-browser, observation-errors, error-ledger, relevant accumulator/collector/surface/acceptance bodies."
+        },
+        {
+          "seam": "Button guard -> controls -> document validation",
+          "requiredIntegration": "Retain NF-A3 source repair: resetGame and revealHotPotatoAnswers consume the same stageButtonGuard signature; both raw getter siblings are normalized before deferred document failure. The extra subsequent assertDocumentIdentity on the success path is not a missing-error repair or a changed signature."
+        },
+        {
+          "seam": "Published packet -> current-root matcher -> activity bracket -> witness baseline",
+          "requiredIntegration": "Trace both publication outputs, full lifecycle health, strict command/tuple/document/current-connected-node checks, activity conversion and all Start history copies together. NF-A4 must remain a separate unresolved/excluded packet-store binding limitation; lifecycle health cannot be claimed as complete packet-store integrity."
+        },
+        {
+          "seam": "Witness exports/results -> immutable journey callers",
+          "requiredIntegration": "witness exports startWitnessTimer(root,evidence), waitForWitnessExpiry(root,startRecord,evidence), and assertMeasuredWitnessInterval. The fully read leave-return caller still uses waitForWitnessExpiry(witness,evidence) at57, omits required sinks elsewhere, and uses expiryTime-startTime>=3800 at60-61 instead of the returned strict crossover. These are unchanged deferred caller obligations, not new helper regressions or authorization to change callers. Other journey consumers belong to their assigned component."
+        },
+        {
+          "seam": "Controls re-export -> navigation -> actual linked Reveal dispatcher",
+          "requiredIntegration": "Navigation component/integration owner must dispose N07-09,N07-10,N10B-01,N10B-02 from actual navigation and production dispatch bodies. No conclusion can be inferred merely from controls.js:20."
+        },
+        {
+          "seam": "Native normalized Error -> Evidence wrapper reconciliation/all three exposures",
+          "requiredIntegration": "The Evidence component must independently establish S10-C2,09-C2,E06-01-A/B/C,Evidence08-1/2,09-S4/S5 and stable repeated/late exposures. This component's full ledger read is ingestion/normalization evidence, not a substitute for those full consumer loops."
+        }
+      ],
+      "NF_A4Scope": {
+        "id": "NF-A4",
+        "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+        "excludedFrom11Repairs": true,
+        "completeRecordedExcludedScopeCandidate": {
+          "consumerVisibleMechanism": "evaluateActionCandidates returns candidates from the public, replaceable window.__nsRecordedPackets (:146-147). storeHealth (:148) checks only the lifecycle store. In-place mutation of an original packet is detected, because that packet object is also the retained native-action detail. Replacing the array, or replacing an element with a forged object, leaves the retained and private stores untouched, so health stays true. extractActionBracket (observation.js:107-131) then builds the action bracket from the forged packet: rootEventsBefore/After, stateAfter and tCapture/tBubble, which witness.js:44-63 adopts as the Start baseline. This is the same public-store replacement model as N07-04, applied to the packet store.",
+          "lineEnd": 158,
+          "title": "Bind returned action packets to the integrity-checked native-action records",
+          "confidence": 0.6,
+          "id": "NF-A4",
+          "lineStart": 146,
+          "repairNeeded": "Inside evaluateActionCandidates, derive candidates from, or verify each one against, the closure-retained native-action entries. For example, expose a private read of native-action details by sequence, or verify that each candidate is identical to the retained entry's detail and matches its private JSON clone. Report a recorder:store error when they diverge. evaluatePreActionCursor's lastSeq source (:36-37) needs the same binding.",
+          "priority": 2,
+          "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+          "disposition": "SOURCE_MECHANISM_CONFIRMED_SCOPE_APPLICABILITY_UNRESOLVED",
+          "scopeDecision": "Original N07-04/N07-05 explicitly cover lifecycle store integrity. Extending identical checks to separately replaceable action-packet storage is not automatically a required cutover; no new repair scope authorized."
+        },
+        "currentSourceRelationship": "Personally read observation-browser.js:36-37,146-148 and native-history.js:107-110. They retain the recorded mechanism: lifecycle-store health does not bind a replaced packet array or replaced packet element to the private native-action record. No repair, waiver, seventh required repair or complete packet-store-integrity claim is made."
+      },
+      "readEvidence": {
+        "provenance": "Personal functions.read calls in this continuation session against the exact frozen root. Requested bounded ranges below returned complete bodies through their terminal content; no primary or assigned-owner function-body omission remained. terminalContentLine identifies the last substantive source line using source read/grep anchors, not an independently measured physical line count. Source tool outputs are the full-body evidence; this component summary must not substitute for the integration owner's required inspection of full source evidence.",
+        "primaryFiles": [
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-native-observation.js",
+            "requestedReadRanges": ["1-210", "155-220:raw"],
+            "coveredBodyRange": "1-163",
+            "terminalContentLine": 163,
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-native-snapshot.js",
+            "requestedReadRanges": ["1-210"],
+            "coveredBodyRange": "1-106",
+            "terminalContentLine": 106,
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-native-history.js",
+            "requestedReadRanges": ["1-220"],
+            "coveredBodyRange": "1-185",
+            "terminalContentLine": 185,
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-history-domain.js",
+            "requestedReadRanges": ["1-220"],
+            "coveredBodyRange": "1-53",
+            "terminalContentLine": 53,
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-activity-interval.js",
+            "requestedReadRanges": ["1-220"],
+            "coveredBodyRange": "1-102",
+            "terminalContentLine": 102,
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-clock.js",
+            "requestedReadRanges": ["1-220"],
+            "coveredBodyRange": "1-102",
+            "terminalContentLine": 102,
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-controls.js",
+            "requestedReadRanges": ["1-220", "128-210:raw"],
+            "coveredBodyRange": "1-171",
+            "terminalContentLine": 171,
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-witness.js",
+            "requestedReadRanges": ["1-220"],
+            "coveredBodyRange": "1-166",
+            "terminalContentLine": 166,
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-witness-domain.js",
+            "requestedReadRanges": ["1-220"],
+            "coveredBodyRange": "1-137",
+            "terminalContentLine": 137,
+            "EOFReached": true
+          }
+        ],
+        "assignedOwnerFiles": [
+          {
+            "file": "shared/src/education/runtime-session.js",
+            "requestedReadRanges": ["1-220"],
+            "coveredBodyRange": "1-138",
+            "terminalContentLine": 138,
+            "EOFReached": true
+          },
+          {
+            "file": "shared/src/education/browser/local-activity.js",
+            "requestedReadRanges": ["1-220"],
+            "coveredBodyRange": "1-124",
+            "terminalContentLine": 124,
+            "EOFReached": true
+          },
+          {
+            "file": "shared/src/education/countdown-state.js",
+            "requestedReadRanges": ["1-220"],
+            "coveredBodyRange": "1-90",
+            "terminalContentLine": 90,
+            "EOFReached": true
+          },
+          {
+            "file": "shared/src/education/browser/countdown-presenter.js",
+            "requestedReadRanges": ["1-220"],
+            "coveredBodyRange": "1-114",
+            "terminalContentLine": 114,
+            "EOFReached": true
+          }
+        ],
+        "integrationSourceReads": [
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-observation.js",
+            "requestedReadRanges": ["1-220"],
+            "coveredBodyRange": "1-152",
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-observation-browser.js",
+            "requestedReadRanges": ["1-220"],
+            "coveredBodyRange": "1-175",
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-observation-domain.js",
+            "requestedReadRanges": ["1-220"],
+            "coveredBodyRange": "1-187",
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-observation-errors.js",
+            "requestedReadRanges": ["1-220"],
+            "coveredBodyRange": "1-93",
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-native-action.js",
+            "requestedReadRanges": ["1-220"],
+            "coveredBodyRange": "1-84",
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-error-ledger.js",
+            "requestedReadRanges": ["1-210"],
+            "coveredBodyRange": "1-150",
+            "EOFReached": true
+          },
+          {
+            "file": "shared/src/education/browser/mount.js",
+            "requestedReadRanges": ["1-230"],
+            "coveredBodyRange": "1-138",
+            "EOFReached": true
+          },
+          {
+            "file": "shared/src/education/utility-config.js",
+            "requestedReadRanges": ["1-200"],
+            "coveredBodyRange": "1-21",
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-evidence.js",
+            "requestedReadRanges": ["1-120", "109-198:raw", "198-210:raw"],
+            "coveredBodyRange": "1-198",
+            "EOFReached": true,
+            "omissionsExpanded": "The initial structured read elided later accumulator method bodies;109-198:raw explicitly expanded complete collectLive/finalize bodies and198-210:raw covered terminal content/EOF."
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-live-evidence.js",
+            "requestedReadRanges": ["1-150:raw"],
+            "coveredBodyRange": "1-120",
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-surfaces.js",
+            "requestedReadRanges": ["39-122:raw", "123-194:raw"],
+            "coveredBodyRange": "39-194",
+            "EOFReached": true,
+            "fullFileRead": false,
+            "purpose": "Complete visitSurface dispatch branches and failure/finally bodies; pre-function helpers/imports were not claimed as full coverage."
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-leave-return.js",
+            "requestedReadRanges": ["1-115:raw", "116-160:raw"],
+            "coveredBodyRange": "1-144",
+            "EOFReached": true
+          },
+          {
+            "file": "tests/e2e/education/pending-round-lifecycle-acceptance.spec.js",
+            "requestedReadRanges": ["1-120:raw"],
+            "coveredBodyRange": "1-95",
+            "EOFReached": true
+          }
+        ],
+        "governingReads": [
+          {
+            "file": "pending-substrate-11-native-coverage-continuation-counsel.json",
+            "ranges": ["1-240", "175-210:raw"],
+            "coverage": "Full235-line document through EOF; truncated deferred-scope line expanded."
+          },
+          {
+            "file": "pending-substrate-11-native-salvage-prompt.md",
+            "ranges": ["1-220", "1-110:raw"],
+            "coverage": "Complete prompt through EOF, including all long authority/deferred/retained-obligation lines."
+          },
+          {
+            "file": "pending-substrate-11-dispatch-authority.json",
+            "ranges": ["1-220:raw", "221-300:raw"],
+            "coverage": "Complete257-line document through EOF, including full current six, chronology contract and excluded NF-A4 body."
+          },
+          {
+            "file": "pending-substrate-11-terminal-failure-counsel.json",
+            "ranges": ["1-190:raw", "191-370:raw", "371-550:raw"],
+            "coverage": "Complete541-line document through EOF."
+          },
+          {
+            "file": "pending-substrate-07-native-admission.json",
+            "ranges": ["1-120:raw"],
+            "coverage": "Complete original report and all12 full governing Native finding bodies."
+          },
+          {
+            "file": "pending-substrate-08-native-salvage-audit.json",
+            "ranges": ["1-60:raw"],
+            "coverage": "Complete report and all4 full governing Native08 finding bodies."
+          },
+          {
+            "file": "pending-substrate-09-native-salvage-audit.json",
+            "ranges": ["1-32:raw"],
+            "coverage": "Complete applicable Native09 finding bodies09-S1/09-S2/09-S3 and the report's disposition context; unrelated Evidence09 bodies were not claimed as read."
+          },
+          {
+            "file": "pending-substrate-11-native-prompt.md",
+            "ranges": ["1-80:raw"],
+            "coverage": "Complete prompt including explicit forwarded-occurrence identity/deduplication and retained witness obligations."
+          },
+          {
+            "file": "pending-substrate-10-native-completion-settlement.json",
+            "ranges": ["258-315:raw"],
+            "coverage": "Applicable full N07-01..N07-08 identity/mechanism mapping context; canonical remaining Native IDs were additionally located by grep. Historical closure labels were not used as current certification."
+          }
+        ],
+        "skillRead": "skill://ak-code-review:1-220"
+      },
+      "deliveryAndScopeLimits": {
+        "missingNativeReceipt": "Genuine Native11 producer receipt remains absent and independently fatal to admission. This component is not a reconstructed/replacement receipt.",
+        "originalArtifacts": "Original Native11 incomplete audit and provenance supplement remain immutable; no retrospective attribution or completeness claim is made.",
+        "independence": "No Evidence11 independent audit output was borrowed for source dispositions or read coverage.",
+        "externalDependency": "The linked node_modules owner is outside the recursive freeze. This component did not read that external owner and makes no immutable-content or dispatcher-equivalence claim.",
+        "historicalEvidence": "Historical reports supply complete obligations and IDs, not current PASS or runtime evidence.",
+        "integrationOwnership": "This component certifies only its attributable primary/owner reads and listed seam reads. The integration owner still must inspect complete full-source evidence, finish all other component coverage and personally integrate crossing conclusions; this is not a full38 audit verdict."
+      },
+      "deferredScopeRetained": {
+        "status": "REQUIRED_UNEXECUTED",
+        "cells": "All18 independent rows on present/share/file remain54 declared, zero admitted/executed cells. No representative canary substitute.",
+        "callerCutover": "All12 immutable callers require later separately authorized clean cutover with mandatory sink/root-manifest/document binding, real Page context, actual action/activity results and consumed startRecord/measured expiry. Existing old call signatures are not relabeled as new helper regressions.",
+        "witness": "Every cell retains complete idle/running/expired state AND native UI, actual native Start+4000 bounds, original last-running/first-expired crossover, same-root/document lifecycle continuity and exact raw failure staging before assertions.",
+        "pendingAndReset": "Complete independent initial/pending/hidden/returned/reset/terminal/peer state AND native UI; actual native Pass/Reset/Start brackets; root/document/lifecycle uncertainty; original consumed return/expiry; positive exact originally pending work at Reset and crossing the original due.",
+        "Quiz": "Native Reset+5000, after-old/before-new checkpoint and bounded new expiry, complete terminal/controls/UI without800ms slack.",
+        "Relay": "Exact original pending due, genuine settled peer, complete first-timeout/team/lane/question/identity/UI and peer invariance, without extra Pass, fixed sleep, retry or winner fallback.",
+        "Trivia": "Complete question/round expiry and native Next identity/history/scores/awards/deadline/UI, including independent next-question policy bounds.",
+        "surfacesAndFinalization": "Earliest lifecycle setup, exact tuple/document/root cardinality, native focus/geometry/controls, complete live PNG/diagnostics, portable before/after network enforcement, source GET/config equality and failure-safe setup/close/attachments remain required.",
+        "canonicalAndLaterScope": "NC01-NC11,RPC-01-RPC-17,original-1-original-9,both historical mappings and all state/evidence SE meanings remain unchanged. Original7 Hot Potato exact speed bonus,original8 Scatter NFC duplicate/unique controls andoriginal9 full Trivia scoring remain required other slices. Gap4 unresolved; dependent gaps5-9 unchanged."
+      }
+    },
+    "notIndependentCompleteAudit": true
+  }
+]

@@ -1,0 +1,80 @@
+		// and vertical slides
+		hasHorizontalSlides,
+		hasVerticalSlides,
+
+		// Checks if the deck has navigated on either axis at least once
+		hasNavigatedHorizontally: () => navigationHistory.hasNavigatedHorizontally,
+		hasNavigatedVertically: () => navigationHistory.hasNavigatedVertically,
+
+		shouldAutoAnimateBetween,
+
+		// Adds/removes a custom key binding
+		addKeyBinding: keyboard.addKeyBinding.bind( keyboard ),
+		removeKeyBinding: keyboard.removeKeyBinding.bind( keyboard ),
+
+		// Programmatically triggers a keyboard event
+		triggerKey: keyboard.triggerKey.bind( keyboard ),
+
+		// Registers a new shortcut to include in the help overlay
+		registerKeyboardShortcut: keyboard.registerKeyboardShortcut.bind( keyboard ),
+
+		getComputedSlideSize,
+		setCurrentScrollPage,
+
+		// Allows for manually removing slides prior to reveal.js initialization
+		removeHiddenSlides,
+
+		// Returns the current scale of the presentation content
+		getScale: () => scale,
+
+		// Returns the current configuration object
+		getConfig: () => config,
+
+		// Helper method, retrieves query string as a key:value map
+		getQueryHash: Util.getQueryHash,
+
+		// Returns the path to the current slide as represented in the URL
+		getSlidePath: location.getHash.bind( location ),
+
+		// Returns reveal.js DOM elements
+		getRevealElement: () => revealElement,
+		getSlidesElement: () => dom.slides,
+		getViewportElement: () => dom.viewport,
+		getBackgroundsElement: () => backgrounds.element,
+
+		// API for registering and retrieving plugins
+		registerPlugin: plugins.registerPlugin.bind( plugins ),
+		hasPlugin: plugins.hasPlugin.bind( plugins ),
+		getPlugin: plugins.getPlugin.bind( plugins ),
+		getPlugins: plugins.getRegisteredPlugins.bind( plugins )
+
+	};
+
+	// Our internal API which controllers have access to
+	Util.extend( Reveal, {
+		...API,
+
+		// Methods for announcing content to screen readers
+		announceStatus,
+		getStatusText,
+
+		// Controllers
+		focus,
+		scroll: scrollView,
+		progress,
+		controls,
+		location,
+		overview,
+		keyboard,
+		fragments,
+		backgrounds,
+		slideContent,
+		slideNumber,
+
+		onUserInput,
+		closeOverlay: overlay.close.bind( overlay ),
+		updateSlidesVisibility,
+		layoutSlideContents,
+		transformSlides,
+
+[Showing lines 2888-2965 of 2973. Use :2966 to continue]

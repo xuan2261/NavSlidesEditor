@@ -1,0 +1,252 @@
+
+			let horizontalSlide = horizontalSlides[i];
+			let verticalSlides = horizontalSlide.querySelectorAll( 'section' );
+
+			for( let j = 0; j < verticalSlides.length; j++ ) {
+
+				// Stop as soon as we arrive at the present
+				if( verticalSlides[j] === slide ) {
+					break mainLoop;
+				}
+
+				// Don't count slides with the "uncounted" class
+				if( verticalSlides[j].dataset.visibility !== 'uncounted' ) {
+					pastCount++;
+				}
+
+			}
+
+			// Stop as soon as we arrive at the present
+			if( horizontalSlide === slide ) {
+				break;
+			}
+
+			// Don't count the wrapping section for vertical slides and
+			// slides marked as uncounted
+			if( horizontalSlide.classList.contains( 'stack' ) === false && horizontalSlide.dataset.visibility !== 'uncounted' ) {
+				pastCount++;
+			}
+
+		}
+
+		return pastCount;
+
+	}
+
+	/**
+	 * Returns a value ranging from 0-1 that represents
+	 * how far into the presentation we have navigated.
+	 *
+	 * @return {number}
+	 */
+	function getProgress() {
+
+		// The number of past and total slides
+		let totalCount = getTotalSlides();
+		let pastCount = getSlidePastCount();
+
+		if( currentSlide ) {
+
+			let allFragments = currentSlide.querySelectorAll( '.fragment' );
+
+			// If there are fragments in the current slide those should be
+			// accounted for in the progress.
+			if( allFragments.length > 0 ) {
+				let visibleFragments = currentSlide.querySelectorAll( '.fragment.visible' );
+
+				// This value represents how big a portion of the slide progress
+				// that is made up by its fragments (0-1)
+				let fragmentWeight = 0.9;
+
+				// Add fragment progress to the past slide count
+				pastCount += ( visibleFragments.length / allFragments.length ) * fragmentWeight;
+			}
+
+		}
+
+		return Math.min( pastCount / ( totalCount - 1 ), 1 );
+
+	}
+
+	/**
+	 * Retrieves the h/v location and fragment of the current,
+	 * or specified, slide.
+	 *
+	 * @param {HTMLElement} [slide] If specified, the returned
+	 * index will be for this slide rather than the currently
+	 * active one
+	 *
+	 * @return {{h: number, v: number, f: number}}
+	 */
+	function getIndices( slide ) {
+
+		// By default, return the current indices
+		let h = indexh,
+			v = indexv,
+			f;
+
+		// If a slide is specified, return the indices of that slide
+		if( slide ) {
+			// In scroll mode the original h/x index is stored on the slide
+			if( scrollView.isActive() ) {
+				h = parseInt( slide.getAttribute( 'data-index-h' ), 10 );
+
+				if( slide.getAttribute( 'data-index-v' ) ) {
+					v = parseInt( slide.getAttribute( 'data-index-v' ), 10 );
+				}
+			}
+			else {
+				let isVertical = isVerticalSlide( slide );
+				let slideh = isVertical ? slide.parentNode : slide;
+
+				// Select all horizontal slides
+				let horizontalSlides = getHorizontalSlides();
+
+				// Now that we know which the horizontal slide is, get its index
+				h = Math.max( horizontalSlides.indexOf( slideh ), 0 );
+
+				// Assume we're not vertical
+				v = undefined;
+
+				// If this is a vertical slide, grab the vertical index
+				if( isVertical ) {
+					v = Math.max( Util.queryAll( slide.parentNode, 'section' ).indexOf( slide ), 0 );
+				}
+			}
+		}
+
+		if( !slide && currentSlide ) {
+			let hasFragments = currentSlide.querySelectorAll( '.fragment' ).length > 0;
+			if( hasFragments ) {
+				let currentFragment = currentSlide.querySelector( '.current-fragment' );
+				if( currentFragment && currentFragment.hasAttribute( 'data-fragment-index' ) ) {
+					f = parseInt( currentFragment.getAttribute( 'data-fragment-index' ), 10 );
+				}
+				else {
+					f = currentSlide.querySelectorAll( '.fragment.visible' ).length - 1;
+				}
+			}
+		}
+
+		return { h, v, f };
+
+	}
+
+	/**
+	 * Retrieves all slides in this presentation.
+	 */
+	function getSlides() {
+
+		return Util.queryAll( dom.wrapper, SLIDES_SELECTOR + ':not(.stack):not([data-visibility="uncounted"])' );
+
+	}
+
+	/**
+	 * Returns a list of all horizontal slides in the deck. Each
+	 * vertical stack is included as one horizontal slide in the
+	 * resulting array.
+	 */
+	function getHorizontalSlides() {
+
+		return Util.queryAll( dom.wrapper, HORIZONTAL_SLIDES_SELECTOR );
+
+	}
+
+	/**
+	 * Returns all vertical slides that exist within this deck.
+	 */
+	function getVerticalSlides() {
+
+		return Util.queryAll( dom.wrapper, '.slides>section>section' );
+
+	}
+
+	/**
+	 * Returns all vertical stacks (each stack can contain multiple slides).
+	 */
+	function getVerticalStacks() {
+
+		return Util.queryAll( dom.wrapper, HORIZONTAL_SLIDES_SELECTOR + '.stack');
+
+	}
+
+	/**
+	 * Returns true if there are at least two horizontal slides.
+	 */
+	function hasHorizontalSlides() {
+
+		return getHorizontalSlides().length > 1;
+	}
+
+	/**
+	 * Returns true if there are at least two vertical slides.
+	 */
+	function hasVerticalSlides() {
+
+		return getVerticalSlides().length > 1;
+
+	}
+
+	/**
+	 * Returns an array of objects where each object represents the
+	 * attributes on its respective slide.
+	 */
+	function getSlidesAttributes() {
+
+		return getSlides().map( slide => {
+
+			let attributes = {};
+			for( let i = 0; i < slide.attributes.length; i++ ) {
+				let attribute = slide.attributes[ i ];
+				attributes[ attribute.name ] = attribute.value;
+			}
+			return attributes;
+
+		} );
+
+	}
+
+	/**
+	 * Retrieves the total number of slides in this presentation.
+	 *
+	 * @return {number}
+	 */
+	function getTotalSlides() {
+
+		return getSlides().length;
+
+	}
+
+	/**
+	 * Returns the slide element matching the specified index.
+	 *
+	 * @return {HTMLElement}
+	 */
+	function getSlide( x, y ) {
+
+		let horizontalSlide = getHorizontalSlides()[ x ];
+		let verticalSlides = horizontalSlide && horizontalSlide.querySelectorAll( 'section' );
+
+		if( verticalSlides && verticalSlides.length && typeof y === 'number' ) {
+			return verticalSlides ? verticalSlides[ y ] : undefined;
+		}
+
+		return horizontalSlide;
+
+	}
+
+	/**
+	 * Returns the background element for the given slide.
+	 * All slides, even the ones with no background properties
+	 * defined, have a background element so as long as the
+	 * index is valid an element will be returned.
+	 *
+	 * @param {mixed} x Horizontal background index OR a slide
+	 * HTML element
+	 * @param {number} y Vertical background index
+	 * @return {(HTMLElement[]|*)}
+	 */
+	function getSlideBackground( x, y ) {
+
+
+[Showing lines 2001-2250 of 2973. Use :2251 to continue]
