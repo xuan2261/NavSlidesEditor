@@ -1,0 +1,13 @@
+{
+  "status": "failed",
+  "classification": "operator-invocation-discrepancy",
+  "command": ["C:/nvm4w/nodejs/node.exe", "node_modules/vitepress/bin/vitepress.js", "build", "website"],
+  "exitCode": 1,
+  "startedAt": "2026-10-09T21:15:45.392Z",
+  "finishedAt": "2026-10-09T21:15:55.846Z",
+  "observed": "Client/server bundles built; SSR page rendering failed with ERR_REQUIRE_ESM for website/.vitepress/.temp/app.js required from vitepress/dist/node/chunk-BYTgXTwz.js.",
+  "canonicalOwner": "website/package.json scripts.docs:build",
+  "missingFlag": "--experimental-require-module",
+  "counsel": "FinalDocsBuildInvocationCounsel: retain failure, use canonical npm run docs:build; no dependency edits, node_modules patching or check suppression.",
+  "limits": "Not a product/documentation regression or a passed docs build. Corrected canonical build must be observed separately."
+}

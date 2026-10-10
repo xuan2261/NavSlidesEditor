@@ -4,6 +4,27 @@ How element properties map across the three export targets — reveal.js HTML
 (share link, offline bundle, PDF print) and PowerPoint (`.pptx`) — and which
 properties cannot be represented by a given format.
 
+## Three export modes and portability contract
+
+NavSlides provides three distinct export and interchange targets for presentations:
+
+1. **Portable `.navslides.json` (Project Archive)**
+   - Complete project encapsulation including slides, elements, metadata, design tokens, and local assets.
+   - Authority fields, server-specific credentials, and internal state are stripped cleanly (`shared/src/project-export-value.js`) to guarantee safe portability across environments without privilege escalation.
+   - Restored projects preserve layout/asset integrity while binding to fresh local ownership.
+   - Package-backed replacement selects trusted import styling from the active Original lineage. Retained templates/history keep their own Original-bound metadata; an old retained sidecar cannot become authority for the replacement package.
+
+2. **Immutable Original PPTX**
+   - Available for package-backed presentations originally imported from PowerPoint (`.pptx`).
+   - Preserves bit-for-bit identity against the committed package store digest (`server/services/package-backed-presentation-read.js`).
+   - Never reconstructed or re-serialized by editor saves; always delivered with exact byte-identical fidelity.
+
+3. **Validated Edited PPTX**
+   - Available only when presentation edits pass strict server-side OOXML validation rules.
+   - Edits are restricted to supported text, structure, and validated styling. Unsupported modifications, macros, ActiveX, or schema inconsistencies are rejected with explicit status rather than falling back to lossy approximations.
+   - Never advertised as "universal lossless roundtrip"; fidelity limits and warning reports (`exportReport`) explicitly identify all fallbacks and constraints.
+   - A genuinely byte-identical no-op reconciles the saved projection without creating a binary revision. Reopen and portable replay retain the selected committed package journal, while Original bytes remain immutable. Changed-package exports still require the existing validator gates.
+
 ## Reveal.js runtime contract
 
 - The canonical Reveal.js pin and runtime asset paths are owned by
@@ -69,6 +90,15 @@ properties cannot be represented by a given format.
   audiences cannot switch to a local picker. Authenticated host/two-learner journeys
   passed for eligible educational games and all seven quiz kinds; final frozen
   browser, desktop and packaged-release qualification remains separate.
+- Generated documents record the pinned Reveal.js 6.0.2 version in the
+  `navslides-reveal-version` metadata tag; `server/package.json` pins the only
+  supported workspace version.
+- Publication and startup fail closed if a required asset is absent, its manifest
+  version or hash differs, or a legacy `reveal.js/plugin/` path reappears. Portable
+  export likewise aborts on missing required Reveal.js, KaTeX or Highlight.js
+  assets rather than emitting a partially portable document.
+
+These source pins do not establish runtime or plugin compatibility qualification.
 
 ## Fixed mapping gaps (resolved)
 
@@ -217,6 +247,15 @@ created directly in NavSlides.
   [`mutation-transaction-execution.js`](../server/services/pptx-import/mutation-transaction-execution.js),
   and
   [`validated-edited-export-materialization.test.js`](../server/services/validated-edited-export-materialization.test.js).
+- **Editor readability is independent of edited-PPTX eligibility.** Consecutive
+  projection saves advance the aggregate generation without materializing a new
+  package revision. The reader retains the committed base package authority and
+  serves the current server-owned projection, including slide additions, reorder
+  and deletion. Non-text edits still make validated edited export unavailable
+  with `CANONICAL_TEXT_JOURNAL_INVALID`; immutable Original bytes are unchanged.
+  [HTTP boundary evidence](../plans/261009-0901-navslides-full-reliability-deep-tdd/reports/projection-read-export-http-smoke.json)
+  exercises sequential saves and structural edits on disposable data, not release
+  or Office qualification.
 - **Fidelity generation comes from the package store.** For a package-backed
   deck, the fidelity route reads the aggregate generation from the package-store
   head rather than trusting the compatibility JSON projection. See
@@ -286,12 +325,39 @@ created directly in NavSlides.
   package-authority archive; its remote-wide destination serialization and path checks
   have focused coverage pending the skipped sync-suite rerun. DTO/package-generation
   alignment, expected-head fencing between projection and bundle export, bounded
-  resource use, and complete referenced-media traversal remain unfinished. Portable
-  import now rejects missing/conflicting revisions/blobs, clears stale destination
-  outbox records, and rejects cross-presentation revision bytes without an owner
-  record; focused portable coverage passes, but the full authority archive contract
-  remains open. None of these edges is qualification evidence. The shared reader is
+  resource use, and complete referenced-media traversal remain unfinished for sync.
+  Portable archive admission and replacement are owned by
+  [`portable.js`](../server/services/pptx-import/package-store/portable.js) and
+  [`portable-authority.js`](../server/services/pptx-import/package-store/portable-authority.js),
+  with regressions in
+  [`portable.test.js`](../server/services/pptx-import/package-store/portable.test.js) and
+  [`portable-retained-authority.test.js`](../server/services/pptx-import/package-store/portable-retained-authority.test.js).
+  None of these edges is qualification evidence. The shared reader is
   [`package-backed-presentation-read.js`](../server/services/package-backed-presentation-read.js).
+- **Replacement is not revocation of retained authority.** A template or snapshot
+  represents an earlier retained package subject, not the replacement's current
+  head. Historical authority must survive replacement so these retained subjects
+  remain restorable. Source authority must be admitted before destination
+  rebinding: normalization must not turn a malformed or foreign source map into
+  apparently valid destination authority. The portable owners and regression
+  tests linked above are the executable contract; minimal-ZIP lifecycle evidence
+  is not parser, Office or complete browser qualification.
+- **Full projects and projection-only exports are different portability boundaries.**
+  A projection alone cannot carry the authority needed to restore an imported
+  package. The native full-project archive owner is
+  [`project-export.js`](../server/routes/project-export.js); session publication
+  and recovery are owned by
+  [`project-import-package-session.js`](../server/services/project-import-package-session.js).
+  The client save/export boundary is
+  [`use-export-actions.js`](../client/src/hooks/use-export-actions.js) with
+  [`export-project.js`](../client/src/utils/export-project.js).
+  Original-bound styling metadata has a separate owner in
+  [`trusted-import-metadata.js`](../server/services/pptx-import/trusted-import-metadata.js)
+  and coverage in
+  [`pptx-import-metadata-roundtrip.test.js`](../server/routes/pptx-import-metadata-roundtrip.test.js).
+  Carrying importer styling is not accepting client-supplied package authority.
+  The existing native-edit, validation and recovery limits still apply; these
+  paths do not establish offline-media decoding or Office fidelity.
 - **Native re-import remains an application validator, not provenance or
   collateral proof.** It now binds the requested package identity and isolates
   validation media state from the ordinary-import upload index. Those focused

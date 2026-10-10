@@ -1,0 +1,77 @@
+{
+  "status": "failed-run-partial-observations-only",
+  "receipt": "reports/p06-browser-acceptance.json",
+  "stats": {
+    "startTime": "2026-10-09T20:25:10.518Z",
+    "duration": 85652.324,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 5,
+    "flaky": 0
+  },
+  "unhandledErrors": [],
+  "observations": [
+    {
+      "title": "P06-07/08 deleted text Undo caret and locked master selection remain authorable",
+      "status": "failed",
+      "identity": "matched",
+      "sourceHash": "218a84b2b60c241f2aeeac1e06ec933d442c1ccc7d45d4fed55c7551494ef7cd",
+      "runs": [
+        {
+          "scenarioId": "P06-07",
+          "status": "passed",
+          "deletedTarget": "local",
+          "restoredNextInput": "<p>Local Alpha?</p>",
+          "staleEditorCountAfterUndo": 0
+        }
+      ],
+      "pageErrors": [],
+      "error": "\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText('Editing master: Acceptance master')\nExpected: visible\nError: strict mode violation: getByText('Editing master: Acceptance master') resolved to 2 elements:\n    1) <span>Editing master: Acceptance master</span> aka getByText('Editing master: Acceptance').first()\n    2) <span class=\"min-w-0 truncate tabular-nums\" data-testid=\"statusbar-slide-position\" title=\"Editing master: Acceptance master\">Editing master: Acceptance master</span> aka getByTestId('statusbar-slide-position')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText('Editing master: Acceptance master') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText('Editing master: Acceptance master')\u001b[22m\n"
+    },
+    {
+      "title": "P06-14 server history restore is reversible with immutable Original downloads",
+      "status": "failed",
+      "identity": "matched",
+      "sourceHash": "218a84b2b60c241f2aeeac1e06ec933d442c1ccc7d45d4fed55c7551494ef7cd",
+      "runs": [
+        {
+          "scenarioId": "P06-14",
+          "status": "passed",
+          "kind": "plain-changed-content",
+          "originalContent": "{\"title\":\"Plain original\",\"slides\":[{\"id\":\"slide\",\"elements\":[{\"id\":\"restore-text\",\"type\":\"text\",\"x\":100,\"y\":100,\"width\":400,\"height\":80,\"content\":\"<p>Restore Alpha</p>\",\"fontSize\":24}],\"notes\":\"\",\"background\":{\"type\":\"color\",\"color\":\"#101010\"}}]}",
+          "changedContent": "{\"title\":\"Plain changed\",\"slides\":[{\"id\":\"slide\",\"elements\":[{\"id\":\"restore-text\",\"type\":\"text\",\"x\":100,\"y\":100,\"width\":400,\"height\":80,\"content\":\"<p>Restore Beta</p>\",\"fontSize\":24}],\"notes\":\"\",\"background\":{\"type\":\"color\",\"color\":\"#101010\"}}]}",
+          "reversibleSnapshotId": "9d579873-d991-4a91-92af-ac6ea4f3eb11"
+        },
+        {
+          "scenarioId": "P06-14",
+          "status": "passed",
+          "kind": "settled-package",
+          "snapshotId": "cbabf88c-d3db-481d-926e-d617733bcf16",
+          "reversibleSnapshotId": "b9326af5-1cee-4fed-ab4b-fa153100bc70",
+          "generations": [
+            1,
+            2,
+            3
+          ],
+          "initialHash": "3e9c7fbe1a632c13eb87e4e73729247ddce5e203b7f9fe47cc5ccf51ca1f8c90",
+          "beforeRestoreHash": "3e9c7fbe1a632c13eb87e4e73729247ddce5e203b7f9fe47cc5ccf51ca1f8c90",
+          "restoreBackHash": "3e9c7fbe1a632c13eb87e4e73729247ddce5e203b7f9fe47cc5ccf51ca1f8c90",
+          "retainedOwnerBoundary": "actual server restore-back from Before restore succeeds and Original remains downloadable; raw authority intentionally hidden by editor DTO",
+          "packageProvenance": "PptxGenJS genuine PPTX, real source package store, portable admission API; not parser/Office qualification"
+        }
+      ],
+      "pageErrors": [],
+      "error": "\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\nExpected: \u001b[32m\"Package \u001b[7mpending projection\u001b[27m\"\u001b[39m\nReceived: \u001b[31m\"Package \u001b[7moriginal\u001b[27m\"\u001b[39m\n\nCall Log:\n- Timeout 12000ms exceeded while waiting on the predicate"
+    },
+    {
+      "title": "P06-12 Use Remote discards a queued edit after a genuine generation conflict",
+      "status": "failed",
+      "identity": "matched",
+      "sourceHash": "218a84b2b60c241f2aeeac1e06ec933d442c1ccc7d45d4fed55c7551494ef7cd",
+      "runs": [],
+      "pageErrors": [],
+      "error": "\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mfalse\u001b[39m"
+    }
+  ],
+  "boundary": "Passing observed substeps inside a failed5-test run are not whole-test/scenario completion or final source qualification. Missing route/Retry receipts correspond to asynchronous route-handler errors."
+}

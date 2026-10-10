@@ -1,0 +1,37 @@
+{
+  "status": "feasible_persisted_runtime_reload_tests_passed_with_explicit_architectural_limits",
+  "sourceRoot": "C:/Work/JeikCode",
+  "testsfile": "crates/jeikcode-coding/src/runtime_offline_integration.rs",
+  "names": ["runtime::tests::offline_integration::runtime_offline_persisted_queue_refresh_and_inflight_parent_reload"],
+  "preservedTests": ["runtime_offline_mounted_cross_provider_reload_and_snapshot_invariants", "runtime_offline_persisted_two_provider_explicit_pins", "per_task_model_running_and_queued_bindings_survive_refresh_and_session_change"],
+  "checkcmd": [
+    "C:/Users/Z10PAD8C_Xuan2261/.cargo/bin/cargo.exe test --offline -p jeikcode-coding runtime_offline_persisted_queue --lib",
+    "C:/Users/Z10PAD8C_Xuan2261/.cargo/bin/cargo.exe test --offline -p jeikcode-coding --lib",
+    "C:/Users/Z10PAD8C_Xuan2261/.cargo/bin/cargo.exe test --offline -p jeikcode-coding provider_factory --lib",
+    "C:/Users/Z10PAD8C_Xuan2261/.cargo/bin/cargo.exe test --offline -p jeikcode-capabilities tools::task --lib",
+    "git diff --check"
+  ],
+  "passedcounts": {
+    "newFocused": {"passed": 1, "failed": 0, "filtered": 381},
+    "fullCodingLib": {"passed": 374, "failed": 0, "ignored": 8, "filtered": 0},
+    "provider_factory": {"passed": 9, "failed": 0, "filtered": 373},
+    "tools_task": {"passed": 38, "failed": 0, "filtered": 875},
+    "uniquePassedAcrossFinalCommands": 412,
+    "finalCommandTestExecutionsPassed": 422,
+    "diffCheckExit": 0
+  },
+  "logs": ["C:/Work/JeikCode/target/persisted-route-focused.log", "C:/Work/JeikCode/target/persisted-route-fullcoding.log", "C:/Work/JeikCode/target/persisted-route-factory.log", "C:/Work/JeikCode/target/persisted-route-task.log"],
+  "evidence": {
+    "criteria0": "Actual CodingRuntime::start Fresh session with C:/Work/JeikCode/target temporary home/project; actual mounted task batch, max_concurrent=1. Both provider builds carry the actual nonempty session ID; second child is bound but has zero requests while first is blocked. Refresh of the runtime-installed registry resolver changes model and credentials while first runs; queued request still uses queued-api and old binding, actual child context excludes parent history. Then actual reassemble_provider with running and queued children cancels old generation: never-issued-api is built with same session but never called. Subsequent new-generation explicit child uses updated-api/new synthetic key and same persisted session. Native SessionManager load_snapshot matches actual runtime conversation and completed snapshot files; final shutdown persistence checked.",
+    "criteria1": "Nonempty parent conversation recorded at actual provider request boundary before blocked held-parent call. Actual provider reload stops that request and preserves user/assistant/tool message prefix, including history and in-flight user input. Held request messages remain exactly equal. Recorded build metadata asserts Responses parent protocol, model identities, same nonempty session and parent key; recorded actual parent ChatOptions retain 0.7 on old request and use 0.2 on new request. Task receipt effective API identity checked against actual observed child calls, not self-response text. Serialized native snapshots and SessionMeta contain no synthetic credentials.",
+    "architecture": "parts.rs mounts resolver from cfg.task_model_routing and assemble binds actual session; TaskTool resolves before semaphore acquisition and stores task-local provider/options. runtime.rs ReassembleProvider constructs candidate then stops current agent before refresh_subagent_tiers. Thus actual reload is cancellation, not simultaneous old-turn continuation. No production fix needed for observed task-local immutable bindings."
+  },
+  "remaining": [
+    "Running/queued completion across actual provider reassembly cannot be claimed: runtime intentionally cancels the old agent and children. Completion with retained bindings is verified across live resolver refresh; actual reassembly cancellation/no queued request and subsequent new-generation binding are verified separately. Changing this lifecycle solely for testing would violate scope.",
+    "Exact equality of all System messages across changing parent model is not an invariant: existing CodingPersonaHook refreshes model-specific persona. Non-System conversation is preserved exactly; child routing without parent model change preserves full snapshot prefix. Initial overstrong all-message assertion failed on expected persona refresh and was corrected, not production behavior.",
+    "Legacy snapshot serialization and explicit-versus-omitted-ID legacy persistence comparison from original criteria[1].remaining remain untested here. Native persisted snapshots are covered; no full Phase A closure claim.",
+    "Eight existing full-coding tests are ignored. This is offline mock-runtime evidence, not remote serving identity, activation, or inference certification."
+  ],
+  "scope": {"newProductionApi": false, "productionBehaviorChanged": false, "newSourceFilesEdited": ["crates/jeikcode-coding/src/runtime_offline_integration.rs"], "priorEditsPreserved": true, "externalNetwork": false, "liveProviders": false, "modelInference": false, "globalConfigReadOrWrite": false, "otherDriveAccess": false, "hostOrRemoteprocChanges": false},
+  "development": "Focused test passed after correcting expected model-specific System persona refresh; final focused and all requested suites passed after all edits. No repeated broad rollups during editing."
+}

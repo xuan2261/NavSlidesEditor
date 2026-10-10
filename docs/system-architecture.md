@@ -395,6 +395,24 @@ server/uploads/
 
 - `storage.js` uses an in-memory lock queue per file to avoid concurrent JSON
   write/read races.
+- Settings revisions prevent stale forms from overwriting newer values; they do
+  not replace the single-process deployment invariant. The transaction owner is
+  [`settings.js`](../server/routes/settings.js), backed by `updateSettings()` in
+  [`storage.js`](../server/services/storage.js).
+- Media cleanup cannot treat unreadable ownership as absence;
+  [`withUploadHashes()`](../server/services/storage.js) owns the fail-closed ledger boundary.
+- Recovery uncertainty is a mutation-admission boundary, not permission to
+  reconstruct authority or delete retained data. Startup/admission ownership is
+  [`server/index.js`](../server/index.js) and
+  [`recoverStartupState()`](../server/services/health-state-readiness.js);
+  session-ledger authority is owned by
+  [`project-import-media-session-store.js`](../server/services/project-import-media-session-store.js).
+  Read/download authority remains route-specific. Operator action belongs in the
+  [durable recovery runbook](deployment-guide.md#durable-recovery-runbook), not an
+  unauthenticated repair API or destructive collector.
+- Deploy the revision-bound Settings API and UI together. Conflict review must
+  preserve local intent rather than retry an unconditional write; the draft
+  owner is [`use-settings-draft.js`](../client/src/pages/use-settings-draft.js).
 - `initDataFiles()` creates the data directories and default JSON files on
   first run.
 - `tmp-pptx-imports/` is a temporary workspace for PPTX import uploads and is cleaned after each import.
@@ -437,22 +455,22 @@ billing, and offline sandbox inlining are not part of Phase 1.
 
 ### Shared Modules
 
-| Module                           | Purpose                                                                                                                              |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `htmlGenerator.js`               | Reveal.js HTML and print HTML generation                                                                                             |
-| `reveal-runtime-assets.js`       | Reveal.js 6.0.1 receipt and canonical manifest for `/vendor/reveal.js/dist` core, theme, plugin, vendor, and offline assets          |
-| `live-presenter-runtime.js`      | Generated live presenter navigation and live-room runtime                                                                            |
-| `live-presenter-game-runtime.js` | Generated presenter game bootstrap, host sockets, and bounded cleanup                                                                |
-| `transition-settings.js`         | Validated presentation/slide transition resolution shared by generation and preview                                                  |
-| `element-renderers.js`           | Shared element rendering helpers                                                                                                     |
-| `design-tokens.js`               | `'auto'` → `var(--ns-*)` resolver shared by both render paths (`DEFAULT_TOKENS`, `AUTO_FIELD_MAP`, `resolveAutoColor`, `isTokenVar`) |
-| `theme-presets.js`               | 39 token presets (`THEME_PRESETS`), 7 categories                                                                                     |
-| `fx/`                            | 8 canvas FX modules + registry; `buildFxRuntimeScript()` emits the inlined browser runtime                                           |
-| `slideNotes.js`                  | Canonical notes normalization helpers                                                                                                |
-| `shapeUtils.js`                  | SVG shape/path helpers                                                                                                               |
-| `index.js`                       | Canonical color palettes, gradient presets, and `isLightColor()` helper                                                              |
-| `presenterTools.js`              | Presenter UI controls and scripts                                                                                                    |
-| `types/presentation.js`          | JSDoc data model for presentation objects                                                                                            |
+| Module | Purpose |
+| --- | --- |
+| `htmlGenerator.js` | Reveal.js HTML and print HTML generation |
+| `reveal-runtime-assets.js` | Reveal.js 6.0.2 receipt and canonical manifest for `/vendor/reveal.js/dist` core, theme, plugin, vendor, and offline assets |
+| `live-presenter-runtime.js` | Generated live presenter navigation and live-room runtime |
+| `live-presenter-game-runtime.js` | Generated presenter game bootstrap, host sockets, and bounded cleanup |
+| `transition-settings.js` | Validated presentation/slide transition resolution shared by generation and preview |
+| `element-renderers.js` | Shared element rendering helpers |
+| `design-tokens.js` | `'auto'` → `var(--ns-*)` resolver shared by both render paths (`DEFAULT_TOKENS`, `AUTO_FIELD_MAP`, `resolveAutoColor`, `isTokenVar`) |
+| `theme-presets.js` | 39 token presets (`THEME_PRESETS`), 7 categories |
+| `fx/` | 8 canvas FX modules + registry; `buildFxRuntimeScript()` emits the inlined browser runtime |
+| `slideNotes.js` | Canonical notes normalization helpers |
+| `shapeUtils.js` | SVG shape/path helpers |
+| `index.js` | Canonical color palettes, gradient presets, and `isLightColor()` helper |
+| `presenterTools.js` | Presenter UI controls and scripts |
+| `types/presentation.js` | JSDoc data model for presentation objects |
 
 ### Design Token Render Path
 
@@ -520,7 +538,7 @@ diverge:
 
 ## Export Pipeline
 
-- `generateRevealHTML()` renders the live/present HTML deck from the Reveal.js 6.0.1 manifest; present, preview, share, and offline use the canonical `/vendor/reveal.js/dist` asset set. Built-in plugins resolve beneath `dist/plugin/`.
+- `generateRevealHTML()` renders the live/present HTML deck from the Reveal.js 6.0.2 manifest; present, preview, share, and offline use the canonical `/vendor/reveal.js/dist` asset set. Built-in plugins resolve beneath `dist/plugin/`.
 - `generatePrintHTML()` expands fragments into print pages.
 - `transition-settings.js` normalizes transition type, direction, duration, and speed. Destination-slide settings override presentation settings, with validated defaults shared by production generation and `TransitionPreview`.
 - `TransitionPreview` builds a two-slide deck through `generateRevealHTML()`, uses the configured presentation resolution and local `/vendor/reveal.js` assets, and loads the generated offline HTML in a sandboxed iframe. Its replay hook disables automatic advancement while preserving effective transition metadata.

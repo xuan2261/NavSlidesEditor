@@ -1,0 +1,37 @@
+{
+  "status": "passed",
+  "scope": "actual Node disk preservation smoke, not release qualification",
+  "sourceSha": "aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+  "dirty": true,
+  "runtime": "v22.22.0",
+  "command": "node <owned temporary ledger diagnostic .cjs>",
+  "exitCode": 0,
+  "wallSeconds": 0.4,
+  "observed": {
+    "corruptLedgerRejected": "SyntaxError",
+    "mediaBytesPreserved": true,
+    "corruptLedgerBytesPreserved": true,
+    "subsequentMutationPreservedPreviousOwner": true
+  },
+  "sourceHash": "d55895dd12a3aff66a60af5b9f3e6842932fe2c76d13e45b838a7d756c160620",
+  "regression": {
+    "before": {
+      "artifact": "artifact://151",
+      "exitCode": 1,
+      "testsPassed": 1,
+      "testsFailed": 7
+    },
+    "after": {
+      "evidence": "Observed four-file Vitest completion at 17:45:30 in session transcript",
+      "exitCode": 0,
+      "testFiles": 4,
+      "testsPassed": 17,
+      "skipped": 1
+    }
+  },
+  "limits": [
+    "Initial Bun execFileSync launch timed out at 30 seconds; no product deadlock was reproduced through direct standalone Node.",
+    "The actual smoke Node version differs from the v24.3.0 planning baseline; no environment equivalence is claimed.",
+    "POSIX 0600 permission assertion is skipped on Windows and remains unproved."
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "status": "observed",
+  "buildManifest": "5b2c54c1b6d6607b8d7d8a7db6552c2aadaa8646baedd21966ecce9051dd03fc",
+  "observed": {
+    "html": "<p><strong>Selection text sự kiểm tra</strong></p>",
+    "text": "Selection text sự kiểm tra",
+    "selectedId": "rte-smoke-text",
+    "caret": {
+      "anchorText": "Selection text sự kiểm tra",
+      "offset": 26,
+      "collapsed": true
+    },
+    "events": [
+      {
+        "type": "compositionstart",
+        "trusted": true,
+        "data": ""
+      },
+      {
+        "type": "compositionupdate",
+        "trusted": true,
+        "data": " sự kiểm"
+      },
+      {
+        "type": "beforeinput",
+        "trusted": true,
+        "data": " sự kiểm",
+        "inputType": "insertCompositionText",
+        "isComposing": true
+      },
+      {
+        "type": "input",
+        "trusted": true,
+        "data": " sự kiểm",
+        "inputType": "insertCompositionText",
+        "isComposing": true
+      },
+      {
+        "type": "compositionupdate",
+        "trusted": true,
+        "data": " sự kiểm tra"
+      },
+      {
+        "type": "beforeinput",
+        "trusted": true,
+        "data": " sự kiểm tra",
+        "inputType": "insertCompositionText",
+        "isComposing": true
+      },
+      {
+        "type": "input",
+        "trusted": true,
+        "data": " sự kiểm tra",
+        "inputType": "insertCompositionText",
+        "isComposing": true
+      },
+      {
+        "type": "compositionupdate",
+        "trusted": true,
+        "data": " sự kiểm tra"
+      },
+      {
+        "type": "beforeinput",
+        "trusted": true,
+        "data": " sự kiểm tra",
+        "inputType": "insertCompositionText",
+        "isComposing": true
+      },
+      {
+        "type": "input",
+        "trusted": true,
+        "data": " sự kiểm tra",
+        "inputType": "insertCompositionText",
+        "isComposing": true
+      },
+      {
+        "type": "compositionend",
+        "trusted": false,
+        "data": " sự kiểm tra"
+      }
+    ]
+  },
+  "persistedAndReloadedHtml": "<p><strong>Selection text sự kiểm tra</strong></p>",
+  "htmlSha256": "4d11e054601ad495c461ca9e096c90aa42c6314b32bf70de2b1af8bac21d392a",
+  "limitations": [
+    "Chromium CDP composition, not physical Windows IME.",
+    "compositionend was untrusted; other captured composition/input events were trusted.",
+    "Initial fixture contrast changed from #222222 to #fafafa against the actual dark theme; no production color change.",
+    "Re-entering the unedited text then Ctrl+Z emptied its initial content; phase06 remains incomplete.",
+    "No fresh A/B/C cycle was performed; prior chat labels do not establish that scenario."
+  ]
+}

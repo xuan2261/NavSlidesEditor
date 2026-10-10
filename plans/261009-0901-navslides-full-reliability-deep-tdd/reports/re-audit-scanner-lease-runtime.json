@@ -1,0 +1,217 @@
+{
+  "kind": "real-verifier-cli-and-extracted-workflow-local-origin-smoke",
+  "createdAt": "2026-10-10T09:44:43.934Z",
+  "limits": "No scanner binary, candidate image, hosted workflow or live GitHub API. Clean OS capture is genuine; added Go, browser and invocation/database metadata are synthetic. Git commands use only disposable file:// origins; gh responses are synthetic.",
+  "sourceBefore": {
+    "scripts/trivy-report-evidence.js": "54f00c3a42e80fd2888e83d832083d251d7c9d5faad1715f90cd3afd7f68e840",
+    "scripts/verify-container-supply-chain.js": "f95530d348d56992a66e2d6fede80c475f11bbb8ef3a80fe33427fa710181a4e",
+    ".github/workflows/electron-server-lock-refresh.yml": "bd57ff2a87304b39206d64222dfa7c857016d7eaa6b9add3929f6e30abc1c02b"
+  },
+  "scanner": [
+    {
+      "name": "equivalent-go-stdlib",
+      "status": 0,
+      "expectedExit": 0,
+      "stdout": "",
+      "stderr": "(node:3496) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\n",
+      "receipt": {
+        "schemaVersion": 2,
+        "status": "passed",
+        "imageID": "sha256:c83674e1999044d33d751661371b873539f47e5b5c5ca3320c7e0377acca6238",
+        "registryManifestDigests": [
+          "alpine@sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8"
+        ],
+        "scannerVersion": "0.74.0",
+        "scannerEvidenceHash": "350b3d0ce2ca4eb4ff40b8006fd63adcc6f496d02f8b15c51b4da1b967d104ab",
+        "playwrightVersion": "1.63.0",
+        "chromiumRevision": "1243",
+        "vulnerabilityCount": 0,
+        "policyHash": "47c0e43d0ca102bcf0c29df0f3b4a7d97f3c4127d769798852be63d7fade6489",
+        "reportHash": "7eddd0f43b4fd3cc461ae2b4a32e723154d841417f9a67ed793639609f459ad7",
+        "sbomHash": "b578f9b9558ebdac8debcb084c2442e4c95bde918fd0252b55e9789b5458bd86",
+        "browserInventoryHash": "3f8e5c50e847bd1df567b9b7086ea534e5335b72cec93ec4c8f4d59efaf620c7"
+      }
+    },
+    {
+      "name": "exact-raw-go-control",
+      "status": 0,
+      "expectedExit": 0,
+      "stdout": "",
+      "stderr": "(node:14164) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\n",
+      "receipt": {
+        "schemaVersion": 2,
+        "status": "passed",
+        "imageID": "sha256:c83674e1999044d33d751661371b873539f47e5b5c5ca3320c7e0377acca6238",
+        "registryManifestDigests": [
+          "alpine@sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8"
+        ],
+        "scannerVersion": "0.74.0",
+        "scannerEvidenceHash": "a99e379043cfc31ad4ff1a7e96a2e9254470dcb9cf0f57611a2393016bc122bd",
+        "playwrightVersion": "1.63.0",
+        "chromiumRevision": "1243",
+        "vulnerabilityCount": 0,
+        "policyHash": "47c0e43d0ca102bcf0c29df0f3b4a7d97f3c4127d769798852be63d7fade6489",
+        "reportHash": "dbf6a2b1d4eee31017ffea43c2961a1435c8b102431ada5ebc0963338835d581",
+        "sbomHash": "b578f9b9558ebdac8debcb084c2442e4c95bde918fd0252b55e9789b5458bd86",
+        "browserInventoryHash": "3f8e5c50e847bd1df567b9b7086ea534e5335b72cec93ec4c8f4d59efaf620c7"
+      }
+    },
+    {
+      "name": "different-go-version",
+      "status": 1,
+      "expectedExit": 1,
+      "stdout": "",
+      "stderr": "(node:3760) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nscanner SBOM package coverage mismatch: stdlib\n",
+      "receipt": null
+    },
+    {
+      "name": "different-go-ecosystem",
+      "status": 1,
+      "expectedExit": 1,
+      "stdout": "",
+      "stderr": "(node:38840) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nscanner SBOM package coverage mismatch: stdlib\n",
+      "receipt": null
+    },
+    {
+      "name": "severe-go-finding",
+      "status": 1,
+      "expectedExit": 1,
+      "stdout": "",
+      "stderr": "(node:6728) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nunapproved vulnerabilities: CVE-2026-12345:stdlib\n",
+      "receipt": null
+    },
+    {
+      "name": "weakened-severity-config",
+      "status": 1,
+      "expectedExit": 1,
+      "stdout": "",
+      "stderr": "(node:6136) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nscanner invocation coverage is incomplete\n",
+      "receipt": null
+    },
+    {
+      "name": "raw-sbom-hash-mismatch",
+      "status": 1,
+      "expectedExit": 1,
+      "stdout": "",
+      "stderr": "(node:41836) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nscanner evidence sbom hash mismatch\n",
+      "receipt": null
+    }
+  ],
+  "lease": [
+    {
+      "name": "absent-automation-branch",
+      "status": 0,
+      "stdout": "M\telectron/server-package-lock.json\n[chore/electron-server-lock-refresh 108e9bc] chore: refresh isolated Electron server lock\n 1 file changed, 1 insertion(+), 1 deletion(-)\n",
+      "stderr": "Switched to a new branch 'chore/electron-server-lock-refresh'\nTo file:///C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-lock-lease-test-0cZqQy/origin.git\n * [new branch]      HEAD -> chore/electron-server-lock-refresh\n",
+      "originalTip": null,
+      "remoteTip": "108e9bce10dd33a6f7ab14bd2c44852ccef008f7",
+      "checkoutTip": "108e9bce10dd33a6f7ab14bd2c44852ccef008f7",
+      "baseTip": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "baseTipAfter": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "ghCalls": [
+        "pr list --head chore/electron-server-lock-refresh --base trunk --state open --json number --jq .[0].number // empty",
+        "pr create --title chore: refresh isolated Electron server lock --body Regenerates electron/server-package-lock.json via `npm run electron:lock -- --resolve` so the packaged Electron server picks up in-range dependency updates that Dependabot lands on the workspace lockfile. The refresh job verifies the lock installs its declared tree via `node scripts/prepare-electron.js`. --base trunk --head chore/electron-server-lock-refresh"
+      ]
+    },
+    {
+      "name": "concurrent-winner-existing-false",
+      "status": 1,
+      "stdout": "M\telectron/server-package-lock.json\n[chore/electron-server-lock-refresh 108e9bc] chore: refresh isolated Electron server lock\n 1 file changed, 1 insertion(+), 1 deletion(-)\n[chore/electron-server-lock-refresh 95e45c2] concurrent winner\n 1 file changed, 1 insertion(+), 1 deletion(-)\n",
+      "stderr": "Switched to a new branch 'chore/electron-server-lock-refresh'\nSwitched to a new branch 'chore/electron-server-lock-refresh'\nTo file:///C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-lock-lease-test-46IVBq/origin.git\n * [new branch]      chore/electron-server-lock-refresh -> chore/electron-server-lock-refresh\nFrom file:///C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-lock-lease-test-46IVBq/origin\n * [new branch]      chore/electron-server-lock-refresh -> origin/chore/electron-server-lock-refresh\nTo file:///C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-lock-lease-test-46IVBq/origin.git\n ! [rejected]        HEAD -> chore/electron-server-lock-refresh (stale info)\nerror: failed to push some refs to 'file:///C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-lock-lease-test-46IVBq/origin.git'\n",
+      "originalTip": null,
+      "remoteTip": "95e45c2d77cca7c507008011ee75d6b995d3bcd6",
+      "checkoutTip": "108e9bce10dd33a6f7ab14bd2c44852ccef008f7",
+      "baseTip": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "baseTipAfter": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "ghCalls": []
+    },
+    {
+      "name": "existing-automation-branch",
+      "status": 0,
+      "stdout": "M\telectron/server-package-lock.json\n[chore/electron-server-lock-refresh 108e9bc] chore: refresh isolated Electron server lock\n 1 file changed, 1 insertion(+), 1 deletion(-)\nRefresh PR #41 already open — branch updated in place.\n",
+      "stderr": "From file:///C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-lock-lease-test-Wic1dp/origin\n * branch            557c8065bc4218140f5f3725bab1f155dbb5e285 -> FETCH_HEAD\nSwitched to a new branch 'chore/electron-server-lock-refresh'\nTo file:///C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-lock-lease-test-Wic1dp/origin.git\n + 557c806...108e9bc HEAD -> chore/electron-server-lock-refresh (forced update)\n",
+      "originalTip": "557c8065bc4218140f5f3725bab1f155dbb5e285",
+      "remoteTip": "108e9bce10dd33a6f7ab14bd2c44852ccef008f7",
+      "checkoutTip": "108e9bce10dd33a6f7ab14bd2c44852ccef008f7",
+      "baseTip": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "baseTipAfter": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "ghCalls": [
+        "pr list --head chore/electron-server-lock-refresh --base trunk --state open --json number --jq .[0].number // empty"
+      ]
+    },
+    {
+      "name": "concurrent-winner-existing-true",
+      "status": 1,
+      "stdout": "M\telectron/server-package-lock.json\n[chore/electron-server-lock-refresh 108e9bc] chore: refresh isolated Electron server lock\n 1 file changed, 1 insertion(+), 1 deletion(-)\n[chore/electron-server-lock-refresh 7170a7a] concurrent winner\n 1 file changed, 1 insertion(+), 1 deletion(-)\n",
+      "stderr": "From file:///C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-lock-lease-test-vCth24/origin\n * branch            557c8065bc4218140f5f3725bab1f155dbb5e285 -> FETCH_HEAD\nSwitched to a new branch 'chore/electron-server-lock-refresh'\nReset branch 'chore/electron-server-lock-refresh'\nTo file:///C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-lock-lease-test-vCth24/origin.git\n   557c806..7170a7a  chore/electron-server-lock-refresh -> chore/electron-server-lock-refresh\nFrom file:///C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-lock-lease-test-vCth24/origin\n * [new branch]      chore/electron-server-lock-refresh -> origin/chore/electron-server-lock-refresh\nTo file:///C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-lock-lease-test-vCth24/origin.git\n ! [rejected]        HEAD -> chore/electron-server-lock-refresh (stale info)\nerror: failed to push some refs to 'file:///C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-lock-lease-test-vCth24/origin.git'\n",
+      "originalTip": "557c8065bc4218140f5f3725bab1f155dbb5e285",
+      "remoteTip": "7170a7abf9bf784e3b44b7bd42960cf30709b46c",
+      "checkoutTip": "108e9bce10dd33a6f7ab14bd2c44852ccef008f7",
+      "baseTip": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "baseTipAfter": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "ghCalls": []
+    },
+    {
+      "name": "no-diff",
+      "status": 0,
+      "stdout": "Electron server lock already up to date.\n",
+      "stderr": "",
+      "originalTip": "557c8065bc4218140f5f3725bab1f155dbb5e285",
+      "remoteTip": "557c8065bc4218140f5f3725bab1f155dbb5e285",
+      "checkoutTip": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "baseTip": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "baseTipAfter": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "ghCalls": []
+    },
+    {
+      "name": "unreachable-origin",
+      "status": 128,
+      "stdout": "::error::Cannot observe the refresh branch; refusing to push without a lease.\n",
+      "stderr": "fatal: 'C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-lock-lease-test-yigwdM/unavailable.git' does not appear to be a git repository\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "originalTip": "557c8065bc4218140f5f3725bab1f155dbb5e285",
+      "remoteTip": "557c8065bc4218140f5f3725bab1f155dbb5e285",
+      "checkoutTip": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "baseTip": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "baseTipAfter": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "ghCalls": []
+    },
+    {
+      "name": "denied-pr",
+      "status": 1,
+      "stdout": "M\telectron/server-package-lock.json\n[chore/electron-server-lock-refresh 108e9bc] chore: refresh isolated Electron server lock\n 1 file changed, 1 insertion(+), 1 deletion(-)\n::error::Refresh PR creation denied or unavailable. Repository owner must approve the existing Actions PR policy; this workflow does not change permissions or use a PAT fallback.\n",
+      "stderr": "Switched to a new branch 'chore/electron-server-lock-refresh'\nTo file:///C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-lock-lease-test-YUWD8y/origin.git\n * [new branch]      HEAD -> chore/electron-server-lock-refresh\n",
+      "originalTip": null,
+      "remoteTip": "108e9bce10dd33a6f7ab14bd2c44852ccef008f7",
+      "checkoutTip": "108e9bce10dd33a6f7ab14bd2c44852ccef008f7",
+      "baseTip": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "baseTipAfter": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "ghCalls": [
+        "pr list --head chore/electron-server-lock-refresh --base trunk --state open --json number --jq .[0].number // empty",
+        "pr create --title chore: refresh isolated Electron server lock --body Regenerates electron/server-package-lock.json via `npm run electron:lock -- --resolve` so the packaged Electron server picks up in-range dependency updates that Dependabot lands on the workspace lockfile. The refresh job verifies the lock installs its declared tree via `node scripts/prepare-electron.js`. --base trunk --head chore/electron-server-lock-refresh"
+      ]
+    },
+    {
+      "name": "resolved-non-main-default-branch",
+      "status": 0,
+      "stdout": "M\telectron/server-package-lock.json\n[chore/electron-server-lock-refresh 108e9bc] chore: refresh isolated Electron server lock\n 1 file changed, 1 insertion(+), 1 deletion(-)\n",
+      "stderr": "Switched to a new branch 'chore/electron-server-lock-refresh'\nTo file:///C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-lock-lease-test-LlowC6/origin.git\n * [new branch]      HEAD -> chore/electron-server-lock-refresh\n",
+      "originalTip": null,
+      "remoteTip": "108e9bce10dd33a6f7ab14bd2c44852ccef008f7",
+      "checkoutTip": "108e9bce10dd33a6f7ab14bd2c44852ccef008f7",
+      "baseTip": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "baseTipAfter": "4bc473dcd7c29d7801616cab6e8f472b42a7b5bb",
+      "ghCalls": [
+        "repo view fixture/navslides --json defaultBranchRef --jq .defaultBranchRef.name",
+        "pr list --head chore/electron-server-lock-refresh --base trunk --state open --json number --jq .[0].number // empty",
+        "pr create --title chore: refresh isolated Electron server lock --body Regenerates electron/server-package-lock.json via `npm run electron:lock -- --resolve` so the packaged Electron server picks up in-range dependency updates that Dependabot lands on the workspace lockfile. The refresh job verifies the lock installs its declared tree via `node scripts/prepare-electron.js`. --base trunk --head chore/electron-server-lock-refresh"
+      ]
+    }
+  ],
+  "success": true,
+  "sourceAfter": {
+    "scripts/trivy-report-evidence.js": "54f00c3a42e80fd2888e83d832083d251d7c9d5faad1715f90cd3afd7f68e840",
+    "scripts/verify-container-supply-chain.js": "f95530d348d56992a66e2d6fede80c475f11bbb8ef3a80fe33427fa710181a4e",
+    ".github/workflows/electron-server-lock-refresh.yml": "bd57ff2a87304b39206d64222dfa7c857016d7eaa6b9add3929f6e30abc1c02b"
+  },
+  "fixtureRootRemoved": true
+}

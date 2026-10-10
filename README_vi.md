@@ -2,7 +2,11 @@
 
 A self-hostable WYSIWYG presentation editor được xây dựng dựa trên [reveal.js](https://revealjs.com/). Build và trình chiếu slide trực tiếp trên trình duyệt — không cần tài khoản, không cần đám mây, không bị theo dõi. Đồng thời cung cấp dưới dạng ứng dụng desktop độc lập thông qua Electron.
 
-Phiên bản hiện tại: **v1.15.0** — phần tử tương tác cho giảng dạy, Mermaid/STEM authoring, 10 game subtype, UX LaTeX, biểu tượng kỹ thuật và kiểm chứng release gate.
+Phiên bản package trong mã nguồn là **1.17.0**, do [package.json](package.json)
+quản lý. [runtime-versions.json](runtime-versions.json) quản lý riêng các phiên
+bản runtime và toolchain được khóa. Phiên bản package không chứng minh đã đạt
+qualification hoặc đã phát hành; xem artifact đã công bố tại
+[Releases](https://github.com/xuan2261/NavSlidesEditor/releases).
 
 ## Features
 
@@ -75,7 +79,7 @@ Các công cụ dạy học có thể khám phá từ tab **Insert**: Mermaid di
 - **Present mode** — trình chiếu toàn màn hình với reveal.js kèm theo ghi chú diễn giả (nhấn phím `S`)
 - **Advanced Markdown Import** — tạo toàn bộ bài thuyết trình từ Markdown với sự hỗ trợ cho các attributes nâng cao của slide
 - **Export HTML** — tải xuống dưới dạng tệp HTML độc lập
-- **Export offline HTML** — tích hợp sẵn tất cả tài nguyên CDN (Reveal.js, KaTeX, highlight.js) vào file và phân giải chính xác các iframe/plugin cục bộ để tệp hoạt động hoàn toàn offline
+- **Export offline HTML** — nhúng runtime cục bộ đã được kiểm tra và tài nguyên được hỗ trợ; thiếu tài nguyên bắt buộc sẽ làm export thất bại. Nội dung nhúng hoặc dịch vụ bên ngoài không mặc nhiên hoạt động offline. Xem [giới hạn export](docs/export-fidelity-and-limits.md#revealjs-runtime-contract).
 - **Export PDF** — bố cục in sẵn sàng với một trang trên mỗi slide, các trạng thái fragment được mở rộng, kèm tính năng khởi tạo iframe cải tiến cho nội dung nhúng
 - **Export PPTX** — tạo tệp PowerPoint để chia sẻ với người dùng không chuyên kỹ thuật
 - **Shareable links** — tạo các URL công khai để xem bản trình bày mà không cần vào trình chỉnh sửa; bật/tắt tính năng này tùy từng file
@@ -125,7 +129,7 @@ chmod +x Slides\ Editor-1.0.0.AppImage
 
 #### Build from source
 
-Yêu cầu **Node.js 20+**.
+Yêu cầu **Node.js >=22.13.0** và npm.
 
 ```bash
 git clone https://github.com/xuan2261/NavSlidesEditor.git
@@ -218,7 +222,7 @@ ports:
 
 ### Option C — Node.js / npm from source
 
-Yêu cầu **Node.js 20+** và npm 8+.
+Yêu cầu **Node.js >=22.13.0** và npm. CI khóa Node.js 22.22.0; image container khóa Node.js 22.23.3 trên Debian Trixie Slim.
 
 #### 1. Clone repository
 
@@ -269,26 +273,9 @@ PORT=8080 npm start
 
 ## Data & Persistence
 
-| Path                             | Contents                              |
-| -------------------------------- | ------------------------------------- |
-| `server/data/presentations.json` | Toàn bộ dữ liệu của bài thuyết trình  |
-| `server/data/templates.json`     | Custom templates                      |
-| `server/data/share-tokens.json`  | Shareable link tokens                 |
-| `server/data/github-config.json` | Thông tin xác thực GitHub integration |
-| `server/data/history/`           | Lịch sử lưu các bản nháp (snapshots)  |
-| `server/uploads/`                | Hình ảnh, audio, video được upload    |
+Dữ liệu và package authority nằm trong `server/data/`; tài nguyên đã tải lên nằm trong `server/uploads/`. Docker lưu hai thư mục trong các named volumes được khai báo ở `docker-compose.yml`.
 
-Mọi file cấu hình và thư mục sẽ được tự động tạo vào lần chạy đầu tiên. Bạn nên thực hiện backup để tránh mất dữ liệu.
-
-**Docker:** Dữ liệu nằm trong 2 named volumes (`revealjs-data`, `revealjs-uploads`). Để backup:
-
-```bash
-# Lệnh copy file JSON dữ liệu ra khỏi volume
-docker run --rm \
-  -v revealjs-data:/data \
-  -v $(pwd):/backup \
-  alpine cp /data/presentations.json /backup/presentations.json
-```
+Sao lưu cả hai volume tại cùng một điểm nhất quán khi dịch vụ đã dừng bằng `npm run backup:docker`. Chỉ khôi phục vào các volume rỗng bằng `npm run restore:docker -- -BackupDirectory <path>`; manifest kiểm tra cả hai archive trước khi giải nén. Sao chép riêng `presentations.json` không giữ đủ package, media và lịch sử. Xem [hướng dẫn backup/restore](docs/deployment-guide.md#backup-and-restore-docker).
 
 ---
 
@@ -402,11 +389,30 @@ slides.example.com {
 
 ## Requirements
 
+Các giá trị trong mã nguồn bên dưới theo [package.json](package.json),
+[runtime-versions.json](runtime-versions.json), manifest của
+[server](server/package.json) và [client](client/package.json), cùng
+[`ELEMENT_DEFAULTS`](client/src/data/element-defaults.js). Đây là phiên bản và
+số lượng được khai báo, không phải bằng chứng cài đặt, qualification runtime
+hay phát hành. Package desktop Electron được đóng gói riêng, không thuộc npm
+workspaces; `website` là workspace thứ tư.
+
+<!-- navslides-facts:start -->
+| Fact | Value |
+| --- | --- |
+| version | 1.17.0 |
+| workspaces | server,client,shared,website |
+| node.minimum | 22.13.0 |
+| reveal | 6.0.2 |
+| tiptap | 3.31.3 |
+| elements | 19 |
+<!-- navslides-facts:end -->
+
 | Method       | Requirement                                        |
 | ------------ | -------------------------------------------------- |
-| Desktop app  | Node.js 20+ (chỉ dành cho quá trình build)         |
+| Desktop app  | Node.js >=22.13.0 (chỉ dành cho quá trình build)    |
 | Docker       | Docker 20.10+ và Docker Compose v2+                |
-| Node.js      | Node.js 20+ và npm 8+                              |
+| Node.js      | Node.js >=22.13.0 và npm                           |
 | Load Testing | [k6](https://k6.io/docs/get-started/installation/) |
 
 ---
@@ -446,9 +452,9 @@ Cài `k6` theo hướng dẫn chính thức nếu muốn chạy load suite local
 
 | Layer                | Technology                                                |
 | -------------------- | --------------------------------------------------------- |
-| Frontend             | React 18, Vite 5                                          |
-| Rich text editor     | TipTap 2                                                  |
-| Presentation engine  | reveal.js 5                                               |
+| Frontend             | React 18, Vite 8                                          |
+| Rich text editor     | TipTap (phiên bản khóa ở [Requirements](#requirements))    |
+| Presentation engine  | reveal.js (phiên bản khóa ở [Requirements](#requirements)) |
 | Math rendering       | KaTeX                                                     |
 | Diagrams             | TikZJax                                                   |
 | Charts               | Chart.js 4                                                |

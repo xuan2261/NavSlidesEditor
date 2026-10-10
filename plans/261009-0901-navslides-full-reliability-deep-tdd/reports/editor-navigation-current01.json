@@ -1,0 +1,652 @@
+{
+  "config": {
+    "argv": [
+      "C:\\nvm4w\\nodejs\\node.exe",
+      "C:\\Work\\NavSlidesEditor\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/e2e/editor-history-errors.spec.js",
+      "tests/e2e/version-history-ui-restore.spec.js",
+      "tests/e2e/autosave-oversized-recovery.spec.js",
+      "tests/e2e/slide-management-modal-and-multiselect.spec.js",
+      "tests/e2e/a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js",
+      "--project=chromium",
+      "--workers=1",
+      "--retries=0",
+      "--trace=on",
+      "--output=test-results/editor-navigation-current01",
+      "--reporter=line,json"
+    ],
+    "configFile": "C:\\Work\\NavSlidesEditor\\playwright.config.js",
+    "rootDir": "C:/Work/NavSlidesEditor/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\global-setup.js",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results/editor-navigation-current01",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [
+          "/tests\\/e2e\\/live(?:\\.spec\\.js$|\\/.*\\.spec\\.js$)/",
+          "/tests\\/e2e\\/visual(?:\\/.*\\.spec\\.js$)/",
+          "/tests\\/e2e\\/visual-regression\\.spec\\.js$/",
+          "/tests\\/e2e\\/a11y\\/tablet-touch-editor-interactions\\.spec\\.js$/",
+          "/tests\\/e2e\\/critical-pptx-journey\\.spec\\.js$/",
+          "/tests\\/e2e\\/pptx-import-(?:async|fidelity|real-browser-audit|editor-visual-regression)\\.spec\\.js$/",
+          "/tests\\/e2e\\/export\\/pptx-import-endpoint-roundtrip-across-multiple-fixtures\\.spec\\.js$/"
+        ],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results/editor-navigation-current01",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "tablet-touch",
+        "name": "tablet-touch",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/a11y\\/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport\\.spec\\.js$/",
+          "/tests\\/e2e\\/a11y\\/tablet-touch-editor-interactions\\.spec\\.js$/",
+          "/tests\\/e2e\\/ribbon-responsive-touch\\.spec\\.js$/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results/editor-navigation-current01",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-live",
+        "name": "chromium-live",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/live(?:\\.spec\\.js$|\\/.*\\.spec\\.js$)/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results/editor-navigation-current01",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-pptx-import",
+        "name": "chromium-pptx-import",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/critical-pptx-journey\\.spec\\.js$/",
+          "/tests\\/e2e\\/pptx-import-(?:async|fidelity|real-browser-audit|editor-visual-regression)\\.spec\\.js$/",
+          "/tests\\/e2e\\/export\\/pptx-import-endpoint-roundtrip-across-multiple-fixtures\\.spec\\.js$/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results/editor-navigation-current01",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-visual",
+        "name": "chromium-visual",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/visual(?:\\/.*\\.spec\\.js$)/",
+          "/tests\\/e2e\\/visual-regression\\.spec\\.js$/"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm start",
+      "url": "http://127.0.0.1:3202",
+      "reuseExistingServer": false,
+      "timeout": 180000,
+      "environmentRedacted": "Inherited process environment omitted; observed test results unchanged."
+    }
+  },
+  "suites": [
+    {
+      "title": "a11y\\keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js",
+      "file": "a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Keyboard only navigation across editor ribbon tabs and modals",
+          "file": "a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js",
+          "line": 17,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Tab key cycles focus through ribbon tab bar with role tab",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5075,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T17:41:11.799Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Work\\NavSlidesEditor\\test-results\\editor-navigation-current01\\a11y-keyboard-only-navigat-b0a9a-ibbon-tab-bar-with-role-tab-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f535b7146761c43c8933-ded3f22510cba9f8f19e",
+              "file": "a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js",
+              "line": 30,
+              "column": 7
+            },
+            {
+              "title": "ArrowLeft and ArrowRight roving navigates ribbon tabs without leaving tablist",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1975,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T17:41:17.112Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Work\\NavSlidesEditor\\test-results\\editor-navigation-current01\\a11y-keyboard-only-navigat-fc849-abs-without-leaving-tablist-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f535b7146761c43c8933-02fd11e9fe0223ca741e",
+              "file": "a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js",
+              "line": 45,
+              "column": 7
+            },
+            {
+              "title": "Home and End keys jump to first and last ribbon tab via roving focus",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3143,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T17:41:19.164Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Work\\NavSlidesEditor\\test-results\\editor-navigation-current01\\a11y-keyboard-only-navigat-dae84-ribbon-tab-via-roving-focus-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f535b7146761c43c8933-7b2d1018ce4482c8ec8e",
+              "file": "a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js",
+              "line": 62,
+              "column": 7
+            },
+            {
+              "title": "[cap:control.file.menu depth:a11y] Escape key closes File menu without trapping focus",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2470,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T17:41:22.391Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Work\\NavSlidesEditor\\test-results\\editor-navigation-current01\\a11y-keyboard-only-navigat-a306a-menu-without-trapping-focus-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "f535b7146761c43c8933-02e6a19d48564a24e605",
+              "file": "a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js",
+              "line": 80,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "autosave-oversized-recovery.spec.js",
+      "file": "autosave-oversized-recovery.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "oversized autosave recovery",
+          "file": "autosave-oversized-recovery.spec.js",
+          "line": 7,
+          "column": 6,
+          "specs": [
+            {
+              "title": "survives reload and requires an explicit reconciliation choice",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1972,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T17:41:24.973Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Work\\NavSlidesEditor\\test-results\\editor-navigation-current01\\autosave-oversized-recover-2b88a-licit-reconciliation-choice-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "461d171a59883086b7f4-92886462fb735f35443b",
+              "file": "autosave-oversized-recovery.spec.js",
+              "line": 8,
+              "column": 7
+            },
+            {
+              "title": "recovers the local draft and retries with the preserved local title",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1940,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T17:41:27.031Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Work\\NavSlidesEditor\\test-results\\editor-navigation-current01\\autosave-oversized-recover-b9807-h-the-preserved-local-title-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "461d171a59883086b7f4-cd8b5b1b7d822c314376",
+              "file": "autosave-oversized-recovery.spec.js",
+              "line": 54,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "editor-history-errors.spec.js",
+      "file": "editor-history-errors.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Editor POM Workflow",
+          "file": "editor-history-errors.spec.js",
+          "line": 8,
+          "column": 6,
+          "specs": [
+            {
+              "title": "template gallery restores default ordering after sort, filter, and favorites changes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1997,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T17:41:29.065Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Work\\NavSlidesEditor\\test-results\\editor-navigation-current01\\editor-history-errors-Edit-9c388-ilter-and-favorites-changes-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fe9872726eb0364e0e5b-c70aca5bf21f92a702cd",
+              "file": "editor-history-errors.spec.js",
+              "line": 9,
+              "column": 7
+            },
+            {
+              "title": "editor chrome keeps text editing mounted and toolbar stays within bounds",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5015,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T17:41:31.193Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Work\\NavSlidesEditor\\test-results\\editor-navigation-current01\\editor-history-errors-Edit-23f3e-toolbar-stays-within-bounds-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fe9872726eb0364e0e5b-f08066974df3f9bc0895",
+              "file": "editor-history-errors.spec.js",
+              "line": 96,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "slide-management-modal-and-multiselect.spec.js",
+      "file": "slide-management-modal-and-multiselect.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Slide Management Advanced",
+          "file": "slide-management-modal-and-multiselect.spec.js",
+          "line": 30,
+          "column": 6,
+          "specs": [
+            {
+              "title": "multi-select delete clamps the active slide to the remaining tail",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7192,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T17:41:36.517Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Work\\NavSlidesEditor\\test-results\\editor-navigation-current01\\slide-management-modal-and-c081d-slide-to-the-remaining-tail-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b41087af11f07c7181f8-8bdcf0e10f7914eca06f",
+              "file": "slide-management-modal-and-multiselect.spec.js",
+              "line": 45,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "version-history-ui-restore.spec.js",
+      "file": "version-history-ui-restore.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Version history UI restore",
+          "file": "version-history-ui-restore.spec.js",
+          "line": 23,
+          "column": 6,
+          "specs": [
+            {
+              "title": "restoring a snapshot reverts canvas content and persists",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1906,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T17:41:43.852Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Work\\NavSlidesEditor\\test-results\\editor-navigation-current01\\version-history-ui-restore-2cd05-canvas-content-and-persists-chromium\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1e71f400091351eca262-367c6993c09bc400c163",
+              "file": "version-history-ui-restore.spec.js",
+              "line": 24,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-09T17:41:04.220Z",
+    "duration": 42022.613,
+    "expected": 10,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

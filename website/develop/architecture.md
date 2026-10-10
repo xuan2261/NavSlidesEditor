@@ -4,14 +4,16 @@ A high-level map of how NavSlides Editor is put together. For the full internal 
 
 ## Monorepo at a glance
 
-NavSlides Editor is an npm-workspace monorepo with four packages:
+NavSlides Editor has four npm workspaces, declared in [`package.json`](https://github.com/xuan2261/NavSlidesEditor/blob/master/package.json):
 
 | Workspace | Role |
 |---|---|
 | `client` | React + Vite single-page app; the editor UI. Builds to `client/dist/` for production. |
 | `server` | Express REST API + Socket.IO; serves the built client and persists data as JSON files. |
 | `shared` | Pure Node.js utilities used by **both** client and server (HTML generation, shapes, color/text helpers). |
-| `electron` | Desktop shell that embeds the server for a no-Docker, offline app. |
+| `website` | VitePress documentation site. |
+
+Electron desktop packaging is separate from the npm workspaces; `electron/` contains the desktop shell.
 
 `shared` is consumed by `client` (at Vite build time) and `server` (at runtime) through npm-workspace symlinks, so the same logic never gets duplicated.
 

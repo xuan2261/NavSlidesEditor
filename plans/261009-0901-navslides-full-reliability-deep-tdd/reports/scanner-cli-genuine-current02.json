@@ -1,0 +1,95 @@
+{
+  "kind": "genuine-disposable-scan-cli-replay",
+  "status": "passed",
+  "command": [
+    "C:\\nvm4w\\nodejs\\node.exe",
+    "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\scanner-cli-genuine.tmp.cjs"
+  ],
+  "recordedAt": "2026-10-09T17:38:53.774Z",
+  "limits": "Reduced genuine Alpine scan. SBOM and browser inventory are explicitly synthetic contract inputs; not NavSlides candidate image or scanner attestation.",
+  "runs": [
+    {
+      "name": "clean",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "(node:34904) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\n",
+      "receipt": {
+        "schemaVersion": 2,
+        "status": "passed",
+        "imageID": "sha256:c83674e1999044d33d751661371b873539f47e5b5c5ca3320c7e0377acca6238",
+        "registryManifestDigests": [
+          "alpine@sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8"
+        ],
+        "scannerVersion": "0.74.0",
+        "scannerEvidenceHash": "f8f5c6a4fd3d8de2b057b7a48979daa9dcc711169973d0c0970e183f6d73367b",
+        "playwrightVersion": "1.63.0",
+        "chromiumRevision": "1243",
+        "vulnerabilityCount": 0,
+        "policyHash": "47c0e43d0ca102bcf0c29df0f3b4a7d97f3c4127d769798852be63d7fade6489",
+        "reportHash": "aa27b3ccb85f2c58f7460e795bd3e3a9c713e7483a5f3371b9c3947be50b8555",
+        "sbomHash": "f95906c75ac552d67111eeed821a6206aefa5a35e691f6726ed2115a5ff1d486",
+        "browserInventoryHash": "ba70e49babb9cc60eaacb7aee603dc8cfeec1181f758ecba8dfdb1e94de21467"
+      }
+    },
+    {
+      "name": "truncated",
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "(node:27720) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nExpected property name or '}' in JSON at position 1 (line 1 column 2)\n",
+      "successReceiptAbsent": true
+    }
+  ],
+  "provenance": {
+    "kind": "actual-disposable-remote-image-scan",
+    "scannerVersion": "0.74.0",
+    "binarySource": "https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_windows-64bit.zip",
+    "binaryArchiveSha256": "94c40e0696e4b907a74b7b2e1438d5d72ebaca83115817407f568a002d520842",
+    "binaryVerification": "SHA256 matched primary GitHub release asset digest and checksum manifest; signature not verified",
+    "command": [
+      "trivy.exe",
+      "image",
+      "--cache-dir",
+      "<isolated-temp>/cache",
+      "--image-src",
+      "remote",
+      "--scanners",
+      "vuln",
+      "--pkg-types",
+      "os,library",
+      "--list-all-pkgs",
+      "--severity",
+      "HIGH,CRITICAL",
+      "--ignore-unfixed=false",
+      "--exit-code",
+      "0",
+      "--format",
+      "json",
+      "--output",
+      "<raw-capture>",
+      "alpine@sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8"
+    ],
+    "imageConfigID": "sha256:c83674e1999044d33d751661371b873539f47e5b5c5ca3320c7e0377acca6238",
+    "registryManifestDigests": [
+      "alpine@sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8"
+    ],
+    "database": {
+      "Version": 2,
+      "NextUpdate": "2026-10-10T07:05:00.081187086Z",
+      "UpdatedAt": "2026-10-09T07:05:00.081187346Z",
+      "DownloadedAt": "2026-10-09T10:01:11.1593458Z"
+    },
+    "databaseMetadataSha256": "31d2ed8405653669bcc0f211a8b4dffb48767102c73a53469e2874f46e536051",
+    "rawReportSha256": "a29a499dd5a3b8c3d5bf1c15f6aa435d546e24bd6c37324f7abcee4c898df14c",
+    "fixtureSha256": "aed24e903be3d6c10640652cc6d727eedbc7deefd0ed879f4b8d0edcda850778",
+    "capturedAt": "2026-10-09T17:01:53.2695838+07:00",
+    "reduction": "Preserved every target/package/finding and its identity. Omitted descriptions, references, image history/layers and ancillary package metadata. No findings pruned by reducer.",
+    "qualification": "Policy-filtered capture; clean is not all-severity vulnerability-free.",
+    "limits": "Disposable image schema evidence only, not NavSlides candidate runtime qualification or scanner attestation. SBOM/browser test inputs are synthetic unless separately captured."
+  },
+  "fixtureSha256": "aed24e903be3d6c10640652cc6d727eedbc7deefd0ed879f4b8d0edcda850778",
+  "sourceHashes": {
+    "scripts/verify-container-supply-chain.js": "f95530d348d56992a66e2d6fede80c475f11bbb8ef3a80fe33427fa710181a4e",
+    "scripts/trivy-report-evidence.js": "33f51d5f3789af99a4d65ab01d1564d51887dd00ef96e5decd6c0fea6a8cee71"
+  },
+  "ownedTempRootRemoved": true
+}

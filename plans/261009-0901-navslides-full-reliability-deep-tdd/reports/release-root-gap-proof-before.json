@@ -1,0 +1,112 @@
+{
+  "status": "failed",
+  "scope": "Synthetic inputs through actual current producer/root CLI; NOT hosted, signing, physical or release qualification.",
+  "rows": [
+    {
+      "scenario": "positive-control",
+      "positive": {
+        "args": [
+          "linux",
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "14bb311edd819cfd58a8550f1d7f5958abf469549c4342a709da322a658befbe",
+          "release-target-policy-v1",
+          "evidence"
+        ],
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "(node:37876) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)"
+      },
+      "created": {
+        "args": [
+          "create-root",
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "14bb311edd819cfd58a8550f1d7f5958abf469549c4342a709da322a658befbe",
+          "release-target-policy-v1",
+          "v1.17.0"
+        ],
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "(node:33576) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)"
+      },
+      "verified": {
+        "args": [
+          "verify-root",
+          "."
+        ],
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "(node:38848) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)"
+      },
+      "rootSha256": "d531c040ea0c1f93690008a82dc32695a3c4455f403c75d4a0591887e95b06f8"
+    },
+    {
+      "scenario": "missing-parent",
+      "result": {
+        "args": [
+          "verify-root",
+          "."
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": "(node:12456) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nwindows parent receipt hash mismatch"
+      },
+      "preservedFrozenRoot": true
+    },
+    {
+      "scenario": "self-cycle-parent",
+      "result": {
+        "args": [
+          "verify-root",
+          "."
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": "(node:13228) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nwindows parent receipt hash mismatch"
+      },
+      "preservedFrozenRoot": true
+    },
+    {
+      "scenario": "wrong-policy-version",
+      "result": {
+        "args": [
+          "verify-root",
+          "."
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": "(node:24072) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\npolicyVersion mismatch"
+      },
+      "preservedFrozenRoot": true
+    },
+    {
+      "scenario": "well-formed-wrong-image-file-digest",
+      "result": {
+        "args": [
+          "verify-root",
+          "."
+        ],
+        "exitCode": 1,
+        "stdout": "",
+        "stderr": "(node:16308) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nLinux gate leaf hash mismatch: docker"
+      }
+    },
+    {
+      "scenario": "same-version-changed-policy",
+      "oldPolicySha256": "4ff62a07c48cc8741046614a87c3c23d5f6bb33f481e23174faa51d4a966f620",
+      "changedPolicySha256": "6ef5814433b99de3dcd3c58629c04124e861584a8cce64671fea046cade40762",
+      "result": {
+        "args": [
+          "verify-root",
+          "."
+        ],
+        "exitCode": 0,
+        "stdout": "",
+        "stderr": "(node:20284) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)"
+      },
+      "expectedExitCode": 1,
+      "rootPresent": true
+    }
+  ],
+  "failure": "P16-03/P16-12: changed shipped policy must invalidate frozen root\n\n0 !== 1\n",
+  "fixtureRemoved": true
+}

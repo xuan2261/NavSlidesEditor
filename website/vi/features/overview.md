@@ -91,11 +91,11 @@ Mẫu thiết kế (preset) áp dụng một bảng màu phối hợp, ngăn x�
 
 ## Xuất & Chia sẻ
 
-- **HTML độc lập** — một tệp `.html` duy nhất phát reveal.js từ CDN
-- **HTML ngoại tuyến** — toàn bộ tài nguyên CDN được nhúng trực tiếp; hoạt động không cần internet
+- **HTML thông thường** — tham chiếu runtime cục bộ do manifest quản lý; xem [giới hạn runtime và ngoại tuyến](/vi/features/export)
+- **HTML ngoại tuyến** — nhúng tài nguyên runtime cục bộ bắt buộc; không bảo đảm mọi nội dung bên ngoài dùng được ngoại tuyến
 - **PDF** — sẵn sàng để in qua hộp thoại in của trình duyệt với tất cả fragment được mở rộng
-- **PPTX** — xuất tương thích PowerPoint
-- **Liên kết chia sẻ** — tạo một URL để chia sẻ chế độ xem chỉ đọc hoặc có thể chỉnh sửa
+- **PPTX** — [các chế độ Original, Edited đã xác thực và Reconstructed](/vi/features/pptx-import-export) có giới hạn độ trung thực riêng
+- **Liên kết chia sẻ** — URL chỉ xem với tên, mật khẩu và thời hạn hết hạn tùy chọn
 - **GitHub push** — commit bài trình chiếu của bạn trực tiếp vào một kho lưu trữ GitHub
 
 Xem [Xuất & Chia sẻ](/vi/features/export) để biết chi tiết.

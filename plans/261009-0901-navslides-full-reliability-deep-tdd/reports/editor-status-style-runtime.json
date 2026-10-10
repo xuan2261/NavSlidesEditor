@@ -1,0 +1,14 @@
+{
+  "status": "failed",
+  "observations": [
+    {
+      "kind": "plain",
+      "restoredNextInputSavedAndReloaded": "<p>Alpha?</p>"
+    }
+  ],
+  "browserErrors": [],
+  "limitations": [
+    "Working-tree production Chromium surface; not hardware IME, physical Office or release qualification"
+  ],
+  "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"Alpha?\"\u001b[39m\nReceived string:    \u001b[31m\"<h1><span style=\\\"color: rgb(199, 54, 57); font-size: 120px;\\\">Alpha</span></h1><p>?</p>\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n    at C:\\Work\\NavSlidesEditor\\tests\\e2e\\editor-status-style-runtime.tmp.spec.js:29:116"
+}

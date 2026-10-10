@@ -1,0 +1,84 @@
+{
+  "kind": "HOST_ROUTING_PLAN_REVIEWED_NO_IMPLEMENTATION",
+  "plan": "C:/Work/NavSlidesEditor/plans/jeikcode-per-task-model-routing-plan-20261007.md",
+  "planSHA256": "ae1d0719fefe3d1fd713a0a105a0e08bdf23c7e8d069ce1d7f256593b0e6b9e7",
+  "scope": "Read-only host survey and new coordinator plan only",
+  "sourceEditsByAgent": false,
+  "hostBuildTestsRun": false,
+  "hostConfigEdited": false,
+  "hostBinaryReplaced": false,
+  "producerGeminiInvoked": false,
+  "DReadByAgent": false,
+  "reviewsApplied": [
+    "config generation snapshot consistency",
+    "existing provider permissions preserved",
+    "resolved vs actual/remote-served route distinction",
+    "all lifecycle receipt emitters",
+    "offlineC build/cache prerequisites"
+  ],
+  "sourceEvidenceLimit": "Concrete resolver/runner symbols and live binary linkage require implementation-entry confirmation; no purported current per-task model support.",
+  "gitObservedFinal": [
+    {
+      "root": "C:/Work/JeikCode",
+      "branch": "main",
+      "HEAD": "9817a8e8b5a00bbe7e4f77d63fea9ca49465a870",
+      "status": [
+        " M crates/jeikcode-capabilities/src/tools/bash.rs",
+        " M crates/jeikcode-config/src/util.rs"
+      ],
+      "staged": []
+    },
+    {
+      "root": "C:/Work/NavSlidesEditor",
+      "branch": "main",
+      "HEAD": "aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+      "status": [
+        "?? plans/handoffs/education-partial11-resume-20261007.md",
+        "?? plans/jeikcode-per-task-model-routing-plan-20261007.md"
+      ],
+      "staged": []
+    },
+    {
+      "root": "C:/Work/worktrees/NavSlidesEditor-education-gemini38-cook-261001",
+      "branch": "feat/education-gemini38-cook-261001",
+      "HEAD": "c5b5e896d9f06859b21e19122f81c7613067c386",
+      "status": [
+        " M client/src/components/SlidePanel.jsx",
+        " M client/src/components/editor/editor-navigator.jsx",
+        " M client/src/components/properties/action-controls.jsx",
+        " M client/src/components/ribbon/ribbon-format-tab-element-position-size-rotation-controls.jsx",
+        " M client/src/components/slide-panel/slide-navigator-item.jsx",
+        " M client/src/hooks/use-block-library.test.jsx",
+        " M client/src/pages/EditorPage.jsx",
+        " M docs/project-changelog.md",
+        " M plans/261001-0639-interactive-html-education-deep-tdd/phase-06-native-quiz.md",
+        " M plans/261001-0639-interactive-html-education-deep-tdd/plan.md",
+        " M tests/e2e/education/present-offline-helpers.js",
+        " M tests/e2e/education/release-surfaces.js",
+        "?? client/src/components/SlidePanel.child-duplication.test.jsx",
+        "?? client/src/components/properties/inherited-action-targets.test.jsx",
+        "?? plans/handoffs/education-gemini-session-transfer-20261007.md",
+        "?? plans/handoffs/education-producer-quota-20261005.md",
+        "?? plans/journals/2026-10-05-education-cook-blocked-by-pinned-producer-quota.md",
+        "?? plans/journals/2026-10-05-education-pinned-route-policy-verified-capacity-unconfirmed.md",
+        "?? plans/reports/education-c-only-correction-preparation-20261007/",
+        "?? plans/reports/education-c-only-gate0-20261007/",
+        "?? plans/reports/education-gemini-session-transfer-20261007/",
+        "?? plans/reports/education-isolated-route-startup-20261007/",
+        "?? plans/reports/education-jeikcode-help-20261007/",
+        "?? plans/reports/education-partial11-access-diagnostic-20261007/",
+        "?? plans/reports/education-partial11-settlement-20261007/",
+        "?? plans/reports/education-pin-aware-session-procedure-20261007/",
+        "?? plans/reports/education-route-config-supplement-20261007/",
+        "?? plans/reports/education-subagent-routing-20261007/",
+        "?? tests/e2e/education/trigger-local-fixed-history-acceptance.spec.js",
+        "?? tests/e2e/education/trigger-reference-history-acceptance.spec.js",
+        "?? tests/e2e/education/trigger-reference-history-controls.js",
+        "?? tests/e2e/education/trigger-surfaces-acceptance.spec.js"
+      ],
+      "staged": []
+    }
+  ],
+  "preservationLimit": "Observed source write scopes and Git snapshots; host concurrent dirty changes not byte-baseline certified.",
+  "next": "Approve host PhaseA code+offline tests only; no deploy/config/default changes or education execution."
+}

@@ -1,0 +1,83 @@
+{
+  "root": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-session-production-smoke-gNVaKQ",
+  "script": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-session-cancellation-replay-smoke-20261010-SessionCancellationReplay.cjs",
+  "sourceHashes": {
+    "server/services/project-import-media-session.js": "3359b068436f7021bd72ce9885cd791b41cd85900aa5387be66e91e151ca84ad",
+    "server/services/project-import-media-session-recovery.js": "cf453a2492dfbffc0bc7bc2badf066697c08785a47274cd040c05907b481e64a",
+    "server/services/project-import-media-session-cancellation.js": "ea7d8d4fc9aca7447afb73c155c7de638a15ce5f3fadd7d7cbabdc4be4131e37",
+    "server/services/project-import-media-session-identity.js": "b2673e98d43e0bfd2466270c006c84c79fd7f2a4a2368aa48201900364b8e719"
+  },
+  "cancellation": {
+    "rollback": {
+      "preparation": {
+        "operation": "rollback",
+        "state": "reconcile-required",
+        "reason": "PROJECT_IMPORT_ROLLBACK_FAILED",
+        "pid": 34548
+      },
+      "restarts": [
+        {
+          "pid": 15848,
+          "live": 200,
+          "ready": 200,
+          "mutation": 201,
+          "state": "rolled-back",
+          "ledgerSha": "cfe7e988fcf87e24724684a45453820c817333e2fe5235f7642e7038052bd1ec",
+          "winnerSha": "fa2e53ca63733c2144782679998b428777f65b411188ad57ce8ac3ffcb7bb84a"
+        },
+        {
+          "pid": 26776,
+          "live": 200,
+          "ready": 200,
+          "mutation": 201,
+          "state": "rolled-back",
+          "ledgerSha": "cfe7e988fcf87e24724684a45453820c817333e2fe5235f7642e7038052bd1ec",
+          "winnerSha": "fa2e53ca63733c2144782679998b428777f65b411188ad57ce8ac3ffcb7bb84a"
+        }
+      ]
+    },
+    "expiry": {
+      "preparation": {
+        "operation": "expiry",
+        "state": "reconcile-required",
+        "reason": "PROJECT_IMPORT_EXPIRY_FAILED",
+        "pid": 36456
+      },
+      "restarts": [
+        {
+          "pid": 38412,
+          "live": 200,
+          "ready": 200,
+          "mutation": 201,
+          "state": "rolled-back",
+          "ledgerSha": "40afa32aff5c2749e2d23ee3f54d5e07dfefce601d24d22de8a68f6e7694e2e2",
+          "winnerSha": "fa2e53ca63733c2144782679998b428777f65b411188ad57ce8ac3ffcb7bb84a"
+        },
+        {
+          "pid": 29548,
+          "live": 200,
+          "ready": 200,
+          "mutation": 201,
+          "state": "rolled-back",
+          "ledgerSha": "40afa32aff5c2749e2d23ee3f54d5e07dfefce601d24d22de8a68f6e7694e2e2",
+          "winnerSha": "fa2e53ca63733c2144782679998b428777f65b411188ad57ce8ac3ffcb7bb84a"
+        }
+      ]
+    }
+  },
+  "replay": {
+    "pid": 10904,
+    "outcomes": [
+      "fulfilled",
+      "fulfilled"
+    ],
+    "staleReplay": "same receipt",
+    "foreignSnapshot": 503,
+    "foreignCapability": 403,
+    "rows": 1,
+    "heads": 1,
+    "originalSha": "d0b40277c869783cfea102e7eeef73d44e4a139564bb0b1e676a744c1b5078ec"
+  },
+  "ok": true,
+  "fullExternalReceipt": "C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/nav-session-production-smoke-gNVaKQ/report.json"
+}

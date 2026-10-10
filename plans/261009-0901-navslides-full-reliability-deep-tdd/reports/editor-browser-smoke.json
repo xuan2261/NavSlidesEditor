@@ -1,0 +1,84 @@
+{
+  "status": "passed",
+  "subjectSha": "aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+  "dirty": true,
+  "buildManifest": "5b2c54c1b6d6607b8d7d8a7db6552c2aadaa8646baedd21966ecce9051dd03fc",
+  "observed": {
+    "richText": {
+      "undo": "New text",
+      "redo": "History stable text",
+      "reloadedHtml": "<p>History stable text</p>"
+    },
+    "offline": {
+      "visibleError": "Save failed/Retry",
+      "serverAfterOnlineReload": "Recovered offline history draft",
+      "browserAfterOnlineReload": "Recovered offline history draft",
+      "unexpectedDialogTimeout": "Incorrect initial oracle; actual server/browser data was preserved. No production fix."
+    },
+    "queuedSuccessor": {
+      "firstStatus": 200,
+      "secondStatus": 200,
+      "bodies": [
+        {
+          "title": "Queue A"
+        },
+        {
+          "title": "Queue B"
+        }
+      ],
+      "pending": {
+        "disabled": true,
+        "name": "Saving...",
+        "title": "Queue B",
+        "recoveryRetained": true,
+        "trace": []
+      }
+    },
+    "queueAfterReload": "Queue B",
+    "master": {
+      "afterEdit": {
+        "id": "master-text",
+        "type": "text",
+        "x": 80,
+        "y": 100,
+        "width": 400,
+        "height": 100,
+        "content": "<p>Master after</p>",
+        "locked": true
+      },
+      "afterUndo": {
+        "id": "master-text",
+        "type": "text",
+        "x": 80,
+        "y": 100,
+        "width": 400,
+        "height": 100,
+        "content": "<p>Master before</p>",
+        "locked": true
+      },
+      "afterRedo": {
+        "id": "master-text",
+        "type": "text",
+        "x": 80,
+        "y": 100,
+        "width": 400,
+        "height": 100,
+        "content": "<p>Master after</p>",
+        "locked": true
+      },
+      "localContentUnchanged": "<p>Local unchanged</p>",
+      "reopenedContent": "Master after",
+      "fixtureAppearance": {
+        "textColor": "#222222",
+        "computed": "rgb(34, 34, 34)"
+      },
+      "selectionSurvivedUndo": "Focused controller regression verified surviving selection; browser edit/undo/redo remained master-owned, but no separate selection-ID observation was captured at Undo."
+    }
+  },
+  "limitations": [
+    "Local actual browser on isolated data roots; not clean candidate release qualification.",
+    "No IME input event sequence was exercised.",
+    "An initial manually constructed master fixture omitted textColor; DOM/API proof passed but white inherited text was visually invisible. Canonical textColor was then supplied in the fixture, with no product change, and actual reopened rendering was verified.",
+    "Exact recovery-key retention does not prove draft clearing; receipt claims data preservation only."
+  ]
+}

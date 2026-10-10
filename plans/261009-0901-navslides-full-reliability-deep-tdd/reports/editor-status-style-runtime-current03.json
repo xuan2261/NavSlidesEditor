@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "observations": [
+    {
+      "kind": "plain",
+      "restoredNextInputSavedAndReloaded": "<p>Alpha?</p>"
+    },
+    {
+      "kind": "styled",
+      "restoredNextInputSavedAndReloaded": "<h1><span style=\"color: rgb(199, 54, 57); font-size: 120px;\">Alpha?</span></h1><p></p>"
+    },
+    {
+      "kind": "settings",
+      "savedThenDirtyThenReverted": true
+    }
+  ],
+  "browserErrors": [],
+  "limitations": [
+    "Working-tree production Chromium surface; not hardware IME, physical Office or release qualification"
+  ]
+}

@@ -81,10 +81,10 @@ Bạn sẽ thấy một slide với hai chỗ dành sẵn cho văn bản: một 
 
 1. Nhấn **File → Export → HTML**.
 2. Lưu tệp `.html` vào máy tính của bạn.
-3. Mở tệp trong bất kỳ trình duyệt nào — bài trình chiếu của bạn là độc lập và có thể chia sẻ.
+3. Mở tệp trong trình duyệt khi các tài nguyên runtime cục bộ và media được tham chiếu còn truy cập được.
 
 ::: tip
-Nếu bạn dự định trình chiếu mà không có kết nối internet (ví dụ, tại một hội nghị), hãy chọn **File → Export → Offline HTML** thay thế để nhúng toàn bộ tài nguyên vào trong tệp.
+Để trình chiếu ngoại tuyến, chọn **File → Export → Offline HTML** nhằm nhúng tài nguyên runtime cục bộ bắt buộc. Nội dung bên ngoài tùy ý không được bảo đảm dùng ngoại tuyến; xem [Xuất & Chia sẻ](/vi/features/export) và kiểm tra trên máy trình chiếu.
 :::
 
 Chúc mừng — bạn đã xây dựng và xuất bài trình chiếu đầu tiên của mình!

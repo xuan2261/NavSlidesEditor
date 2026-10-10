@@ -330,7 +330,7 @@ Server reads and writes JSON files via `fs-extra`.
 | `templates.json` | `[]` |
 | `share-tokens.json` | `{}` |
 | `github-config.json` | `{ token: '', owner: '', repo: '' }` |
-| `settings.json` | `{ aiApiKey: '', defaultTheme: 'black', defaultTransition: 'slide' }` |
+| `settings.json` | Defaults owned by [`initDataFiles()`](../server/services/storage.js); legacy files remain supported by the Settings revision reader. |
 | `analytics.json` | `{}` |
 | `media.json` | `[]` |
 

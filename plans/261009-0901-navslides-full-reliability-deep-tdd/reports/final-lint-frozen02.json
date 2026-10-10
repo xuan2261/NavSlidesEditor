@@ -1,0 +1,10 @@
+{
+  "gate": "npm run lint policy: eslint .",
+  "executedCommand": "node node_modules/eslint/bin/eslint.js . --format=json",
+  "exitCode": 0,
+  "files": 1683,
+  "errors": 0,
+  "warnings": 71,
+  "errorDiagnostics": [],
+  "limits": "Whole current working-tree lint only. Compiler-era hook warnings are non-blocking under the existing repository configuration. No warning suppression or gate change. No clean-SHA/hosted CI qualification inferred."
+}

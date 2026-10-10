@@ -1,0 +1,537 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-09T20:15:10.237Z",
+  "acceptance": [
+    "P12-17",
+    "P12-13",
+    "P12-14"
+  ],
+  "scope": "Exact extracted workflow bodies and listed contract inputs only; no repository-wide source identity gate while Main edits.",
+  "syntheticLimitations": [
+    "Dummy .exe files contain plain text and are never executed.",
+    "Native Node subprocess models validator exit status; no real signing, certificate trust, gh auth/API, GitHub download/upload or physical OfficeCLI/PowerPoint acquisition.",
+    "Positive schema2 adapter and Windows validator run real production contracts with explicitly synthetic physical/signature/attestation producer fixtures; not qualification."
+  ],
+  "workflowLoops": [
+    {
+      "key": "preupload",
+      "name": "Independently capture pre-upload signature chain and RFC3161 proof",
+      "source": ".github/workflows/reusable-windows-qualification.yml",
+      "firstLine": 106,
+      "lastLine": 109,
+      "body": "foreach ($exe in Get-ChildItem dist-electron/*.exe) {\n  node scripts/ci/release-receipt-workflow.mjs authenticode-pre $exe.FullName evidence/authenticode\n  if ($LASTEXITCODE -ne 0) { throw \"independent pre-upload verification failed: $($exe.Name)\" }\n}\n",
+      "bodySha256": "788a435f563594844767796271686027016e089a6cf40ec46fbdfb623b7f61ca",
+      "renderedBodySha256": "788a435f563594844767796271686027016e089a6cf40ec46fbdfb623b7f61ca",
+      "interpolation": {},
+      "harnessPrelude": "$ErrorActionPreference = 'Stop'\n$PSNativeCommandUseErrorActionPreference = $false\nfunction node { & $env:BOUNDARY_NODE $env:BOUNDARY_DUMMY @args }\n",
+      "sentinelAfterBody": "Synthetic downstream windows invocation + passed receipt marker; neither reached",
+      "validatorBoundaryScriptSha256": "f9f4be4ad7c1dc8e28468aca4ccf3d916820085e04590fb2a7b4991cee958cd5",
+      "control": {
+        "command": "pwsh",
+        "args": [
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\preupload\\second-positive-control.ps1"
+        ],
+        "cwd": "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\preupload",
+        "status": 0,
+        "signal": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 2289,
+        "calls": [
+          {
+            "args": [
+              "scripts/ci/release-receipt-workflow.mjs",
+              "authenticode-pre",
+              "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\preupload\\dist-electron\\001-owned-second-would-pass.exe",
+              "evidence/authenticode"
+            ],
+            "artifact": "001-owned-second-would-pass.exe",
+            "status": 0
+          }
+        ]
+      },
+      "execution": {
+        "command": "pwsh",
+        "args": [
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\preupload\\workflow-extracted.ps1"
+        ],
+        "cwd": "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\preupload",
+        "status": 1,
+        "signal": null,
+        "stdout": "",
+        "stderr": "Exception: C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\preupload\\workflow-extracted.ps1:6\r\nLine |\r\n   6 |  . DE -ne 0) { throw \"independent pre-upload verification failed: $($exe .\r\n     |                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n     | independent pre-upload verification failed: 000-owned-first-fails.exe\r\n",
+        "durationMs": 2097
+      },
+      "calls": [
+        {
+          "args": [
+            "scripts/ci/release-receipt-workflow.mjs",
+            "authenticode-pre",
+            "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\preupload\\dist-electron\\000-owned-first-fails.exe",
+            "evidence/authenticode"
+          ],
+          "artifact": "000-owned-first-fails.exe",
+          "status": 47
+        }
+      ],
+      "assertions": {
+        "immediateAbort": true,
+        "secondArtifactNotConsumed": true,
+        "downstreamWindowsNotInvoked": true,
+        "noPassedReceipt": true,
+        "postDownloadCopyNotReached": null
+      },
+      "absent": [
+        {
+          "path": "windows-qualification-receipt.json",
+          "absent": true
+        },
+        {
+          "path": "evidence/attestation-verification.json",
+          "absent": true
+        },
+        {
+          "path": "evidence/current-attestation.json",
+          "absent": true
+        }
+      ]
+    },
+    {
+      "key": "postdownload",
+      "name": "Independently verify every downloaded EXE",
+      "source": ".github/workflows/reusable-windows-qualification.yml",
+      "firstLine": 131,
+      "lastLine": 135,
+      "body": "foreach ($exe in Get-ChildItem post-download/*.exe) {\n  node scripts/ci/release-receipt-workflow.mjs authenticode-post $exe.FullName evidence/authenticode\n  if ($LASTEXITCODE -ne 0) { throw \"independent post-download verification failed: $($exe.Name)\" }\n}\nCopy-Item evidence/authenticode/*.json post-download/evidence/authenticode/ -Force\n",
+      "bodySha256": "7c454a52ee6739186cd27677ac43d652f6e86841fca04cf12d3b5c47e82bd340",
+      "renderedBodySha256": "7c454a52ee6739186cd27677ac43d652f6e86841fca04cf12d3b5c47e82bd340",
+      "interpolation": {},
+      "harnessPrelude": "$ErrorActionPreference = 'Stop'\n$PSNativeCommandUseErrorActionPreference = $false\nfunction node { & $env:BOUNDARY_NODE $env:BOUNDARY_DUMMY @args }\n",
+      "sentinelAfterBody": "Synthetic downstream windows invocation + passed receipt marker; neither reached",
+      "validatorBoundaryScriptSha256": "f9f4be4ad7c1dc8e28468aca4ccf3d916820085e04590fb2a7b4991cee958cd5",
+      "control": {
+        "command": "pwsh",
+        "args": [
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\postdownload\\second-positive-control.ps1"
+        ],
+        "cwd": "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\postdownload",
+        "status": 0,
+        "signal": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 1590,
+        "calls": [
+          {
+            "args": [
+              "scripts/ci/release-receipt-workflow.mjs",
+              "authenticode-post",
+              "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\postdownload\\post-download\\001-owned-second-would-pass.exe",
+              "evidence/authenticode"
+            ],
+            "artifact": "001-owned-second-would-pass.exe",
+            "status": 0
+          }
+        ]
+      },
+      "execution": {
+        "command": "pwsh",
+        "args": [
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\postdownload\\workflow-extracted.ps1"
+        ],
+        "cwd": "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\postdownload",
+        "status": 1,
+        "signal": null,
+        "stdout": "",
+        "stderr": "Exception: C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\postdownload\\workflow-extracted.ps1:6\r\nLine |\r\n   6 |  . DE -ne 0) { throw \"independent post-download verification failed: $($ .\r\n     |                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n     | independent post-download verification failed: 000-owned-first-fails.exe\r\n",
+        "durationMs": 1910
+      },
+      "calls": [
+        {
+          "args": [
+            "scripts/ci/release-receipt-workflow.mjs",
+            "authenticode-post",
+            "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\postdownload\\post-download\\000-owned-first-fails.exe",
+            "evidence/authenticode"
+          ],
+          "artifact": "000-owned-first-fails.exe",
+          "status": 47
+        }
+      ],
+      "assertions": {
+        "immediateAbort": true,
+        "secondArtifactNotConsumed": true,
+        "downstreamWindowsNotInvoked": true,
+        "noPassedReceipt": true,
+        "postDownloadCopyNotReached": true
+      },
+      "absent": [
+        {
+          "path": "windows-qualification-receipt.json",
+          "absent": true
+        },
+        {
+          "path": "evidence/attestation-verification.json",
+          "absent": true
+        },
+        {
+          "path": "evidence/current-attestation.json",
+          "absent": true
+        }
+      ]
+    },
+    {
+      "key": "ghattestation",
+      "name": "Verify provenance for every downloaded EXE",
+      "source": ".github/workflows/reusable-windows-qualification.yml",
+      "firstLine": 139,
+      "lastLine": 148,
+      "body": "$identity = \"https://github.com/${{ github.repository }}/.github/workflows/reusable-windows-qualification.yml@${{ github.ref }}\"\n$results = @()\nforeach ($exe in Get-ChildItem post-download/*.exe) {\n  node scripts/ci/release-receipt-workflow.mjs capture-attestation $exe.FullName \"${{ inputs.subject_sha }}\" .github/workflows/reusable-windows-qualification.yml evidence/current-attestation.json\n  if ($LASTEXITCODE -ne 0) { throw \"gh verification failed: $($exe.Name)\" }\n  $results += @(Get-Content evidence/current-attestation.json | ConvertFrom-Json)\n}\nConvertTo-Json -InputObject $results -Depth 100 | Out-File -Encoding utf8 evidence/attestation-verification.json\nnode scripts/ci/release-receipt-workflow.mjs attestation-windows evidence/attestation-verification.json \"${{ inputs.subject_sha }}\" \"${{ inputs.client_digest }}\" $identity\nif ($LASTEXITCODE -ne 0) { throw 'attestation normalization failed' }\n",
+      "bodySha256": "6f2aa98357a333dad5f1aeaca379cd58fc52b529dc849a5ca288ec24a98262ef",
+      "renderedBodySha256": "bac366de90ecfbe5410f5767bb7ee47b9627640dcd8ca6e27124818942e8d16e",
+      "interpolation": {
+        "github.repository": "example/repo",
+        "github.ref": "refs/tags/v1.17.0",
+        "inputs.subject_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "inputs.client_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "harnessPrelude": "$ErrorActionPreference = 'Stop'\n$PSNativeCommandUseErrorActionPreference = $false\nfunction node { & $env:BOUNDARY_NODE $env:BOUNDARY_DUMMY @args }\n",
+      "sentinelAfterBody": "Synthetic downstream windows invocation + passed receipt marker; neither reached",
+      "validatorBoundaryScriptSha256": "f9f4be4ad7c1dc8e28468aca4ccf3d916820085e04590fb2a7b4991cee958cd5",
+      "control": {
+        "command": "pwsh",
+        "args": [
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\ghattestation\\second-positive-control.ps1"
+        ],
+        "cwd": "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\ghattestation",
+        "status": 0,
+        "signal": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 1596,
+        "calls": [
+          {
+            "args": [
+              "scripts/ci/release-receipt-workflow.mjs",
+              "capture-attestation",
+              "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\ghattestation\\post-download\\001-owned-second-would-pass.exe",
+              "evidence/authenticode"
+            ],
+            "artifact": "001-owned-second-would-pass.exe",
+            "status": 0
+          }
+        ]
+      },
+      "execution": {
+        "command": "pwsh",
+        "args": [
+          "-NoProfile",
+          "-NonInteractive",
+          "-File",
+          "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\ghattestation\\workflow-extracted.ps1"
+        ],
+        "cwd": "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\ghattestation",
+        "status": 1,
+        "signal": null,
+        "stdout": "",
+        "stderr": "Exception: C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\ghattestation\\workflow-extracted.ps1:8\r\nLine |\r\n   8 |  . $LASTEXITCODE -ne 0) { throw \"gh verification failed: $($exe.Name)\" }\r\n     |                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n     | gh verification failed: 000-owned-first-fails.exe\r\n",
+        "durationMs": 1939
+      },
+      "calls": [
+        {
+          "args": [
+            "scripts/ci/release-receipt-workflow.mjs",
+            "capture-attestation",
+            "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\ghattestation\\post-download\\000-owned-first-fails.exe",
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            ".github/workflows/reusable-windows-qualification.yml",
+            "evidence/current-attestation.json"
+          ],
+          "artifact": "000-owned-first-fails.exe",
+          "status": 47
+        }
+      ],
+      "assertions": {
+        "immediateAbort": true,
+        "secondArtifactNotConsumed": true,
+        "downstreamWindowsNotInvoked": true,
+        "noPassedReceipt": true,
+        "postDownloadCopyNotReached": null
+      },
+      "absent": [
+        {
+          "path": "windows-qualification-receipt.json",
+          "absent": true
+        },
+        {
+          "path": "evidence/attestation-verification.json",
+          "absent": true
+        },
+        {
+          "path": "evidence/current-attestation.json",
+          "absent": true
+        }
+      ]
+    }
+  ],
+  "contracts": [
+    {
+      "name": "schema2 raw adapter -> Windows leaf consumer",
+      "passed": true,
+      "rawSchemaVersion": 2,
+      "rawBytesSha256": "da46b9bff404ccf79534715307892a6164b68378002c89a0e495d5a8707a1f1a",
+      "claimScope": "local-physical-feasibility",
+      "retainedLimitations": [
+        "memory-limit-unproven",
+        "descendant-containment-unproven"
+      ],
+      "operations": [
+        "createPhysicalReleaseEnvelope",
+        "createHostReceipt",
+        "assertWindowsLeafEvidence"
+      ],
+      "synthetic": true
+    },
+    {
+      "name": "wrong-producer-run",
+      "operation": "createPhysicalReleaseEnvelope",
+      "rejected": true,
+      "rejection": "producer run/source/workflow/event/ref/attempt identity mismatch"
+    },
+    {
+      "name": "wrong-producer-workflow",
+      "operation": "createPhysicalReleaseEnvelope",
+      "rejected": true,
+      "rejection": "producer run/source/workflow/event/ref/attempt identity mismatch"
+    },
+    {
+      "name": "wrong-subject",
+      "operation": "createPhysicalReleaseEnvelope",
+      "rejected": true,
+      "rejection": "Source subject does not match the clean expected commit"
+    },
+    {
+      "name": "wrong-client",
+      "operation": "createPhysicalReleaseEnvelope",
+      "rejected": true,
+      "rejection": "physical admission raw/client digest mismatch"
+    },
+    {
+      "name": "Windows consumer wrong subjectSha",
+      "rejected": true,
+      "rejection": "physical release leaf identity/scope mismatch"
+    },
+    {
+      "name": "Windows consumer wrong clientDigest",
+      "rejected": true,
+      "rejection": "physical release leaf identity/scope mismatch"
+    }
+  ],
+  "cliCases": [
+    {
+      "name": "existing synthetic Linux CLI fixture",
+      "command": "C:\\nvm4w\\nodejs\\node.exe",
+      "args": [
+        "C:\\Work\\NavSlidesEditor\\scripts\\ci\\release-receipt-workflow.mjs",
+        "linux",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "14bb311edd819cfd58a8550f1d7f5958abf469549c4342a709da322a658befbe",
+        "release-target-policy-v1",
+        "evidence"
+      ],
+      "cwd": "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\cli",
+      "status": 0,
+      "signal": null,
+      "stdout": "",
+      "stderr": "(node:41164) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\n",
+      "durationMs": 150
+    },
+    {
+      "name": "reject duplicate Linux=OfficeCLI",
+      "command": "C:\\nvm4w\\nodejs\\node.exe",
+      "args": [
+        "C:\\Work\\NavSlidesEditor\\scripts\\ci\\release-receipt-workflow.mjs",
+        "physical-preflight",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "14bb311edd819cfd58a8550f1d7f5958abf469549c4342a709da322a658befbe",
+        "release-target-policy-v1",
+        "101",
+        "101",
+        "303",
+        "officecli-test-double",
+        "fidelity-test-double"
+      ],
+      "cwd": "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\cli",
+      "status": 1,
+      "signal": null,
+      "stdout": "",
+      "stderr": "(node:21600) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nCI/OfficeCLI/fidelity producer run IDs must be distinct\n",
+      "durationMs": 113,
+      "noPhysicalAdmission": true,
+      "noWindowsReceipt": true
+    },
+    {
+      "name": "reject duplicate Linux=PowerPoint",
+      "command": "C:\\nvm4w\\nodejs\\node.exe",
+      "args": [
+        "C:\\Work\\NavSlidesEditor\\scripts\\ci\\release-receipt-workflow.mjs",
+        "physical-preflight",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "14bb311edd819cfd58a8550f1d7f5958abf469549c4342a709da322a658befbe",
+        "release-target-policy-v1",
+        "101",
+        "202",
+        "101",
+        "officecli-test-double",
+        "fidelity-test-double"
+      ],
+      "cwd": "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\cli",
+      "status": 1,
+      "signal": null,
+      "stdout": "",
+      "stderr": "(node:39528) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nCI/OfficeCLI/fidelity producer run IDs must be distinct\n",
+      "durationMs": 111,
+      "noPhysicalAdmission": true,
+      "noWindowsReceipt": true
+    },
+    {
+      "name": "reject duplicate OfficeCLI=PowerPoint",
+      "command": "C:\\nvm4w\\nodejs\\node.exe",
+      "args": [
+        "C:\\Work\\NavSlidesEditor\\scripts\\ci\\release-receipt-workflow.mjs",
+        "physical-preflight",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "14bb311edd819cfd58a8550f1d7f5958abf469549c4342a709da322a658befbe",
+        "release-target-policy-v1",
+        "101",
+        "202",
+        "202",
+        "officecli-test-double",
+        "fidelity-test-double"
+      ],
+      "cwd": "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\cli",
+      "status": 1,
+      "signal": null,
+      "stdout": "",
+      "stderr": "(node:21620) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nCI/OfficeCLI/fidelity producer run IDs must be distinct\n",
+      "durationMs": 112,
+      "noPhysicalAdmission": true,
+      "noWindowsReceipt": true
+    },
+    {
+      "name": "wrong OfficeCLI producer",
+      "command": "C:\\nvm4w\\nodejs\\node.exe",
+      "args": [
+        "C:\\Work\\NavSlidesEditor\\scripts\\ci\\release-receipt-workflow.mjs",
+        "physical-preflight",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "14bb311edd819cfd58a8550f1d7f5958abf469549c4342a709da322a658befbe",
+        "release-target-policy-v1",
+        "101",
+        "202",
+        "303",
+        "officecli-test-double",
+        "fidelity-test-double"
+      ],
+      "cwd": "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\cli",
+      "status": 1,
+      "signal": null,
+      "stdout": "",
+      "stderr": "(node:38148) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nproducer run/source/workflow/event/ref/attempt identity mismatch\n",
+      "durationMs": 118,
+      "noPhysicalAdmission": true,
+      "noWindowsReceipt": true
+    },
+    {
+      "name": "wrong raw subject",
+      "command": "C:\\nvm4w\\nodejs\\node.exe",
+      "args": [
+        "C:\\Work\\NavSlidesEditor\\scripts\\ci\\release-receipt-workflow.mjs",
+        "physical-preflight",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "14bb311edd819cfd58a8550f1d7f5958abf469549c4342a709da322a658befbe",
+        "release-target-policy-v1",
+        "101",
+        "202",
+        "303",
+        "officecli-test-double",
+        "fidelity-test-double"
+      ],
+      "cwd": "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\cli",
+      "status": 1,
+      "signal": null,
+      "stdout": "",
+      "stderr": "(node:36236) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nSource subject does not match the clean expected commit\n",
+      "durationMs": 112,
+      "noPhysicalAdmission": true,
+      "noWindowsReceipt": true
+    },
+    {
+      "name": "wrong client",
+      "command": "C:\\nvm4w\\nodejs\\node.exe",
+      "args": [
+        "C:\\Work\\NavSlidesEditor\\scripts\\ci\\release-receipt-workflow.mjs",
+        "physical-preflight",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "14bb311edd819cfd58a8550f1d7f5958abf469549c4342a709da322a658befbe",
+        "release-target-policy-v1",
+        "101",
+        "202",
+        "303",
+        "officecli-test-double",
+        "fidelity-test-double"
+      ],
+      "cwd": "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned\\cli",
+      "status": 1,
+      "signal": null,
+      "stdout": "",
+      "stderr": "(node:21064) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Work/NavSlidesEditor/scripts/verify-container-supply-chain.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to C:\\Work\\NavSlidesEditor\\package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nphysical admission raw/client digest mismatch\n",
+      "durationMs": 117,
+      "noPhysicalAdmission": true,
+      "noWindowsReceipt": true
+    }
+  ],
+  "existingTestsInspected": [
+    "scripts/ci/windows-verification-evidence.test.js:98-117 covers schema2 envelope + wrong raw subject/hash/run, but not adapter-to-Windows validation or wrong client.",
+    "scripts/ci/release-receipts.test.js:25-31 covers synthetic root positive; :118-123 covers wrong child subject/client/parent. No existing direct repeated-run CLI test located.",
+    "scripts/ci/release-evidence-producer.test.js:64-90 exercises actual Linux CLI positive/negative synthetic wire inputs."
+  ],
+  "externalBlocked": [
+    "Genuine protected Windows signer/RFC3161 trust and post-download attestation",
+    "Genuine physical OfficeCLI raw receipt and environment-bounded PowerPoint oracle acquisition",
+    "Actual hosted workflow artifact transports and gh producer admission capture"
+  ],
+  "inputHashesAtExecution": {
+    ".github/workflows/reusable-windows-qualification.yml": "9b1a036abf0c4715774ed4ef6dc9da2b8dcc9f7a2721879ed332a8c90051af90",
+    "scripts/ci/release-receipt-workflow.mjs": "8bd6cc69e243ce6475098a1a51d52e08c57a94a9572ad6353e2d52df2b929d17",
+    "scripts/ci/physical-release-envelope.mjs": "fccae009dd4ebcd8803c77e77d42bce071d7d2f938e0443e35fcb5917a560bbb",
+    "scripts/ci/windows-verification-evidence.mjs": "d97f0e623386cd50cda9c56d3a9e36c86da5d9138d326bd50b563f94d92ad558",
+    "scripts/ci/release-evidence-producer.mjs": "ee8e7d4cb2578a7d44d21e323b6ea617cd7b759b67ce6768cc102c91e2d2ec66",
+    "scripts/ci/release-receipts.mjs": "46c5d4cf14d18d975d498786cae4f1326c08a2f79b96f2c9075d471b53ef9653",
+    "scripts/ci/release-evidence-test-support.mjs": "7c4d0ae226d3cedc65b438d67c840e6dfd1b3ca6316271990182a3b62e4a2a00",
+    "server/services/pptx-import/officecli/qualification-manifest.json": "8941ded2fe0bbbd55068848487e21ddc40b5e15ad968b289bf5a0a5996a35330"
+  },
+  "status": "passed-synthetic-command-boundary-and-production-contracts",
+  "cleanup": {
+    "ownedRoot": "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\.tmp-windows-caller-boundary-owned",
+    "ownedFileCount": 54,
+    "rootAbsent": true,
+    "throwawayRunner": ".tmp-windows-caller-boundary-smoke.mjs removed via tool-confirmed delete after execution",
+    "throwawayRunnerRemoved": true,
+    "productionWorkflowProductEdits": false
+  }
+}

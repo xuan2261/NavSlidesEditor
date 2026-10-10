@@ -1,12 +1,12 @@
 # Cloud Sync
 
-NavSlides Editor can mirror your `server/data/` and `server/uploads/` directories to any cloud provider [rclone](https://rclone.org/) supports — Drive, S3, Dropbox, B2, SFTP, WebDAV, and dozens of others.
+NavSlides Editor publishes presentation bundles to a configured [rclone](https://rclone.org/) remote. This is presentation delivery, not a mirror or full backup of the server's data and uploads directories.
 
 ## Why rclone
 
 - **No lock-in**: configure once, switch providers without touching NavSlides
-- **Offline-first**: all data lives locally; the cloud is a backup mirror
-- **Selective**: sync presentations only, or include uploads, or include history snapshots
+- **Local authoring**: presentation data stays local; cloud sync requires a network connection and a configured rclone remote.
+- **Whole-library or single-deck delivery**: sync healthy presentations together or publish one presentation with its referenced media.
 
 ## Wiring it up
 
@@ -15,12 +15,8 @@ NavSlides Editor can mirror your `server/data/` and `server/uploads/` directorie
 3. Configure the sync target in **Settings → Cloud Sync**
 4. Trigger sync manually or schedule it via your OS scheduler
 
-The endpoints that drive sync are `POST /api/rclone/sync` and `POST /api/rclone/sync-single` (see `server/routes/sync.js`). They shell out to `rclone` with the configured remote — so anything you can do at the rclone CLI is available here.
+The application exposes fixed sync operations through `POST /api/rclone/sync` and `POST /api/rclone/sync-single`; it does not expose arbitrary rclone CLI operations.
 
 ## What gets synced
 
-- `server/data/*.json` — presentation, template, and share metadata
-- `server/data/history/` — version snapshots
-- `server/uploads/` — media assets
-
-Secrets and per-instance config (`server/data/settings.json`) are sync-excluded by default.
+The bundle producer in [`server/routes/sync.js`](https://github.com/xuan2261/NavSlidesEditor/blob/main/server/routes/sync.js) owns the payload: presentation HTML and JSON, available package-backed content, and referenced uploads. Settings, template/share records and the instance's history directory are not a full-instance backup payload. Keep operator backups separate from cloud presentation delivery.

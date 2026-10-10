@@ -1,0 +1,26 @@
+[
+  {
+    "url": "http://127.0.0.1:3276/api/presentations/b570845a-ef99-4158-be7f-35b053d0c41b/restore/46e457d4-c72e-498d-b739-4dddd13f5fa4",
+    "status": 200,
+    "title": "Plain original"
+  },
+  {
+    "url": "http://127.0.0.1:3276/api/presentations/b570845a-ef99-4158-be7f-35b053d0c41b/restore/9d579873-d991-4a91-92af-ac6ea4f3eb11",
+    "status": 200,
+    "title": "Plain changed"
+  },
+  {
+    "url": "http://127.0.0.1:3276/api/presentations/d3c0177b-44e3-4a6c-86b6-db6d968f1490/restore/cbabf88c-d3db-481d-926e-d617733bcf16",
+    "status": 200,
+    "title": "Package original",
+    "aggregateGeneration": 2,
+    "pptxSourceAvailable": true
+  },
+  {
+    "url": "http://127.0.0.1:3276/api/presentations/d3c0177b-44e3-4a6c-86b6-db6d968f1490/restore/b9326af5-1cee-4fed-ab4b-fa153100bc70",
+    "status": 200,
+    "title": "Package original",
+    "aggregateGeneration": 3,
+    "pptxSourceAvailable": true
+  }
+]

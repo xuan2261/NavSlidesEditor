@@ -1,0 +1,2 @@
+{"file":"C:/nvm4w/nodejs/node.exe","args":["-NoProfile","-NonInteractive","-Command","$PSVersionTable.PSVersion.ToString()"]}
+{"file":"C:/nvm4w/nodejs/node.exe","args":["verify","/pa","/all","/v","/tw","C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\windows-local.tmp-root-policy-current-owned\\failed-verifier-capture\\synthetic.exe"]}

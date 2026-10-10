@@ -1,0 +1,49 @@
+{
+  "status": "feasible_offline_runtime_and_adapter_tests_passed_partial_acceptance_remaining",
+  "sourceRoot": "C:/Work/JeikCode",
+  "changedFiles": [
+    "crates/jeikcode-coding/src/runtime.rs",
+    "crates/jeikcode-coding/src/runtime_offline_integration.rs",
+    "crates/jeikcode-coding/src/provider_factory.rs",
+    "crates/jeikcode-coding/src/provider_factory_offline_transport.rs"
+  ],
+  "productionBehaviorChanged": false,
+  "newTests": [
+    "runtime::tests::offline_integration::runtime_offline_mounted_cross_provider_reload_and_snapshot_invariants",
+    "provider_factory::offline_transport::runtime_offline_adapter_boundary_all_protocols"
+  ],
+  "checks": [
+    {"command": "C:/Users/Z10PAD8C_Xuan2261/.cargo/bin/cargo.exe test --offline -p jeikcode-coding runtime_offline --lib", "passed": 2, "failed": 0, "log": "plans/reports/jeikcode-model-routing-phase-a-20261008/runtime-offline-cargo.log"},
+    {"command": "C:/Users/Z10PAD8C_Xuan2261/.cargo/bin/cargo.exe test --offline -p jeikcode-coding provider_factory --lib", "passed": 8, "failed": 0, "log": "plans/reports/jeikcode-model-routing-phase-a-20261008/runtime-offline-factory.log"},
+    {"command": "C:/Users/Z10PAD8C_Xuan2261/.cargo/bin/cargo.exe test --offline -p jeikcode-capabilities tools::task --lib", "passed": 38, "failed": 0, "log": "plans/reports/jeikcode-model-routing-phase-a-20261008/runtime-offline-task.log"}
+  ],
+  "counts": {"newTests": 2, "newProtocolCases": 5, "testExecutionsPassed": 48, "uniqueTestsPassed": 47, "finalFailures": 0},
+  "criteria": [
+    {
+      "criterion": "Prepared/mounted CodingRuntime explicit cross-provider whole invocation",
+      "status": "substantially_covered",
+      "evidence": "CodingRuntime::start, actual parent stream task ToolCall, runtime-mounted tool, actual child loop, selected Gemini factory/provider calls and output cap, child cannot mount recursive task, unknown-ID zero builds/child calls, parent Responses model/key/sampling invariants, successful reload and failed parent reassembly preserving selected generation. Session-disabled factory session explicitly asserted None. Original cloned registry remains immutable after reload.",
+      "remaining": "Nonempty persisted-session binding and running/queued bindings across reload are not combined in this runtime test; the preserved factory running/queued test covers immutable bindings with old/new nonempty session IDs separately. No inaccessible-seam claim is made."
+    },
+    {
+      "criterion": "Parent conversation and legacy/native snapshot invariance",
+      "status": "partial",
+      "evidence": "Real runtime serialized SessionSnapshot preexisting messages remain exactly equal as a prefix after explicit success, unknown-ID rejection, terminal child provider failure, successful/failed reload and blocked child cancellation. Snapshot top-level schema keys unchanged. Expected new parent user/tool/result/assistant additions are outside the compared prefix. Synthetic parent/task credentials absent from serialized snapshots.",
+      "remaining": "SessionMode::Disabled snapshots exercise native runtime memory/serialization, not persisted SessionManager files or legacy snapshot serialization/omitted-ID comparison. Those persistence compatibility portions remain open; this report does not declare all three reviewer criteria fully closed."
+    },
+    {
+      "criterion": "Offline protocol adapter recording boundary",
+      "status": "covered_for_five_supported_protocols",
+      "evidence": "DefaultCodingProviderFactory real adapters resolved from registry for openai, responses, claude, gemini and ollama. Loopback-only HTTP recorder captures protocol endpoint, API model (Gemini URL), per-task synthetic authentication and output caps; reasoning/thinking bodies checked. Provider context_window asserted 32000 (local policy, not necessarily wire field), bound max_tokens 1234 and reasoning high checked. Parent synthetic auth absent from requests; no credentials in JSON payload or returned errors. Terminal mock HTTP 400 surfaced at open or lazy stream boundary, without provider retry-policy changes.",
+      "remaining": "Not an exhaustive matrix of all reasoning/vision/TLS/signing permutations; does not establish remote serving identity."
+    }
+  ],
+  "developmentErrorsResolved": [
+    "Initial compilation used a private sibling test helper; replaced with test-local synthetic registry.",
+    "Windows accepted socket inherited nonblocking mode; recorder explicitly switches it to blocking with bounded read timeout.",
+    "Generic OpenAI model uses max_tokens, not o-series max_completion_tokens; assertion corrected to actual protocol.",
+    "Some adapters open lazily; recorder test now consumes stream to capture terminal mock error."
+  ],
+  "scope": {"sourceEditsCodingOnly": true, "providersCrateExpanded": false, "externalNetwork": false, "loopbackHttpOnly": true, "realSecretsOrSecretConfigAccessed": false, "otherDriveAccess": false, "buildDeploy": false, "retryDefaultsChanged": false, "activation": false, "branchReset": false},
+  "priorConsumerCheck": "User-supplied exit 0 retained as prior evidence; not rerun in this focused test task."
+}

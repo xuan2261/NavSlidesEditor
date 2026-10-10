@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "evidenceSource": "functions.bash background bg_14 auto-delivered result; no spill artifact was returned",
+  "command": "npx vitest run client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx client/src/pages/__tests__/editor-page-autosave.characterization.test.jsx client/src/hooks/editor-controller/use-editor-save-controller.test.jsx client/src/hooks/editor-controller/use-editor-persistence-controller.test.jsx client/src/hooks/editor-controller/use-editor-rich-text-controller.test.js client/src/hooks/editor-controller/use-editor-layout-controller.test.js client/src/hooks/editor-controller/use-editor-selection-controller.test.js client/src/pages/__tests__/editor-authoring-context.regression.test.jsx client/src/pages/editor-undo-selection-reconcile.test.js client/src/utils/history-stack.test.js",
+  "vitest": "5.0.1",
+  "filesPassed": 10,
+  "testsPassed": 78,
+  "exitCode": 0,
+  "durationSeconds": 23,
+  "wallTimeSeconds": 26.38,
+  "startTimeLocal": "2026-10-09 17:00:18",
+  "subjectSha": "aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+  "dirty": true,
+  "limitations": [
+    "Local focused tests, not runtime browser or clean candidate qualification."
+  ]
+}

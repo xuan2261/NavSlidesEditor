@@ -1,0 +1,34 @@
+{
+  "sourceSha": "aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+  "initialRevision": 0,
+  "initialTag": "\"0\"",
+  "mutationStatuses": [
+    200,
+    412
+  ],
+  "current": {
+    "aiApiKey": "",
+    "defaultTheme": "white",
+    "defaultTransition": "slide",
+    "settingsRevision": 1,
+    "ai": {}
+  },
+  "persisted": {
+    "aiApiKey": "",
+    "defaultTheme": "white",
+    "defaultTransition": "slide",
+    "settingsRevision": 1
+  },
+  "port": 3387,
+  "isolationRoot": "C:\\Users\\Z10PAD~1\\AppData\\Local\\Temp\\navslides-reliability-http-RdEOph",
+  "startedAt": "2026-10-09T10:00:53.913Z",
+  "status": "passed",
+  "limitations": [
+    "Dirty candidate local API only; not release qualification."
+  ],
+  "restart": {
+    "persistedRevision": 1,
+    "persistedTheme": "white",
+    "staleStatus": 412
+  }
+}

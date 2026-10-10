@@ -1,0 +1,65 @@
+{
+  "scenario": "portable-repeated-replacement-current-replay",
+  "checks": [
+    {
+      "replacement": 0,
+      "generation": 1,
+      "replay": true,
+      "directReplay": true,
+      "conflictingIdentity": "IDEMPOTENCY_KEY_CONFLICT",
+      "originalSha256": "e8b6a78b1d67e12816f7cacce06aff8d141ae6c281db87f45fbc75b4abac0372",
+      "retainedOwnerRecords": 6,
+      "receiptGenerations": [
+        1
+      ]
+    },
+    {
+      "replacement": 1,
+      "generation": 2,
+      "replay": true,
+      "directReplay": true,
+      "conflictingIdentity": "IDEMPOTENCY_KEY_CONFLICT",
+      "originalSha256": "e8b6a78b1d67e12816f7cacce06aff8d141ae6c281db87f45fbc75b4abac0372",
+      "retainedOwnerRecords": 6,
+      "receiptGenerations": [
+        1,
+        2
+      ]
+    },
+    {
+      "replacement": 2,
+      "generation": 3,
+      "replay": true,
+      "directReplay": true,
+      "conflictingIdentity": "IDEMPOTENCY_KEY_CONFLICT",
+      "originalSha256": "e8b6a78b1d67e12816f7cacce06aff8d141ae6c281db87f45fbc75b4abac0372",
+      "retainedOwnerRecords": 6,
+      "receiptGenerations": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "replacement": 3,
+      "generation": 4,
+      "replay": true,
+      "directReplay": true,
+      "conflictingIdentity": "IDEMPOTENCY_KEY_CONFLICT",
+      "originalSha256": "e8b6a78b1d67e12816f7cacce06aff8d141ae6c281db87f45fbc75b4abac0372",
+      "retainedOwnerRecords": 6,
+      "receiptGenerations": [
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  ],
+  "diskReopenReplay": true,
+  "retainedTemplateInstantiation": true,
+  "originalSha256": "e8b6a78b1d67e12816f7cacce06aff8d141ae6c281db87f45fbc75b4abac0372",
+  "status": "passed",
+  "cleanedOwnedRoot": true,
+  "fullExternalReceipt": "C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-portable-replay-23464.json"
+}

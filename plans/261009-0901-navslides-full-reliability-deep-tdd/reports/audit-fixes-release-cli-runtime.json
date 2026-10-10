@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "audit-fixes-release-cli-smoke-v1",
+  "startedAt": "2026-10-10T08:32:04.721Z",
+  "status": "passed",
+  "runs": [
+    {
+      "kind": "linux",
+      "subjectShape": "string",
+      "status": "passed",
+      "cliExit": 0,
+      "issuedSyntheticReceipt": true
+    },
+    {
+      "kind": "linux",
+      "subjectShape": "legacy-object",
+      "status": "passed",
+      "cliExit": 1,
+      "issuedSyntheticReceipt": false
+    },
+    {
+      "kind": "windows",
+      "subjectShape": "string",
+      "status": "passed",
+      "cliExit": 0,
+      "issuedSyntheticReceipt": true
+    },
+    {
+      "kind": "windows",
+      "subjectShape": "legacy-object",
+      "status": "passed",
+      "cliExit": 1,
+      "issuedSyntheticReceipt": false
+    }
+  ],
+  "limits": "Actual Linux/Windows receipt CLI and leaf validation; all upstream CI/scanner/signature/EXE/Office/fidelity inputs are labeled synthetic fixtures. No physical qualification or hosted dispatch/publication. Sandbox receipts are removed.",
+  "cleaned": true,
+  "finishedAt": "2026-10-10T08:32:05.515Z"
+}

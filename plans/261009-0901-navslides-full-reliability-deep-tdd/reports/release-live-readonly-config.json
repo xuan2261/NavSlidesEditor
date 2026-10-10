@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-09T21:50:36.198Z",
+  "scope": "Authorized GET-only repository/default-branch/Actions policy/environment metadata; no pushes, dispatches, PRs, settings mutation, credentials or publication.",
+  "authPreflight": { "exitCode": 0, "detail": "Verified; auth output/token/account details not retained." },
+  "repository": { "endpoint": "repos/xuan2261/NavSlidesEditor", "exitCode": 0, "repository": "xuan2261/NavSlidesEditor", "defaultBranch": "master", "private": false },
+  "actionsPrPolicy": { "endpoint": "repos/xuan2261/NavSlidesEditor/actions/permissions/workflow", "exitCode": 0, "default_workflow_permissions": "read", "can_approve_pull_request_reviews": false },
+  "releaseEnvironments": [
+    { "name": "release-publication", "endpoint": "repos/xuan2261/NavSlidesEditor/environments/release-publication", "exitCode": 1, "httpStatus": 404, "diagnostic": "gh: Not Found (HTTP 404)" },
+    { "name": "release-staging", "endpoint": "repos/xuan2261/NavSlidesEditor/environments/release-staging", "exitCode": 1, "httpStatus": 404, "diagnostic": "gh: Not Found (HTTP 404)" }
+  ],
+  "environmentInventory": { "endpoint": "repos/xuan2261/NavSlidesEditor/environments", "exitCode": 0, "totalCount": 1, "names": ["github-pages"] },
+  "qualification": "blocked: release staging/publication environment and approval-policy provisioning is repository-owner work outside local implementation authorization; no live graph or publication proof",
+  "mutationCount": 0
+}

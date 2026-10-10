@@ -1,0 +1,124 @@
+{
+  "status": "initial-native-red-preserved-main-product-repair-required",
+  "scope": "P06 exact reachable acceptance gaps only; no production changes",
+  "focused": {
+    "receipt": "reports/p06-history-acceptance-focused-corrected.json",
+    "passed": 17,
+    "failed": 0,
+    "pending": 0,
+    "retries": 0,
+    "workers": 1,
+    "scenarioIds": [
+      "P06-01",
+      "P06-02",
+      "P06-03",
+      "P06-04",
+      "P06-05",
+      "P06-06",
+      "P06-07",
+      "P06-08",
+      "P06-09",
+      "P06-10",
+      "P06-11"
+    ],
+    "newExactOracles": {
+      "P06-01": "each intermediate Undo/Redo title is asserted in existing traversal test",
+      "P06-04": "two integrated document mutations200ms apart,500ms commit then exact serialized original/latest Undo/Redo; not autosave coalescing",
+      "P06-05": "initial load remains clean after5000ms; no update call,draft or dirty-save affordance; history disabled",
+      "P06-06": "65 integrated snapshots; every Undo64..16 exact serialized state, disabled stop and no-op then Redo17"
+    },
+    "unhandled": "JSON reporter does not expose an unhandled-error count; success:true and runner exit0 observed",
+    "sourceBoundary": "Focused test/current controller hashes captured after successful run in reports/p06-focused-acceptance-provenance.json, not full coverage/whole-source before-after identity"
+  },
+  "browserDiscovery": {
+    "passed": true,
+    "selectedTests": 5,
+    "files": 3,
+    "workers": 1,
+    "retries": 0,
+    "scenarioIds": [
+      "P06-07",
+      "P06-08",
+      "P06-09",
+      "P06-10",
+      "P06-11",
+      "P06-12",
+      "P06-14"
+    ],
+    "execution": "Main FINAL SOURCE_FROZEN plus exclusive lane authorized; actual production npm start on3276; five native tests running one worker/zero retries",
+    "discoveryAfterRepairs": "5 tests/3 files selected; corrected --list exit0, no browser launch"
+  },
+  "harnessCorrections": {
+    "unit": "Initial new oracles incorrectly observed an unused presentation store; integrated history cap full-page loop timed out. Counsel confirmed actual local React document ownership and lower integrated layer. Incorrect oracles removed rather than changing production.",
+    "browserDiscovery": "Playwright CJS transform rejects import.meta. Counsel-approved createRequire(path.resolve(package.json)) bridge corrected;5 tests discovered.",
+    "retainedFailedReceipt": "reports/p06-history-acceptance-focused.json",
+    "frozenLint": {
+      "errors": [
+        "no-unsafe-finally identityError throw",
+        "prohibited page.waitForTimeout"
+      ],
+      "evidence": "artifact://636 (Main-owned frozen lint)",
+      "sourceFreeze": "Reopened only P06 authored browser helper/spec; production unchanged",
+      "status": "repaired after mandatory counsel; focused lint exit0, zero errors/five existing harness warnings",
+      "correctedEvidence": "artifact://655"
+    },
+    "packageRemoteSave": "Unique test-owned idempotencyKey added to genuine package-backed remote PUT after read confirmed required generation-safe envelope",
+    "restoreEligibility": "Counsel confirmed every package projection save marks pendingJournalHash, making restore intentionally ineligible until validated edited export. Native P06-14 now tests plain changed-content reversible restore plus settled package restore/back, forward generation, retained-owner consumer success/Original, and intentional pending-projection409/UI error with exact unchanged publicDTO/generation/Original; no fake validator/native bypass or silently removed refusal.",
+    "nativeInitial": "Mandatory counsel approved unique statusbar selector and boolean-once hold/abort barriers instead of unroute during active request; remote actual API status/body/generation now retained in receipt before assertion"
+  },
+  "unselected": "All other repository suites; P06-13/manual unload, hardware IME and physical Office qualification not claimed",
+  "sourceEdits": [
+    "client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx",
+    "client/src/hooks/editor-controller/editor-toolbar-live-text-history.test.jsx",
+    "tests/e2e/p06-history-authoring-acceptance.spec.js",
+    "tests/e2e/p06-history-save-acceptance.spec.js",
+    "tests/e2e/p06-history-restore-acceptance.spec.js",
+    "tests/e2e/helpers/p06-history-acceptance.js",
+    "tests/e2e/helpers/p06-history-package.js"
+  ],
+  "browserCommand": "PLAYWRIGHT_SERVER_PORT=3276 PLAYWRIGHT_RUN_ID=p06-history-acceptance-final PLAYWRIGHT_JSON_OUTPUT_NAME=reports/p06-browser-acceptance.json npx playwright test tests/e2e/p06-history-authoring-acceptance.spec.js tests/e2e/p06-history-save-acceptance.spec.js tests/e2e/p06-history-restore-acceptance.spec.js --project=chromium --workers=1 --retries=0 --reporter=json --output=reports/p06-browser-results",
+  "servedBuildIdentity": {
+    "providedByMain": "a80afd0badf20530ff1dd5e52c937eefd490d4db87b94d6d0e798f68a0930959",
+    "boundary": "Main reports build/runtime closure passed; actual native receipts independently gate dirty complete source/build/runtime before and after"
+  },
+  "browserInitial": {
+    "receipt": "reports/p06-browser-acceptance.json",
+    "expected": 0,
+    "unexpected": 5,
+    "skipped": 0,
+    "flaky": 0,
+    "retries": 0,
+    "workers": 1,
+    "globalErrors": [],
+    "partialObservations": "reports/p06-native-initial-partial-observations.json",
+    "sourceSha256": "218a84b2b60c241f2aeeac1e06ec933d442c1ccc7d45d4fed55c7551494ef7cd",
+    "identityMatchedReceipts": 3,
+    "boundary": "Three completed receipt finalizers matched before/after source; route/Retry asynchronous barrier errors prevented finalizer receipts. No passing5-test aggregate; no promotion of partial substeps."
+  },
+  "productBug": {
+    "confirmedBy": "HistoryOracleFailureCounsel",
+    "evidence": [
+      "reports/p06-native-initial-restore-response-evidence.json",
+      "reports/p06-native-initial-refused-save-evidence.json"
+    ],
+    "observed": "Package restore HTTP200 returns generations2 then3; subsequent user title save PUT sends1 and server409 STALE_GENERATION current3",
+    "rootCause": "HistoryModal onRestore only installs React state, bypassing persistence restored-generation adoption, history seeding, interaction reset and skip-autosave lifecycle. Save controller accepted initial generation1 shadows restored snapshotgeneration3.",
+    "owner": "Main owns product repair/regression/build; worker will not reload or bypass bug to force green"
+  },
+  "harnessReadinessAfterNativeRed": {
+    "nativeLintExit": 0,
+    "nativeLintWarnings": 0,
+    "discoveryTests": 5,
+    "discoveryFiles": 3,
+    "discoveryExit": 0,
+    "workers": 1,
+    "retries": 0,
+    "sourceEdits": "Only three newly authored native files changed after counsel; no shared fixture/unit/production/config modifications"
+  },
+  "ownedRuntimeCleanup": {
+    "port": 3276,
+    "observed": "ECONNREFUSED from one post-run loopback connection; CLI completed and owned server is not listening",
+    "fixtureTempRoots": "Genuine package source temp roots removed by fixture finally; downloaded Originals/traces/receipts intentionally retained"
+  },
+  "nextRequired": "Main-owned restore lifecycle fix/unit regression/rebuild and next frozen exclusive browser lane; no native reload workaround and no whole-run acceptance claim from first5/5RED"
+}

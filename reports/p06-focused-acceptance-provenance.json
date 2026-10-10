@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "command": "npx vitest run client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx client/src/hooks/editor-controller/editor-toolbar-live-text-history.test.jsx --maxWorkers=1 --retry=0 --reporter=json --outputFile=reports/p06-history-acceptance-focused-corrected.json",
+  "receipt": "reports/p06-history-acceptance-focused-corrected.json",
+  "passed": 17,
+  "failed": 0,
+  "pending": 0,
+  "unhandled": null,
+  "scenarioIds": [
+    "P06-01",
+    "P06-04",
+    "P06-05",
+    "P06-06"
+  ],
+  "sourceCapturedAfterRun": [
+    {
+      "path": "client/src/pages/__tests__/editor-page-history-autosave.characterization.test.jsx",
+      "sha256": "8ed7e7184f066cdcb400cbabf677981b102ea29fdd79d76c31a41c14d2910386"
+    },
+    {
+      "path": "client/src/hooks/editor-controller/editor-toolbar-live-text-history.test.jsx",
+      "sha256": "6f43a19a276008f1f1de063a1cd8fdd37d4456fc926476466bcf100c6edc9c11"
+    },
+    {
+      "path": "client/src/hooks/editor-controller/use-editor-history-controller.js",
+      "sha256": "7e91f8246124c6cf18f47aa9b70f7ec5d244758b3bfd0df0c03ec27af121e4cb"
+    },
+    {
+      "path": "client/src/utils/history-stack.js",
+      "sha256": "e0917d6bdd23ba9f1974200415651be6255712a8696fda53500a37163d49fbeb"
+    }
+  ],
+  "sourceBoundary": "Selected characterization and integrated document-history/TipTap tests, current controller/history-cap source. No production edits. Hashes captured after run, not an unchanged before/after manifest or a whole-suite gate.",
+  "initialReceipt": "reports/p06-history-acceptance-focused.json",
+  "initialFailures": "Incorrect unused store oracle (null) and full-page cap timeout; counsel advised correct integrated state boundary. No product bug or RED manufactured."
+}

@@ -1,0 +1,131 @@
+{
+  "status": "passed",
+  "startedAt": "2026-10-09T14:14:42.127Z",
+  "command": [
+    "C:\\nvm4w\\nodejs\\node.exe",
+    "C:\\Work\\NavSlidesEditor\\server\\routes\\sequential-projection-save-smoke.cjs"
+  ],
+  "node": "v22.22.0",
+  "platform": "win32",
+  "sourceScope": "selected backend source and input files; not release qualification",
+  "sourceBefore": [
+    {
+      "path": "package-lock.json",
+      "bytes": 365448,
+      "sha256": "2ceada6ae6632f64154d488bd2864ba0d25496c0a171ef9460adbd3298fff97d"
+    },
+    {
+      "path": "package.json",
+      "bytes": 9708,
+      "sha256": "f64b270c32c29dd2856bed4205689a62f2fdc2f38e94a4526f4afc6c212fc101"
+    },
+    {
+      "path": "server/routes/presentations-crud.js",
+      "bytes": 31826,
+      "sha256": "2ae5a0060dbf2a64ee2d8022d7cebe7b6ceb40001bfe651a86615f10a2c68bed"
+    },
+    {
+      "path": "server/routes/presentations.js",
+      "bytes": 640,
+      "sha256": "419c9b8d4bd644cf31ce8557de68bfa54f459b00eaeab51c15b0a6005c79c8cc"
+    },
+    {
+      "path": "server/routes/sequential-projection-save-smoke.cjs",
+      "bytes": 6725,
+      "sha256": "be47fe0f02e0a1024c3bd875bcd92dbe891147ef81778a9627fa6f2d07d3584a"
+    },
+    {
+      "path": "server/services/generation-safe-save.js",
+      "bytes": 8908,
+      "sha256": "9a2c8e7d3075e1028da2d59a31b214085cb393d91fab5cf44c144c1489284c3e"
+    },
+    {
+      "path": "server/services/package-backed-presentation-read.js",
+      "bytes": 6928,
+      "sha256": "2cd4042ed14957c92ec4c1f9e79407554e22cea73bdefc4a613556a7fe540d93"
+    },
+    {
+      "path": "server/services/pptx-import/package-store-runtime.js",
+      "bytes": 7078,
+      "sha256": "893c58a4ec6603a0e36b55e4cf20a88d1c2c8045c4b9fc794bcf967323b8f9a3"
+    },
+    {
+      "path": "server/services/pptx-import/validated-edited-export-context.js",
+      "bytes": 6990,
+      "sha256": "ed05076987a23f2e294c0d1a16d3047305e3ddac3904c98d63835d61bf3a913d"
+    }
+  ],
+  "fixture": {
+    "presentationId": "bcc1864d-61e0-45ac-843e-c1e12602c33d",
+    "originalSha256": "87228fc1f8f09ae02ac0530bf493cc1d7c083793efefdaac876650d09deb2990",
+    "baseRevisionId": "r0-87228fc1f8f09ae02ac0530bf493cc1d7c083793efefdaac876650d09deb2990"
+  },
+  "saves": [
+    {
+      "savedGeneration": 2,
+      "openedGeneration": 2,
+      "content": "<p>First</p>",
+      "originalSha256": "87228fc1f8f09ae02ac0530bf493cc1d7c083793efefdaac876650d09deb2990"
+    },
+    {
+      "savedGeneration": 3,
+      "openedGeneration": 3,
+      "content": "<p>Second</p>",
+      "originalSha256": "87228fc1f8f09ae02ac0530bf493cc1d7c083793efefdaac876650d09deb2990"
+    },
+    {
+      "savedGeneration": 4,
+      "openedGeneration": 4,
+      "content": "<p>Third</p>",
+      "originalSha256": "87228fc1f8f09ae02ac0530bf493cc1d7c083793efefdaac876650d09deb2990"
+    }
+  ],
+  "sourceAfter": [
+    {
+      "path": "package-lock.json",
+      "bytes": 365448,
+      "sha256": "2ceada6ae6632f64154d488bd2864ba0d25496c0a171ef9460adbd3298fff97d"
+    },
+    {
+      "path": "package.json",
+      "bytes": 9708,
+      "sha256": "f64b270c32c29dd2856bed4205689a62f2fdc2f38e94a4526f4afc6c212fc101"
+    },
+    {
+      "path": "server/routes/presentations-crud.js",
+      "bytes": 31826,
+      "sha256": "2ae5a0060dbf2a64ee2d8022d7cebe7b6ceb40001bfe651a86615f10a2c68bed"
+    },
+    {
+      "path": "server/routes/presentations.js",
+      "bytes": 640,
+      "sha256": "419c9b8d4bd644cf31ce8557de68bfa54f459b00eaeab51c15b0a6005c79c8cc"
+    },
+    {
+      "path": "server/routes/sequential-projection-save-smoke.cjs",
+      "bytes": 6725,
+      "sha256": "be47fe0f02e0a1024c3bd875bcd92dbe891147ef81778a9627fa6f2d07d3584a"
+    },
+    {
+      "path": "server/services/generation-safe-save.js",
+      "bytes": 8908,
+      "sha256": "9a2c8e7d3075e1028da2d59a31b214085cb393d91fab5cf44c144c1489284c3e"
+    },
+    {
+      "path": "server/services/package-backed-presentation-read.js",
+      "bytes": 6928,
+      "sha256": "2cd4042ed14957c92ec4c1f9e79407554e22cea73bdefc4a613556a7fe540d93"
+    },
+    {
+      "path": "server/services/pptx-import/package-store-runtime.js",
+      "bytes": 7078,
+      "sha256": "893c58a4ec6603a0e36b55e4cf20a88d1c2c8045c4b9fc794bcf967323b8f9a3"
+    },
+    {
+      "path": "server/services/pptx-import/validated-edited-export-context.js",
+      "bytes": 6990,
+      "sha256": "ed05076987a23f2e294c0d1a16d3047305e3ddac3904c98d63835d61bf3a913d"
+    }
+  ],
+  "completedAt": "2026-10-09T14:14:45.195Z"
+}

@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "kind": "actual-production-two-tab-themed-settings-discard",
+  "nativeDialogs": [],
+  "browserErrors": [],
+  "restored": true,
+  "observations": {
+    "cancellationKeepsDraft": true,
+    "escapeKeepsDraft": true,
+    "focusRestored": true,
+    "confirmationAdoptsLatest": true,
+    "persistedAfterReload": true
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "args": [
+    "test",
+    "--offline",
+    "-p",
+    "jeikcode-capabilities",
+    "per_task_model",
+    "--lib"
+  ],
+  "exitCode": 0,
+  "summary": [
+    "running 11 tests",
+    "test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 902 filtered out; finished in 3.01s"
+  ]
+}

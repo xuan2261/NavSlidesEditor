@@ -1,0 +1,2686 @@
+{
+  "phase": 9,
+  "kind": "actual-startServer-process-death-http",
+  "artifactKind": "source",
+  "scenarioIds": [
+    "P09-02",
+    "P09-03",
+    "P09-04",
+    "P09-05",
+    "P09-06",
+    "P09-07",
+    "P09-08",
+    "P09-11",
+    "P09-14",
+    "P09-15"
+  ],
+  "command": [
+    "C:\\nvm4w\\nodejs\\node.exe",
+    "C:\\Work\\NavSlidesEditor\\server\\recovery-http-smoke.cjs",
+    "plans/261009-0901-navslides-full-reliability-deep-tdd/reports/pptx-phase09-http-smoke-receipt.json"
+  ],
+  "startedAt": "2026-10-09T15:38:56.101Z",
+  "toolVersions": {
+    "node": "v22.22.0"
+  },
+  "platform": "win32",
+  "limits": "Process kill, not power-loss durability. Controlled injected importer; no native source-lineage claim.",
+  "sourceBefore": {
+    "files": {
+      "server/index.js": "98a04985f97bc01fdf8ca9dba6cf4d7ee8c3c7f768c5ea7d2411457e805638f4",
+      "server/services/health-state-readiness.js": "46a43fea10948417632fe3b0d1804e63a4adba576812c3779c9044b1e74da26a",
+      "server/services/project-import-media-session-store.js": "8c646d036c94818f1d9d96381fd812821fb9784143c111c211d95553af1be9f0",
+      "server/services/project-import-media-session-recovery.js": "0e182b6e78006e5bf2970c9e87d854a3cb25681aeff50f43d86a2483a054ec9f",
+      "server/services/project-import-media-session.js": "fbeb0bd350b4865ad4a1562e8ae0ac21d1d321fed74be22897266286e15e2567",
+      "server/services/media-placement-ownership.js": "48bcccc8edbdad4f10d47e45371ea34c308d246af02d855bb774d59218f23d9d",
+      "server/services/pptx-import/package-store-runtime.js": "893c58a4ec6603a0e36b55e4cf20a88d1c2c8045c4b9fc794bcf967323b8f9a3",
+      "server/routes/pptx-import.js": "4175034e9c9eebb84bd2c13dff5b22857d1adf0c5a22bfd537636f849f1f0189",
+      "server/recovery-test-child.cjs": "812fdd835d46837a83f618934ddf4718558ef9cee52886731e8bd4d37ba358c8",
+      "server/recovery-http-smoke.cjs": "3a901010968a9d8806ced2e8dd23153e3aba91f42aef0d79a059053ee656a069"
+    },
+    "sha256": "2fe5ae65db0861db6f2317f5e49e12eea863c1998ebb2ded1c8550ddb541c2a7"
+  },
+  "scenarios": [
+    {
+      "boundary": "project-placement",
+      "fixtureRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-http-51P8XY",
+      "restarts": [
+        {
+          "restart": 0,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 503,
+              "sha256": "d149ba1fd836a4a4eb975fb586e868e64072d33d9ffa63bef2a09db814b67cea",
+              "byteLength": 98
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "32f7d658c274fb87890e81c0e40aca9c636a28aef22ace5d325fb4eb62e73cfe",
+              "byteLength": 58
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "6961ca25a40caef6dfe36e66a0621e99464e235df4b0e8daf9079a38a283f70b",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/34ffbc618d66a794e1515ab2f683a1f10aeddb8fa562877b18d03d56974c727a.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "POST",
+              "target": "/api/project-imports/preflight",
+              "status": 503,
+              "sha256": "877c0e5a021c9bdc9774567c4a45c2af27e7182a719f05f14ecb8e1a5def7685",
+              "byteLength": 146
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\34ffbc618d66a794e1515ab2f683a1f10aeddb8fa562877b18d03d56974c727a.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            }
+          ],
+          "uploadLedgerSha256": "c557659d1de0c355b8c1343a4377e698647f713e2d54958ea46412fccf32af31",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 1,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 503,
+              "sha256": "d149ba1fd836a4a4eb975fb586e868e64072d33d9ffa63bef2a09db814b67cea",
+              "byteLength": 98
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "32f7d658c274fb87890e81c0e40aca9c636a28aef22ace5d325fb4eb62e73cfe",
+              "byteLength": 58
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "6961ca25a40caef6dfe36e66a0621e99464e235df4b0e8daf9079a38a283f70b",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/34ffbc618d66a794e1515ab2f683a1f10aeddb8fa562877b18d03d56974c727a.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "POST",
+              "target": "/api/project-imports/preflight",
+              "status": 503,
+              "sha256": "877c0e5a021c9bdc9774567c4a45c2af27e7182a719f05f14ecb8e1a5def7685",
+              "byteLength": 146
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\34ffbc618d66a794e1515ab2f683a1f10aeddb8fa562877b18d03d56974c727a.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            }
+          ],
+          "uploadLedgerSha256": "c557659d1de0c355b8c1343a4377e698647f713e2d54958ea46412fccf32af31",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 2,
+          "backupRestore": true,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 503,
+              "sha256": "d149ba1fd836a4a4eb975fb586e868e64072d33d9ffa63bef2a09db814b67cea",
+              "byteLength": 98
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "32f7d658c274fb87890e81c0e40aca9c636a28aef22ace5d325fb4eb62e73cfe",
+              "byteLength": 58
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "9acbddaf0509f9873f283e37143b7ec1e8a7b19cb289656c0ba7acfe7aee3945",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/34ffbc618d66a794e1515ab2f683a1f10aeddb8fa562877b18d03d56974c727a.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "POST",
+              "target": "/api/project-imports/preflight",
+              "status": 503,
+              "sha256": "877c0e5a021c9bdc9774567c4a45c2af27e7182a719f05f14ecb8e1a5def7685",
+              "byteLength": 146
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\34ffbc618d66a794e1515ab2f683a1f10aeddb8fa562877b18d03d56974c727a.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            }
+          ],
+          "uploadLedgerSha256": "c557659d1de0c355b8c1343a4377e698647f713e2d54958ea46412fccf32af31",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        }
+      ],
+      "cleanup": true,
+      "exit": {
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "intent": {
+        "sharedUrl": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+        "sharedSha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+        "sessionId": "33bcfb99-5f3a-40f3-8c40-fcb244008dbc",
+        "mediaSha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+        "mediaUrl": "/uploads/34ffbc618d66a794e1515ab2f683a1f10aeddb8fa562877b18d03d56974c727a.png"
+      },
+      "preservedBefore": [
+        {
+          "filename": "uploads\\34ffbc618d66a794e1515ab2f683a1f10aeddb8fa562877b18d03d56974c727a.png",
+          "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+          "byteLength": 71
+        },
+        {
+          "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+          "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+          "byteLength": 67
+        }
+      ],
+      "backupRestoreRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-restore-0FuAfa",
+      "status": "passed"
+    },
+    {
+      "boundary": "project-checkpoint",
+      "fixtureRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-http-FpKTk8",
+      "restarts": [
+        {
+          "restart": 0,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 503,
+              "sha256": "d149ba1fd836a4a4eb975fb586e868e64072d33d9ffa63bef2a09db814b67cea",
+              "byteLength": 98
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "32f7d658c274fb87890e81c0e40aca9c636a28aef22ace5d325fb4eb62e73cfe",
+              "byteLength": 58
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "94563146a8ec385d82d8cfbf44a263658915a78bf29841fe4eaf1fe420b502e5",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/e87e3cf3d6b9abbe43106b9108e9f6221bd3e253c44f31bdd87803f85d1d38e1.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "POST",
+              "target": "/api/project-imports/preflight",
+              "status": 503,
+              "sha256": "877c0e5a021c9bdc9774567c4a45c2af27e7182a719f05f14ecb8e1a5def7685",
+              "byteLength": 146
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "uploads\\e87e3cf3d6b9abbe43106b9108e9f6221bd3e253c44f31bdd87803f85d1d38e1.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            }
+          ],
+          "uploadLedgerSha256": "39bb71bc0dfe7d5dfcc38da9ed2d4db289f8e4f54bf99a4d938c8d284178a62d",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 1,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 503,
+              "sha256": "d149ba1fd836a4a4eb975fb586e868e64072d33d9ffa63bef2a09db814b67cea",
+              "byteLength": 98
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "32f7d658c274fb87890e81c0e40aca9c636a28aef22ace5d325fb4eb62e73cfe",
+              "byteLength": 58
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "94563146a8ec385d82d8cfbf44a263658915a78bf29841fe4eaf1fe420b502e5",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/e87e3cf3d6b9abbe43106b9108e9f6221bd3e253c44f31bdd87803f85d1d38e1.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "POST",
+              "target": "/api/project-imports/preflight",
+              "status": 503,
+              "sha256": "877c0e5a021c9bdc9774567c4a45c2af27e7182a719f05f14ecb8e1a5def7685",
+              "byteLength": 146
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "uploads\\e87e3cf3d6b9abbe43106b9108e9f6221bd3e253c44f31bdd87803f85d1d38e1.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            }
+          ],
+          "uploadLedgerSha256": "39bb71bc0dfe7d5dfcc38da9ed2d4db289f8e4f54bf99a4d938c8d284178a62d",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 2,
+          "backupRestore": true,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 503,
+              "sha256": "d149ba1fd836a4a4eb975fb586e868e64072d33d9ffa63bef2a09db814b67cea",
+              "byteLength": 98
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "32f7d658c274fb87890e81c0e40aca9c636a28aef22ace5d325fb4eb62e73cfe",
+              "byteLength": 58
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "d980a26bd797fec77b76b26aff7be9dd5da96f4356f35c6c5fa1914a7faeb6f5",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/e87e3cf3d6b9abbe43106b9108e9f6221bd3e253c44f31bdd87803f85d1d38e1.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "POST",
+              "target": "/api/project-imports/preflight",
+              "status": 503,
+              "sha256": "877c0e5a021c9bdc9774567c4a45c2af27e7182a719f05f14ecb8e1a5def7685",
+              "byteLength": 146
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "uploads\\e87e3cf3d6b9abbe43106b9108e9f6221bd3e253c44f31bdd87803f85d1d38e1.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            }
+          ],
+          "uploadLedgerSha256": "39bb71bc0dfe7d5dfcc38da9ed2d4db289f8e4f54bf99a4d938c8d284178a62d",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        }
+      ],
+      "cleanup": true,
+      "exit": {
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "intent": {
+        "sharedUrl": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+        "sharedSha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+        "sessionId": "d267e963-61aa-4b76-8a0e-82a6bdbba785",
+        "mediaSha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+        "mediaUrl": "/uploads/e87e3cf3d6b9abbe43106b9108e9f6221bd3e253c44f31bdd87803f85d1d38e1.png"
+      },
+      "preservedBefore": [
+        {
+          "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+          "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+          "byteLength": 67
+        },
+        {
+          "filename": "uploads\\e87e3cf3d6b9abbe43106b9108e9f6221bd3e253c44f31bdd87803f85d1d38e1.png",
+          "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+          "byteLength": 71
+        }
+      ],
+      "backupRestoreRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-restore-zWGd0P",
+      "status": "passed"
+    },
+    {
+      "boundary": "project-committing",
+      "fixtureRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-http-wryDFQ",
+      "restarts": [
+        {
+          "restart": 0,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "b02c24599482f0e1134b80ba27c4babc726018344ba5c8ed587b0634ac989b6d",
+              "byteLength": 264
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "4fcfb9a27185b4962153cd916e2186893f0c448c6bc7144c5fac6c04d594b1e0",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/1a4b1d4da2d7867743fc5926da640485eb0f20f97924ba00ca15a3ccac763776.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/3f6df5fe-8ad3-45aa-98b6-f7fa3c26e73f",
+              "status": 200,
+              "sha256": "0fe0bdcadffb847e3ef78b0ee920bee262b4f8affae02ce263d96e80bddb4630",
+              "byteLength": 812
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\1a4b1d4da2d7867743fc5926da640485eb0f20f97924ba00ca15a3ccac763776.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            }
+          ],
+          "uploadLedgerSha256": "a32c3492ac85196ab2e0be30131ac0cf68c5e43017f30a23bb2f3f2e2e82267f",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 1,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "b02c24599482f0e1134b80ba27c4babc726018344ba5c8ed587b0634ac989b6d",
+              "byteLength": 264
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "4fcfb9a27185b4962153cd916e2186893f0c448c6bc7144c5fac6c04d594b1e0",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/1a4b1d4da2d7867743fc5926da640485eb0f20f97924ba00ca15a3ccac763776.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/3f6df5fe-8ad3-45aa-98b6-f7fa3c26e73f",
+              "status": 200,
+              "sha256": "0fe0bdcadffb847e3ef78b0ee920bee262b4f8affae02ce263d96e80bddb4630",
+              "byteLength": 812
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\1a4b1d4da2d7867743fc5926da640485eb0f20f97924ba00ca15a3ccac763776.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            }
+          ],
+          "uploadLedgerSha256": "a32c3492ac85196ab2e0be30131ac0cf68c5e43017f30a23bb2f3f2e2e82267f",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 2,
+          "backupRestore": true,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "b02c24599482f0e1134b80ba27c4babc726018344ba5c8ed587b0634ac989b6d",
+              "byteLength": 264
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "922a9b9d9a85a1b9b6ab37d51ba8fd9a69e5b95db1d66e38fb09899e2362cc47",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/1a4b1d4da2d7867743fc5926da640485eb0f20f97924ba00ca15a3ccac763776.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/3f6df5fe-8ad3-45aa-98b6-f7fa3c26e73f",
+              "status": 200,
+              "sha256": "0fe0bdcadffb847e3ef78b0ee920bee262b4f8affae02ce263d96e80bddb4630",
+              "byteLength": 812
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\1a4b1d4da2d7867743fc5926da640485eb0f20f97924ba00ca15a3ccac763776.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            }
+          ],
+          "uploadLedgerSha256": "a32c3492ac85196ab2e0be30131ac0cf68c5e43017f30a23bb2f3f2e2e82267f",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        }
+      ],
+      "cleanup": true,
+      "exit": {
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "intent": {
+        "sharedUrl": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+        "sharedSha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+        "sessionId": "ddf0d5aa-beff-4f7b-a8eb-d283e97db1eb",
+        "mediaSha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+        "mediaUrl": "/uploads/1a4b1d4da2d7867743fc5926da640485eb0f20f97924ba00ca15a3ccac763776.png",
+        "presentationId": "3f6df5fe-8ad3-45aa-98b6-f7fa3c26e73f"
+      },
+      "preservedBefore": [
+        {
+          "filename": "uploads\\1a4b1d4da2d7867743fc5926da640485eb0f20f97924ba00ca15a3ccac763776.png",
+          "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+          "byteLength": 71
+        },
+        {
+          "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+          "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+          "byteLength": 67
+        }
+      ],
+      "backupRestoreRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-restore-sOnvVU",
+      "status": "passed"
+    },
+    {
+      "boundary": "project-row",
+      "fixtureRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-http-6xbkxc",
+      "restarts": [
+        {
+          "restart": 0,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "991d8699c7a2c88e1c9655a5919589bb58be34225015ec50f892bf6889c34f87",
+              "byteLength": 264
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "7c516f8fc5ce36f2acb65d9704a68292c0ea1c642d4372ea4452cd6ac3e073c8",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9ec34a58de1499971a13a712bd703a0550180aea668878ef9388104a1ca26b4e.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/f369a6c5-ad25-4ebd-a4d5-aaf9009fe084",
+              "status": 200,
+              "sha256": "98cae3910150ef0803424a2c470e743437f58f933a5026cfa0664b6ccc414b88",
+              "byteLength": 812
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "uploads\\9ec34a58de1499971a13a712bd703a0550180aea668878ef9388104a1ca26b4e.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            }
+          ],
+          "uploadLedgerSha256": "ff7e17a3000e20089a1eab76c67c2bc696037035d984e3a080a75b192fde6758",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 1,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "991d8699c7a2c88e1c9655a5919589bb58be34225015ec50f892bf6889c34f87",
+              "byteLength": 264
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "7c516f8fc5ce36f2acb65d9704a68292c0ea1c642d4372ea4452cd6ac3e073c8",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9ec34a58de1499971a13a712bd703a0550180aea668878ef9388104a1ca26b4e.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/f369a6c5-ad25-4ebd-a4d5-aaf9009fe084",
+              "status": 200,
+              "sha256": "98cae3910150ef0803424a2c470e743437f58f933a5026cfa0664b6ccc414b88",
+              "byteLength": 812
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "uploads\\9ec34a58de1499971a13a712bd703a0550180aea668878ef9388104a1ca26b4e.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            }
+          ],
+          "uploadLedgerSha256": "ff7e17a3000e20089a1eab76c67c2bc696037035d984e3a080a75b192fde6758",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 2,
+          "backupRestore": true,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "991d8699c7a2c88e1c9655a5919589bb58be34225015ec50f892bf6889c34f87",
+              "byteLength": 264
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "bafbfb4154a29d809f851c7c42e3b3308387ac28e2965d68199fa140912beab0",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9ec34a58de1499971a13a712bd703a0550180aea668878ef9388104a1ca26b4e.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/f369a6c5-ad25-4ebd-a4d5-aaf9009fe084",
+              "status": 200,
+              "sha256": "98cae3910150ef0803424a2c470e743437f58f933a5026cfa0664b6ccc414b88",
+              "byteLength": 812
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "uploads\\9ec34a58de1499971a13a712bd703a0550180aea668878ef9388104a1ca26b4e.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            }
+          ],
+          "uploadLedgerSha256": "ff7e17a3000e20089a1eab76c67c2bc696037035d984e3a080a75b192fde6758",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        }
+      ],
+      "cleanup": true,
+      "exit": {
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "intent": {
+        "sharedUrl": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+        "sharedSha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+        "sessionId": "55c8d09c-5534-4234-9d4a-b8bd9ce7fd72",
+        "mediaSha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+        "mediaUrl": "/uploads/9ec34a58de1499971a13a712bd703a0550180aea668878ef9388104a1ca26b4e.png",
+        "presentationId": "f369a6c5-ad25-4ebd-a4d5-aaf9009fe084"
+      },
+      "preservedBefore": [
+        {
+          "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+          "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+          "byteLength": 67
+        },
+        {
+          "filename": "uploads\\9ec34a58de1499971a13a712bd703a0550180aea668878ef9388104a1ca26b4e.png",
+          "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+          "byteLength": 71
+        }
+      ],
+      "backupRestoreRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-restore-3wMZ1L",
+      "status": "passed"
+    },
+    {
+      "boundary": "project-committed",
+      "fixtureRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-http-QppSQC",
+      "restarts": [
+        {
+          "restart": 0,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "058364cf2473135915d3824ceca099fc521161218727e1fc1798016e042fd920",
+              "byteLength": 264
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "929cf965c2088ce28d8dbdf8bf0fcbbbaf3c8bb2dff57279d1593feaabe84769",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/b5bec8b2607349a58c83eb6c17399becd44aed398bb609a6a94594cbbbfb2820.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/b07bbed0-9b37-498e-bd88-2a2f6269cb5a",
+              "status": 200,
+              "sha256": "4b3ac64ae4d0a463055339e56a4840e896be3d4e2781ff216c9b3cf3bb909443",
+              "byteLength": 812
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "uploads\\b5bec8b2607349a58c83eb6c17399becd44aed398bb609a6a94594cbbbfb2820.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            }
+          ],
+          "uploadLedgerSha256": "2142e49d9e1ff8a8be167374d4937bc365c2d0431b8b3e2e27a4603b7d51dca3",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 1,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "058364cf2473135915d3824ceca099fc521161218727e1fc1798016e042fd920",
+              "byteLength": 264
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "929cf965c2088ce28d8dbdf8bf0fcbbbaf3c8bb2dff57279d1593feaabe84769",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/b5bec8b2607349a58c83eb6c17399becd44aed398bb609a6a94594cbbbfb2820.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/b07bbed0-9b37-498e-bd88-2a2f6269cb5a",
+              "status": 200,
+              "sha256": "4b3ac64ae4d0a463055339e56a4840e896be3d4e2781ff216c9b3cf3bb909443",
+              "byteLength": 812
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "uploads\\b5bec8b2607349a58c83eb6c17399becd44aed398bb609a6a94594cbbbfb2820.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            }
+          ],
+          "uploadLedgerSha256": "2142e49d9e1ff8a8be167374d4937bc365c2d0431b8b3e2e27a4603b7d51dca3",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 2,
+          "backupRestore": true,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "058364cf2473135915d3824ceca099fc521161218727e1fc1798016e042fd920",
+              "byteLength": 264
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "bf0e1f01217690fca5c463c9ad71344025dbffc5f3162ab77685705d2e4c1d2b",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/b5bec8b2607349a58c83eb6c17399becd44aed398bb609a6a94594cbbbfb2820.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/b07bbed0-9b37-498e-bd88-2a2f6269cb5a",
+              "status": 200,
+              "sha256": "4b3ac64ae4d0a463055339e56a4840e896be3d4e2781ff216c9b3cf3bb909443",
+              "byteLength": 812
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "uploads\\b5bec8b2607349a58c83eb6c17399becd44aed398bb609a6a94594cbbbfb2820.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            }
+          ],
+          "uploadLedgerSha256": "2142e49d9e1ff8a8be167374d4937bc365c2d0431b8b3e2e27a4603b7d51dca3",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        }
+      ],
+      "cleanup": true,
+      "exit": {
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "intent": {
+        "sharedUrl": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+        "sharedSha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+        "sessionId": "97cc7c4b-d19a-4386-93c4-7cdf4ab2563a",
+        "mediaSha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+        "mediaUrl": "/uploads/b5bec8b2607349a58c83eb6c17399becd44aed398bb609a6a94594cbbbfb2820.png",
+        "presentationId": "b07bbed0-9b37-498e-bd88-2a2f6269cb5a"
+      },
+      "preservedBefore": [
+        {
+          "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+          "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+          "byteLength": 67
+        },
+        {
+          "filename": "uploads\\b5bec8b2607349a58c83eb6c17399becd44aed398bb609a6a94594cbbbfb2820.png",
+          "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+          "byteLength": 71
+        }
+      ],
+      "backupRestoreRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-restore-pUaIYr",
+      "status": "passed"
+    },
+    {
+      "boundary": "pptx-media",
+      "fixtureRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-http-9iYTEm",
+      "restarts": [
+        {
+          "restart": 0,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 503,
+              "sha256": "d149ba1fd836a4a4eb975fb586e868e64072d33d9ffa63bef2a09db814b67cea",
+              "byteLength": 98
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "32f7d658c274fb87890e81c0e40aca9c636a28aef22ace5d325fb4eb62e73cfe",
+              "byteLength": 58
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "bafc5c22c3c613d8a0408601d73bebaa6a9939214ce006bdd87e464382010a73",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/fa14085ba4a2559e8add59950df45172bdaf2d903b5718c1224bc43ed347256c.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "POST",
+              "target": "/api/project-imports/preflight",
+              "status": 503,
+              "sha256": "877c0e5a021c9bdc9774567c4a45c2af27e7182a719f05f14ecb8e1a5def7685",
+              "byteLength": 146
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "uploads\\fa14085ba4a2559e8add59950df45172bdaf2d903b5718c1224bc43ed347256c.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            }
+          ],
+          "uploadLedgerSha256": "ca0cb7da4835c3aedaba5d33b11e44217f3ef24fc6ebb7eb3544d3a953d77976",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 1,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 503,
+              "sha256": "d149ba1fd836a4a4eb975fb586e868e64072d33d9ffa63bef2a09db814b67cea",
+              "byteLength": 98
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "32f7d658c274fb87890e81c0e40aca9c636a28aef22ace5d325fb4eb62e73cfe",
+              "byteLength": 58
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "bafc5c22c3c613d8a0408601d73bebaa6a9939214ce006bdd87e464382010a73",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/fa14085ba4a2559e8add59950df45172bdaf2d903b5718c1224bc43ed347256c.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "POST",
+              "target": "/api/project-imports/preflight",
+              "status": 503,
+              "sha256": "877c0e5a021c9bdc9774567c4a45c2af27e7182a719f05f14ecb8e1a5def7685",
+              "byteLength": 146
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "uploads\\fa14085ba4a2559e8add59950df45172bdaf2d903b5718c1224bc43ed347256c.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            }
+          ],
+          "uploadLedgerSha256": "ca0cb7da4835c3aedaba5d33b11e44217f3ef24fc6ebb7eb3544d3a953d77976",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 2,
+          "backupRestore": true,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 503,
+              "sha256": "d149ba1fd836a4a4eb975fb586e868e64072d33d9ffa63bef2a09db814b67cea",
+              "byteLength": 98
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "32f7d658c274fb87890e81c0e40aca9c636a28aef22ace5d325fb4eb62e73cfe",
+              "byteLength": 58
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "a0154b6c3df001643281cd660e0201ea254b076c17374408f40833e71205391d",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/fa14085ba4a2559e8add59950df45172bdaf2d903b5718c1224bc43ed347256c.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "POST",
+              "target": "/api/project-imports/preflight",
+              "status": 503,
+              "sha256": "877c0e5a021c9bdc9774567c4a45c2af27e7182a719f05f14ecb8e1a5def7685",
+              "byteLength": 146
+            }
+          ],
+          "preservedFiles": [
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "uploads\\fa14085ba4a2559e8add59950df45172bdaf2d903b5718c1224bc43ed347256c.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            }
+          ],
+          "uploadLedgerSha256": "ca0cb7da4835c3aedaba5d33b11e44217f3ef24fc6ebb7eb3544d3a953d77976",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        }
+      ],
+      "cleanup": true,
+      "exit": {
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "intent": {
+        "sharedUrl": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+        "sharedSha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+        "originalSha256": "c122174ee1d0d623df414bc0fd5d7561d091df1f0a1a9c81ffc17a16200fcd67",
+        "jobId": "9eed4cde-4e32-4bcc-83f4-5680423fcfae",
+        "mediaUrl": "/uploads/fa14085ba4a2559e8add59950df45172bdaf2d903b5718c1224bc43ed347256c.png",
+        "mediaSha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a"
+      },
+      "preservedBefore": [
+        {
+          "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+          "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+          "byteLength": 67
+        },
+        {
+          "filename": "uploads\\fa14085ba4a2559e8add59950df45172bdaf2d903b5718c1224bc43ed347256c.png",
+          "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+          "byteLength": 71
+        }
+      ],
+      "backupRestoreRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-restore-tYnglM",
+      "status": "passed"
+    },
+    {
+      "boundary": "pptx-root",
+      "fixtureRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-http-RYYhHa",
+      "restarts": [
+        {
+          "restart": 0,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "aa65405d6c9bcfa748a840cc680d3fd6552075b86adc584e7a9fdabda6547ced",
+              "byteLength": 253
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "b21c73e25b0cac63915a34c959a3812a093b52e2905a71da420c87396bbc5364",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/2ca264706eca5505145e795118ac078ee8397cb7ac7a2764dd6bc7991c4336b3.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/cc0a08c2-28db-48b1-80e6-4126a55f1cfb",
+              "status": 200,
+              "sha256": "dc04901e4b60b93c9507a72edd3473be4784c79a950aa54c941981815fcb7ca4",
+              "byteLength": 1046
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/cc0a08c2-28db-48b1-80e6-4126a55f1cfb/pptx-original",
+              "status": 200,
+              "sha256": "4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+              "byteLength": 640
+            }
+          ],
+          "authority": {
+            "presentationId": "cc0a08c2-28db-48b1-80e6-4126a55f1cfb",
+            "generation": 1,
+            "originalRevisionId": "r0-4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+            "packageRevisionId": "r0-4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+            "headHash": "7e2efda630cb4c218feb6acd9290324a4217307a8d141e2417b355c33e8cb094",
+            "rootStateHash": "1857e0595ffdb6a200a1d4feb42a596be1180820ee901c41077dd4cb3ac95618",
+            "outcomeRevisionId": "r0-4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+            "outcomeGeneration": 1,
+            "outcomeHeadHash": "7e2efda630cb4c218feb6acd9290324a4217307a8d141e2417b355c33e8cb094",
+            "reconcileRequired": false
+          },
+          "packageStateSha256": "64752e051d8393812a92af730be57cbc9af497518f92eafbb4b2e2ee4eabd3af",
+          "preservedFiles": [
+            {
+              "filename": "uploads\\2ca264706eca5505145e795118ac078ee8397cb7ac7a2764dd6bc7991c4336b3.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "data\\blobs\\4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde.blob",
+              "sha256": "4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+              "byteLength": 640
+            }
+          ],
+          "uploadLedgerSha256": "3d75d511f5f4399ec90d2df7675bf0299bcd2fa23874d1228548b64b0822f657",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 1,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "aa65405d6c9bcfa748a840cc680d3fd6552075b86adc584e7a9fdabda6547ced",
+              "byteLength": 253
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "b21c73e25b0cac63915a34c959a3812a093b52e2905a71da420c87396bbc5364",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/2ca264706eca5505145e795118ac078ee8397cb7ac7a2764dd6bc7991c4336b3.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/cc0a08c2-28db-48b1-80e6-4126a55f1cfb",
+              "status": 200,
+              "sha256": "dc04901e4b60b93c9507a72edd3473be4784c79a950aa54c941981815fcb7ca4",
+              "byteLength": 1046
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/cc0a08c2-28db-48b1-80e6-4126a55f1cfb/pptx-original",
+              "status": 200,
+              "sha256": "4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+              "byteLength": 640
+            }
+          ],
+          "authority": {
+            "presentationId": "cc0a08c2-28db-48b1-80e6-4126a55f1cfb",
+            "generation": 1,
+            "originalRevisionId": "r0-4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+            "packageRevisionId": "r0-4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+            "headHash": "7e2efda630cb4c218feb6acd9290324a4217307a8d141e2417b355c33e8cb094",
+            "rootStateHash": "1857e0595ffdb6a200a1d4feb42a596be1180820ee901c41077dd4cb3ac95618",
+            "outcomeRevisionId": "r0-4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+            "outcomeGeneration": 1,
+            "outcomeHeadHash": "7e2efda630cb4c218feb6acd9290324a4217307a8d141e2417b355c33e8cb094",
+            "reconcileRequired": false
+          },
+          "packageStateSha256": "64752e051d8393812a92af730be57cbc9af497518f92eafbb4b2e2ee4eabd3af",
+          "preservedFiles": [
+            {
+              "filename": "uploads\\2ca264706eca5505145e795118ac078ee8397cb7ac7a2764dd6bc7991c4336b3.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "data\\blobs\\4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde.blob",
+              "sha256": "4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+              "byteLength": 640
+            }
+          ],
+          "uploadLedgerSha256": "3d75d511f5f4399ec90d2df7675bf0299bcd2fa23874d1228548b64b0822f657",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 2,
+          "backupRestore": true,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "aa65405d6c9bcfa748a840cc680d3fd6552075b86adc584e7a9fdabda6547ced",
+              "byteLength": 253
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "5183aaa42b6b9fac5f2a013e905e22065392441304c179b2eed8397855e46c7e",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/2ca264706eca5505145e795118ac078ee8397cb7ac7a2764dd6bc7991c4336b3.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/cc0a08c2-28db-48b1-80e6-4126a55f1cfb",
+              "status": 200,
+              "sha256": "dc04901e4b60b93c9507a72edd3473be4784c79a950aa54c941981815fcb7ca4",
+              "byteLength": 1046
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/cc0a08c2-28db-48b1-80e6-4126a55f1cfb/pptx-original",
+              "status": 200,
+              "sha256": "4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+              "byteLength": 640
+            }
+          ],
+          "authority": {
+            "presentationId": "cc0a08c2-28db-48b1-80e6-4126a55f1cfb",
+            "generation": 1,
+            "originalRevisionId": "r0-4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+            "packageRevisionId": "r0-4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+            "headHash": "7e2efda630cb4c218feb6acd9290324a4217307a8d141e2417b355c33e8cb094",
+            "rootStateHash": "1857e0595ffdb6a200a1d4feb42a596be1180820ee901c41077dd4cb3ac95618",
+            "outcomeRevisionId": "r0-4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+            "outcomeGeneration": 1,
+            "outcomeHeadHash": "7e2efda630cb4c218feb6acd9290324a4217307a8d141e2417b355c33e8cb094",
+            "reconcileRequired": false
+          },
+          "packageStateSha256": "64752e051d8393812a92af730be57cbc9af497518f92eafbb4b2e2ee4eabd3af",
+          "preservedFiles": [
+            {
+              "filename": "uploads\\2ca264706eca5505145e795118ac078ee8397cb7ac7a2764dd6bc7991c4336b3.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "data\\blobs\\4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde.blob",
+              "sha256": "4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+              "byteLength": 640
+            }
+          ],
+          "uploadLedgerSha256": "3d75d511f5f4399ec90d2df7675bf0299bcd2fa23874d1228548b64b0822f657",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        }
+      ],
+      "cleanup": true,
+      "exit": {
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "intent": {
+        "sharedUrl": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+        "sharedSha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+        "originalSha256": "4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+        "jobId": "71ca3277-7f04-4434-af83-1e7dd7ef6fcc",
+        "mediaUrl": "/uploads/2ca264706eca5505145e795118ac078ee8397cb7ac7a2764dd6bc7991c4336b3.png",
+        "mediaSha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+        "presentationId": "cc0a08c2-28db-48b1-80e6-4126a55f1cfb"
+      },
+      "preservedBefore": [
+        {
+          "filename": "uploads\\2ca264706eca5505145e795118ac078ee8397cb7ac7a2764dd6bc7991c4336b3.png",
+          "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+          "byteLength": 71
+        },
+        {
+          "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+          "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+          "byteLength": 67
+        },
+        {
+          "filename": "data\\blobs\\4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde.blob",
+          "sha256": "4a66e551f127e3a490d27d114ad4f1160b37d08e003958c5a2b11b3f187c4fde",
+          "byteLength": 640
+        }
+      ],
+      "backupRestoreRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-restore-JN7rQp",
+      "status": "passed"
+    },
+    {
+      "boundary": "pptx-json",
+      "fixtureRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-http-nIuxUk",
+      "restarts": [
+        {
+          "restart": 0,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "b1b2df1ebb651db176dafe511014ed11455c0c4a256c85b07a1ba061373bf354",
+              "byteLength": 253
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "a53d7d76f1d2abc5cf3b98a8a8da63654a75fdd1110fc307ce53dcc77a8a1d39",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/e9c32a1b8356ddd3d32f9816af67250a9e35b662b77279b2bdedd2337f2bccd4.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/a81bff78-65cb-4252-8a57-05713bfe34fa",
+              "status": 200,
+              "sha256": "dce989c278083ff85f0222ec74f219a51608d012bde7e7f1f639c2bd65dc74bb",
+              "byteLength": 1046
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/a81bff78-65cb-4252-8a57-05713bfe34fa/pptx-original",
+              "status": 200,
+              "sha256": "47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+              "byteLength": 640
+            }
+          ],
+          "authority": {
+            "presentationId": "a81bff78-65cb-4252-8a57-05713bfe34fa",
+            "generation": 1,
+            "originalRevisionId": "r0-47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+            "packageRevisionId": "r0-47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+            "headHash": "3364a8654a3315c6a8d5c6548846adf7c2fa6ee6e5ea5525f73940e7c2294918",
+            "rootStateHash": "2fc39382ed493dbcb63656465efc4dd3d0b41298304f276d2e13bad3f83c106c",
+            "outcomeRevisionId": "r0-47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+            "outcomeGeneration": 1,
+            "outcomeHeadHash": "3364a8654a3315c6a8d5c6548846adf7c2fa6ee6e5ea5525f73940e7c2294918",
+            "reconcileRequired": false
+          },
+          "packageStateSha256": "f9621380fc2250b52a720c5812677287a5894a508fa1634370ebaf145ccc4eb0",
+          "preservedFiles": [
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "uploads\\e9c32a1b8356ddd3d32f9816af67250a9e35b662b77279b2bdedd2337f2bccd4.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "data\\blobs\\47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef.blob",
+              "sha256": "47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+              "byteLength": 640
+            }
+          ],
+          "uploadLedgerSha256": "d358f9f3a7d7ab78b109c60531316f6f91ef5d04cf4eca5b8150b9df85d71e99",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 1,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "b1b2df1ebb651db176dafe511014ed11455c0c4a256c85b07a1ba061373bf354",
+              "byteLength": 253
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "a53d7d76f1d2abc5cf3b98a8a8da63654a75fdd1110fc307ce53dcc77a8a1d39",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/e9c32a1b8356ddd3d32f9816af67250a9e35b662b77279b2bdedd2337f2bccd4.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/a81bff78-65cb-4252-8a57-05713bfe34fa",
+              "status": 200,
+              "sha256": "dce989c278083ff85f0222ec74f219a51608d012bde7e7f1f639c2bd65dc74bb",
+              "byteLength": 1046
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/a81bff78-65cb-4252-8a57-05713bfe34fa/pptx-original",
+              "status": 200,
+              "sha256": "47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+              "byteLength": 640
+            }
+          ],
+          "authority": {
+            "presentationId": "a81bff78-65cb-4252-8a57-05713bfe34fa",
+            "generation": 1,
+            "originalRevisionId": "r0-47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+            "packageRevisionId": "r0-47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+            "headHash": "3364a8654a3315c6a8d5c6548846adf7c2fa6ee6e5ea5525f73940e7c2294918",
+            "rootStateHash": "2fc39382ed493dbcb63656465efc4dd3d0b41298304f276d2e13bad3f83c106c",
+            "outcomeRevisionId": "r0-47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+            "outcomeGeneration": 1,
+            "outcomeHeadHash": "3364a8654a3315c6a8d5c6548846adf7c2fa6ee6e5ea5525f73940e7c2294918",
+            "reconcileRequired": false
+          },
+          "packageStateSha256": "f9621380fc2250b52a720c5812677287a5894a508fa1634370ebaf145ccc4eb0",
+          "preservedFiles": [
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "uploads\\e9c32a1b8356ddd3d32f9816af67250a9e35b662b77279b2bdedd2337f2bccd4.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "data\\blobs\\47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef.blob",
+              "sha256": "47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+              "byteLength": 640
+            }
+          ],
+          "uploadLedgerSha256": "d358f9f3a7d7ab78b109c60531316f6f91ef5d04cf4eca5b8150b9df85d71e99",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 2,
+          "backupRestore": true,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "b1b2df1ebb651db176dafe511014ed11455c0c4a256c85b07a1ba061373bf354",
+              "byteLength": 253
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "7825acc67e870b4188dbe63dd62fba13fb19604839b01a856e6522ba3e60e84a",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/e9c32a1b8356ddd3d32f9816af67250a9e35b662b77279b2bdedd2337f2bccd4.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/a81bff78-65cb-4252-8a57-05713bfe34fa",
+              "status": 200,
+              "sha256": "dce989c278083ff85f0222ec74f219a51608d012bde7e7f1f639c2bd65dc74bb",
+              "byteLength": 1046
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/a81bff78-65cb-4252-8a57-05713bfe34fa/pptx-original",
+              "status": 200,
+              "sha256": "47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+              "byteLength": 640
+            }
+          ],
+          "authority": {
+            "presentationId": "a81bff78-65cb-4252-8a57-05713bfe34fa",
+            "generation": 1,
+            "originalRevisionId": "r0-47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+            "packageRevisionId": "r0-47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+            "headHash": "3364a8654a3315c6a8d5c6548846adf7c2fa6ee6e5ea5525f73940e7c2294918",
+            "rootStateHash": "2fc39382ed493dbcb63656465efc4dd3d0b41298304f276d2e13bad3f83c106c",
+            "outcomeRevisionId": "r0-47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+            "outcomeGeneration": 1,
+            "outcomeHeadHash": "3364a8654a3315c6a8d5c6548846adf7c2fa6ee6e5ea5525f73940e7c2294918",
+            "reconcileRequired": false
+          },
+          "packageStateSha256": "f9621380fc2250b52a720c5812677287a5894a508fa1634370ebaf145ccc4eb0",
+          "preservedFiles": [
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "uploads\\e9c32a1b8356ddd3d32f9816af67250a9e35b662b77279b2bdedd2337f2bccd4.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "data\\blobs\\47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef.blob",
+              "sha256": "47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+              "byteLength": 640
+            }
+          ],
+          "uploadLedgerSha256": "d358f9f3a7d7ab78b109c60531316f6f91ef5d04cf4eca5b8150b9df85d71e99",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        }
+      ],
+      "cleanup": true,
+      "exit": {
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "intent": {
+        "sharedUrl": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+        "sharedSha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+        "originalSha256": "47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+        "jobId": "a770dcd7-6b30-476d-bc8e-ac87eca048e4",
+        "mediaUrl": "/uploads/e9c32a1b8356ddd3d32f9816af67250a9e35b662b77279b2bdedd2337f2bccd4.png",
+        "mediaSha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+        "presentationId": "a81bff78-65cb-4252-8a57-05713bfe34fa"
+      },
+      "preservedBefore": [
+        {
+          "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+          "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+          "byteLength": 67
+        },
+        {
+          "filename": "uploads\\e9c32a1b8356ddd3d32f9816af67250a9e35b662b77279b2bdedd2337f2bccd4.png",
+          "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+          "byteLength": 71
+        },
+        {
+          "filename": "data\\blobs\\47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef.blob",
+          "sha256": "47534c1b870497212f4471951453abc3849fa4b18bf6da624564fce589575fef",
+          "byteLength": 640
+        }
+      ],
+      "backupRestoreRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-restore-40rbpE",
+      "status": "passed"
+    },
+    {
+      "boundary": "pptx-visible",
+      "fixtureRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-http-k4w0sX",
+      "restarts": [
+        {
+          "restart": 0,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "e8ee1ffa38330a1dd89d0834d6e04b2a1b2e9d26913cc16a601fa5e901423a19",
+              "byteLength": 253
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "88ca4bbb7ac5bdae900ec245ca41cf5981fc0de861c12524bb62e968e72310b7",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/97607abc26f0c2e2f31bc7a29a1be4504f4862e4790f4986f0a6c81d78ebe54c.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/a727e9e6-f6a8-41c4-82b9-aaa3d8f880d9",
+              "status": 200,
+              "sha256": "20fda4ee5a52fb380a9fd6c53d27fd963f248702300d21f47797fc274a99e3d6",
+              "byteLength": 1046
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/a727e9e6-f6a8-41c4-82b9-aaa3d8f880d9/pptx-original",
+              "status": 200,
+              "sha256": "4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+              "byteLength": 640
+            }
+          ],
+          "authority": {
+            "presentationId": "a727e9e6-f6a8-41c4-82b9-aaa3d8f880d9",
+            "generation": 1,
+            "originalRevisionId": "r0-4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+            "packageRevisionId": "r0-4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+            "headHash": "24803e51c2437845ae76c375471551de541294fb8aa444570b57cf100c311258",
+            "rootStateHash": "6a130c1f50bc06f578926cb8f41c7fd246483c159a78167f58d5b7ad7b498572",
+            "outcomeRevisionId": "r0-4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+            "outcomeGeneration": 1,
+            "outcomeHeadHash": "24803e51c2437845ae76c375471551de541294fb8aa444570b57cf100c311258",
+            "reconcileRequired": false
+          },
+          "packageStateSha256": "887a0bae579e7f90b2c8dc14b6ebb93c59188921dc31f0f9d0d7895f06922295",
+          "preservedFiles": [
+            {
+              "filename": "uploads\\97607abc26f0c2e2f31bc7a29a1be4504f4862e4790f4986f0a6c81d78ebe54c.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "data\\blobs\\4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed.blob",
+              "sha256": "4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+              "byteLength": 640
+            }
+          ],
+          "uploadLedgerSha256": "c2100b0c1006130a28d63669322461d3bff4d34e5bb08ed69036fd5641bc20d2",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 1,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "e8ee1ffa38330a1dd89d0834d6e04b2a1b2e9d26913cc16a601fa5e901423a19",
+              "byteLength": 253
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "88ca4bbb7ac5bdae900ec245ca41cf5981fc0de861c12524bb62e968e72310b7",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/97607abc26f0c2e2f31bc7a29a1be4504f4862e4790f4986f0a6c81d78ebe54c.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/a727e9e6-f6a8-41c4-82b9-aaa3d8f880d9",
+              "status": 200,
+              "sha256": "20fda4ee5a52fb380a9fd6c53d27fd963f248702300d21f47797fc274a99e3d6",
+              "byteLength": 1046
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/a727e9e6-f6a8-41c4-82b9-aaa3d8f880d9/pptx-original",
+              "status": 200,
+              "sha256": "4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+              "byteLength": 640
+            }
+          ],
+          "authority": {
+            "presentationId": "a727e9e6-f6a8-41c4-82b9-aaa3d8f880d9",
+            "generation": 1,
+            "originalRevisionId": "r0-4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+            "packageRevisionId": "r0-4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+            "headHash": "24803e51c2437845ae76c375471551de541294fb8aa444570b57cf100c311258",
+            "rootStateHash": "6a130c1f50bc06f578926cb8f41c7fd246483c159a78167f58d5b7ad7b498572",
+            "outcomeRevisionId": "r0-4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+            "outcomeGeneration": 1,
+            "outcomeHeadHash": "24803e51c2437845ae76c375471551de541294fb8aa444570b57cf100c311258",
+            "reconcileRequired": false
+          },
+          "packageStateSha256": "887a0bae579e7f90b2c8dc14b6ebb93c59188921dc31f0f9d0d7895f06922295",
+          "preservedFiles": [
+            {
+              "filename": "uploads\\97607abc26f0c2e2f31bc7a29a1be4504f4862e4790f4986f0a6c81d78ebe54c.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "data\\blobs\\4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed.blob",
+              "sha256": "4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+              "byteLength": 640
+            }
+          ],
+          "uploadLedgerSha256": "c2100b0c1006130a28d63669322461d3bff4d34e5bb08ed69036fd5641bc20d2",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 2,
+          "backupRestore": true,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 200,
+              "sha256": "c8eabb3b2226dd60287fee51bea3729dbd2e7a73125d0e6a46b1afca93ac710d",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "e8ee1ffa38330a1dd89d0834d6e04b2a1b2e9d26913cc16a601fa5e901423a19",
+              "byteLength": 253
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "affa529eec381b1c6dfff9f8cef88d34fbe1c836a22ef210d62c46f8874022b6",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/97607abc26f0c2e2f31bc7a29a1be4504f4862e4790f4986f0a6c81d78ebe54c.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/a727e9e6-f6a8-41c4-82b9-aaa3d8f880d9",
+              "status": 200,
+              "sha256": "20fda4ee5a52fb380a9fd6c53d27fd963f248702300d21f47797fc274a99e3d6",
+              "byteLength": 1046
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/a727e9e6-f6a8-41c4-82b9-aaa3d8f880d9/pptx-original",
+              "status": 200,
+              "sha256": "4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+              "byteLength": 640
+            }
+          ],
+          "authority": {
+            "presentationId": "a727e9e6-f6a8-41c4-82b9-aaa3d8f880d9",
+            "generation": 1,
+            "originalRevisionId": "r0-4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+            "packageRevisionId": "r0-4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+            "headHash": "24803e51c2437845ae76c375471551de541294fb8aa444570b57cf100c311258",
+            "rootStateHash": "6a130c1f50bc06f578926cb8f41c7fd246483c159a78167f58d5b7ad7b498572",
+            "outcomeRevisionId": "r0-4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+            "outcomeGeneration": 1,
+            "outcomeHeadHash": "24803e51c2437845ae76c375471551de541294fb8aa444570b57cf100c311258",
+            "reconcileRequired": false
+          },
+          "packageStateSha256": "887a0bae579e7f90b2c8dc14b6ebb93c59188921dc31f0f9d0d7895f06922295",
+          "preservedFiles": [
+            {
+              "filename": "uploads\\97607abc26f0c2e2f31bc7a29a1be4504f4862e4790f4986f0a6c81d78ebe54c.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "data\\blobs\\4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed.blob",
+              "sha256": "4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+              "byteLength": 640
+            }
+          ],
+          "uploadLedgerSha256": "c2100b0c1006130a28d63669322461d3bff4d34e5bb08ed69036fd5641bc20d2",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        }
+      ],
+      "cleanup": true,
+      "exit": {
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "intent": {
+        "sharedUrl": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+        "sharedSha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+        "originalSha256": "4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+        "jobId": "749a36c1-8f7f-4400-99b9-a7197e6a498a",
+        "mediaUrl": "/uploads/97607abc26f0c2e2f31bc7a29a1be4504f4862e4790f4986f0a6c81d78ebe54c.png",
+        "mediaSha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+        "presentationId": "a727e9e6-f6a8-41c4-82b9-aaa3d8f880d9"
+      },
+      "preservedBefore": [
+        {
+          "filename": "uploads\\97607abc26f0c2e2f31bc7a29a1be4504f4862e4790f4986f0a6c81d78ebe54c.png",
+          "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+          "byteLength": 71
+        },
+        {
+          "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+          "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+          "byteLength": 67
+        },
+        {
+          "filename": "data\\blobs\\4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed.blob",
+          "sha256": "4a78f77c03d02d765bbda747e861465072826c59c82b951729a755f5f02526ed",
+          "byteLength": 640
+        }
+      ],
+      "backupRestoreRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-restore-lnOgCE",
+      "status": "passed"
+    },
+    {
+      "boundary": "pptx-rollback",
+      "fixtureRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-http-JJhR4X",
+      "restarts": [
+        {
+          "restart": 0,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 503,
+              "sha256": "d149ba1fd836a4a4eb975fb586e868e64072d33d9ffa63bef2a09db814b67cea",
+              "byteLength": 98
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "0f89b6758f807553a9eb1dc04a04138828b33bf32f68769cfa86dbe1dec8bc11",
+              "byteLength": 253
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "3d2fa894d2f2272bbba84a88466fac14aea0c6e6cc3d17080a9820337201f876",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/77470b73af7d5d979ae03ce87782391c8a5358bde502c2e51eac0905734929f0.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/f33244e1-4342-4484-b5f5-9ba5ac5b18f8",
+              "status": 200,
+              "sha256": "60432870f54fd4de9953bc05b2bf2e6aa892e689f7dca33c1c1b7b1a3f807b0c",
+              "byteLength": 1046
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/f33244e1-4342-4484-b5f5-9ba5ac5b18f8/pptx-original",
+              "status": 200,
+              "sha256": "42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+              "byteLength": 640
+            },
+            {
+              "method": "POST",
+              "target": "/api/project-imports/preflight",
+              "status": 503,
+              "sha256": "877c0e5a021c9bdc9774567c4a45c2af27e7182a719f05f14ecb8e1a5def7685",
+              "byteLength": 146
+            }
+          ],
+          "authority": {
+            "presentationId": "f33244e1-4342-4484-b5f5-9ba5ac5b18f8",
+            "generation": 1,
+            "originalRevisionId": "r0-42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+            "packageRevisionId": "r0-42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+            "headHash": "2ca7e498bb50b165bfc7590c6d41996ffca60e022d0b1b8f9f05d15d52543e5c",
+            "rootStateHash": "43aa6ce9e5c4d0ca47b2e6f8817791d991119779e8e46ad563774d3ad1806e8f",
+            "outcomeRevisionId": "r0-42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+            "outcomeGeneration": 1,
+            "outcomeHeadHash": "2ca7e498bb50b165bfc7590c6d41996ffca60e022d0b1b8f9f05d15d52543e5c",
+            "reconcileRequired": true
+          },
+          "packageStateSha256": "3487f623193c64e85ac09c9edeae04987742b9ead1ecf33f8a1ca30b7915d2d6",
+          "preservedFiles": [
+            {
+              "filename": "uploads\\77470b73af7d5d979ae03ce87782391c8a5358bde502c2e51eac0905734929f0.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "data\\blobs\\42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee.blob",
+              "sha256": "42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+              "byteLength": 640
+            }
+          ],
+          "uploadLedgerSha256": "ce28033a3d73829eb344e6cf1a19bf0400602e239a664c82f13f38a5377b2022",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 1,
+          "backupRestore": false,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 503,
+              "sha256": "d149ba1fd836a4a4eb975fb586e868e64072d33d9ffa63bef2a09db814b67cea",
+              "byteLength": 98
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "0f89b6758f807553a9eb1dc04a04138828b33bf32f68769cfa86dbe1dec8bc11",
+              "byteLength": 253
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "3d2fa894d2f2272bbba84a88466fac14aea0c6e6cc3d17080a9820337201f876",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/77470b73af7d5d979ae03ce87782391c8a5358bde502c2e51eac0905734929f0.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/f33244e1-4342-4484-b5f5-9ba5ac5b18f8",
+              "status": 200,
+              "sha256": "60432870f54fd4de9953bc05b2bf2e6aa892e689f7dca33c1c1b7b1a3f807b0c",
+              "byteLength": 1046
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/f33244e1-4342-4484-b5f5-9ba5ac5b18f8/pptx-original",
+              "status": 200,
+              "sha256": "42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+              "byteLength": 640
+            },
+            {
+              "method": "POST",
+              "target": "/api/project-imports/preflight",
+              "status": 503,
+              "sha256": "877c0e5a021c9bdc9774567c4a45c2af27e7182a719f05f14ecb8e1a5def7685",
+              "byteLength": 146
+            }
+          ],
+          "authority": {
+            "presentationId": "f33244e1-4342-4484-b5f5-9ba5ac5b18f8",
+            "generation": 1,
+            "originalRevisionId": "r0-42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+            "packageRevisionId": "r0-42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+            "headHash": "2ca7e498bb50b165bfc7590c6d41996ffca60e022d0b1b8f9f05d15d52543e5c",
+            "rootStateHash": "43aa6ce9e5c4d0ca47b2e6f8817791d991119779e8e46ad563774d3ad1806e8f",
+            "outcomeRevisionId": "r0-42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+            "outcomeGeneration": 1,
+            "outcomeHeadHash": "2ca7e498bb50b165bfc7590c6d41996ffca60e022d0b1b8f9f05d15d52543e5c",
+            "reconcileRequired": true
+          },
+          "packageStateSha256": "3487f623193c64e85ac09c9edeae04987742b9ead1ecf33f8a1ca30b7915d2d6",
+          "preservedFiles": [
+            {
+              "filename": "uploads\\77470b73af7d5d979ae03ce87782391c8a5358bde502c2e51eac0905734929f0.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "data\\blobs\\42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee.blob",
+              "sha256": "42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+              "byteLength": 640
+            }
+          ],
+          "uploadLedgerSha256": "ce28033a3d73829eb344e6cf1a19bf0400602e239a664c82f13f38a5377b2022",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        },
+        {
+          "restart": 2,
+          "backupRestore": true,
+          "http": [
+            {
+              "method": "GET",
+              "target": "/health/ready",
+              "status": 503,
+              "sha256": "d149ba1fd836a4a4eb975fb586e868e64072d33d9ffa63bef2a09db814b67cea",
+              "byteLength": 98
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations",
+              "status": 200,
+              "sha256": "0f89b6758f807553a9eb1dc04a04138828b33bf32f68769cfa86dbe1dec8bc11",
+              "byteLength": 253
+            },
+            {
+              "method": "GET",
+              "target": "/api/media",
+              "status": 200,
+              "sha256": "9995be4c90e9caf73bc7da2bf06a126edff27dd30081444477dedfc3ad7822e9",
+              "byteLength": 815
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "status": 200,
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "method": "GET",
+              "target": "/uploads/77470b73af7d5d979ae03ce87782391c8a5358bde502c2e51eac0905734929f0.png",
+              "status": 200,
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/f33244e1-4342-4484-b5f5-9ba5ac5b18f8",
+              "status": 200,
+              "sha256": "60432870f54fd4de9953bc05b2bf2e6aa892e689f7dca33c1c1b7b1a3f807b0c",
+              "byteLength": 1046
+            },
+            {
+              "method": "GET",
+              "target": "/api/presentations/f33244e1-4342-4484-b5f5-9ba5ac5b18f8/pptx-original",
+              "status": 200,
+              "sha256": "42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+              "byteLength": 640
+            },
+            {
+              "method": "POST",
+              "target": "/api/project-imports/preflight",
+              "status": 503,
+              "sha256": "877c0e5a021c9bdc9774567c4a45c2af27e7182a719f05f14ecb8e1a5def7685",
+              "byteLength": 146
+            }
+          ],
+          "authority": {
+            "presentationId": "f33244e1-4342-4484-b5f5-9ba5ac5b18f8",
+            "generation": 1,
+            "originalRevisionId": "r0-42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+            "packageRevisionId": "r0-42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+            "headHash": "2ca7e498bb50b165bfc7590c6d41996ffca60e022d0b1b8f9f05d15d52543e5c",
+            "rootStateHash": "43aa6ce9e5c4d0ca47b2e6f8817791d991119779e8e46ad563774d3ad1806e8f",
+            "outcomeRevisionId": "r0-42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+            "outcomeGeneration": 1,
+            "outcomeHeadHash": "2ca7e498bb50b165bfc7590c6d41996ffca60e022d0b1b8f9f05d15d52543e5c",
+            "reconcileRequired": true
+          },
+          "packageStateSha256": "3487f623193c64e85ac09c9edeae04987742b9ead1ecf33f8a1ca30b7915d2d6",
+          "preservedFiles": [
+            {
+              "filename": "uploads\\77470b73af7d5d979ae03ce87782391c8a5358bde502c2e51eac0905734929f0.png",
+              "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+              "byteLength": 71
+            },
+            {
+              "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+              "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+              "byteLength": 67
+            },
+            {
+              "filename": "data\\blobs\\42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee.blob",
+              "sha256": "42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+              "byteLength": 640
+            }
+          ],
+          "uploadLedgerSha256": "ce28033a3d73829eb344e6cf1a19bf0400602e239a664c82f13f38a5377b2022",
+          "exit": {
+            "code": null,
+            "signal": "SIGKILL"
+          }
+        }
+      ],
+      "cleanup": true,
+      "exit": {
+        "code": null,
+        "signal": "SIGKILL"
+      },
+      "intent": {
+        "sharedUrl": "/uploads/9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+        "sharedSha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+        "originalSha256": "42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+        "jobId": "68c9452d-e2f5-4c2c-a469-2ba30ab5b9f7",
+        "mediaUrl": "/uploads/77470b73af7d5d979ae03ce87782391c8a5358bde502c2e51eac0905734929f0.png",
+        "mediaSha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+        "presentationId": "f33244e1-4342-4484-b5f5-9ba5ac5b18f8"
+      },
+      "preservedBefore": [
+        {
+          "filename": "uploads\\77470b73af7d5d979ae03ce87782391c8a5358bde502c2e51eac0905734929f0.png",
+          "sha256": "17fc08deeb7a3f34c183de2c3885f2c203803332696ed64eaf352d5fc60a014a",
+          "byteLength": 71
+        },
+        {
+          "filename": "uploads\\9cf3f8f5c25ec528526c1fae6a5aee907504b61232f301e70196cdde3bf1db93.png",
+          "sha256": "91ff7d557b62c15dd1ca2707cca1c8e4aa988ea3a9cb45c4a24ce3dddd0e26a8",
+          "byteLength": 67
+        },
+        {
+          "filename": "data\\blobs\\42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee.blob",
+          "sha256": "42a914ebe62d3a5096b9bf0002f54908af14b5bdc9807d2c908a95d2ed7b54ee",
+          "byteLength": 640
+        }
+      ],
+      "backupRestoreRoot": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\nav-p09-restore-dGXZWm",
+      "status": "passed"
+    }
+  ],
+  "sourceAfter": {
+    "files": {
+      "server/index.js": "98a04985f97bc01fdf8ca9dba6cf4d7ee8c3c7f768c5ea7d2411457e805638f4",
+      "server/services/health-state-readiness.js": "46a43fea10948417632fe3b0d1804e63a4adba576812c3779c9044b1e74da26a",
+      "server/services/project-import-media-session-store.js": "8c646d036c94818f1d9d96381fd812821fb9784143c111c211d95553af1be9f0",
+      "server/services/project-import-media-session-recovery.js": "0e182b6e78006e5bf2970c9e87d854a3cb25681aeff50f43d86a2483a054ec9f",
+      "server/services/project-import-media-session.js": "fbeb0bd350b4865ad4a1562e8ae0ac21d1d321fed74be22897266286e15e2567",
+      "server/services/media-placement-ownership.js": "48bcccc8edbdad4f10d47e45371ea34c308d246af02d855bb774d59218f23d9d",
+      "server/services/pptx-import/package-store-runtime.js": "893c58a4ec6603a0e36b55e4cf20a88d1c2c8045c4b9fc794bcf967323b8f9a3",
+      "server/routes/pptx-import.js": "4175034e9c9eebb84bd2c13dff5b22857d1adf0c5a22bfd537636f849f1f0189",
+      "server/recovery-test-child.cjs": "812fdd835d46837a83f618934ddf4718558ef9cee52886731e8bd4d37ba358c8",
+      "server/recovery-http-smoke.cjs": "3a901010968a9d8806ced2e8dd23153e3aba91f42aef0d79a059053ee656a069"
+    },
+    "sha256": "2fe5ae65db0861db6f2317f5e49e12eea863c1998ebb2ded1c8550ddb541c2a7"
+  },
+  "status": "passed",
+  "completedAt": "2026-10-09T15:40:47.884Z",
+  "exitCode": 0
+}

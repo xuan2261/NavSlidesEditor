@@ -4,7 +4,7 @@ NavSlides Editor hỗ trợ nhiều định dạng xuất để bạn có thể 
 
 ## Xuất HTML (độc lập)
 
-Xuất HTML mặc định tạo ra một **tệp `.html` tự chứa** nạp reveal.js và các tài nguyên khác từ một CDN.
+Xuất HTML thông thường tạo tệp `.html` tham chiếu runtime cục bộ `/vendor/` do manifest quản lý, không dùng CDN. Đây không phải là tệp ngoại tuyến hoàn toàn tự chứa.
 
 - Mở bài trình chiếu của bạn trong trình soạn thảo.
 - Nhấp **File → Export → HTML**.
@@ -12,19 +12,19 @@ Xuất HTML mặc định tạo ra một **tệp `.html` tự chứa** nạp rev
 - Mở tệp trong bất kỳ trình duyệt nào để trình chiếu.
 
 ::: tip
-HTML độc lập là định dạng tệp nhỏ nhất vì tài nguyên được lấy từ CDN tại thời điểm chạy. Hãy dùng nó khi bạn dự kiến có kết nối internet.
+Khi mở HTML thông thường, các tài nguyên runtime cục bộ và media được tham chiếu phải còn truy cập được. Xem [Export Fidelity and Known Limitations](https://github.com/xuan2261/NavSlidesEditor/blob/master/docs/export-fidelity-and-limits.md#revealjs-runtime-contract) để biết nguồn quản lý runtime và yêu cầu tài nguyên.
 :::
 
 ## HTML ngoại tuyến
 
-HTML ngoại tuyến nhúng trực tiếp toàn bộ CSS, JavaScript và tài nguyên phông chữ bên ngoài để tệp hoạt động **không cần bất kỳ kết nối internet nào**.
+HTML ngoại tuyến nhúng các tài nguyên runtime cục bộ bắt buộc đã được công bố và chặn xuất nếu thiếu tài nguyên bắt buộc. Điều này không làm cho mọi iframe, script, media hoặc dịch vụ bên ngoài có thể dùng ngoại tuyến.
 
 - Nhấp **File → Export → Offline HTML**.
-- Quá trình xuất tải xuống tất cả tài nguyên CDN và nhúng trực tiếp chúng — việc này có thể mất vài giây.
-- Tệp kết quả là tự chứa và có thể được sao chép vào ổ USB hoặc chia sẻ qua email.
+- Quá trình xuất nhúng các tài nguyên runtime cục bộ bắt buộc.
+- Lưu tệp kết quả để phân phối ngoại tuyến; kiểm tra riêng nội dung bên ngoài.
 
 ::: tip
-Dùng HTML ngoại tuyến khi trình chiếu tại địa điểm hội nghị nơi Wi-Fi có thể không ổn định, hoặc khi phân phối slide cho học viên.
+Dùng HTML ngoại tuyến khi Wi-Fi không ổn định, nhưng hãy kiểm tra bộ slide đã xuất trên máy trình chiếu. Nội dung nhúng bên ngoài, nhà cung cấp AI và đồng bộ đám mây vẫn cần tài nguyên hoặc dịch vụ mạng tương ứng.
 :::
 
 ## PDF
@@ -42,18 +42,14 @@ Xuất PDF dựa vào bộ máy in của trình duyệt. Bố cục phức tạp
 
 ## PPTX (PowerPoint)
 
-Xuất một **tệp `.pptx` tương thích PowerPoint** để chỉnh sửa trong Microsoft Office, Google Slides, hoặc LibreOffice Impress.
-
-- Nhấp **File → Export → PPTX**.
-- Văn bản, hình ảnh và hình khối cơ bản được xuất dưới dạng các phần tử PowerPoint có thể chỉnh sửa.
-- Các phần tử phức tạp (khối LaTeX, biểu đồ) được kết xuất thành hình ảnh trong tệp PPTX.
+Xem [Nhập & Xuất PPTX](/vi/features/pptx-import-export) để chọn giữa **Download Original**, **Export Validated Edited Revision** và **Generate Reconstructed PPTX**. Các chế độ có giới hạn khác nhau về khôi phục, xác thực và khả năng chỉnh sửa; tệp được tạo không phải là bằng chứng đã xác thực độ trung thực khi chỉnh sửa trong Microsoft Office hoặc Google Slides.
 
 ## Liên kết chia sẻ
 
-Tạo một **URL chia sẻ** mà người khác có thể mở để xem (hoặc chỉnh sửa) bài trình chiếu của bạn trực tiếp trong trình duyệt của họ — không cần cài đặt.
+Tạo một **URL chỉ xem** mà người khác có thể mở trong trình duyệt. Liên kết chia sẻ không cấp quyền cộng tác chỉnh sửa.
 
 - Nhấp **Share → Get Link**.
-- Chọn **View only** (chỉ xem) hoặc **Editable** (có thể chỉnh sửa).
+- Có thể đặt tên liên kết, mật khẩu hoặc thời hạn hết hạn.
 - Sao chép và chia sẻ URL.
 
 ::: tip

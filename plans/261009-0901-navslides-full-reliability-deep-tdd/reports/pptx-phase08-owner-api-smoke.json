@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "smoke": "actual-api-owner-lifetimes",
+  "fixture": "synthetic ZIP/PNG",
+  "admissionLimitPreserved": 1,
+  "loserJobId": "443da55e-15b9-4062-b0ee-49c3cef8d7d4",
+  "winnerJobId": "d6a916d3-1ea4-411d-88f1-eb2f1707064b",
+  "winnerPresentationId": "d62abe86-4b89-4e18-8406-77ac8204df05",
+  "uncertainOutcomeRetained": true,
+  "lateReleaseCount": 1,
+  "winnerHeadHashBefore": "0ddf8f8202eb3a4093168bd35b99d73864e928f31d337de33544385afcfdedff",
+  "winnerHeadHashAfter": "0ddf8f8202eb3a4093168bd35b99d73864e928f31d337de33544385afcfdedff",
+  "mediaBytes": 67,
+  "originalBytes": 640,
+  "winnerJobUnchanged": true,
+  "originalBytesPreserved": true,
+  "concurrency": "late loser ownership release versus actual winner HTTP consumers",
+  "faultModel": "injected unavailable projection/rollback sink, not process crash",
+  "wallTimeSeconds": 3.30
+}

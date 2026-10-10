@@ -9,7 +9,7 @@ Embed custom interactive content directly on your slides — D3 visualizations, 
 3. Write any valid HTML — the content renders inside a sandboxed iframe.
 4. Click **Apply** to insert. The element previews live on the slide.
 
-The embedded HTML is completely self-contained. It works in present mode, exported files, and shared links. External scripts (D3, Three.js, etc.) can be loaded via CDN.
+Embedded HTML can be used in present mode, exports, and shared links, but external scripts (D3, Three.js, etc.) and iframe resources retain their own network dependencies. Offline export does not make arbitrary external embed resources self-contained; see [offline limits](/features/export#offline-html).
 
 ### Example output
 

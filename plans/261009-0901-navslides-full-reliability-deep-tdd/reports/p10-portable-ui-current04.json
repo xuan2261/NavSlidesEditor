@@ -1,0 +1,556 @@
+{
+  "config": {
+    "argv": [
+      "C:\\nvm4w\\nodejs\\node.exe",
+      "C:\\Work\\NavSlidesEditor\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/e2e/export/portable-package-real-browser.spec.js",
+      "tests/e2e/export/portable-package-export-refusals.spec.js",
+      "--project=chromium",
+      "--workers=1",
+      "--retries=0",
+      "--trace=on",
+      "--output=test-results/p10-portable-ui-current04",
+      "--reporter=line,json"
+    ],
+    "configFile": "C:\\Work\\NavSlidesEditor\\playwright.config.js",
+    "rootDir": "C:/Work/NavSlidesEditor/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\global-setup.js",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results/p10-portable-ui-current04",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [
+          "/tests\\/e2e\\/live(?:\\.spec\\.js$|\\/.*\\.spec\\.js$)/",
+          "/tests\\/e2e\\/visual(?:\\/.*\\.spec\\.js$)/",
+          "/tests\\/e2e\\/visual-regression\\.spec\\.js$/",
+          "/tests\\/e2e\\/a11y\\/tablet-touch-editor-interactions\\.spec\\.js$/",
+          "/tests\\/e2e\\/critical-pptx-journey\\.spec\\.js$/",
+          "/tests\\/e2e\\/pptx-import-(?:async|fidelity|real-browser-audit|editor-visual-regression)\\.spec\\.js$/",
+          "/tests\\/e2e\\/export\\/pptx-import-endpoint-roundtrip-across-multiple-fixtures\\.spec\\.js$/"
+        ],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results/p10-portable-ui-current04",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "tablet-touch",
+        "name": "tablet-touch",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/a11y\\/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport\\.spec\\.js$/",
+          "/tests\\/e2e\\/a11y\\/tablet-touch-editor-interactions\\.spec\\.js$/",
+          "/tests\\/e2e\\/ribbon-responsive-touch\\.spec\\.js$/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results/p10-portable-ui-current04",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-live",
+        "name": "chromium-live",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/live(?:\\.spec\\.js$|\\/.*\\.spec\\.js$)/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results/p10-portable-ui-current04",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-pptx-import",
+        "name": "chromium-pptx-import",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/critical-pptx-journey\\.spec\\.js$/",
+          "/tests\\/e2e\\/pptx-import-(?:async|fidelity|real-browser-audit|editor-visual-regression)\\.spec\\.js$/",
+          "/tests\\/e2e\\/export\\/pptx-import-endpoint-roundtrip-across-multiple-fixtures\\.spec\\.js$/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results/p10-portable-ui-current04",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-visual",
+        "name": "chromium-visual",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/visual(?:\\/.*\\.spec\\.js$)/",
+          "/tests\\/e2e\\/visual-regression\\.spec\\.js$/"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm start",
+      "url": "http://127.0.0.1:3202",
+      "reuseExistingServer": false,
+      "timeout": 180000,
+      "environmentRedacted": "Inherited process environment omitted; observed test results unchanged."
+    }
+  },
+  "suites": [
+    {
+      "title": "export\\portable-package-export-refusals.spec.js",
+      "file": "export/portable-package-export-refusals.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "P10-15 refuses package export with missing owned media",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\export\\portable-package-export-refusals.spec.js",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 11458,
+                  "error": {
+                    "message": "TypeError: The URL must be of scheme file",
+                    "stack": "TypeError: The URL must be of scheme file\n    at launchRecoveryChild (C:\\Work\\NavSlidesEditor\\server\\recovery-test-driver.js:7:35)\n    at C:\\Work\\NavSlidesEditor\\tests\\e2e\\export\\portable-package-export-refusals.spec.js:24:34",
+                    "location": {
+                      "file": "C:\\Work\\NavSlidesEditor\\server\\recovery-test-driver.js",
+                      "column": 35,
+                      "line": 7
+                    },
+                    "snippet": "\u001b[90m   at \u001b[39m..\\..\\server\\recovery-test-driver.js:7\n\n   5 | // Test-only IPC controller: no sleeps, no user-server discovery or termination.\n   6 | export function launchRecoveryChild(entry, root, mode) {\n>  7 |   const child = fork(fileURLToPath(entry), [mode], {\n     |                                   ^\n   8 |     execArgv: [], silent: true, windowsHide: true,\n   9 |     env: { ...process.env, NODE_ENV: 'test', NAVSLIDES_CRASH_TEST_HARNESS: '1',\n  10 |       SLIDES_DATA_DIR: path.join(root, 'data'), SLIDES_UPLOADS_DIR: path.join(root, 'uploads') },"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Work\\NavSlidesEditor\\server\\recovery-test-driver.js",
+                        "column": 35,
+                        "line": 7
+                      },
+                      "message": "TypeError: The URL must be of scheme file\n\n   at ..\\..\\server\\recovery-test-driver.js:7\n\n   5 | // Test-only IPC controller: no sleeps, no user-server discovery or termination.\n   6 | export function launchRecoveryChild(entry, root, mode) {\n>  7 |   const child = fork(fileURLToPath(entry), [mode], {\n     |                                   ^\n   8 |     execArgv: [], silent: true, windowsHide: true,\n   9 |     env: { ...process.env, NODE_ENV: 'test', NAVSLIDES_CRASH_TEST_HARNESS: '1',\n  10 |       SLIDES_DATA_DIR: path.join(root, 'data'), SLIDES_UPLOADS_DIR: path.join(root, 'uploads') },\n    at launchRecoveryChild (C:\\Work\\NavSlidesEditor\\server\\recovery-test-driver.js:7:35)\n    at C:\\Work\\NavSlidesEditor\\tests\\e2e\\export\\portable-package-export-refusals.spec.js:24:34"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:39:43.865Z",
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\export\\portable-package-export-refusals.spec.js",
+                        "line": 0,
+                        "column": 0
+                      }
+                    }
+                  ],
+                  "attachments": [
+                    {
+                      "name": "portable-browser-receipt",
+                      "contentType": "application/json",
+                      "path": "C:\\Work\\NavSlidesEditor\\test-results\\p10-portable-ui-current04\\export-portable-package-ex-1f46a-rt-with-missing-owned-media-chromium\\attachments\\portable-browser-receipt-8da56dd14a6ca68702d2fe7b2ebdb6b017abf778.json"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Work\\NavSlidesEditor\\test-results\\p10-portable-ui-current04\\export-portable-package-ex-1f46a-rt-with-missing-owned-media-chromium\\test-failed-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Work\\NavSlidesEditor\\test-results\\p10-portable-ui-current04\\export-portable-package-ex-1f46a-rt-with-missing-owned-media-chromium\\video.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Work\\NavSlidesEditor\\test-results\\p10-portable-ui-current04\\export-portable-package-ex-1f46a-rt-with-missing-owned-media-chromium\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Work\\NavSlidesEditor\\test-results\\p10-portable-ui-current04\\export-portable-package-ex-1f46a-rt-with-missing-owned-media-chromium\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Work\\NavSlidesEditor\\server\\recovery-test-driver.js",
+                    "column": 35,
+                    "line": 7
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "74e1c8e761027e2148de-1c59d94069f361d5bf17",
+          "file": "export/portable-package-export-refusals.spec.js",
+          "line": 15,
+          "column": 7
+        },
+        {
+          "title": "P10-15 refuses package export with save generation conflict",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\export\\portable-package-export-refusals.spec.js",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": -1,
+                  "parallelIndex": -1,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:39:55.669Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "74e1c8e761027e2148de-92a42a1761c5d7435279",
+          "file": "export/portable-package-export-refusals.spec.js",
+          "line": 15,
+          "column": 7
+        }
+      ]
+    },
+    {
+      "title": "export\\portable-package-real-browser.spec.js",
+      "file": "export/portable-package-real-browser.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "P10-01/12/13/14 owned media via Home A-B-C",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\export\\portable-package-real-browser.spec.js",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 10817,
+                  "error": {
+                    "message": "TypeError: The URL must be of scheme file",
+                    "stack": "TypeError: The URL must be of scheme file\n    at launchRecoveryChild (C:\\Work\\NavSlidesEditor\\server\\recovery-test-driver.js:7:35)\n    at boot (C:\\Work\\NavSlidesEditor\\tests\\e2e\\export\\portable-package-real-browser.spec.js:18:36)\n    at C:\\Work\\NavSlidesEditor\\tests\\e2e\\export\\portable-package-real-browser.spec.js:96:27",
+                    "location": {
+                      "file": "C:\\Work\\NavSlidesEditor\\server\\recovery-test-driver.js",
+                      "column": 35,
+                      "line": 7
+                    },
+                    "snippet": "\u001b[90m   at \u001b[39m..\\..\\server\\recovery-test-driver.js:7\n\n   5 | // Test-only IPC controller: no sleeps, no user-server discovery or termination.\n   6 | export function launchRecoveryChild(entry, root, mode) {\n>  7 |   const child = fork(fileURLToPath(entry), [mode], {\n     |                                   ^\n   8 |     execArgv: [], silent: true, windowsHide: true,\n   9 |     env: { ...process.env, NODE_ENV: 'test', NAVSLIDES_CRASH_TEST_HARNESS: '1',\n  10 |       SLIDES_DATA_DIR: path.join(root, 'data'), SLIDES_UPLOADS_DIR: path.join(root, 'uploads') },"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Work\\NavSlidesEditor\\server\\recovery-test-driver.js",
+                        "column": 35,
+                        "line": 7
+                      },
+                      "message": "TypeError: The URL must be of scheme file\n\n   at ..\\..\\server\\recovery-test-driver.js:7\n\n   5 | // Test-only IPC controller: no sleeps, no user-server discovery or termination.\n   6 | export function launchRecoveryChild(entry, root, mode) {\n>  7 |   const child = fork(fileURLToPath(entry), [mode], {\n     |                                   ^\n   8 |     execArgv: [], silent: true, windowsHide: true,\n   9 |     env: { ...process.env, NODE_ENV: 'test', NAVSLIDES_CRASH_TEST_HARNESS: '1',\n  10 |       SLIDES_DATA_DIR: path.join(root, 'data'), SLIDES_UPLOADS_DIR: path.join(root, 'uploads') },\n    at launchRecoveryChild (C:\\Work\\NavSlidesEditor\\server\\recovery-test-driver.js:7:35)\n    at boot (C:\\Work\\NavSlidesEditor\\tests\\e2e\\export\\portable-package-real-browser.spec.js:18:36)\n    at C:\\Work\\NavSlidesEditor\\tests\\e2e\\export\\portable-package-real-browser.spec.js:96:27"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:39:56.597Z",
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\export\\portable-package-real-browser.spec.js",
+                        "line": 0,
+                        "column": 0
+                      }
+                    }
+                  ],
+                  "attachments": [
+                    {
+                      "name": "portable-browser-receipt",
+                      "contentType": "application/json",
+                      "path": "C:\\Work\\NavSlidesEditor\\test-results\\p10-portable-ui-current04\\export-portable-package-re-cba4f--owned-media-via-Home-A-B-C-chromium\\attachments\\portable-browser-receipt-84934991f15e02e32c06e72867390364ee9bd15e.json"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Work\\NavSlidesEditor\\test-results\\p10-portable-ui-current04\\export-portable-package-re-cba4f--owned-media-via-Home-A-B-C-chromium\\test-failed-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Work\\NavSlidesEditor\\test-results\\p10-portable-ui-current04\\export-portable-package-re-cba4f--owned-media-via-Home-A-B-C-chromium\\video.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Work\\NavSlidesEditor\\test-results\\p10-portable-ui-current04\\export-portable-package-re-cba4f--owned-media-via-Home-A-B-C-chromium\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Work\\NavSlidesEditor\\test-results\\p10-portable-ui-current04\\export-portable-package-re-cba4f--owned-media-via-Home-A-B-C-chromium\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Work\\NavSlidesEditor\\server\\recovery-test-driver.js",
+                    "column": 35,
+                    "line": 7
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "ddf20c023f1432c80a35-c63486ebdc6cadfe6b2e",
+          "file": "export/portable-package-real-browser.spec.js",
+          "line": 85,
+          "column": 7
+        },
+        {
+          "title": "P10-01/12/13/14 owned media via Editor A-B-C",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\export\\portable-package-real-browser.spec.js",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": -1,
+                  "parallelIndex": -1,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:40:07.752Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "ddf20c023f1432c80a35-9fd3e1814440babdacc6",
+          "file": "export/portable-package-real-browser.spec.js",
+          "line": 85,
+          "column": 7
+        },
+        {
+          "title": "P10-01/12/13/14 no local media via Home A-B-C",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\export\\portable-package-real-browser.spec.js",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": -1,
+                  "parallelIndex": -1,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:40:07.753Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "ddf20c023f1432c80a35-b1143a6ab93527552ecb",
+          "file": "export/portable-package-real-browser.spec.js",
+          "line": 85,
+          "column": 7
+        },
+        {
+          "title": "P10-01/12/13/14 no local media via Editor A-B-C",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\export\\portable-package-real-browser.spec.js",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": -1,
+                  "parallelIndex": -1,
+                  "status": "skipped",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T17:40:07.753Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "skipped"
+            }
+          ],
+          "id": "ddf20c023f1432c80a35-79b7855fe84f87bfd52a",
+          "file": "export/portable-package-real-browser.spec.js",
+          "line": 85,
+          "column": 7
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-09T17:39:36.640Z",
+    "duration": 31388.806,
+    "expected": 0,
+    "skipped": 4,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

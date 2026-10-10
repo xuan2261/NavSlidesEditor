@@ -4,14 +4,16 @@ Bản đồ tổng quan về cách NavSlides Editor được lắp ráp. Để t
 
 ## Monorepo nhìn thoáng qua
 
-NavSlides Editor là một monorepo dạng npm-workspace với bốn package:
+NavSlides Editor có bốn npm workspaces, được khai báo trong [`package.json`](https://github.com/xuan2261/NavSlidesEditor/blob/master/package.json):
 
 | Workspace | Vai trò |
 |---|---|
 | `client` | Ứng dụng single-page React + Vite; giao diện trình soạn thảo. Build ra `client/dist/` cho môi trường production. |
 | `server` | Express REST API + Socket.IO; phục vụ client đã build và lưu dữ liệu dưới dạng các file JSON. |
 | `shared` | Các tiện ích Node.js thuần được dùng bởi **cả** client lẫn server (tạo HTML, hình khối, helper màu sắc/văn bản). |
-| `electron` | Vỏ desktop nhúng server để có một ứng dụng offline, không cần Docker. |
+| `website` | Trang tài liệu VitePress. |
+
+Package desktop Electron được đóng gói riêng, không thuộc npm workspaces; `electron/` chứa vỏ desktop.
 
 `shared` được tiêu thụ bởi `client` (lúc Vite build) và `server` (lúc runtime) thông qua liên kết tượng trưng (symlink) của npm-workspace, nên cùng một logic không bao giờ bị trùng lặp.
 

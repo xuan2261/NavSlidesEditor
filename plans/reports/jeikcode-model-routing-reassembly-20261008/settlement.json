@@ -1,0 +1,172 @@
+{
+  "date": "2026-10-08",
+  "status": "BOUNDED_NATIVE_RUNTIME_REASSEMBLY_AND_PERSISTENCE_OFFLINE_COVERAGE_COMPLETE_NOT_ACTIVE",
+  "correctedEarlierClaim": "Actual runtime reassembly gap was not wholly absent: preexisting test exercises CodingRuntime::reassemble_provider, running/queued cancellation and post-reload generation. Old generation is intentionally cancelled, not required to complete. Source semantics unchanged; do not equate task completion after reassembly with intended lifecycle.",
+  "newTestCoverage": [
+    "native persisted-session explicit model_id",
+    "native persisted-session genuinely omitted model_id",
+    "persisted ToolCall matching Tool result route",
+    "Completed/Stopped terminal, SnapshotUnavailable rejected",
+    "native snapshot serde lossless and keys unchanged",
+    "non-System parent provenance bytes retained across reopen/resave",
+    "parent metadata/provider/options unchanged",
+    "all local native tests share environment guard"
+  ],
+  "changedSourceThisRequest": [
+    "crates/jeikcode-coding/src/runtime_offline_integration.rs"
+  ],
+  "productionRuntimeSHA256Unchanged": true,
+  "sourceFingerprint": "d4c70a9b63b109c7a812278a77f11d42fb98d02385ba9c0aa0b70c9140dde157",
+  "checks": {
+    "date": "2026-10-08",
+    "checks": [
+      {
+        "args": [
+          "test",
+          "--offline",
+          "-p",
+          "jeikcode-coding",
+          "runtime_offline",
+          "--lib"
+        ],
+        "exitCode": 0,
+        "summary": [
+          "running 7 tests",
+          "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 377 filtered out; finished in 2.27s",
+          "    Finished `test` profile [unoptimized + debuginfo] target(s) in 10.86s"
+        ],
+        "counts": [
+          [
+            "7",
+            "0"
+          ]
+        ]
+      },
+      {
+        "args": [
+          "test",
+          "--offline",
+          "-p",
+          "jeikcode-capabilities",
+          "tools::task",
+          "--lib"
+        ],
+        "exitCode": 0,
+        "summary": [
+          "running 38 tests",
+          "test result: ok. 38 passed; 0 failed; 0 ignored; 0 measured; 875 filtered out; finished in 3.01s",
+          "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.78s"
+        ],
+        "counts": [
+          [
+            "38",
+            "0"
+          ]
+        ]
+      },
+      {
+        "args": [
+          "test",
+          "--offline",
+          "-p",
+          "jeikcode-coding",
+          "provider_factory",
+          "--lib"
+        ],
+        "exitCode": 0,
+        "summary": [
+          "running 9 tests",
+          "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 375 filtered out; finished in 0.03s",
+          "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.84s"
+        ],
+        "counts": [
+          [
+            "9",
+            "0"
+          ]
+        ]
+      },
+      {
+        "args": [
+          "check",
+          "--offline",
+          "-p",
+          "jeikcode",
+          "-p",
+          "jeikcode-tuix"
+        ],
+        "exitCode": 0,
+        "summary": [
+          "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.11s"
+        ],
+        "counts": []
+      }
+    ],
+    "offline": true,
+    "activation": false
+  },
+  "sourceReview": "final-review.md",
+  "limits": [
+    "No legacy daemon importer/serializer byte parity claim; LegacySession in daemon legacy_convert.rs is a separate Deserialize importer boundary.",
+    "No actual remote serving model or SDK/gateway no-retry proof.",
+    "No installed/active task schema change; current functions.task has no model_id parameter.",
+    "Factory session_id context binding not proof of child session identity isolation.",
+    "Full workspace and multi-OS validation not run.",
+    "No pristine-worktree or all-diff ownership claim; dirty source preserved.",
+    "No user-request PR9 actions (withdrawn)."
+  ],
+  "preservation": {
+    "hostBranch": "main",
+    "hostHEAD": "9d279b840628385deba0067de80e214eeaee44c3",
+    "staged": [],
+    "diffCheckExitCode": 0,
+    "beforeEvidence": "before.json",
+    "afterStatus": [
+      " M crates/jeikcode-capabilities/assets/.codegraphignore",
+      " M crates/jeikcode-capabilities/assets/builtin-tools.txt",
+      " M crates/jeikcode-capabilities/assets/teaches/00_overview_index.md",
+      " M crates/jeikcode-capabilities/assets/teaches/01_prompts_and_context.md",
+      " M crates/jeikcode-capabilities/assets/teaches/02_models_and_providers.md",
+      " M crates/jeikcode-capabilities/assets/teaches/03_mcp_and_skills.md",
+      " M crates/jeikcode-capabilities/assets/teaches/04_thesaurus_and_retrieval.md",
+      " M crates/jeikcode-capabilities/assets/teaches/06_directories_and_system.md",
+      " M crates/jeikcode-capabilities/assets/teaches/07_project_constraints_and_rules.md",
+      " M crates/jeikcode-capabilities/assets/teaches/08_updates_and_releases.md",
+      " M crates/jeikcode-capabilities/src/tools/edit.rs",
+      " M crates/jeikcode-capabilities/src/tools/mod.rs",
+      " M crates/jeikcode-capabilities/src/tools/repair.rs",
+      " M crates/jeikcode-capabilities/src/tools/task.rs",
+      " M crates/jeikcode-cli/assets/config_teachs.md",
+      " M crates/jeikcode-coding/assets/prompts/root_docs_prompts.md",
+      " M \"crates/jeikcode-coding/assets/prompts/root_docs_\\345\\206\\205\\347\\275\\256\\345\\267\\245\\345\\205\\267.yaml\"",
+      " M crates/jeikcode-coding/assets/prompts/rules.yaml",
+      " M crates/jeikcode-coding/src/config.rs",
+      " M crates/jeikcode-coding/src/parts.rs",
+      " M crates/jeikcode-coding/src/provider_factory.rs",
+      " M crates/jeikcode-coding/src/runtime.rs",
+      " M crates/jeikcode-config/src/util.rs",
+      "?? crates/jeikcode-capabilities/src/tools/task_offline_acceptance.rs",
+      "?? crates/jeikcode-capabilities/src/tools/task_offline_scope.rs",
+      "?? crates/jeikcode-coding/src/provider_factory_offline_acceptance.rs",
+      "?? crates/jeikcode-coding/src/provider_factory_offline_transport.rs",
+      "?? crates/jeikcode-coding/src/runtime_offline_integration.rs",
+      "?? docs/remote-portability-validation-2026-10-07.md",
+      "?? docs/task-model-routing-phase-a-closure-20261008.md",
+      "?? docs/task-model-routing-phase-a-offline-acceptance-20261008.md",
+      "?? docs/task-model-routing-phase-a-review-20261008.md",
+      "?? harness-delivery.json"
+    ]
+  },
+  "effects": {
+    "globalConfigEdited": false,
+    "coordinatorModelChanged": false,
+    "retryTimeoutPolicyChanged": false,
+    "DReadByAgent": false,
+    "providerRealInference": false,
+    "binaryActivated": false,
+    "educationSourceEdited": false,
+    "educationAcceptanceExecuted": 0,
+    "commitPushMergeDeploy": false
+  },
+  "nextDecision": "Approve a separate bounded host build/artifact verification stage only, no activation by implication. Activation requires a deliberate operator/application switch after verifying supported schema and unchanged coordinator route; live route checks and retry policy remain separate gates. If historical legacy serialization parity is still desired, inspect its true adapter first and authorize daemon legacy-conversion tests separately (not needed to claim native tests passed)."
+}

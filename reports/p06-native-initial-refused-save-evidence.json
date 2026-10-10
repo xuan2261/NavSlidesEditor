@@ -1,0 +1,38 @@
+[
+  {
+    "network": "2-trace.network",
+    "url": "http://127.0.0.1:3276/api/presentations/d3c0177b-44e3-4a6c-86b6-db6d968f1490",
+    "status": 409,
+    "request": {
+      "title": "Package pending projection",
+      "aggregateGeneration": 1,
+      "idempotencyKey": "9e0ce4eb-58c4-44b8-bc46-606b2c0c294d"
+    },
+    "response": "{\"error\":\"STALE_GENERATION\",\"code\":\"STALE_GENERATION\",\"reason\":\"STALE_GENERATION\",\"currentGeneration\":3,\"reasonCode\":\"STALE_GENERATION\",\"reasonCodes\":[\"STALE_GENERATION\"],\"reasonCodeSubject\":{\"schemaVersion\":1,\"version\":\"1.0.0\",\"hash\":\"a3efc7ffef1223514473d98639bc4a3dab7f304b98f1580d66289a6033feeb65\"}}"
+  },
+  {
+    "network": "2-trace.network",
+    "url": "http://127.0.0.1:3276/api/presentations/b570845a-ef99-4158-be7f-35b053d0c41b",
+    "status": -1,
+    "request": {
+      "title": "Plain changed"
+    },
+    "response": ""
+  },
+  {
+    "network": "0-trace.network",
+    "url": "http://127.0.0.1:3276/api/presentations/b570845a-ef99-4158-be7f-35b053d0c41b",
+    "status": 200,
+    "request": {},
+    "response": "{\"id\":\"b570845a-ef99-4158-be7f-35b053d0c41b\",\"title\":\"Plain original\",\"theme\":\"black\",\"transition\":\"slide\",\"designTokens\":{\"colors\":{\"bg\":\"#0a0a0f\",\"surface\":\"#1a1a22\",\"accent\":\"#6366f1\",\"accent2\":\"#8b5cf6\",\"text\":\"#ffffff\",\"muted\":\"rgba(255,255,255,0.6)\"},\"fonts\":{\"heading\":\"\\\"Inter\\\", \\\"Helvetica Neue\\\", Arial, sans-serif\",\"body\":\"\\\"Inter\\\", \\\"Helvetica Neue\\\", Arial, sans-serif\"},\"radius\":8,\"spacingScale\":1},\"slides\":[{\"id\":\"slide\",\"elements\":[{\"id\":\"restore-text\",\"type\":\"text\",\"x\":100,\"y\":100,\"width\":400,\"height\":80,\"content\":\"<p>Restore Alpha</p>\",\"fontSize\":24}],\"notes\":\"\",\"background\":{\"type\":\"color\",\"color\":\"#101010\"}}],\"createdAt\":\"2026-10-09T20:25:40.389Z\",\"updatedAt\":\"2026-10-09T20:25:40.410Z\",\"presenterTools\":{\"themeToggle\":true,\"fontZoom\":true,\"slideMenu\":false,\"chalkboard\":false}}"
+  },
+  {
+    "network": "0-trace.network",
+    "url": "http://127.0.0.1:3276/api/presentations/b570845a-ef99-4158-be7f-35b053d0c41b",
+    "status": 200,
+    "request": {
+      "title": "Plain changed"
+    },
+    "response": "{\"id\":\"b570845a-ef99-4158-be7f-35b053d0c41b\",\"title\":\"Plain changed\",\"theme\":\"black\",\"transition\":\"slide\",\"designTokens\":{\"colors\":{\"bg\":\"#0a0a0f\",\"surface\":\"#1a1a22\",\"accent\":\"#6366f1\",\"accent2\":\"#8b5cf6\",\"text\":\"#ffffff\",\"muted\":\"rgba(255,255,255,0.6)\"},\"fonts\":{\"heading\":\"\\\"Inter\\\", \\\"Helvetica Neue\\\", Arial, sans-serif\",\"body\":\"\\\"Inter\\\", \\\"Helvetica Neue\\\", Arial, sans-serif\"},\"radius\":8,\"spacingScale\":1},\"slides\":[{\"id\":\"slide\",\"elements\":[{\"id\":\"restore-text\",\"type\":\"text\",\"x\":100,\"y\":100,\"width\":400,\"height\":80,\"content\":\"<p>Restore Beta</p>\",\"fontSize\":24}],\"notes\":\"\",\"background\":{\"type\":\"color\",\"color\":\"#101010\"}}],\"createdAt\":\"2026-10-09T20:25:40.389Z\",\"updatedAt\":\"2026-10-09T20:25:40.438Z\",\"presenterTools\":{\"themeToggle\":true,\"fontZoom\":true,\"slideMenu\":false,\"chalkboard\":false}}"
+  }
+]

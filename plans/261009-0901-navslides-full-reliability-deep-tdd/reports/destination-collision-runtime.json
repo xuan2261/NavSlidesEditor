@@ -1,0 +1,483 @@
+{
+  "scenario": "template-uuid-collision-existing-destination",
+  "response": {
+    "status": 409,
+    "body": {
+      "error": "Presentation destination already exists",
+      "code": "STALE_GENERATION"
+    }
+  },
+  "before": {
+    "head": {
+      "schemaVersion": 2,
+      "presentationId": "already-published-destination",
+      "originalRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+      "projectionRevisionId": null,
+      "packageRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+      "sourceMapRevisionId": null,
+      "journalRevisionId": null,
+      "evidenceByClaim": {},
+      "matrixAuthorityEpoch": 1,
+      "matrixAuthoritySubjects": {
+        "qualification": {
+          "schemaVersion": 1,
+          "matrixVersion": "1.0.0",
+          "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+          "evolutionEpoch": 1
+        },
+        "capability": {
+          "schemaVersion": 1,
+          "matrixVersion": "1.0.0",
+          "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+          "evolutionEpoch": 1
+        },
+        "journal": {
+          "schemaVersion": 1,
+          "matrixVersion": "1.0.0",
+          "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+          "evolutionEpoch": 1
+        },
+        "claim": {
+          "schemaVersion": 1,
+          "matrixVersion": "1.0.0",
+          "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+          "evolutionEpoch": 1
+        }
+      },
+      "generation": 1,
+      "predecessorId": null,
+      "fencingEpoch": 1
+    },
+    "owners": [
+      {
+        "schemaVersion": 1,
+        "revisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+        "ownerType": "presentation",
+        "ownerId": "already-published-destination"
+      }
+    ],
+    "rows": [
+      {
+        "id": "already-published-destination",
+        "title": "Existing winner",
+        "slides": [],
+        "pptxAggregateHead": {
+          "schemaVersion": 2,
+          "presentationId": "already-published-destination",
+          "originalRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+          "projectionRevisionId": null,
+          "packageRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+          "sourceMapRevisionId": null,
+          "journalRevisionId": null,
+          "evidenceByClaim": {},
+          "matrixAuthorityEpoch": 1,
+          "matrixAuthoritySubjects": {
+            "qualification": {
+              "schemaVersion": 1,
+              "matrixVersion": "1.0.0",
+              "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+              "evolutionEpoch": 1
+            },
+            "capability": {
+              "schemaVersion": 1,
+              "matrixVersion": "1.0.0",
+              "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+              "evolutionEpoch": 1
+            },
+            "journal": {
+              "schemaVersion": 1,
+              "matrixVersion": "1.0.0",
+              "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+              "evolutionEpoch": 1
+            },
+            "claim": {
+              "schemaVersion": 1,
+              "matrixVersion": "1.0.0",
+              "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+              "evolutionEpoch": 1
+            }
+          },
+          "generation": 1,
+          "predecessorId": null,
+          "fencingEpoch": 1
+        }
+      }
+    ]
+  },
+  "after": {
+    "head": {
+      "schemaVersion": 2,
+      "presentationId": "already-published-destination",
+      "originalRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+      "projectionRevisionId": null,
+      "packageRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+      "sourceMapRevisionId": null,
+      "journalRevisionId": null,
+      "evidenceByClaim": {},
+      "matrixAuthorityEpoch": 1,
+      "matrixAuthoritySubjects": {
+        "qualification": {
+          "schemaVersion": 1,
+          "matrixVersion": "1.0.0",
+          "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+          "evolutionEpoch": 1
+        },
+        "capability": {
+          "schemaVersion": 1,
+          "matrixVersion": "1.0.0",
+          "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+          "evolutionEpoch": 1
+        },
+        "journal": {
+          "schemaVersion": 1,
+          "matrixVersion": "1.0.0",
+          "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+          "evolutionEpoch": 1
+        },
+        "claim": {
+          "schemaVersion": 1,
+          "matrixVersion": "1.0.0",
+          "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+          "evolutionEpoch": 1
+        }
+      },
+      "generation": 1,
+      "predecessorId": null,
+      "fencingEpoch": 1
+    },
+    "owners": [
+      {
+        "schemaVersion": 1,
+        "revisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+        "ownerType": "presentation",
+        "ownerId": "already-published-destination"
+      }
+    ],
+    "rows": [
+      {
+        "id": "already-published-destination",
+        "title": "Existing winner",
+        "slides": [],
+        "pptxAggregateHead": {
+          "schemaVersion": 2,
+          "presentationId": "already-published-destination",
+          "originalRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+          "projectionRevisionId": null,
+          "packageRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+          "sourceMapRevisionId": null,
+          "journalRevisionId": null,
+          "evidenceByClaim": {},
+          "matrixAuthorityEpoch": 1,
+          "matrixAuthoritySubjects": {
+            "qualification": {
+              "schemaVersion": 1,
+              "matrixVersion": "1.0.0",
+              "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+              "evolutionEpoch": 1
+            },
+            "capability": {
+              "schemaVersion": 1,
+              "matrixVersion": "1.0.0",
+              "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+              "evolutionEpoch": 1
+            },
+            "journal": {
+              "schemaVersion": 1,
+              "matrixVersion": "1.0.0",
+              "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+              "evolutionEpoch": 1
+            },
+            "claim": {
+              "schemaVersion": 1,
+              "matrixVersion": "1.0.0",
+              "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+              "evolutionEpoch": 1
+            }
+          },
+          "generation": 1,
+          "predecessorId": null,
+          "fencingEpoch": 1
+        }
+      }
+    ]
+  },
+  "existingAuthorityPreserved": true,
+  "cleanup": "isolated fixture and writer removed",
+  "duplicate": {
+    "scenario": "duplicate-uuid-collision-existing-destination",
+    "response": {
+      "status": 409,
+      "body": {
+        "error": "Presentation destination already exists",
+        "code": "STALE_GENERATION"
+      }
+    },
+    "before": {
+      "head": {
+        "schemaVersion": 2,
+        "presentationId": "already-published-destination",
+        "originalRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+        "projectionRevisionId": null,
+        "packageRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+        "sourceMapRevisionId": null,
+        "journalRevisionId": null,
+        "evidenceByClaim": {},
+        "matrixAuthorityEpoch": 1,
+        "matrixAuthoritySubjects": {
+          "qualification": {
+            "schemaVersion": 1,
+            "matrixVersion": "1.0.0",
+            "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+            "evolutionEpoch": 1
+          },
+          "capability": {
+            "schemaVersion": 1,
+            "matrixVersion": "1.0.0",
+            "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+            "evolutionEpoch": 1
+          },
+          "journal": {
+            "schemaVersion": 1,
+            "matrixVersion": "1.0.0",
+            "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+            "evolutionEpoch": 1
+          },
+          "claim": {
+            "schemaVersion": 1,
+            "matrixVersion": "1.0.0",
+            "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+            "evolutionEpoch": 1
+          }
+        },
+        "generation": 1,
+        "predecessorId": null,
+        "fencingEpoch": 1
+      },
+      "owners": [
+        {
+          "schemaVersion": 1,
+          "revisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+          "ownerType": "presentation",
+          "ownerId": "already-published-destination"
+        }
+      ]
+    },
+    "after": {
+      "head": {
+        "schemaVersion": 2,
+        "presentationId": "already-published-destination",
+        "originalRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+        "projectionRevisionId": null,
+        "packageRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+        "sourceMapRevisionId": null,
+        "journalRevisionId": null,
+        "evidenceByClaim": {},
+        "matrixAuthorityEpoch": 1,
+        "matrixAuthoritySubjects": {
+          "qualification": {
+            "schemaVersion": 1,
+            "matrixVersion": "1.0.0",
+            "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+            "evolutionEpoch": 1
+          },
+          "capability": {
+            "schemaVersion": 1,
+            "matrixVersion": "1.0.0",
+            "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+            "evolutionEpoch": 1
+          },
+          "journal": {
+            "schemaVersion": 1,
+            "matrixVersion": "1.0.0",
+            "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+            "evolutionEpoch": 1
+          },
+          "claim": {
+            "schemaVersion": 1,
+            "matrixVersion": "1.0.0",
+            "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+            "evolutionEpoch": 1
+          }
+        },
+        "generation": 1,
+        "predecessorId": null,
+        "fencingEpoch": 1
+      },
+      "owners": [
+        {
+          "schemaVersion": 1,
+          "revisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+          "ownerType": "presentation",
+          "ownerId": "already-published-destination"
+        }
+      ],
+      "rows": [
+        {
+          "id": "already-published-destination",
+          "title": "already-published-destination",
+          "slides": [],
+          "pptxAggregateHead": {
+            "schemaVersion": 2,
+            "presentationId": "already-published-destination",
+            "originalRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+            "projectionRevisionId": null,
+            "packageRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+            "sourceMapRevisionId": null,
+            "journalRevisionId": null,
+            "evidenceByClaim": {},
+            "matrixAuthorityEpoch": 1,
+            "matrixAuthoritySubjects": {
+              "qualification": {
+                "schemaVersion": 1,
+                "matrixVersion": "1.0.0",
+                "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+                "evolutionEpoch": 1
+              },
+              "capability": {
+                "schemaVersion": 1,
+                "matrixVersion": "1.0.0",
+                "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+                "evolutionEpoch": 1
+              },
+              "journal": {
+                "schemaVersion": 1,
+                "matrixVersion": "1.0.0",
+                "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+                "evolutionEpoch": 1
+              },
+              "claim": {
+                "schemaVersion": 1,
+                "matrixVersion": "1.0.0",
+                "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+                "evolutionEpoch": 1
+              }
+            },
+            "generation": 1,
+            "predecessorId": null,
+            "fencingEpoch": 1
+          }
+        },
+        {
+          "id": "template-source",
+          "title": "template-source",
+          "slides": [],
+          "pptxAggregateHead": {
+            "schemaVersion": 2,
+            "presentationId": "template-source",
+            "originalRevisionId": "r0-d44693dd5846bdd13252169f4083e356d54e179c91fa45b04fda80e76c45467a",
+            "projectionRevisionId": null,
+            "packageRevisionId": "r0-d44693dd5846bdd13252169f4083e356d54e179c91fa45b04fda80e76c45467a",
+            "sourceMapRevisionId": null,
+            "journalRevisionId": null,
+            "evidenceByClaim": {},
+            "matrixAuthorityEpoch": 1,
+            "matrixAuthoritySubjects": {
+              "qualification": {
+                "schemaVersion": 1,
+                "matrixVersion": "1.0.0",
+                "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+                "evolutionEpoch": 1
+              },
+              "capability": {
+                "schemaVersion": 1,
+                "matrixVersion": "1.0.0",
+                "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+                "evolutionEpoch": 1
+              },
+              "journal": {
+                "schemaVersion": 1,
+                "matrixVersion": "1.0.0",
+                "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+                "evolutionEpoch": 1
+              },
+              "claim": {
+                "schemaVersion": 1,
+                "matrixVersion": "1.0.0",
+                "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+                "evolutionEpoch": 1
+              }
+            },
+            "generation": 1,
+            "predecessorId": null,
+            "fencingEpoch": 1
+          }
+        }
+      ],
+      "heads": [
+        {
+          "schemaVersion": 2,
+          "presentationId": "already-published-destination",
+          "originalRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+          "projectionRevisionId": null,
+          "packageRevisionId": "r0-427a3d85c596d85ff63f45e2f6e30780c0222445c2d7bfc796a512b2b9a27db7",
+          "sourceMapRevisionId": null,
+          "journalRevisionId": null,
+          "evidenceByClaim": {},
+          "matrixAuthorityEpoch": 1,
+          "matrixAuthoritySubjects": {
+            "qualification": {
+              "schemaVersion": 1,
+              "matrixVersion": "1.0.0",
+              "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+              "evolutionEpoch": 1
+            },
+            "capability": {
+              "schemaVersion": 1,
+              "matrixVersion": "1.0.0",
+              "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+              "evolutionEpoch": 1
+            },
+            "journal": {
+              "schemaVersion": 1,
+              "matrixVersion": "1.0.0",
+              "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+              "evolutionEpoch": 1
+            },
+            "claim": {
+              "schemaVersion": 1,
+              "matrixVersion": "1.0.0",
+              "hash": "47fe80afd5bd2011f334537033104a5a64fe8317cf572155bd2e1a8f33f04114",
+              "evolutionEpoch": 1
+            }
+          },
+          "generation": 1,
+          "predecessorId": null,
+          "fencingEpoch": 1
+        }
+      ],
+      "read": {
+        "status": 200,
+        "body": {
+          "id": "already-published-destination",
+          "title": "already-published-destination",
+          "slides": [],
+          "pptxSourceAvailable": true,
+          "aggregateGeneration": 1
+        }
+      }
+    },
+    "existingAuthorityPreserved": true,
+    "rejected": true,
+    "uniqueDestinationHead": true
+  },
+  "successes": [
+    {
+      "kind": "template",
+      "createStatus": 201,
+      "openStatus": 200,
+      "originalPreserved": true
+    },
+    {
+      "kind": "duplicate",
+      "createStatus": 201,
+      "openStatus": 200,
+      "originalPreserved": true
+    }
+  ],
+  "sourceBinding": {
+    "server/routes/presentations-crud.js": "c2fcf49ed14103629f5a5f9507b382c670091d86039105f5ad25c1d3b063f4df",
+    "server/services/pptx-import/package-store/lifecycle.js": "178d095d2f85a19542eaa3c0230e2d2eba5fdf06df086724751c898f8f656d3f",
+    "server/services/pptx-import/package-store/destination-creation.js": "b95d2e268a0f78332d8dcc872e45ec16c1c63b280743aa8ca5c8dca410947062"
+  },
+  "status": "passed"
+}

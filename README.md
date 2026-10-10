@@ -8,10 +8,11 @@
 
 A self-hostable WYSIWYG presentation editor powered by [reveal.js](https://revealjs.com/). Build, present, and broadcast slides in the browser — no account, no cloud, no tracking. Also available as a standalone desktop app via Electron.
 
-The current published release is **v1.16.2**. Published history also retains
-**v1.16.0** and **v1.16.1**. The next release candidate is the untagged
-**v1.17.0** product version; package manifests own that candidate version, while
-`runtime-versions.json` separately owns runtime and toolchain pins.
+The source package version is **1.17.0**, owned by [package.json](package.json).
+[runtime-versions.json](runtime-versions.json) separately owns runtime and
+toolchain pins. A package version does not establish a qualified or published
+release; see [Releases](https://github.com/xuan2261/NavSlidesEditor/releases) for
+published artifacts.
 
 <p align="center">
   <img src="website/public/img/editor-empty.png" alt="NavSlides Editor workspace with the ribbon, slide navigator, canvas, and properties panel" width="100%">
@@ -234,7 +235,7 @@ AI copywriter (rewrite slide text), AI generator (full presentation drafts from 
 
 ### Export & Sharing
 
-Present mode (Reveal.js 6.0.1, press `S` for speaker notes), export HTML (the canonical manifest-owned `/vendor/reveal.js/dist` runtime), export offline HTML (the same runtime assets inlined), export PDF (one page per slide with expanded fragments), export PPTX (hybrid: editable primitives + Playwright-rasterized fallback for unsupported elements), shareable links with optional password, GitHub push with auto-generated README, Markdown import, project export/import (`.navslides` archive with manifest v1.1). Browser actions remain browser-only and are omitted from PPTX with a warning; connectors export as resolved native lines with an attachment-semantics warning; layout masters flatten to resolved objects without native PowerPoint masters. Image alt text is native where supported, while decorative/long-description/media-track/transcript semantics have explicit PPTX warnings or fallbacks rather than unsupported preservation claims.
+Present mode (Reveal.js 6.0.2, press `S` for speaker notes), export HTML (the canonical manifest-owned `/vendor/reveal.js/dist` runtime), export offline HTML (the same runtime assets inlined), export PDF (one page per slide with expanded fragments), export PPTX (hybrid: editable primitives + Playwright-rasterized fallback for unsupported elements), shareable links with optional password, GitHub push with auto-generated README, Markdown import, project export/import (`.navslides` archive with manifest v1.1). Browser actions remain browser-only and are omitted from PPTX with a warning; connectors export as resolved native lines with an attachment-semantics warning; layout masters flatten to resolved objects without native PowerPoint masters. Image alt text is native where supported, while decorative/long-description/media-track/transcript semantics have explicit PPTX warnings or fallbacks rather than unsupported preservation claims.
 
 Dashboard imports wait for a shared import slot separately from the admitted job's bounded wait. ZIP structure, entry count, declared decompressed size, streamed decompressed-byte budget, and per-entry CRC32 are validated before package mapping. If the final outcome cannot be confirmed, the editor asks you to check existing presentations before retrying rather than making destructive recovery. A completed package job can remain pending visibility until it is safe to open. Imported external media is blocked unless a server administrator explicitly allows its origin; EMF/WMF conversion remains off until that administrator configures its guarded policy.
 
@@ -403,6 +404,25 @@ Only shortcuts implemented by the active game are enabled.
 
 ## Requirements
 
+Source facts below follow [package.json](package.json),
+[runtime-versions.json](runtime-versions.json), the [server](server/package.json)
+and [client](client/package.json) manifests, and
+[`ELEMENT_DEFAULTS`](client/src/data/element-defaults.js). These are declared
+versions and counts, not installation, runtime-qualification, or release evidence.
+Electron desktop packaging is separate from the npm workspaces; `website` is the
+fourth workspace.
+
+<!-- navslides-facts:start -->
+| Fact | Value |
+| --- | --- |
+| version | 1.17.0 |
+| workspaces | server,client,shared,website |
+| node.minimum | 22.13.0 |
+| reveal | 6.0.2 |
+| tiptap | 3.31.3 |
+| elements | 19 |
+<!-- navslides-facts:end -->
+
 | Method       | Requirement                                        |
 | ------------ | -------------------------------------------------- |
 | Desktop app  | Node.js >=22.13.0 (build only)                     |
@@ -490,8 +510,8 @@ PPTX browser audit artifacts are written under `plans/reports/pptx-import-real-b
 | -------------------- | -------------------------------------------------------------------------- |
 | Frontend             | React 18, Vite 8, React Router 7                                           |
 | State management     | Zustand (3 stores: editor, presentation, UI)                               |
-| Rich text editor     | TipTap 2                                                                   |
-| Presentation engine  | reveal.js 6.0.1 (canonical manifest-owned `/vendor/reveal.js/dist` assets) |
+| Rich text editor     | TipTap (pinned version in [Requirements](#requirements))                  |
+| Presentation engine  | reveal.js (pin in [Requirements](#requirements); canonical `/vendor/reveal.js/dist` assets) |
 | Math rendering       | KaTeX                                                                      |
 | Diagrams             | TikZJax                                                                    |
 | Charts               | Chart.js 4                                                                 |

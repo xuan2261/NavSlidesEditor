@@ -1,0 +1,180 @@
+{
+  "status": "observed",
+  "measuredAt": "2026-10-09T12:29:53.852Z",
+  "fixtureHash": "bae4068822c5b1025e9b988f3c556a61a40c9ecc118b842bb115db7ddd525e60",
+  "productionChanged": false,
+  "limitation": "Targeted instrumented managed Chromium observation, not performance distribution; final cleanup attempted a second Puppeteer mouse-up and threw after the drop; DOM/events were read without repeating it.",
+  "observed": {
+    "events": [
+      {
+        "type": "dragstart",
+        "trusted": true,
+        "label": "Select slide 1"
+      },
+      {
+        "type": "dragover",
+        "trusted": true,
+        "label": "Select slide 1"
+      },
+      {
+        "type": "dragover",
+        "trusted": true,
+        "label": "Select slide 1"
+      },
+      {
+        "type": "dragover",
+        "trusted": true,
+        "label": "Select slide 1"
+      },
+      {
+        "type": "dragover",
+        "trusted": true,
+        "label": "Select slide 1"
+      },
+      {
+        "type": "dragover",
+        "trusted": true,
+        "label": "Select slide 1"
+      },
+      {
+        "type": "dragover",
+        "trusted": true,
+        "label": "Select slide 48"
+      },
+      {
+        "type": "dragover",
+        "trusted": true,
+        "label": "Select slide 50"
+      },
+      {
+        "type": "drop",
+        "trusted": true,
+        "label": "Select slide 50"
+      },
+      {
+        "type": "dragend",
+        "trusted": true,
+        "label": "Select slide 50"
+      }
+    ],
+    "order": [
+      "50x0-parent-1",
+      "50x0-parent-2",
+      "50x0-parent-3",
+      "50x0-parent-4",
+      "50x0-parent-5",
+      "50x0-parent-6",
+      "50x0-parent-7",
+      "50x0-parent-8",
+      "50x0-parent-9",
+      "50x0-parent-10",
+      "50x0-parent-11",
+      "50x0-parent-12",
+      "50x0-parent-13",
+      "50x0-parent-14",
+      "50x0-parent-15",
+      "50x0-parent-16",
+      "50x0-parent-17",
+      "50x0-parent-18",
+      "50x0-parent-19",
+      "50x0-parent-20",
+      "50x0-parent-21",
+      "50x0-parent-22",
+      "50x0-parent-23",
+      "50x0-parent-24",
+      "50x0-parent-25",
+      "50x0-parent-26",
+      "50x0-parent-27",
+      "50x0-parent-28",
+      "50x0-parent-29",
+      "50x0-parent-30",
+      "50x0-parent-31",
+      "50x0-parent-32",
+      "50x0-parent-33",
+      "50x0-parent-34",
+      "50x0-parent-35",
+      "50x0-parent-36",
+      "50x0-parent-37",
+      "50x0-parent-38",
+      "50x0-parent-39",
+      "50x0-parent-40",
+      "50x0-parent-41",
+      "50x0-parent-42",
+      "50x0-parent-43",
+      "50x0-parent-44",
+      "50x0-parent-45",
+      "50x0-parent-46",
+      "50x0-parent-47",
+      "50x0-parent-48",
+      "50x0-parent-49",
+      "50x0-parent-0"
+    ],
+    "currentLabel": "Select slide 50",
+    "pressedLabels": [
+      "Select slide 50"
+    ],
+    "canvasIds": [
+      "layout-fixed:navigator-brand:brand",
+      "50x0-parent-0-text",
+      "50x0-parent-0-image",
+      "50x0-parent-0-chart"
+    ],
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 1.25
+    },
+    "persistedOrder": [
+      "50x0-parent-1",
+      "50x0-parent-2",
+      "50x0-parent-3",
+      "50x0-parent-4",
+      "50x0-parent-5",
+      "50x0-parent-6",
+      "50x0-parent-7",
+      "50x0-parent-8",
+      "50x0-parent-9",
+      "50x0-parent-10",
+      "50x0-parent-11",
+      "50x0-parent-12",
+      "50x0-parent-13",
+      "50x0-parent-14",
+      "50x0-parent-15",
+      "50x0-parent-16",
+      "50x0-parent-17",
+      "50x0-parent-18",
+      "50x0-parent-19",
+      "50x0-parent-20",
+      "50x0-parent-21",
+      "50x0-parent-22",
+      "50x0-parent-23",
+      "50x0-parent-24",
+      "50x0-parent-25",
+      "50x0-parent-26",
+      "50x0-parent-27",
+      "50x0-parent-28",
+      "50x0-parent-29",
+      "50x0-parent-30",
+      "50x0-parent-31",
+      "50x0-parent-32",
+      "50x0-parent-33",
+      "50x0-parent-34",
+      "50x0-parent-35",
+      "50x0-parent-36",
+      "50x0-parent-37",
+      "50x0-parent-38",
+      "50x0-parent-39",
+      "50x0-parent-40",
+      "50x0-parent-41",
+      "50x0-parent-42",
+      "50x0-parent-43",
+      "50x0-parent-44",
+      "50x0-parent-45",
+      "50x0-parent-46",
+      "50x0-parent-47",
+      "50x0-parent-48",
+      "50x0-parent-49",
+      "50x0-parent-0"
+    ]
+  }
+}

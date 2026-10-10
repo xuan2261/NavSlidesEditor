@@ -1,0 +1,273 @@
+{
+  "status": "failed",
+  "scope": "bounded actual package feasibility; agents may run concurrently; timings not baseline evidence",
+  "runs": [
+    {
+      "population": "cold",
+      "canonicalHash": "3cc9d61ce4df41a372e996b3d52b4d45a5cfe7c4d578ad542427d4e592484d0d",
+      "ready": {
+        "openToReadyMs": 4112.400000035763,
+        "parentCount": 39,
+        "flattenedCount": 39,
+        "identityMode": "persisted source order + keyed DOM node identity + canvas element IDs"
+      },
+      "browser": {
+        "samples": [],
+        "longTasks": {
+          "available": true,
+          "value": [
+            {
+              "name": "self",
+              "startTime": 2762.2000000476837,
+              "duration": 129,
+              "interactionId": null
+            },
+            {
+              "name": "self",
+              "startTime": 3227.800000011921,
+              "duration": 602,
+              "interactionId": null
+            },
+            {
+              "name": "self",
+              "startTime": 3875.7000000476837,
+              "duration": 132,
+              "interactionId": null
+            },
+            {
+              "name": "self",
+              "startTime": 4008.900000035763,
+              "duration": 60,
+              "interactionId": null
+            }
+          ]
+        },
+        "eventTiming": {
+          "available": true,
+          "value": []
+        },
+        "dom": {
+          "documentElements": 5973,
+          "navigatorElements": 5565,
+          "parentEntries": 39,
+          "flattenedEntries": 39
+        },
+        "heap": {
+          "available": true,
+          "usedBytes": 29400000,
+          "totalBytes": 42100000,
+          "limitBytes": 3760000000,
+          "source": "performance.memory; browser may bucket estimates"
+        },
+        "reactCommit": {
+          "available": false,
+          "value": null,
+          "reason": "Normal production build has no React profiling instrumentation; never merge profiling-build samples"
+        },
+        "resources": [
+          {
+            "name": "/assets/index-CJMcXud_.js",
+            "initiatorType": "script",
+            "duration": 10.5,
+            "transferSize": 92530,
+            "decodedBodySize": 92230
+          },
+          {
+            "name": "/assets/rolldown-runtime-C0FnF6B9.js",
+            "initiatorType": "other",
+            "duration": 14.5,
+            "transferSize": 1591,
+            "decodedBodySize": 1291
+          },
+          {
+            "name": "/assets/vendor-lucide-17ESUYP-.js",
+            "initiatorType": "other",
+            "duration": 15.5,
+            "transferSize": 65603,
+            "decodedBodySize": 65303
+          },
+          {
+            "name": "/assets/vendor-react-CWiSyg_n.js",
+            "initiatorType": "other",
+            "duration": 16.399999976158142,
+            "transferSize": 133684,
+            "decodedBodySize": 133384
+          },
+          {
+            "name": "/assets/vendor-katex-BkSWQkk7.js",
+            "initiatorType": "other",
+            "duration": 17.099999964237213,
+            "transferSize": 258987,
+            "decodedBodySize": 258687
+          },
+          {
+            "name": "/assets/vendor-katex-DEcVZfaU.css",
+            "initiatorType": "link",
+            "duration": 13.800000011920929,
+            "transferSize": 29136,
+            "decodedBodySize": 28836
+          },
+          {
+            "name": "/assets/index-CnkxrtfX.css",
+            "initiatorType": "link",
+            "duration": 15.200000047683716,
+            "transferSize": 68235,
+            "decodedBodySize": 67935
+          },
+          {
+            "name": "/css2",
+            "initiatorType": "css",
+            "duration": 2608.800000011921,
+            "transferSize": 3432,
+            "decodedBodySize": 60703
+          },
+          {
+            "name": "/gh/dreampulse/computer-modern-web-font@master/fonts.css",
+            "initiatorType": "css",
+            "duration": 2540.199999988079,
+            "transferSize": 512,
+            "decodedBodySize": 685
+          },
+          {
+            "name": "/assets/EditorPage-CefTq9Bl.js",
+            "initiatorType": "script",
+            "duration": 19.69999998807907,
+            "transferSize": 1870357,
+            "decodedBodySize": 1870057
+          },
+          {
+            "name": "/assets/esm-hM4c-ZSl.js",
+            "initiatorType": "script",
+            "duration": 3.699999988079071,
+            "transferSize": 41475,
+            "decodedBodySize": 41175
+          },
+          {
+            "name": "/assets/api-Bll5kYip.js",
+            "initiatorType": "script",
+            "duration": 16.80000001192093,
+            "transferSize": 981042,
+            "decodedBodySize": 980742
+          },
+          {
+            "name": "/assets/pptx-import-summary-Bidbg6Uf.js",
+            "initiatorType": "script",
+            "duration": 6.899999976158142,
+            "transferSize": 112547,
+            "decodedBodySize": 112247
+          },
+          {
+            "name": "/assets/vendor-tiptap-yw5h5ThW.js",
+            "initiatorType": "script",
+            "duration": 14.399999976158142,
+            "transferSize": 483432,
+            "decodedBodySize": 483132
+          },
+          {
+            "name": "/assets/use-keyboard-BvNmJ_11.js",
+            "initiatorType": "script",
+            "duration": 7,
+            "transferSize": 6744,
+            "decodedBodySize": 6444
+          },
+          {
+            "name": "/assets/shortcut-local-storage-persistence-Crn22I8q.js",
+            "initiatorType": "script",
+            "duration": 8.800000011920929,
+            "transferSize": 1356,
+            "decodedBodySize": 1056
+          },
+          {
+            "name": "/assets/default-keyboard-shortcut-definitions-registry-DODQ_om8.js",
+            "initiatorType": "script",
+            "duration": 10.899999976158142,
+            "transferSize": 4438,
+            "decodedBodySize": 4138
+          },
+          {
+            "name": "/assets/ai-J5HdxhS2.js",
+            "initiatorType": "script",
+            "duration": 13.300000011920929,
+            "transferSize": 7200,
+            "decodedBodySize": 6900
+          },
+          {
+            "name": "/assets/use-reveal-preview-frame-Df8yBdOh.js",
+            "initiatorType": "script",
+            "duration": 13.799999952316284,
+            "transferSize": 1545,
+            "decodedBodySize": 1245
+          },
+          {
+            "name": "/api/presentations/326f5e31-fb4f-4605-9445-70a7830328f5/share",
+            "initiatorType": "fetch",
+            "duration": 3,
+            "transferSize": 329,
+            "decodedBodySize": 29
+          },
+          {
+            "name": "/api/presentations/326f5e31-fb4f-4605-9445-70a7830328f5",
+            "initiatorType": "fetch",
+            "duration": 233.39999997615814,
+            "transferSize": 723585,
+            "decodedBodySize": 723285
+          },
+          {
+            "name": "/api/plugins",
+            "initiatorType": "fetch",
+            "duration": 231.89999997615814,
+            "transferSize": 745,
+            "decodedBodySize": 445
+          },
+          {
+            "name": "/api/presentations/326f5e31-fb4f-4605-9445-70a7830328f5/pptx-fidelity",
+            "initiatorType": "fetch",
+            "duration": 424.30000001192093,
+            "transferSize": 24163,
+            "decodedBodySize": 23863
+          },
+          {
+            "name": "/uploads/b1765835e3309730fe739bb583adf16084b31c6d14bfc0cc8090c14a8710876e.png",
+            "initiatorType": "img",
+            "duration": 4.100000023841858,
+            "transferSize": 51294,
+            "decodedBodySize": 50994
+          },
+          {
+            "name": "/uploads/90ef2f0d4741aac5006997b04c226d40e4cddb2a28313d65a447782efc00eb24.png",
+            "initiatorType": "img",
+            "duration": 4.300000011920929,
+            "transferSize": 14392,
+            "decodedBodySize": 14092
+          },
+          {
+            "name": "/assets/icon-paths-DGBL5uqE.js",
+            "initiatorType": "script",
+            "duration": 6.100000023841858,
+            "transferSize": 790620,
+            "decodedBodySize": 790320
+          }
+        ]
+      },
+      "status": "passed"
+    },
+    {
+      "population": "warmup",
+      "canonicalHash": "3cc9d61ce4df41a372e996b3d52b4d45a5cfe7c4d578ad542427d4e592484d0d",
+      "ready": {
+        "openToReadyMs": 1413.4000000357628,
+        "parentCount": 39,
+        "flattenedCount": 39,
+        "identityMode": "persisted source order + keyed DOM node identity + canvas element IDs"
+      }
+    }
+  ],
+  "pageErrors": [],
+  "fixture": {
+    "packageHash": "e433a1780b7e7b0b69d98cb7e2d7e99b487c47736b89b1649bd311360352d044",
+    "fixtureHash": "0d61eb6ebe4ebf68b87bcd18023e35c2728193a79b6d24fddd3f578e0928aaaa",
+    "parents": 39,
+    "flattened": 39
+  },
+  "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 1\u001b[39m\n\n\u001b[33m@@ -1,7 +1,7 @@\u001b[39m\n\u001b[2m  Object {\u001b[22m\n\u001b[32m-   \"inputRetained\": true,\u001b[39m\n\u001b[31m+   \"inputRetained\": false,\u001b[39m\n\u001b[2m    \"order\": Array [\u001b[22m\n\u001b[2m      \"0a394dba-cc9d-4466-8308-06c941fc0373\",\u001b[22m\n\u001b[2m      \"724b6ebe-88db-4983-9b28-09a95ab6f95e\",\u001b[22m\n\u001b[2m      \"f44f4e56-0adf-4b85-b8b7-20eab04bec34\",\u001b[22m\n\u001b[2m      \"59b8ecda-f720-4d5e-b8f9-a14adb5a56a9\",\u001b[22m\n\nCall Log:\n- Timeout 30000ms exceeded while waiting on the predicate\n    at measureInteractions (C:\\Work\\NavSlidesEditor\\tests\\e2e\\helpers\\navigator-performance-interactions.js:94:26)\n    at C:\\Work\\NavSlidesEditor\\tests\\e2e\\navigator-package-preflight.tmp.spec.js:30:55"
+}

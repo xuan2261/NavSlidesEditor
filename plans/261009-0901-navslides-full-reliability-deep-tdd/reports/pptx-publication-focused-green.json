@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "evidenceSource": "functions.bash actual seven-file command small output; no spill artifact returned",
+  "command": "npx vitest run server/routes/pptx-import-crash-points.test.js server/routes/pptx-import-durable-job.test.js server/routes/pptx-import.test.js server/services/pptx-import/package-store/lifecycle.test.js server/services/package-backed-presentation-read.test.js server/services/pptx-import/compatibility-outbox.test.js server/services/pptx-import/package-store-runtime-lock-order.test.js",
+  "filesPassed": 7,
+  "testsPassed": 88,
+  "exitCode": 0,
+  "startTimeLocal": "2026-10-09 17:07:14",
+  "durationSeconds": 19.34,
+  "wallTimeSeconds": 23.59,
+  "subjectSha": "aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+  "dirty": true,
+  "failedBefore": "artifact://72 and sanitized diagnostic artifact://96: CJS runtime singleton was not initialized by ESM fixture",
+  "repair": "createRequire aligned the fixture with the real CommonJS singleton, no runtime guard weakening",
+  "limitations": [
+    "Original success test used a minimal constructed OOXML fixture and actual temp store/HTTP; actual corpus/browser qualification remains separate."
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "status": "passed",
+  "observed": [
+    "template and snapshot projections restored after replacement; Original bytes exact",
+    "supplied foreign revision rejected before authority publication",
+    "supplied foreign generation rejected before authority publication",
+    "supplied foreign schema rejected before authority publication"
+  ],
+  "limitations": [
+    "Real store/import/export/lifecycle APIs; minimal ZIP source, not parser or Office qualification"
+  ],
+  "sourceFiles": [
+    {
+      "file": "server/services/pptx-import/package-store/portable.js",
+      "sha256": "014635dee5c44787cdb35970d01094026285f8fea4dca7d3bfdc0e6528194110"
+    },
+    {
+      "file": "server/services/pptx-import/package-store/portable-authority.js",
+      "sha256": "d0de6bcc0922b94d83429b4f9fe233a4788bc9d3a0e85b46cd085d36fbb05021"
+    },
+    {
+      "file": "server/services/package-backed-presentation-read.js",
+      "sha256": "1ddd6d8eeb3647383ddef223508d23d3e409571fc4a9e4e744c1c8fde600c1d6"
+    },
+    {
+      "file": "server/services/pptx-import/validated-edited-export-context.js",
+      "sha256": "ff01ff953e6a54a9835c216f4415dbf413eed5c015eeee741853eb0705306637"
+    }
+  ]
+}

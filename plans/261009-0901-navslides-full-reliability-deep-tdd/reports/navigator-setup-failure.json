@@ -1,0 +1,14 @@
+{
+  "phase": 13,
+  "status": "failed-setup",
+  "command": "npx playwright test tests/e2e/navigator-performance.spec.js --project=chromium --workers=1 --retries=0",
+  "exitCode": 1,
+  "artifact": "artifact://135",
+  "observedError": "Expected 1; received undefined at testInfo.config.repeatEach, navigator-performance.spec.js:18",
+  "timingSamplesCaptured": 0,
+  "cause": "Installed Playwright TestInfo.config is FullConfig; repeatEach is resolved on TestInfo.project (FullProject).",
+  "correction": "Replace testInfo.config.repeatEach with testInfo.project.repeatEach; counsel GO received.",
+  "budgetChanges": false,
+  "fixtureChanges": false,
+  "nextGate": "No timing claim; rerun only after Phase 08 source settles GREEN with no concurrent workload."
+}

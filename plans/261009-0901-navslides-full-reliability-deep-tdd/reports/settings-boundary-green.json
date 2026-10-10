@@ -1,0 +1,32 @@
+{
+  "status": "passed",
+  "scope": "local draft boundary characterization, not release qualification",
+  "sourceSha": "aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+  "dirty": true,
+  "command": "npx vitest run client/src/pages/SettingsPage.test.jsx client/src/pages/SettingsPage.draft.test.jsx",
+  "exitCode": 0,
+  "evidence": "Observed background job bg_22 completion in the session transcript",
+  "observed": {
+    "testFiles": 2,
+    "testsPassed": 17,
+    "start": "17:34:22",
+    "durationSeconds": 4.6
+  },
+  "addedScenarioIds": [
+    "P03-03",
+    "P03-04",
+    "P03-08",
+    "P03-10"
+  ],
+  "sourceHashes": {
+    "client/src/pages/SettingsPage.jsx": "5822134ab21c1cbbc42f123ce149d7a589603a4d667c469af9f922d40197284c",
+    "client/src/pages/settings-draft.js": "66bcec5b6dc61bcc5a911e1f841796ab92421840cd863ca667990126b41e6c53",
+    "client/src/pages/use-settings-draft.js": "d50a505247a480d9a800f319655b252f451660fcf851b1eae240141d250452e5",
+    "client/src/pages/SettingsPage.test.jsx": "9dbae4112e94f4d66158833f9847fc446da7439b3dc14b9b1867b0bade4e0620",
+    "client/src/pages/SettingsPage.draft.test.jsx": "9dbe1f0a828ddfa504b9b45a8ea8ab391bb6c8322b34c88d494bce909b401e8a"
+  },
+  "limitations": [
+    "Current renderer characterization is jsdom; actual browser draft/conflict proof is retained in settings-browser-smoke.json.",
+    "The shared 02/03 exit gate still lacks actual POSIX 0600 permission proof."
+  ]
+}

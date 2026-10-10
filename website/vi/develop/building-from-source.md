@@ -1,6 +1,6 @@
 # Build từ mã nguồn
 
-Cách chạy NavSlides Editor cục bộ để phát triển. Yêu cầu **Node.js >=22.13.0** và npm. Các bản build CI và container khóa Node.js 22.22.0.
+Cách chạy NavSlides Editor cục bộ để phát triển. Yêu cầu **Node.js >=22.13.0** và npm. CI khóa Node.js 22.22.0; image container khóa Node.js 22.23.3 trên Debian Trixie Slim. [`runtime-versions.json`](https://github.com/xuan2261/NavSlidesEditor/blob/master/runtime-versions.json) quản lý các phiên bản khóa này, không phải trạng thái qualification hay phát hành.
 
 ## Clone và cài đặt
 

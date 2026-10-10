@@ -1,0 +1,40 @@
+{
+  "scenario": "template",
+  "startedAt": "2026-10-10T09:44:17.589Z",
+  "node": "v22.22.0",
+  "platform": "win32",
+  "script": "C:\\Users\\Z10PAD8C_Xuan2261\\AppData\\Local\\Temp\\navslides-reaudit-package-green.cjs",
+  "scriptSha256": "33f0fafbfa22a7b01f0960759ef8ecb1f3e76bdcd3154bcaed78315cdcba7ecb",
+  "sourceBefore": {
+    "sha256": "9fe66ee5916e46229894b99b983a1175f6beefd7e4c98292e5a4016fce5e160e"
+  },
+  "limits": "Actual production package store, disk and loopback HTTP; synthetic PPTX fixture, not physical Office/platform qualification.",
+  "fixture": {
+    "sha256": "ce54495f2b73eac81690e53af6e54802dbee1e5f557111b572ce40a3bd3c0ce6",
+    "bytes": 361
+  },
+  "observed": {
+    "destination": "77e376ac-d650-44f8-9688-878d374faec9",
+    "duringRows": 0,
+    "duringHttpStatus": 404,
+    "responseStatus": 201,
+    "afterRows": 1,
+    "deckStatus": 200,
+    "immutable": {
+      "status": 200,
+      "body": {
+        "sha256": "ce54495f2b73eac81690e53af6e54802dbee1e5f557111b572ce40a3bd3c0ce6",
+        "bytes": 361
+      }
+    },
+    "headEpoch": 2
+  },
+  "status": "passed",
+  "cleanedOwnedRoot": true,
+  "sourceAfter": {
+    "sha256": "9fe66ee5916e46229894b99b983a1175f6beefd7e4c98292e5a4016fce5e160e"
+  },
+  "sourceUnchanged": true,
+  "finishedAt": "2026-10-10T09:44:20.951Z",
+  "fullExternalReceipt": "C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-reaudit-package-template-1791625457589.json"
+}

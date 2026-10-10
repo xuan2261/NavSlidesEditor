@@ -1,0 +1,164 @@
+{
+  "config": {
+    "argv": [
+      "C:\\nvm4w\\nodejs\\node.exe",
+      "C:\\Work\\NavSlidesEditor\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/e2e/export/portable-package-real-browser.spec.js",
+      "tests/e2e/export/portable-package-export-refusals.spec.js",
+      "--project=chromium",
+      "--workers=1",
+      "--retries=0",
+      "--trace=on",
+      "--output=test-results/p10-portable-ui-current02",
+      "--reporter=line,json"
+    ],
+    "configFile": "C:\\Work\\NavSlidesEditor\\playwright.config.js",
+    "rootDir": "C:/Work/NavSlidesEditor/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\global-setup.js",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results/p10-portable-ui-current02",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [
+          "/tests\\/e2e\\/live(?:\\.spec\\.js$|\\/.*\\.spec\\.js$)/",
+          "/tests\\/e2e\\/visual(?:\\/.*\\.spec\\.js$)/",
+          "/tests\\/e2e\\/visual-regression\\.spec\\.js$/",
+          "/tests\\/e2e\\/a11y\\/tablet-touch-editor-interactions\\.spec\\.js$/",
+          "/tests\\/e2e\\/critical-pptx-journey\\.spec\\.js$/",
+          "/tests\\/e2e\\/pptx-import-(?:async|fidelity|real-browser-audit|editor-visual-regression)\\.spec\\.js$/",
+          "/tests\\/e2e\\/export\\/pptx-import-endpoint-roundtrip-across-multiple-fixtures\\.spec\\.js$/"
+        ],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results/p10-portable-ui-current02",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "tablet-touch",
+        "name": "tablet-touch",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/a11y\\/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport\\.spec\\.js$/",
+          "/tests\\/e2e\\/a11y\\/tablet-touch-editor-interactions\\.spec\\.js$/",
+          "/tests\\/e2e\\/ribbon-responsive-touch\\.spec\\.js$/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results/p10-portable-ui-current02",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "chromium-live",
+        "name": "chromium-live",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/live(?:\\.spec\\.js$|\\/.*\\.spec\\.js$)/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results/p10-portable-ui-current02",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "chromium-pptx-import",
+        "name": "chromium-pptx-import",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/critical-pptx-journey\\.spec\\.js$/",
+          "/tests\\/e2e\\/pptx-import-(?:async|fidelity|real-browser-audit|editor-visual-regression)\\.spec\\.js$/",
+          "/tests\\/e2e\\/export\\/pptx-import-endpoint-roundtrip-across-multiple-fixtures\\.spec\\.js$/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results/p10-portable-ui-current02",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "chromium-visual",
+        "name": "chromium-visual",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/visual(?:\\/.*\\.spec\\.js$)/",
+          "/tests\\/e2e\\/visual-regression\\.spec\\.js$/"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm start",
+      "url": "http://127.0.0.1:3202",
+      "reuseExistingServer": false,
+      "timeout": 180000,
+      "environmentRedacted": "Inherited process environment omitted; observed test results unchanged."
+    }
+  },
+  "suites": [],
+  "errors": [
+    {
+      "message": "SyntaxError: Cannot use 'import.meta' outside a module",
+      "stack": "SyntaxError: Cannot use 'import.meta' outside a module"
+    },
+    {
+      "message": "SyntaxError: Cannot use 'import.meta' outside a module",
+      "stack": "SyntaxError: Cannot use 'import.meta' outside a module"
+    },
+    {
+      "message": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments.",
+      "stack": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments."
+    }
+  ],
+  "stats": {
+    "startTime": "2026-10-09T17:07:28.856Z",
+    "duration": 6463.127,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

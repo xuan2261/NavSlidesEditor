@@ -1,0 +1,248 @@
+{
+  "config": {
+    "argv": [
+      "C:\\nvm4w\\nodejs\\node.exe",
+      "C:\\Work\\NavSlidesEditor\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/e2e/editor-status-style-runtime.tmp.spec.js",
+      "--project=chromium",
+      "--workers=1",
+      "--retries=0",
+      "--reporter=line,json"
+    ],
+    "configFile": "C:\\Work\\NavSlidesEditor\\playwright.config.js",
+    "rootDir": "C:/Work/NavSlidesEditor/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\global-setup.js",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [
+          "/tests\\/e2e\\/live(?:\\.spec\\.js$|\\/.*\\.spec\\.js$)/",
+          "/tests\\/e2e\\/visual(?:\\/.*\\.spec\\.js$)/",
+          "/tests\\/e2e\\/visual-regression\\.spec\\.js$/",
+          "/tests\\/e2e\\/a11y\\/tablet-touch-editor-interactions\\.spec\\.js$/",
+          "/tests\\/e2e\\/critical-pptx-journey\\.spec\\.js$/",
+          "/tests\\/e2e\\/pptx-import-(?:async|fidelity|real-browser-audit|editor-visual-regression)\\.spec\\.js$/",
+          "/tests\\/e2e\\/export\\/pptx-import-endpoint-roundtrip-across-multiple-fixtures\\.spec\\.js$/"
+        ],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "tablet-touch",
+        "name": "tablet-touch",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/a11y\\/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport\\.spec\\.js$/",
+          "/tests\\/e2e\\/a11y\\/tablet-touch-editor-interactions\\.spec\\.js$/",
+          "/tests\\/e2e\\/ribbon-responsive-touch\\.spec\\.js$/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-live",
+        "name": "chromium-live",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/live(?:\\.spec\\.js$|\\/.*\\.spec\\.js$)/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-pptx-import",
+        "name": "chromium-pptx-import",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/critical-pptx-journey\\.spec\\.js$/",
+          "/tests\\/e2e\\/pptx-import-(?:async|fidelity|real-browser-audit|editor-visual-regression)\\.spec\\.js$/",
+          "/tests\\/e2e\\/export\\/pptx-import-endpoint-roundtrip-across-multiple-fixtures\\.spec\\.js$/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-visual",
+        "name": "chromium-visual",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/visual(?:\\/.*\\.spec\\.js$)/",
+          "/tests\\/e2e\\/visual-regression\\.spec\\.js$/"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm start",
+      "url": "http://127.0.0.1:3202",
+      "reuseExistingServer": false,
+      "timeout": 180000,
+      "environmentRedacted": "Inherited process environment omitted; observed test results unchanged."
+    }
+  },
+  "suites": [
+    {
+      "title": "editor-status-style-runtime.tmp.spec.js",
+      "file": "editor-status-style-runtime.tmp.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "current editor typography and Settings status runtime smoke",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 12659,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"Alpha?\"\u001b[39m\nReceived string:    \u001b[31m\"<h1><span style=\\\"color: rgb(199, 54, 57); font-size: 120px;\\\">Alpha</span></h1><p>?</p>\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"Alpha?\"\u001b[39m\nReceived string:    \u001b[31m\"<h1><span style=\\\"color: rgb(199, 54, 57); font-size: 120px;\\\">Alpha</span></h1><p>?</p>\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n    at C:\\Work\\NavSlidesEditor\\tests\\e2e\\editor-status-style-runtime.tmp.spec.js:29:116",
+                    "location": {
+                      "file": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\editor-status-style-runtime.tmp.spec.js",
+                      "column": 116,
+                      "line": 29
+                    },
+                    "snippet": "  27 |       await expect(text).toHaveText('Alpha?')\n  28 |       await quick.getByRole('button').first().click()\n> 29 |       await expect.poll(async () => (await apiGetPresentation(request, created.id)).slides[0].elements[0].content).toContain('Alpha?')\n     |                                                                                                                    ^\n  30 |       const persisted = await apiGetPresentation(request, created.id)\n  31 |       const persistedContent = persisted.slides[0].elements[0].content\n  32 |       expect(persistedContent).not.toContain('!')"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\editor-status-style-runtime.tmp.spec.js",
+                        "column": 116,
+                        "line": 29
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"Alpha?\"\u001b[39m\nReceived string:    \u001b[31m\"<h1><span style=\\\"color: rgb(199, 54, 57); font-size: 120px;\\\">Alpha</span></h1><p>?</p>\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n\n  27 |       await expect(text).toHaveText('Alpha?')\n  28 |       await quick.getByRole('button').first().click()\n> 29 |       await expect.poll(async () => (await apiGetPresentation(request, created.id)).slides[0].elements[0].content).toContain('Alpha?')\n     |                                                                                                                    ^\n  30 |       const persisted = await apiGetPresentation(request, created.id)\n  31 |       const persistedContent = persisted.slides[0].elements[0].content\n  32 |       expect(persistedContent).not.toContain('!')\n    at C:\\Work\\NavSlidesEditor\\tests\\e2e\\editor-status-style-runtime.tmp.spec.js:29:116"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:01:02.713Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Work\\NavSlidesEditor\\test-results\\editor-status-style-runtim-e92cc-ttings-status-runtime-smoke-chromium\\test-failed-1.png"
+                    },
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "C:\\Work\\NavSlidesEditor\\test-results\\editor-status-style-runtim-e92cc-ttings-status-runtime-smoke-chromium\\video.webm"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Work\\NavSlidesEditor\\test-results\\editor-status-style-runtim-e92cc-ttings-status-runtime-smoke-chromium\\error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "C:\\Work\\NavSlidesEditor\\test-results\\editor-status-style-runtim-e92cc-ttings-status-runtime-smoke-chromium\\trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\editor-status-style-runtime.tmp.spec.js",
+                    "column": 116,
+                    "line": 29
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "634ed3a7a380df88dde5-dafed89bc1f21c5d1860",
+          "file": "editor-status-style-runtime.tmp.spec.js",
+          "line": 6,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-09T19:00:55.723Z",
+    "duration": 20606.852000000003,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

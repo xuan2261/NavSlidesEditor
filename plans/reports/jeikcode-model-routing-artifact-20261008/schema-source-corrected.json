@@ -1,0 +1,25 @@
+{
+  "command": [
+    "C:/Users/Z10PAD8C_Xuan2261/.cargo/bin/cargo.exe",
+    "test",
+    "--offline",
+    "--locked",
+    "-p",
+    "jeikcode-capabilities",
+    "per_task_model_schema_and_parse_are_additive",
+    "--lib"
+  ],
+  "exitCode": 0,
+  "summary": [
+    "running 1 test",
+    "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 912 filtered out; finished in 0.00s"
+  ],
+  "counts": [
+    [
+      "1",
+      "0"
+    ]
+  ],
+  "kind": "COMPILED_CAPABILITIES_SOURCE_TEST_NOT_CLI_CANDIDATE_OR_ACTIVE_SCHEMA",
+  "previousFilterZeroTests": "Preserved schema-source-check.json/log, NOT evidence of completed schema validation."
+}

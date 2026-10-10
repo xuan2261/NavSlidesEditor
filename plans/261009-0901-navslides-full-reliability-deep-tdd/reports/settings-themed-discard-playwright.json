@@ -1,0 +1,204 @@
+{
+  "config": {
+    "argv": [
+      "C:\\nvm4w\\nodejs\\node.exe",
+      "C:\\Work\\NavSlidesEditor\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "tests/e2e/settings-themed-discard-runtime.tmp.spec.js",
+      "--project=chromium",
+      "--workers=1",
+      "--retries=0",
+      "--output=plans/261009-0901-navslides-full-reliability-deep-tdd/reports/settings-themed-discard-native",
+      "--reporter=line,json"
+    ],
+    "configFile": "C:\\Work\\NavSlidesEditor\\playwright.config.js",
+    "rootDir": "C:/Work/NavSlidesEditor/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": "C:\\Work\\NavSlidesEditor\\tests\\e2e\\global-setup.js",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/plans/261009-0901-navslides-full-reliability-deep-tdd/reports/settings-themed-discard-native",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [
+          "/tests\\/e2e\\/live(?:\\.spec\\.js$|\\/.*\\.spec\\.js$)/",
+          "/tests\\/e2e\\/visual(?:\\/.*\\.spec\\.js$)/",
+          "/tests\\/e2e\\/visual-regression\\.spec\\.js$/",
+          "/tests\\/e2e\\/a11y\\/tablet-touch-editor-interactions\\.spec\\.js$/",
+          "/tests\\/e2e\\/critical-pptx-journey\\.spec\\.js$/",
+          "/tests\\/e2e\\/pptx-import-(?:async|fidelity|real-browser-audit|editor-visual-regression)\\.spec\\.js$/",
+          "/tests\\/e2e\\/export\\/pptx-import-endpoint-roundtrip-across-multiple-fixtures\\.spec\\.js$/"
+        ],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/plans/261009-0901-navslides-full-reliability-deep-tdd/reports/settings-themed-discard-native",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "tablet-touch",
+        "name": "tablet-touch",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/a11y\\/touch-gestures-tap-double-tap-and-swipe-on-tablet-viewport\\.spec\\.js$/",
+          "/tests\\/e2e\\/a11y\\/tablet-touch-editor-interactions\\.spec\\.js$/",
+          "/tests\\/e2e\\/ribbon-responsive-touch\\.spec\\.js$/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/plans/261009-0901-navslides-full-reliability-deep-tdd/reports/settings-themed-discard-native",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-live",
+        "name": "chromium-live",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/live(?:\\.spec\\.js$|\\/.*\\.spec\\.js$)/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/plans/261009-0901-navslides-full-reliability-deep-tdd/reports/settings-themed-discard-native",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-pptx-import",
+        "name": "chromium-pptx-import",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/critical-pptx-journey\\.spec\\.js$/",
+          "/tests\\/e2e\\/pptx-import-(?:async|fidelity|real-browser-audit|editor-visual-regression)\\.spec\\.js$/",
+          "/tests\\/e2e\\/export\\/pptx-import-endpoint-roundtrip-across-multiple-fixtures\\.spec\\.js$/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Work/NavSlidesEditor/plans/261009-0901-navslides-full-reliability-deep-tdd/reports/settings-themed-discard-native",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-visual",
+        "name": "chromium-visual",
+        "testDir": "C:/Work/NavSlidesEditor/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/tests\\/e2e\\/visual(?:\\/.*\\.spec\\.js$)/",
+          "/tests\\/e2e\\/visual-regression\\.spec\\.js$/"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm start",
+      "url": "http://127.0.0.1:3202",
+      "reuseExistingServer": false,
+      "timeout": 180000,
+      "environmentRedacted": "Inherited process environment omitted; observed test results unchanged."
+    }
+  },
+  "suites": [
+    {
+      "title": "settings-themed-discard-runtime.tmp.spec.js",
+      "file": "settings-themed-discard-runtime.tmp.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "real two-tab Settings conflict uses themed cancel and explicit discard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4988,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T19:41:09.963Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6176135cc19cdf111ff2-afcb5144011fc3bd4a16",
+          "file": "settings-themed-discard-runtime.tmp.spec.js",
+          "line": 4,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-09T19:41:03.010Z",
+    "duration": 12439.782,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

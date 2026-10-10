@@ -23,7 +23,7 @@ Unlike editing raw Markdown or HTML reveal.js files, NavSlides Editor lets you:
 - **Slide navigation** — first-class vertical (child) slides, reorderable slides, speaker notes
 - **Themes & presets** — 11 built-in reveal.js themes plus 39 token-based design presets across 7 categories
 - **Footer sequences** — automatic section progress footers for academic talks
-- **Export options** — standalone HTML, offline HTML (CDN inlined), PDF, PPTX, shareable links, GitHub push
+- **Export options** — [standard HTML and scoped offline HTML](/features/export), PDF, [three PPTX modes](/features/pptx-import-export), view-only share links, GitHub push
 - **Cloud sync** — Proton Drive, S3, Google Drive, or any rclone remote
 
 ## Choose your installation method
@@ -32,7 +32,7 @@ NavSlides Editor can be run in three ways:
 
 | Method | Best for |
 |--------|----------|
-| **Docker** (recommended) | Servers, always-on setups, teams |
+| **Docker** (recommended) | Private, always-on deployment for one operator |
 | **Desktop App** | Single-user, offline, local files |
 | **Node.js from source** | Development, customization |
 

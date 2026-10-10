@@ -1,0 +1,109 @@
+{
+  "verdict": {
+    "status": "source_path_supported_offline_acceptance_incomplete_not_activated",
+    "summary": "Independent inspection of current C:/Work/JeikCode source supports explicit task-local provider and ChatOptions binding, exact-ID rejection without inherited fallback, and honest local-call receipts. No blocking defect was identified in the inspected binding path. Full runner acceptance and unchanged persisted snapshots are not established by the supplied test selections. The current API is not activated and model pinning remains unusable in this review session.",
+    "complete": false
+  },
+  "blockingFindings": [],
+  "sourceReviewed": [
+    {
+      "path": "C:/Work/JeikCode/crates/jeikcode-capabilities/src/tools/task.rs",
+      "ranges": ["277-403", "470-747", "1233-1429"],
+      "finding": "Actual names are TaskModelBinding and TaskModelResolver, not TaskModelResolverBinding. Explicit model_id is admitted before child tools are mounted. Registry ID, account prefix, nonempty API model and provider.model_name are checked. A valid callback binding supplies the actual child provider and ChatOptions; explicit selection bypasses both inherited difficulty factories. Missing/invalid/unknown/mismatched bindings reject without fallback. Omitted model_id retains fast/capable selection. Worker scope admission, child middleware and loop limits remain in the actual child builder."
+    },
+    {
+      "path": "C:/Work/JeikCode/crates/jeikcode-coding/src/provider_factory.rs",
+      "ranges": ["44-220", "279-449", "484-617"],
+      "finding": "TaskModelRouting resolves exact logical catalog IDs, validates account and protocol, derives a cloned task config, explicitly replaces endpoint and authentication rather than inheriting parent credentials, resets coordinator sampling/tool-choice overrides, and builds a fresh provider through CodingProviderFactory. Resolved model, protocol, context window, output cap, reasoning/thinking settings, vision, user agent and TLS policy feed the adapter construction; stream timeout remains inherited coding policy. Bound ChatOptions carry max_tokens and reasoning_effort. Unknown IDs fail before factory.build. Refresh replaces the cloned generation without rewriting already constructed providers."
+    },
+    {
+      "path": "C:/Work/JeikCode/crates/jeikcode-coding/src/parts.rs",
+      "ranges": ["379-483", "1574-1611"],
+      "finding": "The actual mounted task tool receives cfg.task_model_routing.resolve via with_model_resolver, plus runtime concurrency, round limit, loop policy and inherited worker execution policy. Assembly binds routing to the parent session ID. Legacy tier cells and host-provider fallback are separate from explicit routing."
+    },
+    {
+      "path": "C:/Work/JeikCode/crates/jeikcode-coding/src/runtime.rs",
+      "ranges": ["1800-1844", "4090-4137", "4220-4263", "8138-8203"],
+      "finding": "Runtime startup installs routing before prepare when subagent_config exists. Reassembly preserves the shared routing object and legacy tier cells, refreshing the generation after successful assembly. Existing inspected runtime tests exercise legacy tier installation/reload, not an explicit model_id dispatched through the mounted runtime task tool."
+    },
+    {
+      "path": "C:/Work/JeikCode/crates/jeikcode-cli/src/main.rs",
+      "ranges": ["2828 (registration search)", "2850-2897"],
+      "finding": "CLI constructs cfg.agent_config and passes it with the daemon-owned provider factory into CodingRuntimeStart/start_with_bootstrap or start_with_session_lease. This is a concrete source registration path, not proof that the presently exposed API uses that updated executable."
+    },
+    {
+      "path": "C:/Work/JeikCode/crates/jeikcode-coding/src/config.rs",
+      "ranges": ["400,419,459 (registration search)"],
+      "finding": "Configuration construction retains a registry snapshot and agent_config propagates subagent_config. Only these registration search matches were inspected here."
+    },
+    {
+      "path": "C:/Work/JeikCode/crates/jeikcode-daemon/src/runtime_host.rs",
+      "ranges": ["63-67 (registration search)"],
+      "finding": "coding_provider_factory returns DefaultCodingProviderFactory; no endpoint-specific authenticator is injected by this inspected source-build factory. Gateway activation/authentication is not established."
+    },
+    {
+      "path": "C:/Work/JeikCode/crates/jeikcode-daemon/src/live_api.rs",
+      "ranges": ["627-641 (registration search)"],
+      "finding": "Daemon configuration includes a cloned registry in subagent_config. No live daemon dispatch was performed."
+    },
+    {
+      "path": "C:/Work/JeikCode/crates/jeikcode-capabilities/src/tools/task_offline_acceptance.rs",
+      "ranges": ["1-113"],
+      "finding": "Current offline tests cover local-call receipts for open/midstream/429 failures, retry, cancellation, spoofed response identity and malformed explicit-ID types."
+    },
+    {
+      "path": "C:/Work/JeikCode/crates/jeikcode-capabilities/src/tools/task_offline_scope.rs",
+      "ranges": ["1-39"],
+      "finding": "Real child loop test checks worker write confinement and explore tool mounting under explicit binding."
+    },
+    {
+      "path": "C:/Work/JeikCode/crates/jeikcode-coding/src/provider_factory_offline_acceptance.rs",
+      "ranges": ["1-83"],
+      "finding": "Fake-factory tests exercise running/queued immutable bindings across registry/session refresh and sanitized construction failure. They manually construct TaskTool rather than dispatch through CodingParts/CodingRuntime registration."
+    }
+  ],
+  "runtimePlumbing": {
+    "sourceTrace": "CLI cfg.agent_config -> CodingRuntimeStart with coding_provider_factory -> runtime install_subagent_tiers -> CodingParts mounted TaskTool.with_model_resolver -> TaskModelRouting.resolve -> factory.build(task config, session ID) -> TaskModelBinding.provider/chat_options -> child Agent builder -> ObservedTaskProvider.chat_stream.",
+    "bindingOverridesActualClient": true,
+    "qualification": "True for the inspected source path: the resolved factory-created Arc replaces the inherited provider in the real child builder. No claim of installed executable or current API activation.",
+    "unknownId": "Exact lookup rejects before provider factory construction and before child mounting/calls; other valid tasks in a mixed batch may still run.",
+    "parentAndLegacy": "Task derivation clones parent configuration; explicit tasks do not invoke legacy factories. Omitted-ID factory selection and parent model/auth/protocol invariance have targeted mock assertions. No persisted snapshot serialization equality or comprehensive legacy snapshot comparison is established.",
+    "receipts": "Admission receipts have resolved_api_model with effective_api_model null. ObservedTaskProvider marks the local chat_stream attempt before delegation; final status provider_called and effective_api_model identify the local configured API model even if opening fails. This is not successful transport or actual remotely served identity. remote_serving_identity remains null; assistant self-identification is not used as evidence.",
+    "runnerResolution": "Shared coding runtime and CLI source registration are traced. Exact runner backing the currently exposed API, its loaded binary revision, endpoint availability, credentials and serving implementation remain unresolved; therefore complete runtime usability is not claimed.",
+    "existingWorkspaceEvidence": {
+      "path": "plans/reports/jeikcode-model-routing-phase-a-20261008/final-check-results.json",
+      "reportedResults": "38 task tests passed; 7 provider_factory tests passed; offline jeikcode and jeikcode-tuix consumer check exited 0.",
+      "independentlyRerun": false,
+      "meaning": "Existing logs are supporting offline evidence, not proof of activation or full runtime dispatch."
+    }
+  },
+  "missingOfflineTests": [
+    {
+      "test": "Dispatch explicit cross-provider model_id through CodingRuntime's prepared/mounted task tool using a recording factory/provider.",
+      "reason": "Current factory acceptance manually wires TaskTool; existing inspected runtime tests concern legacy tiers. Assert selected actual provider calls and ChatOptions, zero inherited calls, session binding, unknown-ID zero construction/calls, and successful/failed reassembly generation behavior through registration."
+    },
+    {
+      "test": "Parent conversation and legacy/native snapshot invariance around explicit task success, rejection, cancellation and provider failure.",
+      "reason": "Current assertions compare selected parent config fields and omitted-ID factory choices, not before/after snapshot contents or legacy serialization. Define expected parent task-result additions separately from unchanged preexisting history and persisted snapshot schema."
+    },
+    {
+      "test": "Offline adapter-boundary recording across supported protocols for resolved coding settings.",
+      "reason": "The dispatch smoke test constructs adapters without exercising requests; fake factory tests capture only a subset of settings. Capture task model, endpoint selection, auth isolation, context/output caps and reasoning/thinking options at a local mock transport boundary without live credentials."
+    }
+  ],
+  "scopeLimits": {
+    "mode": "Independent read-only source review; Phase A source changes remain subject to user approval.",
+    "sourceRoot": "C:/Work/JeikCode",
+    "outputWorkspace": "C:/Work/NavSlidesEditor",
+    "onlyWrittenFile": "plans/reports/jeikcode-model-routing-phase-a-20261008/independent-review.json",
+    "sourceChanged": false,
+    "testsRunByReviewer": false,
+    "liveApiCalls": false,
+    "activation": false,
+    "currentApiModelPinUsable": false,
+    "secretsAccessedOrRecorded": false,
+    "otherDriveAccess": false,
+    "commandInferenceUsed": false,
+    "limitations": "Source identities and local call attempts cannot establish remote serving identity. Existing test logs are not a fresh run against a pinned revision. Only listed ranges/search matches were independently inspected; no complete snapshot compatibility or all-consumer runtime acceptance claim is made."
+  }
+}

@@ -1,0 +1,187 @@
+{
+  "status": "passed",
+  "scope": "Plan artifact validation only; product tests not run",
+  "phases": [
+    {
+      "phase": 1,
+      "file": "phase-01-start.md",
+      "dependencies": [],
+      "scenarios": 8,
+      "uncheckedTasks": 5
+    },
+    {
+      "phase": 2,
+      "file": "phase-02-settings-atomic-revision.md",
+      "dependencies": [
+        1
+      ],
+      "scenarios": 14,
+      "uncheckedTasks": 5
+    },
+    {
+      "phase": 3,
+      "file": "phase-03-settings-ui-draft.md",
+      "dependencies": [
+        2
+      ],
+      "scenarios": 13,
+      "uncheckedTasks": 5
+    },
+    {
+      "phase": 4,
+      "file": "phase-04-ci-required-summary.md",
+      "dependencies": [
+        1
+      ],
+      "scenarios": 10,
+      "uncheckedTasks": 5
+    },
+    {
+      "phase": 5,
+      "file": "phase-05-scanner-evidence.md",
+      "dependencies": [
+        1
+      ],
+      "scenarios": 14,
+      "uncheckedTasks": 5
+    },
+    {
+      "phase": 6,
+      "file": "phase-06-history-autosave.md",
+      "dependencies": [
+        1
+      ],
+      "scenarios": 14,
+      "uncheckedTasks": 5
+    },
+    {
+      "phase": 7,
+      "file": "phase-07-pptx-publication.md",
+      "dependencies": [
+        1
+      ],
+      "scenarios": 14,
+      "uncheckedTasks": 5
+    },
+    {
+      "phase": 8,
+      "file": "phase-08-pptx-concurrency.md",
+      "dependencies": [
+        7
+      ],
+      "scenarios": 14,
+      "uncheckedTasks": 5
+    },
+    {
+      "phase": 9,
+      "file": "phase-09-pptx-recovery.md",
+      "dependencies": [
+        8
+      ],
+      "scenarios": 15,
+      "uncheckedTasks": 5
+    },
+    {
+      "phase": 10,
+      "file": "phase-10-pptx-portable.md",
+      "dependencies": [
+        9
+      ],
+      "scenarios": 15,
+      "uncheckedTasks": 5
+    },
+    {
+      "phase": 11,
+      "file": "phase-11-container-runtime.md",
+      "dependencies": [
+        4,
+        5,
+        10
+      ],
+      "scenarios": 10,
+      "uncheckedTasks": 5
+    },
+    {
+      "phase": 12,
+      "file": "phase-12-windows-office-qualification.md",
+      "dependencies": [
+        10,
+        11
+      ],
+      "scenarios": 17,
+      "uncheckedTasks": 5
+    },
+    {
+      "phase": 13,
+      "file": "phase-13-navigator-baseline.md",
+      "dependencies": [
+        6,
+        7
+      ],
+      "scenarios": 10,
+      "uncheckedTasks": 5
+    },
+    {
+      "phase": 14,
+      "file": "phase-14-navigator-optimization.md",
+      "dependencies": [
+        13
+      ],
+      "scenarios": 10,
+      "uncheckedTasks": 5
+    },
+    {
+      "phase": 15,
+      "file": "phase-15-documentation-drift.md",
+      "dependencies": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        14
+      ],
+      "scenarios": 10,
+      "uncheckedTasks": 5
+    },
+    {
+      "phase": 16,
+      "file": "phase-16-release-closeout.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "scenarios": 15,
+      "uncheckedTasks": 5
+    }
+  ],
+  "scenarioCount": 203,
+  "uncheckedTaskCount": 80,
+  "dependencyCreatedFiles": [
+    {
+      "phase": 14,
+      "createdBy": 13,
+      "path": "C:/Work/NavSlidesEditor/tests/e2e/navigator-performance.spec.js"
+    }
+  ],
+  "errors": []
+}

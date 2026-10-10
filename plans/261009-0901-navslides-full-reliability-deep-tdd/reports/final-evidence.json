@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "1.0.0",
+  "subject": {
+    "version": "1.17.0",
+    "baseSha": "aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+    "worktreeState": "dirty-audit-fixes-locally-verified",
+    "workspaces": ["server", "client", "shared", "website"]
+  },
+  "status": "nine-audit-findings-repaired; final-qualification-blocked",
+  "scope": "Current status summary, not a release receipt. Historical artifacts certify only their recorded inputs; scoped repair evidence does not close the full plan.",
+  "phases": {
+    "01_baseline": "completed-planning-baseline; not-current-source-certification",
+    "02_settings_atomic": "local-implementation; linux-owner-permissions-blocked",
+    "03_settings_ui_draft": "audit-fixes-source-matched-green-and-browser-smoke; joint-posix-gate-open",
+    "04_ci_summary": "local-contracts; hosted-github-dispatch-blocked",
+    "05_scanner_evidence": "reduced-scan-observed; candidate-image-scan-blocked",
+    "06_history_autosave": "historical-scoped-evidence; current-full-qualification-open",
+    "07_pptx_publication": "audited-authority-fixes-source-matched-green-and-native-smoke; phase-final-binding-open",
+    "08_pptx_concurrency": "audited-restoration-fixes-source-matched-green-and-native-smoke; phase-final-binding-open",
+    "09_pptx_recovery": "audited-expiry-fix-green-with-deadline-process-death-abort-neighbors; physical-backup-gates-open",
+    "10_pptx_portable": "audited-sidecar-and-noop-replay-fixes-green-and-native-smoke; full-phase-qualification-open",
+    "11_container_runtime": "physical-target-qualification-blocked",
+    "12_windows_office_qualification": "string-runtime-subject-consumers-green; synthetic-cli-smoke-only; physical-office-signing-blocked",
+    "13_navigator_baseline": "historical-measurement-completed",
+    "14_navigator_optimization": "blocked-stability-budget-and-comparison",
+    "15_documentation_drift": "machine-facts-and-edited-docs-build-passed; upstream-qualification-open",
+    "16_release_closeout": "in-progress; current-input-performance-and-external-qualification-open"
+  },
+  "verification": {
+    "auditFixes": {
+      "status": "passed-scoped-local-verification",
+      "findingsRepaired": 9,
+      "observedRedFailures": 16,
+      "redReports": [
+        "reports/audit-fixes-red-settings.json",
+        "reports/audit-fixes-red-pptx.json",
+        "reports/audit-fixes-red-recovery.json",
+        "reports/audit-fixes-red-release.json"
+      ],
+      "greenReport": "reports/audit-fixes-green.json",
+      "identityReport": "reports/audit-fixes-green-identity.json",
+      "identityMatched": true,
+      "sourceDigest": "63f2fa8f00065da0d314d052e0c81b9ac6c47ebb99d04bd9d5826afeca21e6c7",
+      "filesPassed": 19,
+      "testsPassed": 222,
+      "testsFailed": 0,
+      "runtimeReports": [
+        "reports/audit-fixes-pptx-runtime.json",
+        "reports/audit-fixes-settings-browser.json",
+        "reports/audit-fixes-release-cli-runtime.json"
+      ],
+      "clientBuild": {
+        "status": "passed",
+        "artifactIdentity": "a5c3f278743feda74526c17f61b9116f7f9b10595712f9ccf7575cd1a1c5be33",
+        "files": 103,
+        "limits": "Current dirty-tree client compilation, not production-browser or release qualification."
+      },
+      "machineFacts": "passed-current-canonical-owners",
+      "documentationBuild": "passed-current-edited-documents",
+      "testInventory": { "report": "reports/audit-fixes-inventory.json", "files": 672, "exactLaneUnion": true },
+      "lint": { "report": "reports/audit-fixes-lint.json", "errors": 0, "warnings": 4, "files": 21 },
+      "limits": "Affected source/config/harness-matched tests and isolated native/browser/actual-CLI smokes only. Upstream release inputs are explicitly synthetic. Not full-suite/E2E, physical Office, signed artifacts, hosted CI or performance qualification. Earlier harness startup/config/syntax/payload corrections are not product RED; raw observed product RED reports remain preserved."
+    },
+    "navigatorPerformance": {
+      "baseline": "reports/navigator-baseline.json",
+      "candidate": "reports/navigator-candidate.json",
+      "status": "blocked",
+      "stable": false,
+      "withinBudget": false,
+      "comparisonPassed": false,
+      "decision": "rerun controlled environment: noise>=5%; phase14 blocked",
+      "limits": "Noise invalidates stable-regression/improvement claims. Keep raw samples and frozen budgets; functional passes cannot qualify timing."
+    },
+    "finalFullSuite": {
+      "status": "not-run-current-inputs",
+      "historicalReport": "reports/final-coverage-frozen04.json",
+      "historicalIdentity": "reports/final-coverage-frozen04-runtime.json"
+    },
+    "finalFullE2e": {
+      "status": "not-passed-current-inputs",
+      "historicalReport": "reports/final-e2e-frozen03.json",
+      "historicalUnexpected": 1,
+      "limits": "Later targeted repair receipts are not a current full-E2E pass; skipped mandatory checks do not pass."
+    }
+  },
+  "historicalObservations": {
+    "vitest": "reports/final-coverage-frozen04.json passed its captured suite; later navigator/SlidePanel changes and audit fixes invalidate transplantation to the current candidate.",
+    "runtimeClosure": "A local runtime closure run observed intact manifest/vendor/dependency closure; this does not certify current client source or physical targets.",
+    "documentation": "Earlier machine facts and VitePress runs remain bounded historical observations.",
+    "matrixAndCorpus": "Earlier matrix/adversarial/corpus runs do not constitute current clean-SHA, native Office or release qualification."
+  },
+  "externalBlockers": {
+    "linuxContainerScanAndRuntime": "Exact physical Linux/container scan/runtime/permissions/backup target evidence required.",
+    "windowsOfficeQualification": "Physical Windows NSIS/portable and Microsoft PowerPoint qualification required.",
+    "authenticodeSigning": "Authorized Authenticode certificate/signing capability and independent download verification required.",
+    "releasePublication": "Explicit user authorization and qualified exact-subject hosted evidence required; no push/tag/publish is authorized by this repair."
+  }
+}

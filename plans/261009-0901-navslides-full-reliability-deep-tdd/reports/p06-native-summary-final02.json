@@ -1,0 +1,205 @@
+{
+  "status": "passed",
+  "command": "Playwright P06 native authoring/save/restore; chromium; workers=1; retries=0",
+  "stats": {
+    "startTime": "2026-10-09T20:49:22.265Z",
+    "duration": 82784.325,
+    "expected": 5,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "runs": [
+    {
+      "title": "P06-07/08 deleted text Undo caret and locked master selection remain authorable",
+      "status": "passed",
+      "scenarioIds": [
+        "P06-07",
+        "P06-08"
+      ],
+      "executionIdentity": {
+        "status": "matched",
+        "before": "202b2ce2e85c46bf5c30b7e835993faebc23a1f999dd1e7f4e17735dec2e7e94",
+        "after": "202b2ce2e85c46bf5c30b7e835993faebc23a1f999dd1e7f4e17735dec2e7e94",
+        "sourceBefore": "6b0171a5f54f3804e6f085cde37ca0f1c4a50219c8a24c4322ed064aef832424",
+        "sourceAfter": "6b0171a5f54f3804e6f085cde37ca0f1c4a50219c8a24c4322ed064aef832424",
+        "nodeExecutableSha256": "bae898add4643fcf890a83ad8ae56e20dce7e781cab161a53991ceba70c99ffb",
+        "browserExecutableSha256": "addfa79abb060e1e514e155ed745d4bf96140bca402735958bb4e223aea0b98c",
+        "browserVersion": "153.0.8010.12",
+        "files": 3317
+      },
+      "runs": [
+        {
+          "scenarioId": "P06-07",
+          "status": "passed",
+          "deletedTarget": "local",
+          "restoredNextInput": "<p>Local Alpha?</p>",
+          "staleEditorCountAfterUndo": 0
+        },
+        {
+          "scenarioId": "P06-08",
+          "status": "passed",
+          "masterEditUndoRedoX": [
+            222,
+            100,
+            222
+          ],
+          "survivingSelection": true,
+          "deletionClearsSelection": true,
+          "storedMasterLocked": true,
+          "localContentUnchanged": true
+        }
+      ],
+      "pageErrors": [],
+      "screenshot": "p06-native-final02-1.png"
+    },
+    {
+      "title": "P06-14 server history restore is reversible with immutable Original downloads",
+      "status": "passed",
+      "scenarioIds": [
+        "P06-14"
+      ],
+      "executionIdentity": {
+        "status": "matched",
+        "before": "202b2ce2e85c46bf5c30b7e835993faebc23a1f999dd1e7f4e17735dec2e7e94",
+        "after": "202b2ce2e85c46bf5c30b7e835993faebc23a1f999dd1e7f4e17735dec2e7e94",
+        "sourceBefore": "6b0171a5f54f3804e6f085cde37ca0f1c4a50219c8a24c4322ed064aef832424",
+        "sourceAfter": "6b0171a5f54f3804e6f085cde37ca0f1c4a50219c8a24c4322ed064aef832424",
+        "nodeExecutableSha256": "bae898add4643fcf890a83ad8ae56e20dce7e781cab161a53991ceba70c99ffb",
+        "browserExecutableSha256": "addfa79abb060e1e514e155ed745d4bf96140bca402735958bb4e223aea0b98c",
+        "browserVersion": "153.0.8010.12",
+        "files": 3317
+      },
+      "runs": [
+        {
+          "scenarioId": "P06-14",
+          "status": "passed",
+          "kind": "plain-changed-content",
+          "originalContent": "{\"title\":\"Plain original\",\"slides\":[{\"id\":\"slide\",\"elements\":[{\"id\":\"restore-text\",\"type\":\"text\",\"x\":100,\"y\":100,\"width\":400,\"height\":80,\"content\":\"<p>Restore Alpha</p>\",\"fontSize\":24}],\"notes\":\"\",\"background\":{\"type\":\"color\",\"color\":\"#101010\"}}]}",
+          "changedContent": "{\"title\":\"Plain changed\",\"slides\":[{\"id\":\"slide\",\"elements\":[{\"id\":\"restore-text\",\"type\":\"text\",\"x\":100,\"y\":100,\"width\":400,\"height\":80,\"content\":\"<p>Restore Beta</p>\",\"fontSize\":24}],\"notes\":\"\",\"background\":{\"type\":\"color\",\"color\":\"#101010\"}}]}",
+          "reversibleSnapshotId": "2b8488c7-056a-4d35-bda0-3062087d08c0"
+        },
+        {
+          "scenarioId": "P06-14",
+          "status": "passed",
+          "kind": "settled-package",
+          "snapshotId": "14de7dcb-3c58-47a8-834b-03fe51d0ea8c",
+          "reversibleSnapshotId": "a74be1c5-e447-4885-9e5f-b0eb1f05c5d0",
+          "generations": [
+            1,
+            2,
+            3
+          ],
+          "initialHash": "59c7d3aef15942f65517313a762c0845bcbf3296fd6fe42c48ad0219f160761c",
+          "beforeRestoreHash": "59c7d3aef15942f65517313a762c0845bcbf3296fd6fe42c48ad0219f160761c",
+          "restoreBackHash": "59c7d3aef15942f65517313a762c0845bcbf3296fd6fe42c48ad0219f160761c",
+          "retainedOwnerBoundary": "actual server restore-back from Before restore succeeds and Original remains downloadable; raw authority intentionally hidden by editor DTO",
+          "packageProvenance": "PptxGenJS genuine PPTX, real source package store, portable admission API; not parser/Office qualification"
+        },
+        {
+          "scenarioId": "P06-14",
+          "status": "passed",
+          "kind": "pending-projection-refusal",
+          "statusCode": 409,
+          "publicError": "Cannot restore while the current package projection is pending",
+          "publicDtoAndGenerationUnchanged": true,
+          "pendingRefusalHash": "59c7d3aef15942f65517313a762c0845bcbf3296fd6fe42c48ad0219f160761c"
+        }
+      ],
+      "pageErrors": [],
+      "screenshot": "p06-native-final02-2.png"
+    },
+    {
+      "title": "P06-09/10 queued save persists and a pending route save cannot replace its destination",
+      "status": "passed",
+      "scenarioIds": [
+        "P06-09",
+        "P06-10"
+      ],
+      "executionIdentity": {
+        "status": "matched",
+        "before": "202b2ce2e85c46bf5c30b7e835993faebc23a1f999dd1e7f4e17735dec2e7e94",
+        "after": "202b2ce2e85c46bf5c30b7e835993faebc23a1f999dd1e7f4e17735dec2e7e94",
+        "sourceBefore": "6b0171a5f54f3804e6f085cde37ca0f1c4a50219c8a24c4322ed064aef832424",
+        "sourceAfter": "6b0171a5f54f3804e6f085cde37ca0f1c4a50219c8a24c4322ed064aef832424",
+        "nodeExecutableSha256": "bae898add4643fcf890a83ad8ae56e20dce7e781cab161a53991ceba70c99ffb",
+        "browserExecutableSha256": "addfa79abb060e1e514e155ed745d4bf96140bca402735958bb4e223aea0b98c",
+        "browserVersion": "153.0.8010.12",
+        "files": 3317
+      },
+      "runs": [
+        {
+          "scenarioIds": [
+            "P06-09",
+            "P06-10"
+          ],
+          "status": "passed",
+          "heldBody": "Route pending A",
+          "successorPersisted": "Route queued B",
+          "routePendingPersistedAndReloaded": "Route in-flight C",
+          "destinationUnchanged": true
+        }
+      ],
+      "pageErrors": [],
+      "screenshot": "p06-native-final02-3.png"
+    },
+    {
+      "title": "P06-11 actual connection failure retries the queued latest edit and reloads",
+      "status": "passed",
+      "scenarioIds": [
+        "P06-11"
+      ],
+      "executionIdentity": {
+        "status": "matched",
+        "before": "202b2ce2e85c46bf5c30b7e835993faebc23a1f999dd1e7f4e17735dec2e7e94",
+        "after": "202b2ce2e85c46bf5c30b7e835993faebc23a1f999dd1e7f4e17735dec2e7e94",
+        "sourceBefore": "6b0171a5f54f3804e6f085cde37ca0f1c4a50219c8a24c4322ed064aef832424",
+        "sourceAfter": "6b0171a5f54f3804e6f085cde37ca0f1c4a50219c8a24c4322ed064aef832424",
+        "nodeExecutableSha256": "bae898add4643fcf890a83ad8ae56e20dce7e781cab161a53991ceba70c99ffb",
+        "browserExecutableSha256": "addfa79abb060e1e514e155ed745d4bf96140bca402735958bb4e223aea0b98c",
+        "browserVersion": "153.0.8010.12",
+        "files": 3317
+      },
+      "runs": [
+        {
+          "scenarioId": "P06-11",
+          "status": "passed",
+          "transportFailure": "connectionfailed, no invented API body",
+          "retryAndReload": "Retry latest B"
+        }
+      ],
+      "pageErrors": [],
+      "screenshot": "p06-native-final02-4.png"
+    },
+    {
+      "title": "P06-12 Use Remote discards a queued edit after a genuine generation conflict",
+      "status": "passed",
+      "scenarioIds": [
+        "P06-12"
+      ],
+      "executionIdentity": {
+        "status": "matched",
+        "before": "202b2ce2e85c46bf5c30b7e835993faebc23a1f999dd1e7f4e17735dec2e7e94",
+        "after": "202b2ce2e85c46bf5c30b7e835993faebc23a1f999dd1e7f4e17735dec2e7e94",
+        "sourceBefore": "6b0171a5f54f3804e6f085cde37ca0f1c4a50219c8a24c4322ed064aef832424",
+        "sourceAfter": "6b0171a5f54f3804e6f085cde37ca0f1c4a50219c8a24c4322ed064aef832424",
+        "nodeExecutableSha256": "bae898add4643fcf890a83ad8ae56e20dce7e781cab161a53991ceba70c99ffb",
+        "browserExecutableSha256": "addfa79abb060e1e514e155ed745d4bf96140bca402735958bb4e223aea0b98c",
+        "browserVersion": "153.0.8010.12",
+        "files": 3317
+      },
+      "runs": [
+        {
+          "scenarioId": "P06-12",
+          "status": "passed",
+          "heldBody": "Conflict local A",
+          "discardedQueued": "Conflict queued B",
+          "remoteAndReload": "Remote authoritative"
+        }
+      ],
+      "pageErrors": [],
+      "screenshot": "p06-native-final02-5.png"
+    }
+  ],
+  "limits": "Current dirty working-tree production browser/HTTP evidence, not hosted CI, Office, clean SHA or release qualification."
+}

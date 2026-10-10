@@ -1,0 +1,50 @@
+{
+  "status": "passed",
+  "kind": "actual-production-loopback-k6-smoke",
+  "profile": "smoke",
+  "observations": [
+    {
+      "label": "api",
+      "command": [
+        "k6",
+        "run",
+        "-e",
+        "PROFILE=smoke",
+        "-e",
+        "API_BASE_URL=http://127.0.0.1:61743/api",
+        "-e",
+        "WS_URL=ws://127.0.0.1:61743/ws/?EIO=4&transport=websocket",
+        "--summary-export",
+        "plans/261009-0901-navslides-full-reliability-deep-tdd/reports/load-api-final-summary.json",
+        "tests/load/k6-load-test-api-presentations-post-endpoint-with-profiles.js"
+      ],
+      "code": 0,
+      "signal": null,
+      "summary": "plans/261009-0901-navslides-full-reliability-deep-tdd/reports/load-api-final-summary.json"
+    },
+    {
+      "label": "websocket",
+      "command": [
+        "k6",
+        "run",
+        "-e",
+        "PROFILE=smoke",
+        "-e",
+        "API_BASE_URL=http://127.0.0.1:61743/api",
+        "-e",
+        "WS_URL=ws://127.0.0.1:61743/ws/?EIO=4&transport=websocket",
+        "--summary-export",
+        "plans/261009-0901-navslides-full-reliability-deep-tdd/reports/load-websocket-final-summary.json",
+        "tests/load/k6-load-test-socketio-websocket-room-join-and-slide-change-broadcast.js"
+      ],
+      "code": 0,
+      "signal": null,
+      "summary": "plans/261009-0901-navslides-full-reliability-deep-tdd/reports/load-websocket-final-summary.json"
+    }
+  ],
+  "userDataTouched": false,
+  "limits": [
+    "Working-tree application; not packaged/container or release qualification"
+  ],
+  "ownedRootRemoved": true
+}

@@ -1,0 +1,36 @@
+{
+  "status": "pendingacceptance",
+  "phase": "A",
+  "sourceRoot": "C:/Work/JeikCode",
+  "previousReport": "runtime-offline-integration.json",
+  "changedFiles": [
+    "crates/jeikcode-coding/src/runtime_offline_integration.rs",
+    "crates/jeikcode-coding/src/provider_factory_offline_transport.rs"
+  ],
+  "productionBehaviorChanged": false,
+  "checks": [
+    {"filter": "runtime_offline_persisted_two_provider_explicit_pins", "passed": 1, "failed": 0},
+    {"filter": "runtime_offline_adapter_metadata_without_http", "passed": 1, "failed": 0},
+    {"filter": "runtime_offline_mounted_cross_provider_reload_and_snapshot_invariants", "passed": 1, "failed": 0}
+  ],
+  "commandTemplate": "C:/Users/Z10PAD8C_Xuan2261/.cargo/bin/cargo.exe test --offline -p jeikcode-coding FILTER --lib -- --test-threads=1",
+  "counts": {"newTestsPassed": 2, "regressionTestsPassed": 1, "testExecutionsPassed": 3, "finalFailures": 0},
+  "evidence": [
+    "CodingRuntime::start uses existing native_start runner configuration and CodingRuntimeStart.provider_factory injection. Real preparation and mounted task ToolCall execute two parent turns, explicitly pinned Gemini and Claude children; GPT-5 Responses coordinator model, key, temperature and session bindings remain unchanged.",
+    "Fresh persistent session uses only a temporary C-drive home/project, restores JEIKCODE_HOME, and asserts nonempty identical parent/child session IDs. Native SessionManager files equal runtime parent messages after each turn and after shutdown; serialized prior conversation remains an exact prefix and schema keys remain unchanged.",
+    "Child call contexts contain the task prompt, not the coordinator-only history marker or synthetic credentials. Actual embedded tool-result provenance asserts requested pin, resolved/effective API model, explicit_task source, and null remote_serving_identity. Output cap and child sampling isolation asserted.",
+    "Existing adapter test module now additionally constructs real DefaultCodingProviderFactory adapters for openai, responses, claude, gemini and ollama without calling chat_stream or HTTP. Registry/model/context/output/reasoning metadata asserted. Existing loopback transport test retained but not executed in this follow-up."
+  ],
+  "remainingGaps": [
+    "Running/queued bindings across reload remain covered by the previous factory/task test, not combined with the new persisted whole-runtime two-turn test. No inaccessible-seam or live-provider blocker is claimed: runtime.rs CodingRuntimeStart.provider_factory and start_inner factory installation already provide an offline seam.",
+    "Legacy snapshot serialization and omitted-model-ID comparison remain unclosed. Native resume deliberately rejects legacy ownership until driver import (parts.rs:576-581); this follow-up does not perform driver import or claim legacy compatibility acceptance. This is an untested acceptance gap, not proof that no safe offline hook exists.",
+    "Remote serving identity is inherently unknown for mocked invocations and metadata-only adapter construction. No network model identity, host activation, deployment or Phase D verification claimed."
+  ],
+  "developmentFailuresResolved": [
+    "Fresh sessions invoke auxiliary task-free title calls: mock now consumes the explicit pin only on task-mounted coordinator calls and excludes task-free GPT title calls from turn sampling assertions; all contexts still recorded.",
+    "Claude resolves to canonical anthropic provider_type; assertion corrected to actual factory normalization.",
+    "Auxiliary title lifecycle may build GPT twice; invariant checks unchanged configurations and absence of unrequested models rather than asserting one build."
+  ],
+  "scope": {"existingDirtyPreserved": true, "testOnlySourceChanges": true, "externalNetwork": false, "httpCallsInNewTests": false, "productionSwitchOrRetryChanges": false, "hostConfigurationChanges": false, "runtimeFilesystemSideEffects": "temporary C-drive home/project only", "deployment": false},
+  "acceptance": "Partial Phase A evidence; pendingacceptance, not completed. Prior report and prior test counts are not overwritten or added to this run's passed count."
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "bundleHash": "5754b022675903faa8410f6326666022ba2dfd7b019a441df081c9c701e4c857",
+    "clientDigest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "digest": "f345ae2f597f10a2b6b9fe2037e0cb7a14eb695bfeaba13feddf7d1ee8f324ab",
+    "id": "electron-windows",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "subjectSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "verified": true,
+    "workflowIdentity": "https://github.com/example/repo/.github/workflows/reusable-windows-qualification.yml@refs/tags/v1.17.0"
+  }
+]

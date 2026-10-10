@@ -1,0 +1,596 @@
+{
+  "status": "failed-product-contract",
+  "timestamp": "2026-10-09T20:18:49.366916+00:00",
+  "scope": "Extracted actual workflow Bash consumers; synthetic gh command boundary; actual Git and bare file-only remote",
+  "workflowBodies": [
+    {
+      "file": ".github/workflows/electron-server-lock-refresh.yml",
+      "lines": [
+        30,
+        33
+      ],
+      "workflowSha256": "4540cab8054ed024cf7785b3a9ab74963fa65a7b3436da0d204a6b07cea07d23",
+      "extractedBodySha256": "d7e46fefc856cdcd67b3b0ac910d491567f43d27f605bb022405d8af8c820e0c"
+    },
+    {
+      "file": ".github/workflows/electron-server-lock-refresh.yml",
+      "lines": [
+        53,
+        77
+      ],
+      "workflowSha256": "4540cab8054ed024cf7785b3a9ab74963fa65a7b3436da0d204a6b07cea07d23",
+      "extractedBodySha256": "c4139f1ab4ca4e54e0f3a5ca74b02fe792953ee741f293b22d525731ba4eaada"
+    },
+    {
+      "file": ".github/workflows/release.yml",
+      "lines": [
+        69,
+        82
+      ],
+      "workflowSha256": "b128603bc0a61b3829af678769bad51e0067d2bb17026230222febb37ba75432",
+      "extractedBodySha256": "691304e7c06511e244c79aee7905476626f48190ef47efe7d739180e1775d5dd"
+    }
+  ],
+  "fixtures": {
+    "repository": "synthetic-owner/synthetic-repo",
+    "approvedDefaultBranch": "main",
+    "subjectSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "linuxRun": 51001,
+    "officecliRun": 51002,
+    "fidelityRun": 51003
+  },
+  "results": [
+    {
+      "id": "P16-10/default-branch-resolution",
+      "case": "denied-refresh-pr",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "ghCalls": [
+        [
+          "repo",
+          "view",
+          "synthetic-owner/synthetic-repo",
+          "--json",
+          "defaultBranchRef",
+          "--jq",
+          ".defaultBranchRef.name"
+        ]
+      ],
+      "consumerOutputs": "base=main\n",
+      "gitTrace": "",
+      "command": [
+        "bash",
+        "--noprofile",
+        "--norc",
+        "-eo",
+        "pipefail",
+        "policy.sh"
+      ],
+      "passed": true
+    },
+    {
+      "id": "P16-08",
+      "case": "denied-refresh-pr",
+      "exitCode": 1,
+      "stdout": "M\telectron/server-package-lock.json\n[chore/electron-server-lock-refresh 8d635ea] chore: refresh isolated Electron server lock\n 1 file changed, 1 insertion(+), 1 deletion(-)\n::error::Refresh PR creation denied or unavailable. Repository owner must approve the existing Actions PR policy; this workflow does not change permissions or use a PAT fallback.\n",
+      "stderr": "Switched to a new branch 'chore/electron-server-lock-refresh'\nTo C:\\Users\\Z10PAD~1\\AppData\\Local\\Temp\\navslides-github-boundary-8bmjsamj\\denied-refresh-pr\\remote.git\n * [new branch]      chore/electron-server-lock-refresh -> chore/electron-server-lock-refresh\nsynthetic upstream: resource not accessible by integration\n",
+      "ghCalls": [
+        [
+          "pr",
+          "list",
+          "--head",
+          "chore/electron-server-lock-refresh",
+          "--base",
+          "main",
+          "--state",
+          "open",
+          "--json",
+          "number",
+          "--jq",
+          ".[0].number // empty"
+        ],
+        [
+          "pr",
+          "create",
+          "--title",
+          "chore: refresh isolated Electron server lock",
+          "--body",
+          "Regenerates electron/server-package-lock.json via `npm run electron:lock -- --resolve` so the packaged Electron server picks up in-range dependency updates that Dependabot lands on the workspace lockfile. The refresh job verifies the lock installs its declared tree via `node scripts/prepare-electron.js`.",
+          "--base",
+          "main",
+          "--head",
+          "chore/electron-server-lock-refresh"
+        ]
+      ],
+      "consumerOutputs": "",
+      "gitTrace": "03:18:42.786670 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:42.793887 git.c:502               trace: built-in: git diff --quiet -- electron/server-package-lock.json\n03:18:42.843582 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:42.851878 git.c:502               trace: built-in: git config user.name 'github-actions[bot]'\n03:18:42.895335 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:42.903529 git.c:502               trace: built-in: git config user.email '41898282+github-actions[bot]@users.noreply.github.com'\n03:18:42.946312 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:42.955711 git.c:502               trace: built-in: git checkout -B chore/electron-server-lock-refresh\n03:18:43.008511 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:43.017877 git.c:502               trace: built-in: git add electron/server-package-lock.json\n03:18:43.069259 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:43.078705 git.c:502               trace: built-in: git commit -m 'chore: refresh isolated Electron server lock'\n03:18:43.100841 run-command.c:673       trace: run_command: git maintenance run --auto --no-quiet --detach\n03:18:43.100841 run-command.c:934       trace: start_command: git maintenance run --auto --no-quiet --detach\n03:18:43.113331 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/libexec/git-core\n03:18:43.117039 git.c:502               trace: built-in: git maintenance run --auto --no-quiet --detach\n03:18:43.171283 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:43.180477 git.c:502               trace: built-in: git push --force-with-lease origin chore/electron-server-lock-refresh\n03:18:43.182494 run-command.c:673       trace: run_command: unset GIT_PREFIX; 'git-receive-pack '\\''C:\\Users\\Z10PAD~1\\AppData\\Local\\Temp\\navslides-github-boundary-8bmjsamj\\denied-refresh-pr\\remote.git'\\'''\n03:18:43.182494 run-command.c:934       trace: start_command: 'C:/Program Files/Git/usr/bin/sh.exe' -c 'git-receive-pack '\\''C:\\Users\\Z10PAD~1\\AppData\\Local\\Temp\\navslides-github-boundary-8bmjsamj\\denied-refresh-pr\\remote.git'\\''' 'git-receive-pack '\\''C:\\Users\\Z10PAD~1\\AppData\\Local\\Temp\\navslides-github-boundary-8bmjsamj\\denied-refresh-pr\\remote.git'\\'''\n03:18:43.228292 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:43.231347 git.c:502               trace: built-in: git receive-pack 'C:\\Users\\Z10PAD~1\\AppData\\Local\\Temp\\navslides-github-boundary-8bmjsamj\\denied-refresh-pr\\remote.git'\n03:18:43.234416 run-command.c:673       trace: run_command: git pack-objects --all-progress-implied --revs --stdout --thin --delta-base-offset -q\n03:18:43.234416 run-command.c:934       trace: start_command: git pack-objects --all-progress-implied --revs --stdout --thin --delta-base-offset -q\n03:18:43.246697 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/libexec/git-core\n03:18:43.250846 git.c:502               trace: built-in: git pack-objects --all-progress-implied --revs --stdout --thin --delta-base-offset -q\n03:18:43.257044 run-command.c:673       trace: run_command: GIT_ALTERNATE_OBJECT_DIRECTORIES=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/denied-refresh-pr/remote.git/./objects GIT_OBJECT_DIRECTORY=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/denied-refresh-pr/remote.git/./objects/tmp_objdir-incoming-gKNXUi GIT_QUARANTINE_PATH=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/denied-refresh-pr/remote.git/./objects/tmp_objdir-incoming-gKNXUi git unpack-objects --pack_header=2,4 -q\n03:18:43.257044 run-command.c:934       trace: start_command: git unpack-objects --pack_header=2,4 -q\n03:18:43.268479 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/libexec/git-core\n03:18:43.272636 git.c:502               trace: built-in: git unpack-objects --pack_header=2,4 -q\n03:18:43.289115 run-command.c:673       trace: run_command: GIT_ALTERNATE_OBJECT_DIRECTORIES=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/denied-refresh-pr/remote.git/./objects GIT_OBJECT_DIRECTORY=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/denied-refresh-pr/remote.git/./objects/tmp_objdir-incoming-gKNXUi GIT_QUARANTINE_PATH=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/denied-refresh-pr/remote.git/./objects/tmp_objdir-incoming-gKNXUi git rev-list --objects --stdin --not --exclude-hidden=receive --all --quiet --alternate-refs\n03:18:43.289115 run-command.c:934       trace: start_command: git rev-list --objects --stdin --not --exclude-hidden=receive --all --quiet --alternate-refs\n03:18:43.301431 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/libexec/git-core\n03:18:43.304513 git.c:502               trace: built-in: git rev-list --objects --stdin --not --exclude-hidden=receive --all --quiet --alternate-refs\n03:18:43.306565 run-command.c:673       trace: run_command: unset GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_DIR GIT_OBJECT_DIRECTORY GIT_PREFIX; git --git-dir=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/denied-refresh-pr/remote.git for-each-ref '--format=%(objectname)'\n03:18:43.306565 run-command.c:934       trace: start_command: git --git-dir=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/denied-refresh-pr/remote.git for-each-ref '--format=%(objectname)'\n03:18:43.314205 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/libexec/git-core\n03:18:43.322311 git.c:502               trace: built-in: git for-each-ref '--format=%(objectname)'\n03:18:43.336064 run-command.c:673       trace: run_command: git maintenance run --auto --quiet --detach\n03:18:43.336064 run-command.c:934       trace: start_command: git maintenance run --auto --quiet --detach\n03:18:43.352882 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/libexec/git-core\n03:18:43.354947 git.c:502               trace: built-in: git maintenance run --auto --quiet --detach\n",
+      "command": [
+        "bash",
+        "--noprofile",
+        "--norc",
+        "-eo",
+        "pipefail",
+        "refresh.sh"
+      ],
+      "remoteRefsBefore": {
+        "refs/heads/main": "45e28fe9288978e4d869458657022f1499056b26",
+        "refs/heads/unrelated": "45e28fe9288978e4d869458657022f1499056b26"
+      },
+      "remoteRefsAfter": {
+        "refs/heads/chore/electron-server-lock-refresh": "8d635eaa788d933fa26c000a2578af65c22ecd75",
+        "refs/heads/main": "45e28fe9288978e4d869458657022f1499056b26",
+        "refs/heads/unrelated": "45e28fe9288978e4d869458657022f1499056b26"
+      },
+      "passed": true
+    },
+    {
+      "id": "P16-10/default-branch-resolution",
+      "case": "no-diff",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "ghCalls": [
+        [
+          "repo",
+          "view",
+          "synthetic-owner/synthetic-repo",
+          "--json",
+          "defaultBranchRef",
+          "--jq",
+          ".defaultBranchRef.name"
+        ]
+      ],
+      "consumerOutputs": "base=main\n",
+      "gitTrace": "",
+      "command": [
+        "bash",
+        "--noprofile",
+        "--norc",
+        "-eo",
+        "pipefail",
+        "policy.sh"
+      ],
+      "passed": true
+    },
+    {
+      "id": "P16-09",
+      "case": "no-diff",
+      "exitCode": 0,
+      "stdout": "Electron server lock already up to date.\n",
+      "stderr": "",
+      "ghCalls": [],
+      "consumerOutputs": "",
+      "gitTrace": "03:18:44.997242 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:45.004504 git.c:502               trace: built-in: git diff --quiet -- electron/server-package-lock.json\n",
+      "command": [
+        "bash",
+        "--noprofile",
+        "--norc",
+        "-eo",
+        "pipefail",
+        "refresh.sh"
+      ],
+      "remoteRefsBefore": {
+        "refs/heads/main": "32194e7c5e561a273b5a22e036467791324b1375",
+        "refs/heads/unrelated": "32194e7c5e561a273b5a22e036467791324b1375"
+      },
+      "remoteRefsAfter": {
+        "refs/heads/main": "32194e7c5e561a273b5a22e036467791324b1375",
+        "refs/heads/unrelated": "32194e7c5e561a273b5a22e036467791324b1375"
+      },
+      "passed": true
+    },
+    {
+      "id": "P16-10/default-branch-resolution",
+      "case": "existing-refresh-pr",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "ghCalls": [
+        [
+          "repo",
+          "view",
+          "synthetic-owner/synthetic-repo",
+          "--json",
+          "defaultBranchRef",
+          "--jq",
+          ".defaultBranchRef.name"
+        ]
+      ],
+      "consumerOutputs": "base=main\n",
+      "gitTrace": "",
+      "command": [
+        "bash",
+        "--noprofile",
+        "--norc",
+        "-eo",
+        "pipefail",
+        "policy.sh"
+      ],
+      "passed": true
+    },
+    {
+      "id": "P16-09",
+      "case": "existing-refresh-pr",
+      "exitCode": 0,
+      "stdout": "M\telectron/server-package-lock.json\n[chore/electron-server-lock-refresh 36c7114] chore: refresh isolated Electron server lock\n 1 file changed, 1 insertion(+), 1 deletion(-)\nRefresh PR #733 already open \u00e2\u20ac\u201d branch updated in place.\n",
+      "stderr": "Switched to and reset branch 'chore/electron-server-lock-refresh'\nTo C:\\Users\\Z10PAD~1\\AppData\\Local\\Temp\\navslides-github-boundary-8bmjsamj\\existing-refresh-pr\\remote.git\n   b68733e..36c7114  chore/electron-server-lock-refresh -> chore/electron-server-lock-refresh\n",
+      "ghCalls": [
+        [
+          "pr",
+          "list",
+          "--head",
+          "chore/electron-server-lock-refresh",
+          "--base",
+          "main",
+          "--state",
+          "open",
+          "--json",
+          "number",
+          "--jq",
+          ".[0].number // empty"
+        ]
+      ],
+      "consumerOutputs": "",
+      "gitTrace": "03:18:46.542389 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:46.549637 git.c:502               trace: built-in: git diff --quiet -- electron/server-package-lock.json\n03:18:46.592412 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:46.599711 git.c:502               trace: built-in: git config user.name 'github-actions[bot]'\n03:18:46.642433 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:46.649762 git.c:502               trace: built-in: git config user.email '41898282+github-actions[bot]@users.noreply.github.com'\n03:18:46.693481 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:46.702721 git.c:502               trace: built-in: git checkout -B chore/electron-server-lock-refresh\n03:18:46.755394 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:46.764346 git.c:502               trace: built-in: git add electron/server-package-lock.json\n03:18:46.809617 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:46.818124 git.c:502               trace: built-in: git commit -m 'chore: refresh isolated Electron server lock'\n03:18:46.840084 run-command.c:673       trace: run_command: git maintenance run --auto --no-quiet --detach\n03:18:46.840091 run-command.c:934       trace: start_command: git maintenance run --auto --no-quiet --detach\n03:18:46.851512 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/libexec/git-core\n03:18:46.854550 git.c:502               trace: built-in: git maintenance run --auto --no-quiet --detach\n03:18:46.903248 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:46.912603 git.c:502               trace: built-in: git push --force-with-lease origin chore/electron-server-lock-refresh\n03:18:46.915156 run-command.c:673       trace: run_command: unset GIT_PREFIX; 'git-receive-pack '\\''C:\\Users\\Z10PAD~1\\AppData\\Local\\Temp\\navslides-github-boundary-8bmjsamj\\existing-refresh-pr\\remote.git'\\'''\n03:18:46.915156 run-command.c:934       trace: start_command: 'C:/Program Files/Git/usr/bin/sh.exe' -c 'git-receive-pack '\\''C:\\Users\\Z10PAD~1\\AppData\\Local\\Temp\\navslides-github-boundary-8bmjsamj\\existing-refresh-pr\\remote.git'\\''' 'git-receive-pack '\\''C:\\Users\\Z10PAD~1\\AppData\\Local\\Temp\\navslides-github-boundary-8bmjsamj\\existing-refresh-pr\\remote.git'\\'''\n03:18:46.953261 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin\n03:18:46.961331 git.c:502               trace: built-in: git receive-pack 'C:\\Users\\Z10PAD~1\\AppData\\Local\\Temp\\navslides-github-boundary-8bmjsamj\\existing-refresh-pr\\remote.git'\n03:18:46.963351 run-command.c:673       trace: run_command: git pack-objects --all-progress-implied --revs --stdout --thin --delta-base-offset -q\n03:18:46.963351 run-command.c:934       trace: start_command: git pack-objects --all-progress-implied --revs --stdout --thin --delta-base-offset -q\n03:18:46.974026 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/libexec/git-core\n03:18:46.981542 git.c:502               trace: built-in: git pack-objects --all-progress-implied --revs --stdout --thin --delta-base-offset -q\n03:18:46.983639 run-command.c:673       trace: run_command: GIT_ALTERNATE_OBJECT_DIRECTORIES=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/existing-refresh-pr/remote.git/./objects GIT_OBJECT_DIRECTORY=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/existing-refresh-pr/remote.git/./objects/tmp_objdir-incoming-5hCCtK GIT_QUARANTINE_PATH=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/existing-refresh-pr/remote.git/./objects/tmp_objdir-incoming-5hCCtK git unpack-objects --pack_header=2,4 -q\n03:18:46.983639 run-command.c:934       trace: start_command: git unpack-objects --pack_header=2,4 -q\n03:18:46.993811 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/libexec/git-core\n03:18:47.001841 git.c:502               trace: built-in: git unpack-objects --pack_header=2,4 -q\n03:18:47.018058 run-command.c:673       trace: run_command: GIT_ALTERNATE_OBJECT_DIRECTORIES=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/existing-refresh-pr/remote.git/./objects GIT_OBJECT_DIRECTORY=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/existing-refresh-pr/remote.git/./objects/tmp_objdir-incoming-5hCCtK GIT_QUARANTINE_PATH=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/existing-refresh-pr/remote.git/./objects/tmp_objdir-incoming-5hCCtK git rev-list --objects --stdin --not --exclude-hidden=receive --all --quiet --alternate-refs\n03:18:47.018058 run-command.c:934       trace: start_command: git rev-list --objects --stdin --not --exclude-hidden=receive --all --quiet --alternate-refs\n03:18:47.024853 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/libexec/git-core\n03:18:47.034583 git.c:502               trace: built-in: git rev-list --objects --stdin --not --exclude-hidden=receive --all --quiet --alternate-refs\n03:18:47.034583 run-command.c:673       trace: run_command: unset GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_DIR GIT_OBJECT_DIRECTORY GIT_PREFIX; git --git-dir=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/existing-refresh-pr/remote.git for-each-ref '--format=%(objectname)'\n03:18:47.034583 run-command.c:934       trace: start_command: git --git-dir=C:/Users/Z10PAD8C_Xuan2261/AppData/Local/Temp/navslides-github-boundary-8bmjsamj/existing-refresh-pr/remote.git for-each-ref '--format=%(objectname)'\n03:18:47.044697 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/libexec/git-core\n03:18:47.052773 git.c:502               trace: built-in: git for-each-ref '--format=%(objectname)'\n03:18:47.073042 run-command.c:673       trace: run_command: git maintenance run --auto --quiet --detach\n03:18:47.073042 run-command.c:934       trace: start_command: git maintenance run --auto --quiet --detach\n03:18:47.085226 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/libexec/git-core\n03:18:47.085226 git.c:502               trace: built-in: git maintenance run --auto --quiet --detach\n",
+      "command": [
+        "bash",
+        "--noprofile",
+        "--norc",
+        "-eo",
+        "pipefail",
+        "refresh.sh"
+      ],
+      "remoteRefsBefore": {
+        "refs/heads/chore/electron-server-lock-refresh": "b68733e11810228c749a90bc0ebf6a70151c214a",
+        "refs/heads/main": "b68733e11810228c749a90bc0ebf6a70151c214a",
+        "refs/heads/unrelated": "b68733e11810228c749a90bc0ebf6a70151c214a"
+      },
+      "remoteRefsAfter": {
+        "refs/heads/chore/electron-server-lock-refresh": "36c71149ac9240f49335e4a53d4ac5e38a990bfd",
+        "refs/heads/main": "b68733e11810228c749a90bc0ebf6a70151c214a",
+        "refs/heads/unrelated": "b68733e11810228c749a90bc0ebf6a70151c214a"
+      },
+      "passed": true
+    },
+    {
+      "id": "P16-10",
+      "case": "approved-main",
+      "syntheticUpstreamRun": {
+        "id": 51001,
+        "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "conclusion": "success",
+        "head_branch": "main",
+        "event": "push",
+        "path": ".github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml"
+      },
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "ghCalls": [
+        [
+          "repo",
+          "view",
+          "synthetic-owner/synthetic-repo",
+          "--json",
+          "defaultBranchRef",
+          "--jq",
+          ".defaultBranchRef.name"
+        ],
+        [
+          "api",
+          "-X",
+          "GET",
+          "repos/synthetic-owner/synthetic-repo/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml/runs",
+          "-f",
+          "head_sha=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "-f",
+          "branch=main",
+          "-f",
+          "event=push",
+          "-f",
+          "status=success",
+          "-f",
+          "per_page=100",
+          "--jq",
+          ".workflow_runs[0] | [.id,.head_sha,.conclusion,.head_branch,.event,.path] | @tsv"
+        ]
+      ],
+      "consumerOutputs": "run_id=51001\nhead_sha=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nofficecli_run_id=51002\nfidelity_run_id=51003\n",
+      "gitTrace": "",
+      "command": [
+        "bash",
+        "--noprofile",
+        "--norc",
+        "-eo",
+        "pipefail",
+        "selection.sh"
+      ],
+      "passed": true
+    },
+    {
+      "id": "P16-10",
+      "case": "wrong-branch",
+      "syntheticUpstreamRun": {
+        "id": 51001,
+        "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "conclusion": "success",
+        "head_branch": "master",
+        "event": "push",
+        "path": ".github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml"
+      },
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "ghCalls": [
+        [
+          "repo",
+          "view",
+          "synthetic-owner/synthetic-repo",
+          "--json",
+          "defaultBranchRef",
+          "--jq",
+          ".defaultBranchRef.name"
+        ],
+        [
+          "api",
+          "-X",
+          "GET",
+          "repos/synthetic-owner/synthetic-repo/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml/runs",
+          "-f",
+          "head_sha=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "-f",
+          "branch=main",
+          "-f",
+          "event=push",
+          "-f",
+          "status=success",
+          "-f",
+          "per_page=100",
+          "--jq",
+          ".workflow_runs[0] | [.id,.head_sha,.conclusion,.head_branch,.event,.path] | @tsv"
+        ]
+      ],
+      "consumerOutputs": "run_id=51001\nhead_sha=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nofficecli_run_id=51002\nfidelity_run_id=51003\n",
+      "gitTrace": "",
+      "command": [
+        "bash",
+        "--noprofile",
+        "--norc",
+        "-eo",
+        "pipefail",
+        "selection.sh"
+      ],
+      "passed": false
+    },
+    {
+      "id": "P16-10",
+      "case": "wrong-sha",
+      "syntheticUpstreamRun": {
+        "id": 51001,
+        "head_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "conclusion": "success",
+        "head_branch": "main",
+        "event": "push",
+        "path": ".github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml"
+      },
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "ghCalls": [
+        [
+          "repo",
+          "view",
+          "synthetic-owner/synthetic-repo",
+          "--json",
+          "defaultBranchRef",
+          "--jq",
+          ".defaultBranchRef.name"
+        ],
+        [
+          "api",
+          "-X",
+          "GET",
+          "repos/synthetic-owner/synthetic-repo/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml/runs",
+          "-f",
+          "head_sha=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "-f",
+          "branch=main",
+          "-f",
+          "event=push",
+          "-f",
+          "status=success",
+          "-f",
+          "per_page=100",
+          "--jq",
+          ".workflow_runs[0] | [.id,.head_sha,.conclusion,.head_branch,.event,.path] | @tsv"
+        ]
+      ],
+      "consumerOutputs": "run_id=51001\nhead_sha=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\nofficecli_run_id=51002\nfidelity_run_id=51003\n",
+      "gitTrace": "",
+      "command": [
+        "bash",
+        "--noprofile",
+        "--norc",
+        "-eo",
+        "pipefail",
+        "selection.sh"
+      ],
+      "passed": false
+    },
+    {
+      "id": "P16-10",
+      "case": "wrong-workflow-source",
+      "syntheticUpstreamRun": {
+        "id": 51001,
+        "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "conclusion": "success",
+        "head_branch": "main",
+        "event": "push",
+        "path": ".github/workflows/unrelated.yml"
+      },
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "ghCalls": [
+        [
+          "repo",
+          "view",
+          "synthetic-owner/synthetic-repo",
+          "--json",
+          "defaultBranchRef",
+          "--jq",
+          ".defaultBranchRef.name"
+        ],
+        [
+          "api",
+          "-X",
+          "GET",
+          "repos/synthetic-owner/synthetic-repo/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml/runs",
+          "-f",
+          "head_sha=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "-f",
+          "branch=main",
+          "-f",
+          "event=push",
+          "-f",
+          "status=success",
+          "-f",
+          "per_page=100",
+          "--jq",
+          ".workflow_runs[0] | [.id,.head_sha,.conclusion,.head_branch,.event,.path] | @tsv"
+        ]
+      ],
+      "consumerOutputs": "",
+      "gitTrace": "",
+      "command": [
+        "bash",
+        "--noprofile",
+        "--norc",
+        "-eo",
+        "pipefail",
+        "selection.sh"
+      ],
+      "passed": true
+    },
+    {
+      "id": "P16-10",
+      "case": "wrong-event",
+      "syntheticUpstreamRun": {
+        "id": 51001,
+        "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "conclusion": "success",
+        "head_branch": "main",
+        "event": "pull_request",
+        "path": ".github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml"
+      },
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "ghCalls": [
+        [
+          "repo",
+          "view",
+          "synthetic-owner/synthetic-repo",
+          "--json",
+          "defaultBranchRef",
+          "--jq",
+          ".defaultBranchRef.name"
+        ],
+        [
+          "api",
+          "-X",
+          "GET",
+          "repos/synthetic-owner/synthetic-repo/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml/runs",
+          "-f",
+          "head_sha=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "-f",
+          "branch=main",
+          "-f",
+          "event=push",
+          "-f",
+          "status=success",
+          "-f",
+          "per_page=100",
+          "--jq",
+          ".workflow_runs[0] | [.id,.head_sha,.conclusion,.head_branch,.event,.path] | @tsv"
+        ]
+      ],
+      "consumerOutputs": "",
+      "gitTrace": "",
+      "command": [
+        "bash",
+        "--noprofile",
+        "--norc",
+        "-eo",
+        "pipefail",
+        "selection.sh"
+      ],
+      "passed": true
+    },
+    {
+      "id": "P16-10",
+      "case": "wrong-conclusion",
+      "syntheticUpstreamRun": {
+        "id": 51001,
+        "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "conclusion": "failure",
+        "head_branch": "main",
+        "event": "push",
+        "path": ".github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml"
+      },
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "",
+      "ghCalls": [
+        [
+          "repo",
+          "view",
+          "synthetic-owner/synthetic-repo",
+          "--json",
+          "defaultBranchRef",
+          "--jq",
+          ".defaultBranchRef.name"
+        ],
+        [
+          "api",
+          "-X",
+          "GET",
+          "repos/synthetic-owner/synthetic-repo/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml/runs",
+          "-f",
+          "head_sha=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "-f",
+          "branch=main",
+          "-f",
+          "event=push",
+          "-f",
+          "status=success",
+          "-f",
+          "per_page=100",
+          "--jq",
+          ".workflow_runs[0] | [.id,.head_sha,.conclusion,.head_branch,.event,.path] | @tsv"
+        ]
+      ],
+      "consumerOutputs": "",
+      "gitTrace": "",
+      "command": [
+        "bash",
+        "--noprofile",
+        "--norc",
+        "-eo",
+        "pipefail",
+        "selection.sh"
+      ],
+      "passed": true
+    }
+  ],
+  "limitations": [
+    "No genuine gh, authentication, token, API, network, permission mutation, dispatch, publication or remote push. gh CLI upstream outputs are deterministic synthetic fixtures, not live GitHub qualification.",
+    "The real upstream baseline default branch master is unchanged; main here is an explicitly synthetic approved-default-branch fixture.",
+    "Only policy, refresh PR caller and release CI run-selection blocks executed; dependency regeneration, hosted CI and physical producer qualification are not claimed."
+  ],
+  "mainRepositoryGitUntouched": true,
+  "cleanup": {
+    "temporaryRootRemoved": true
+  }
+}

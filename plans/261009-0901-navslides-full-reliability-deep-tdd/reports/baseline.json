@@ -1,0 +1,165 @@
+{
+  "phase": 1,
+  "scenarioIds": [
+    "P01-02",
+    "P01-03",
+    "P01-04",
+    "P01-07"
+  ],
+  "sourceSha": "aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+  "branch": "main",
+  "worktreeState": "untracked-user-files; tracked diff empty",
+  "trackedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "untrackedAtEntry": [
+    "?? docs/task-model-routing-phase-a-20261008.md",
+    "?? docs/task-model-routing-phase-a-final-review-20261008.json",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/decisions-and-risks.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/evidence-ledger.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/phase-01-overview.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/phase-01-start.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/phase-02-settings-atomic-revisions.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/phase-03-settings-ui-conflicts.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/phase-04-ci-required-checks.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/phase-05-supply-chain-evidence.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/phase-06-history-regression.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/phase-07-pptx-publication.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/phase-08-pptx-concurrency.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/phase-09-pptx-recovery.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/phase-10-pptx-portable-archive.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/phase-11-security-deployment.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/phase-12-release-qualification.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/phase-13-performance-modularity.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/phase-14-documentation-closeout.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/plan.md",
+    "?? plans/261009-0836-navslides-reliability-release-hardening/verification-strategy.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/decisions-and-boundaries.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/evidence-ledger.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-01-start.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-02-settings-atomic-revision.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-03-settings-ui-draft.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-04-ci-required-summary.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-05-scanner-evidence.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-06-history-autosave.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-07-pptx-publication.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-08-pptx-concurrency.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-09-pptx-recovery.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-10-pptx-portable.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-11-container-runtime.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-12-windows-office-qualification.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-13-navigator-baseline.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-14-navigator-optimization.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-15-documentation-drift.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/phase-16-release-closeout.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/plan.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/reports/editor-scout.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/reports/plan-validation.json",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/reports/pptx-scout.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/reports/release-scout.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/review-report.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/task-map.md",
+    "?? plans/261009-0901-navslides-full-reliability-deep-tdd/verification-strategy.md",
+    "?? plans/handoffs/education-partial11-resume-20261007.md",
+    "?? plans/jeikcode-per-task-model-routing-plan-20261007.md",
+    "?? plans/jeikcode-per-task-model-routing-plan-validation-20261007.json",
+    "?? plans/journals/2026-10-09-navslides-full-reliability-deep-tdd-planning.md",
+    "?? plans/reports/jeikcode-model-routing-artifact-20261008/before.json",
+    "?? plans/reports/jeikcode-model-routing-artifact-20261008/build-artifact.py",
+    "?? plans/reports/jeikcode-model-routing-artifact-20261008/build-home/AppData/Local/Microsoft/Windows/INetCache/IE/BS0N2TV5/dyntelconfig.json[1].cache",
+    "?? plans/reports/jeikcode-model-routing-artifact-20261008/build-home/AppData/Local/Microsoft/Windows/INetCache/IE/container.dat",
+    "?? plans/reports/jeikcode-model-routing-artifact-20261008/build-result.json",
+    "?? plans/reports/jeikcode-model-routing-artifact-20261008/build-stdout.jsonl",
+    "?? plans/reports/jeikcode-model-routing-artifact-20261008/schema-source-check.json",
+    "?? plans/reports/jeikcode-model-routing-artifact-20261008/schema-source-corrected.json",
+    "?? plans/reports/jeikcode-model-routing-artifact-20261008/settle-build.py",
+    "?? plans/reports/jeikcode-model-routing-artifact-20261008/settlement.json",
+    "?? plans/reports/jeikcode-model-routing-artifact-20261008/summary.md",
+    "?? plans/reports/jeikcode-model-routing-phase-a-20261008/closure-check-results.json",
+    "?? plans/reports/jeikcode-model-routing-phase-a-20261008/final-check-results.json",
+    "?? plans/reports/jeikcode-model-routing-phase-a-20261008/independent-review.json",
+    "?? plans/reports/jeikcode-model-routing-phase-a-20261008/offline-results.json",
+    "?? plans/reports/jeikcode-model-routing-phase-a-20261008/per-task-model-results.json",
+    "?? plans/reports/jeikcode-model-routing-phase-a-20261008/persisted-route-tests.json",
+    "?? plans/reports/jeikcode-model-routing-phase-a-20261008/phase-a-settlement.json",
+    "?? plans/reports/jeikcode-model-routing-phase-a-20261008/phase-a-summary.md",
+    "?? plans/reports/jeikcode-model-routing-phase-a-20261008/runtime-offline-followup.json",
+    "?? plans/reports/jeikcode-model-routing-phase-a-20261008/runtime-offline-integration.json",
+    "?? plans/reports/jeikcode-model-routing-phase-a-20261008/runtime-offline-resume-proof.json",
+    "?? plans/reports/jeikcode-model-routing-phase-a-20261008/settle-phase-a.py",
+    "?? plans/reports/jeikcode-model-routing-reassembly-20261008/before.json",
+    "?? plans/reports/jeikcode-model-routing-reassembly-20261008/closed-validation.json",
+    "?? plans/reports/jeikcode-model-routing-reassembly-20261008/final-review.md",
+    "?? plans/reports/jeikcode-model-routing-reassembly-20261008/final-validation.json",
+    "?? plans/reports/jeikcode-model-routing-reassembly-20261008/settlement.json",
+    "?? plans/reports/jeikcode-model-routing-reassembly-20261008/validation.json"
+  ],
+  "policyHash": "5f42a3de51b6f704da06b558da64bf71d66e34e1a5fcae47071d362b0179958c",
+  "artifactKind": "source",
+  "artifactDigest": "git-commit:aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+  "toolVersions": {
+    "node": "v24.3.0",
+    "npm": "10.2.4"
+  },
+  "capabilities": {
+    "docker": {
+      "error": "ENOENT",
+      "stdout": "",
+      "stderr": ""
+    },
+    "trivy": {
+      "error": "ENOENT",
+      "stdout": "",
+      "stderr": ""
+    },
+    "syft": {
+      "error": "ENOENT",
+      "stdout": "",
+      "stderr": ""
+    },
+    "officecli": {
+      "status": 0,
+      "error": null,
+      "stdout": "1.0.153",
+      "stderr": ""
+    },
+    "gh": {
+      "status": 0,
+      "error": null,
+      "stdout": "gh version 2.83.2 (2025-12-10)\nhttps://github.com/cli/cli/releases/tag/v2.83.2",
+      "stderr": ""
+    },
+    "k6": {
+      "status": 0,
+      "error": null,
+      "stdout": "k6.exe v1.2.3 (commit/e4a5a88f7c, go1.24.6, windows/amd64)",
+      "stderr": ""
+    }
+  },
+  "browserProbe": {
+    "status": 0,
+    "error": null,
+    "stdout": "{\"version\":\"1.63.0\",\"path\":\"C:\\\\Users\\\\Z10PAD8C_Xuan2261\\\\AppData\\\\Local\\\\ms-playwright\\\\chromium-1243\\\\chrome-win64\\\\chrome.exe\",\"exists\":true}",
+    "stderr": ""
+  },
+  "powerpointRegistration": {
+    "status": 0,
+    "error": null,
+    "stdout": "not-registered",
+    "stderr": ""
+  },
+  "command": "npm run test:inventory -- --out plans/261009-0901-navslides-full-reliability-deep-tdd/reports/baseline-inventory.json",
+  "exitCode": 0,
+  "status": "passed",
+  "outputs": [
+    "reports/baseline-inventory.json"
+  ],
+  "inventory": {
+    "fileCount": 644,
+    "hash": "59503a3d36f41630d22bb70bc0b4f9bd45472920adc41cfadc711a0518baa4d1",
+    "exactLaneUnion": true
+  },
+  "limitations": [
+    "No release qualification inferred from inventory or historical CI.",
+    "Office/signing/CI capabilities are separate gates.",
+    "Fault fixtures must use temp SLIDES_DATA_DIR and SLIDES_UPLOADS_DIR; existing user data untouched."
+  ]
+}

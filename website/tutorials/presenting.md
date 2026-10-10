@@ -50,7 +50,7 @@ Themes affect the background color, text color, and heading styles. Element-leve
 
 ### HTML
 
-Click **Export** > **Download HTML** to get a self-contained HTML file. All fonts, scripts, and images (if from URLs) are loaded via CDN. The file can be opened in any browser without a server.
+Click **Export** > **Download HTML** to export HTML that references the manifest-owned local runtime. Keep referenced runtime and media assets reachable; see [Export & Sharing](/features/export) for standard and offline HTML limits.
 
 ### Single slide HTML
 
@@ -62,14 +62,14 @@ Click **Export** > **Export PDF** to generate a print-ready PDF with one page pe
 
 ### PowerPoint
 
-Click **Export** > **Export PPTX** to generate a PowerPoint file. Text, shapes, and images are converted to native PowerPoint objects.
+Use **Export** > **Export PPTX**, then choose the appropriate mode. See [PPTX Import & Export](/features/pptx-import-export) for Original recovery, validated Edited export, and Reconstructed generation; these do not share one editability or fidelity guarantee.
 
 ## Sharing
 
 1. Click the **Share** button in the toolbar.
-2. Toggle sharing on. A shareable URL is generated.
-3. Anyone with the link can view the presentation in present mode (read-only).
-4. Toggle sharing off to revoke access.
+2. Create a view-only link, optionally with a name, password, or expiration.
+3. Viewers need network access to your instance and must satisfy any link password and expiration restrictions. This does not enable collaborative editing.
+4. Revoke the link to remove that access. See [Export & Sharing](/features/export#shareable-links).
 
 ### Example: exported slide
 

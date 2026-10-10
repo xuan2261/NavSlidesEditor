@@ -1,0 +1,44 @@
+{
+  "status": "passed-bounded-finding-6",
+  "contract": "Collision rejects without changing existing destination; compensation targets only the attempt-created exact head and preserves successors.",
+  "red": {
+    "httpCasesFailed": 6,
+    "httpCasesPassed": 2,
+    "admissionRaceFailed": "duplicate",
+    "environmentFailureExcluded": "ERR_REQUIRE_ESM under inherited --no-experimental-require-module"
+  },
+  "green": {
+    "tests": 139,
+    "suites": 12,
+    "failed": 0,
+    "skipped": 0,
+    "receipt": "destination-collision-green.json"
+  },
+  "runtime": {
+    "status": "passed",
+    "receipt": "destination-collision-runtime.json",
+    "sourceBindingMatched": true,
+    "templateCollision": 409,
+    "duplicateCollision": 409,
+    "existingAuthorityPreserved": true,
+    "noncollidingCreate": 201,
+    "noncollidingOpen": 200,
+    "originalBytesPreserved": true
+  },
+  "checks": {
+    "eslint": {
+      "errors": 0,
+      "warnings": 2,
+      "warningScope": "pre-existing unused resolveEditedExportContext and retainedRevisionIds in lifecycle.js"
+    },
+    "runtimeClosure": "passed",
+    "documentationFacts": "passed"
+  },
+  "runtimeEnvironment": "Node 22.22.0; NODE_OPTIONS=--experimental-require-module for inherited Vitest children and docs verifier",
+  "limits": [
+    "Affected regression and isolated native Node/HTTP only; no full-suite, hosted CI, navigator, container or Office/release qualification.",
+    "No frontend change; existing client artifact verified, not rebuilt.",
+    "No commit or push."
+  ],
+  "review": "Inline cause-aligned review: mutation checks under serialization, JSON insertion collision guards, exact-head cleanup, post-root compensation, successor preservation and aggregate-error HTTP classification."
+}

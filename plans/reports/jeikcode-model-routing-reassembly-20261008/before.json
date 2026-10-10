@@ -1,0 +1,42 @@
+{
+  "branch": "main",
+  "HEAD": "9d279b840628385deba0067de80e214eeaee44c3",
+  "status": [
+    " M crates/jeikcode-capabilities/assets/.codegraphignore",
+    " M crates/jeikcode-capabilities/assets/builtin-tools.txt",
+    " M crates/jeikcode-capabilities/assets/teaches/00_overview_index.md",
+    " M crates/jeikcode-capabilities/assets/teaches/01_prompts_and_context.md",
+    " M crates/jeikcode-capabilities/assets/teaches/02_models_and_providers.md",
+    " M crates/jeikcode-capabilities/assets/teaches/03_mcp_and_skills.md",
+    " M crates/jeikcode-capabilities/assets/teaches/04_thesaurus_and_retrieval.md",
+    " M crates/jeikcode-capabilities/assets/teaches/06_directories_and_system.md",
+    " M crates/jeikcode-capabilities/assets/teaches/07_project_constraints_and_rules.md",
+    " M crates/jeikcode-capabilities/assets/teaches/08_updates_and_releases.md",
+    " M crates/jeikcode-capabilities/src/tools/edit.rs",
+    " M crates/jeikcode-capabilities/src/tools/mod.rs",
+    " M crates/jeikcode-capabilities/src/tools/repair.rs",
+    " M crates/jeikcode-capabilities/src/tools/task.rs",
+    " M crates/jeikcode-cli/assets/config_teachs.md",
+    " M crates/jeikcode-coding/assets/prompts/root_docs_prompts.md",
+    " M \"crates/jeikcode-coding/assets/prompts/root_docs_\\345\\206\\205\\347\\275\\256\\345\\267\\245\\345\\205\\267.yaml\"",
+    " M crates/jeikcode-coding/assets/prompts/rules.yaml",
+    " M crates/jeikcode-coding/src/config.rs",
+    " M crates/jeikcode-coding/src/parts.rs",
+    " M crates/jeikcode-coding/src/provider_factory.rs",
+    " M crates/jeikcode-coding/src/runtime.rs",
+    " M crates/jeikcode-config/src/util.rs",
+    "?? crates/jeikcode-capabilities/src/tools/task_offline_acceptance.rs",
+    "?? crates/jeikcode-capabilities/src/tools/task_offline_scope.rs",
+    "?? crates/jeikcode-coding/src/provider_factory_offline_acceptance.rs",
+    "?? crates/jeikcode-coding/src/provider_factory_offline_transport.rs",
+    "?? crates/jeikcode-coding/src/runtime_offline_integration.rs",
+    "?? docs/remote-portability-validation-2026-10-07.md",
+    "?? docs/task-model-routing-phase-a-closure-20261008.md",
+    "?? docs/task-model-routing-phase-a-offline-acceptance-20261008.md",
+    "?? docs/task-model-routing-phase-a-review-20261008.md"
+  ],
+  "files": {
+    "crates/jeikcode-coding/src/runtime_offline_integration.rs": "7853211a1b312145b36215e06726978f89c460fa43b8a026dbaf74951d7271b6",
+    "crates/jeikcode-coding/src/runtime.rs": "52c94102635563eb30a6fd4a84d0f5b96f75edc251182aaac98961122f1a8a24"
+  }
+}

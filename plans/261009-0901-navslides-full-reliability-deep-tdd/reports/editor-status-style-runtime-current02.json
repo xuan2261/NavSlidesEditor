@@ -1,0 +1,18 @@
+{
+  "status": "failed",
+  "observations": [
+    {
+      "kind": "plain",
+      "restoredNextInputSavedAndReloaded": "<p>Alpha?</p>"
+    },
+    {
+      "kind": "styled",
+      "restoredNextInputSavedAndReloaded": "<h1><span style=\"color: rgb(199, 54, 57); font-size: 120px;\">Alpha?</span></h1><p></p>"
+    }
+  ],
+  "browserErrors": [],
+  "limitations": [
+    "Working-tree production Chromium surface; not hardware IME, physical Office or release qualification"
+  ],
+  "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('status', { name: 'Settings save status' })\nExpected: \u001b[32m\"\u001b[7mU\u001b[27mnsaved changes\"\u001b[39m\nReceived: \u001b[31m\"\u001b[7mSaved submitted snapshot; u\u001b[27mnsaved changes\u001b[7m remain.\u001b[27m\"\u001b[39m\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" getByRole('status', { name: 'Settings save status' }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('status', { name: 'Settings save status' })\u001b[22m\n\u001b[2m    14 × locator resolved to <span role=\"status\" aria-live=\"polite\" class=\"text-[13px] text-success\" aria-label=\"Settings save status\">Saved submitted snapshot; unsaved changes remain.</span>\u001b[22m\n\u001b[2m       - unexpected value \"Saved submitted snapshot; unsaved changes remain.\"\u001b[22m\n\n    at C:\\Work\\NavSlidesEditor\\tests\\e2e\\editor-status-style-runtime.tmp.spec.js:51:26"
+}

@@ -1,0 +1,25 @@
+{
+  "status": "passed-with-platform-skip",
+  "evidenceSource": "functions.bash bg_18 auto-delivered result; no spill artifact was returned",
+  "command": "npx vitest run server/routes/settings-merge.test.js server/routes/settings-concurrency.test.js server/routes/api-surface.test.js server/routes/ai.test.js server/services/storage.test.js client/src/pages/SettingsPage.test.jsx client/src/pages/SettingsPage.draft.test.jsx",
+  "filesPassed": 7,
+  "testsPassed": 46,
+  "testsSkipped": 1,
+  "exitCode": 0,
+  "startTimeLocal": "2026-10-09 17:06:08",
+  "durationSeconds": 9.6,
+  "wallTimeSeconds": 12.78,
+  "subjectSha": "aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+  "dirty": true,
+  "missing": [
+    "P02-14 actual Linux POSIX0600 mode after atomic rename"
+  ],
+  "capabilityObservations": {
+    "docker": "Baseline ENOENT",
+    "wsl": "wsl.exe --list --quiet exit0 with no output; no registered distribution listed",
+    "remoteCI": "No candidate push/dispatch authorization"
+  },
+  "limitations": [
+    "Skipped permission proof is not passed; local Windows evidence does not close Phase02 exit gate."
+  ]
+}

@@ -1,0 +1,179 @@
+{
+    "metrics": {
+        "http_req_duration": {
+            "avg": 4.1642,
+            "min": 4.1642,
+            "med": 4.1642,
+            "max": 4.1642,
+            "p(90)": 4.1642,
+            "p(95)": 4.1642
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(95)": 4.1642,
+            "avg": 4.1642,
+            "min": 4.1642,
+            "med": 4.1642,
+            "max": 4.1642,
+            "p(90)": 4.1642
+        },
+        "http_req_connecting": {
+            "avg": 1.1695,
+            "min": 1.1695,
+            "med": 1.1695,
+            "max": 1.1695,
+            "p(90)": 1.1695,
+            "p(95)": 1.1695
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "room_join_success_rate": {
+            "passes": 3,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.99": false
+            },
+            "value": 1
+        },
+        "vus": {
+            "max": 1,
+            "value": 1,
+            "min": 1
+        },
+        "checks": {
+            "passes": 1,
+            "fails": 0,
+            "value": 1
+        },
+        "http_req_receiving": {
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 1,
+            "value": 0
+        },
+        "ws_connecting": {
+            "avg": 3.9553,
+            "min": 3.9553,
+            "med": 3.9553,
+            "max": 3.9553,
+            "p(90)": 3.9553,
+            "p(95)": 3.9553,
+            "thresholds": {
+                "p(95)<200": false
+            }
+        },
+        "http_req_blocked": {
+            "p(95)": 1.1695,
+            "avg": 1.1695,
+            "min": 1.1695,
+            "med": 1.1695,
+            "max": 1.1695,
+            "p(90)": 1.1695
+        },
+        "ws_sessions": {
+            "rate": 0.033318690435260846,
+            "count": 1
+        },
+        "iteration_duration": {
+            "avg": 30004.9759,
+            "min": 30004.9759,
+            "med": 30004.9759,
+            "max": 30004.9759,
+            "p(90)": 30004.9759,
+            "p(95)": 30004.9759
+        },
+        "http_req_sending": {
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0
+        },
+        "http_req_waiting": {
+            "avg": 4.1642,
+            "min": 4.1642,
+            "med": 4.1642,
+            "max": 4.1642,
+            "p(90)": 4.1642,
+            "p(95)": 4.1642
+        },
+        "ws_msgs_received": {
+            "count": 7,
+            "rate": 0.2332308330468259,
+            "thresholds": {
+                "count>2": false
+            }
+        },
+        "iterations": {
+            "count": 1,
+            "rate": 0.033318690435260846
+        },
+        "ws_msgs_sent": {
+            "count": 3,
+            "rate": 0.09995607130578253
+        },
+        "socket_messages_received": {
+            "count": 4,
+            "rate": 0.13327476174104338
+        },
+        "vus_max": {
+            "max": 1,
+            "value": 1,
+            "min": 1
+        },
+        "data_received": {
+            "count": 1055,
+            "rate": 35.15121840920019
+        },
+        "data_sent": {
+            "count": 397,
+            "rate": 13.227520102798556
+        },
+        "ws_session_duration": {
+            "avg": 30004.9759,
+            "min": 30004.9759,
+            "med": 30004.9759,
+            "max": 30004.9759,
+            "p(90)": 30004.9759,
+            "p(95)": 30004.9759
+        },
+        "http_reqs": {
+            "count": 1,
+            "rate": 0.033318690435260846
+        }
+    },
+    "setup_data": {
+        "roomCode": "FQ9AYI",
+        "vus": 1,
+        "duration": "30s",
+        "name": "smoke"
+    },
+    "root_group": {
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "status is 101": {
+                    "name": "status is 101",
+                    "path": "::status is 101",
+                    "id": "b26b36ccbc717178372f638aae5b6111",
+                    "passes": 1,
+                    "fails": 0
+                }
+            },
+        "name": ""
+    }
+}

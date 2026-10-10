@@ -1,0 +1,65 @@
+{
+  "kind": "genuine-disposable-scan-cli-replay",
+  "status": "failed",
+  "command": [
+    "C:\\nvm4w\\nodejs\\node.exe",
+    "C:\\Work\\NavSlidesEditor\\plans\\261009-0901-navslides-full-reliability-deep-tdd\\reports\\scanner-cli-genuine.tmp.cjs"
+  ],
+  "recordedAt": "2026-10-09T17:37:37.179Z",
+  "limits": "Reduced genuine Alpine scan. SBOM and browser inventory are explicitly synthetic contract inputs; not NavSlides candidate image or scanner attestation.",
+  "runs": [],
+  "provenance": {
+    "kind": "actual-disposable-remote-image-scan",
+    "scannerVersion": "0.74.0",
+    "binarySource": "https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_windows-64bit.zip",
+    "binaryArchiveSha256": "94c40e0696e4b907a74b7b2e1438d5d72ebaca83115817407f568a002d520842",
+    "binaryVerification": "SHA256 matched primary GitHub release asset digest and checksum manifest; signature not verified",
+    "command": [
+      "trivy.exe",
+      "image",
+      "--cache-dir",
+      "<isolated-temp>/cache",
+      "--image-src",
+      "remote",
+      "--scanners",
+      "vuln",
+      "--pkg-types",
+      "os,library",
+      "--list-all-pkgs",
+      "--severity",
+      "HIGH,CRITICAL",
+      "--ignore-unfixed=false",
+      "--exit-code",
+      "0",
+      "--format",
+      "json",
+      "--output",
+      "<raw-capture>",
+      "alpine@sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8"
+    ],
+    "imageConfigID": "sha256:c83674e1999044d33d751661371b873539f47e5b5c5ca3320c7e0377acca6238",
+    "registryManifestDigests": [
+      "alpine@sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8"
+    ],
+    "database": {
+      "Version": 2,
+      "NextUpdate": "2026-10-10T07:05:00.081187086Z",
+      "UpdatedAt": "2026-10-09T07:05:00.081187346Z",
+      "DownloadedAt": "2026-10-09T10:01:11.1593458Z"
+    },
+    "databaseMetadataSha256": "31d2ed8405653669bcc0f211a8b4dffb48767102c73a53469e2874f46e536051",
+    "rawReportSha256": "a29a499dd5a3b8c3d5bf1c15f6aa435d546e24bd6c37324f7abcee4c898df14c",
+    "fixtureSha256": "aed24e903be3d6c10640652cc6d727eedbc7deefd0ed879f4b8d0edcda850778",
+    "capturedAt": "2026-10-09T17:01:53.2695838+07:00",
+    "reduction": "Preserved every target/package/finding and its identity. Omitted descriptions, references, image history/layers and ancillary package metadata. No findings pruned by reducer.",
+    "qualification": "Policy-filtered capture; clean is not all-severity vulnerability-free.",
+    "limits": "Disposable image schema evidence only, not NavSlides candidate runtime qualification or scanner attestation. SBOM/browser test inputs are synthetic unless separately captured."
+  },
+  "fixtureSha256": "aed24e903be3d6c10640652cc6d727eedbc7deefd0ed879f4b8d0edcda850778",
+  "sourceHashes": {
+    "scripts/verify-container-supply-chain.js": "f95530d348d56992a66e2d6fede80c475f11bbb8ef3a80fe33427fa710181a4e",
+    "scripts/trivy-report-evidence.js": "33f51d5f3789af99a4d65ab01d1564d51887dd00ef96e5decd6c0fea6a8cee71"
+  },
+  "failure": "Error [ERR_UNSUPPORTED_ESM_URL_SCHEME]: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. On Windows, absolute paths must be valid file:// URLs. Received protocol 'c:'\n    at throwIfUnsupportedURLScheme (node:internal/modules/esm/load:187:11)\n    at defaultLoad (node:internal/modules/esm/load:82:3)\n    at ModuleLoader.load (node:internal/modules/esm/loader:815:12)\n    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:594:31)\n    at #createModuleJob (node:internal/modules/esm/loader:624:36)\n    at #getJobFromResolveResult (node:internal/modules/esm/loader:343:34)\n    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:311:41)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:664:25)",
+  "ownedTempRootRemoved": true
+}

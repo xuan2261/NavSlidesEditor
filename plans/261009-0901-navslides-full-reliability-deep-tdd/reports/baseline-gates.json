@@ -1,0 +1,18 @@
+{
+  "phase": 1,
+  "sourceSha": "aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+  "candidateCI": {"status": "not-run", "command": "gh run list --commit aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131 --limit 10 --json databaseId,headSha,status,conclusion,workflowName,url", "exitCode": 0, "runs": []},
+  "repository": {"name": "xuan2261/NavSlidesEditor", "defaultBranch": "master", "private": false},
+  "gates": [
+    {"owner": "02/03", "command": "npx vitest run server/routes/settings-merge.test.js server/services/storage.test.js", "status": "passed", "artifact": "tool transcript; 6 passed, 1 POSIX permission test skipped on Windows", "limitation": "characterization only; revision and draft scenarios not yet exercised"},
+    {"owner": "03/06/13/14", "command": "production isolated API + installed Chromium", "status": "not-run", "artifact": "browser traces, screenshots and persisted content"},
+    {"owner": "04/16", "command": "exact candidate GitHub required graph", "status": "blocked", "artifact": "leaf/shard receipts", "missing": "candidate run; no authorization to push/dispatch"},
+    {"owner": "05/11", "command": "pinned Trivy v0.74.0 and Syft v1.52.0 on exact Docker image", "status": "blocked", "artifact": "genuine reports, SBOM, scanner invocation metadata", "missing": "Docker/Trivy/Syft executables on PATH"},
+    {"owner": "07/08/09/10", "command": "real temp package-store and HTTP, barrier/kill/reopen fixtures", "status": "not-run", "artifact": "state, Original hashes, authority and archive reports"},
+    {"owner": "12", "command": "OfficeCLI physical adapter and PowerPoint qualification", "status": "blocked", "artifact": "physical and renderer receipts", "missing": "PowerPoint registration; OfficeCLI present but adapter not qualified"},
+    {"owner": "12/16", "command": "protected signing and independent post-download Authenticode/RFC3161 verification", "status": "blocked", "artifact": "signed NSIS/portable and independent receipts", "missing": "authorized protected signer, final artifacts and independent download"},
+    {"owner": "16", "command": "final clean source/artifact/policy-bound receipt DAG", "status": "blocked", "artifact": "release qualification", "missing": "dependent qualification and final clean subject"}
+  ],
+  "isolation": {"requireTemporaryDataUploads": true, "userDataTouched": false, "productionFaultTesting": false},
+  "advice": {"status": "received", "agent": "BaselineSettingsCounsel", "decision": "GO for independent implementation", "correction": "tracked diff empty, not clean: user untracked files remain"}
+}

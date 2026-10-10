@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "audit-fixes-settings-browser-v1",
+  "startedAt": "2026-10-10T08:29:02.888Z",
+  "runs": [
+    {
+      "scenario": "actual-dev-StrictMode-load",
+      "saveEnabled": true,
+      "staleAlert": false,
+      "expectedAbortedFirstGet": true
+    },
+    {
+      "scenario": "actual-server-revision-conflict",
+      "externalSaveStatus": 200,
+      "conflict": true,
+      "preservedDraftTheme": "white"
+    },
+    {
+      "scenario": "recording-to-discard-Tab-Escape",
+      "status": "passed",
+      "focusRestored": true,
+      "theme": "white",
+      "draftKeyPreserved": true,
+      "shortcutUnchanged": true,
+      "recorderClosed": true
+    },
+    {
+      "scenario": "confirmed-reload-dirty-theme-and-key-revert",
+      "status": "passed",
+      "cleanMessage": "Latest settings loaded.",
+      "dirtyMessage": "Unsaved changes",
+      "fakeSaveClaim": false
+    },
+    {
+      "scenario": "save-edit-revert-actual-reload",
+      "status": "passed",
+      "persistedTheme": "moon"
+    }
+  ],
+  "harnessCorrections": [
+    "An initial external PUT included server-owned settingsRevision and was correctly rejected with 400; the smoke payload was corrected without production edits."
+  ],
+  "sourceBefore": {
+    "client/src/main.jsx": "86b698a665510bf7a12832d94f2470020c4f4fc6ae61df7c6773d73213190be1",
+    "client/src/pages/SettingsPage.jsx": "824f3297cd500a7ae8aa9f0adc8f5da299795ea21b4ef6c77e4a399e2fd80f57",
+    "client/src/pages/SettingsConflict.jsx": "d781edd884501818dc08b8136075bbc7ffd0ca39b3ab1d45aa3049034ef0c118",
+    "client/src/pages/use-settings-draft.js": "97f32a694eec7e605095367f35d9a185207ee59c268d29d89ffc33773cfa94e7",
+    "client/src/pages/settings-draft.js": "66bcec5b6dc61bcc5a911e1f841796ab92421840cd863ca667990126b41e6c53",
+    "server/routes/settings.js": "19de7d43022457e4854369a7018b4ac0c426e0193488dad659c559a73b2c7a7a",
+    "server/services/storage.js": "dc31f86b25d4b827808d900364a36be871b6273c2f5e083de34e161611c41b7e",
+    "client/src/pages/home/confirm-dialog.jsx": "5cde3a897943beda2dfb01320b36a19839b485bbebe56dbfb3b60688d3db4d98"
+  },
+  "sourceAfter": {
+    "client/src/main.jsx": "86b698a665510bf7a12832d94f2470020c4f4fc6ae61df7c6773d73213190be1",
+    "client/src/pages/SettingsPage.jsx": "824f3297cd500a7ae8aa9f0adc8f5da299795ea21b4ef6c77e4a399e2fd80f57",
+    "client/src/pages/SettingsConflict.jsx": "d781edd884501818dc08b8136075bbc7ffd0ca39b3ab1d45aa3049034ef0c118",
+    "client/src/pages/use-settings-draft.js": "97f32a694eec7e605095367f35d9a185207ee59c268d29d89ffc33773cfa94e7",
+    "client/src/pages/settings-draft.js": "66bcec5b6dc61bcc5a911e1f841796ab92421840cd863ca667990126b41e6c53",
+    "server/routes/settings.js": "19de7d43022457e4854369a7018b4ac0c426e0193488dad659c559a73b2c7a7a",
+    "server/services/storage.js": "dc31f86b25d4b827808d900364a36be871b6273c2f5e083de34e161611c41b7e",
+    "client/src/pages/home/confirm-dialog.jsx": "5cde3a897943beda2dfb01320b36a19839b485bbebe56dbfb3b60688d3db4d98"
+  },
+  "identityMatched": true,
+  "errors": {
+    "entries": [
+      {
+        "seq": 4,
+        "ts": 1791620824568,
+        "type": "requestfailed",
+        "level": "error",
+        "text": "GET http://127.0.0.1:5187/api/settings: net::ERR_ABORTED",
+        "location": "http://127.0.0.1:5187/api/settings"
+      },
+      {
+        "seq": 8,
+        "ts": 1791621006012,
+        "type": "requestfailed",
+        "level": "error",
+        "text": "GET http://127.0.0.1:5187/api/settings: net::ERR_ABORTED",
+        "location": "http://127.0.0.1:5187/api/settings"
+      }
+    ],
+    "nextSeq": 8,
+    "dropped": 0
+  },
+  "status": "passed",
+  "finishedAt": "2026-10-10T08:30:30.276Z",
+  "limits": "Real React.StrictMode Vite UI and isolated actual Settings API. Expected canceled GET and 412 conflict are recorded; native timing rejection is separately covered by deterministic tests. Not global E2E, production bundle or release qualification.",
+  "cleanup": {
+    "managedTabClosed": true,
+    "ownedServiceExitCode": 0,
+    "isolatedUiRootRemoved": true,
+    "observed": "Service exit and empty owned temporary-root glob after stop"
+  }
+}

@@ -1,0 +1,297 @@
+{
+  "status": "passed",
+  "recordedAt": "2026-10-09T13:06:58.000Z",
+  "surface": "Actual isolated production editor, native Puppeteer/CDP key events and real HTTP persistence",
+  "buildArtifactIdentity": "b6158a54984ae862c7b6a39585b93a7fbbfd7db422b5b109eced5ed610c950f9",
+  "baseCommit": "aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+  "subject": "working tree; not clean candidate or release evidence",
+  "presentationId": "af7c81b0-2db5-444f-b9f7-1d270222ff48",
+  "nativeBoundary": {
+    "states": {
+      "seed": "Beta",
+      "seedUndo": "Beta",
+      "typed": "Beta?",
+      "undo": "Beta",
+      "redo": "Beta?"
+    },
+    "dom": [
+      {
+        "id": "history-first",
+        "text": "Alpha!"
+      },
+      {
+        "id": "history-second",
+        "text": "Beta?"
+      }
+    ],
+    "keys": [
+      {
+        "key": "Control",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "z",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "Control",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "End",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "!",
+        "ctrl": false,
+        "trusted": true
+      },
+      {
+        "key": "Control",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "z",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "Control",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "Shift",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "z",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "Escape",
+        "ctrl": false,
+        "trusted": true
+      },
+      {
+        "key": "Control",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "z",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "Control",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "End",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "?",
+        "ctrl": false,
+        "trusted": true
+      },
+      {
+        "key": "Control",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "z",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "Control",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "Shift",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "z",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "Escape",
+        "ctrl": false,
+        "trusted": true
+      },
+      {
+        "key": "Control",
+        "ctrl": true,
+        "trusted": true
+      },
+      {
+        "key": "s",
+        "ctrl": true,
+        "trusted": true
+      }
+    ],
+    "productionResources": [
+      "http://127.0.0.1:60268/assets/EditorPage-CefTq9Bl.js",
+      "http://127.0.0.1:60268/assets/vendor-tiptap-yw5h5ThW.js"
+    ]
+  },
+  "imeAndSelectedFormat": {
+    "method": "CDP Input.imeSetComposition/Input.insertText followed by native Control+Shift+ArrowLeft and KeyB at observed settled ProseMirror selection; not hardware IME qualification",
+    "successfulDispatch": {
+      "before": {
+        "html": "<p>Beta?nhập</p>",
+        "composing": false,
+        "selection": {
+          "from": 6,
+          "to": 10
+        }
+      },
+      "after": {
+        "html": "<p>Beta?<strong>nhập</strong></p>",
+        "json": {
+          "type": "doc",
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": {
+                "textAlign": null,
+                "lineHeight": null
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Beta?"
+                },
+                {
+                  "type": "text",
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ],
+                  "text": "nhập"
+                }
+              ]
+            }
+          ]
+        },
+        "dom": "<p>Beta?<strong>nhập</strong></p>",
+        "composing": false
+      },
+      "events": [
+        {
+          "key": "Control",
+          "code": "ControlLeft",
+          "ctrl": true,
+          "isComposing": false,
+          "trusted": true,
+          "viewComposing": false,
+          "selection": {
+            "from": 6,
+            "to": 10
+          },
+          "prevented": false,
+          "html": "<p>Beta?nhập</p>"
+        },
+        {
+          "key": "b",
+          "code": "KeyB",
+          "ctrl": true,
+          "isComposing": false,
+          "trusted": true,
+          "viewComposing": false,
+          "selection": {
+            "from": 6,
+            "to": 10
+          },
+          "prevented": false,
+          "html": "<p>Beta?nhập</p>"
+        }
+      ]
+    },
+    "saved": {
+      "text": "Beta?nhập",
+      "html": "<p>Beta?<strong>nhập</strong></p>",
+      "json": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "textAlign": null,
+              "lineHeight": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Beta?"
+              },
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ],
+                "text": "nhập"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "persistedElements": [
+    {
+      "id": "history-first",
+      "content": "<p>Alpha!</p>"
+    },
+    {
+      "id": "history-second",
+      "content": "<p>Beta?<strong>nhập</strong></p>"
+    }
+  ],
+  "reloaded": {
+    "elements": [
+      {
+        "id": "history-first",
+        "text": "Alpha!",
+        "strong": []
+      },
+      {
+        "id": "history-second",
+        "text": "Beta?nhập",
+        "strong": [
+          "nhập"
+        ]
+      }
+    ],
+    "resources": [
+      "http://127.0.0.1:60268/assets/EditorPage-CefTq9Bl.js",
+      "http://127.0.0.1:60268/assets/vendor-tiptap-yw5h5ThW.js"
+    ]
+  },
+  "limitations": [
+    "First raw Puppeteer combined shortcut attempt failed before dispatch; explicit modifier sequencing was required.",
+    "Raw page.click(clickCount:2) selected but did not activate second element; direct tab.dblclick succeeded.",
+    "Immediate format attempt after CDP IME did not apply bold; observed later settled native KeyB did. The immediate event-time ProseMirror composition/selection state was not captured, so its cause is unproven.",
+    "Managed browser viewport drifted; this is functional evidence, not fixed-viewport performance evidence.",
+    "Synthetic fixture omitted textColor and rendered white-on-white outside edit mode; no visual text-contrast claim."
+  ]
+}

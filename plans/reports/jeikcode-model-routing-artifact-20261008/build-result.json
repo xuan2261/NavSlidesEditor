@@ -1,0 +1,26 @@
+{
+  "command": [
+    "C:/Users/Z10PAD8C_Xuan2261/.cargo/bin/cargo.exe",
+    "build",
+    "--offline",
+    "-p",
+    "jeikcode",
+    "--bin",
+    "jeikcode",
+    "--locked",
+    "--message-format=json-render-diagnostics"
+  ],
+  "exitCode": 101,
+  "elapsedSeconds": 75.49,
+  "homeSandbox": "C:/Work/NavSlidesEditor/plans/reports/jeikcode-model-routing-artifact-20261008/build-home",
+  "cargoHome": "C:/Users/Z10PAD8C_Xuan2261/.cargo",
+  "rustupHome": "C:/Users/Z10PAD8C_Xuan2261/.rustup",
+  "incrementalDisabled": true,
+  "offline": true,
+  "profile": "debug/development, not production release",
+  "actualExecutableRecords": [],
+  "freeCAfterBytes": 28771581952,
+  "installedExecutableUnchanged": true,
+  "activation": false,
+  "providerInference": false
+}

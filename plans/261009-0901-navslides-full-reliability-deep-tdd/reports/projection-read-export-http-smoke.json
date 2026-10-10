@@ -1,0 +1,182 @@
+{
+  "status": "passed",
+  "startedAt": "2026-10-09T14:31:18.012Z",
+  "command": [
+    "C:\\nvm4w\\nodejs\\node.exe",
+    "C:\\Work\\NavSlidesEditor\\server\\routes\\sequential-projection-save-smoke.cjs"
+  ],
+  "node": "v22.22.0",
+  "platform": "win32",
+  "sourceScope": "selected backend source and input files; not release qualification",
+  "sourceBefore": [
+    {
+      "path": "package-lock.json",
+      "bytes": 365448,
+      "sha256": "2ceada6ae6632f64154d488bd2864ba0d25496c0a171ef9460adbd3298fff97d"
+    },
+    {
+      "path": "package.json",
+      "bytes": 9708,
+      "sha256": "f64b270c32c29dd2856bed4205689a62f2fdc2f38e94a4526f4afc6c212fc101"
+    },
+    {
+      "path": "server/routes/presentations-crud.js",
+      "bytes": 31826,
+      "sha256": "2ae5a0060dbf2a64ee2d8022d7cebe7b6ceb40001bfe651a86615f10a2c68bed"
+    },
+    {
+      "path": "server/routes/presentations-pptx.js",
+      "bytes": 10930,
+      "sha256": "07dddcc2331dddde080f637ff7062b9edaa09063f1507f16bf7889d799f499b5"
+    },
+    {
+      "path": "server/routes/presentations.js",
+      "bytes": 640,
+      "sha256": "419c9b8d4bd644cf31ce8557de68bfa54f459b00eaeab51c15b0a6005c79c8cc"
+    },
+    {
+      "path": "server/routes/sequential-projection-save-smoke.cjs",
+      "bytes": 8495,
+      "sha256": "bc33fdae0ec7653351f5e65a746b4e042e95baf556c50901366e9a9b5ba5325a"
+    },
+    {
+      "path": "server/services/generation-safe-save.js",
+      "bytes": 8908,
+      "sha256": "9a2c8e7d3075e1028da2d59a31b214085cb393d91fab5cf44c144c1489284c3e"
+    },
+    {
+      "path": "server/services/package-backed-presentation-read.js",
+      "bytes": 6928,
+      "sha256": "2cd4042ed14957c92ec4c1f9e79407554e22cea73bdefc4a613556a7fe540d93"
+    },
+    {
+      "path": "server/services/pptx-import/package-store-runtime.js",
+      "bytes": 7078,
+      "sha256": "893c58a4ec6603a0e36b55e4cf20a88d1c2c8045c4b9fc794bcf967323b8f9a3"
+    },
+    {
+      "path": "server/services/pptx-import/validated-edited-export-context.js",
+      "bytes": 6948,
+      "sha256": "95a0b94ca7e1dfbf756e3437a010cb906285716ac0ee801c73177f65754908f5"
+    },
+    {
+      "path": "server/services/validated-edited-export.js",
+      "bytes": 7309,
+      "sha256": "63d023e03995a81f9c97e74bf4baee9428290c5f8096f3ba239589a6c312bb28"
+    }
+  ],
+  "fixture": {
+    "presentationId": "8ac9cd2e-4d00-4873-a84d-199cb56c9e0f",
+    "originalSha256": "32a4e82bcccc0db998c1ccd6d49cb7425a90d294bdd79bac843f372d3bfe4f33",
+    "baseRevisionId": "r0-32a4e82bcccc0db998c1ccd6d49cb7425a90d294bdd79bac843f372d3bfe4f33"
+  },
+  "saves": [
+    {
+      "savedGeneration": 2,
+      "openedGeneration": 2,
+      "content": "<p>First</p>",
+      "originalSha256": "32a4e82bcccc0db998c1ccd6d49cb7425a90d294bdd79bac843f372d3bfe4f33"
+    },
+    {
+      "savedGeneration": 3,
+      "openedGeneration": 3,
+      "content": "<p>Second</p>",
+      "originalSha256": "32a4e82bcccc0db998c1ccd6d49cb7425a90d294bdd79bac843f372d3bfe4f33"
+    },
+    {
+      "savedGeneration": 4,
+      "openedGeneration": 4,
+      "content": "<p>Third</p>",
+      "originalSha256": "32a4e82bcccc0db998c1ccd6d49cb7425a90d294bdd79bac843f372d3bfe4f33"
+    }
+  ],
+  "structural": [
+    {
+      "generation": 5,
+      "slideIds": [
+        "s1",
+        "s2"
+      ],
+      "editedExportStatus": 422,
+      "reasonCode": "CANONICAL_TEXT_JOURNAL_INVALID",
+      "originalSha256": "32a4e82bcccc0db998c1ccd6d49cb7425a90d294bdd79bac843f372d3bfe4f33"
+    },
+    {
+      "generation": 6,
+      "slideIds": [
+        "s2",
+        "s1"
+      ],
+      "editedExportStatus": 422,
+      "reasonCode": "CANONICAL_TEXT_JOURNAL_INVALID",
+      "originalSha256": "32a4e82bcccc0db998c1ccd6d49cb7425a90d294bdd79bac843f372d3bfe4f33"
+    },
+    {
+      "generation": 7,
+      "slideIds": [
+        "s2"
+      ],
+      "editedExportStatus": 422,
+      "reasonCode": "CANONICAL_TEXT_JOURNAL_INVALID",
+      "originalSha256": "32a4e82bcccc0db998c1ccd6d49cb7425a90d294bdd79bac843f372d3bfe4f33"
+    }
+  ],
+  "sourceAfter": [
+    {
+      "path": "package-lock.json",
+      "bytes": 365448,
+      "sha256": "2ceada6ae6632f64154d488bd2864ba0d25496c0a171ef9460adbd3298fff97d"
+    },
+    {
+      "path": "package.json",
+      "bytes": 9708,
+      "sha256": "f64b270c32c29dd2856bed4205689a62f2fdc2f38e94a4526f4afc6c212fc101"
+    },
+    {
+      "path": "server/routes/presentations-crud.js",
+      "bytes": 31826,
+      "sha256": "2ae5a0060dbf2a64ee2d8022d7cebe7b6ceb40001bfe651a86615f10a2c68bed"
+    },
+    {
+      "path": "server/routes/presentations-pptx.js",
+      "bytes": 10930,
+      "sha256": "07dddcc2331dddde080f637ff7062b9edaa09063f1507f16bf7889d799f499b5"
+    },
+    {
+      "path": "server/routes/presentations.js",
+      "bytes": 640,
+      "sha256": "419c9b8d4bd644cf31ce8557de68bfa54f459b00eaeab51c15b0a6005c79c8cc"
+    },
+    {
+      "path": "server/routes/sequential-projection-save-smoke.cjs",
+      "bytes": 8495,
+      "sha256": "bc33fdae0ec7653351f5e65a746b4e042e95baf556c50901366e9a9b5ba5325a"
+    },
+    {
+      "path": "server/services/generation-safe-save.js",
+      "bytes": 8908,
+      "sha256": "9a2c8e7d3075e1028da2d59a31b214085cb393d91fab5cf44c144c1489284c3e"
+    },
+    {
+      "path": "server/services/package-backed-presentation-read.js",
+      "bytes": 6928,
+      "sha256": "2cd4042ed14957c92ec4c1f9e79407554e22cea73bdefc4a613556a7fe540d93"
+    },
+    {
+      "path": "server/services/pptx-import/package-store-runtime.js",
+      "bytes": 7078,
+      "sha256": "893c58a4ec6603a0e36b55e4cf20a88d1c2c8045c4b9fc794bcf967323b8f9a3"
+    },
+    {
+      "path": "server/services/pptx-import/validated-edited-export-context.js",
+      "bytes": 6948,
+      "sha256": "95a0b94ca7e1dfbf756e3437a010cb906285716ac0ee801c73177f65754908f5"
+    },
+    {
+      "path": "server/services/validated-edited-export.js",
+      "bytes": 7309,
+      "sha256": "63d023e03995a81f9c97e74bf4baee9428290c5f8096f3ba239589a6c312bb28"
+    }
+  ],
+  "completedAt": "2026-10-09T14:31:21.667Z"
+}

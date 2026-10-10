@@ -50,7 +50,7 @@ Giao diện ảnh hưởng đến màu nền, màu chữ, và kiểu tiêu đề
 
 ### HTML
 
-Nhấn **Export** > **Download HTML** để lấy một tệp HTML độc lập. Tất cả phông chữ, script, và hình ảnh (nếu từ URL) được tải qua CDN. Tệp có thể được mở trong bất kỳ trình duyệt nào mà không cần máy chủ.
+Nhấn **Export** > **Download HTML** để xuất HTML tham chiếu runtime cục bộ do manifest quản lý. Các tài nguyên runtime và media được tham chiếu phải còn truy cập được; xem [Xuất & Chia sẻ](/vi/features/export) để biết giới hạn của HTML thông thường và ngoại tuyến.
 
 ### HTML một slide
 
@@ -62,14 +62,14 @@ Nhấn **Export** > **Export PDF** để tạo một PDF sẵn sàng in với m�
 
 ### PowerPoint
 
-Nhấn **Export** > **Export PPTX** để tạo một tệp PowerPoint. Văn bản, hình khối, và hình ảnh được chuyển đổi thành các đối tượng PowerPoint gốc.
+Dùng **Export** > **Export PPTX**, rồi chọn chế độ phù hợp. Xem [Nhập & Xuất PPTX](/vi/features/pptx-import-export) về khôi phục Original, xuất Edited đã xác thực và tạo Reconstructed; các chế độ không có chung một cam kết về khả năng chỉnh sửa hay độ trung thực.
 
 ## Chia sẻ
 
 1. Nhấn nút **Share** trên thanh công cụ.
-2. Bật chia sẻ. Một URL có thể chia sẻ được tạo ra.
-3. Bất kỳ ai có liên kết đều có thể xem bài trình chiếu ở chế độ trình chiếu (chỉ đọc).
-4. Tắt chia sẻ để thu hồi quyền truy cập.
+2. Tạo liên kết chỉ xem, có thể kèm tên, mật khẩu hoặc thời hạn hết hạn.
+3. Người xem cần truy cập được phiên bản đang chạy qua mạng và đáp ứng yêu cầu mật khẩu, thời hạn của liên kết. Điều này không cho phép cộng tác chỉnh sửa.
+4. Thu hồi liên kết để gỡ quyền truy cập đó. Xem [Xuất & Chia sẻ](/vi/features/export).
 
 ### Ví dụ: slide đã xuất
 

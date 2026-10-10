@@ -1,0 +1,66 @@
+{
+  "status": "passed",
+  "scope": "genuine upstream gh wire-schema smoke; not NavSlides artifact qualification",
+  "runtime": "v22.22.0",
+  "ghVersion": "gh version 2.83.2 (2025-12-10)",
+  "verifierExitCode": 0,
+  "artifactName": "github_provenance_demo-0.0.12-py3-none-any.whl",
+  "sha256": "ae57936def59bc4c75edd3a837d89bcefc6d3a5e31d55a6fa7a71624f92c3c3b",
+  "issuer": "https://token.actions.githubusercontent.com",
+  "workflowIdentity": "https://github.com/actions/attest-demo/.github/workflows/build-python.yml@refs/heads/main",
+  "buildSignerURI": "https://github.com/actions/attest-demo/.github/workflows/build-python.yml@refs/heads/main",
+  "sourceRepositoryURI": "https://github.com/actions/attest-demo",
+  "sourceRepositoryDigest": "a6c23b9806c593664f68637c8f9d45dfcf98b2db",
+  "normalized": [
+    {
+      "id": "electron-windows",
+      "digest": "80f7901c2a0140e6ec6704c3ad7e46b533a459d1041bff044ba268632c06c94b",
+      "subjectSha": "a6c23b9806c593664f68637c8f9d45dfcf98b2db",
+      "clientDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+      "workflowIdentity": "https://github.com/actions/attest-demo/.github/workflows/build-python.yml@refs/heads/main",
+      "issuer": "https://token.actions.githubusercontent.com",
+      "verified": true,
+      "bundleHash": "d23b211f172691c885009283e653b46248a68e209d0fa3b54ed2b886b264ea29"
+    }
+  ],
+  "wrongSourceRejected": true,
+  "evidence": "Observed background job bg_25 completion; full output artifact://160",
+  "sourceSha": "aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+  "dirty": true,
+  "provenance": {
+    "schemaVersion": 1,
+    "scope": "genuine upstream gh wire-schema smoke; not NavSlides artifact qualification",
+    "authoritativeCandidateReceipt": false,
+    "capture": {
+      "command": "gh attestation verify <upstream wheel> --bundle <upstream bundle> --repo actions/attest-demo --signer-workflow actions/attest-demo/.github/workflows/build-python.yml --format json",
+      "ghVersion": "gh version 2.83.2 (2025-12-10)",
+      "runtime": "v22.22.0",
+      "exitCode": 0,
+      "acquiredAt": "2026-10-09T10:56:40.865Z",
+      "rawSha256": "2fecfbf8fc0d22fbdf2f2ca002ce41017e5df45c25eaffe264aa609fb57e4982"
+    },
+    "acquisition": [
+      {
+        "url": "https://raw.githubusercontent.com/cli/cli/v2.83.2/pkg/cmd/attestation/test/data/github_provenance_demo-0.0.12-py3-none-any.whl",
+        "byteLength": 1437,
+        "gitBlob": "67fa195e0055e2d5343da74299e04ef3604e4657",
+        "sha256": "ae57936def59bc4c75edd3a837d89bcefc6d3a5e31d55a6fa7a71624f92c3c3b"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/cli/cli/v2.83.2/pkg/cmd/attestation/test/data/github_provenance_demo-0.0.12-py3-none-any-bundle.jsonl",
+        "byteLength": 4885,
+        "gitBlob": "4dffc8fd61443b9fd90c039235399fa7a0b4519f",
+        "sha256": "4f8c096e38a0eee242574ab100d16701928605409225e59784a3636f742bb27e"
+      }
+    ],
+    "artifactName": "github_provenance_demo-0.0.12-py3-none-any.whl",
+    "artifactSha256": "ae57936def59bc4c75edd3a837d89bcefc6d3a5e31d55a6fa7a71624f92c3c3b",
+    "workflowIdentity": "https://github.com/actions/attest-demo/.github/workflows/build-python.yml@refs/heads/main",
+    "sourceRepositoryURI": "https://github.com/actions/attest-demo",
+    "sourceRepositoryDigest": "a6c23b9806c593664f68637c8f9d45dfcf98b2db",
+    "limitations": [
+      "Official upstream Python-wheel fixture, not a NavSlides installer, portable EXE, client build, or release subject.",
+      "The normalizer smoke used synthetic zero clientDigest metadata; it does not bind a candidate client artifact."
+    ]
+  }
+}

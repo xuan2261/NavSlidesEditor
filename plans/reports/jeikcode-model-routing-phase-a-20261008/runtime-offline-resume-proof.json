@@ -1,0 +1,30 @@
+{
+  "sourceRoot": "C:/Work/JeikCode",
+  "changedSourceFiles": ["crates/jeikcode-coding/src/runtime_offline_integration.rs"],
+  "scope": "Test/helper only; preexisting dirty source preserved; no production interfaces, global configuration, activation, architecture or new crates changed.",
+  "sourceChecks": {
+    "snapshotAPI": "Actual source exposes SessionManager.load_snapshot/load_native_session/snapshot_path, not store.latest_snapshot. Verification uses these real APIs after shutdown.",
+    "metadataAPI": "Actual source exposes SessionManager.update_meta, not update_meta_fields. Helper performs a real title/user_renamed transaction and compares stable parent identity/title/preference/working-directory/owner fields after execution.",
+    "serialization": "Message.tool_calls and tool_call_id bind the persisted request to its Tool result. Task results embed JSON in <route> tags.",
+    "isolation": "All five runtime_offline integration tests use the existing serial_test::serial(jeikcode_home) guard, including the previously unguarded mounted reload test."
+  },
+  "persistedProof": [
+    "After the completed turn and shutdown, native persisted messages equal the saved live turn exactly; non-System seeded conversation prefix remains byte-exact.",
+    "Native on-disk snapshot deserialization is lossless. Persisted assistant task arguments and matching Tool result are inspected structurally, not by whole-snapshot substring search.",
+    "Explicit persisted route asserts requested_model_id, resolved_registry_id, provider_id, resolved_api_model, effective_api_model, provider_called status and null remote identity.",
+    "Omitted persisted task arguments lack model_id; matching persisted route retains legacy_difficulty and capable-api and lacks explicit binding keys.",
+    "A second real CodingRuntime resumes the completed persisted session without submitting another UserInput. Its full non-System conversation equals the completed persisted conversation exactly, including the final task result. Shutdown and reload verify this remains persisted.",
+    "Explicit and omitted sessions are not compared byte-for-byte to one another. Only each session's own saved-turn and reopened conversation are compared."
+  ],
+  "verification": {
+    "command": "C:/Users/Z10PAD8C_Xuan2261/.cargo/bin/cargo.exe test --offline -p jeikcode-coding runtime_offline --lib",
+    "exitCode": 0,
+    "passed": 7,
+    "failed": 0,
+    "integrationTestsPassed": 5,
+    "adapterTestsPassed": 2,
+    "log": "runtime-offline-resume-proof.log",
+    "note": "Default parallel test runner exercises shared guard; existing adapter boundary test uses loopback transport. No external provider network. No additional waits, retries or timeout increases were needed; no red-test run claimed. Previous task/provider/check counts not rerun or added."
+  },
+  "conclusion": "Existing native runtime/factory/session seams suffice. No new architecture or production test seam is needed. Legacy difficulty routing is proved on actual persisted native messages; legacy-owner import compatibility is not claimed."
+}

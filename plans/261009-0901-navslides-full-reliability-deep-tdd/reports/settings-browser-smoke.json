@@ -1,0 +1,29 @@
+{
+  "status": "passed",
+  "subjectSha": "aa19b59cd5bd5de2510f9bc4edd2ef2311ce9131",
+  "dirty": true,
+  "buildManifest": "5b2c54c1b6d6607b8d7d8a7db6552c2aadaa8646baedd21966ecce9051dd03fc",
+  "observed": {
+    "competingTabTheme": "dracula",
+    "conflictedDraftTheme": "moon",
+    "conflictedSaveDisabled": true,
+    "explicitLocalRebase": true,
+    "reloadedTheme": "moon",
+    "revisionAfterRebase": 3,
+    "shortcutKeyboardReached": true,
+    "syncDialogOpened": true
+  },
+  "limitations": [
+    "Local browser smoke on isolated data root; not clean-candidate qualification."
+  ],
+  "pendingResponse": {
+    "authenticResponseHeld": true,
+    "submittedTheme": "league",
+    "newerDraftTheme": "sky",
+    "serverBeforeSecondSave": "league",
+    "serverBeforeRevision": 4,
+    "visibleStatusAfterRelease": "Saved submitted snapshot; unsaved changes remain.",
+    "serverFinalTheme": "sky",
+    "serverFinalRevision": 5
+  }
+}

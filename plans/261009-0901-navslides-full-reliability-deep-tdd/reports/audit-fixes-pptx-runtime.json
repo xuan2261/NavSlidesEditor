@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "audit-fixes-pptx-runtime-v1",
+  "startedAt": "2026-10-10T08:28:07.936Z",
+  "runs": [
+    {
+      "scenario": "restore-A-pending-B-open-original",
+      "status": "passed",
+      "originalSha256": "2ab7fdeeaaf78189d2d7a2d17f1052bde51a44dcc4604983eccb512055c10de1"
+    },
+    {
+      "scenario": "noop-export-reopen-without-validator",
+      "status": "passed",
+      "originalSha256": "d0c1c283a135ea9c1a79d20479247e4d8c8b21cec28066c67b0285eafd9bdc34"
+    },
+    {
+      "scenario": "portable-replace-current-original-retained-template",
+      "status": "passed",
+      "currentOriginalSha256": "ddc8f953045b984805e465300c235e7e24e57d665e1894dbc08c45856c5a48af",
+      "retainedOriginalSha256": "0ec0c2408969aae13a8842ddac7ea2bd0927bed89a305d4e59ac191dbbe15329"
+    },
+    {
+      "scenario": "real-stop-start-retained-deck-readability",
+      "status": "passed"
+    }
+  ],
+  "limits": "Isolated real filesystem/package services and TCP HTTP. Minimal ZIPs qualify lifecycle authority, not native importer/rendering fidelity or Office/signing/release.",
+  "status": "passed",
+  "cleaned": true,
+  "finishedAt": "2026-10-10T08:28:33.801Z"
+}

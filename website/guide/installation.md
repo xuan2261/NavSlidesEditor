@@ -66,12 +66,7 @@ docker compose up -d --build
 
 ### Data persistence
 
-| Path inside container | What it stores |
-|---|---|
-| `/app/presentations` | All saved presentation files |
-| `/app/uploads` | Uploaded images and assets |
-
-These are mounted to `./presentations` and `./uploads` on the host by default (see `docker-compose.yml`).
+The named volumes and their container paths are owned by [`docker-compose.yml`](https://github.com/xuan2261/NavSlidesEditor/blob/main/docker-compose.yml): `revealjs-data` stores `/app/server/data`; `revealjs-uploads` stores `/app/server/uploads`. These are Docker-managed volumes, not host `./presentations` or `./uploads` bind mounts.
 
 ---
 
@@ -104,7 +99,7 @@ For developers or anyone who wants to customize the editor.
 
 ### Prerequisites
 
-- Node.js >=22.13.0 and npm. CI and container builds pin Node.js 22.22.0.
+- Node.js >=22.13.0 and npm. CI pins Node.js 22.22.0; the container image pins Node.js 22.23.3 on Debian Trixie Slim. See [`runtime-versions.json`](https://github.com/xuan2261/NavSlidesEditor/blob/master/runtime-versions.json) for source pins, not qualification or release evidence.
 
 ### Steps
 

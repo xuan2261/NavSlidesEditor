@@ -67,10 +67,10 @@ docker compose up -d --build
 
 | Đường dẫn bên trong container | Nội dung lưu trữ |
 |---|---|
-| `/app/presentations` | Toàn bộ tệp bài trình chiếu đã lưu |
-| `/app/uploads` | Hình ảnh và tài nguyên đã tải lên |
+| `/app/server/data` | Dữ liệu bài trình chiếu, package authority, cấu hình và lịch sử |
+| `/app/server/uploads` | Hình ảnh và tài nguyên đã tải lên |
 
-Theo mặc định, các thư mục này được gắn (mount) vào `./presentations` và `./uploads` trên máy chủ (xem `docker-compose.yml`).
+Các thư mục này dùng named volumes trong `docker-compose.yml`, không phải mặc định các thư mục host `./presentations` và `./uploads`. Sao lưu cả hai khi dịch vụ đã dừng để giữ một điểm nhất quán; các entry point là `scripts/backup-docker-volumes.ps1` và `scripts/restore-docker-volumes.ps1`.
 
 ---
 
@@ -103,7 +103,7 @@ Dành cho nhà phát triển hoặc bất kỳ ai muốn tùy biến trình so�
 
 ### Yêu cầu trước
 
-- Node.js >=22.13.0 và npm. Các bản build CI và container khóa Node.js 22.22.0.
+- Node.js >=22.13.0 và npm. CI khóa Node.js 22.22.0; image container khóa Node.js 22.23.3 trên Debian Trixie Slim. Xem [`runtime-versions.json`](https://github.com/xuan2261/NavSlidesEditor/blob/master/runtime-versions.json) để đối chiếu phiên bản khóa trong mã nguồn, không phải bằng chứng qualification hay phát hành.
 
 ### Các bước
 
