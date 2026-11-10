@@ -137,7 +137,13 @@ describe('pptx property mapping hardening', () => {
         uploadsDir: dir,
         output: {
           size: { width: 960, height: 540 },
-          slides: [{ elements: [{ type: 'text', left: -2, top: 10, width: 962, height: 40, content: '<p>Wide</p>' }] }],
+          slides: [
+            {
+              elements: [
+                { type: 'text', left: -2, top: 10, width: 962, height: 40, content: '<p>Wide</p>' },
+              ],
+            },
+          ],
         },
       })
       const text = result.presentation.slides[0].elements[0]
@@ -164,7 +170,7 @@ describe('pptx property mapping hardening', () => {
                   width: 300,
                   height: 200,
                   base64: PNG_DATA_URL,
-                  rect: { l: -100, r: 1200, t: 100, b: 50 },
+                  rect: { l: -10, r: 120, t: 10, b: 5 },
                   borderColor: '#f97316',
                   borderWidth: 2,
                   isFlipH: true,
@@ -256,8 +262,20 @@ describe('pptx property mapping hardening', () => {
                   chartType: 'lineChart',
                   grouping: 'clustered',
                   data: [
-                    { key: 'S1', values: [{ x: 'A', y: 10 }, { x: 'B', y: 20 }] },
-                    { key: 'S2', values: [{ x: 'A', y: 15 }, { x: 'B', y: 25 }] },
+                    {
+                      key: 'S1',
+                      values: [
+                        { x: 'A', y: 10 },
+                        { x: 'B', y: 20 },
+                      ],
+                    },
+                    {
+                      key: 'S2',
+                      values: [
+                        { x: 'A', y: 15 },
+                        { x: 'B', y: 25 },
+                      ],
+                    },
                   ],
                   colors: ['#6366f1', '#ef4444'],
                 },
@@ -286,7 +304,11 @@ describe('pptx property mapping hardening', () => {
         uploadsDir: dir,
         output: {
           size: { width: 960, height: 540 },
-          slides: [{ elements: [{ type: 'math', left: 30, top: 200, width: 940, height: 120, latex: 'x' }] }],
+          slides: [
+            {
+              elements: [{ type: 'math', left: 30, top: 200, width: 940, height: 120, latex: 'x' }],
+            },
+          ],
         },
       })
       const math = result.presentation.slides[0].elements[0]

@@ -22,22 +22,27 @@ export async function generateBrowserAssets(page) {
     if (!MediaRecorder.isTypeSupported(mime)) throw new Error('Chromium VP8 encoder unavailable')
     const recorder = new MediaRecorder(stream, { mimeType: mime })
     const chunks = []
-    recorder.ondataavailable = (event) => chunks.push(event.data)
-    const stopped = new Promise((resolve, reject) => {
+    let frame = 0
+    const recorded = new Promise((resolve, reject) => {
+      recorder.ondataavailable = (event) => {
+        chunks.push(event.data)
+        if (event.data.size > 0 && frame >= 2 && recorder.state === 'recording') recorder.stop()
+      }
       recorder.onstop = resolve; recorder.onerror = reject
     })
-    recorder.start()
-    // Draw during real-time capture so the stream contains presented frames, not one still.
-    let frame = 0
+    recorder.start(100)
+    // Stop after real encoder output and multiple captured drawings, not a blind delay.
     const drawing = setInterval(() => {
       ctx.fillStyle = ++frame % 2 ? '#ef4444' : '#3b82f6'
       ctx.fillRect(160, 30, 90, 90)
     }, 100)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1200))
-      recorder.stop(); await stopped
-    } finally { clearInterval(drawing) }
-    stream.getTracks().forEach((track) => track.stop())
+      await recorded
+    } finally {
+      clearInterval(drawing)
+      if (recorder.state !== 'inactive') recorder.stop()
+      stream.getTracks().forEach((track) => track.stop())
+    }
     const bytes = new Uint8Array(await new Blob(chunks).arrayBuffer())
     let binary = ''; for (const byte of bytes) binary += String.fromCharCode(byte)
     return [

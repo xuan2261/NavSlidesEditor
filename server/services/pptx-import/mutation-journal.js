@@ -6,7 +6,9 @@ const {
   featureMatrixHash,
 } = require('./canonical-feature-matrix')
 const { reasonCodeSubject } = require('./reason-code-contract')
-const { assertUniqueSnapshot, cloneReplaySnapshot, elementList, findElement, findSlide, safeSnapshot, slideList } = require('./generic-journal-safety')
+const { cloneReplaySnapshot, elementList, findElement, findSlide, safeSnapshot, slideList } = require('./generic-journal-safety')
+const { isPlainRecord } = require('./own-plain-data')
+const { semanticPropertyDeltas, propertyPath, propertySlot } = require('./generic-journal-property-path')
 
 const JOURNAL_VERSION = 1
 const valueHash = (value) => hashRecord({ value })
@@ -30,19 +32,31 @@ function impactClosure(ref, property) {
   if (!ref?.partUri) return []
   return property === 'src' && ref.mediaPartUri ? [ref.partUri, ref.mediaPartUri] : [ref.partUri]
 }
-function propertyChange(before, after, property, context) {
+function propertyChange(before, after, property, context, path) {
   const targetKind = context.targetKind || 'element'
   const address = targetKind === 'presentation' ? { targetKind, targetId: before.id }
     : targetKind === 'slide' ? { targetKind, slideId: before.id, parentSlideId: context.parentSlideId ?? null }
       : { targetKind, slideId: context.slideId, elementId: before.id }
   const ref = targetKind === 'element' ? source(context, before.id) : null
-  return op({ kind: 'property-change', ...address, property, before: structuredClone(ownValue(before, property)), after: structuredClone(ownValue(after, property)), affectedProperties: [property], sourceRef: ref, impactClosure: impactClosure(ref, property), inverse: { value: structuredClone(ownValue(before, property)) } })
+  return op({ kind: 'property-change', ...address, property, ...(path ? { path } : {}), before: structuredClone(ownValue(before, property)), after: structuredClone(ownValue(after, property)), affectedProperties: [property], sourceRef: ref, impactClosure: impactClosure(ref, property), inverse: { value: structuredClone(ownValue(before, property)) } })
 }
 function properties(before, after, context) {
   const ignored = new Set(context.targetKind === 'presentation' ? ['id', 'slides'] : ['id', 'elements', 'children'])
   const keys = [...new Set([...Object.keys(before), ...Object.keys(after)])].sort()
-  return keys.filter((key) => !ignored.has(key) && valueHash(ownValue(before, key)) !== valueHash(ownValue(after, key)))
-    .map((property) => propertyChange(before, after, property, context))
+  return keys.filter((key) => !ignored.has(key)).flatMap((property) => {
+    const left = ownValue(before, property); const right = ownValue(after, property)
+    if (context.targetKind === 'presentation' && property === 'pptxSemantic' && isPlainRecord(left) && isPlainRecord(right)) {
+      if (left === right) return []
+      const changes = []
+      semanticPropertyDeltas(left, right, (path, previous, next) => {
+        if (valueHash(previous) !== valueHash(next)) changes.push(propertyChange(
+          { id: before.id, [property]: previous }, { id: after.id, [property]: next }, property, context, path
+        ))
+      })
+      return changes
+    }
+    return valueHash(left) !== valueHash(right) ? [propertyChange(before, after, property, context)] : []
+  })
 }
 function collectionChanges(before, after, property, kind, context, ownerContext = context) {
   const operations = nodes(kind, before[property] || [], after[property] || [], context)
@@ -79,7 +93,7 @@ function nodes(kind, before, after, context) {
   return operations
 }
 function deriveMutationJournal(beforeInput, afterInput, options = {}) {
-  const before = assertUniqueSnapshot(safeSnapshot(beforeInput, options.budgets), options.budgets); const after = assertUniqueSnapshot(safeSnapshot(afterInput, options.budgets), options.budgets)
+  const before = safeSnapshot(beforeInput, options.budgets); const after = safeSnapshot(afterInput, options.budgets)
   const context = { ...options, targetKind: 'presentation', presentationId: before.id, parentSlideId: null }
   const operations = [...properties(before, after, context), ...nodes('slide', before.slides, after.slides, context)]
   // Deletes release old lineage before additions; final sibling ordering follows membership changes.
@@ -108,14 +122,16 @@ function deriveMutationJournal(beforeInput, afterInput, options = {}) {
 function replayJournal(snapshotInput, journal) {
   const snapshot = cloneReplaySnapshot(snapshotInput)
   for (const operation of journal.operations || []) {
+    propertyPath(operation)
     const slide = findSlide(snapshot, operation.slideId)
     if (operation.kind === 'property-change') {
       const target = operation.targetKind === 'presentation' ? snapshot : operation.targetKind === 'slide' ? slide
         : findElement(slide?.elements, operation.elementId)?.element
-      const current = target && Object.hasOwn(target, operation.property) ? target[operation.property] : undefined
-      if (target && valueHash(current) === valueHash(operation.before)) {
-        if (operation.after === undefined) delete target[operation.property]
-        else Object.defineProperty(target, operation.property, { value: structuredClone(operation.after), enumerable: true, configurable: true, writable: true })
+      const slot = propertySlot(target, operation)
+      const current = slot ? ownValue(slot.target, slot.property) : undefined
+      if (slot && valueHash(current) === valueHash(operation.before)) {
+        if (operation.after === undefined) delete slot.target[slot.property]
+        else Object.defineProperty(slot.target, slot.property, { value: structuredClone(operation.after), enumerable: true, configurable: true, writable: true })
       }
     } else if (operation.kind === 'element-delete' && slide) {
       const found = findElement(slide.elements, operation.elementId)

@@ -6,44 +6,88 @@ const ITEM_CLASS =
   'slide-item group relative rounded-md border-2 transition-colors focus-within:ring-2 focus-within:ring-focus/25'
 
 export const SlideNavigatorItem = memo(function SlideNavigatorItem({
-  slide, index, current, selected, focused, actionsActive, dragOver, slideCount, resolution, designTokens, layoutMasters,
-  onActivate, onFocus, onKeyDown, onContextMenu, onDuplicate, onDelete,
-  onDragStart, onDragOver, onDragLeave, onDrop, onDragEnd,
-  currentVerticalIndex, onSelectVertical, onChildContextMenu, buttonRef,
+  slide,
+  index,
+  current,
+  selected,
+  focused,
+  actionsActive,
+  dragOver,
+  slideCount,
+  resolution,
+  designTokens,
+  layoutMasters,
+  pptxSemantic,
+  onActivate,
+  onFocus,
+  onKeyDown,
+  onContextMenu,
+  onDuplicate,
+  onDelete,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd,
+  currentVerticalIndex,
+  onSelectVertical,
+  onChildContextMenu,
+  buttonRef,
 }) {
-  const handleItemClick = useCallback((event) => {
-    if (event.target === event.currentTarget && onActivate) {
-      onActivate(event, index)
-    }
-  }, [onActivate, index])
+  const handleItemClick = useCallback(
+    (event) => {
+      if (event.target === event.currentTarget && onActivate) {
+        onActivate(event, index)
+      }
+    },
+    [onActivate, index]
+  )
 
-  const handleItemContextMenu = useCallback((event) => {
-    if (onContextMenu) onContextMenu(event, index)
-  }, [onContextMenu, index])
+  const handleItemContextMenu = useCallback(
+    (event) => {
+      if (onContextMenu) onContextMenu(event, index)
+    },
+    [onContextMenu, index]
+  )
 
-  const handleButtonClick = useCallback((event) => {
-    if (onActivate) onActivate(event, index)
-  }, [onActivate, index])
+  const handleButtonClick = useCallback(
+    (event) => {
+      if (onActivate) onActivate(event, index)
+    },
+    [onActivate, index]
+  )
 
   const handleButtonFocus = useCallback(() => {
     if (onFocus) onFocus(index)
   }, [onFocus, index])
 
-  const handleButtonKeyDown = useCallback((event) => {
-    if (onKeyDown) onKeyDown(event, index)
-  }, [onKeyDown, index])
+  const handleButtonKeyDown = useCallback(
+    (event) => {
+      if (onKeyDown) onKeyDown(event, index)
+    },
+    [onKeyDown, index]
+  )
 
-  const handleButtonDragStart = useCallback((event) => {
-    if (onDragStart) onDragStart(event, index)
-  }, [onDragStart, index])
+  const handleButtonDragStart = useCallback(
+    (event) => {
+      if (onDragStart) onDragStart(event, index)
+    },
+    [onDragStart, index]
+  )
 
-  const handleButtonDragOver = useCallback((event) => {
-    if (onDragOver) onDragOver(event, index)
-  }, [onDragOver, index])
+  const handleButtonDragOver = useCallback(
+    (event) => {
+      if (onDragOver) onDragOver(event, index)
+    },
+    [onDragOver, index]
+  )
 
-  const handleButtonDrop = useCallback((event) => {
-    if (onDrop) onDrop(event, index)
-  }, [onDrop, index])
+  const handleButtonDrop = useCallback(
+    (event) => {
+      if (onDrop) onDrop(event, index)
+    },
+    [onDrop, index]
+  )
 
   const handleButtonDuplicate = useCallback(() => {
     if (onDuplicate) onDuplicate(index)
@@ -53,9 +97,12 @@ export const SlideNavigatorItem = memo(function SlideNavigatorItem({
     if (onDelete) onDelete(index)
   }, [onDelete, index])
 
-  const handleButtonRef = useCallback((node) => {
-    if (buttonRef) buttonRef(node, index)
-  }, [buttonRef, index])
+  const handleButtonRef = useCallback(
+    (node) => {
+      if (buttonRef) buttonRef(node, index)
+    },
+    [buttonRef, index]
+  )
   return (
     <li
       data-testid="slide-panel-item"
@@ -96,12 +143,32 @@ export const SlideNavigatorItem = memo(function SlideNavigatorItem({
           resolution={resolution}
           designTokens={designTokens}
           layoutMasters={layoutMasters}
+          pptxSemantic={pptxSemantic}
           className="m-1.5"
         />
       </button>
       <div className="absolute right-1 top-1 z-20 flex gap-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(pointer:coarse)]:opacity-100">
-        <button type="button" title="Duplicate" aria-label={`Duplicate slide ${index + 1}`} tabIndex={actionsActive ? 0 : -1} onClick={handleButtonDuplicate} className="flex min-h-11 min-w-11 items-center justify-center rounded bg-black/60 p-1 text-white"><Copy size={12} /></button>
-        <button type="button" title={slideCount <= 1 ? 'Cannot delete last slide' : 'Delete'} aria-label={slideCount <= 1 ? 'Cannot delete last slide' : `Delete slide ${index + 1}`} disabled={slideCount <= 1} tabIndex={actionsActive ? 0 : -1} onClick={handleButtonDelete} className="flex min-h-11 min-w-11 items-center justify-center rounded bg-black/60 p-1 text-white disabled:opacity-40"><Trash2 size={12} /></button>
+        <button
+          type="button"
+          title="Duplicate"
+          aria-label={`Duplicate slide ${index + 1}`}
+          tabIndex={actionsActive ? 0 : -1}
+          onClick={handleButtonDuplicate}
+          className="flex min-h-11 min-w-11 items-center justify-center rounded bg-black/60 p-1 text-white"
+        >
+          <Copy size={12} />
+        </button>
+        <button
+          type="button"
+          title={slideCount <= 1 ? 'Cannot delete last slide' : 'Delete'}
+          aria-label={slideCount <= 1 ? 'Cannot delete last slide' : `Delete slide ${index + 1}`}
+          disabled={slideCount <= 1}
+          tabIndex={actionsActive ? 0 : -1}
+          onClick={handleButtonDelete}
+          className="flex min-h-11 min-w-11 items-center justify-center rounded bg-black/60 p-1 text-white disabled:opacity-40"
+        >
+          <Trash2 size={12} />
+        </button>
       </div>
       {(slide.children || []).length > 0 && (
         <ul className="ml-2 border-l-2 border-accent/30 pl-2">
@@ -118,7 +185,8 @@ export const SlideNavigatorItem = memo(function SlideNavigatorItem({
                   onClick={() => onSelectVertical?.({ parent: index, child: childIndex })}
                   onContextMenu={(event) => onChildContextMenu?.(event, index, childIndex)}
                   onKeyDown={(event) => {
-                    if (event.key === 'F10' && event.shiftKey) onChildContextMenu?.(event, index, childIndex)
+                    if (event.key === 'F10' && event.shiftKey)
+                      onChildContextMenu?.(event, index, childIndex)
                   }}
                 >
                   <span className="absolute left-1 top-1 z-10 text-[8px]">
@@ -129,6 +197,7 @@ export const SlideNavigatorItem = memo(function SlideNavigatorItem({
                     resolution={resolution}
                     designTokens={designTokens}
                     layoutMasters={layoutMasters}
+                    pptxSemantic={pptxSemantic}
                     className="min-h-[24px]"
                   />
                 </button>

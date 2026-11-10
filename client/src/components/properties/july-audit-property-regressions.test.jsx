@@ -155,25 +155,26 @@ describe('July property finding regressions', () => {
     }
   )
 
-  it('rejects reversed and equal trim endpoints while allowing the open-ended sentinel', () => {
+  it.each(['video', 'audio'])('rejects invalid %s trim endpoints while allowing the open-ended sentinel', (type) => {
     render(
       <PropertyHarness
         Component={MediaProperties}
         initial={{
-          type: 'video',
+          type,
           startTime: 0,
           endTime: 5,
         }}
       />
     )
-    fireEvent.change(screen.getByLabelText('Video start time'), { target: { value: '10' } })
+    const label = type === 'video' ? 'Video' : 'Audio'
+    fireEvent.change(screen.getByLabelText(`${label} start time`), { target: { value: '10' } })
     expect(saved().startTime).toBe(0)
     expect(screen.getByRole('alert').textContent).toContain('greater than')
-    fireEvent.change(screen.getByLabelText('Video start time'), { target: { value: '3' } })
-    fireEvent.change(screen.getByLabelText('Video end time'), { target: { value: '3' } })
+    fireEvent.change(screen.getByLabelText(`${label} start time`), { target: { value: '3' } })
+    fireEvent.change(screen.getByLabelText(`${label} end time`), { target: { value: '3' } })
     expect(saved().endTime).toBe(5)
-    fireEvent.change(screen.getByLabelText('Video end time'), { target: { value: '0' } })
-    fireEvent.change(screen.getByLabelText('Video start time'), { target: { value: '10' } })
+    fireEvent.change(screen.getByLabelText(`${label} end time`), { target: { value: '0' } })
+    fireEvent.change(screen.getByLabelText(`${label} start time`), { target: { value: '10' } })
     expect(saved().startTime).toBe(10)
     expect(saved().endTime).toBe(0)
     expect(screen.queryByRole('alert')).toBeNull()

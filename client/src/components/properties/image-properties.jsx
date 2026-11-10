@@ -4,6 +4,8 @@ import { clampNumber } from '../../utils/number-input'
 import { computeMixedValues } from '../../utils/selection-mixed-values'
 import MixedValueNotice from './mixed-value-notice'
 import FocusedAuthoringTextInput from './focused-authoring-text-input'
+import NativePictureProperties from './native-picture-properties'
+import { semanticInstance, semanticDefinition } from 'revealjs-shared/src/pptx-semantic-records.js'
 
 const IMAGE_VISUAL_DEFAULTS = {
   src: '',
@@ -37,8 +39,12 @@ export default function ImageProperties({
   onUpdate,
   elements = [],
   selectedElementIds = [],
+  pptxSemantic,
+  slideLocked = false,
 }) {
   const mixedId = useId()
+  const instance = semanticInstance(pptxSemantic, element.pptxInstanceId)
+  const nativePicture = semanticDefinition(pptxSemantic, instance?.definitionId)?.content?.pictureDocument
   const effectiveImages = elements
     .filter((candidate) => candidate.type === 'image')
     .map((candidate) => ({
@@ -74,6 +80,10 @@ export default function ImageProperties({
   const locked = element.locked === true
   return (
     <fieldset disabled={locked} className="mb-2.5 min-w-0">
+      {nativePicture ? (
+        <NativePictureProperties key={instance.id} element={element} document={pptxSemantic}
+          slideLocked={slideLocked || selectedElementIds.length > 1} onUpdate={onUpdate} />
+      ) : <>
       <div className="text-[11px] text-text-muted mb-1">Image source URL</div>
       <FocusedAuthoringTextInput
         key={`${element.id}-source`}
@@ -196,6 +206,7 @@ export default function ImageProperties({
           {mixedNotice('borderColor', 'image border color')}
         </div>
       </div>
+      </>}
       <div className="border-t border-border pt-2 mt-1 mb-2.5">
         <div className="text-[11px] text-text-muted mb-1.5 font-medium">Accessibility</div>
         <label className="flex items-center gap-1.5 mb-2 cursor-pointer">

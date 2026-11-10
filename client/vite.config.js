@@ -54,6 +54,13 @@ export default defineConfig({
   optimizeDeps: {
     include: [
       'revealjs-shared',
+      'revealjs-shared/src/slide-layouts.js',
+      'revealjs-shared/src/native-tab-layout.js',
+      'revealjs-shared/src/presentation-slide-order.js',
+      'revealjs-shared/src/element-actions.js',
+      // Linked workspace sources are CommonJS; dev needs the same interop as build.
+      'revealjs-shared/src/pptx-*.js',
+      'revealjs-shared/src/source-font-*.js',
       'revealjs-shared/src/education/config-serialization.js',
       'revealjs-shared/src/education/browser/mount.js',
       'revealjs-shared/src/education/game-registry.js',

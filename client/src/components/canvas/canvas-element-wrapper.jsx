@@ -12,6 +12,8 @@ import {
 import { buildSandboxFrameDocument } from 'revealjs-shared/src/education/html-sandbox-policy.js'
 import { attachMediaPlayback } from 'revealjs-shared/src/media-playback.js'
 import { sanitizeRichTextHtml } from 'revealjs-shared/src/content-safety.js'
+import { attachNativeTabLayout } from 'revealjs-shared/src/native-tab-layout.js'
+import { EMU_TO_CSS } from '../../utils/pptx-semantic-geometry-bridge'
 import { sanitizeMediaSrc } from '../../utils/url-safety'
 import { resolveVideoSrc } from '../../utils/migrate-video-src'
 import { getElementRenderer, CropOverlay } from './element-renderers/registry'
@@ -23,6 +25,10 @@ import { buildMermaidEmbedContent } from '../../hooks/use-element-creation'
 import { getKeyboardNudgeStep } from '../../utils/keyboard-nudge'
 import { isInteractiveKeyboardTarget } from '../../utils/interactive-keyboard-target'
 import { applyMove } from './use-canvas-pointer-interaction'
+import { useEditorStore } from '../../stores/editor-store'
+import pictureRenderer from 'revealjs-shared/src/pptx-picture-svg.js'
+import { usePptxSourceFonts } from '../../hooks/use-pptx-source-fonts'
+import { textBoxSvgString } from 'revealjs-shared/src/pptx-textbox-svg.js'
 
 function isLinePathEvent(element, event) {
   if (element.type !== 'line') return true
@@ -142,6 +148,7 @@ function renderHighlightedCodeLines(element) {
 
 export default function CanvasElement({
   element,
+  outputPixelScale = 1,
   isSelected,
   selectedElementCount = isSelected ? 1 : 0,
   isEditing,
@@ -164,6 +171,14 @@ export default function CanvasElement({
   slideWidth = 960,
   slideHeight = 540,
 }) {
+  const { fontRuntime } = usePptxSourceFonts()
+  const pointEditing =
+    useEditorStore((state) => state.geometryPointEditingElementId === element.id) &&
+    isSelected &&
+    selectedElementCount === 1 &&
+    (element.pptxGeometry?.kind === 'custom' || element.pptxGeometry?.connector !== undefined) &&
+    !element.locked &&
+    !slideLocked
   const contentRef = useRef(null)
   const wrapperRef = useRef(null)
   useLayoutEffect(
@@ -175,7 +190,12 @@ export default function CanvasElement({
     },
     []
   )
-  const videoRef = useRef(null)
+  const mediaRef = useRef(null)
+  useLayoutEffect(() => {
+    if (!wrapperRef.current || !['text', 'shape'].includes(element.type)) return
+    if (!String(element.content || element.textHtml || '').includes('--pptx-tab-stops')) return
+    return attachNativeTabLayout(wrapperRef.current)
+  }, [element.content, element.textHtml, element.type, isEditing])
 
   // Render KaTeX math in preview
   useEffect(() => {
@@ -194,8 +214,14 @@ export default function CanvasElement({
   }, [element.content, isEditing])
 
   useEffect(() => {
-    if (element.type !== 'video' || !videoRef.current) return
-    return attachMediaPlayback(videoRef.current, element)
+    if (!['video', 'audio'].includes(element.type) || !mediaRef.current) return
+    return attachMediaPlayback(mediaRef.current, {
+      startTime: element.startTime,
+      endTime: element.endTime,
+      loop: element.loop,
+      playbackRate: element.playbackRate,
+      volume: element.volume,
+    })
   }, [
     element.src,
     element.videoUrl,
@@ -203,6 +229,7 @@ export default function CanvasElement({
     element.endTime,
     element.loop,
     element.playbackRate,
+    element.volume,
     element.type,
   ])
 
@@ -215,7 +242,7 @@ export default function CanvasElement({
     width: element.width,
     height: element.height,
     zIndex: element.zIndex || 1,
-    pointerEvents: 'auto',
+    pointerEvents: element.type === 'semantic-group' ? 'none' : 'auto',
     touchAction: 'none',
     outline: element.locked
       ? '2px solid var(--warning, #f59e0b)'
@@ -235,6 +262,7 @@ export default function CanvasElement({
             : 'grab',
     userSelect: isEditing ? 'text' : 'none',
     overflow:
+      element._semanticLocal ||
       isSelected ||
       isEditing ||
       isCropping ||
@@ -351,7 +379,24 @@ export default function CanvasElement({
       const step = getKeyboardNudgeStep(event.shiftKey)
       onUpdateElement?.(
         element.id,
-        applyMove(element, nudge.x * step, nudge.y * step, Number(slideWidth), Number(slideHeight))
+        element._semanticLocal
+          ? {
+              semanticWorldOperation: [
+                1,
+                0,
+                0,
+                1,
+                (nudge.x * step) / EMU_TO_CSS,
+                (nudge.y * step) / EMU_TO_CSS,
+              ],
+            }
+          : applyMove(
+              element,
+              nudge.x * step,
+              nudge.y * step,
+              Number(slideWidth),
+              Number(slideHeight)
+            )
       )
     }
   }
@@ -383,7 +428,7 @@ export default function CanvasElement({
   // Opacity is applied to the element-CONTENT layer only, so selection chrome
   // (outline, resize/rotation handles, badges) stays fully opaque.
   const contentOpacity =
-    element.opacity !== undefined && element.opacity !== 1 ? element.opacity : undefined
+    !element.pptxPicture && element.opacity !== undefined && element.opacity !== 1 ? element.opacity : undefined
   const contentLayerStyle = {
     position: 'absolute',
     inset: 0,
@@ -469,6 +514,7 @@ export default function CanvasElement({
     borderRadius: 2,
     zIndex: 100,
     touchAction: 'none',
+    pointerEvents: 'auto',
     ...handleStyle,
   })
   const rotationGuideStyle = {
@@ -494,6 +540,7 @@ export default function CanvasElement({
     border: '2px solid white',
     zIndex: 100,
     cursor: 'grab',
+    pointerEvents: 'auto',
   }
 
   return (
@@ -537,7 +584,11 @@ export default function CanvasElement({
       }}
     >
       <div data-element-content style={contentLayerStyle}>
-        {element.type === 'text' && !isEditing && (
+        {element.type === 'text' && !isEditing && element.pptxTextDocument && (
+          <div className="slide-text-content" style={{ width: '100%', height: '100%', overflow: 'visible' }}
+            dangerouslySetInnerHTML={{ __html: textBoxSvgString(element, { fontRuntime, theme: element.pptxTextTheme }) }} />
+        )}
+        {element.type === 'text' && !isEditing && !element.pptxTextDocument && (
           <div
             ref={contentRef}
             className="slide-text-content ProseMirror-preview"
@@ -551,6 +602,12 @@ export default function CanvasElement({
         {element.type === 'image' &&
           (() => {
             const image = normalizeImageAccessibility(element)
+            if (element.pptxPicture)
+              return <>
+                <div style={{ width: '100%', height: '100%', overflow: 'visible' }}
+                  dangerouslySetInnerHTML={{ __html: pictureRenderer.pictureSvg(image) }} />
+                <ImageCitation element={image} />
+              </>
             const descriptionId = image.longDescription
               ? `image-description-${image.id}`
               : undefined
@@ -709,7 +766,7 @@ export default function CanvasElement({
               return (
                 <>
                   <video
-                    ref={videoRef}
+                    ref={mediaRef}
                     src={videoSrc}
                     controls={media.controls !== false}
                     autoPlay={media.autoplay || false}
@@ -749,6 +806,7 @@ export default function CanvasElement({
                 <>
                   <div style={audioWrapperStyle}>
                     <audio
+                      ref={mediaRef}
                       src={sanitizeMediaSrc(media.src)}
                       controls={media.controls !== false}
                       autoPlay={media.autoplay || false}
@@ -783,6 +841,17 @@ export default function CanvasElement({
               )
             }
             if (Renderer) {
+              if (element.type === 'shape')
+                return (
+                  <Renderer
+                    element={element}
+                    isSelected={isSelected}
+                    onUpdateElement={onUpdateElement}
+                    geometryPointEditing={pointEditing}
+                    fontRuntime={fontRuntime}
+                    outputPixelScale={outputPixelScale}
+                  />
+                )
               if (element.type === 'table')
                 return (
                   <Renderer
@@ -823,6 +892,7 @@ export default function CanvasElement({
       {element.action?.hotspot && <div style={hotspotBadgeStyle}>Hotspot</div>}
       {element.groupId && isSelected && <div style={groupBadgeStyle}>Group</div>}
       {isSelected &&
+        !pointEditing &&
         !isEditing &&
         !isCropping &&
         !element.locked &&
@@ -841,22 +911,27 @@ export default function CanvasElement({
             onDoubleClick={(e) => e.stopPropagation()}
           />
         ))}
-      {isSelected && !isEditing && !isCropping && !element.locked && !slideLocked && (
-        <>
-          <div style={rotationGuideStyle} />
-          <div
-            style={rotationHandleStyle}
-            data-testid="rotation-handle"
-            onPointerDown={(e) => {
-              if (e.button !== 0) return
-              e.stopPropagation()
-              onPointerDown(e, 'rotate', null)
-            }}
-            onClick={(e) => e.stopPropagation()}
-            onDoubleClick={(e) => e.stopPropagation()}
-          />
-        </>
-      )}
+      {isSelected &&
+        !pointEditing &&
+        !isEditing &&
+        !isCropping &&
+        !element.locked &&
+        !slideLocked && (
+          <>
+            <div style={rotationGuideStyle} />
+            <div
+              style={rotationHandleStyle}
+              data-testid="rotation-handle"
+              onPointerDown={(e) => {
+                if (e.button !== 0) return
+                e.stopPropagation()
+                onPointerDown(e, 'rotate', null)
+              }}
+              onClick={(e) => e.stopPropagation()}
+              onDoubleClick={(e) => e.stopPropagation()}
+            />
+          </>
+        )}
     </div>
   )
 }

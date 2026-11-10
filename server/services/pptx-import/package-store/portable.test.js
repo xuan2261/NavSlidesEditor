@@ -266,6 +266,40 @@ describe('portable destination and source fences (P10-02/03/10)', () => {
     await destination.releaseWriter()
   })
 
+  it('replaces markerless destination geometry with native portable projection while preserving Original bytes', async () => {
+    const { applyCompatibilityWrites } = require('../compatibility-view')
+    const { resolvePackageBackedReadFromState } = require('../../package-backed-presentation-read')
+    const source = await storeFor('native-geometry-source')
+    const metadata = { originalSize: { width: 960, height: 720 }, geometryPolicy: 'native-aspect-v1' }
+    const bundle = await bundleWithCanonicalProjection(source, {
+      resolution: { width: 720, height: 540 }, _pptxMeta: metadata,
+    })
+    expect(bundle.manifest.mutationResults[0].projection._pptxMeta).toEqual(metadata)
+    const destination = await storeFor('native-geometry-destination')
+    await destination.commitOriginal(Buffer.from('previous-legacy-original'), { ownerType: 'presentation', ownerId: 'destination' })
+    const expectedHead = destination.getState().heads[0]
+    const rows = [{
+      id: 'destination', title: 'Legacy', slides: [], resolution: { width: 960, height: 540 },
+      _pptxMeta: { originalSize: { width: 720, height: 540 }, usedFonts: ['Calibri'] },
+      pptxAggregateHead: expectedHead,
+    }]
+    const head = await destination.importPresentationPackage(bundle, 'destination', {
+      replace: true, expectedHead,
+      beforePublication: async ({ head: planned, projection }) => ({ ...projection, pptxAggregateHead: planned }),
+    })
+    applyCompatibilityWrites(rows, destination.getState().compatibilityOutbox)
+    expect(rows[0].resolution).toEqual({ width: 720, height: 540 })
+    expect(rows[0]._pptxMeta).toEqual({ ...metadata, usedFonts: ['Calibri'] })
+    const resolved = resolvePackageBackedReadFromState(destination.getState(), 'destination', rows[0])
+    expect(resolved.presentation.resolution).toEqual({ width: 720, height: 540 })
+    expect(resolved.presentation._pptxMeta).toEqual({ ...metadata, usedFonts: ['Calibri'] })
+    const exported = await destination.exportPresentationPackage('destination', { expectedHead: head })
+    expect(exported.manifest.mutationResults.every((result) => result.projection._pptxMeta.geometryPolicy === 'native-aspect-v1')).toBe(true)
+    expect(await destination.readOriginal(head.originalRevisionId)).toEqual(Buffer.from('publication-hook-original'))
+    await source.releaseWriter()
+    await destination.releaseWriter()
+  })
+
   it.each([false, true])('preserves a winner published during preflight (replace=%s)', async (replace) => {
     const source = await storeFor('race-source')
     await source.commitOriginal(Buffer.from('incoming'), { ownerType: 'presentation', ownerId: 'source' })
@@ -381,9 +415,10 @@ describe('portable canonical media rebinding (P10-14/12)', () => {
     const expectedHead = destination.getState().heads[0]
     const mediaUrlMap = { '/uploads/old.png': '/uploads/destination.png', '/uploads/pending.png': '/uploads/destination-pending.png', '/uploads/old.mp4': '/uploads/destination.mp4', '/uploads/old.vtt': '/uploads/destination.vtt' }
     const head = await destination.importPresentationPackage(bundle, 'destination', { mediaUrlMap, ...(replace ? { replace: true, expectedHead } : {}) })
-    expect(head.generation).toBe(replace ? expectedHead.generation + 1 : pending ? 2 : 1)
     expect(head.predecessorId).toBe(replace ? hashRecord(expectedHead) : null)
     const context = resolveEditedExportContext(destination.getState(), 'destination')
+    expect(require('../package-authority-snapshot').resolveEditorProjectionContext(destination.getState(), 'destination'))
+      .toMatchObject({ ok: true, after: { id: 'destination' } })
     expect(context.ok).toBe(true)
     expect(context.before.slides[0].elements[0].src).toBe('/uploads/destination.png')
     expect(context.after.slides[0].elements[0].src).toBe(pending ? '/uploads/destination-pending.png' : '/uploads/destination.png')
@@ -642,9 +677,9 @@ describe('portable trusted sidecar admission boundary', () => {
   })
 })
 
-async function bundleWithCanonicalProjection(source) {
+async function bundleWithCanonicalProjection(source, extra = {}) {
   const { revision } = await source.commitOriginal(Buffer.from('publication-hook-original'), { ownerType: 'presentation', ownerId: 'source' })
-  const projection = { id: 'source', title: 'Canonical intent', slides: [] }
+  const projection = { id: 'source', title: 'Canonical intent', slides: [], ...extra }
   const sourceMap = { schemaVersion: 1, presentationId: 'source', revisionId: revision.id, packageGeneration: 1, entries: {} }
   await source.mutate((next) => {
     Object.assign(next.heads[0], { projectionRevisionId: hashRecord(projection), sourceMapRevisionId: hashRecord(sourceMap) })

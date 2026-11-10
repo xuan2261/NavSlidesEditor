@@ -134,6 +134,7 @@ svg.selectAll('circle').data(data).join('circle')
     tracks: [],
     transcript: '',
     audioDescription: '',
+    volume: 1,
   },
   audio: {
     width: 400,
@@ -144,9 +145,13 @@ svg.selectAll('circle').data(data).join('circle')
     autoplay: false,
     loop: false,
     muted: false,
+    startTime: 0,
+    endTime: 0,
+    playbackRate: 1,
     tracks: [],
     transcript: '',
     audioDescription: '',
+    volume: 1,
   },
   table: {
     width: 600,

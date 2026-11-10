@@ -1,53 +1,32 @@
 import { createRequire } from 'node:module'
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, rmSync, lstatSync, readFileSync } from 'node:fs'
+import { mkdtempSync, rmSync, lstatSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve, join, dirname } from 'node:path'
 import { collectFiles } from '../ci/create-client-dist-manifest.mjs'
 import { digest, fileHash } from './education-evidence-files.mjs'
+import { assertPlainPath, withNsisArchiveTool } from './education-nsis-tool.mjs'
 
 const require = createRequire(import.meta.url)
 const LIMITS = Object.freeze({ maxBytes: 500 * 1024 * 1024, maxFiles: 50000 })
-function invoke(tool, args) {
+function invoke(tool, args, cwd) {
   return execFileSync(tool, args, {
+    cwd,
     encoding: 'utf8',
     timeout: 120000,
     maxBuffer: 16 * 1024 * 1024,
     windowsHide: true,
   })
 }
-export function assertPlainPath(target) {
-  for (let current = resolve(target); ; current = dirname(current)) {
-    if (lstatSync(current).isSymbolicLink())
-      throw new Error(`Refusing symbolic link or reparse point: ${current}`)
-    if (dirname(current) === current) break
-  }
-}
-function nsisArchiveTool() {
-  if (process.platform !== 'win32' || process.arch !== 'x64')
-    throw new Error('NSIS qualification requires native Windows x64 tooling')
-  const packagePath = require.resolve('electron-winstaller/package.json')
-  if (JSON.parse(readFileSync(packagePath, 'utf8')).version !== '5.4.0')
-    throw new Error('NSIS archive dependency differs from the locked tool contract')
-  // This obsolete native parser is limited to locally built NSIS wrappers, not installer uploads.
-  const tool = join(dirname(packagePath), 'vendor', '7z-x64.exe')
-  for (const path of [tool, join(dirname(tool), '7z-x64.dll')]) {
-    assertPlainPath(path)
-    if (!lstatSync(path).isFile()) throw new Error('Missing package-owned NSIS archive tool')
-  }
-  return tool
-}
 function listArchive(tool, archive, limits = LIMITS, format = null) {
   assertPlainPath(archive)
   if (!lstatSync(archive).isFile() || lstatSync(archive).size > LIMITS.maxBytes)
     throw new Error('Installer archive exceeds file bound')
-  const output = invoke(tool, [
-    'l',
-    ...(format ? [`-t${format}`] : []),
-    '-slt',
-    '-sccUTF-8',
-    archive,
-  ])
+  const output = invoke(
+    tool,
+    ['l', ...(format ? [`-t${format}`] : []), '-slt', '-sccUTF-8', archive],
+    format === 'Nsis' ? dirname(tool) : undefined
+  )
   const sections = output.replaceAll('\r\n', '\n').split(/^----------$/m)
   if (sections.length !== 2) throw new Error('Unrecognized installer archive listing')
   const entries = [],
@@ -162,51 +141,47 @@ export async function verifyInstallerPayload({ installer, exe, resources }) {
   if (process.env.ELECTRON_BUILDER_7ZIP_PATH)
     throw new Error('Unverified 7zip tool override is not admissible')
   const { getPath7za } = require('app-builder-lib/out/toolsets/7zip.js')
-  const tool = nsisArchiveTool(),
-    innerTool = await getPath7za()
-  const installerHash = fileHash(installer),
-    listing = listArchive(tool, resolve(installer), LIMITS, 'Nsis')
-  if (!/^Type = Nsis\s*$/im.test(listing.header))
-    throw new Error('Installer must be an actual NSIS payload archive')
-  const payloads = listing.entries.filter((entry) =>
-    /(?:^|\/)app-(?:32|64|arm64)\.(?:7z|zip)$/i.test(entry.path)
-  )
-  if (
-    payloads.length !== 1 ||
-    payloads[0].path !== '$PLUGINSDIR/app-64.7z' ||
-    payloads[0].directory
-  )
-    throw new Error('Installer must contain one unambiguous x64 NSIS payload')
-  if (
-    payloads[0].method !== 'Copy' ||
-    !Number.isSafeInteger(payloads[0].size) ||
-    payloads[0].size < 1 ||
-    payloads[0].size > LIMITS.maxBytes
-  )
-    throw new Error('NSIS selected payload requires a bounded exact Copy size')
-  const scratch = mkdtempSync(join(tmpdir(), 'navslides-installer-'))
-  try {
-    invoke(tool, [
-      'x',
-      '-tNsis',
-      '-bd',
-      '-y',
-      '-spd',
-      `-o${scratch}`,
-      resolve(installer),
-      payloads[0].raw,
-    ])
-    const archive = join(scratch, '$PLUGINSDIR', 'app-64.7z')
-    assertPlainPath(archive)
-    if (!lstatSync(archive).isFile() || lstatSync(archive).size !== payloads[0].size)
-      throw new Error('Installer payload archive size mismatch')
-    const result = await verifyPayloadArchive(innerTool, archive, unpacked)
-    if (fileHash(installer) !== installerHash)
-      throw new Error('Installer changed during payload verification')
-    return { installerHash, ...result }
-  } catch (error) {
-    throw new Error(`Installer payload verification failed: ${error.message}`, { cause: error })
-  } finally {
-    rmSync(scratch, { recursive: true, force: true })
-  }
+  return withNsisArchiveTool(async (tool) => {
+    const innerTool = await getPath7za()
+    const installerHash = fileHash(installer),
+      listing = listArchive(tool, resolve(installer), LIMITS, 'Nsis')
+    if (!/^Type = Nsis\s*$/im.test(listing.header))
+      throw new Error('Installer must be an actual NSIS payload archive')
+    const payloads = listing.entries.filter((entry) =>
+      /(?:^|\/)app-(?:32|64|arm64)\.(?:7z|zip)$/i.test(entry.path)
+    )
+    if (
+      payloads.length !== 1 ||
+      payloads[0].path !== '$PLUGINSDIR/app-64.7z' ||
+      payloads[0].directory
+    )
+      throw new Error('Installer must contain one unambiguous x64 NSIS payload')
+    if (
+      payloads[0].method !== 'Copy' ||
+      !Number.isSafeInteger(payloads[0].size) ||
+      payloads[0].size < 1 ||
+      payloads[0].size > LIMITS.maxBytes
+    )
+      throw new Error('NSIS selected payload requires a bounded exact Copy size')
+    const scratch = mkdtempSync(join(tmpdir(), 'navslides-installer-'))
+    try {
+      invoke(
+        tool,
+        ['x', '-tNsis', '-bd', '-y', '-spd', `-o${scratch}`, resolve(installer), payloads[0].raw],
+        dirname(tool)
+      )
+      const archive = join(scratch, '$PLUGINSDIR', 'app-64.7z')
+      assertPlainPath(archive)
+      if (!lstatSync(archive).isFile() || lstatSync(archive).size !== payloads[0].size)
+        throw new Error('Installer payload archive size mismatch')
+      const result = await verifyPayloadArchive(innerTool, archive, unpacked)
+      if (fileHash(installer) !== installerHash)
+        throw new Error('Installer changed during payload verification')
+      return { installerHash, ...result }
+    } catch (error) {
+      throw new Error(`Installer payload verification failed: ${error.message}`, { cause: error })
+    } finally {
+      rmSync(scratch, { recursive: true, force: true })
+    }
+  })
 }

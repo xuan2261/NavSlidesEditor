@@ -3,6 +3,8 @@ import { calculateGuides } from '../../utils/smartGuides'
 import { clampAspectResizeToSlide, getRotatedAABB } from './use-canvas-resize-rotate'
 import { applyGroupResize, applyGroupRotate, getGroupBounds, scaleLineResizePoints } from './canvas-group-transform-geometry'
 import { expandSelectionIdsForGroups } from '../../utils/active-slide-selection'
+import { semanticPointerUpdates } from '../../utils/pptx-semantic-geometry-bridge'
+import { semanticInstance } from 'revealjs-shared/src/pptx-semantic-records.js'
 
 export function rotateDeltaToLocal(dx, dy, rotation = 0) {
   if (!rotation) return { dx, dy }
@@ -108,6 +110,7 @@ export default function useCanvasPointerInteraction({
   gridSizeRef,
   smartGuidesRef,
   slideRef,
+  pptxSemantic,
   selectedElementIdsRef: _selectedElementIdsRef,
   draggingRef,
   pendingDragRef,
@@ -261,7 +264,9 @@ export default function useCanvasPointerInteraction({
         startMouseX: (event.clientX - rect.left) / scale,
         startMouseY: (event.clientY - rect.top) / scale,
         startEl: { ...element, rotation: element.rotation || 0 },
+        semanticDocument: element.pptxInstanceId ? pptxSemantic : null,
         startEls: startEls.map((item) => ({
+          ...item,
           id: item.id,
           type: item.type,
           x1: item.x1, y1: item.y1, x2: item.x2, y2: item.y2, cx: item.cx, cy: item.cy,
@@ -284,7 +289,7 @@ export default function useCanvasPointerInteraction({
       event.currentTarget?.setPointerCapture?.(event.pointerId)
       return true
     },
-    [activeSlideIdentity, onBlockedAction, pendingDragRef, pinchActiveRef]
+    [activeSlideIdentity, onBlockedAction, pendingDragRef, pinchActiveRef, pptxSemantic]
   )
 
   useEffect(() => {
@@ -294,7 +299,8 @@ export default function useCanvasPointerInteraction({
         session.navigationIdentity && session.navigationIdentity !== activeSlideIdentity
       ) ||
       Boolean(session.slideId && slideRef.current?.id !== session.slideId) ||
-      (session.elementId && !slideRef.current?.elements?.some((element) => element.id === session.elementId))
+      (session.elementId && !slideRef.current?.elements?.some((element) => element.id === session.elementId) &&
+        (!semanticInstance(pptxSemantic, session.elementId) || semanticInstance(pptxSemantic, session.elementId).lineage?.tombstone))
     const updateElementPreview = (drag, updates) => {
       drag.previewUpdates = updates
       setElementPreview?.(
@@ -349,6 +355,19 @@ export default function useCanvasPointerInteraction({
       const mouseY = (event.clientY - rect.top) / scaleRef.current
       const dx = mouseX - drag.startMouseX
       const dy = mouseY - drag.startMouseY
+      if (drag.semanticDocument) {
+        try {
+          const updates = semanticPointerUpdates(drag.semanticDocument, drag.startEl, drag,
+            dx, dy, { x: mouseX, y: mouseY }, event.shiftKey)
+          updateElementPreview(drag, updates)
+          setActiveGuides([])
+        } catch {
+          drag.previewUpdates = null
+          clearElementPreview?.()
+          onBlockedAction?.('invalid-semantic-transform')
+        }
+        return
+      }
 
       if (drag.type === 'move') {
         if (drag.startEls.length > 1) {
@@ -470,7 +489,7 @@ export default function useCanvasPointerInteraction({
       document.removeEventListener('pointercancel', onPointerCancel)
       document.removeEventListener('lostpointercapture', onPointerCancel)
     }
-  }, [activeSlideIdentity, applyResize, applyResizeAspectRatio, applyRubberBandSelection, cancelActiveInteraction, clampToSlide, clearSession, cropDragRef, draggingRef, endRubberBand, forceUpdate, getRotationAngle, gridSizeRef, onUpdateElement, onUpdateElements, pendingDragRef, rubberBandRef, scaleRef, setActiveGuides, setCropMode, setElementPreview, setRubberBand, showGridRef, slideH, slideRef, slideW, smartGuidesRef, snapToGrid, snapWithRef_, updateRubberBand])
+  }, [activeSlideIdentity, applyResize, applyResizeAspectRatio, applyRubberBandSelection, cancelActiveInteraction, clampToSlide, clearSession, clearElementPreview, cropDragRef, draggingRef, endRubberBand, forceUpdate, getRotationAngle, gridSizeRef, onUpdateElement, onUpdateElements, onBlockedAction, pendingDragRef, pptxSemantic, rubberBandRef, scaleRef, setActiveGuides, setCropMode, setElementPreview, setRubberBand, showGridRef, slideH, slideRef, slideW, smartGuidesRef, snapToGrid, snapWithRef_, updateRubberBand])
 
   return { startElementDrag, setCropDrag, startRubberBand: startRubberBandDrag, cancelActiveInteraction, applyCropHandle }
 }

@@ -1,10 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export function useRevealPreviewFrame(htmlContent, state = null, frameKey = 0) {
   const iframeRef = useRef(null)
   const deckRef = useRef(null)
   const generationRef = useRef(0)
   const latestStateRef = useRef(state)
+  const [status, setStatus] = useState('loading')
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     latestStateRef.current = state
@@ -16,14 +18,13 @@ export function useRevealPreviewFrame(htmlContent, state = null, frameKey = 0) {
 
     const generation = generationRef.current + 1
     generationRef.current = generation
-    let intervalId = null
     let timeoutId = null
-    const isCurrent = () => generationRef.current === generation && iframeRef.current === frame
+    let deck = null
+    let output = null
+    let readyListener = null
+    let failed = false
+    const isCurrent = () => !failed && generationRef.current === generation && iframeRef.current === frame
     const clearTimers = () => {
-      if (intervalId !== null) {
-        clearInterval(intervalId)
-        intervalId = null
-      }
       if (timeoutId !== null) {
         clearTimeout(timeoutId)
         timeoutId = null
@@ -31,47 +32,52 @@ export function useRevealPreviewFrame(htmlContent, state = null, frameKey = 0) {
     }
 
     deckRef.current = null
-    const handleLoad = () => {
+    setStatus('loading')
+    setError(null)
+    const fail = (cause) => {
+      if (!isCurrent()) return
+      failed = true
+      clearTimers()
+      setError(cause instanceof Error ? cause.message : String(cause))
+      setStatus('error')
+    }
+    const handleLoad = async () => {
       if (!isCurrent()) return
       clearTimers()
       const iframeWindow = frame.contentWindow
       if (!iframeWindow) return
-
-      intervalId = setInterval(() => {
-        if (!isCurrent()) {
-          clearTimers()
-          return
-        }
-        try {
-          const deck = iframeWindow.Reveal
-          if (deck && typeof deck.isReady === 'function' && deck.isReady()) {
-            clearTimers()
-            deckRef.current = deck
-            deck.configure({
-              keyboard: false,
-              touch: false,
-              controls: false,
-              progress: true,
-              overview: false,
-            })
-            const fsBtn = iframeWindow.document.getElementById('fs-btn')
-            if (fsBtn) fsBtn.style.display = 'none'
-            if (latestStateRef.current) {
-              deck.slide(
-                latestStateRef.current.slideIndex || 0,
-                latestStateRef.current.verticalIndex || 0,
-                latestStateRef.current.fragmentIndex || 0
-              )
-            }
-          }
-        } catch {
-          /* iframe can be temporarily inaccessible while srcdoc loads */
-        }
-      }, 100)
-
       timeoutId = setTimeout(() => {
-        if (isCurrent()) clearTimers()
+        fail(new Error('Preview readiness deadline'))
       }, 15000)
+      try {
+        output = iframeWindow.__navslidesSemanticOutput
+        if (output) {
+          await output.ready
+          if (!isCurrent()) return
+          if (output.state !== 'ready') throw new Error('Semantic preview is not ready')
+        }
+        if (!isCurrent()) return
+        deck = iframeWindow.Reveal
+        if (!deck) throw new Error('Reveal preview runtime unavailable')
+        readyListener = () => {
+          if (!isCurrent() || (output && output.state !== 'ready')) return
+          clearTimers()
+          deckRef.current = deck
+          deck.configure({
+            keyboard: false, touch: false, controls: false, progress: true, overview: false,
+          })
+          const fsBtn = iframeWindow.document.getElementById('fs-btn')
+          if (fsBtn) fsBtn.style.display = 'none'
+          if (latestStateRef.current) deck.slide(
+            latestStateRef.current.slideIndex || 0,
+            latestStateRef.current.verticalIndex || 0,
+            latestStateRef.current.fragmentIndex || 0
+          )
+          setStatus('ready')
+        }
+        if (deck.isReady?.()) readyListener()
+        else deck.on('ready', readyListener)
+      } catch (cause) { fail(cause) }
     }
 
     frame.onload = handleLoad
@@ -80,6 +86,9 @@ export function useRevealPreviewFrame(htmlContent, state = null, frameKey = 0) {
     return () => {
       if (generationRef.current === generation) generationRef.current += 1
       clearTimers()
+      deck?.off?.('ready', readyListener)
+      output?.dispose?.()
+      deckRef.current = null
       if (frame.onload === handleLoad) frame.onload = null
     }
   }, [htmlContent, frameKey])
@@ -93,5 +102,5 @@ export function useRevealPreviewFrame(htmlContent, state = null, frameKey = 0) {
     }
   }, [state])
 
-  return { iframeRef, deckRef }
+  return { iframeRef, deckRef, status, error }
 }

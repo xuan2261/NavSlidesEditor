@@ -6,11 +6,42 @@ const { createSourceMap } = require('./source-map')
 const { deriveMutationJournal } = require('./mutation-journal')
 const { validateMatrixAuthoritySubjects } = require('./canonical-feature-matrix')
 const { MUTATION_OPERATIONS: OPERATIONS } = require('./mutation-operation-scope')
-const { isNoOpExportReceipt, hasValidCommittedJournal } = require('./editor-projection-journal-authority')
+const {
+  isNoOpExportReceipt,
+  hasValidCommittedJournal,
+} = require('./editor-projection-journal-authority')
 const {
   resolveImmutableOriginalRevisionBytes,
   resolvePackageRevisionBytes,
 } = require('./package-revision-resolver')
+
+// Authority records are mutable; verify current content rather than object identity.
+const verifiedJournalCache = new Map()
+
+function recordVerifiedJournal({
+  presentationId,
+  generation,
+  packageRevisionId,
+  matrixAuthorityEpoch,
+  previousProjection,
+  currentProjection,
+  previousSourceMap,
+  journal,
+  operationIds,
+}) {
+  if (!presentationId || !generation || !packageRevisionId || !matrixAuthorityEpoch) return
+  const prevProjHash = hashRecord(previousProjection)
+  const currProjHash = hashRecord(currentProjection)
+  const prevMapHash = hashRecord(previousSourceMap)
+  const journalHash = hashRecord(journal)
+  const opIdsHash = hashRecord(operationIds)
+  const verifiedKey = `${presentationId}:${generation}:${packageRevisionId}:${matrixAuthorityEpoch}:${prevProjHash}:${currProjHash}:${prevMapHash}:${journalHash}:${opIdsHash}`
+  verifiedJournalCache.set(verifiedKey, true)
+  if (verifiedJournalCache.size > 1000) {
+    const first = verifiedJournalCache.keys().next().value
+    verifiedJournalCache.delete(first)
+  }
+}
 
 function snapshotError(code, message) {
   return Object.assign(new Error(message), { code, status: 422 })
@@ -194,19 +225,29 @@ function resolveEditorProjectionContext(state, presentationId) {
     // Portable import may collapse historical generations. A reconciled pending
     // row is superseded only by the matching committed package authority.
     if (receipts.length && authorities.some((result) => result.state === 'committed')) {
-      authorities = authorities.filter((result) => !(result.state === 'pending-edited-export' &&
-        editorResultAllowed(result) && validIdentity(result) &&
-        hashRecord(result.projection) === head.projectionRevisionId &&
-        hashRecord(result.sourceMap) === head.sourceMapRevisionId))
+      authorities = authorities.filter(
+        (result) =>
+          !(
+            result.state === 'pending-edited-export' &&
+            editorResultAllowed(result) &&
+            validIdentity(result) &&
+            hashRecord(result.projection) === head.projectionRevisionId &&
+            hashRecord(result.sourceMap) === head.sourceMapRevisionId
+          )
+      )
     }
     if (authorities.length !== 1) return failed()
     const current = authorities[0]
-    if (receipts.some((result) =>
-      !validIdentity(result) ||
-      hashRecord(result.projection) !== head.projectionRevisionId ||
-      hashRecord(result.sourceMap) !== head.sourceMapRevisionId ||
-      !hasValidCommittedJournal(result, head.journalRevisionId)
-    )) return failed()
+    if (
+      receipts.some(
+        (result) =>
+          !validIdentity(result) ||
+          hashRecord(result.projection) !== head.projectionRevisionId ||
+          hashRecord(result.sourceMap) !== head.sourceMapRevisionId ||
+          !hasValidCommittedJournal(result, head.journalRevisionId)
+      )
+    )
+      return failed()
     if (
       !editorResultAllowed(current) ||
       !validIdentity(current) ||
@@ -230,21 +271,50 @@ function resolveEditorProjectionContext(state, presentationId) {
           validIdentity(result)
       )
       const previous = results.filter(
-        (result) => result.generation === head.generation - 1 && validIdentity(result) &&
+        (result) =>
+          result.generation === head.generation - 1 &&
+          validIdentity(result) &&
           !isNoOpExportReceipt(result)
       )
       if (!anchors.length || previous.length !== 1) return failed()
-      const expected = deriveMutationJournal(previous[0].projection, current.projection, {
-        baseRevisionId: head.packageRevisionId,
-        sourceMap: previous[0].sourceMap,
-        matrixAuthorityEpoch: state.matrixAuthorityEpoch,
-      })
+      // A historical editor journal is hash-bound, not a current native grant.
+      // Restore may advance the live epoch without rewriting pending siblings.
+      const journalEpoch = current.journal?.matrixAuthoritySubject?.evolutionEpoch
       if (
-        hashRecord(expected) !== hashRecord(current.journal) ||
-        hashRecord(expected.operations.map((item) => item.operationId)) !==
-          hashRecord(current.operationIds)
+        !Number.isSafeInteger(journalEpoch) ||
+        journalEpoch < 1 ||
+        journalEpoch > state.matrixAuthorityEpoch
       )
         return failed()
+      const prevProjHash = hashRecord(previous[0].projection)
+      const currProjHash = hashRecord(current.projection)
+      const prevMapHash = hashRecord(previous[0].sourceMap)
+      const journalHash = hashRecord(current.journal)
+      const opIdsHash = hashRecord(current.operationIds)
+      const verifiedKey = `${head.presentationId}:${head.generation}:${head.packageRevisionId}:${journalEpoch}:${prevProjHash}:${currProjHash}:${prevMapHash}:${journalHash}:${opIdsHash}`
+      if (!verifiedJournalCache.has(verifiedKey)) {
+        const expected = deriveMutationJournal(previous[0].projection, current.projection, {
+          baseRevisionId: head.packageRevisionId,
+          sourceMap: previous[0].sourceMap,
+          matrixAuthorityEpoch: journalEpoch,
+        })
+        if (
+          hashRecord(expected) !== journalHash ||
+          hashRecord(expected.operations.map((item) => item.operationId)) !== opIdsHash
+        )
+          return failed()
+        recordVerifiedJournal({
+          presentationId: head.presentationId,
+          generation: head.generation,
+          packageRevisionId: head.packageRevisionId,
+          matrixAuthorityEpoch: journalEpoch,
+          previousProjection: previous[0].projection,
+          currentProjection: current.projection,
+          previousSourceMap: previous[0].sourceMap,
+          journal: current.journal,
+          operationIds: current.operationIds,
+        })
+      }
     } else {
       if (!hasValidCommittedJournal(current, head.journalRevisionId)) return failed()
     }
@@ -260,7 +330,24 @@ function resolveEditorProjectionContext(state, presentationId) {
   }
 }
 
+function createEditorPackageRead(store) {
+  const state = store.getState()
+  // Resolvers share this operation's defensive copy, never a live store view.
+  const snapshotStore = {
+    getState: () => state,
+    readBlob: (hash) => store.readBlob(hash),
+  }
+  return {
+    state,
+    verifyBytes: (head) => verifyEditorPackageBytesFromSnapshot(snapshotStore, head),
+  }
+}
+
 async function verifyEditorPackageBytes(store, head) {
+  return createEditorPackageRead(store).verifyBytes(head)
+}
+
+async function verifyEditorPackageBytesFromSnapshot(store, head) {
   try {
     await resolveImmutableOriginalRevisionBytes({ presentationId: head.presentationId }, { store })
     if (isOwned(store.getState(), head.presentationId, head.packageRevisionId)) {
@@ -280,7 +367,9 @@ async function verifyEditorPackageBytes(store, head) {
 module.exports = {
   readPackageAuthoritySnapshot,
   resolveEditorProjectionContext,
+  createEditorPackageRead,
   verifyEditorPackageBytes,
   publicPackageAuthoritySnapshot,
+  recordVerifiedJournal,
   samePackageAuthority,
 }

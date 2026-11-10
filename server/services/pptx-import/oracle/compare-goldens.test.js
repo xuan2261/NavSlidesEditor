@@ -5,6 +5,7 @@ import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { encodePngRgba } from './png-rgba.js'
 import { compareCorpusToGoldens, compareDeck } from './compare-goldens.js'
+import { verifyVisualSummary } from '../../../../scripts/ci/pptx-semantic-feature-visual.mjs'
 
 const sha = (value) => createHash('sha256').update(value).digest('hex')
 
@@ -83,6 +84,24 @@ describe('compare-goldens', () => {
       expectedActualSlides: [{ sha256: sha('different'), byteLength: image.length }],
     })
     expect(result).toMatchObject({ ok: false, error: 'actual-image-hash-mismatch' })
+  })
+
+  it('admits a complete exact-image corpus through the feature visual gate', async () => {
+    const dir = await root()
+    const corpus = path.join(dir, 'corpus')
+    await fs.mkdir(corpus)
+    await fs.writeFile(path.join(corpus, 'deck-a.pptx'), 'source')
+    await pair(dir, 2)
+    const comparison = await compareCorpusToGoldens({
+      corpusDir: corpus, goldensDir: path.join(dir, 'goldens'), actualsDir: path.join(dir, 'actuals'),
+    })
+    expect(verifyVisualSummary(comparison, 1)).toEqual({ valid: true, reasons: [] })
+
+    await fs.rm(path.join(dir, 'actuals', 'deck-a', 'slide-1.png'))
+    const incomplete = await compareCorpusToGoldens({
+      corpusDir: corpus, goldensDir: path.join(dir, 'goldens'), actualsDir: path.join(dir, 'actuals'),
+    })
+    expect(verifyVisualSummary(incomplete, 1).valid).toBe(false)
   })
 
   it('fails corpus runs with a missing golden deck rather than skipping it', async () => {

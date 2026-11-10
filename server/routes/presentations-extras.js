@@ -27,6 +27,8 @@ const { toPresentationEditorDto } = require('../services/pptx-import/package-sto
 const packageLifecycle = require('../services/package-lifecycle-integration')
 const { readAuthoritativePresentation } = require('../services/package-backed-presentation-read')
 const { getServingBaseUrl } = require('../utils/serving-origin')
+const { prepareSemanticOutputResources, assertSemanticOutputArtifact } =
+  require('../services/pptx-import/semantic-output-resources')
 const {
   uuidv4,
   isCurrentPresenterBootstrap,
@@ -121,10 +123,12 @@ router.get('/:id/present', async (req, res) => {
     // built-ins are never trashed, so they stay as a fallback.
     let presentation = await readPresentablePresentation(req.params.id)
     if (!presentation) return res.status(404).json({ error: 'Not found' })
+    const semanticOutputResources = await prepareSemanticOutputResources(presentation)
     presentation = normalizePptxImportedPresentationForRead(presentation)
     let html = generateRevealHTML(normalizePresentationNotes(presentation), {
       baseUrl: getServingBaseUrl(req),
       educationView: req.query.live ? 'audience' : 'local',
+      semanticOutputResources,
     })
     if (req.query.preview === 'true') {
       html = html.replace(
@@ -137,9 +141,9 @@ router.get('/:id/present', async (req, res) => {
       )
     }
     res.setHeader('Content-Type', 'text/html')
-    res.send(html)
+    res.send(assertSemanticOutputArtifact(html, semanticOutputResources))
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(err.status || 500).json({ error: err.message, code: err.code, issues: err.issues })
   }
 })
 
@@ -159,9 +163,26 @@ router.post('/:id/save-as-template', validate(saveAsTemplateSchema), async (req,
       })
     }
     const now = new Date().toISOString()
+    const sanitized = sanitizeClientEditableData(JSON.parse(JSON.stringify(pres)))
+    if (Object.hasOwn(pres, 'pptxSlideSize')) {
+      sanitized.pptxSlideSize = JSON.parse(JSON.stringify(pres.pptxSlideSize))
+    }
+    const restoreSlideSources = (sourceSlides, targetSlides) => {
+      for (const [index, slide] of sourceSlides.entries()) {
+        const target = targetSlides[index]
+        if (!target) continue
+        if (Object.hasOwn(slide, 'pptxSlideSource')) {
+          target.pptxSlideSource = JSON.parse(JSON.stringify(slide.pptxSlideSource))
+        }
+        if (Array.isArray(slide.children) && Array.isArray(target.children)) {
+          restoreSlideSources(slide.children, target.children)
+        }
+      }
+    }
+    restoreSlideSources(pres.slides, sanitized.slides)
     const template = normalizePresentationGames(
       normalizePresentationNotes({
-        ...sanitizeClientEditableData(JSON.parse(JSON.stringify(pres))),
+        ...sanitized,
         id: uuidv4(),
         title: (req.body.title || pres.title || 'Untitled') + ' (template)',
         isTemplate: true,

@@ -1,3 +1,6 @@
+const { sanitizePptxGeometryMetadata } = require('revealjs-shared/src/shared-pptx-core.js')
+const { normalizePptxSemanticDocument } = require('revealjs-shared/src/pptx-semantic-document.js')
+
 function pick(record, fields) {
   return Object.fromEntries(
     fields.filter((field) => record[field] !== undefined).map((field) => [field, record[field]])
@@ -79,36 +82,46 @@ const SAFE_CHART_METADATA_KEYS = new Set([
   'comboDetected',
   'comboFamily',
 ])
-const AUTHORITY_KEYS = /^(?:_?pptx.*|.*(?:aggregateHead|capability|validatedRevision|packageRevision|journal|authority).*|.*source(?:Map|Ref|Authority).*|(?:aggregateGeneration|baseRevisionId|idempotencyKey|blobSha256|sha256|generation|ordinal|fencingEpoch|predecessorId|originalRevisionId|projectionRevisionId|revisionId|manifestHash|originalPath|packagePath|complexObjects|relationships|securityFlags|unknownParts))$/i
+const AUTHORITY_KEYS =
+  /^(?:_?pptx.*|.*(?:aggregateHead|capability|validatedRevision|packageRevision|journal|authority).*|.*source(?:Map|Ref|Authority).*|(?:aggregateGeneration|baseRevisionId|idempotencyKey|blobSha256|sha256|generation|ordinal|fencingEpoch|predecessorId|originalRevisionId|projectionRevisionId|revisionId|manifestHash|originalPath|packagePath|complexObjects|relationships|securityFlags|unknownParts))$/i
 
 function isAuthorityKey(key) {
-  return key === 'trustedImportMetadata' || !SAFE_PPTX_METADATA_KEYS.has(key) && AUTHORITY_KEYS.test(key)
+  return (
+    key === 'trustedImportMetadata' ||
+    (!SAFE_PPTX_METADATA_KEYS.has(key) && AUTHORITY_KEYS.test(key))
+  )
 }
 
 function isSafeChartMetadataValue(value) {
-  return value === null ||
+  return (
+    value === null ||
     typeof value === 'string' ||
     (typeof value === 'number' && Number.isFinite(value)) ||
     typeof value === 'boolean'
+  )
 }
 
 function sanitizeChartMetadata(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
-  return Object.fromEntries(Object.entries(value)
-    .filter(([key, child]) => SAFE_CHART_METADATA_KEYS.has(key) && isSafeChartMetadataValue(child)))
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      ([key, child]) => SAFE_CHART_METADATA_KEYS.has(key) && isSafeChartMetadataValue(child)
+    )
+  )
 }
 
 function safeNumberMap(value, keys) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
-  const result = Object.fromEntries(Object.entries(value)
-    .filter(([key, child]) => keys.has(key) && typeof child === 'number' && Number.isFinite(child)))
+  const result = Object.fromEntries(
+    Object.entries(value).filter(
+      ([key, child]) => keys.has(key) && typeof child === 'number' && Number.isFinite(child)
+    )
+  )
   return Object.keys(result).length ? result : undefined
 }
 
 function sanitizePptxMetadata(value) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
-  const originalSize = safeNumberMap(value.originalSize, new Set(['width', 'height']))
-  return originalSize ? { originalSize } : {}
+  return sanitizePptxGeometryMetadata(value)
 }
 
 function sanitizePptxImportMetadata(value) {
@@ -137,11 +150,22 @@ function sanitizePptxImportMetadata(value) {
   return result
 }
 
-function stripAuthority(value, { retainGeneration = false } = {}) {
-  if (Array.isArray(value)) return value.map((item) => stripAuthority(item, { retainGeneration }))
+function stripAuthority(value, { retainGeneration = false, isRoot = true } = {}) {
+  if (Array.isArray(value))
+    return value.map((item) => stripAuthority(item, { retainGeneration, isRoot: false }))
   if (!value || typeof value !== 'object') return value
   const entries = []
   for (const [key, child] of Object.entries(value)) {
+    if (key === 'pptxSemantic' && isRoot) {
+      entries.push([key, normalizePptxSemanticDocument(child)])
+      continue
+    }
+    if (key === 'pptxInstanceId') {
+      if (typeof child !== 'string' || !child.length || child.length > 1024)
+        throw new TypeError('Invalid semantic occurrence identity')
+      entries.push([key, child])
+      continue
+    }
     if (retainGeneration && key === 'aggregateGeneration') {
       entries.push([key, child])
       continue
@@ -167,7 +191,7 @@ function stripAuthority(value, { retainGeneration = false } = {}) {
       continue
     }
     if (isAuthorityKey(key) || key === 'aggregateGeneration') continue
-    entries.push([key, stripAuthority(child, { retainGeneration })])
+    entries.push([key, stripAuthority(child, { retainGeneration, isRoot: false })])
   }
   return Object.fromEntries(entries)
 }

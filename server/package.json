@@ -10,6 +10,7 @@
   "dependencies": {
     "@drgrice1/tikzjax": "^1.0.0-beta24",
     "bcryptjs": "^3.0.3",
+    "clipper-lib": "6.4.2",
     "cors": "^2.8.5",
     "dompurify": "^3.4.0",
     "express": "^4.22.2",
@@ -22,6 +23,7 @@
     "marked": "^18.0.4",
     "multer": "^2.4.0",
     "playwright": "^1.63.0",
+    "pngjs": "7.0.0",
     "pptxgenjs": "4.0.1",
     "pptxtojson": "2.0.2",
     "revealjs-shared": "*",

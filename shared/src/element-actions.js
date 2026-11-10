@@ -32,17 +32,13 @@ function safeText(value, max = 240) {
 }
 
 function isSafeActionUrl(value, kind) {
-  if (!isSafeHref(value)) return false
+  if (!isSafeHref(value) || value.includes('\\') || value.startsWith('//')) return false
   try {
-    const protocol = new URL(value, 'https://navslides.local').protocol
-    if (kind === 'email') return protocol === 'mailto:'
-    return (
-      protocol === 'http:' ||
-      protocol === 'https:' ||
-      String(value).startsWith('/') ||
-      String(value).startsWith('./') ||
-      String(value).startsWith('../')
-    )
+    const url = new URL(value, 'https://navslides.local')
+    if (kind === 'email') return url.protocol === 'mailto:' && Boolean(url.pathname)
+    if (url.username || url.password) return false
+    if (/^https?:\/\//i.test(value)) return url.protocol === 'http:' || url.protocol === 'https:'
+    return value.startsWith('/') || value.startsWith('./') || value.startsWith('../')
   } catch {
     return false
   }
@@ -53,6 +49,8 @@ function normalizeElementAction(value) {
   if (value == null) return { action: null, error: '' }
   if (!value || typeof value !== 'object' || Array.isArray(value))
     return { action: null, error: 'Action must be an object.' }
+  if (Object.values(Object.getOwnPropertyDescriptors(value)).some((descriptor) => !Object.hasOwn(descriptor, 'value')))
+    return { action: null, error: 'Action must contain plain data fields.' }
   const kind = safeText(value.kind, 24)
   if (INTERACTION_ACTION_KINDS.has(kind)) return normalizeInteractionAction(value)
   if (!ACTION_KINDS.has(kind)) return { action: null, error: 'Choose a supported action kind.' }
@@ -77,7 +75,8 @@ function normalizeElementAction(value) {
     }
   }
   if (kind === 'slide') {
-    const slideId = safeText(value.slideId, 160)
+    const slideId = typeof value.slideId === 'string' && value.slideId.length <= 160 &&
+      value.slideId === value.slideId.trim() && !hasControlChars(value.slideId) ? value.slideId : ''
     return slideId
       ? {
           action: {

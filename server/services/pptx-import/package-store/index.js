@@ -12,6 +12,22 @@ const importCommit = require('./import-commit')
 const { createMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
 
 function clone(value) {
+  if (value && typeof value === 'object' && Array.isArray(value.mutationResults)) {
+    const semantics = value.mutationResults.map((r) => r.projection?.pptxSemantic)
+    for (const r of value.mutationResults) {
+      if (r.projection?.pptxSemantic) delete r.projection.pptxSemantic
+    }
+    const cloned = structuredClone(value)
+    for (let i = 0; i < value.mutationResults.length; i++) {
+      if (value.mutationResults[i]?.projection) {
+        if (semantics[i]) {
+          value.mutationResults[i].projection.pptxSemantic = semantics[i]
+        }
+        cloned.mutationResults[i].projection = value.mutationResults[i].projection
+      }
+    }
+    return cloned
+  }
   return structuredClone(value)
 }
 
@@ -24,14 +40,53 @@ class PackageStore {
     this.fencingEpoch = 0
     this.mutationTail = Promise.resolve()
   }
-async init() {
+  async init() {
     await this.blobs.init()
     await this.metadata.init()
     this.recoveryActions = this.metadata.recoveryActions
     return this
   }
-getState() {
+  getState() {
     return clone(this.metadata.state)
+  }
+  getPresentationHead(presentationId) {
+    return clone(
+      this.metadata.state.heads.find((head) => head.presentationId === presentationId) || null
+    )
+  }
+  getCompatibilityState() {
+    const { heads, compatibilityOutbox } = this.metadata.state
+    return clone({ heads, compatibilityOutbox })
+  }
+  hasOwner(owner) {
+    return this.metadata.state.owners.some(
+      (item) => item.ownerType === owner.ownerType && item.ownerId === owner.ownerId
+    )
+  }
+  hasPresentationHead(presentationId) {
+    return this.metadata.state.heads.some(
+      (head) => head.presentationId === presentationId
+    )
+  }
+  hasCompatibilityPending(presentationId) {
+    return this.metadata.state.compatibilityOutbox.some(
+      (record) => record.presentationId === presentationId
+    )
+  }
+  getOwnerRecords(owner) {
+    return clone(
+      this.metadata.state.owners.filter(
+        (item) => item.ownerType === owner.ownerType && item.ownerId === owner.ownerId
+      )
+    )
+  }
+  getHistoryOwnerRecords(presentationId) {
+    const prefix = `${presentationId}:`
+    return clone(
+      this.metadata.state.owners.filter(
+        (item) => item.ownerType === 'history' && item.ownerId.startsWith(prefix)
+      )
+    )
   }
   async acquireWriter() {
     const record = await this.lock.acquire()
@@ -45,9 +100,9 @@ getState() {
         const successor = structuredClone(this.metadata.state)
         successor.fencingEpoch = this.fencingEpoch
         await this.metadata.publish(successor, { assertWriter: () => this.assertWriter() })
-        this.metadata.recoveryActions.push(isMigration
-          ? 'published-state-migration-v2'
-          : 'published-recovered-state-v2')
+        this.metadata.recoveryActions.push(
+          isMigration ? 'published-state-migration-v2' : 'published-recovered-state-v2'
+        )
       }
       await this.metadata.finalizeWriterRecovery(() => this.assertWriter())
       return this.fencingEpoch
@@ -59,10 +114,12 @@ getState() {
   releaseWriter() {
     return this.lock.release()
   }
-async reload() {
+  async reload() {
     const previous = this.mutationTail
     let release
-    this.mutationTail = new Promise((resolve) => { release = resolve })
+    this.mutationTail = new Promise((resolve) => {
+      release = resolve
+    })
     try {
       await previous
       await this.assertWriter()
@@ -72,28 +129,32 @@ async reload() {
       release()
     }
   }
-assertWriter() {
+  assertWriter() {
     return this.lock.assertOwned(this.fencingEpoch)
   }
-async ownsWriter() {
+  async ownsWriter() {
     if (!this.lock.nonce) return false
     await this.assertWriter()
     return true
   }
-stageBlob(source, options) {
+  stageBlob(source, options) {
     return this.blobs.stage(source, options)
   }
-async mutate(mutator, options = {}) {
+  async mutate(mutator, options = {}) {
     const previous = this.mutationTail
     let release
-    this.mutationTail = new Promise((resolve) => { release = resolve })
+    this.mutationTail = new Promise((resolve) => {
+      release = resolve
+    })
     try {
       await previous
       options.signal?.throwIfAborted()
       await this.assertWriter()
       options.signal?.throwIfAborted()
-      if (options.expectedGeneration !== undefined &&
-          options.expectedGeneration !== this.metadata.state.generation) {
+      if (
+        options.expectedGeneration !== undefined &&
+        options.expectedGeneration !== this.metadata.state.generation
+      ) {
         throw Object.assign(new Error('Package store generation is stale'), {
           code: 'STALE_GENERATION',
           currentGeneration: this.metadata.state.generation,
@@ -118,22 +179,22 @@ async mutate(mutator, options = {}) {
       release()
     }
   }
-async commitOriginal(source, owner, options = {}) {
+  async commitOriginal(source, owner, options = {}) {
     return originalCommit.commitOriginal(this, source, owner, options)
   }
-async commitImport(source, input, options = {}) {
+  async commitImport(source, input, options = {}) {
     return importCommit.commitImport(this, source, input, options)
   }
-prepareImport(source, input, options = {}) {
+  prepareImport(source, input, options = {}) {
     return importCommit.prepareImport(this, source, input, options)
   }
-publishImport(prepared, options = {}) {
+  publishImport(prepared, options = {}) {
     return importCommit.publishImport(this, prepared, options)
   }
-async rollbackImport(input) {
+  async rollbackImport(input) {
     return importCommit.rollbackImport(this, input)
   }
-async advanceMatrixAuthorityEpoch(options = {}) {
+  async advanceMatrixAuthorityEpoch(options = {}) {
     await this.mutate((next) => {
       const matrixAuthorityEpoch = next.matrixAuthorityEpoch + 1
       next.matrixAuthorityEpoch = matrixAuthorityEpoch
@@ -145,7 +206,7 @@ async advanceMatrixAuthorityEpoch(options = {}) {
     }, options)
     return this.metadata.state.matrixAuthorityEpoch
   }
-async addOwner(revisionId, owner, options) {
+  async addOwner(revisionId, owner, options) {
     validateOwner(owner)
     if (!this.metadata.state.revisions.some((revision) => revision.id === revisionId)) {
       throw new Error('Unknown package revision')
@@ -154,10 +215,10 @@ async addOwner(revisionId, owner, options) {
       next.owners.push({ schemaVersion: RECORD_SCHEMA_VERSION, revisionId, ...owner })
     }, options)
   }
-async releaseOwner(owner) {
+  async releaseOwner(owner) {
     validateOwner(owner)
-    const owned = this.metadata.state.owners.some((item) =>
-      item.ownerType === owner.ownerType && item.ownerId === owner.ownerId
+    const owned = this.metadata.state.owners.some(
+      (item) => item.ownerType === owner.ownerType && item.ownerId === owner.ownerId
     )
     if (!owned) return false
     await this.mutate((next) => {
@@ -167,34 +228,34 @@ async releaseOwner(owner) {
     })
     return true
   }
-async duplicatePresentationOwner(sourceId, destinationId, options = {}) {
+  async duplicatePresentationOwner(sourceId, destinationId, options = {}) {
     return lifecycle.duplicatePresentationOwner(this, sourceId, destinationId, options)
   }
-async instantiateRetainedHead(retainedOwner, destinationId, options = {}) {
+  async instantiateRetainedHead(retainedOwner, destinationId, options = {}) {
     return lifecycle.instantiateRetainedHead(this, retainedOwner, destinationId, options)
   }
-async quarantinePresentation(presentationId, options = {}) {
+  async quarantinePresentation(presentationId, options = {}) {
     return lifecycle.quarantinePresentation(this, presentationId, options)
   }
-async restoreQuarantinedHead(retainedOwner, presentationId, options = {}) {
+  async restoreQuarantinedHead(retainedOwner, presentationId, options = {}) {
     return lifecycle.restoreQuarantinedHead(this, retainedOwner, presentationId, options)
   }
-async retainHead(owner, presentationId, options = {}) {
+  async retainHead(owner, presentationId, options = {}) {
     return lifecycle.retainHead(this, owner, presentationId, options)
   }
-getRestorableHead(presentationId, retainedOwner) {
+  getRestorableHead(presentationId, retainedOwner) {
     return lifecycle.getRestorableHead(this, presentationId, retainedOwner)
   }
-async restoreForward(presentationId, retainedOwner, options = {}) {
+  async restoreForward(presentationId, retainedOwner, options = {}) {
     return lifecycle.restoreForward(this, presentationId, retainedOwner, options)
   }
-exportPresentationPackage(presentationId, options = {}) {
+  exportPresentationPackage(presentationId, options = {}) {
     return portable.exportPresentationPackage(this, presentationId, options)
   }
-importPresentationPackage(bundle, presentationId, options = {}) {
+  importPresentationPackage(bundle, presentationId, options = {}) {
     return portable.importPresentationPackage(this, bundle, presentationId, options)
   }
-async putJob(input) {
+  async putJob(input) {
     const job = validateJob({
       schemaVersion: RECORD_SCHEMA_VERSION,
       updatedAt: new Date().toISOString(),
@@ -215,27 +276,27 @@ async putJob(input) {
     })
     return job
   }
-getJob(id) {
+  getJob(id) {
     const job = this.metadata.state.jobs.find((item) => item.id === id)
     return job ? clone(job) : null
   }
-listBlobFiles() {
+  listBlobFiles() {
     return this.blobs.list()
   }
-readBlob(sha256) {
+  readBlob(sha256) {
     return this.blobs.read(sha256)
   }
-async readOriginal(revisionId) {
+  async readOriginal(revisionId) {
     const revision = this.metadata.state.revisions.find((item) => item.id === revisionId)
     return revision ? this.readBlob(revision.blobSha256) : null
   }
-auditCollection() {
+  auditCollection() {
     return auditCollection(this.metadata.state)
   }
-async auditPhysicalCollection() {
+  async auditPhysicalCollection() {
     return auditBlobFiles(this.metadata.state, await this.blobs.list())
   }
-async migrateLegacyOriginal(meta, owner) {
+  async migrateLegacyOriginal(meta, owner) {
     const legacyPath = path.join(this.rootDir, 'pptx-originals', `${meta.id}.pptx`)
     const exactBytes = await fs.readFile(legacyPath)
     return this.commitOriginal(exactBytes, owner, { uploadedAt: meta.uploadedAt })

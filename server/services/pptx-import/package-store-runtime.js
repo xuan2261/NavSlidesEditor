@@ -25,7 +25,8 @@ async function initializePackageStore({ rootDir }) {
   if (shuttingDown) throw new Error('Package store is shutting down')
   const resolvedRoot = path.resolve(rootDir)
   if (activeStore) {
-    if (activeRoot !== resolvedRoot) throw new Error('Package store is already initialized elsewhere')
+    if (activeRoot !== resolvedRoot)
+      throw new Error('Package store is already initialized elsewhere')
     return activeStore
   }
   if (initialization) {
@@ -99,7 +100,7 @@ async function withPackageStore(action) {
 }
 
 function isCapturedWriteCurrent(store, write) {
-  const state = store.getState()
+  const state = store.getCompatibilityState()
   const queued = state.compatibilityOutbox.find((record) => record.id === write.id)
   if (!queued || hashRecord(queued) !== hashRecord(write)) return false
   const head = state.heads.find((item) => item.presentationId === write.presentationId)
@@ -111,7 +112,9 @@ async function withCompatibilityDrain(action) {
   if (typeof action !== 'function') throw new TypeError('Compatibility drain action is required')
   const previous = compatibilityDrainTail
   let release
-  compatibilityDrainTail = new Promise((resolve) => { release = resolve })
+  compatibilityDrainTail = new Promise((resolve) => {
+    release = resolve
+  })
   await previous
   try {
     return await action()
@@ -133,22 +136,31 @@ async function drainPackageCompatibilityOutbox({ signal } = {}) {
     const applied = []
     const obsolete = []
     const poisoned = []
+    const candidateWrites = []
     for (const write of writes) {
+      if (isCapturedWriteCurrent(getPackageStore(), write)) {
+        candidateWrites.push(write)
+      } else {
+        obsolete.push(write)
+      }
+    }
+    if (candidateWrites.length === 1) {
+      const write = candidateWrites[0]
       signal?.throwIfAborted()
       try {
-        const didApply = await withPresentations((presentations) => {
-          signal?.throwIfAborted()
-          // Do not reacquire package serialization while holding the JSON lock.
-          // Publication may have been invalidated while this replay waited here.
-          if (!isCapturedWriteCurrent(getPackageStore(), write)) return false
-          applyCompatibilityWrites(presentations, [write])
-          return true
-        }, { signal })
+        const didApply = await withPresentations(
+          (presentations) => {
+            signal?.throwIfAborted()
+            if (!isCapturedWriteCurrent(getPackageStore(), write)) return false
+            applyCompatibilityWrites(presentations, [write])
+            return true
+          },
+          { signal }
+        )
         if (didApply) applied.push(write)
         else obsolete.push(write)
       } catch (error) {
         if (signal?.aborted) throw error
-        // Preserve full write for repair/replay; only attach bounded error metadata.
         poisoned.push({
           write: structuredClone(write),
           id: write?.id,
@@ -157,6 +169,48 @@ async function drainPackageCompatibilityOutbox({ signal } = {}) {
           message: String(error?.message || error).slice(0, 240),
           deadLetteredAt: new Date().toISOString(),
         })
+      }
+    } else if (candidateWrites.length > 1) {
+      signal?.throwIfAborted()
+      try {
+        await withPresentations(
+          (presentations) => {
+            signal?.throwIfAborted()
+            const stillCurrent = candidateWrites.filter((w) => isCapturedWriteCurrent(getPackageStore(), w))
+            applyCompatibilityWrites(presentations, stillCurrent)
+            return true
+          },
+          { signal }
+        )
+        for (const write of candidateWrites) {
+          if (isCapturedWriteCurrent(getPackageStore(), write)) applied.push(write)
+          else obsolete.push(write)
+        }
+      } catch (error) {
+        if (signal?.aborted) throw error
+        for (const write of candidateWrites) {
+          try {
+            const didApply = await withPresentations(
+              (presentations) => {
+                if (!isCapturedWriteCurrent(getPackageStore(), write)) return false
+                applyCompatibilityWrites(presentations, [write])
+                return true
+              },
+              { signal }
+            )
+            if (didApply) applied.push(write)
+            else obsolete.push(write)
+          } catch (innerError) {
+            poisoned.push({
+              write: structuredClone(write),
+              id: write?.id,
+              presentationId: write?.presentationId,
+              code: innerError?.code || 'COMPATIBILITY_APPLY_FAILED',
+              message: String(innerError?.message || innerError).slice(0, 240),
+              deadLetteredAt: new Date().toISOString(),
+            })
+          }
+        }
       }
     }
 
@@ -169,18 +223,21 @@ async function drainPackageCompatibilityOutbox({ signal } = {}) {
     if (poisoned.length) {
       await withPackageStore(async (store) => {
         signal?.throwIfAborted()
-        await store.mutate((next) => {
-          if (!Array.isArray(next.compatibilityDeadLetter)) next.compatibilityDeadLetter = []
-          for (const item of poisoned) {
-            if (next.compatibilityDeadLetter.some((entry) => entry.id === item.id)) continue
-            next.compatibilityDeadLetter.push(item)
-          }
-          // Remove poisoned writes from active outbox so startup is not permanently blocked.
-          const poisonedIds = new Set(poisoned.map((item) => item.id).filter(Boolean))
-          next.compatibilityOutbox = (next.compatibilityOutbox || []).filter(
-            (record) => !poisonedIds.has(record.id)
-          )
-        }, { signal })
+        await store.mutate(
+          (next) => {
+            if (!Array.isArray(next.compatibilityDeadLetter)) next.compatibilityDeadLetter = []
+            for (const item of poisoned) {
+              if (next.compatibilityDeadLetter.some((entry) => entry.id === item.id)) continue
+              next.compatibilityDeadLetter.push(item)
+            }
+            // Remove poisoned writes from active outbox so startup is not permanently blocked.
+            const poisonedIds = new Set(poisoned.map((item) => item.id).filter(Boolean))
+            next.compatibilityOutbox = (next.compatibilityOutbox || []).filter(
+              (record) => !poisonedIds.has(record.id)
+            )
+          },
+          { signal }
+        )
       })
     }
     return applied.length

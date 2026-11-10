@@ -6,6 +6,8 @@ const { generateRevealHTML, getSlideNotes, normalizePresentationNotes } = requir
 const crypto = require('crypto')
 const { armTimerEnd, timerSnapshot, setupTimerHandlers } = require('./live-timer-handlers.js')
 const { getServingBaseUrl } = require('../utils/serving-origin')
+const { prepareSemanticOutputResources, assertSemanticOutputArtifact } =
+  require('./pptx-import/semantic-output-resources')
 
 function getTextFromHtml(html) {
   return String(html || '')
@@ -94,18 +96,19 @@ function getSocketBaseUrl(socket) {
   return getServingBaseUrl(socket.request)
 }
 
-function emitPresentationPayload(socket, presentation, role, presentationGeneration) {
+function emitPresentationPayload(socket, presentation, role, presentationGeneration, semanticOutputResources) {
   const normalized = normalizePresentationNotes(presentation)
   const includeNotes = role === 'presenter' || role === 'speaker'
   if (role !== 'remote') {
     socket.emit('presentation-data', {
       presentationId: normalized.id,
       presentationGeneration,
-      html: generateRevealHTML(normalized, {
+      html: assertSemanticOutputArtifact(generateRevealHTML(normalized, {
         baseUrl: getSocketBaseUrl(socket),
         includeSpeakerNotes: includeNotes,
         educationView: 'audience',
-      }),
+        semanticOutputResources,
+      }), semanticOutputResources),
     })
   }
   socket.emit(
@@ -117,6 +120,7 @@ function emitPresentationPayload(socket, presentation, role, presentationGenerat
 function setupSocketHandlers(io, dependencies = {}) {
   const liveRooms = dependencies.liveRoomsService || liveRoomsService
   const findById = dependencies.findPresentationById || findLivePresentationById
+  const prepareResources = dependencies.prepareSemanticOutputResources || prepareSemanticOutputResources
   const connectedSockets = new Map()
 
   function isCurrentRecipient(recipient, roomId, role) {
@@ -131,6 +135,7 @@ function setupSocketHandlers(io, dependencies = {}) {
   }
 
   io.on('connection', (socket) => {
+    const outputController = new AbortController()
     connectedSockets.set(socket.id, socket)
     const onPayload = (event, handler) =>
       socket.on(event, (payload) => {
@@ -142,7 +147,11 @@ function setupSocketHandlers(io, dependencies = {}) {
       const count = liveRooms.getViewerCount(roomId)
       io.to(roomId).emit('viewer-count', { count })
     }
-    function emitRoomPresentation(roomId, presentation, roomState, generation, presenterId) {
+    async function emitRoomPresentation(roomId, presentation, roomState, generation, presenterId) {
+      const semanticOutputResources = await prepareResources(presentation, {
+        signal: outputController.signal,
+      })
+      if (outputController.signal.aborted) return
       const recipients = [
         [roomState.presenterId, 'presenter'],
         ...roomState.speakers.map((id) => [id, 'speaker']),
@@ -160,7 +169,7 @@ function setupSocketHandlers(io, dependencies = {}) {
           current.presenterId !== presenterId
         )
           return
-        emitPresentationPayload(recipient, presentation, memberRole, generation)
+        emitPresentationPayload(recipient, presentation, memberRole, generation, semanticOutputResources)
         recipient.emit('sync-state', roomState.state)
       }
     }
@@ -222,7 +231,7 @@ function setupSocketHandlers(io, dependencies = {}) {
               roomState.presentationGeneration === presenterLoadGeneration
             ) {
               roomState.presentationId = presentationId
-              emitRoomPresentation(roomId, pres, roomState, presenterLoadGeneration, socket.id)
+              await emitRoomPresentation(roomId, pres, roomState, presenterLoadGeneration, socket.id)
             }
           } catch (err) {
             logger.error('Failed to load presentation for live room', err)
@@ -266,6 +275,8 @@ function setupSocketHandlers(io, dependencies = {}) {
             if (expectedPresentationId) {
               try {
                 const pres = await findById(expectedPresentationId)
+                const semanticOutputResources = pres && payloadRole !== 'remote'
+                  ? await prepareResources(pres, { signal: outputController.signal }) : null
                 const current = liveRooms.getRoomState(roomId)
                 if (
                   pres &&
@@ -273,9 +284,10 @@ function setupSocketHandlers(io, dependencies = {}) {
                   current.presentationGeneration === expectedGeneration &&
                   current.presentationId === expectedPresentationId &&
                   current.presenterId === expectedPresenterId &&
+                  !outputController.signal.aborted &&
                   isCurrentRecipient(socket, roomId, payloadRole)
                 ) {
-                  emitPresentationPayload(socket, pres, payloadRole, expectedGeneration)
+                  emitPresentationPayload(socket, pres, payloadRole, expectedGeneration, semanticOutputResources)
                 }
               } catch {
                 /* ignore */
@@ -463,6 +475,7 @@ function setupSocketHandlers(io, dependencies = {}) {
     setupTimerHandlers(socket, io, liveRooms, onPayload)
 
     onPayload('disconnect', () => {
+      outputController.abort()
       connectedSockets.delete(socket.id)
       const result = liveRooms.leaveRoom(socket.id, {
         onPresenterLeft: (roomId) => {

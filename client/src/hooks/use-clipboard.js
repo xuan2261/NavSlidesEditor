@@ -1,7 +1,13 @@
 import { useCallback } from 'react'
 import { clonePresetElements } from 'revealjs-shared/src/education/presets/clone.js'
 import { useEditorStore } from '../stores/editor-store'
-import { hasBlockedGroupMutation } from '../utils/active-slide-selection'
+import {
+  hasBlockedGroupMutation,
+  semanticClipboardMutationBlocked,
+} from '../utils/active-slide-selection'
+import { createSemanticClipboard, pasteSemanticClipboard } from '../utils/pptx-semantic-clipboard'
+import { deleteSlideElements } from '../utils/delete-slide-elements'
+import { prepareSemanticCut } from '../utils/pptx-semantic-cut'
 
 function effectiveActions(elements, effective = elements) {
   const byId = new Map((effective || []).map((element) => [element.id, element]))
@@ -135,6 +141,8 @@ export function useClipboard({
   getDestinationElements,
   getScopeId,
   onInteractionWarnings,
+  getPresentation,
+  commitPresentationTransaction,
 }) {
   const setClipboard = useEditorStore((s) => s.setClipboard)
   const setSelectedElementIds = useEditorStore((s) => s.setSelectedElementIds)
@@ -144,6 +152,21 @@ export function useClipboard({
 
   const performCopy = useCallback(
     (slideElements) => {
+      const presentation = getPresentation?.()
+      const active = getActiveSlide?.()
+      if (presentation?.pptxSemantic) {
+        const data = createSemanticClipboard({
+          presentation,
+          slide: active,
+          selectedElementIds: useEditorStore.getState().selectedElementIds,
+          effectiveElements: getDestinationElements?.() || slideElements,
+        })
+        if (data) {
+          setClipboard(data)
+          resetPasteCount()
+          return data
+        }
+      }
       const data = createCopyOperation({
         slideElements,
         selectedElementIds: useEditorStore.getState().selectedElementIds,
@@ -155,11 +178,33 @@ export function useClipboard({
         resetPasteCount()
       }
     },
-    [getScopeId, getActiveSlide, getDestinationElements, setClipboard, resetPasteCount]
+    [
+      getPresentation,
+      getScopeId,
+      getActiveSlide,
+      getDestinationElements,
+      setClipboard,
+      resetPasteCount,
+    ]
   )
 
   const performPaste = useCallback(
     (clipboardElements) => {
+      if (clipboardElements?.kind === 'pptx-semantic-selection') {
+        const active = getActiveSlide()
+        if (active.locked) throw new TypeError('Slide is locked')
+        const pasted = pasteSemanticClipboard({
+          presentation: getPresentation(),
+          slideId: active.id,
+          clipboard: clipboardElements,
+          pasteIndex: useEditorStore.getState().pasteCount,
+        })
+        setPresentation(pasted.presentation)
+        incrementPasteCount()
+        setSelectedElementIds(pasted.selectedIds)
+        if (pasted.warnings.length) onInteractionWarnings?.(pasted.warnings)
+        return pasted
+      }
       if (!clipboardElements?.length) return
       const active = getActiveSlide?.()
       const pasted = createPasteOperation({
@@ -184,6 +229,7 @@ export function useClipboard({
       setPresentation,
       getScopeId,
       getActiveSlide,
+      getPresentation,
       getDestinationElements,
       incrementPasteCount,
       setSelectedElementIds,
@@ -193,6 +239,35 @@ export function useClipboard({
 
   const performCut = useCallback(
     (slideElements, selectedElementIds = []) => {
+      const presentation = getPresentation?.()
+      const active = getActiveSlide?.()
+      if (presentation?.pptxSemantic) {
+        const data = createSemanticClipboard({
+          presentation,
+          slide: active,
+          selectedElementIds,
+          effectiveElements: getDestinationElements?.() || slideElements,
+        })
+        if (data) {
+          if (typeof commitPresentationTransaction !== 'function')
+            throw new TypeError('Semantic cut requires a presentation transaction owner')
+          const prepared = prepareSemanticCut(presentation, active.id, selectedElementIds, mapActiveSlide, data)
+          if (!prepared) throw new TypeError('Selection contains locked or hidden objects')
+          commitPresentationTransaction(
+            (previous) => previous?.id !== presentation.id
+              ? null
+              : previous === presentation
+                ? prepared
+                : prepareSemanticCut(previous, active.id, selectedElementIds, mapActiveSlide),
+            (clipboard) => {
+              setClipboard(clipboard)
+              resetPasteCount()
+              clearSelection()
+            }
+          )
+          return data
+        }
+      }
       const { clipboardData, idsToDelete } = createCutOperation({
         slideElements,
         selectedElementIds,
@@ -205,10 +280,7 @@ export function useClipboard({
       }
       if (!idsToDelete.length) return
       setPresentation((prev) =>
-        mapActiveSlide(prev, (slide) => ({
-          ...slide,
-          elements: (slide.elements || []).filter((element) => !idsToDelete.includes(element.id)),
-        }))
+        mapActiveSlide(prev, (slide) => deleteSlideElements(slide, idsToDelete))
       )
       const survivors = selectedElementIds.filter((id) => !idsToDelete.includes(id))
       if (survivors.length) setSelectedElementIds(survivors)
@@ -216,10 +288,12 @@ export function useClipboard({
     },
     [
       getScopeId,
+      getPresentation,
       getActiveSlide,
       getDestinationElements,
       mapActiveSlide,
       setPresentation,
+      commitPresentationTransaction,
       setClipboard,
       resetPasteCount,
       setSelectedElementIds,
@@ -227,5 +301,42 @@ export function useClipboard({
     ]
   )
 
-  return { performCopy, performPaste, performCut }
+  const performDuplicate = useCallback(() => {
+    const presentation = getPresentation?.()
+    if (!presentation?.pptxSemantic) return null
+    const active = getActiveSlide()
+    const selectedElementIds = useEditorStore.getState().selectedElementIds
+    const data = createSemanticClipboard({
+      presentation,
+      slide: active,
+      selectedElementIds,
+      effectiveElements: getDestinationElements?.() || active.elements,
+    })
+    if (!data) return null
+    if (
+      active.locked ||
+      hasBlockedGroupMutation(active, selectedElementIds) ||
+      semanticClipboardMutationBlocked(presentation.pptxSemantic, active, selectedElementIds)
+    )
+      throw new TypeError('Selection contains locked or hidden objects')
+    const duplicated = pasteSemanticClipboard({
+      presentation,
+      slideId: active.id,
+      clipboard: data,
+      pasteIndex: 0,
+    })
+    setPresentation(duplicated.presentation)
+    setSelectedElementIds(duplicated.selectedIds)
+    if (duplicated.warnings.length) onInteractionWarnings?.(duplicated.warnings)
+    return duplicated
+  }, [
+    getPresentation,
+    getActiveSlide,
+    getDestinationElements,
+    setPresentation,
+    setSelectedElementIds,
+    onInteractionWarnings,
+  ])
+
+  return { performCopy, performPaste, performCut, performDuplicate }
 }

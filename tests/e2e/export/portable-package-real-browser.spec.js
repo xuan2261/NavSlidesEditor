@@ -140,7 +140,7 @@ for (const withMedia of [true, false]) for (const entrypoint of ['Home', 'Editor
           archive: await assertArchive(file, marker, assets, originalHash) })
       }
       const pending = runtime.page.waitForEvent('download')
-      await editor.menubar.openFileMenuItem('Export Offline HTML')
+      await editor.menubar.exportHTML()
       const offline = info.outputPath('C-offline.html'); await (await pending).saveAs(offline)
       await runtime.page.close(); await runtime.child.kill()
       await rm(roots.at(-1), { recursive: true, force: true })

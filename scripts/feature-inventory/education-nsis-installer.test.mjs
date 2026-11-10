@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { createRequire } from 'node:module'
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs'
-import { join } from 'node:path'
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { verifyInstallerPayload } from './education-installer-payload.mjs'
+import { withNsisArchiveTool } from './education-nsis-tool.mjs'
 import { digest, fileHash } from './education-evidence-files.mjs'
 import { collectFiles } from '../ci/create-client-dist-manifest.mjs'
 
@@ -85,6 +86,40 @@ async function fixture(mode = 'valid') {
 }
 
 describe.runIf(nativeWindowsX64)('real NSIS outer container admission', () => {
+  it('isolates overlapping tool lifetimes and cleans up after success and rejection', async () => {
+    const vendor = join(dirname(require.resolve('electron-winstaller/package.json')), 'vendor')
+    const aliases = ['7z.exe', '7z.dll'].map((name) => join(vendor, name))
+    const before = aliases.map((path) => (existsSync(path) ? fileHash(path) : null))
+    let firstTool
+    let secondTool
+    let release
+    const held = new Promise((resolve) => {
+      release = resolve
+    })
+    const first = withNsisArchiveTool(async (tool) => {
+      firstTool = tool
+      expect(fileHash(tool)).toBe(fileHash(join(vendor, '7z-x64.exe')))
+      expect(fileHash(join(dirname(tool), '7z.dll'))).toBe(fileHash(join(vendor, '7z-x64.dll')))
+      await held
+      expect(existsSync(tool)).toBe(true)
+    })
+    try {
+      await expect(
+        withNsisArchiveTool(async (tool) => {
+          secondTool = tool
+          expect(dirname(tool)).not.toBe(dirname(firstTool))
+          throw new Error('selected payload rejected')
+        })
+      ).rejects.toThrow('selected payload rejected')
+      expect(existsSync(dirname(secondTool))).toBe(false)
+      expect(existsSync(firstTool)).toBe(true)
+    } finally {
+      release()
+      await first
+    }
+    expect(existsSync(dirname(firstTool))).toBe(false)
+    expect(aliases.map((path) => (existsSync(path) ? fileHash(path) : null))).toEqual(before)
+  })
   it('verifies the complete installed bytes through a Copy payload and compressed bootstrap member', async () => {
     const data = await fixture()
     await expect(verifyInstallerPayload(data)).resolves.toEqual({

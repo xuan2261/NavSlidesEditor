@@ -1,4 +1,6 @@
 const { normalizePresentationGames } = require('revealjs-shared')
+const { assertSemanticBaseline } = require('./pptx-import/semantic-baseline')
+const { validatePictureReplacements } = require('./pptx-import/picture-replacement-validation')
 const { getReadablePackageStore, withPackageStore } = require('./pptx-import/package-store-runtime')
 const {
   canonicalEditableSnapshot,
@@ -6,19 +8,19 @@ const {
 } = require('./pptx-import/mutation-journal')
 const { hashRecord, RECORD_SCHEMA_VERSION } = require('./pptx-import/package-store/schemas')
 const { rebindSourceMap } = require('./pptx-import/source-map')
+const { recordVerifiedJournal } = require('./pptx-import/package-authority-snapshot')
 const { queueCompatibilityUpsert } = require('./pptx-import/compatibility-outbox')
 const { validateMatrixAuthoritySubjects } = require('./pptx-import/canonical-feature-matrix')
 const { canonicalReasonCodes, reasonCodeSubject } = require('./pptx-import/reason-code-contract')
 const { isValidIdempotencyKey } = require('./pptx-import/request-limits')
 const { MUTATION_OPERATIONS } = require('./pptx-import/mutation-operation-scope')
-const { getTrustedImportMetadata, decorateTrustedImportMetadata } = require('./pptx-import/trusted-import-metadata')
+const {
+  getTrustedImportMetadata,
+  decorateTrustedImportMetadata,
+} = require('./pptx-import/trusted-import-metadata')
 
 const OPERATION = MUTATION_OPERATIONS.PROJECTION_SAVE
 
-function currentHead(state, presentationId) {
-  const head = state.heads.find((item) => item.presentationId === presentationId)
-  return head ? structuredClone(head) : null
-}
 function currentAuthority(state, head) {
   return (
     [...state.mutationResults]
@@ -114,9 +116,14 @@ async function savePackageProjection({
     const canonicalAfter = canonicalEditableSnapshot(
       normalizePresentationGames({ ...stored, ...after, id: presentationId })
     )
+    if (after.pptxSemantic === undefined && canonicalBefore.pptxSemantic !== undefined) {
+      canonicalAfter.pptxSemantic = canonicalBefore.pptxSemantic
+    }
+    assertSemanticBaseline(canonicalBefore, canonicalAfter)
     const trustedImportMetadata = getTrustedImportMetadata(state, head)
     const compatibility = decorateTrustedImportMetadata(
-      compatibilityPresentation(stored, canonicalAfter, presentationId), trustedImportMetadata
+      compatibilityPresentation(stored, canonicalAfter, presentationId),
+      trustedImportMetadata
     )
     const sourceMap = authority?.sourceMap
     // A normal save only publishes the canonical projection and pending journal.
@@ -158,7 +165,7 @@ async function savePackageProjection({
         packageBacked: true,
         idempotent: true,
         generation: prior.generation,
-        aggregateHead: currentHead(store.getState(), presentationId),
+        aggregateHead: store.getPresentationHead(presentationId),
         projection: prior.projection,
         projectionHash: hashRecord(prior.projection),
       }
@@ -183,6 +190,7 @@ async function savePackageProjection({
       })
     }
     if (!sourceMap) return denied(422, 'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
+    await validatePictureReplacements(canonicalAfter, canonicalBefore)
     const journal = deriveMutationJournal(canonicalBefore, canonicalAfter, {
       baseRevisionId: head.packageRevisionId,
       sourceMap,
@@ -229,12 +237,23 @@ async function savePackageProjection({
       next.mutationResults.push(result)
       queueCompatibilityProjection(next, compatibility, nextHead, updatedAt, trustedImportMetadata)
     })
+      recordVerifiedJournal({
+        presentationId,
+        generation,
+        packageRevisionId: head.packageRevisionId,
+        matrixAuthorityEpoch: state.matrixAuthorityEpoch,
+        previousProjection: canonicalBefore,
+        currentProjection: canonicalAfter,
+        previousSourceMap: sourceMap,
+        journal,
+        operationIds: result.operationIds,
+      })
     return {
       ok: true,
       packageBacked: true,
       idempotent: false,
       generation,
-      aggregateHead: currentHead(store.getState(), presentationId),
+      aggregateHead: store.getPresentationHead(presentationId),
       projection: canonicalAfter,
       projectionHash: hashRecord(canonicalAfter),
     }
@@ -243,7 +262,7 @@ async function savePackageProjection({
 
 async function getPackageGeneration(presentationId) {
   const store = await getReadablePackageStore()
-  const head = store.getState().heads.find((item) => item.presentationId === presentationId)
+  const head = store.getPresentationHead(presentationId)
   return head?.generation ?? null
 }
 

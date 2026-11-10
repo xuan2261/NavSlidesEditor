@@ -3,6 +3,7 @@ const {
 } = require('revealjs-shared/src/education/static-raster-targets.js')
 const pptxgen = require('pptxgenjs')
 const {
+  getPptxExportLayout,
   getPptxLayout,
   getPresentationResolution,
   getSlideNotes,
@@ -19,14 +20,6 @@ const { getServerRasters } = require('./server-raster')
 
 function getSafeTitle(title) {
   return String(title || 'Presentation').trim() || 'Presentation'
-}
-
-function getPptxExportLayout(presentation) {
-  const originalSize = presentation && presentation._pptxMeta && presentation._pptxMeta.originalSize
-  const width = Number(originalSize && originalSize.width)
-  const height = Number(originalSize && originalSize.height)
-  if (width > 0 && height > 0) return { width, height }
-  return getPresentationResolution(presentation)
 }
 
 async function exportToFile(sourcePresentation, filePath, options = {}) {

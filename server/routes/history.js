@@ -12,7 +12,7 @@ const {
 } = require('../services/package-lifecycle-integration')
 const { toPresentationEditorDto } = require('../services/pptx-import/package-store/dto')
 const { hashRecord } = require('../services/pptx-import/package-store/schemas')
-const { drainPackageCompatibilityOutbox } = require('../services/pptx-import/package-store-runtime')
+const { drainPackageCompatibilityOutbox, withPackageStore } = require('../services/pptx-import/package-store-runtime')
 const {
   readAuthoritativePresentation,
   resolvePackageBackedRead,
@@ -48,11 +48,17 @@ async function writeSnapshot(presId, pres, name, { preserveSnapshotId } = {}) {
   const snapshotData = JSON.parse(JSON.stringify(pres))
   const expectedHead = snapshotData.pptxAggregateHead
   if (expectedHead?.pendingJournalHash !== undefined) {
-    throw Object.assign(new Error('Cannot snapshot a pending package projection'), {
-      code: 'PACKAGE_PENDING_PROJECTION',
-      status: 409,
+    await withPackageStore(store => {
+      const state = store.getState()
+      const live = state.heads.find(head => head.presentationId === presId)
+      if (!live || hashRecord(live) !== hashRecord(expectedHead)) {
+        throw Object.assign(new Error('Package-backed presentation head changed during snapshot'), { code: 'STALE_GENERATION', status: 409 })
+      }
+      require('../services/pptx-import/package-store/portable').assertSemanticHistoryAuthority(state, live)
     })
   }
+  // Pending semantic snapshots retain their exact project authority, never a
+  // newly materialized or validated native package.
   const presDir = path.join(HISTORY_DIR, presId)
   await fs.ensureDir(presDir)
   const snapshotId = uuidv4()
@@ -271,12 +277,6 @@ router.post('/:id/restore/:snapshotId', async (req, res, next) => {
       ))) {
         throw Object.assign(new Error('Snapshot package head is unavailable'), {
           code: 'SNAPSHOT_PACKAGE_HEAD_UNAVAILABLE',
-        })
-      }
-      if (current.pptxAggregateHead?.pendingJournalHash !== undefined) {
-        throw Object.assign(new Error('Cannot restore while the current package projection is pending'), {
-          code: 'PACKAGE_PENDING_PROJECTION',
-          status: 409,
         })
       }
 

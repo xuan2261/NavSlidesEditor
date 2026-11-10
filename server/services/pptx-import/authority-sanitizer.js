@@ -3,6 +3,7 @@ const {
   sanitizePptxImportMetadata,
   sanitizePptxMetadata,
 } = require('./package-store/dto')
+const { normalizePptxSemanticDocument } = require('revealjs-shared/src/pptx-semantic-document.js')
 
 const SAFE_PPTX_METADATA_KEYS = new Set([
   '_pptxMeta',
@@ -11,13 +12,18 @@ const SAFE_PPTX_METADATA_KEYS = new Set([
   // Allowlisted only so DTO/GET can expose it; client PUT always strips (server-owned).
   '_pptxImportReport',
 ])
-const AUTHORITY_KEY = /^(?:_?pptx.*|.*(?:aggregateHead|capability|validatedRevision|packageRevision|journal|authority).*|.*source(?:Map|Ref|Authority).*|(?:aggregateGeneration|baseRevisionId|idempotencyKey|blobSha256|sha256|generation|ordinal|fencingEpoch|predecessorId|originalRevisionId|projectionRevisionId|revisionId|manifestHash|originalPath|packagePath|serverPath|filePath|complexObjects|relationships|securityFlags|unknownParts|createdAt|updatedAt|deletedAt))$/i
+const AUTHORITY_KEY =
+  /^(?:_?pptx.*|.*(?:aggregateHead|capability|validatedRevision|packageRevision|journal|authority).*|.*source(?:Map|Ref|Authority).*|(?:aggregateGeneration|baseRevisionId|idempotencyKey|blobSha256|sha256|generation|ordinal|fencingEpoch|predecessorId|originalRevisionId|projectionRevisionId|revisionId|manifestHash|originalPath|packagePath|serverPath|filePath|complexObjects|relationships|securityFlags|unknownParts|createdAt|updatedAt|deletedAt))$/i
 
 const ROOT_TIMESTAMP_KEYS = new Set(['createdAt', 'updatedAt', 'deletedAt'])
 
 function isAuthorityKey(key, isRoot) {
-  return key === 'trustedImportMetadata' || !SAFE_PPTX_METADATA_KEYS.has(key) && AUTHORITY_KEY.test(key) &&
-    (isRoot || !ROOT_TIMESTAMP_KEYS.has(key))
+  return (
+    key === 'trustedImportMetadata' ||
+    (!SAFE_PPTX_METADATA_KEYS.has(key) &&
+      AUTHORITY_KEY.test(key) &&
+      (isRoot || !ROOT_TIMESTAMP_KEYS.has(key)))
+  )
 }
 
 function sanitizeClientEditableData(value, isRoot = true) {
@@ -25,6 +31,16 @@ function sanitizeClientEditableData(value, isRoot = true) {
   if (!value || typeof value !== 'object') return value
   const entries = []
   for (const [key, child] of Object.entries(value)) {
+    if (key === 'pptxSemantic' && isRoot) {
+      entries.push([key, normalizePptxSemanticDocument(child)])
+      continue
+    }
+    if (key === 'pptxInstanceId') {
+      if (typeof child !== 'string' || !child.length || child.length > 1024)
+        throw new TypeError('Invalid semantic occurrence identity')
+      entries.push([key, child])
+      continue
+    }
     // Server-owned import report: never accept client injection/enlargement.
     if (key === '_pptxImportReport') continue
     if (key === '_pptxMeta') {

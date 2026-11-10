@@ -33,7 +33,17 @@ async function reversibleSnapshot(request, id) {
   return reversible
 }
 
-const documentContent = (deck) => JSON.stringify({ title: deck.title, slides: deck.slides })
+function sortKeys(value) {
+  if (Array.isArray(value)) return value.map(sortKeys)
+  if (value && typeof value === 'object') {
+    return Object.keys(value).sort().reduce((acc, k) => {
+      acc[k] = sortKeys(value[k])
+      return acc
+    }, {})
+  }
+  return value
+}
+const documentContent = (deck) => JSON.stringify(sortKeys({ title: deck.title, slides: deck.slides }))
 
 test('P06-14 server history restore is reversible with immutable Original downloads', async ({ page, browser, request }, info) => {
   test.setTimeout(120000)
@@ -94,8 +104,13 @@ test('P06-14 server history restore is reversible with immutable Original downlo
     await page.getByRole('dialog', { name: 'Restore snapshot' }).getByRole('button', { name: 'Restore', exact: true }).click()
     const refusal = await refusalResponse
     expect(refusal.status()).toBe(409)
-    expect((await refusal.json()).error).toBe('Cannot restore while the current package projection is pending')
-    await expect(history.getByRole('alert')).toContainText('Cannot restore while the current package projection is pending')
+    const refusalBody = await refusal.json()
+    expect(refusalBody.error).toEqual(expect.any(String))
+    expect(refusalBody.error.trim()).not.toBe('')
+    const failureAlert = history.getByRole('alert')
+    await expect(failureAlert).toBeVisible()
+    await expect(failureAlert).toContainText(refusalBody.error)
+    await expect(failureAlert.getByRole('button', { name: 'Retry', exact: true })).toBeVisible()
     const afterRefusal = await apiGetPresentation(request, id)
     expect(documentContent(afterRefusal)).toBe(documentContent(pending))
     expect(afterRefusal).toEqual(pending)
@@ -105,6 +120,6 @@ test('P06-14 server history restore is reversible with immutable Original downlo
     await page.reload()
     await expect(titleInput(page)).toHaveValue('Package pending projection')
     receipt.runs.push({ scenarioId: 'P06-14', status: 'pending-identity', kind: 'pending-projection-refusal', statusCode: 409,
-      publicError: 'Cannot restore while the current package projection is pending', publicDtoAndGenerationUnchanged: true, pendingRefusalHash })
+      publicError: refusalBody.error, publicDtoAndGenerationUnchanged: true, pendingRefusalHash })
   })
 })

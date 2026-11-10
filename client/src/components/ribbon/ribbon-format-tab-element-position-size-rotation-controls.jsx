@@ -9,6 +9,7 @@ import { handleRibbonKeyboardActivation } from './ribbon-keyboard-activation'
 import ActionControls from '../properties/action-controls'
 import HorizontalAlignmentControls from './ribbon-horizontal-alignment-controls'
 import { resolveVideoSrc } from '../../utils/migrate-video-src'
+import { semanticInstance, semanticDefinition } from 'revealjs-shared/src/pptx-semantic-records.js'
 
 const OBJECT_FIT_OPTIONS = ['cover', 'contain', 'fill', 'none']
 const CHART_TYPES = ['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea']
@@ -77,23 +78,25 @@ function ShapeControls({ element, onUpdateElement }) {
   )
 }
 
-function ImageControls({ element, onUpdateElement }) {
+function ImageControls({ element, onUpdateElement, canonicalPictureSelected }) {
   return (
     <>
-      <RibbonSection label="Fit" className="border-r border-border">
-        <select
-          className="h-7 bg-card border border-border text-text-primary px-1.5 rounded text-xs cursor-pointer"
-          value={element.objectFit || 'cover'}
-          onChange={(e) => onUpdateElement?.({ objectFit: e.target.value })}
-          aria-label="Object fit"
-        >
-          {OBJECT_FIT_OPTIONS.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-      </RibbonSection>
+      {!canonicalPictureSelected && (
+        <RibbonSection label="Fit" className="border-r border-border">
+          <select
+            className="h-7 bg-card border border-border text-text-primary px-1.5 rounded text-xs cursor-pointer"
+            value={element.objectFit || 'cover'}
+            onChange={(e) => onUpdateElement?.({ objectFit: e.target.value })}
+            aria-label="Object fit"
+          >
+            {OBJECT_FIT_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        </RibbonSection>
+      )}
       <RibbonSection label="Alt Text" className="border-r border-border">
         <input
           type="text"
@@ -114,6 +117,7 @@ function ChartControls({ element, onUpdateElement }) {
       <select
         className="h-7 bg-card border border-border text-text-primary px-1.5 rounded text-xs cursor-pointer"
         value={element.chartType || 'bar'}
+        disabled={Boolean(element.pptxInstanceId)}
         onChange={(e) => onUpdateElement?.({ chartType: e.target.value })}
         aria-label="Chart type"
       >
@@ -214,7 +218,12 @@ function CodeControls({ element, onUpdateElement }) {
   )
 }
 
-function ContextualControls({ selectedElement, onUpdateElement, sourceMixed }) {
+function ContextualControls({
+  selectedElement,
+  onUpdateElement,
+  sourceMixed,
+  canonicalPictureSelected,
+}) {
   if (!selectedElement) return null
 
   switch (selectedElement.type) {
@@ -222,7 +231,13 @@ function ContextualControls({ selectedElement, onUpdateElement, sourceMixed }) {
     case 'line':
       return <ShapeControls element={selectedElement} onUpdateElement={onUpdateElement} />
     case 'image':
-      return <ImageControls element={selectedElement} onUpdateElement={onUpdateElement} />
+      return (
+        <ImageControls
+          element={selectedElement}
+          onUpdateElement={onUpdateElement}
+          canonicalPictureSelected={canonicalPictureSelected}
+        />
+      )
     case 'chart':
       return <ChartControls element={selectedElement} onUpdateElement={onUpdateElement} />
     case 'table':
@@ -291,6 +306,14 @@ export default function FormatTabContent({
     'locked',
   ])
   const opacityMixed = mixed.opacity?.isMixed
+  const canonicalPictureSelected = [
+    selectedElement,
+    ...(elements || []).filter((element) => selectedElementIds?.includes(element.id)),
+  ].some((element) => {
+    const semantic = presentation?.pptxSemantic
+    const instance = semanticInstance(semantic, element.pptxInstanceId)
+    return Boolean(semanticDefinition(semantic, instance?.definitionId)?.content?.pictureDocument)
+  })
   const sourceMixed =
     (selectedElement.type === 'audio' || selectedElement.type === 'video') &&
     computeMixedSource(elements || [selectedElement], selectedElementIds || [selectedElement.id])
@@ -322,6 +345,7 @@ export default function FormatTabContent({
           selectedElement={selectedElement}
           onUpdateElement={onUpdateElement}
           sourceMixed={sourceMixed}
+          canonicalPictureSelected={canonicalPictureSelected}
         />
         <RibbonSection label="Action" className="border-r border-border">
           <ActionControls
@@ -408,24 +432,26 @@ export default function FormatTabContent({
           </div>
         </RibbonSection>
 
-        <RibbonSection label="Opacity" className="border-r border-border">
-          <div className="flex items-center gap-1 h-7">
-            <input
-              type="range"
-              data-mixed={opacityMixed ? 'true' : undefined}
-              className="w-16 accent-accent cursor-pointer"
-              min={0}
-              max={1}
-              step={0.05}
-              value={selectedElement.opacity ?? 1}
-              onChange={(e) => onUpdateElement?.({ opacity: parseFloat(e.target.value) })}
-              aria-label="Opacity"
-            />
-            <span className="text-[10px] text-text-muted w-6 text-right">
-              {opacityMixed ? '—' : `${Math.round((selectedElement.opacity ?? 1) * 100)}%`}
-            </span>
-          </div>
-        </RibbonSection>
+        {!canonicalPictureSelected && (
+          <RibbonSection label="Opacity" className="border-r border-border">
+            <div className="flex items-center gap-1 h-7">
+              <input
+                type="range"
+                data-mixed={opacityMixed ? 'true' : undefined}
+                className="w-16 accent-accent cursor-pointer"
+                min={0}
+                max={1}
+                step={0.05}
+                value={selectedElement.opacity ?? 1}
+                onChange={(e) => onUpdateElement?.({ opacity: parseFloat(e.target.value) })}
+                aria-label="Opacity"
+              />
+              <span className="text-[10px] text-text-muted w-6 text-right">
+                {opacityMixed ? '—' : `${Math.round((selectedElement.opacity ?? 1) * 100)}%`}
+              </span>
+            </div>
+          </RibbonSection>
+        )}
 
         <HorizontalAlignmentControls
           element={selectedElement}

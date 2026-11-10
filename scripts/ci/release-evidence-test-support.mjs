@@ -5,7 +5,8 @@ import { normalizeGhAttestations, WINDOWS_CAPTURE_HASH } from './windows-verific
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { sha256 } from './release-receipt-canonical.mjs'
-import { identityFor } from './create-client-dist-manifest.mjs'
+import { createManifest } from './create-client-dist-manifest.mjs'
+import { createSubject } from '../feature-inventory/education-qualification-stage.mjs'
 import { verifyContainerSupplyChain } from '../verify-container-supply-chain.js'
 import { createHostReceipt, createQualificationId } from './release-receipts.mjs'
 const require = createRequire(import.meta.url)
@@ -112,16 +113,16 @@ export function stageSyntheticLinuxCli(root) {
   }
   put('package-lock.json', '{}')
   put('electron/server-package-lock.json', '{}')
-  put('package.json', { version: '1.17.0' })
+  put('package.json', { version: '1.17.0', type: 'module' })
+  put('client/src/synthetic-entry.js', 'export const title = "Synthetic client"\n')
+  const policy = { schemaVersion: 1, failSeverities: ['HIGH', 'CRITICAL'], exceptions: [] }
+  put('config/container-vulnerability-policy.json', policy)
   const index = '<h1>Synthetic client</h1>'
   put('evidence/client/client/dist/index.html', index)
-  const manifest = { schemaVersion: 1, subject: { sha: syntheticSubject, dirty: false },
-    build: { command: 'npm run build', node: '22.22.0', npm: '10', vite: '6' },
-    locks: [{ name: 'electron', path: 'electron/server-package-lock.json', bytes: 2, sha256: sha256('{}') },
-      { name: 'workspace', path: 'package-lock.json', bytes: 2, sha256: sha256('{}') }],
-    files: [{ path: 'index.html', bytes: Buffer.byteLength(index), sha256: sha256(index) }],
-    artifact: { files: 1, bytes: Buffer.byteLength(index) } }
-  manifest.artifact.identity = identityFor(manifest)
+  const manifest = createManifest({ baseDir: root, root: join(root, 'evidence/client/client/dist'),
+    subject: syntheticSubject, dirty: false, buildCommand: 'npm run build', viteVersion: '6',
+    locks: ['electron=electron/server-package-lock.json', 'workspace=package-lock.json'],
+    inputHash: createSubject(root).subjectHash })
   const clientDigest = sha256(JSON.stringify(manifest))
   put('evidence/client/client-dist-manifest.json', manifest)
   const leaf = syntheticLinuxLeaf(clientDigest)
@@ -142,11 +143,9 @@ export function stageSyntheticLinuxCli(root) {
     { name: 'libc6', versionInfo: '2.36', externalRefs: [{ referenceType: 'purl', referenceLocator: 'pkg:deb/debian/libc6@2.36' }] },
     { name: 'playwright', versionInfo: '1.63.0', externalRefs: [{ referenceType: 'purl', referenceLocator: 'pkg:npm/playwright@1.63.0' }] }] }
   const browser = { playwrightVersion: '1.63.0', chromium: { revision: '1243', executablePath: '/synthetic/chrome' } }
-  const policy = { schemaVersion: 1, failSeverities: ['HIGH', 'CRITICAL'], exceptions: [] }
   const input = { report, sbom, browser, policy, actualImageDigest: imageID,
     expected: { imageDigest: imageID, playwrightVersion: '1.63.0', chromiumRevision: '1243' } }
   const now = Date.now()
-  put('config/container-vulnerability-policy.json', policy)
   for (const [name, value] of Object.entries({ 'container-trivy.json': report, 'container-sbom.spdx.json': sbom,
     'container-browser-inventory.json': browser, 'container-supply-chain-receipt.json': verifyContainerSupplyChain(input, now) })) {
     put(`evidence/supply-chain/${name}`, value)

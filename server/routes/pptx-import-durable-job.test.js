@@ -322,6 +322,35 @@ describe('durable PPTX import job authority', () => {
     })
   })
 
+  it.each([
+    ['unavailable', null],
+    ['failed', async () => { throw new Error('presentation cleanup failed') }],
+  ])('does not report reconciliation success when presentation cleanup is %s', async (_label, deletePresentation) => {
+    const jobId = '8f5fb4c5-8d26-4f83-9f3d-a7cd6f9541cc'
+    const durable = packageReceipt({
+      id: jobId,
+      kind: 'import',
+      status: 'completed',
+      presentationId: 'presentation-retained',
+    })
+    const response = await authorize(request(createApp({
+      jobManager: manager(),
+      readDurableJob: vi.fn(async () => durable),
+      packageRollback: null,
+      deletePresentation,
+    })).post(`/api/pptx/jobs/${jobId}/reconcile`))
+
+    expect(response.status).toBe(409)
+    expect(response.body).toMatchObject({
+      success: false,
+      status: 'reconciliation-failed',
+      error: 'package-import-reconciliation-failed',
+      reasonCode: 'PACKAGE_IMPORT_RECONCILIATION_FAILED',
+      jobId,
+      presentationId: 'presentation-retained',
+    })
+  })
+
   it('maps durable non-terminal receipts without exposing package internals', () => {
     expect(serializeDurableImportJob({
       id: 'job', kind: 'import', status: 'running', capabilityHash: 'd'.repeat(64),

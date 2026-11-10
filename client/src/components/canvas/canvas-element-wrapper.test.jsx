@@ -60,6 +60,13 @@ function renderCanvasElement(element, props = {}) {
 }
 
 describe('CanvasElement video playback', () => {
+  it.each(['audio', 'video'])('applies authored %s volume to its HTMLMediaElement', (type) => {
+    const { container } = renderCanvasElement({ ...baseElement, type, volume: 0.2 })
+    const media = container.querySelector(type)
+    expect(media).toBeInstanceOf(HTMLMediaElement)
+    expect(media.volume).toBe(0.2)
+  })
+
   it('[F4 red defect:canvas.keyboard] exposes focusable element semantics', () => {
     renderCanvasElement(baseElement)
     const wrapper = screen.getByTestId('slide-element-video-1')
@@ -281,13 +288,14 @@ describe('CanvasElement video playback', () => {
     expect(video.playbackRate).toBe(1.25)
   })
 
-  it('uses the edited playback interval after rerender and removes it on unmount', () => {
+  it.each(['video', 'audio'])('uses the edited %s playback interval after rerender and removes it on unmount', (type) => {
     const { rerender, unmount } = renderCanvasElement({
       ...baseElement,
+      type,
       startTime: 0.2,
       endTime: 0.8,
     })
-    const video = screen.getByTestId('slide-element-video-1').querySelector('video')
+    const video = screen.getByTestId('slide-element-video-1').querySelector(type)
     const pause = vi.spyOn(video, 'pause').mockImplementation(() => {})
     try {
       fireEvent.loadedMetadata(video)
@@ -296,7 +304,7 @@ describe('CanvasElement video playback', () => {
       fireEvent.timeUpdate(video)
       expect(video.currentTime).toBe(0.8)
       expect(pause).toHaveBeenCalledOnce()
-      rerender(<CanvasElement element={{ ...baseElement, startTime: 0.4, endTime: 1.5 }} />)
+      rerender(<CanvasElement element={{ ...baseElement, type, startTime: 0.4, endTime: 1.5 }} />)
       video.currentTime = 0.9
       fireEvent.timeUpdate(video)
       expect(video.currentTime).toBe(0.9)

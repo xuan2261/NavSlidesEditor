@@ -102,12 +102,22 @@ export function buildTransitionPreviewPresentation({
 
 export function buildTransitionPreviewHtml(options) {
   const previewPresentation = buildTransitionPreviewPresentation(options)
-  const html = generateRevealHTML(previewPresentation)
+  const html = generateRevealHTML(previewPresentation, {
+    semanticOutputResources: options.semanticOutputResources,
+  })
   const replayScript = `<script>
 (function() {
   function replay() {
     if (typeof Reveal === 'undefined' || !Reveal.on) return;
-    var advance = function() { setTimeout(function() { Reveal.next(); }, 800); };
+    var advance = function() {
+      var semantic = window.__navslidesSemanticOutput;
+      Promise.resolve(semantic ? semantic.ready : undefined).then(function() {
+        if (semantic && semantic.state !== 'ready') return;
+        setTimeout(function() {
+          if (!semantic || semantic.state === 'ready') Reveal.next();
+        }, 800);
+      }).catch(function() {});
+    };
     if (Reveal.isReady && Reveal.isReady()) advance();
     else Reveal.on('ready', advance);
   }

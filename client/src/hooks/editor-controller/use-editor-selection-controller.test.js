@@ -16,6 +16,48 @@ function createController(elements, selectedIds, overrides = {}) {
 }
 
 describe('useEditorSelectionController update transactions', () => {
+  it.each(['shape', 'text'])('passes a canonical %s body intact to its single selected occurrence', (type) => {
+    const controller = createController(
+      [{ id: 'shape', type, pptxInstanceId: 'instance' }],
+      ['shape']
+    )
+    const { result } = renderHook(() => useEditorSelectionController(controller))
+    const patch = {
+      semanticTextDocument: { schemaVersion: 1, componentId: 'body', paragraphs: [] },
+      textHtml: '<p></p>',
+      text: '',
+    }
+    act(() => result.current.updateSelectedElements(patch))
+    expect(controller.updateElement).toHaveBeenCalledWith('shape', patch)
+    expect(controller.updateElements).not.toHaveBeenCalled()
+  })
+  it.each(['multiple', 'legacy', 'wrongType'])(
+    'does not broadcast a canonical shape label patch outside a single source occurrence (%s)',
+    (guard) => {
+      const elements = [
+        {
+          id: 'shape',
+          type: guard === 'wrongType' ? 'image' : 'shape',
+          ...(guard === 'legacy' ? {} : { pptxInstanceId: 'instance' }),
+        },
+        { id: 'other', type: 'shape', pptxInstanceId: 'other-instance' },
+      ]
+      const controller = createController(
+        elements,
+        guard === 'multiple' ? ['shape', 'other'] : ['shape']
+      )
+      const { result } = renderHook(() => useEditorSelectionController(controller))
+      expect(() =>
+        result.current.updateSelectedElements({
+          semanticTextDocument: { schemaVersion: 1, componentId: 'body', paragraphs: [] },
+          textHtml: '<p></p>',
+          text: '',
+        })
+      ).toThrow(/single selected occurrence/)
+      expect(controller.updateElement).not.toHaveBeenCalled()
+      expect(controller.updateElements).not.toHaveBeenCalled()
+    }
+  )
   it('keeps a batch-derived multi-selection update on updateElements when one type is compatible', () => {
     const controller = createController(
       [
@@ -124,15 +166,18 @@ describe('useEditorSelectionController update transactions', () => {
   })
 
   it('adds and removes all visible group members atomically without losing unrelated selection', () => {
-    const controller = createController([
-      { id: 'x', type: 'shape' },
-      { id: 'a', type: 'shape', groupId: 'g' },
-      { id: 'b', type: 'shape', groupId: 'g' },
-      { id: 'hidden', type: 'shape', groupId: 'g', hidden: true },
-    ], ['x'])
+    const controller = createController(
+      [
+        { id: 'x', type: 'shape' },
+        { id: 'a', type: 'shape', groupId: 'g' },
+        { id: 'b', type: 'shape', groupId: 'g' },
+        { id: 'hidden', type: 'shape', groupId: 'g', hidden: true },
+      ],
+      ['x']
+    )
     controller.setSelectedElementIds = (update) => {
-      controller.selectedElementIdsRef.current = typeof update === 'function'
-        ? update(controller.selectedElementIdsRef.current) : update
+      controller.selectedElementIdsRef.current =
+        typeof update === 'function' ? update(controller.selectedElementIdsRef.current) : update
     }
     const { result } = renderHook(() => useEditorSelectionController(controller))
     act(() => result.current.toggleElementSelection('a', true))

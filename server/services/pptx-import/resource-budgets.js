@@ -19,6 +19,9 @@ function createMediaBudget(maxBytes = MAX_AGGREGATE_MEDIA_BYTES) {
     get usedBytes() {
       return usedBytes
     },
+    get remainingBytes() {
+      return maxBytes - usedBytes
+    },
     /**
      * Overflow is an ordinary media rejection, not an import failure: the deck
      * still imports, with a placeholder and a warning for whatever did not fit.

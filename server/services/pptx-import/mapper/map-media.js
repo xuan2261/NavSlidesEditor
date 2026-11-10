@@ -168,7 +168,7 @@ function mapMath(element, context) {
   const box = baseElement(element, context.scale, context.zIndex)
   return [{
     ...box,
-    ...fitBoxWithinBounds(box),
+    ...fitBoxWithinBounds(box, context.bounds),
     type: 'latex',
     content: cleanLatex,
     latex: cleanLatex,

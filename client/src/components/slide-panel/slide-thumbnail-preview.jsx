@@ -1,5 +1,14 @@
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { DEFAULT_TOKENS, mergeTokens, resolveColorField, resolveColorForTokens, resolveConnectorGeometry, resolveEffectiveSlide, tokensToStyleObject } from 'revealjs-shared'
+import {
+  DEFAULT_TOKENS,
+  mergeTokens,
+  resolveColorField,
+  resolveColorForTokens,
+  resolveConnectorGeometry,
+  resolveEffectiveSlide,
+  tokensToStyleObject,
+} from 'revealjs-shared'
+import { useOutputPixelScale } from '../../hooks/use-output-pixel-scale'
 import { markdownToHtml } from '../../utils/markdown-utils'
 import { sanitizeMediaSrc } from '../../utils/url-safety'
 import { CalloutRenderer } from '../canvas/element-renderers/callout-element-renderer'
@@ -12,8 +21,11 @@ import { SvgElementRenderer } from '../canvas/element-renderers/svg-element-rend
 import { TableRenderer } from '../canvas/element-renderers/table-element-renderer'
 import { TimelineRenderer } from '../canvas/element-renderers/timeline-element-renderer'
 import { sanitizeThumbnailHtml, sanitizeThumbnailSvg } from './thumbnail-markup-safety'
+import semanticTree from 'revealjs-shared/src/pptx-semantic-render-tree.js'
+import { semanticElement } from '../../utils/pptx-semantic-geometry-bridge'
+import NativeOmmlRenderer from '../properties/native-omml-renderer'
 
-// Only static renderers belong here. Chart and LaTeX renderers mount executable frames.
+// Legacy chart/LaTeX payloads mount executable frames; typed OMML is static SVG.
 const STATIC_RENDERERS = {
   callout: CalloutRenderer,
   drawing: DrawingRenderer,
@@ -80,7 +92,9 @@ function elementStyle(element) {
     opacity: element.opacity,
     transform: element.rotation ? `rotate(${element.rotation}deg)` : undefined,
     overflow:
-      element.type === 'line' || element._pptxImportMeta?.textFit === 'wrap' ? 'visible' : 'hidden',
+      element.pptxGeometry || element.type === 'line' || element._pptxImportMeta?.textFit === 'wrap'
+        ? 'visible'
+        : 'hidden',
     boxSizing: 'border-box',
     borderRadius: ['image', 'code'].includes(element.type) ? element.borderRadius : undefined,
     boxShadow:
@@ -139,7 +153,15 @@ function StaticMarkdown({ element }) {
   )
 }
 
-function SafeElement({ element, tokens }) {
+function SafeElement({ element, tokens, outputPixelScale }) {
+  if (element.type === 'latex' && element.ommlDocument)
+    return (
+      <NativeOmmlRenderer
+        document={element.ommlDocument}
+        mathFrame={element.mathFrame}
+        theme={element.pptxTextContext?.theme}
+      />
+    )
   const Renderer = STATIC_RENDERERS[element.type]
   if (Renderer) {
     const safeElement =
@@ -148,7 +170,9 @@ function SafeElement({ element, tokens }) {
         : element.type === 'svg'
           ? { ...element, content: sanitizeThumbnailSvg(element.content) }
           : element
-    return <Renderer element={safeElement} isEditing={false} />
+    return (
+      <Renderer element={safeElement} isEditing={false} outputPixelScale={outputPixelScale} />
+    )
   }
   if (element.type === 'markdown') return <StaticMarkdown element={element} />
   if (element.type === 'icon') return <StaticIcon element={element} />
@@ -243,11 +267,22 @@ function SafeElement({ element, tokens }) {
   )
 }
 
-export const SlideThumbnailPreview = memo(function SlideThumbnailPreview({ slide, width, height, resolution, designTokens, layoutMasters, className = '', 'data-testid': testId }) {
+export const SlideThumbnailPreview = memo(function SlideThumbnailPreview({
+  slide,
+  width,
+  height,
+  resolution,
+  designTokens,
+  layoutMasters,
+  pptxSemantic,
+  className = '',
+  'data-testid': testId,
+}) {
   const sourceWidth = width || resolution?.width || 960
   const sourceHeight = height || resolution?.height || 540
   const hostRef = useRef(null)
-  const canvasRef = useRef(null)
+  const [scale, setScale] = useState(0)
+  const outputPixelScale = useOutputPixelScale(scale)
   const effectiveSlide = useMemo(
     () => (slide?.layoutId ? resolveEffectiveSlide(slide, layoutMasters).slide : slide),
     [slide, layoutMasters]
@@ -264,11 +299,70 @@ export const SlideThumbnailPreview = memo(function SlideThumbnailPreview({ slide
       .map((element) => effectiveLines.get(element.id) || element)
   }, [effectiveSlide?.elements])
   const background = backgroundStyle(effectiveSlide?.background, tokens)
+  const renderElement = (element) => (
+    <div key={element.id} style={elementStyle(element)}>
+      <SafeElement element={element} tokens={tokens} outputPixelScale={outputPixelScale} />
+    </div>
+  )
+  const semanticNodes = useMemo(() => {
+    if (!pptxSemantic || !effectiveSlide) return null
+    try {
+      const rawNodes = semanticTree.semanticRenderTree(pptxSemantic, effectiveSlide)
+      function projectNodes(nodes) {
+        return nodes.map((node) => {
+          const projectedElement =
+            node.kind !== 'group' && node.element && node.instanceId
+              ? semanticElement(pptxSemantic, node.instanceId, node.element)
+              : node.element
+          return {
+            ...node,
+            projectedElement,
+            children: node.children ? projectNodes(node.children) : [],
+          }
+        })
+      }
+      return projectNodes(rawNodes)
+    } catch (error) {
+      return error
+    }
+  }, [pptxSemantic, effectiveSlide])
+  function renderSemanticNode(node) {
+    if (node.hidden) return null
+    if (!node.instanceId) return renderElement(node.element)
+    return (
+      <div
+        key={node.instanceId}
+        data-thumbnail-instance-id={node.instanceId}
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          transform: node.transform,
+          transformOrigin: '0 0',
+          overflow: 'visible',
+          zIndex: node.paintIndex,
+          ...(node.kind === 'group' ? { opacity: node.opacity } : {}),
+        }}
+      >
+        {node.kind !== 'group' && renderElement(node.projectedElement)}
+        {node.children.map(renderSemanticNode)}
+      </div>
+    )
+  }
+  let content
+  if (pptxSemantic) {
+    if (semanticNodes instanceof Error) {
+      content = <span data-thumbnail-error>{semanticNodes.message}</span>
+    } else if (semanticNodes) {
+      content = semanticNodes.map(renderSemanticNode)
+    }
+  } else content = elements.map(renderElement)
 
   useLayoutEffect(() => {
     const host = hostRef.current
     const resize = (availableWidth) => {
-      canvasRef.current.style.transform = `scale(${availableWidth / sourceWidth})`
+      // Keep geometry sampling in sync with the measured CSS scale, independently of editor zoom.
+      setScale(availableWidth / sourceWidth)
     }
     const measure = () => resize(host.getBoundingClientRect().width)
     measure()
@@ -296,7 +390,6 @@ export const SlideThumbnailPreview = memo(function SlideThumbnailPreview({ slide
       }}
     >
       <div
-        ref={canvasRef}
         style={{
           ...background,
           position: 'absolute',
@@ -305,15 +398,11 @@ export const SlideThumbnailPreview = memo(function SlideThumbnailPreview({ slide
           width: sourceWidth,
           height: sourceHeight,
           fontSize: 16,
-          transform: 'scale(0)',
+          transform: `scale(${scale})`,
           transformOrigin: 'top left',
         }}
       >
-        {elements.map((element) => (
-          <div key={element.id} style={elementStyle(element)}>
-            <SafeElement element={element} tokens={tokens} />
-          </div>
-        ))}
+        {content}
       </div>
     </div>
   )

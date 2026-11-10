@@ -30,6 +30,16 @@ describe('table properties utilities', () => {
     expect(next.mergedCells).toEqual([{ row: 0, col: 0, rowSpan: 1, colSpan: 2 }])
   })
 
+  it('keeps inset sides including zero across table expansion and removes only out-of-bounds metadata', () => {
+    const insets = { top: 0, right: 3.6, bottom: 2, left: 4 }
+    const current = { data: [['A', 'B']], cellStyles: { insets: [[insets, { left: 1 }]] } }
+    const expanded = normalizeTableShape({ data: [['A', 'B', 'C'], ['D', 'E', 'F']] }, current)
+    expect(expanded.cellStyles.insets).toEqual([[insets, { left: 1 }, null], [null, null, null]])
+    const contracted = normalizeTableShape({ data: [['A']] }, { ...current, ...expanded })
+    expect(contracted.cellStyles.insets).toEqual([[insets]])
+    expect(current.cellStyles.insets).toEqual([[insets, { left: 1 }]])
+  })
+
   it('preserves in-bounds merge when appending a row', () => {
     const next = normalizeTableShape(
       {

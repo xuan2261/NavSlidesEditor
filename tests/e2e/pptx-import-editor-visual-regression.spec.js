@@ -15,7 +15,6 @@ const CORPUS_DECKS = [
   'Bai_2_1.pptx',
   'Bai_2_5.pptx',
   'math-rich-text.pptx',
-  'non-default-4x3-resolution.pptx',
 ]
 
 function fixturePath(name) {
@@ -76,5 +75,36 @@ test.describe('PPTX import editor visual regression', () => {
         await apiDeletePresentation(request, presentationId)
       }
     })
+  }
+})
+
+test('preserves native 4:3 canvas and square geometry across editor reload', async ({ page, request }) => {
+  test.setTimeout(180000)
+  let presentationId
+  try {
+    presentationId = await importDeck(request, 'non-default-4x3-resolution.pptx')
+    const presentation = await apiGetPresentation(request, presentationId)
+    expect(presentation.resolution).toEqual({ width: 720, height: 540 })
+    const square = presentation.slides[0].elements.find((element) => element.name === 'Shape 2')
+    expect(square).toMatchObject({ x: 324, y: 173, width: 72, height: 72 })
+    await page.addInitScript(() => localStorage.setItem('navSlidesTutorialSeen', 'true'))
+    await page.setViewportSize({ width: 1600, height: 1000 })
+    await page.goto(`/editor/${presentationId}`)
+    const canvas = page.locator('.slide-canvas')
+    const renderedSquare = canvas.getByTestId(`slide-element-${square.id}`)
+    const assertNativeGeometry = async () => {
+      await expect(renderedSquare).toBeVisible()
+      const canvasBox = await canvas.boundingBox()
+      const squareBox = await renderedSquare.boundingBox()
+      expect(canvasBox.width / canvasBox.height).toBeCloseTo(4 / 3, 2)
+      expect(squareBox.width / squareBox.height).toBeCloseTo(1, 2)
+      expect(squareBox.width / canvasBox.width).toBeCloseTo(72 / 720, 2)
+    }
+    await assertNativeGeometry()
+    await page.reload()
+    await assertNativeGeometry()
+    expect((await apiGetPresentation(request, presentationId)).resolution).toEqual({ width: 720, height: 540 })
+  } finally {
+    await apiDeletePresentation(request, presentationId)
   }
 })

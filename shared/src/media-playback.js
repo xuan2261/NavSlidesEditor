@@ -1,11 +1,12 @@
 // Self-contained so generated presentations can serialize the same playback behavior.
 function attachMediaPlayback(
   media,
-  { startTime = 0, endTime = 0, loop = false, playbackRate = 1 } = {}
+  { startTime = 0, endTime = 0, loop = false, playbackRate = 1, volume = 1 } = {}
 ) {
   const requestedStart = Number(startTime)
   const requestedEnd = Number(endTime)
   const requestedRate = Number(playbackRate)
+  const requestedVolume = Number(volume)
   const trimmed =
     (Number.isFinite(requestedStart) && requestedStart > 0) ||
     (Number.isFinite(requestedEnd) && requestedEnd > 0)
@@ -51,6 +52,8 @@ function attachMediaPlayback(
         ? Math.min(requestedEnd, duration)
         : duration
     media.playbackRate = Number.isFinite(requestedRate) && requestedRate > 0 ? requestedRate : 1
+    media.volume = Number.isFinite(requestedVolume) && requestedVolume >= 0 && requestedVolume <= 1
+      ? requestedVolume : 1
     // Native looping wraps the entire resource, not the authored segment.
     media.loop =
       Boolean(loop) && start === 0 && !(Number.isFinite(requestedEnd) && requestedEnd > 0)

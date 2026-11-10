@@ -9,6 +9,7 @@ const TABLE_STYLE_KEYS = [
   'aligns',
   'vAligns',
   'borders',
+  'insets',
 ]
 
 export function syncTableStyleMatrices(cellStyles = {}, rows, cols) {

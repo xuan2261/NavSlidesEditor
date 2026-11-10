@@ -128,7 +128,8 @@
  *   playbackRate?: number,
  *   transcript?: string,
  *   audioDescription?: string,
- *   tracks?: MediaTrack[]
+ *   tracks?: MediaTrack[],
+ *   volume?: number
  * }} VideoElement
  */
 
@@ -141,9 +142,9 @@
  *   loop?: boolean,
  *   transcript?: string,
  *   audioDescription?: string,
- *   tracks?: MediaTrack[]
+ *   tracks?: MediaTrack[],
+ *   volume?: number
  * }} AudioElement
- */
 
 /**
  * @typedef {BaseElement & {

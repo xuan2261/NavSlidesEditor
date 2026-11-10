@@ -6,6 +6,7 @@ import journalModule from './mutation-journal.js'
 import matrix from './canonical-feature-matrix.js'
 import sourceMaps from './source-map.js'
 import editedExport from '../validated-edited-export.js'
+import planner from './transactional-patch-planner.js'
 
 const { hashRecord } = schemas
 function fixture() {
@@ -236,6 +237,72 @@ describe('editor projection authority distinct from native export eligibility', 
       reasonCode: 'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE',
     })
   })
+  it('keeps hash-bound historical pending edits readable without granting current native authority', () => {
+    const state = fixture()
+    const pending = state.mutationResults[2]
+    const originalJournalHash = hashRecord(pending.journal)
+    state.matrixAuthorityEpoch = 2
+    Object.assign(state.heads[0], {
+      matrixAuthorityEpoch: 2,
+      matrixAuthoritySubjects: matrix.createMatrixAuthoritySubjects(undefined, 2),
+    })
+
+    expect(authority.resolveEditorProjectionContext(state, 'deck')).toMatchObject({
+      ok: true,
+      after: pending.projection,
+      pendingJournalHash: pending.journal.journalHash,
+    })
+    expect(hashRecord(pending.journal)).toBe(originalJournalHash)
+    expect(planner.compilePatchPlan(pending.journal, { matrixAuthorityEpoch: 2 }))
+      .toMatchObject({ ok: false, reasonCode: 'JOURNAL_MATRIX_AUTHORITY_SUBJECT_STALE' })
+  })
+
+  it.each([false, true])('rejects future pending journal epochs with rewritten head pointers=%s', (rewritePointers) => {
+    const state = fixture()
+    const previous = state.mutationResults[1]
+    const pending = state.mutationResults[2]
+    state.matrixAuthorityEpoch = 2
+    Object.assign(state.heads[0], {
+      matrixAuthorityEpoch: 2,
+      matrixAuthoritySubjects: matrix.createMatrixAuthoritySubjects(undefined, 2),
+    })
+    pending.journal = journalModule.deriveMutationJournal(previous.projection, pending.projection, {
+      baseRevisionId: state.heads[0].packageRevisionId,
+      sourceMap: previous.sourceMap,
+      matrixAuthorityEpoch: 3,
+    })
+    pending.operationIds = pending.journal.operations.map((operation) => operation.operationId)
+    if (rewritePointers) {
+      state.heads[0].journalRevisionId = pending.journal.journalHash
+      state.heads[0].pendingJournalHash = pending.journal.journalHash
+    }
+
+    expect(authority.resolveEditorProjectionContext(state, 'deck')).toMatchObject({
+      ok: false,
+      reasonCode: 'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE',
+    })
+  })
+
+  it.each([undefined, null, 0, -1, 1.5, '1', Number.MAX_SAFE_INTEGER + 1])(
+    'rejects malformed historical journal epoch %s without a live-epoch fallback', (epoch) => {
+      const state = structuredClone(fixture())
+      state.mutationResults[2].journal.matrixAuthoritySubject.evolutionEpoch = epoch
+      expect(authority.resolveEditorProjectionContext(state, 'deck')).toMatchObject({
+        ok: false,
+        reasonCode: 'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE',
+      })
+    }
+  )
+
+  it('rejects a missing historical matrix authority subject', () => {
+    const state = structuredClone(fixture())
+    delete state.mutationResults[2].journal.matrixAuthoritySubject
+    expect(authority.resolveEditorProjectionContext(state, 'deck')).toMatchObject({
+      ok: false,
+      reasonCode: 'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE',
+    })
+  })
+
 
   it('rejects a stale feature matrix authority even when projection hashes match', () => {
     const state = fixture()

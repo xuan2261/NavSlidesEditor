@@ -19,6 +19,7 @@ const { resolveChartBackground } = require('./chart-colors.js')
 const { buildLivePresenterRuntime } = require('./live-presenter-runtime.js')
 const { attachMediaPlayback } = require('./media-playback.js')
 const { attachMediaPlaybackRoot } = require('./media-playback-root.js')
+const { attachSourceTimingPlayback } = require('./pptx-timing-playback.js')
 const {
   normalizeTransition,
   normalizeTransitionDirection,
@@ -38,6 +39,14 @@ const { effectiveSlideIdentity } = require('./education/effective-slide-identity
 const { generatedRuntimeMetadata } = require('./education/generated-runtime-metadata.js')
 const { INTERACTION_ACTION_KINDS } = require('./education/interaction-actions.js')
 const { safeStyleText } = require('./rich-text-style-sanitizer.js')
+const { attachNativeTabLayout } = require('./native-tab-layout.js')
+const {
+  semanticOutputBootstrap,
+  boundSemanticOutputHTML,
+} = require('./pptx-semantic-output-serialization.js')
+const { installSemanticPrintReadiness } = require('./pptx-semantic-output-readiness.js')
+const { presentationSlideEntries, slideFieldContext } = require('./presentation-slide-order.js')
+const { presentationHasRunHyperlinks } = require('./pptx-run-hyperlink-render')
 
 function resolveSlideForRender(slide, presentation) {
   return resolveEffectiveSlide(slide, presentation?.layoutMasters).slide
@@ -188,8 +197,8 @@ function buildActionRuntimeScript(presentation) {
       var slideMap = ${serializedMap}; var warned = {}; var interactionKinds = ${JSON.stringify([...INTERACTION_ACTION_KINDS])};
       function feedback(message) { var node = document.getElementById('ns-action-feedback'); if (node) node.textContent = message; }
       function invalid(message) { if (!warned[message]) { warned[message] = true; console.warn(message); } feedback(message); }
-      function activate(node) {
-        var action; try { action = JSON.parse(node.getAttribute('data-ns-action') || ''); } catch (_) { invalid('Invalid presentation action.'); return; }
+      function activate(node, attribute) {
+        var action; try { action = JSON.parse(node.getAttribute(attribute || 'data-ns-action') || ''); } catch (_) { invalid('Invalid presentation action.'); return; }
         if (!action || typeof action.kind !== 'string') return invalid('Invalid presentation action.');
         if (action.kind === 'next') return Reveal.next(); if (action.kind === 'previous') return Reveal.prev();
         if (action.kind === 'first') return Reveal.slide(0, 0); if (action.kind === 'last') { var slides = Reveal.getSlides(); var last = slides[slides.length - 1]; if (!last) return; var indices = Reveal.getIndices(last); return Reveal.slide(indices.h, indices.v || 0); }
@@ -199,22 +208,34 @@ function buildActionRuntimeScript(presentation) {
         if (action.target === 'new') { var opened = window.open(action.url, '_blank', 'noopener,noreferrer'); if (opened) opened.opener = null; return; }
         window.location.assign(action.url);
       }
-      function actionTarget(event) {
+      function actionTarget(event, attribute) {
         if (event.defaultPrevented) return null;
         var target = event.target && event.target.closest ? event.target : null;
         if (!target) return null;
         var control = target.closest('button,input,select,textarea,[contenteditable="true"]');
-        var action = target.closest('[data-ns-action]');
+        var action = target.closest('[' + (attribute || 'data-ns-action') + ']');
         if (!action) return null;
-        try { if (interactionKinds.includes(JSON.parse(action.getAttribute('data-ns-action')).kind)) return null; } catch (_) {}
+        try { if (interactionKinds.includes(JSON.parse(action.getAttribute(attribute || 'data-ns-action')).kind)) return null; } catch (_) {}
         return control && control.closest('[data-ns-game]') && control !== action ? null : action;
       }
       document.addEventListener('click', function(event) { var node = actionTarget(event); if (!node) return; event.preventDefault(); event.stopPropagation(); activate(node); });
-      document.addEventListener('keydown', function(event) { if (event.key !== 'Enter' && event.key !== ' ') return; var node = actionTarget(event); if (!node) return; event.preventDefault(); event.stopPropagation(); activate(node); });
+      document.addEventListener('keydown', function(event) { if (event.key !== 'Enter' && event.key !== ' ') return; var node = actionTarget(event); if (!node || (node.getAttribute('role') === 'link' && event.key !== 'Enter')) return; event.preventDefault(); event.stopPropagation(); activate(node); }, true);
+      document.addEventListener('mouseover', function(event) {
+        var node = actionTarget(event, 'data-ns-hover-action'); if (!node || node.contains(event.relatedTarget)) return;
+        var previous = event.relatedTarget && event.relatedTarget.closest && event.relatedTarget.closest('[data-ns-hover-action]');
+        if (previous && previous.getAttribute('data-ns-hover-link') === node.getAttribute('data-ns-hover-link') && previous.closest('[data-ns-element-id]') === node.closest('[data-ns-element-id]') && previous.getAttribute('data-ns-hover-action') === node.getAttribute('data-ns-hover-action')) return;
+        activate(node, 'data-ns-hover-action');
+      });
     })();`
 }
 
 function generateRevealHTML(presentation, options = {}) {
+  const semanticOutputMounts = []
+  const fieldContext = { date: new Date(), ...options.pptxFieldContext }
+  const fieldSlideNumbers = new Map(
+    presentationSlideEntries(presentation).map(({ horizontalIndex, verticalIndex, slideNumber }) =>
+      [`${horizontalIndex}:${verticalIndex}`, slideNumber])
+  )
   const includeSpeakerNotes = options.includeSpeakerNotes !== false
   const educationView = options.educationView || 'local'
   if (!['local', 'host', 'audience'].includes(educationView))
@@ -237,6 +258,15 @@ function generateRevealHTML(presentation, options = {}) {
   const footerInactiveColor = presentation.footerInactiveColor || 'rgba(255,255,255,0.25)'
   const resW = Number(presentation.resolution?.width) || 960
   const resH = Number(presentation.resolution?.height) || 540
+  const nativeAspectBackgroundCss =
+    presentation._pptxMeta?.geometryPolicy === 'native-aspect-v1'
+      ? `.reveal-viewport { background: #000; }
+       .reveal:not(.reveal-scroll) > .backgrounds {
+         width: min(100vw, ${(100 * resW) / resH}vh);
+         height: min(100vh, ${(100 * resH) / resW}vw);
+         left: 50%; top: 50%; transform: translate(-50%, -50%);
+       }`
+      : ''
   const presenterTools = {
     ...presentation.presenterTools,
     _baseWidth: resW,
@@ -265,7 +295,7 @@ function generateRevealHTML(presentation, options = {}) {
   const transitionMetadataCss = presentationUsesTransitionMetadata(presentation)
     ? TRANSITION_METADATA_CSS
     : ''
-  const hasActions = presentationUsesActions(resolvedPresentation)
+  const hasActions = presentationUsesActions(resolvedPresentation) || presentationHasRunHyperlinks(presentation)
   const runtimeMetadata = generatedRuntimeMetadata(resolvedPresentation)
   const hasEducationRuntime =
     hasGameElements ||
@@ -277,6 +307,8 @@ function generateRevealHTML(presentation, options = {}) {
       section.elements?.some((element) => element.type === 'video' || element.type === 'audio')
     )
   )
+  const hasSourceTiming = Boolean(presentation.pptxSemantic) && presentation.slides.some(slide =>
+    [slide, ...(slide.children || [])].some(section => section.hasSourceTiming || section.sourceTiming))
 
   const slidesHtml = presentation.slides
     .map((sourceSlide, slideIndex) => {
@@ -294,6 +326,10 @@ function generateRevealHTML(presentation, options = {}) {
 
       const elementsHtml = renderSlideElements(slide, {
         forPrint: false,
+        semanticOutputMounts,
+        pptxSemantic: presentation.pptxSemantic,
+        hyperlinkPresentation: presentation,
+        pptxFieldContext: slideFieldContext(slide, fieldSlideNumbers.get(`${slideIndex}:0`), fieldContext),
         baseUrl: options.baseUrl,
         educationView,
         gameConfigs: gameConfigsBySlide.get(effectiveSlideId),
@@ -361,6 +397,10 @@ function generateRevealHTML(presentation, options = {}) {
               : ''
             const childElements = renderSlideElements(child, {
               forPrint: false,
+              semanticOutputMounts,
+              pptxSemantic: presentation.pptxSemantic,
+              hyperlinkPresentation: presentation,
+              pptxFieldContext: slideFieldContext(child, fieldSlideNumbers.get(`${slideIndex}:${childIndex + 1}`), fieldContext),
               baseUrl: options.baseUrl,
               educationView,
               gameConfigs: gameConfigsBySlide.get(childSlideId),
@@ -377,7 +417,8 @@ function generateRevealHTML(presentation, options = {}) {
     })
     .join('\n')
 
-  return `<!doctype html>
+  return boundSemanticOutputHTML(
+    `<!doctype html>
 <html data-ns-education-view="${educationView}" data-ns-presentation-id="${escapeHtml(presentation.id || '')}" data-ns-content-revision="${escapeHtml(presentation.updatedAt || '')}">
 <head>
   <meta charset="utf-8">
@@ -394,12 +435,13 @@ ${hasEducationRuntime ? `  <link rel="stylesheet" href="${EDUCATION_ASSET_PATHS.
 
   <style>${safeStyleText(`
     html, body { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; background: #000; }
+${nativeAspectBackgroundCss}
     /* Reset reveal.js section padding/alignment so absolute positions match the 960x540 editor canvas exactly */
     .reveal .slides section { padding: 0 !important; text-align: left !important; line-height: normal !important; overflow: hidden; }
 ${transitionMetadataCss}    /* Neutralise theme typography overrides so presentation matches editor exactly */
     /* font-family only on section (inherited) so KaTeX's explicit rules take precedence */
     .reveal .slides section { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-    .reveal .slides section * { text-transform: none !important; letter-spacing: normal !important; }
+    .reveal .slides section *${presentation.pptxSemantic ? ':not([data-pptx-semantic-mount], [data-pptx-semantic-mount] *)' : ''} { text-transform: none !important; letter-spacing: normal !important; }
     /* Explicit heading sizes ΓÇö override theme so present mode matches editor exactly */
     .reveal .slides section h1 { font-size: 2.5em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
     .reveal .slides section h2 { font-size: 1.6em; font-weight: bold; line-height: 1.2; margin: 0 0 6px; }
@@ -441,7 +483,13 @@ ${hasActions ? '  <div id="ns-action-feedback" role="status" aria-live="polite">
   <script src="/vendor/katex/dist/katex.min.js"></script>
   ${getPresenterToolsScripts(presenterTools)}
 ${hasEducationRuntime ? `  <script src="${EDUCATION_ASSET_PATHS.runtimeJs}"></script>` : ''}
+${semanticOutputBootstrap(presentation.pptxSemantic, options.semanticOutputResources, semanticOutputMounts, presentation.slides)}
   <script data-navslides-runtime="local">
+    var setupNativeTabs = ${attachNativeTabLayout.toString()};
+    var disposeNativeTabs = setupNativeTabs(document);
+    Reveal.on('ready', function() { disposeNativeTabs(); disposeNativeTabs = setupNativeTabs(document); });
+    Reveal.on('slidechanged', function() { disposeNativeTabs(); disposeNativeTabs = setupNativeTabs(document); });
+    window.addEventListener('pagehide', function() { disposeNativeTabs(); }, { once: true });
 ${
   hasMediaElements
     ? `    var disposeMedia = (${attachMediaPlaybackRoot.toString()})(document.querySelector('.reveal .slides'), ${attachMediaPlayback.toString()});
@@ -449,6 +497,9 @@ ${
 `
     : ''
 }
+${hasSourceTiming ? `    var disposeSourceTiming = (${attachSourceTimingPlayback.toString()})(document.querySelector('.reveal .slides'), Reveal);
+    window.addEventListener('pagehide', disposeSourceTiming, { once: true });
+` : ''}
     var params = new URLSearchParams(window.location.search);
     var revealConfig = {
       hash: true,
@@ -471,7 +522,6 @@ ${
     ${Number(presentation.autoSlide) > 0 && presentation.kioskMode ? `revealConfig.autoSlideStoppable = false;` : ''}
     ${['default', 'linear', 'grid'].includes(presentation.navigationMode) ? `revealConfig.navigationMode = '${presentation.navigationMode}';` : ''}
     if (params.get('scroll') === 'true') { revealConfig.view = 'scroll'; revealConfig.scrollProgress = true; }
-    Reveal.initialize(revealConfig);
     Reveal.on('ready', function() {
       document.querySelectorAll('span[data-math-latex]').forEach(function(el) {
         try {
@@ -483,9 +533,18 @@ ${
       });
 ${options.portable ? '' : buildLivePresenterRuntime({ presentationId: presentation.id, hasGames: hasGameElements })}${hasActions ? buildActionRuntimeScript(resolvedPresentation) : ''}
     });
+    ${
+      presentation.pptxSemantic
+        ? `window.__navslidesSemanticOutput.ready.then(function() {
+      return Reveal.initialize(revealConfig);
+    }).catch(function(error) { console.error('Canonical output unavailable', error); });`
+        : 'Reveal.initialize(revealConfig);'
+    }
   </script>${getPresenterToolsInlineJS(presenterTools)}${fxRuntimeScript ? `\n${fxRuntimeScript}` : ''}
 </body>
-</html>`
+</html>`,
+    presentation.pptxSemantic
+  )
 }
 
 function getBackgroundAttrs(bg) {
@@ -561,6 +620,8 @@ function getBgPrintStyle(bg, deckTokens) {
 }
 
 function generatePrintHTML(presentation, options = {}) {
+  const semanticOutputMounts = []
+  const fieldContext = { date: new Date(), ...options.pptxFieldContext }
   const autoPrint = options.autoPrint !== false
   const includePrintBar = options.includePrintBar !== false
   const fragmentMode = options.fragmentMode || 'expanded'
@@ -578,12 +639,14 @@ function generatePrintHTML(presentation, options = {}) {
   const resW = Number(presentation.resolution?.width) || 960
   const resH = Number(presentation.resolution?.height) || 540
   const printDeckTokens = mergeTokens(DEFAULT_TOKENS, presentation.designTokens)
+  const printSlides = presentationSlideEntries(presentation)
+  const totalNumberedPrintSlides = printSlides.filter(({ slide }) => slide.showPageNumber !== false).length
   const pages = []
   let printPageCounter = 0
-  presentation.slides.forEach((sourceSlide) => {
+  printSlides.forEach(({ slide: sourceSlide, slideNumber }) => {
     const slide = resolveSlideForRender(sourceSlide, presentation)
     if (fragmentMode === 'final') {
-      pages.push({ slide, maxIdx: Infinity, countPageNumber: true })
+      pages.push({ slide, slideNumber, maxIdx: Infinity, countPageNumber: true })
       return
     }
 
@@ -596,19 +659,22 @@ function generatePrintHTML(presentation, options = {}) {
           .map((el) => el.fragmentIndex || 1)
       ),
     ].sort((a, b) => a - b)
-    pages.push({ slide, maxIdx: -Infinity, countPageNumber: true }) // initial: no fragments
-    fragIndices.forEach((idx) => pages.push({ slide, maxIdx: idx, countPageNumber: false }))
+    pages.push({ slide, slideNumber, maxIdx: -Infinity, countPageNumber: true }) // initial: no fragments
+    fragIndices.forEach((idx) => pages.push({ slide, slideNumber, maxIdx: idx, countPageNumber: false }))
   })
   const totalPages = pages.length
 
   const pagesHtml = pages
     // eslint-disable-next-line unused-imports/no-unused-vars
-    .map(({ slide, maxIdx, countPageNumber }, pageIndex) => {
+    .map(({ slide, slideNumber, maxIdx, countPageNumber }, pageIndex) => {
       const slidePrintTokens = mergeTokens(printDeckTokens, slide?.designTokens)
       const bgStyle = getBgPrintStyle(slide.background, slidePrintTokens)
 
       const elementsHtml = renderSlideElements(slide, {
         forPrint: true,
+        semanticOutputMounts,
+        pptxSemantic: presentation.pptxSemantic,
+        pptxFieldContext: slideFieldContext(slide, slideNumber, fieldContext),
         baseUrl: options.baseUrl,
         maxFragIdx: maxIdx,
         exportElementIds: options.exportElementIds,
@@ -623,7 +689,7 @@ function generatePrintHTML(presentation, options = {}) {
       const pageLabel =
         showPageNumbers && slideHasPageNum
           ? pageNumberFormat === 'c/t'
-            ? `${printPageCounter} / ${(presentation.slides || []).filter((s) => s.showPageNumber !== false).length}`
+            ? `${printPageCounter} / ${totalNumberedPrintSlides}`
             : `${printPageCounter}`
           : ''
 
@@ -669,11 +735,12 @@ function generatePrintHTML(presentation, options = {}) {
       <span class="hint"> &nbsp;┬╖&nbsp; ${totalPages} page${totalPages !== 1 ? 's' : ''} (${fragmentMode === 'final' ? 'final fragment state' : 'fragments expanded'})
         &nbsp;┬╖&nbsp; enable <em>Background graphics</em> in print settings</span>
     </div>
-    <button onclick="window.print()">Print / Save as PDF</button>
+    <button${presentation.pptxSemantic ? ' disabled' : ''} onclick="window.print()">Print / Save as PDF</button>
   </div>`
     : ''
 
-  return `<!doctype html>
+  return boundSemanticOutputHTML(
+    `<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -723,10 +790,16 @@ ${printBarHtml}
 ${pagesHtml}
   <script src="/vendor/katex/dist/katex.min.js"></script>
   <script src="${REVEAL_ASSET_PATHS.highlightJs}"></script>
+  <script data-navslides-runtime="local">
+    var disposeNativeTabs = (${attachNativeTabLayout.toString()})(document);
+    window.addEventListener('pagehide', disposeNativeTabs, { once: true });
+  </script>
   <script src="/vendor/chart.js/dist/chart.umd.js"></script>
   <script src="/vendor/qrcode/qrcode.min.js"></script>
-  <script>
+${semanticOutputBootstrap(presentation.pptxSemantic, options.semanticOutputResources, semanticOutputMounts)}
+  <script data-navslides-runtime="local">
     window.__navslidesExportReady = false;
+    ${presentation.pptxSemantic ? `var completeSemanticPrint = (${installSemanticPrintReadiness.toString()})(window, ${JSON.stringify(autoPrint)});` : ''}
     window.addEventListener('load', function() {
       var iframePromises = [];
       // Highlight code blocks
@@ -773,18 +846,26 @@ ${pagesHtml}
           el.src = URL.createObjectURL(blob);
         } catch(e) { console.error('Iframe PDF init error:', e); }
       });
-      Promise.all(iframePromises.concat([
+      ${
+        presentation.pptxSemantic
+          ? `completeSemanticPrint(Promise.all(iframePromises.concat([
+        document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()
+      ])));`
+          : `Promise.all(iframePromises.concat([
         document.fonts && document.fonts.ready ? document.fonts.ready.catch(function(){}) : Promise.resolve()
       ])).then(function() {
         setTimeout(function() {
           window.__navslidesExportReady = true;
           if (${JSON.stringify(autoPrint)}) window.print();
         }, ${Math.max(0, exportReadyDelayMs)});
-      });
+      });`
+      }
     });
   </script>
 </body>
-</html>`
+</html>`,
+    presentation.pptxSemantic
+  )
 }
 
 function exportPDF(presentation, options = {}) {

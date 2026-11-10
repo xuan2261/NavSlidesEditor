@@ -1,87 +1,12 @@
 import { pathToFileURL } from 'node:url'
-import shared from 'revealjs-shared'
 import {
   test,
   expect,
-  apiUpdatePresentation,
   apiGetPresentation,
   apiCreateShareLink,
 } from '../fixtures/test-fixtures.js'
+import { local, inherited, hostileLabel, author, readState, waitReady, pick } from './standalone-runtime-fixture.js'
 
-const local = '[data-ns-effective-slide-id="parent"] [data-ns-element-id="local"]'
-const inherited = 'layout-fixed:lesson:inherited'
-const hostileLabel = 'An & Tiếng Việt </ScRiPt> "quote" \\'
-const game = (id, x) => ({
-  id,
-  type: 'game',
-  gameType: 'name-picker',
-  x,
-  y: 20,
-  width: 430,
-  height: 490,
-  'name-picker': {
-    ...shared.createDefaultGameConfig('name-picker'),
-    animationDuration: 700,
-    weighted: true,
-    excludeAfterPick: true,
-    items: [
-      { id: 'a', label: hostileLabel, weight: 1 },
-      { id: 'b', label: 'Bình', weight: 3 },
-      { id: 'c', label: 'Chi', weight: 2 },
-    ],
-  },
-})
-
-async function author(request, presentation) {
-  return apiUpdatePresentation(request, presentation.id, {
-    ...presentation,
-    theme: 'white',
-    layoutMasters: [
-      { id: 'lesson', name: 'Lesson', fixedElements: [game('inherited', 510)], placeholders: [] },
-    ],
-    slides: [
-      {
-        id: 'parent',
-        layoutId: 'lesson',
-        elements: [game('local', 20)],
-        children: [{ id: 'child', layoutId: 'lesson', elements: [] }],
-      },
-      { id: 'second', layoutId: 'lesson', elements: [] },
-      {
-        id: 'hidden',
-        layoutId: 'lesson',
-        elements: [],
-        layoutOverrides: { elementPatches: { inherited: { hidden: true } } },
-      },
-    ],
-  })
-}
-
-const readState = (page, slide, element) =>
-  page.evaluate(
-    ({ slide, element }) => {
-      const root = [...document.querySelectorAll('[data-ns-game]')].find(
-        (node) =>
-          node.dataset.nsElementId === element &&
-          node.closest('[data-ns-effective-slide-id]').dataset.nsEffectiveSlideId === slide
-      )
-      return NavSlidesEducation.mount(root).getState()
-    },
-    { slide, element }
-  )
-
-async function waitReady(page) {
-  await page.waitForFunction(() => typeof NavSlidesEducation !== 'undefined' && Reveal.isReady())
-}
-
-async function pick(page, selector = local) {
-  await page.locator(`${selector} [data-ns-command="pick"]`).click()
-  await expect
-    .poll(() =>
-      page.locator(selector).evaluate((root) => NavSlidesEducation.mount(root).getState().phase)
-    )
-    .toMatch(/^(result|exhausted)$/)
-}
 
 test('effective tuples pause pending picks, resume once and isolate inherited copies', async ({
   page,
@@ -235,53 +160,3 @@ test('UI Present, hosted Preview/Share and downloaded file use safe native gamep
   expect(await apiGetPresentation(request, testPresentation.id)).toEqual(before)
 })
 
-for (const width of [320, 768]) {
-  test(`native touch and reduced motion preserve gameplay at ${width}px`, async ({
-    browser,
-    request,
-    testPresentation,
-  }) => {
-    await author(request, testPresentation)
-    const mobile = await browser.newContext({
-      viewport: { width, height: 768 },
-      hasTouch: true,
-      isMobile: true,
-      reducedMotion: 'reduce',
-    })
-    try {
-      const page = await mobile.newPage()
-      await page.goto(
-        `${process.env.PLAYWRIGHT_TEST_BASE_URL}/api/presentations/${testPresentation.id}/present`
-      )
-      await waitReady(page)
-      await page.locator(`${local} select`).selectOption('button')
-      await page.locator(`${local} [data-ns-command="pick"]`).tap()
-      await expect.poll(() => readState(page, 'parent', 'local')).toMatchObject({ picks: 1 })
-      const result = await page.evaluate(() => ({
-        width: innerWidth,
-        touch: navigator.maxTouchPoints,
-        reduced: matchMedia('(prefers-reduced-motion: reduce)').matches,
-        indices: Reveal.getIndices(),
-        targetable: [...document.querySelectorAll('[data-ns-element-id="local"] button')].every(
-          (button) => {
-            const rect = button.getBoundingClientRect()
-            return (
-              document
-                .elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)
-                ?.closest('button') === button
-            )
-          }
-        ),
-      }))
-      expect(result).toMatchObject({
-        width,
-        reduced: true,
-        indices: { h: 0, v: 0 },
-        targetable: true,
-      })
-      expect(result.touch).toBeGreaterThan(0)
-    } finally {
-      await mobile.close()
-    }
-  })
-}

@@ -1,4 +1,5 @@
 import { sanitizeRichTextHtml } from 'revealjs-shared/src/content-safety.js'
+import { normalizeSemanticPresentation } from 'revealjs-shared/src/pptx-semantic-presentation.js'
 import { migrateVideoSrc } from './migrate-video-src'
 import { normalizePresentationNotes } from './slide-notes'
 import {
@@ -81,6 +82,7 @@ export function migrateSlide(slide, gameOptions) {
 }
 
 export function migratePresentation(presentation, { draft = false } = {}) {
+  presentation = normalizeSemanticPresentation(presentation)
   // Only local drafts bypass admission validation; canonical migration still throws.
   const gameOptions = { validate: !draft }
   const layoutMasters = normalizeLayoutMasters(presentation.layoutMasters)

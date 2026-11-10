@@ -116,8 +116,8 @@ async function observe(root, url, sessionId, fixture, baseline, http) {
   const fidelity = await request(url, `/api/presentations/${current.id}/pptx-fidelity`, http)
   assert.equal(fidelity.status, 200); assert.equal(fidelity.json().exports.original.available, true)
   const evidence = safeSnapshot(current)
-  evidence.deckSha256 = sha(opened.bytes)
-  evidence.fidelitySha256 = sha(fidelity.bytes)
+  evidence.deckSha256 = hashRecord(deck)
+  evidence.fidelitySha256 = hashRecord(fidelity.json())
   return evidence
 }
 module.exports = { boundary, observe, exists }

@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { resolveColorField, resolveMergedCells, resolveTableDimensions } from 'revealjs-shared'
+import { resolveColorField, resolveMergedCells, resolveTableDimensions, resolveTableContentExtent, resolveTableInsets } from 'revealjs-shared'
+import TableCellContent from './table-cell-content'
+import NativeTableRenderer from '../../native-table-renderer'
 
 function safeCssColor(value, fallback) {
   const color = typeof value === 'string' ? value.trim() : ''
@@ -31,7 +33,13 @@ function safeFontFamily(value) {
   return /^[a-zA-Z0-9 _.-]+$/.test(family) ? family : undefined
 }
 
-export function TableRenderer({ element, isEditing, onUpdateElement }) {
+export function TableRenderer(props) {
+  return props.element.tableDocument
+    ? <NativeTableRenderer {...props} />
+    : <LegacyTableRenderer {...props} />
+}
+
+function LegacyTableRenderer({ element, isEditing, onUpdateElement }) {
   const data = Array.isArray(element.data) && element.data.length ? element.data : [['']]
   const headerBg =
     resolveColorField(element.headerBgColor, 'table', 'headerBgColor') || 'rgba(99,102,241,0.3)'
@@ -50,8 +58,11 @@ export function TableRenderer({ element, isEditing, onUpdateElement }) {
     colCount: Math.max(1, ...data.map((row) => (Array.isArray(row) ? row.length : 0))),
   })
   const getCellStyle = (key, ri, ci) => cellStyles[key]?.[ri]?.[ci]
-  const colWidths = resolveTableDimensions(element.colWidths, 100) || []
-  const rowHeights = resolveTableDimensions(element.rowHeights, 100) || []
+  const contentExtent = resolveTableContentExtent(element)
+  const colWidths = resolveTableDimensions(element.colWidths, contentExtent.width) || resolveTableDimensions(element.colWidths, 100) || []
+  const rowHeights = resolveTableDimensions(element.rowHeights, contentExtent.height) || resolveTableDimensions(element.rowHeights, 100) || []
+  const colUnit = Number.isFinite(contentExtent.width) && contentExtent.width > 0 ? 'px' : '%'
+  const rowUnit = Number.isFinite(contentExtent.height) && contentExtent.height > 0 ? 'px' : '%'
   const tableBorderStyle = safeBorderStyle(element.borderStyle)
   const getBorderStyle = (ri, ci) => {
     const borders = getCellStyle('borders', ri, ci)
@@ -89,13 +100,13 @@ export function TableRenderer({ element, isEditing, onUpdateElement }) {
   return (
     <div style={{ width: '100%', height: '100%', overflow: 'auto' }}>
       <table
-        style={{ width: '100%', height: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}
+        style={{ width: '100%', height: '100%', boxSizing: 'border-box', borderCollapse: 'collapse', tableLayout: 'fixed' }}
       >
         {colWidths.length > 0 && (
           <colgroup>
             {colWidths.map((width, index) => {
               const safeWidth = Number(width)
-              return <col key={index} style={{ width: `${safeWidth}%` }} />
+              return <col key={index} style={{ width: `${safeWidth}${colUnit}` }} />
             })}
           </colgroup>
         )}
@@ -107,7 +118,7 @@ export function TableRenderer({ element, isEditing, onUpdateElement }) {
                 key={ri}
                 style={
                   Number.isFinite(safeRowHeight) && safeRowHeight > 0
-                    ? { height: `${safeRowHeight}%` }
+                    ? { height: `${safeRowHeight}${rowUnit}` }
                     : undefined
                 }
               >
@@ -124,18 +135,16 @@ export function TableRenderer({ element, isEditing, onUpdateElement }) {
                   const cellFontFamily = safeFontFamily(getCellStyle('fontFamilies', ri, ci))
                   const textAlign = getCellStyle('aligns', ri, ci) || 'left'
                   const verticalAlign = getCellStyle('vAligns', ri, ci) || 'top'
+                  const insets = resolveTableInsets(getCellStyle('insets', ri, ci), cellPadding)
                   return (
                     <td
                       key={ci}
                       colSpan={merge?.colSpan}
                       rowSpan={merge?.rowSpan}
-                      onMouseDown={() => {
-                        if (!isEditing) {
-                          setFocusCell({ ri, ci })
-                        }
-                      }}
+                      onMouseDown={() => setFocusCell({ ri, ci })}
                       style={{
-                        padding: cellPadding,
+                        padding: `${insets.top}px ${insets.right}px ${insets.bottom}px ${insets.left}px`,
+                        boxSizing: 'border-box',
                         ...getBorderStyle(ri, ci),
                         background: cellBackground,
                         color: cellTextColor,
@@ -154,37 +163,21 @@ export function TableRenderer({ element, isEditing, onUpdateElement }) {
                         overflow: 'hidden',
                       }}
                     >
-                      {isEditing ? (
-                        <textarea
-                          ref={(el) => (inputRefs.current[`${ri}-${ci}`] = el)}
-                          value={String(cell ?? '')}
-                          onChange={(e) => {
-                            const newData = data.map((r) => (Array.isArray(r) ? [...r] : []))
-                            newData[ri][ci] = e.target.value
-                            onUpdateElement(element.id, { data: newData })
-                          }}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          onKeyDown={(e) => e.stopPropagation()}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            background: 'transparent',
-                            border: 'none',
-                            color: 'inherit',
-                            fontSize: 'inherit',
-                            fontWeight: 'inherit',
-                            outline: 'none',
-                            textAlign: 'inherit',
-                            fontFamily: 'inherit',
-                            resize: 'none',
-                            overflow: 'hidden',
-                          }}
-                        />
-                      ) : (
-                        <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                          {String(cell ?? '')}
-                        </div>
-                      )}
+                      <TableCellContent
+                        key={`${element.id}-${ri}-${ci}`}
+                        cell={cell}
+                        row={ri}
+                        column={ci}
+                        isEditing={isEditing}
+                        focused={focusRow === ri && focusColumn === ci}
+                        inputRef={(input) => (inputRefs.current[`${ri}-${ci}`] = input)}
+                        onFocus={() => setFocusCell({ ri, ci })}
+                        onChange={(value) => {
+                          const newData = data.map((r) => (Array.isArray(r) ? [...r] : []))
+                          newData[ri][ci] = value
+                          onUpdateElement(element.id, { data: newData })
+                        }}
+                      />
                     </td>
                   )
                 })}

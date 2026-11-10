@@ -8,10 +8,10 @@ properties cannot be represented by a given format.
 
 NavSlides provides three distinct export and interchange targets for presentations:
 
-1. **Portable `.navslides.json` (Project Archive)**
-   - Complete project encapsulation including slides, elements, metadata, design tokens, and local assets.
-   - Authority fields, server-specific credentials, and internal state are stripped cleanly (`shared/src/project-export-value.js`) to guarantee safe portability across environments without privilege escalation.
-   - Restored projects preserve layout/asset integrity while binding to fresh local ownership.
+1. **Portable project archive (`.navslides`) and legacy projection JSON**
+   - Package-backed decks use a server-owned ZIP with outer manifest version `2.0`, including validated package authority, immutable Original bytes, projection and owned local media—even when no local media is present.
+   - Import validates the package envelope, then rebinds authority and media URLs to fresh destination ownership. Explicit replacement requires the destination's expected head; missing owned media aborts full-archive export.
+   - Legacy projection-only exports use JSON version `1.1` without local media, or a legacy media ZIP. Client authority is stripped through `shared/src/project-export-value.js`; this format does not preserve or claim Original/package fidelity.
    - Package-backed replacement selects trusted import styling from the active Original lineage. Retained templates/history keep their own Original-bound metadata; an old retained sidecar cannot become authority for the replacement package.
 
 2. **Immutable Original PPTX**
@@ -170,6 +170,16 @@ than worked around.
 This section applies to decks imported from `.pptx`; it does not limit charts
 created directly in NavSlides.
 
+- **Native aspect for new PPTX imports.** New imports use `native-aspect-v1`
+  so a source square stays square rather than stretching into a widescreen canvas.
+  Existing unmarked imports retain their legacy geometry; no silent coordinate
+  migration is authorized. The executable owners are
+  [`normalizeSourceSize`](../server/services/pptx-import/geometry.js),
+  [`presentation-normalization.js`](../server/services/presentation-normalization.js),
+  and [`getPptxExportLayout`](../shared/src/shared-pptx-core.js).
+  Choosing another aspect later is an authored layout change, not a promise of
+  native PowerPoint fidelity. Fixed-viewport captures letterbox outside the slide;
+  the viewport is not the deck's logical canvas.
 - **Import ZIP CRC is fail-closed.** `validatePptxPackage` /
   `loadPptxArchive` perform raw ZIP structure and declared-size preflight, then
   validate each bounded inflated entry against its declared CRC32. JSZip
@@ -196,6 +206,15 @@ created directly in NavSlides.
   is owned by [`server/routes/presentations.js`](../server/routes/presentations.js), and the
   immutable-revision resolver is
   [`server/services/pptx-import/package-revision-resolver.js`](../server/services/pptx-import/package-revision-resolver.js).
+- **Source transitions initialize, not lock, NavSlides authoring.** The bounded
+  exact-duration fade profile preserves source XML/provenance while initializing
+  the slide's browser transition. Subsequent authored transition/duration changes
+  survive reopen without changing the retained source. Unknown effects or
+  unsupported timing are not silently mapped to fade. Owners:
+  [`pptx-transition-document.js`](../shared/src/pptx-transition-document.js) and
+  [source/reopen contracts](../tests/pptx-semantic/transition-oct25-source.test.js).
+  Source preservation and browser playback are not native transition editing or
+  Office playback qualification.
 - **Imported charts remain preserve-only until qualified.** A display mapping is
   not edit qualification. Canonical `_pptxChartMeta` marks an imported chart
   preserve-only while adapter, transaction, and level-4 evidence are incomplete;
@@ -256,6 +275,15 @@ created directly in NavSlides.
   [HTTP boundary evidence](../plans/261009-0901-navslides-full-reliability-deep-tdd/reports/projection-read-export-http-smoke.json)
   exercises sequential saves and structural edits on disposable data, not release
   or Office qualification.
+  Semantic history retention/restoration also requires the exact live package
+  predecessor; restoring a pending semantic snapshot does not manufacture a
+  chain of historical package revisions. The
+  [bounded compatibility evidence](../.omo/evidence/pptx-semantic/compatibility-oct25-execution-receipt.md)
+  covers pending snapshot reversal, independent owners, nine immutable Original
+  responses and HTTP/store restart. These software lifecycle checks do not
+  qualify every family, platform runtime or native visual/export gate. Owners:
+  [`history.js`](../server/routes/history.js) and
+  [`portable.js`](../server/services/pptx-import/package-store/portable.js).
 - **Fidelity generation comes from the package store.** For a package-backed
   deck, the fidelity route reads the aggregate generation from the package-store
   head rather than trusting the compatibility JSON projection. See

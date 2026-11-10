@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import JSZip from 'jszip'
 import { describe, expect, it } from 'vitest'
 import exportModule from './server-export.js'
 import importerModule from '../services/pptx-import/importer.js'
@@ -99,8 +100,9 @@ describe('server-export integration', () => {
       uploadsDir,
     })
 
-    expect(imported.presentation.resolution).toEqual({ width: 960, height: 540 })
+    expect(imported.presentation.resolution).toEqual({ width: 720, height: 540 })
     expect(imported.presentation._pptxMeta?.originalSize).toEqual({ width: 720, height: 540 })
+    expect(imported.presentation._pptxMeta.geometryPolicy).toBe('native-aspect-v1')
 
     const marker = imported.presentation.slides[0].elements[0]
     expect(marker).toBeTruthy()
@@ -109,6 +111,38 @@ describe('server-export integration', () => {
 
     await fs.rm(tempDir, { recursive: true, force: true })
   }, 60000)
+
+  it.each([
+    [{ width: 720, height: 540 }, 6858000],
+    [{ width: 960, height: 540 }, 5143500],
+  ])('emits marked logical aspect ratio and uniform shape bounds after resizing: %j', async (resolution, expectedHeight) => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'navslides-export-native-'))
+    try {
+      const outFile = path.join(tempDir, 'native.pptx')
+      const presentation = {
+        title: 'Native Geometry', resolution,
+        _pptxMeta: { originalSize: { width: 960, height: 720 }, geometryPolicy: 'native-aspect-v1' },
+        slides: [{ id: 's1', background: { type: 'color', color: '#ffffff' }, elements: [{
+          id: 'square', type: 'shape', shape: 'rect', x: 72, y: 72, width: 72, height: 72,
+        }] }],
+      }
+      const before = structuredClone(presentation)
+      await exportToFile(presentation, outFile, { strictRaster: true })
+      const zip = await JSZip.loadAsync(await fs.readFile(outFile))
+      const documentXml = await zip.file('ppt/presentation.xml').async('string')
+      const slideXml = await zip.file('ppt/slides/slide1.xml').async('string')
+      const size = documentXml.match(/<p:sldSz[^>]*cx="(\d+)"[^>]*cy="(\d+)"/u)
+      expect(size).not.toBeNull()
+      expect(size.slice(1).map(Number)).toEqual([9144000, expectedHeight])
+      const bounds = slideXml.match(/<a:xfrm[^>]*>\s*<a:off x="(\d+)" y="(\d+)"\/>\s*<a:ext cx="(\d+)" cy="(\d+)"\/>/u)
+      expect(bounds).not.toBeNull()
+      expect(Number(bounds[1])).toBe(Number(bounds[2]))
+      expect(Number(bounds[3])).toBe(Number(bounds[4]))
+      expect(presentation).toEqual(before)
+    } finally {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
 
   it('omits hidden elements from PPTX viewer export output', async () => {
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'navslides-export-hidden-'))

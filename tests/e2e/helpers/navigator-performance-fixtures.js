@@ -81,7 +81,7 @@ export async function installPackage(request, fixture) {
 
 export async function restoreCanonical(request, fixture) {
   const current = await apiGetPresentation(request, fixture.id)
-  const fields = ['title', 'theme', 'resolution', 'slides', 'layoutMasters', 'designTokens']
+  const fields = ['title', 'theme', 'resolution', 'slides', 'layoutMasters', 'designTokens', 'pptxSemantic']
   const canonical = Object.fromEntries(fields.filter((key) => fixture.deck[key] !== undefined).map((key) => [key, fixture.deck[key]]))
   const response = await request.put(`${process.env.PLAYWRIGHT_API_BASE_URL}/presentations/${fixture.id}`, {
     headers: { 'Idempotency-Key': `navigator-${randomUUID()}` },

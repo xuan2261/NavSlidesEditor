@@ -1,3 +1,5 @@
+const { sanitizePptxGeometryMetadata } = require('revealjs-shared/src/shared-pptx-core.js')
+
 const { hashRecord } = require('./package-store/schemas')
 const { validateTrustedImportMetadata, decorateTrustedImportMetadata } = require('./trusted-import-metadata')
 
@@ -62,7 +64,7 @@ function mergeTrustedNestedMetadata(existing, incoming) {
     return incoming
   }
 
-  const next = structuredClone(incoming)
+  const next = { ...incoming }
   for (const key of Object.keys(next)) {
     if (/^_pptx/i.test(key) && !NESTED_SERVER_METADATA_KEYS.has(key)) delete next[key]
   }
@@ -86,6 +88,17 @@ function mergeCompatibilityPresentation(existing, incoming) {
     if (Object.prototype.hasOwnProperty.call(existing, key)) {
       next[key] = structuredClone(existing[key])
     }
+  }
+  if (incoming && incoming.pptxSemantic) {
+    next.pptxSemantic = incoming.pptxSemantic
+  }
+  if (Object.prototype.hasOwnProperty.call(incoming, '_pptxMeta')) {
+    // Geometry is editable semantics; canonical input wins over a stale compatibility view.
+    const metadata = { ...next._pptxMeta }
+    delete metadata.originalSize
+    delete metadata.geometryPolicy
+    next._pptxMeta = { ...metadata, ...sanitizePptxGeometryMetadata(incoming._pptxMeta) }
+    if (!Object.keys(next._pptxMeta).length) delete next._pptxMeta
   }
   return next
 }

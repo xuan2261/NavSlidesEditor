@@ -66,4 +66,20 @@ describe('authored interaction actions', () => {
     })
     expect(authored().initialVisibility).toBe('hidden')
   })
+  it('discloses a dangling slide action destination and preserves draft selection until repaired', () => {
+    render(
+      <Harness
+        initial={{
+          id: 'trigger',
+          type: 'shape',
+          action: { kind: 'slide', slideId: 'missing-slide' },
+        }}
+      />
+    )
+    expect(screen.getByRole('alert').textContent).toContain('Destination slide is unavailable')
+    expect(screen.getByLabelText('Destination slide').value).toBe('missing-slide')
+    fireEvent.change(screen.getByLabelText('Destination slide'), { target: { value: 's' } })
+    expect(authored().action).toEqual({ kind: 'slide', slideId: 's' })
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
 })

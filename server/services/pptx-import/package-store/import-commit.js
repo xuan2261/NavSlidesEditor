@@ -1,5 +1,4 @@
-const { canonicalEditableSnapshot } = require('../canonical-snapshot')
-const { collectTrustedImportMetadata } = require('../trusted-import-metadata')
+const { prepareTrustedImportProjection } = require('../trusted-import-metadata')
 const { rebindSourceMap } = require('../source-map')
 const { createMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
 const { MUTATION_OPERATIONS } = require('../mutation-operation-scope')
@@ -22,14 +21,18 @@ function importCommitError(message, code = 'PACKAGE_IMPORT_COMMIT_FAILED') {
 }
 
 function hasImportOutcomeAuthority(job) {
-  return typeof job?.outcomeRevisionId === 'string' &&
-    Number.isSafeInteger(job?.outcomeGeneration) && job.outcomeGeneration > 0 &&
+  return (
+    typeof job?.outcomeRevisionId === 'string' &&
+    Number.isSafeInteger(job?.outcomeGeneration) &&
+    job.outcomeGeneration > 0 &&
     typeof job?.outcomeHeadHash === 'string'
+  )
 }
 
 function isLegacyImportReceipt(job) {
-  return ['outcomeRevisionId', 'outcomeGeneration', 'outcomeHeadHash']
-    .every((field) => job?.[field] === undefined)
+  return ['outcomeRevisionId', 'outcomeGeneration', 'outcomeHeadHash'].every(
+    (field) => job?.[field] === undefined
+  )
 }
 
 function requireImportOutcomeAuthority(job) {
@@ -101,14 +104,10 @@ function validateInput(input) {
 
 async function prepareImport(store, source, input, options = {}) {
   validateInput(input)
-  const {
-    jobId,
-    presentationId,
-    projection,
-    compatibilityPresentation,
-    compatibilityUpdatedAt,
-  } = input
-  const canonicalProjection = canonicalEditableSnapshot(projection, options.snapshotLimits)
+  const { jobId, presentationId, projection, compatibilityPresentation, compatibilityUpdatedAt } =
+    input
+  const { canonicalProjection, collectTrustedImportMetadata: bindTrustedImportMetadata } =
+    prepareTrustedImportProjection(projection, options.snapshotLimits)
   const inventory = await buildOpcInventory(source, options.inventoryLimits)
   const revision = validateRevision({
     schemaVersion: RECORD_SCHEMA_VERSION,
@@ -119,9 +118,12 @@ async function prepareImport(store, source, input, options = {}) {
     createdAt: options.uploadedAt || new Date().toISOString(),
   })
   const sourceMap = createImportSourceMap(
-    input.sourceMap, presentationId, revision.id, canonicalProjection
+    input.sourceMap,
+    presentationId,
+    revision.id,
+    canonicalProjection
   )
-  const trustedImportMetadata = collectTrustedImportMetadata(projection, revision.id)
+  const trustedImportMetadata = bindTrustedImportMetadata(revision.id)
   const staged = await store.stageBlob(source, { expectedSha256: inventory.packageSha256 })
   const blob = await store.blobs.commit(staged)
   const capabilityHash = hashRecord({
@@ -147,7 +149,8 @@ async function prepareImport(store, source, input, options = {}) {
     blob,
     capabilityHash,
     controlCapabilityHash:
-      typeof input.controlCapabilityHash === 'string' && SHA256_RE_LOCAL.test(input.controlCapabilityHash)
+      typeof input.controlCapabilityHash === 'string' &&
+      SHA256_RE_LOCAL.test(input.controlCapabilityHash)
         ? input.controlCapabilityHash
         : undefined,
     compatibilityPresentation,
@@ -200,6 +203,7 @@ async function publishImport(store, prepared, options = {}) {
       predecessorId: null,
       fencingEpoch: store.fencingEpoch,
     }
+    authority.importHeadHash = hashCanonical(head)
     next.heads.push(head)
     next.mutationResults.push(authority)
     if (compatibilityPresentation) {
@@ -207,7 +211,9 @@ async function publishImport(store, prepared, options = {}) {
         presentationId,
         generation: head.generation,
         ...(compatibilityUpdatedAt ? { updatedAt: compatibilityUpdatedAt } : {}),
-        ...(authority.trustedImportMetadata === undefined ? {} : { trustedImportMetadata: authority.trustedImportMetadata }),
+        ...(authority.trustedImportMetadata === undefined
+          ? {}
+          : { trustedImportMetadata: authority.trustedImportMetadata }),
         presentation: {
           ...compatibilityPresentation,
           id: presentationId,
@@ -247,20 +253,27 @@ async function commitImport(store, source, input, options = {}) {
 }
 
 async function rollbackImport(store, { jobId, presentationId }) {
-  if (typeof jobId !== 'string' || !jobId || typeof presentationId !== 'string' || !presentationId) {
+  if (
+    typeof jobId !== 'string' ||
+    !jobId ||
+    typeof presentationId !== 'string' ||
+    !presentationId
+  ) {
     throw importCommitError('Import rollback requires a job and presentation id')
   }
   await store.assertWriter()
   await store.mutate((next) => {
     const head = next.heads.find((item) => item.presentationId === presentationId)
-    const importResult = next.mutationResults.find((result) =>
-      result.presentationId === presentationId &&
-      result.idempotencyKey === jobId &&
-      result.operation === MUTATION_OPERATIONS.PACKAGE_IMPORT
+    const importResult = next.mutationResults.find(
+      (result) =>
+        result.presentationId === presentationId &&
+        result.idempotencyKey === jobId &&
+        result.operation === MUTATION_OPERATIONS.PACKAGE_IMPORT
     )
     const job = next.jobs.find((item) => item.id === jobId)
     if (!head && job?.transactionState === 'rolled-back') {
-      const completedRollback = job.kind === 'import' &&
+      const completedRollback =
+        job.kind === 'import' &&
         job.presentationId === presentationId &&
         job.status === 'failed' &&
         job.cancellationPoint === 'rolled-back'
@@ -274,14 +287,20 @@ async function rollbackImport(store, { jobId, presentationId }) {
       throw importCommitError('Import rollback authority no longer matches the recorded job')
     }
     requireImportOutcomeAuthority(job)
-    const receiptMatchesHead = job.kind === 'import' &&
+    const receiptMatchesHead =
+      job.kind === 'import' &&
       job.presentationId === presentationId &&
       job.outcomeRevisionId === head.packageRevisionId &&
       job.outcomeGeneration === head.generation &&
       job.outcomeHeadHash === hashCanonical(head)
-    if (!head || !job || !importResult || !receiptMatchesHead ||
-        head.packageRevisionId !== importResult.packageRevisionId ||
-        head.originalRevisionId !== importResult.packageRevisionId) {
+    if (
+      !head ||
+      !job ||
+      !importResult ||
+      !receiptMatchesHead ||
+      head.packageRevisionId !== importResult.packageRevisionId ||
+      head.originalRevisionId !== importResult.packageRevisionId
+    ) {
       throw importCommitError('Import rollback authority no longer matches the recorded job')
     }
     next.owners = next.owners.filter(
@@ -291,9 +310,11 @@ async function rollbackImport(store, { jobId, presentationId }) {
     next.compatibilityOutbox = (next.compatibilityOutbox || []).filter(
       (record) => record.presentationId !== presentationId
     )
-    next.mutationResults = next.mutationResults.filter((result) =>
-      result.presentationId !== presentationId || result.idempotencyKey !== jobId ||
-      (result.operation !== undefined && result.operation !== MUTATION_OPERATIONS.PACKAGE_IMPORT)
+    next.mutationResults = next.mutationResults.filter(
+      (result) =>
+        result.presentationId !== presentationId ||
+        result.idempotencyKey !== jobId ||
+        (result.operation !== undefined && result.operation !== MUTATION_OPERATIONS.PACKAGE_IMPORT)
     )
     if (job) {
       job.status = 'failed'

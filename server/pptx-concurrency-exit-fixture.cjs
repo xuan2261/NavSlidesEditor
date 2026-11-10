@@ -5,7 +5,8 @@ const crypto = require('node:crypto')
 const http = require('node:http')
 const assert = require('node:assert/strict')
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex')
-const digest = value => sha(JSON.stringify(value))
+const { hashRecord } = require('./services/pptx-import/package-store/schemas')
+const digest = value => hashRecord(value)
 const LIMIT = 5000
 function deferred() {
   let resolve

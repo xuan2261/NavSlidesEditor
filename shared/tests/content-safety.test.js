@@ -36,6 +36,15 @@ describe('shared rich text content safety', () => {
     )
   })
 
+  test('preserves bounded browser-serialized text stroke and rejects unsupported width/color syntax', () => {
+    expect(sanitizeRichTextHtml('<span style="-webkit-text-stroke: 2px rgb(255, 0, 0)">M</span>'))
+      .toContain('-webkit-text-stroke:')
+    for (const value of ['-1px rgb(1,2,3)', '2113px rgb(1,2,3)', '2px rgba(999,0,0,1)',
+      '2px rgba(1,2,3,4)', '2px rgba(1,2,3)', '2px rgb(1,2,3,0.5)', '2px url(x)'])
+      expect(sanitizeRichTextHtml(`<span style="-webkit-text-stroke:${value}">M</span>`))
+        .not.toContain('-webkit-text-stroke:')
+  })
+
   test('preserves editor-supported line-height and highlight styles', () => {
     expect(
       sanitizeRichTextStyle('line-height: 1.5; line-height: 30.87pt; background-color: #fef08a')

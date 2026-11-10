@@ -2,6 +2,7 @@
  * Minimal layout placeholder inheritance (Phase 04).
  * When a slide has no title/body text, inject text from slideLayout placeholders if present in scene graph.
  */
+const { mapBox } = require('../geometry')
 
 function graphPlaceholderNodes(graphSlide) {
   return (graphSlide?.nodes || []).filter((n) => n.ph?.type)
@@ -33,21 +34,21 @@ function resolveLayoutPlaceholders(slide, graphSlide, options = {}) {
     if (!/title|body|^obj$/i.test(phType)) continue
     const isTitle = phType.includes('title') || phType === 'ctrtitle'
     const label = isTitle ? 'Click to edit title' : 'Click to edit text'
-    const x = Number(ph.xfrm?.x) || 80
-    const y = Number(ph.xfrm?.y) || (isTitle ? 80 : 200)
-    const width = Number(ph.xfrm?.cx) || 800
-    const height = Number(ph.xfrm?.cy) || 80
+    const scale = options.scale || { x: 1, y: 1 }
+    const box = mapBox({
+      left: ph.xfrm?.x ?? 80,
+      top: ph.xfrm?.y ?? (isTitle ? 80 : 200),
+      width: ph.xfrm?.cx ?? 800,
+      height: ph.xfrm?.cy ?? 80,
+    }, scale)
     const fontFamily = isTitle ? fonts.major : fonts.minor
     elements.push({
       id: `layout-ph-${ph.id || injected}`,
       type: 'text',
-      x,
-      y,
-      width,
-      height,
+      ...box,
       zIndex: elements.length + 1,
       content: `<p>${label}</p>`,
-      fontSize: isTitle ? 36 : 18,
+      fontSize: (isTitle ? 36 : 18) * scale.y,
       ...(fontFamily ? { fontFamily } : {}),
       textColor: options.scheme?.dk1 || '#111111',
       _pptxSource: {

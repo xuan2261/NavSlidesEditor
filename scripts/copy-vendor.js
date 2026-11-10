@@ -4,6 +4,7 @@ const { execFileSync } = require('node:child_process')
 const { build } = require('esbuild')
 const { publishVendorAssets } = require('./vendor-publication')
 const { buildEducationRuntime } = require('./build-education-runtime')
+const { buildPptxSemanticOutputRuntime } = require('./build-pptx-semantic-output-runtime')
 const { prepareTikzVendor } = require('./tikz-vendor-publication')
 const {
   REVEAL_REQUIRED_VENDOR_PATHS,
@@ -120,6 +121,7 @@ async function main() {
       destination: 'qrcode/qrcode.min.js',
     })
     localItems.push(...(await buildEducationRuntime(path.join(generatedDir, 'education'))))
+    localItems.push(...(await buildPptxSemanticOutputRuntime(path.join(generatedDir, 'semantic-output'))))
 
     const manifest = await publishVendorAssets({
       rootDir,

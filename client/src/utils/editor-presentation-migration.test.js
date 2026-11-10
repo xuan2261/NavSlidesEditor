@@ -2,6 +2,33 @@ import { describe, expect, it, vi } from 'vitest'
 import { migratePresentation, migrateSlide } from './editor-presentation-migration'
 
 describe('editor presentation migration', () => {
+  it('refuses future semantic envelopes without overwriting the input', () => {
+    const source = { slides: [], pptxSemantic: { schemaVersion: 99 } }
+    const before = structuredClone(source)
+    expect(() => migratePresentation(source)).toThrow(/schema/i)
+    expect(source).toEqual(before)
+  })
+  it('keeps native import resolution, coordinates, and source size through editor migration', () => {
+    const source = {
+      id: 'native-deck',
+      resolution: { width: 720, height: 540 },
+      _pptxMeta: { originalSize: { width: 960, height: 720 }, geometryPolicy: 'native-aspect-v1' },
+      slides: [
+        {
+          id: 's1',
+          elements: [{ id: 'e1', type: 'shape', x: 360, y: 270, width: 72, height: 72 }],
+        },
+      ],
+    }
+    const before = structuredClone(source)
+    const migrated = migratePresentation(source)
+
+    expect(migrated.resolution).toEqual(source.resolution)
+    expect(migrated._pptxMeta).toEqual(source._pptxMeta)
+    expect(migrated.slides[0].elements[0]).toMatchObject(source.slides[0].elements[0])
+    expect(source).toEqual(before)
+  })
+
   it('migrates parent and child legacy html without mutating the source', () => {
     vi.stubGlobal('crypto', { randomUUID: vi.fn(() => 'generated-id') })
     const source = {

@@ -64,6 +64,27 @@ describe('media source editing', () => {
 })
 
 describe('media accessibility properties', () => {
+  it('authors volume and preserves transcript whitespace while entering a draft', () => {
+    render(<Editor initial={{ id: 'media', type: 'video', volume: 1, transcript: '' }} />)
+    fireEvent.change(screen.getByLabelText('Video volume'), { target: { value: '0.25' } })
+    expect(saved().volume).toBe(0.25)
+    fireEvent.change(screen.getByLabelText('Media transcript'), { target: { value: 'A ' } })
+    expect(saved().transcript).toBe('A ')
+  })
+
+  it('keeps an imported poster URL draft editable without persisting unsafe or partial paths', () => {
+    render(<Editor initial={{ id: 'media', type: 'video', pptxInstanceId: 'source', poster: '/uploads/original.png' }} />)
+    const input = screen.getByLabelText('Video poster image URL')
+    for (const value of ['/', '/uploads/', '/uploads/new.png']) {
+      fireEvent.change(input, { target: { value } })
+      expect(input.value).toBe(value)
+    }
+    expect(saved().poster).toBe('/uploads/new.png')
+    fireEvent.change(input, { target: { value: 'javascript:alert(1)' } })
+    expect(saved().poster).toBe('/uploads/new.png')
+    expect(screen.getByRole('alert')).toBeDefined()
+  })
+
   it.each(['video', 'audio'])(
     'admits a portable WebVTT caption for %s without accepting executable or non-caption data',
     (type) => {

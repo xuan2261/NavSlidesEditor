@@ -4,10 +4,10 @@ const { createMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
 const { canonicalEditableSnapshot } = require('../canonical-snapshot')
 const { rebindSourceMap } = require('../source-map')
 const { MUTATION_OPERATIONS } = require('../mutation-operation-scope')
-const { resolveEditedExportContext } = require('../validated-edited-export-context')
 const { getTrustedImportMetadata } = require('../trusted-import-metadata')
 const { refreshCompatibilityHeads } = require('./authority-publication')
 const { assertDestinationAbsent, createDestinationHead } = require('./destination-creation')
+const { assertSemanticHistoryAuthority, rebindSemanticHistoryAuthority } = require('./portable')
 
 const clone = (value) => structuredClone(value)
 const revisionIdsFor = (head) => new Set([
@@ -321,7 +321,7 @@ async function instantiateRetainedHead(store, retainedOwner, destinationId, opti
   const owner = validateOwner({ ownerType: 'presentation', ownerId: destinationId })
   const retained = retainedHeadForOwner(store.metadata.state, retainedOwner)
   if (!retained) return null
-  const { retainedHead, retainedRevisionIds } = retained
+  const { retainedHead } = retained
   if (retainedHead.pendingJournalHash !== undefined) {
     throw lifecycleError(
       'PACKAGE_PENDING_PROJECTION',
@@ -447,14 +447,13 @@ async function restoreForward(store, presentationId, retainedOwner, options = {}
       hashRecord(current) !== hashRecord(options.expectedCurrentHead)) {
     throw lifecycleError('STALE_GENERATION', 'Package lifecycle current head changed')
   }
-  if (retainedHead.pendingJournalHash !== undefined || current.pendingJournalHash !== undefined) {
-    throw lifecycleError(
-      'PACKAGE_PENDING_PROJECTION',
-      'Cannot restore a presentation while a pending package projection exists'
-    )
+  if (current.pendingJournalHash !== undefined) {
+    assertSemanticHistoryAuthority(store.metadata.state, current)
   }
+  const pendingHistory = retainedHead.pendingJournalHash !== undefined
+  if (pendingHistory) assertSemanticHistoryAuthority(store.metadata.state, retainedHead)
   const authority = committedAuthority(store.metadata.state, retainedHead)
-  if (!authority && (retainedHead.projectionRevisionId || retainedHead.sourceMapRevisionId)) {
+  if (!pendingHistory && !authority && (retainedHead.projectionRevisionId || retainedHead.sourceMapRevisionId)) {
     throw lifecycleError(
       'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE',
       'Package lifecycle retained authority is unavailable'
@@ -479,9 +478,16 @@ async function restoreForward(store, presentationId, retainedOwner, options = {}
       matrixAuthorityEpoch,
       matrixAuthoritySubjects: createMatrixAuthoritySubjects(undefined, matrixAuthorityEpoch),
     }
-    delete restoredHead.pendingJournalHash
     let rebound = null
-    if (authority) {
+    if (pendingHistory) {
+      const imported = rebindSemanticHistoryAuthority(next, retainedHead, current, matrixAuthorityEpoch)
+      Object.assign(restoredHead, imported.head, { fencingEpoch: store.fencingEpoch })
+      next.mutationResults.push(...imported.results)
+      rebound = { projection: imported.projection }
+    } else {
+      delete restoredHead.pendingJournalHash
+    }
+    if (!pendingHistory && authority) {
       rebound = rebindAuthority(
         authority,
         presentationId,

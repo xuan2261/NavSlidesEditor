@@ -1,20 +1,37 @@
-import { duplicateSlidesAtIndices } from '../hooks/slide-operation-helpers'
+import { duplicateSlidesAtIndices, withDeletedSlideOccurrences } from '../hooks/slide-operation-helpers'
 
-export function applySorterSlideOperation(slides, operation, slideId, toIndex) {
+export function applySorterSlideOperation(presentation, operation, slideId, toIndex) {
+  const slides = presentation.slides
   const index = slides.findIndex((slide) => slide.id === slideId)
-  if (index < 0) return slides
-  if (operation === 'duplicate') return duplicateSlidesAtIndices(slides, [index]).slides
+  if (index < 0) return presentation
+  if (operation === 'duplicate') {
+    const result = duplicateSlidesAtIndices(
+      slides,
+      [index],
+      undefined,
+      0,
+      presentation.layoutMasters,
+      presentation.pptxSemantic
+    )
+    return {
+      ...presentation,
+      slides: result.slides,
+      ...(result.pptxSemantic ? { pptxSemantic: result.pptxSemantic } : {}),
+    }
+  }
   if (operation === 'delete') {
-    return slides.length > 1 ? slides.filter((slide) => slide.id !== slideId) : slides
+    if (slides.length <= 1) return presentation
+    const nextSlides = slides.filter((slide) => slide.id !== slideId)
+    return withDeletedSlideOccurrences(presentation, nextSlides)
   }
   if (operation === 'move') {
-    if (!Number.isInteger(toIndex) || toIndex < 0 || toIndex >= slides.length || index === toIndex) return slides
+    if (!Number.isInteger(toIndex) || toIndex < 0 || toIndex >= slides.length || index === toIndex) return presentation
     const next = [...slides]
     const [slide] = next.splice(index, 1)
     next.splice(toIndex, 0, slide)
-    return next
+    return { ...presentation, slides: next }
   }
-  return slides
+  return presentation
 }
 
 export function getSorterCurrentDestination(previousSlides, previousIndex, slides, verticalEdit) {

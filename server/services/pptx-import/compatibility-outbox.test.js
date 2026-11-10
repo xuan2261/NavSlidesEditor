@@ -202,6 +202,51 @@ describe('package compatibility outbox', () => {
     expect(presentations[0].slides[0].elements[0]).not.toHaveProperty('_pptxDiagram')
   })
 
+  it('publishes sanitized native geometry over stale markerless metadata without losing server fields', () => {
+    const presentations = [{
+      id: 'deck-1', resolution: { width: 960, height: 540 }, slides: [],
+      _pptxMeta: { originalSize: { width: 720, height: 540 }, usedFonts: ['Calibri'] },
+      pptxOriginal: { id: 'original-1', sha256: 'a'.repeat(64) },
+      _pptxImportReport: { schemaVersion: 1, jobId: 'trusted' },
+      pptxAggregateHead: { generation: 1 },
+    }]
+    applyCompatibilityWrites(presentations, [{
+      operation: 'upsert', presentationId: 'deck-1', generation: 2,
+      presentation: {
+        id: 'deck-1', resolution: { width: 720, height: 540 }, slides: [],
+        _pptxMeta: { originalSize: { width: 960, height: 720 }, geometryPolicy: 'native-aspect-v1', packageRevisionId: 'forged' },
+        pptxOriginal: { id: 'forged' }, _pptxImportReport: { jobId: 'forged' },
+        pptxAggregateHead: { generation: 2 },
+      },
+    }])
+
+    expect(presentations[0]._pptxMeta).toEqual({
+      originalSize: { width: 960, height: 720 }, geometryPolicy: 'native-aspect-v1', usedFonts: ['Calibri'],
+    })
+    expect(presentations[0].resolution).toEqual({ width: 720, height: 540 })
+    expect(presentations[0].pptxOriginal).toEqual({ id: 'original-1', sha256: 'a'.repeat(64) })
+    expect(presentations[0]._pptxImportReport.jobId).toBe('trusted')
+  })
+
+  it('does not retain a stale native marker when incoming canonical geometry is legacy', () => {
+    const presentations = [{
+      id: 'deck-1', slides: [],
+      _pptxMeta: { originalSize: { width: 960, height: 720 }, geometryPolicy: 'native-aspect-v1', usedFonts: ['Calibri'] },
+      pptxAggregateHead: { generation: 1 },
+    }]
+    applyCompatibilityWrites(presentations, [{
+      operation: 'upsert', presentationId: 'deck-1', generation: 2,
+      presentation: {
+        id: 'deck-1', slides: [], resolution: { width: 720, height: 540 },
+        _pptxMeta: { originalSize: { width: 720, height: 540 }, geometryPolicy: 'unrecognized' },
+        pptxAggregateHead: { generation: 2 },
+      },
+    }])
+    expect(presentations[0]._pptxMeta).toEqual({
+      originalSize: { width: 720, height: 540 }, usedFonts: ['Calibri'],
+    })
+  })
+
   it('ignores compatibility writes older than the stored package generation', () => {
     const presentations = [{
       id: 'deck-1',

@@ -2,6 +2,11 @@
  * Zod schemas for API request validation.
  */
 const { z } = require('zod')
+const {
+  normalizeSemanticPresentation,
+} = require('revealjs-shared/src/pptx-semantic-presentation.js')
+const { geometryLocalExtent } = require('revealjs-shared/src/pptx-geometry-style-resolution.js')
+const { semanticInstance, semanticDefinition } = require('revealjs-shared/src/pptx-semantic-records.js')
 const { admitGameElement } = require('./game-element-admission')
 const {
   interactionVariablesSchema,
@@ -17,6 +22,7 @@ const builtInElementTypeSchema = z.enum([
   'html',
   'chart',
   'table',
+  'diagram',
   'video',
   'audio',
   'callout',
@@ -46,6 +52,7 @@ const baseElementSchema = z
     width: z.number().positive().default(100),
     height: z.number().positive().default(100),
     zIndex: z.number().int().optional(),
+    textVerticalAlign: z.enum(['top', 'middle', 'bottom']).optional(),
     action: elementActionSchema.optional(),
     initialVisibility: z.enum(['visible', 'hidden']).optional(),
   })
@@ -162,36 +169,99 @@ function validatePresentationLayouts(presentation, ctx) {
   visitSlides(presentation.slides)
 }
 
-// ─── Slide Schema ────────────────────────────────────────────────────────────
-const slideSchema = z
-  .object({
-    id: z.string().optional(),
-    elements: z.array(elementSchema).optional().default([]),
-    notes: z.string().optional(),
-    speakerNotes: z.string().optional(),
-    background: z.any().optional(),
-    children: z
-      .array(z.lazy(() => slideSchema))
-      .max(100)
-      .optional(),
-    layoutId: z.string().min(1).max(200).optional(),
-    layoutOverrides: layoutOverridesSchema.optional(),
-  })
-  .passthrough()
-  .superRefine((slide, ctx) => {
-    const elementIds = new Set((slide.elements || []).map((element) => element.id).filter(Boolean))
-    for (const [placeholderId, elementId] of Object.entries(
-      slide.layoutOverrides?.placeholderBindings || {}
-    )) {
-      if (!elementIds.has(elementId))
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['layoutOverrides', 'placeholderBindings', placeholderId],
-          message: 'Placeholder binding must target a slide-owned element',
+function validatePresentationSemantic(presentation, ctx) {
+  try {
+    const normalized = normalizeSemanticPresentation(presentation)
+    const visit = (slides, path = ['slides']) =>
+      (slides || []).forEach((slide, index) => {
+        const slidePath = [...path, index]
+        ;(slide.elements || []).forEach((element, elementIndex) => {
+          for (const [field, nativeField] of [
+            ['width', 'cx'],
+            ['height', 'cy'],
+          ]) {
+            if (element[field] !== 0) continue
+            const instance = semanticInstance(normalized.pptxSemantic, element.pptxInstanceId)
+            const definition = instance && semanticDefinition(normalized.pptxSemantic, instance.definitionId)
+            const geometry = definition?.content.geometry
+            const override =
+              instance?.overrides.components?.[geometry?.componentId]?.geometryDocument
+            const extent =
+              [2, 3].includes(normalized.pptxSemantic?.schemaVersion) && instance
+                ? geometryLocalExtent(normalized.pptxSemantic, instance.id)
+                : override
+                  ? { cx: override.width, cy: override.height }
+                  : definition?.content.extent
+            if (
+              !instance ||
+              instance.tombstoned ||
+              definition.kind === 'group' ||
+              extent?.[nativeField] !== 0
+            )
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: [...slidePath, 'elements', elementIndex, field],
+                message: 'Zero dimensions require a matching canonical leaf extent',
+              })
+          }
         })
-    }
-  })
+        visit(slide.children, [...slidePath, 'children'])
+      })
+    visit(presentation.slides)
+  } catch (error) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['pptxSemantic'],
+      message: error.message,
+    })
+  }
+}
 
+// ─── Slide Schema ────────────────────────────────────────────────────────────
+function createSlideSchema(entrySchema) {
+  let schema
+  const base = z
+    .object({
+      id: z.string().optional(),
+      elements: z.array(entrySchema).optional().default([]),
+      notes: z.string().optional(),
+      speakerNotes: z.string().optional(),
+      background: z.any().optional(),
+      children: z
+        .array(z.lazy(() => schema))
+        .max(100)
+        .optional(),
+      layoutId: z.string().min(1).max(200).optional(),
+      layoutOverrides: layoutOverridesSchema.optional(),
+    })
+    .passthrough()
+    .superRefine((slide, ctx) => {
+      const elementIds = new Set(
+        (slide.elements || []).map((element) => element.id).filter(Boolean)
+      )
+      for (const [placeholderId, elementId] of Object.entries(
+        slide.layoutOverrides?.placeholderBindings || {}
+      )) {
+        if (!elementIds.has(elementId))
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['layoutOverrides', 'placeholderBindings', placeholderId],
+            message: 'Placeholder binding must target a slide-owned element',
+          })
+      }
+    })
+  schema = base
+  return schema
+}
+const slideSchema = createSlideSchema(elementSchema)
+const semanticSlideSchema = createSlideSchema(
+  baseElementSchema
+    .extend({
+      width: z.number().nonnegative().default(100),
+      height: z.number().nonnegative().default(100),
+    })
+    .transform(admitGameElement)
+)
 // ─── Create Presentation ─────────────────────────────────────────────────────
 const createPresentationSchema = z
   .object({
@@ -199,12 +269,13 @@ const createPresentationSchema = z
     theme: z.string().max(100).optional(),
     transition: z.string().max(100).optional(),
     templateId: z.string().min(1).max(200).optional(),
-    slides: z.array(slideSchema).optional(),
+    slides: z.array(semanticSlideSchema).optional(),
     layoutMasters: z.array(layoutMasterSchema).max(64).optional(),
     interactionVariables: interactionVariablesSchema.optional(),
   })
   .passthrough()
   .superRefine(validatePresentationLayouts)
+  .superRefine(validatePresentationSemantic)
   .transform(admitPresentationInteractions)
 
 // ─── Update Presentation ─────────────────────────────────────────────────────
@@ -213,12 +284,13 @@ const updatePresentationSchema = z
     title: z.string().max(500).optional(),
     theme: z.string().max(100).optional(),
     transition: z.string().max(100).optional(),
-    slides: z.array(slideSchema).optional(),
+    slides: z.array(semanticSlideSchema).optional(),
     layoutMasters: z.array(layoutMasterSchema).max(64).optional(),
     interactionVariables: interactionVariablesSchema.optional(),
   })
   .passthrough()
   .superRefine(validatePresentationLayouts)
+  .superRefine(validatePresentationSemantic)
 
 // ─── Templates ───────────────────────────────────────────────────────────────
 const createTemplateSchema = z

@@ -22,15 +22,21 @@ const {
   stripClientPptxOriginalPaths,
 } = require('../services/pptx-import/create-imported-presentation')
 const { sanitizeClientEditableData } = require('../services/pptx-import/authority-sanitizer')
+const { assertSemanticBaseline } = require('../services/pptx-import/semantic-baseline')
+const {
+  validatePictureReplacements,
+  rebindPictureReplacementOwnership,
+  rollbackPictureReplacementOwnership,
+} = require('../services/pptx-import/picture-replacement-validation')
+const {
+  normalizeSemanticPresentation,
+} = require('revealjs-shared/src/pptx-semantic-presentation.js')
 const { toPresentationEditorDto } = require('../services/pptx-import/package-store/dto')
 const { hashRecord } = require('../services/pptx-import/package-store/schemas')
 // Namespace import: tests monkey-patch members of this module then re-require
 // the router, so call sites must resolve through the module object.
 const packageLifecycle = require('../services/package-lifecycle-integration')
-const {
-  getPackageGeneration,
-  savePackageProjection,
-} = require('../services/generation-safe-save')
+const { getPackageGeneration, savePackageProjection } = require('../services/generation-safe-save')
 const {
   drainPackageCompatibilityOutbox,
   getReadablePackageStore,
@@ -47,9 +53,10 @@ const { uuidv4, isSafePresentationId } = require('./presentations-helpers')
 const router = express.Router()
 
 function assertNewPresentationId(presentations, id) {
-  if (presentations.some(presentation => presentation.id === id)) {
+  if (presentations.some((presentation) => presentation.id === id)) {
     throw Object.assign(new Error('Presentation destination already exists'), {
-      code: 'STALE_GENERATION', status: 409,
+      code: 'STALE_GENERATION',
+      status: 409,
     })
   }
 }
@@ -255,11 +262,13 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
         const currentHead = state.heads.find((head) => head.presentationId === presentationId)
         if (!currentHead) {
           throw Object.assign(new Error('Package-backed template head is unavailable'), {
-            code: 'TEMPLATE_PACKAGE_HEAD_UNAVAILABLE', status: 409,
+            code: 'TEMPLATE_PACKAGE_HEAD_UNAVAILABLE',
+            status: 409,
           })
         }
         presentation = resolvePackageBackedReadFromState(state, presentationId, {
-          ...presentation, pptxAggregateHead: currentHead,
+          ...presentation,
+          pptxAggregateHead: currentHead,
         }).presentation
       }
       presentations.push(presentation)
@@ -288,17 +297,17 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
         )
       }
     }
-    if (Array.isArray(responseError.errors) &&
-        responseError.errors.every(issue => Array.isArray(issue.path)))
-      return res
-        .status(400)
-        .json({
-          error: 'Validation failed',
-          details: responseError.errors.map((issue) => ({
-            path: issue.path.join('.'),
-            message: issue.message,
-          })),
-        })
+    if (
+      Array.isArray(responseError.errors) &&
+      responseError.errors.every((issue) => Array.isArray(issue.path))
+    )
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: responseError.errors.map((issue) => ({
+          path: issue.path.join('.'),
+          message: issue.message,
+        })),
+      })
     res.status(responseError.status || 500).json({
       error: responseError.message,
       code: responseError.code,
@@ -384,10 +393,15 @@ router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
       const presentations = await readPresentations()
       result = presentations.find((item) => item.id === req.params.id) || null
     } else {
-      result = await withPresentations((presentations) => {
+      result = await withPresentations(async (presentations) => {
         const index = presentations.findIndex((p) => p.id === req.params.id)
         if (index === -1) return null
         const previous = presentations[index]
+        assertSemanticBaseline(
+          previous,
+          normalizeSemanticPresentation({ ...previous, ...safeBody })
+        )
+        await validatePictureReplacements({ ...previous, ...safeBody, id: req.params.id }, previous)
         // Legacy reconstructed export still observes this marker. Package-backed saves
         // instead record a server-owned pending journal and retain immutable R0 bytes.
         const contentEdited =
@@ -423,18 +437,22 @@ router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
     })
   } catch (err) {
     if (Array.isArray(err.errors))
-      return res
-        .status(400)
-        .json({
-          error: 'Validation failed',
-          details: err.errors.map((issue) => ({
-            path: issue.path.join('.'),
-            message: issue.message,
-          })),
-        })
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: err.errors.map((issue) => ({
+          path: issue.path.join('.'),
+          message: issue.message,
+        })),
+      })
     const code = err.code || 'PACKAGE_SAVE_FAILED'
     const status =
-      code === 'SNAPSHOT_BUDGET_EXCEEDED' ? 413 : code === 'STALE_GENERATION' ? 409 : 500
+      code === 'SNAPSHOT_BUDGET_EXCEEDED'
+        ? 413
+        : code === 'STALE_GENERATION'
+          ? 409
+          : code === 'INVALID_PPTX_SEMANTIC_DOCUMENT'
+            ? 400
+            : 500
     const currentGeneration =
       code === 'STALE_GENERATION'
         ? (err.currentGeneration ??
@@ -817,6 +835,7 @@ router.post('/:id/duplicate', async (req, res, next) => {
   let packageHead
   let destinationId
   let presentationPublished = false
+  let pictureOwnershipToken
   try {
     const {
       persistOriginalPptx,
@@ -841,6 +860,11 @@ router.post('/:id/duplicate', async (req, res, next) => {
     copy.createdAt = now
     copy.updatedAt = now
 
+    pictureOwnershipToken = await rebindPictureReplacementOwnership(
+      copy,
+      original.id,
+      destinationId
+    )
     packageHead = await packageLifecycle.duplicatePackageOwner(original.id, copy.id, {
       projection: copy,
       expectedSourceHead,
@@ -921,6 +945,13 @@ router.post('/:id/duplicate', async (req, res, next) => {
             copiedOriginalId,
             { strict: true }
           )
+        } catch (rollbackError) {
+          rollbackErrors.push(rollbackError)
+        }
+      }
+      if (pictureOwnershipToken) {
+        try {
+          await rollbackPictureReplacementOwnership(pictureOwnershipToken)
         } catch (rollbackError) {
           rollbackErrors.push(rollbackError)
         }

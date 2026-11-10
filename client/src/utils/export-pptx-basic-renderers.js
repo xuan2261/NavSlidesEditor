@@ -5,6 +5,9 @@ import {
   resolveColorForTokens,
   resolveMergedCells,
   resolveTableDimensions,
+  resolveTablePptxMargins,
+  isRichTableCell,
+  tableCellPptxRuns,
 } from 'revealjs-shared'
 import {
   DEFAULT_BACKGROUND_COLOR,
@@ -289,7 +292,7 @@ export function addTableElement(slide, element, bounds, designTokens) {
       const cellFontSize = Number(getCellStyle('fontSizes', rowIndex, colIndex))
       const cellFontFamily = safeFontFamily(getCellStyle('fontFamilies', rowIndex, colIndex))
       cells.push({
-        text: String(cell ?? ''),
+        text: tableCellPptxRuns(cell),
         options: {
           color: textColor.color,
           fontSize: toPptFontSize(
@@ -297,7 +300,9 @@ export function addTableElement(slide, element, bounds, designTokens) {
               ? cellFontSize
               : element.fontSize || 12
           ),
-          margin: cellMargin,
+          margin: getCellStyle('insets', rowIndex, colIndex) != null
+            ? resolveTablePptxMargins(getCellStyle('insets', rowIndex, colIndex), element.cellPadding ?? 8)
+            : cellMargin,
           fill: { color: fillColor.color, transparency: fillColor.transparency },
           border: {
             color: normalizeCssColor(element.borderColor || '#475569').color,
@@ -305,9 +310,11 @@ export function addTableElement(slide, element, bounds, designTokens) {
           },
           ...(cellFontFamily && { fontFace: cellFontFamily }),
           bold:
-            getCellStyle('isBold', rowIndex, colIndex) != null
-              ? Boolean(getCellStyle('isBold', rowIndex, colIndex))
-              : Boolean(element.headerRow && rowIndex === 0 && (element.headerIsBold ?? true)),
+            isRichTableCell(cell)
+              ? false
+              : getCellStyle('isBold', rowIndex, colIndex) != null
+                ? Boolean(getCellStyle('isBold', rowIndex, colIndex))
+                : Boolean(element.headerRow && rowIndex === 0 && (element.headerIsBold ?? true)),
           ...(getCellStyle('aligns', rowIndex, colIndex) && {
             align: getCellStyle('aligns', rowIndex, colIndex),
           }),

@@ -28,6 +28,7 @@ const slideLayouts = require('./slide-layouts.js')
 const slideLayoutNormalization = require('./slide-layout-normalization.js')
 const mediaAccessibility = require('./media-accessibility.js')
 const projectImportContentValidation = require('./project-import-content-validation.js')
+const pptxGeometryBlipAssets = require('./pptx-geometry-blip-assets.js')
 
 const TEXT_COLORS = [
   '#ffffff',
@@ -117,6 +118,7 @@ module.exports = {
   ...fxRegistry,
   ...tableMergeResolver,
   ...require('./table-layout.js'),
+  ...require('./table-cell-utils.js'),
   ...latexUtils,
   ...pptxExportPolicy,
   ...transitionSettings,
@@ -131,6 +133,7 @@ module.exports = {
   ...slideLayoutNormalization,
   ...mediaAccessibility,
   ...projectImportContentValidation,
+  ...pptxGeometryBlipAssets,
   ...require('./timeline-utils.js'),
   ...require('./svg-paint-overrides.js'),
   ...require('./chart-authoring-options.js'),

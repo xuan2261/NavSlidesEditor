@@ -154,6 +154,35 @@ describe('SlideCanvas media drop', () => {
     expect(onRemoveGuide).toHaveBeenCalledWith(0)
   })
 
+  it('keeps native-aspect ruler guide drops inside the actual logical canvas', () => {
+    const onAddGuide = vi.fn()
+    const { zoom, userZoomMode } = useUIStore.getState()
+    useUIStore.setState({ zoom: 0.5, userZoomMode: true })
+    const view = renderCanvas({
+      resolution: { width: 720, height: 540 },
+      showRulers: true,
+      onAddGuide,
+    })
+    try {
+      const canvas = screen.getByTestId('canvas-area')
+      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+        left: 50, top: 30, width: 360, height: 270,
+      })
+      expect(canvas.style.width).toBe('720px')
+      expect(canvas.style.height).toBe('540px')
+      const ruler = screen.getByTestId('top-ruler')
+      fireEvent.pointerDown(ruler, { button: 0, pointerId: 3 })
+      fireEvent.pointerUp(document, { pointerId: 3, clientX: 410, clientY: 30 })
+      fireEvent.pointerDown(ruler, { button: 0, pointerId: 4 })
+      fireEvent.pointerUp(document, { pointerId: 4, clientX: 430, clientY: 30 })
+
+      expect(onAddGuide.mock.calls).toEqual([[{ axis: 'x', position: 720 }]])
+    } finally {
+      view.unmount()
+      useUIStore.setState({ zoom, userZoomMode })
+    }
+  })
+
   it('transfers focus to the named canvas when the focused element is removed', () => {
     const shape = { id: 'a', type: 'shape', shape: 'rect', x: 40, y: 40, width: 120, height: 80 }
     const view = renderCanvas({ slide: { id: 's1', elements: [shape] }, selectedElementIds: ['a'] })

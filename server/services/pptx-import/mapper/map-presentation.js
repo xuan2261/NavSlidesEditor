@@ -3,7 +3,12 @@ const { createMediaIndex } = require('../media')
 const { sanitizeHtml } = require('../sanitize')
 const { mapChart } = require('../chart-output-to-navslides-mapper')
 const { colorValue, gradientBackground } = require('./utils-color')
-const { buildPptxTextImportMeta, extractTextInsets, extractTextMetadata, normalizeImportedRichTextHtml } = require('./utils-text')
+const {
+  buildPptxTextImportMeta,
+  extractTextInsets,
+  extractTextMetadata,
+  normalizeImportedRichTextHtml,
+} = require('./utils-text')
 const { baseElement, extractShadow, placeholder } = require('./utils-base')
 const { mapShape } = require('./map-shape')
 const { mapImage } = require('./map-image')
@@ -12,7 +17,6 @@ const { mapAudio, mapMath, mapVideo, gateBackgroundImageSrc } = require('./map-m
 const { flattenGroupElement } = require('./map-group')
 const { flattenDiagramElement } = require('./map-diagram')
 const { fitBoxWithinBounds, normalizeSourceSize } = require('../geometry')
-const { CANVAS_SIZE } = require('../constants')
 const { inspectOoxmlCoverage } = require('../ooxml-inspection')
 const { attachSourceNodes } = require('../ooxml-scene-graph/attach-source-nodes')
 const { resolveLayoutPlaceholders } = require('./placeholder-resolve')
@@ -24,6 +28,10 @@ const { resolveLayoutFromZip } = require('../ooxml-layout-resolve')
 const { parseSlideAnimations, classifyUnsupportedPackageFeatures } = require('../ooxml-animation')
 const { resolveSchemeColor } = require('./theme-resolve')
 const { createBoundedWarnings } = require('../warning-budget')
+const { mergeNativeLayoutLayers } = require('./native-layout-layers')
+const { applyNativeTextStyles } = require('../ooxml-native-text-style')
+const { applyTableSourceProperties } = require('./table-source-properties')
+const { readSlideOrder } = require('../slide-order')
 
 async function mapElement(element, context) {
   if (element.type === 'group') return flattenGroupElement(element, context, mapElement)
@@ -39,7 +47,17 @@ async function mapElement(element, context) {
   if (element.type === 'chart') return mapChartElement(element, context)
   if (element.type === 'math') return mapMath(element, context)
   if (element.type === 'text' || element.content) return mapText(element, context)
-  return [placeholder(element, context.scale, context.zIndex, context.slideIndex, context.warnings, 'unknown-object', 'Unsupported PPTX object locked as placeholder')]
+  return [
+    placeholder(
+      element,
+      context.scale,
+      context.zIndex,
+      context.slideIndex,
+      context.warnings,
+      'unknown-object',
+      'Unsupported PPTX object locked as placeholder'
+    ),
+  ]
 }
 
 function mapChartElement(element, context) {
@@ -76,7 +94,7 @@ function mapText(element, context) {
   const sanitizedContent = sanitizeHtml(element.content)
   const content = normalizeImportedRichTextHtml(sanitizedContent)
   const box = baseElement(element, context.scale, context.zIndex)
-  const fittedBox = fitBoxWithinBounds(box)
+  const fittedBox = fitBoxWithinBounds(box, context.bounds)
   const text = {
     ...box,
     ...fittedBox,
@@ -85,7 +103,9 @@ function mapText(element, context) {
     ...extractTextMetadata(sanitizedContent, element, context.scale),
   }
   const textInsets = extractTextInsets(element, context.scale, fittedBox)
-  const textLength = String(text.content || '').replace(/<[^>]+>/g, '').trim().length
+  const textLength = String(text.content || '')
+    .replace(/<[^>]+>/g, '')
+    .trim().length
   text._pptxImportMeta = buildPptxTextImportMeta(fittedBox, text, {
     textLength,
     ...(textInsets ? { textInsets, textInsetsUnit: 'px' } : {}),
@@ -102,6 +122,8 @@ function mapText(element, context) {
 
 function sortSlideElements(slide) {
   return [...(slide.elements || [])].sort((a, b) => {
+    const layerDifference = (a?._pptxNativeLayer ?? 2) - (b?._pptxNativeLayer ?? 2)
+    if (layerDifference) return layerDifference
     const aOrder = a?.order
     const bOrder = b?.order
     const aDefined = aOrder != null && Number.isFinite(Number(aOrder))
@@ -120,24 +142,49 @@ async function mapSlideElements(slide, baseContext) {
   for (const element of sortSlideElements(slide)) {
     const topLevelOrder = pass1Index + 1
     if (element.type === 'group') {
-      const children = await withContextZIndex(baseContext, topLevelOrder, () => flattenGroupElement(element, baseContext, mapElement))
-      for (const result of children) pushOrderedResult(allResults, result, baseContext.stats, topLevelOrder, Number(result.order) || 0)
+      const children = await withContextZIndex(baseContext, topLevelOrder, () =>
+        flattenGroupElement(element, baseContext, mapGroupedChild)
+      )
+      for (const result of children)
+        pushOrderedResult(
+          allResults,
+          result,
+          baseContext,
+          topLevelOrder,
+          Number(result.order) || 0,
+          element
+        )
       pass1Index += 1
       continue
     }
-    const results = await withContextZIndex(baseContext, topLevelOrder, () => mapElement(element, baseContext))
-    for (const result of results) pushOrderedResult(allResults, result, baseContext.stats, topLevelOrder, 0)
+    const results = await withContextZIndex(baseContext, topLevelOrder, () =>
+      mapElement(element, baseContext)
+    )
+    for (const result of results)
+      pushOrderedResult(allResults, result, baseContext, topLevelOrder, 0, element)
     pass1Index += 1
   }
 
-  allResults.sort((a, b) => a.effectiveOrder !== b.effectiveOrder
-    ? a.effectiveOrder - b.effectiveOrder
-    : a.childOrder - b.childOrder)
+  allResults.sort((a, b) =>
+    a.effectiveOrder !== b.effectiveOrder
+      ? a.effectiveOrder - b.effectiveOrder
+      : a.childOrder - b.childOrder
+  )
 
   return allResults.map(({ result }, index) => {
     result.zIndex = index + 1
     return result
   })
+}
+
+async function mapGroupedChild(element, context) {
+  const results = await mapElement(element, context)
+  if (element._pptxNativeSource) {
+    // Carry the matched leaf identity through the unchanged group transforms;
+    // pushOrderedResult consumes this private marker before exposing results.
+    for (const result of results) result._pptxNativeSource = element._pptxNativeSource
+  }
+  return results
 }
 
 async function withContextZIndex(context, zIndex, callback) {
@@ -150,8 +197,24 @@ async function withContextZIndex(context, zIndex, callback) {
   }
 }
 
-function pushOrderedResult(allResults, result, stats, effectiveOrder, childOrder) {
-  if (result.importPlaceholderType) stats.placeholderCount += 1
+function pushOrderedResult(allResults, result, context, effectiveOrder, childOrder, rawElement) {
+  const nativeSource = result._pptxNativeSource || rawElement._pptxNativeSource
+  delete result._pptxNativeSource
+  if (rawElement._pptxNativeLayer != null) {
+    const layer = rawElement._pptxNativeLayer === 0 ? 'master' : 'layout'
+    const mapperSource = result._pptxSource
+    result._pptxSource = {
+      ...mapperSource,
+      // Preserve diagram-specific fields and its original mapper identity,
+      // while only the native namespace participates in scene/font matching.
+      ...(mapperSource ? { mapperSource } : {}),
+      nodeId: `${layer}:${rawElement._pptxNativePartUri || 'unknown'}:${nativeSource.nodeId}`,
+      kind: nativeSource.kind,
+      slideIndex: context.slideIndex,
+      authoritative: false,
+    }
+  }
+  if (result.importPlaceholderType) context.stats.placeholderCount += 1
   allResults.push({ result, effectiveOrder, childOrder })
 }
 
@@ -172,13 +235,16 @@ function isMeaningfulRelatedChart(element) {
   if (!element?._pptxChartMeta?.chartPath) return false
   const labels = element?.chartData?.labels
   const datasets = element?.chartData?.datasets
-  const hasData = Array.isArray(datasets) && datasets.some(
-    (dataset) => Array.isArray(dataset?.data) && dataset.data.length > 0
-  )
+  const hasData =
+    Array.isArray(datasets) &&
+    datasets.some((dataset) => Array.isArray(dataset?.data) && dataset.data.length > 0)
   const hasCategories = Array.isArray(labels) && labels.length > 0
-  const hasScatterCoordinates = Array.isArray(datasets) && datasets.some(
-    (dataset) => Array.isArray(dataset?.xValues) && dataset.xValues.length === dataset?.data?.length
-  )
+  const hasScatterCoordinates =
+    Array.isArray(datasets) &&
+    datasets.some(
+      (dataset) =>
+        Array.isArray(dataset?.xValues) && dataset.xValues.length === dataset?.data?.length
+    )
   return hasData && (hasCategories || hasScatterCoordinates)
 }
 
@@ -272,24 +338,55 @@ async function mapPptxOutput({
   }
   const slides = []
   const nativeObjectSlides = []
+  const slidePaths = zip ? await readSlideOrder(zip) : []
   const totalSlides = Math.max(1, (output.slides || []).length)
   const graphByIndex = Object.fromEntries((sceneGraph?.slides || []).map((s) => [s.index, s]))
-  const themeInfo = zip ? await parseThemeFromZip(zip) : { scheme: null, fonts: {}, themePath: null }
+  const themeInfo = zip
+    ? await parseThemeFromZip(zip)
+    : { scheme: null, fonts: {}, themePath: null }
   const packageEntries = Object.keys(zip?.files || {}).map((e) => e.replace(/\\/g, '/'))
   const unsupportedFeatures = classifyUnsupportedPackageFeatures(packageEntries)
-  const hasNativeMasters = packageEntries.some((entry) => /^ppt\/slide(Masters|Layouts)\//.test(entry))
+  const hasNativeMasters = packageEntries.some((entry) =>
+    /^ppt\/slide(Masters|Layouts)\//.test(entry)
+  )
   if (hasNativeMasters) {
-    warnings.push({ slideIndex: null, type: 'native-layout-flattened', message: 'PowerPoint master/layout content was flattened into ordinary slide elements; NavSlides did not synthesize linked masters.' })
+    warnings.push({
+      slideIndex: null,
+      type: 'native-layout-flattened',
+      message:
+        'PowerPoint master/layout content was flattened into ordinary slide elements; NavSlides did not synthesize linked masters.',
+    })
   }
   for (const feature of unsupportedFeatures) {
-    warnings.push({ slideIndex: null, type: feature.type, message: `${feature.feature}: ${feature.entry}` })
+    warnings.push({
+      slideIndex: null,
+      type: feature.type,
+      message: `${feature.feature}: ${feature.entry}`,
+    })
   }
   for (const [slideIndex, slide] of (output.slides || []).entries()) {
     signal?.throwIfAborted?.()
-    onProgress?.({ stage: 'mapping', percent: 80 + Math.round((slideIndex / totalSlides) * 15), message: `Processing slide ${slideIndex + 1} of ${totalSlides}` })
-    let elements = await mapSlideElements(slide, {
+    onProgress?.({
+      stage: 'mapping',
+      percent: 80 + Math.round((slideIndex / totalSlides) * 15),
+      message: `Processing slide ${slideIndex + 1} of ${totalSlides}`,
+    })
+    const nativeLayers = await mergeNativeLayoutLayers({ slide, zip, slideIndex })
+    const nativeTextSlide = await applyNativeTextStyles({
+      slide: nativeLayers.slide,
+      zip,
+      slideIndex,
+      scale,
+    })
+    const preparedSlide = await applyTableSourceProperties({
+      slide: nativeTextSlide,
+      zip,
+      slideIndex,
+    })
+    const mappingContext = {
       mediaIndex,
       scale,
+      bounds: sourceSize.resolution,
       slideIndex,
       warnings,
       stats,
@@ -298,37 +395,86 @@ async function mapPptxOutput({
       mediaBudget,
       mediaTransaction,
       strict: isStrict,
-    })
+    }
+    let elements = await mapSlideElements(preparedSlide, mappingContext)
+    const nativeBackground = elements.filter((element) =>
+      /^(?:master|layout):/.test(element?._pptxSource?.nodeId || '')
+    )
+    const nativeBackgroundElements = new Set(nativeBackground)
+    const nativeMasterElements = new Set(
+      nativeBackground.filter((element) => element._pptxSource.nodeId.startsWith('master:'))
+    )
     signal?.throwIfAborted?.()
     const graphSlide = graphByIndex[slideIndex]
     if (graphSlide) {
-      const resolved = resolveLayoutPlaceholders({ elements }, graphSlide, {
+      const foreground = elements.filter((element) => !nativeBackgroundElements.has(element))
+      const resolved = resolveLayoutPlaceholders({ elements: foreground }, graphSlide, {
         slideIndex,
+        scale,
         fonts: themeInfo.fonts,
         scheme: themeInfo.scheme,
       })
-      elements = resolved.elements
+      elements = [...nativeBackground, ...resolved.elements]
+      if (resolved.injected)
+        elements.forEach((element, index) => {
+          element.zIndex = index + 1
+        })
       stats.layoutPlaceholderInjected += resolved.injected
     }
     // 08a: layout XML fallback when slide still has no text placeholders
     if (zip) {
-      const fromLayout = await resolveLayoutFromZip(
-        { elements },
-        zip,
-        {
-          slideIndex,
-          fonts: themeInfo.fonts,
-          scheme: themeInfo.scheme,
-        }
-      )
+      const fromLayout = await resolveLayoutFromZip({ elements }, zip, {
+        slideIndex,
+        scale,
+        fonts: themeInfo.fonts,
+        layoutPath: nativeLayers.layoutPath,
+        nativeDecorationNodeIds: nativeLayers.nativeDecorationNodeIds,
+        hasSlideText: elements.some(
+          (element) =>
+            !nativeBackgroundElements.has(element) &&
+            (element.type === 'text' || element.type === 'shape') &&
+            String(element.content || element.text || '')
+              .replace(/<[^>]+>/g, '')
+              .trim().length > 0
+        ),
+        scheme: themeInfo.scheme,
+      })
       elements = fromLayout.elements
       stats.layoutPlaceholderInjected += fromLayout.injected
       stats.layoutDecorationInjected += fromLayout.decorativeInjected || 0
+      const layoutDecorations = elements.filter(
+        (element) => element?._pptxSource?.fromLayoutDecoration
+      )
+      if (layoutDecorations.length) {
+        const isLayout = (element) =>
+          element?._pptxSource?.fromLayoutDecoration ||
+          (nativeBackgroundElements.has(element) &&
+            element._pptxSource.nodeId.startsWith('layout:'))
+        const combinedLayout = elements.filter(isLayout)
+        const sourceOrder = (element) =>
+          nativeLayers.layoutNodeOrder.get(String(element._pptxSource.nodeId).split(':').pop()) ??
+          Infinity
+        combinedLayout.sort((left, right) => sourceOrder(left) - sourceOrder(right))
+        elements = elements.filter((element) => !isLayout(element))
+        const masterCount = elements.filter((element) => nativeMasterElements.has(element)).length
+        elements.splice(masterCount, 0, ...combinedLayout)
+        elements.forEach((element, index) => {
+          element.zIndex = index + 1
+        })
+      }
     }
     if (graphSlide) {
+      // Scene identities belong to slide foreground, never inherited models
+      // or XML decorations, even when their source IDs/chart parts collide.
+      const graphForeground = elements.filter(
+        (element) =>
+          !nativeBackgroundElements.has(element) &&
+          !/^(?:master|layout):/.test(element?._pptxSource?.nodeId || '') &&
+          !element?._pptxSource?.fromLayoutDecoration
+      )
       // OOXML-first charts when parser omitted type:chart but package has chart parts
-      elements = await injectChartsFromSceneGraph({
-        elements,
+      let injectedForeground = await injectChartsFromSceneGraph({
+        elements: graphForeground,
         graphSlide,
         zip,
         slideIndex,
@@ -337,8 +483,8 @@ async function mapPptxOutput({
         strict: isStrict,
         scale,
       })
-      elements = await injectDiagramsFromSceneGraph({
-        elements,
+      injectedForeground = await injectDiagramsFromSceneGraph({
+        elements: injectedForeground,
         graphSlide,
         zip,
         slideIndex,
@@ -347,13 +493,19 @@ async function mapPptxOutput({
         strict: isStrict,
         scale,
       })
-      attachSourceNodes(elements, graphSlide.nodes, slideIndex)
+      // Both injectors preserve input references/order and append new results.
+      // Keep the full background/fallback ordering, then append only new rows.
+      for (const injected of injectedForeground.slice(graphForeground.length)) {
+        injected.zIndex = elements.length + 1
+        elements.push(injected)
+      }
+      attachSourceNodes(elements, graphSlide.nodes, slideIndex, scale)
     }
 
     // 08b: animation inventory from slide XML
     let animationMeta = { animations: [], unsupported: [], fragmentHints: [] }
     if (zip) {
-      const slideXml = await readZipText(zip, `ppt/slides/slide${slideIndex + 1}.xml`)
+      const slideXml = await readZipText(zip, slidePaths[slideIndex])
       animationMeta = parseSlideAnimations(slideXml)
       stats.animationCount += animationMeta.animations.length
       stats.unsupportedAnimationCount += animationMeta.unsupported.length
@@ -385,16 +537,23 @@ async function mapPptxOutput({
     ).size
     // Prefer package chart evidence; also count scene-graph chart nodes when present
     const graphChartCount = graphSlide
-      ? (graphSlide.nodes || []).filter((n) => n.graphicKind === 'chart' || n.rels?.chartTarget).length
+      ? (graphSlide.nodes || []).filter((n) => n.graphicKind === 'chart' || n.rels?.chartTarget)
+          .length
       : 0
     const graphDiagramCount = graphSlide
-      ? (graphSlide.nodes || []).filter((n) => n.graphicKind === 'diagram' || n.rels?.diagramTarget).length
+      ? (graphSlide.nodes || []).filter((n) => n.graphicKind === 'diagram' || n.rels?.diagramTarget)
+          .length
       : 0
     const chartEvidenceCount = Math.max(evidence.chartEntries.length, graphChartCount)
     const smartArtEvidenceCount = Math.max(evidence.smartArtEntries.length, graphDiagramCount)
     const chartCoverageGapCount = Math.max(0, chartEvidenceCount - mappedNativeChartCount)
     const smartArtCoverageGapCount = Math.max(0, smartArtEvidenceCount - mappedNativeDiagramCount)
-    if (chartEvidenceCount || smartArtEvidenceCount || mappedNativeChartCount || mappedNativeDiagramCount) {
+    if (
+      chartEvidenceCount ||
+      smartArtEvidenceCount ||
+      mappedNativeChartCount ||
+      mappedNativeDiagramCount
+    ) {
       nativeObjectSlides.push({
         slideIndex,
         chartEvidenceCount,
@@ -425,6 +584,10 @@ async function mapPptxOutput({
       elements,
       notes: slide.note ? sanitizeHtml(slide.note) : '',
       ...mapSlideTransition(slide, warnings, slideIndex),
+      // Save-safe presence only; targetless source inventory stays private.
+      ...(animationMeta.animations.length || animationMeta.unsupported.length
+        ? { hasSourceTiming: true }
+        : {}),
       ...(animationMeta.fragmentHints.length
         ? {
             _pptxAnimations: {
@@ -445,21 +608,36 @@ async function mapPptxOutput({
     })
   }
 
-  const nativeChartImportedCount = nativeObjectSlides.reduce((sum, slide) => sum + slide.mappedNativeChartCount, 0)
-  const nativeSmartArtImportedCount = nativeObjectSlides.reduce((sum, slide) => sum + slide.mappedNativeDiagramCount, 0)
+  const nativeChartImportedCount = nativeObjectSlides.reduce(
+    (sum, slide) => sum + slide.mappedNativeChartCount,
+    0
+  )
+  const nativeSmartArtImportedCount = nativeObjectSlides.reduce(
+    (sum, slide) => sum + slide.mappedNativeDiagramCount,
+    0
+  )
   const nativeObjectCoverage = {
     chartEvidenceCount: ooxml.nativeChartCount,
     smartArtEvidenceCount: ooxml.nativeSmartArtCount,
     mappedNativeChartCount: nativeChartImportedCount,
     mappedNativeDiagramCount: nativeSmartArtImportedCount,
-    chartCoverageGapCount: nativeObjectSlides.reduce((sum, slide) => sum + slide.chartCoverageGapCount, 0),
-    smartArtCoverageGapCount: nativeObjectSlides.reduce((sum, slide) => sum + slide.smartArtCoverageGapCount, 0),
+    chartCoverageGapCount: nativeObjectSlides.reduce(
+      (sum, slide) => sum + slide.chartCoverageGapCount,
+      0
+    ),
+    smartArtCoverageGapCount: nativeObjectSlides.reduce(
+      (sum, slide) => sum + slide.smartArtCoverageGapCount,
+      0
+    ),
     slides: nativeObjectSlides,
   }
 
   const themeColors = themeInfo.scheme
     ? Object.fromEntries(
-        Object.entries(themeInfo.scheme).map(([k, v]) => [k, resolveSchemeColor(k, themeInfo.scheme) || v])
+        Object.entries(themeInfo.scheme).map(([k, v]) => [
+          k,
+          resolveSchemeColor(k, themeInfo.scheme) || v,
+        ])
       )
     : output.themeColors || []
 
@@ -469,18 +647,22 @@ async function mapPptxOutput({
       theme: 'white',
       transition: 'slide',
       slides,
-      resolution: { width: CANVAS_SIZE.width, height: CANVAS_SIZE.height },
+      resolution: sourceSize.resolution,
       _pptxMeta: {
         originalSize: { width: sourceSize.width, height: sourceSize.height },
+        geometryPolicy: 'native-aspect-v1',
         usedFonts: output.usedFonts || [],
-        themeColors: Array.isArray(output.themeColors) && output.themeColors.length
-          ? output.themeColors
-          : themeColors,
+        themeColors:
+          Array.isArray(output.themeColors) && output.themeColors.length
+            ? output.themeColors
+            : themeColors,
         themeScheme: themeInfo.scheme || null,
         themeFonts: themeInfo.fonts || null,
         themePath: themeInfo.themePath || null,
         unsupportedFeatures,
-        layoutProvenance: hasNativeMasters ? { source: 'pptx-native-master', treatment: 'flattened-no-linked-layout' } : undefined,
+        layoutProvenance: hasNativeMasters
+          ? { source: 'pptx-native-master', treatment: 'flattened-no-linked-layout' }
+          : undefined,
       },
     },
     stats: {

@@ -17,12 +17,12 @@ function mapChartType(pptxType = '') {
   if (t.includes('doughnut')) return 'doughnut'
   if (t.includes('radar')) return 'radar'
   if (t.includes('polar')) return 'polarArea'
+  if (t.includes('bubble')) return 'bubble'
+  if (t.includes('stock')) return 'stock'
+  if (t.includes('surface')) return 'surface'
   if (t.includes('area')) return 'line'
-  if (t.includes('bubble')) return 'bar'
   if (t.includes('bar')) return 'bar'
   if (t.includes('stacked')) return 'bar'
-  if (t.includes('stock')) return 'line'
-  if (t.includes('surface')) return 'bar'
   if (t.includes('scatter')) return 'line'
   return 'bar'
 }
@@ -39,12 +39,12 @@ function chartGroupingFlags(element) {
   return flags
 }
 
-function mapCommonChart(element) {
+function mapCommonChart(element, xyData) {
   const colors = element.colors || []
   const firstSeries = element.data?.[0]
-  const labels = firstSeries?.values?.map((v) => String(v.x ?? v.label ?? '')) || []
+  const labels = xyData?.labels ?? firstSeries?.values?.map((v) => String(v.x ?? v.label ?? '')) ?? []
 
-  const datasets = (element.data || []).map((series, i) => ({
+  const datasets = xyData?.datasets ?? (element.data || []).map((series, i) => ({
     label: String(series.key || `Series ${i + 1}`),
     data: series.values?.map((v) => (typeof v.y === 'number' ? v.y : 0)) || [],
     color: colors[i] || DEFAULT_COLORS[i % DEFAULT_COLORS.length],
@@ -69,46 +69,44 @@ function mapCommonChart(element) {
   }
 }
 
-function mapScatterChart(element) {
+function mapXYChart(element) {
   const colors = element.colors || []
   const data = element.data || []
-
-  // Format A: pptxtojson native [x-values, y-values] parallel arrays
-  if (Array.isArray(data) && data.length >= 2 && Array.isArray(data[0]) && Array.isArray(data[1])) {
-    const xValues = data[0] || []
-    const yValues = data[1] || []
-    const labels = xValues.map((v) => String(v ?? ''))
-    return {
-      chartType: 'line',
-      chartData: {
-        labels,
-        datasets: [{
-          label: 'Series 1',
-          data: yValues.map((v) => (typeof v === 'number' ? v : 0)),
-          color: colors[0] || DEFAULT_COLORS[0],
-        }],
-      },
-      _pptxChartMeta: { originalType: 'scatterChart' },
+  const bubble = String(element.chartType || '').toLowerCase().includes('bubble')
+  // The pinned parser emits parallel caches for one XY series, but point
+  // objects for multiple series. Never inspect Array.prototype.values as data.
+  const parallel = Array.isArray(data[0]) && Array.isArray(data[1])
+  const datasets = parallel ? [{
+    label: 'Series 1',
+    data: data[1],
+    xValues: data[0],
+    ...(bubble ? { bubbleSizes: data[2] } : {}),
+    color: colors[0] || DEFAULT_COLORS[0],
+  }] : data.map((series, i) => {
+    const points = series.values
+    if (!Array.isArray(points)) throw new TypeError('Invalid XY chart series values')
+    let count = series.pointCount ?? points.length
+    for (const [ordinal, point] of points.entries()) count = Math.max(count, (point.index ?? ordinal) + 1)
+    const xValues = Array(count).fill(null), values = Array(count).fill(null)
+    const sizes = bubble ? Array(count).fill(null) : null
+    for (const [ordinal, point] of points.entries()) {
+      const index = point.index ?? ordinal
+      xValues[index] = point.x ?? null
+      values[index] = point.y ?? null
+      if (sizes) sizes[index] = point.bubbleSize ?? null
     }
-  }
-
-  // Format B: CommonChart format (key/values) — fallback for PPTX with scatter rendered as series
-  if (Array.isArray(data) && data.length > 0) {
-    const firstSeries = data[0]
-    const labels = (firstSeries?.values || []).map((v) => String(v.x ?? v.label ?? ''))
-    const datasets = data.map((series, i) => ({
+    return {
       label: String(series.key || `Series ${i + 1}`),
-      data: (series.values || []).map((v) => (typeof v.y === 'number' ? v.y : 0)),
+      data: values,
+      xValues,
+      ...(sizes ? { bubbleSizes: sizes } : {}),
       color: colors[i] || DEFAULT_COLORS[i % DEFAULT_COLORS.length],
-    }))
-    return {
-      chartType: 'line',
-      chartData: { labels, datasets },
-      _pptxChartMeta: { originalType: 'scatterChart' },
     }
-  }
-
-  return { chartType: 'line', chartData: { labels: [], datasets: [] }, _pptxChartMeta: { originalType: 'scatterChart' } }
+  })
+  return mapCommonChart(element, {
+    labels: datasets[0]?.xValues.map(value => String(value ?? '')) ?? [],
+    datasets,
+  })
 }
 
 function mapChart(element) {
@@ -119,11 +117,10 @@ function mapChart(element) {
   const originalType = element._pptxChartMeta?.originalType || element.chartType
   const supportType = isCombo ? 'comboChart' : originalType
   const support = supportRow(supportType)
-  // scatter → mapScatterChart (native [x,y] format); bubble → mapCommonChart
-  const isScatter = type.includes('scatter')
+  const isXY = type.includes('scatter') || type.includes('bubble')
 
   let mapped
-  if (isScatter) mapped = mapScatterChart(element)
+  if (isXY) mapped = mapXYChart(element)
   else mapped = mapCommonChart(element)
 
   return {

@@ -21,6 +21,13 @@ describe('placeholder-resolve (T4.2)', () => {
     expect(elements[0]._pptxSource.nodeId).toBe('2')
   })
 
+  it('uses native uniform scale for source placeholder geometry, including zero origins', () => {
+    const { elements } = resolveLayoutPlaceholders({ elements: [] }, {
+      nodes: [{ id: 'title', kind: 'shape', ph: { type: 'title' }, xfrm: { x: 0, y: 0, cx: 600, cy: 100 } }],
+    }, { scale: { x: 0.5, y: 0.5 } })
+    expect(elements[0]).toMatchObject({ x: 0, y: 0, width: 300, height: 50, fontSize: 18 })
+  })
+
   it('does not inject when text already present', () => {
     const slide = { elements: [{ type: 'text', content: '<p>Hello</p>' }] }
     const graphSlide = { nodes: [{ id: '2', kind: 'shape', ph: { type: 'title' } }] }
