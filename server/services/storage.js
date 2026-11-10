@@ -168,18 +168,40 @@ function initDataFiles() {
 }
 
 // ── Presentations ────────────────────────────────────────────────────────────
+let presentationsCache = null
+let presentationsMtime = 0
+
 async function readPresentations() {
   return withFileLock(DATA_FILE, async () => {
-    return fs.readJson(DATA_FILE)
+    try {
+      const stat = await fs.stat(DATA_FILE)
+      if (presentationsCache && stat.mtimeMs === presentationsMtime) {
+        return [...presentationsCache]
+      }
+      const data = await fs.readJson(DATA_FILE)
+      presentationsCache = data
+      presentationsMtime = stat.mtimeMs
+      return [...data]
+    } catch {
+      presentationsCache = null
+      presentationsMtime = 0
+      return fs.readJson(DATA_FILE)
+    }
   })
 }
 
 async function writePresentations(data) {
-  return withFileLock(DATA_FILE, async () => writeJsonAtomic(DATA_FILE, data, { spaces: 2 }))
+  return withFileLock(DATA_FILE, async () => {
+    presentationsCache = null
+    presentationsMtime = 0
+    return writeJsonAtomic(DATA_FILE, data, { spaces: 2 })
+  })
 }
 
 async function withPresentations(fn, { signal } = {}) {
   return withFileLock(DATA_FILE, async () => {
+    presentationsCache = null
+    presentationsMtime = 0
     signal?.throwIfAborted()
     const presentations = await fs.readJson(DATA_FILE)
     signal?.throwIfAborted()

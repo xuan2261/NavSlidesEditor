@@ -17,13 +17,197 @@ Automatic deadline recovery only reads the job status. It does not reconcile, ca
 
 A completed durable package job remains `pending-visibility` and deliberately withholds `presentationId` until its compatibility projection is listable (contract B). The per-job capability secret has a one-time, in-memory plaintext handoff; job state retains a verifier hash. Status, cancellation, and reconciliation use the capability header, while SSE must carry it in the stream query because `EventSource` cannot set headers. Proxy access logs must scrub the query string for `/api/pptx/jobs/*/stream`; deployment guidance is in the [deployment guide](deployment-guide.md#pptx-import-policy). The owners are [`pptx-import-job-manager.js`](../server/services/pptx-import-job-manager.js) and [`pptx-import.js`](../server/routes/pptx-import.js).
 
+Recovery reads also recognize a server-owned saved successor of a visible import.
+New import authority records retain the original head hash; recovery requires that
+hash to match the durable receipt, the presentation identity and original revision
+to agree, and the current authoritative projection and package bytes to validate.
+The import commit and rollback probes still require the exact original head.
+Older authority records without the retained hash are not promoted by guessing
+from a larger generation; missing or conflicting proof remains `pending-visibility`.
+Regression coverage includes two saves and a package-store restart in
+[`pptx-import-successor-visibility.test.js`](../server/routes/pptx-import-successor-visibility.test.js).
+
 The server owns a bounded import report. Its editor form retains only bounded categories, locations, and summary data; it removes job identifiers, timestamps, and raw diagnostic messages. External DTOs reduce the report to a summary, and portable project exports omit it. See [`import-report.js`](../server/services/pptx-import/import-report.js), [`dto.js`](../server/services/pptx-import/package-store/dto.js), and [`export-project.js`](../client/src/utils/export-project.js).
+
+The bounded warning collector keeps its accumulation method non-enumerable so
+returned warning arrays can cross structured-clone boundaries and deterministic
+import comparisons as data. Count/byte caps and the source collector's
+`omittedCount` remain intact; copying its entries is not a substitute for
+carrying omission accounting through the importer. Owner:
+[`warning-budget.js`](../server/services/pptx-import/warning-budget.js).
 
 ### Media and claim boundary
 
 Imported external media is blocked by default and can only use administrator-configured exact origins. EMF/WMF conversion remains default-off; when enabled, the converter policy requires an allowed absolute executable below an absolute trusted root and a matching SHA-256 before spawning it. Those checks are not an OS or network sandbox. The configuration and operational boundary is in the [deployment guide](deployment-guide.md#pptx-import-policy); executable owners are [`constants.js`](../server/services/pptx-import/constants.js), [`map-media.js`](../server/services/pptx-import/mapper/map-media.js), and [`emf-wmf-sandbox.js`](../server/services/pptx-import/emf-wmf-sandbox.js).
 
 This evidence supports the application parser and its software contracts only. It does not claim native PowerPoint or OfficeCLI validation, or pixel-perfect/1:1 fidelity; see [Export Fidelity and Known Limitations](export-fidelity-and-limits.md#evidence-boundary).
+
+### Semantic projection working-tree evidence (2026-10-25)
+
+The approved acceptance ledger remains **10/29**, Tasks1–10 only. The
+[execution ledger](../.omo/drafts/pptx-semantic-execution.md#current-acceptance-ledger--2026-10-25)
+owns the remaining task prerequisites; historical family receipts are not task
+promotion or native edited-PPTX qualification.
+
+Exact-duration fade admission retains source XML, both AlternateContent branches,
+and hash/path-bound provenance. Source projection initializes the imported slide;
+later NavSlides transition edits survive normalization/reopen without rewriting
+that source. Owners: [transition contract](../shared/src/pptx-transition-document.js),
+[source adapter](../server/services/pptx-import/semantic-source-transitions.js), and
+[reopen/provenance regressions](../tests/pptx-semantic/transition-oct25-source.test.js).
+The [90/90 focused result](../.omo/evidence/pptx-semantic/transition-oct25-tests.json)
+is not full-deck admission. The unchanged `Bai_2_2.pptx`
+[full-import receipt](../.omo/evidence/pptx-semantic/transition-oct25-smoke-receipt.json)
+fails at **Semantic data budget exceeded**, not the old unmapped transition.
+No budget increase or source/corpus rewrite is qualified by this result.
+
+The [compatibility receipt](../.omo/evidence/pptx-semantic/compatibility-oct25-execution-receipt.md)
+records **83/83** focused tests, narrow lint, reverse restoration between base and
+edited pending semantic snapshots, nine byte/hash-identical Original responses,
+and actual HTTP/package-store shutdown/restart proof. Its residual slide12
+transition note is superseded by the full-import receipt above. These bounded
+consumer/history results do not complete Task23, its family dependencies, native
+validation, or Docker/Electron runtime qualification. The journal-epoch reader
+change remains under independent security review; no security approval is claimed.
+
+Retained native inputs ([prerequisites](../.omo/evidence/pptx-semantic/native-evidence-oct25-prerequisites-f4096ecf.json))
+have verified integrity for 11 decks/152 PNGs and exact Arial regular/bold assets.
+That is **input integrity, not a current visual pass**: the attempted canonical
+capture failed on its first deck and published no actuals. Native line boxes,
+Aptos/script-face coverage, audited extra-feature references and current authorized
+oracle bindings remain missing. Bounded genuine geometry desktop light/dark
+lifecycle receipts do not close the phone matrix or native pixel qualification.
+Linked workspace CommonJS direct package imports are owned by
+[`client/vite.config.js`](../client/vite.config.js); corrected Vite development
+interop is not proof of a current production build or full runtime qualification.
+
+Current regression entry points: [native chart source/rendering](../tests/pptx-semantic/semantic-chart-native-geometry.test.jsx),
+[real parser-to-mapper XY preservation](../tests/pptx-semantic/semantic-chart-parser-mapper.test.js),
+[committed semantic-cut transactions](../client/src/hooks/use-clipboard.semantic-concurrency.test.jsx),
+and [source timing after canonical reopen](../client/src/hooks/editor-controller/editor-source-timing-reopen.test.jsx).
+Synthetic source-explicit editor smoke is not a PowerPoint-authored native
+comparison or full dashboard workflow qualification.
+
+### Geometry validation and projection repair (2026-10-27)
+
+Source-context admission resolves latent stroke colors even for uninstantiated,
+hidden, tombstoned or occurrence-masked source declarations. Geometry returned by
+`materializeGeometry` remains caller-owned mutable data: connector endpoint
+resolution must not contaminate later reads or source geometry. Compatibility
+projection reuses one materialization only within the current schema-2 element
+pass; ordinary elements and other schema versions retain their existing route.
+
+The [geometry regression receipt](../.omo/evidence/pptx-semantic/oct27-geometry-local-reuse-regressions.json)
+records **1,953/1,953** passing tests across 68 files. Strict lint passed for both
+changed shared modules. A mixed ordinary/semantic element smoke passed; repeated
+normalization of the retained double-ellipse presentation remained equal and took
+about 1.24 seconds in the measured run. The rejected shared-mutable cache's 1.2ms
+result is not a valid performance claim. This is not a completed dashboard
+lifecycle, native fidelity qualification or task promotion; the ledger remains
+**10/29**.
+
+Subsequent actual dashboard lifecycle execution reached the edited/reopened
+canvas and Original/sibling assertions, then exhausted its unchanged 360-second
+overall deadline during portable project export. The retained failure is
+`oct27-local-reuse-lifecycle` under the evidence directory. The CPU profile
+`oct27-select-geometry.cpuprofile` locates repeated compound-outline clipping in
+geometry normalization during selection. The correction retains only one
+successful value-keyed outline-validation proof, never a mutable geometry or
+paint result; each call still clones and structurally validates input, and a
+changed input must pass outline derivation again. Failed derivations are not
+cached. `oct27-outline-proof-regressions.json` records **1,956/1,956** passing
+geometry tests across 68 files, including repeated-read ownership and edited
+reversal rejection. Final strict lint and client build passed. The current-source
+four-environment lifecycle is a separate acceptance check, not implied by those
+unit results.
+
+Signed zero is excluded from validation-proof reuse and admission: JSON encoding
+alone conflates `0` and `-0`, although guide evaluation can distinguish them.
+The failing-before regression and [current full geometry receipt](../.omo/evidence/pptx-semantic/oct27-outline-signed-zero-full-regressions.json)
+record **1,957/1,957** passing tests across 68 files. A current-code smoke on the
+retained native presentation returned independent normalized values without
+changing its input; measured calls took approximately 2,013ms, 175ms and 160ms.
+
+The next four-environment run (`oct27-outline-proof-lifecycle`) failed separately:
+keyboard navigation crossed an unsupported `Default` cap before the requested
+choice; portable reimport collapsed generations 1–7 into six generation-1
+authorities and one generation-2 head. The latter returned HTTP422
+`CURRENT_SOURCE_AUTHORITY_UNAVAILABLE` after durable package publication.
+The keyboard helper now navigates relative to the actual selected option, with
+its keyboard and persisted-value assertions retained. Portable import reserves
+the whole source generation range above an existing destination instead of
+merging historical authorities. This also preserves older-package journal source
+references; compacting only the retained-result range made a re-export fail with
+`Invalid source package generation`.
+
+The [portable boundary receipt](../.omo/evidence/pptx-semantic/oct27-portable-full-range-green.json)
+records **51/51** passing tests across three files, including multi-save
+edit/undo/redo histories, same-package replacement, older journal references,
+Original bytes and input-bundle immutability. The earlier wider post-fixture run
+records **56/57**, not a suite pass: one existing HTTP round-trip test exceeded
+its unchanged 5,000ms deadline (5,236ms). Contention/cold-start is an unproven
+explanation, not grounds to increase the deadline or suppress that result.
+Strict lint and the rebuilt client passed. These are bounded repairs, not Task11,
+full lifecycle/native qualification or promotion beyond **10/29**.
+
+### Portable picture ownership repair (2026-10-27)
+
+Project import rebinds uploaded-picture receipts to the destination presentation
+and installed upload filename, including retained journal preconditions and
+inverse values. The derived `pptxPictureAsset.src` follows the same URL mapping;
+source definitions and unrelated occurrences remain unchanged. Media inventory
+is read-only, including when a receipt belongs to a different presentation.
+Schema 3 picture operations and geometry-provider resolution use the existing
+semantic record adapters; parent topology is checked before catalog decoding.
+
+The [ownership/replay regression receipt](../.omo/evidence/pptx-semantic/oct27-picture-portable-cycle-green.json)
+records **114/114** tests; the [provider/geometry regression receipt](../.omo/evidence/pptx-semantic/oct27-portable-provider-geometry-regressions.json)
+records **2,472/2,472** across 101 files. Independent review removed repeated
+identity-index construction from receipt traversal; raw wire keys and identity
+catalogs remain unchanged, with [24/24 affected regressions](../.omo/evidence/pptx-semantic/oct27-picture-literal-receipt-green.json).
+Changed-file strict ESLint, the final client build and runtime closure passed.
+
+The [four-environment browser receipt](../.omo/evidence/pptx-semantic/oct27-picture-portable-final-browser.json)
+passes desktop/phone, light/dark and pointer/keyboard journeys for crop500,
+whole-image replacement, explicit save, Undo/Redo, reopen, shared-occurrence and
+Original immutability, and portable project reimport. That runtime predates only
+the traversal-performance correction. The [final reviewed runtime binding](../.omo/evidence/pptx-semantic/oct27-picture-linear-runtime.json)
+records actual HTTP asset-byte equality, source-visitor hash and readiness; its
+[desktop pointer/light lifecycle](../.omo/evidence/pptx-semantic/oct27-picture-linear-browser.json)
+also passed. These are genuine application lifecycle results, not native visual
+qualification, full Task12 acceptance or promotion beyond the **10/29** ledger.
+
+### Import correctness repairs (2026-10-12, working tree)
+
+Parser output now follows the relationship-bound `p:sldIdLst` order rather than
+numeric slide filenames. Scene graph, chart/diagram inventory, layout lookup,
+animation metadata and source-map indexing use the same authored order, including
+gaps in slide numbering. The adapter in
+[`slide-order.js`](../server/services/pptx-import/slide-order.js) checks parser
+part identity before reordering; it does not rewrite source package bytes.
+
+Picture crop values use the installed parser's percentage contract, so a 0.5%
+crop remains 0.005 rather than 0.5. Flattened groups compose image reflections
+and reflection-aware rotations, while line endpoints retain their transformed
+orientation without a second group reflection. These repairs have synthetic
+real-package and mapper regressions; they do not establish numerical full-corpus
+fidelity or generic shape-reflection rendering.
+
+### Table and paragraph repair boundary (2026-10-12, working tree)
+
+The importer uses its 72-DPI point coordinate space for paragraph EMU lengths (12,700 EMU/point), not the generic 96-DPI CSS conversion. Owners: [`ooxml-native-text-style-paragraph.js`](../server/services/pptx-import/ooxml-native-text-style-paragraph.js) and [`paragraph-point-space.test.js`](../server/services/pptx-import/paragraph-point-space.test.js).
+
+Table source matching restores ordinary spaces, genuine NBSP and paragraph/break boundaries only with exact provenance; selected table-style `noFill` remains transparent without overriding applicable direct fills. The owners are [`table-source-text.js`](../server/services/pptx-import/mapper/table-source-text.js), [`table-source-fill.js`](../server/services/pptx-import/mapper/table-source-fill.js) and [`table-rich-cell.js`](../server/services/pptx-import/mapper/table-rich-cell.js). Canonical rich content has one sanitized authority; primitive strings remain literal to avoid silently reinterpreting old authored cells as markup.
+
+The [Phase 17 verification contract](../plans/261009-0901-navslides-full-reliability-deep-tdd/phase-17-worst-slide-table-text-tdd.md) and [affected regression receipt](../plans/261009-0901-navslides-full-reliability-deep-tdd/reports/rich-cell-affected-final-green.json) own the bounded evidence. Rich editing and reconstructed exports do not qualify validated edited-package export, numerical corpus fidelity or release acceptance.
+
+### Native projection corrections (2026-10-11, working tree)
+
+Native parser layout/master elements now pass through the existing mapper instead of being replaced by reduced XML decorations. Matching uses source-part identity; hidden content is suppressed only with exact source proof. Native groups retain their contiguous paint order, including unmatched descendants, and an earlier consumed match cannot make an ambiguous name unique. Unmatched parser content remains visible.
+
+Relationship-linked OOXML text styles resolve supported Latin fonts and untransformed colors through direct, layout, master and theme inheritance. Paragraph spacing and leading use the source body defaults; unsupported or ambiguous styling remains in the parser payload. Canvas and generated shape text retain sanitized rich markup. Valid XML whitespace around attribute `=` is accepted; malformed attributes still reject.
+
+The visual capture excludes only owned presenter chrome, retaining the fixed viewport and authored pixels. A real blank/red sentinel smoke changed from 1,626/1,636 contaminated pixels to zero. The final affected run passed 1,592 tests with zero failures and two platform skips; actual production-editor import displayed Times New Roman on slide 18 and returned byte-identical Original PPTX. Full canonical capture completed 11 decks / 152 slides with valid source/image manifests and unchanged declared source inputs. Mean SSIM is 0.566244 and minimum 0.026795: the unchanged `phase08_full` policy (0.99 / 0.97) still fails, with 151 slides below its minimum. Existing 960×540 normalization remains unchanged; the 4:3 actual is stretched while the native-aspect golden is letterboxed. Closing this mismatch requires an explicit geometry-contract decision, not a threshold override. [Scoped repair evidence](../plans/261009-0901-navslides-full-reliability-deep-tdd/reports/261011-fidelity-remediation.json) records the full comparison and authority blockers; this is not release qualification.
 
 ## Current EMF/WMF converter boundary (2026-07-26)
 
@@ -714,3 +898,24 @@ server/data/test-corpus/
 2. **Expand with more real decks** → add Office 365 and SmartArt-heavy decks beyond the initial n=10 corpus.
 3. **Track per-type round-trip gates** → optionally enforce per-type round-trip targets in strict mode.
 4. **Performance benchmarks** → measure 100-slide deck import + round-trip runtime.
+
+## Semantic continuation evidence
+
+The current implementation checkpoint is
+[the semantic execution record](../.omo/drafts/pptx-semantic-execution.md);
+[the integration receipt](../.omo/evidence/pptx-semantic/resume-oct20-repair-integration.json)
+separates actual editor observations from source-reader diagnostics and native-corpus qualification.
+
+Source-bound media playback authoring is owned by `shared/src/pptx-media-document.js`
+and exercised by `client/src/hooks/editor-controller/editor-media-playback-authoring.test.jsx`.
+Playback editing evidence does not qualify imported actions, all media formats,
+or native edited-PPTX export. Those acceptance gates remain independent.
+
+The import diagnostics panel uses the editor's theme text tokens in both light and
+dark modes. The October29 correction was checked on actual desktop and phone
+surfaces; dark heading/summary contrast measured14.18:1/7.98:1. The retained
+[picture lifecycle observation](../.omo/evidence/pptx-semantic/oct29-integration32/picture-lifecycle.json)
+proves dashboard import,0.5% occurrence crop, Undo/Redo, save/reopen and immutable
+Original/siblings for one unchanged corpus deck. It does not qualify native text
+layout, all image effects, or the full semantic/native acceptance matrix.
+

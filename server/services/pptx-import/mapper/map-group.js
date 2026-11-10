@@ -22,9 +22,10 @@ function buildGroupMatrix(group, scale, parentMatrix = identityMatrix()) {
 
   let matrix = translate(left, top)
   const rotation = readNumber(group?.rotate, 0)
-  if (rotation !== 0) matrix = multiply(rotateAround(rotation, cx, cy), matrix)
+  // OOXML flips in the group's local axes before rotating about its center.
   if (group?.isFlipH) matrix = multiply(scaleAround(-1, 1, cx, cy), matrix)
   if (group?.isFlipV) matrix = multiply(scaleAround(1, -1, cx, cy), matrix)
+  if (rotation !== 0) matrix = multiply(rotateAround(rotation, cx, cy), matrix)
 
   return multiply(parentMatrix, matrix)
 }
@@ -39,7 +40,7 @@ async function withContextZIndex(context, zIndex, callback) {
   }
 }
 
-async function flattenGroupElement(group, context, mapElementFn, depth = 0, parentMatrix = identityMatrix(), inheritedRotate = 0) {
+async function flattenGroupElement(group, context, mapElementFn, depth = 0, parentMatrix = identityMatrix(), inheritedRotate = 0, inheritedFlipH = false, inheritedFlipV = false) {
   const results = []
 
   if (depth > MAX_GROUP_DEPTH) {
@@ -50,6 +51,11 @@ async function flattenGroupElement(group, context, mapElementFn, depth = 0, pare
 
   const groupRotation = readNumber(group?.rotate, 0)
   const groupMatrix = buildGroupMatrix(group, context.scale, parentMatrix)
+  // F R(angle) = R(det(F) * angle) F; axis reflections compose by XOR.
+  const rotation = inheritedRotate + (inheritedFlipH !== inheritedFlipV ? -groupRotation : groupRotation)
+  const flipH = inheritedFlipH !== Boolean(group?.isFlipH)
+  const flipV = inheritedFlipV !== Boolean(group?.isFlipV)
+  const rotationSign = flipH !== flipV ? -1 : 1
   const children = group.elements || []
   for (const child of children) {
     const childZIndex = context.zIndex + results.length
@@ -60,7 +66,9 @@ async function flattenGroupElement(group, context, mapElementFn, depth = 0, pare
         mapElementFn,
         depth + 1,
         groupMatrix,
-        inheritedRotate + groupRotation
+        rotation,
+        flipH,
+        flipV
       ))
       for (const nestedChild of nested) {
         results.push({ ...nestedChild, zIndex: context.zIndex + results.length })
@@ -91,11 +99,13 @@ async function flattenGroupElement(group, context, mapElementFn, depth = 0, pare
       top: (childCenter.y - childBoxLocal.height / 2) / context.scale.y,
       width: childBoxLocal.width / context.scale.x,
       height: childBoxLocal.height / context.scale.y,
-      // Shapes: the wrapper rotates once about center, so accumulate all
-      // rotation here. Lines: their endpoints already carry the full accumulated
-      // rotation via groupMatrix, so keep only the child's own rotation or the
-      // wrapper would rotate them again.
-      rotate: isLine ? childRotate : childRotate + inheritedRotate + groupRotation,
+      // Lines already carry group orientation in their endpoints. Their own
+      // rotation still changes handedness under a group reflection.
+      rotate: rotationSign * childRotate + (isLine ? 0 : rotation),
+      ...(isLine ? {} : {
+        isFlipH: flipH !== Boolean(child?.isFlipH),
+        isFlipV: flipV !== Boolean(child?.isFlipV),
+      }),
     }
 
     if (isLine) {

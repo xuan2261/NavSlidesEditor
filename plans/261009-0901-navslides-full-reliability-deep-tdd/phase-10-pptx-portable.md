@@ -1,7 +1,7 @@
 ---
 phase: 10
 title: "Portable archive: revision, blob, media và authority"
-status: in-progress
+status: completed
 priority: P1
 effort: ""
 dependencies: [9]
@@ -102,13 +102,13 @@ npx playwright test tests/e2e/portable-project-roundtrip.spec.js --project=chrom
 Export từ chính UI package-backed deck có ảnh/video và một deck không local media; Open từ cả Home và Editor ở server temp mới không blobs/media. Ngắt process giữa publish rồi restart. Tắt truy cập root A, GET canonical deck/fetch destination media và download Original/Validated Edited theo availability; so hashes và render thực.
 
 ## Deliverables / checklist
-- [ ] 10.1 Chốt phase-entry evidence, callers, môi trường và baseline.
-- [ ] 10.2 Viết/reuse matrix regression trước thay behavior; lưu RED hoặc existing-GREEN đúng nguyên nhân.
-- [ ] 10.3 Hoàn thành implementation/verification steps; không hạ policy hoặc bỏ invariant.
-- [ ] 10.4 Focused regression và runtime smoke đạt, receipt gắn SHA/artifact/fixture identity.
-- [ ] 10.5 Cập nhật tài liệu/changelog cho thay đổi permanent, giữ limits; không mark code fix khi chỉ verification.
+- [x] 10.1 Chốt phase-entry evidence, callers, môi trường và baseline.
+- [x] 10.2 Viết/reuse matrix regression trước thay behavior; lưu RED hoặc existing-GREEN đúng nguyên nhân.
+- [x] 10.3 Hoàn thành implementation/verification steps; không hạ policy hoặc bỏ invariant.
+- [x] 10.4 Focused regression và runtime smoke đạt, receipt gắn SHA/artifact/fixture identity.
+- [x] 10.5 Cập nhật tài liệu/changelog cho thay đổi permanent, giữ limits; không mark code fix khi chỉ verification.
 
-Execution: archive/session/client implementation, retained-authority GREEN và source-bound process termination passed P10-08 tại năm boundaries. Browser final04 (`reports/editor-portable-ui-final04.json`) passed bảy native journeys, superseding retained final02 offline-poster failure; Home/Editor, no-local-media và explicit refusal variants được chạy. Đây là scoped working-tree evidence, không clean-SHA qualification. Exact archive/store/HTTP regressions pass 86 tests/eight files; final current-input process/browser binding vẫn mở. Xem [execution ledger](evidence-ledger.md#execution-ledger-reconciliation).
+Execution / closure 2026-11-07: user authorized conditional closure; independent final review found no remaining scoped exit blocker. Gate CLOSED using `reports/p10-bound-20261107.json` (214 passed, exit 0) and matching 2,150-file `-identity.json`, `reports/p10-e2e-portable-20261106-run1.json` (seven passed native journeys, all attached identities matched) and `reports/p10-process-kill-20261106-run1.json` (five passed boundaries, two restarts each, exit 0, matching source manifests). Final recorded-file hash comparison found no workspace differences. All P10-01–15 mapped in `reports/p10-oracle-evidence-20261106.md`, including supplemented foreign source-map/presentation authority negatives. Existing implementation verified without duplicate tests or policy weakening; format docs/changelog corrected. Separately bound executions are not a joint digest or clean-SHA release qualification. Chromium/local and process-termination limits remain; no Office validation, power-loss/fsync, signing or release acceptance inferred.
 
 ## Exit gate
 Full archive portability có evidence độc lập package bundle unit tests; fenced replace, create-new default, không missing media success. Legacy JSON không tăng fidelity claim.

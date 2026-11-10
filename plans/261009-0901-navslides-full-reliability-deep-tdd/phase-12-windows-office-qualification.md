@@ -19,6 +19,14 @@ Nguồn scout là đọc mã, không phải test đã chạy. Xem [evidence ledg
 
 Execution: independent producers local GREEN; exact NSIS/portable physical OfficeCLI/PowerPoint, signing, independent download/signature và attestation gates blocked. Actual release integration testResults không chứa physical-release-envelope test; requested filters không proof. Xem [execution ledger](evidence-ledger.md#execution-ledger-reconciliation).
 
+2026-10-11 bounded correction: [repair receipt](reports/261011-fidelity-remediation.json) records native master/layout and Latin text inheritance/spacing, rich shape rendering, valid XML attribute whitespace and exact group paint-order repairs. Final affected verification: 178 files, 1,592 pass, zero failures, two platform skips; actual editor import and Original SHA-256 preservation observed. Canonical capture published all 11 decks / 152 slides with valid source/image manifests and identical declared source digests before/after. Per-deck production processes retained the 300/15-minute limiter, default capture deadlines and canonical atomic manifest publication; all drained and exited 0.
+
+The following paragraph is the historical pre-decision checkpoint, not the current geometry contract.
+
+Fixed `phase08_full` visual policy remains **failed**: mean 0.5662440466579346, minimum 0.026795435502743763, 151 slides below 0.97. The approved existing normalized 960×540 canvas is preserved; paired 4:3 images show a stretched actual versus a native-aspect letterboxed golden. Changing this geometry contract requires an explicit decision. Other residuals are not attributed to rendering-engine differences without proof. No authoritative OfficeCLI/role receipts, protected signing, independent artifact downloads or provenance attestations were created; Phase 12 and release acceptance remain open.
+
+Native-aspect continuation: the accepted contract now preserves source aspect for new imports (`native-aspect-v1`) while keeping unmarked legacy decks unchanged. Actual 4:3 import, duplicate, template, snapshot restore, portable roundtrip, editor save/reopen and externally letterboxed Present pass in an owned production runtime; Original bytes remain identical. Historical-authority generation collisions in fresh portable import are repaired at publication with the strict reader unchanged. [Current bounded evidence](reports/261011-native-aspect-remediation.json) owns final comparison, scoped checks and remaining qualification limits. No release checklist item is closed by adopting the geometry contract.
+
 ## File inventory và ownership
 Mọi đường dẫn Modify/Verify phải tồn tại ở phase-entry scout; Create là đề xuất chưa được triển khai. Quy mô là vùng thay đổi, không cam kết sửa toàn file. Một owner của phase; các file dùng chung phải tích hợp tuần tự theo [roadmap](plan.md).
 
@@ -120,6 +128,8 @@ Actual OfficeCLI/PowerPoint commands lấy từ pinned manifest và existing wor
 - [ ] 12.5 Cập nhật tài liệu/changelog cho thay đổi permanent, giữ limits; không mark code fix khi chỉ verification.
 
 Post-audit consumer repair: runtime `clientSubject` is the producer's SHA string, not a `{ sha }` object. Both Linux and Windows actual CLI consumers now accept only the matching string and refuse malformed/legacy shapes without issuing a receipt. [RED evidence](reports/audit-fixes-red-release.json), [source-matched affected GREEN](reports/audit-fixes-green-identity.json) and [actual CLI consumer smoke](reports/audit-fixes-release-cli-runtime.json) retain the boundary proof. Upstream CI/scanner/signature/EXE/Office/fidelity inputs in these local scenarios are explicitly synthetic; no physical or release checklist item is closed.
+
+Physical continuation: [observed diagnostic receipt](reports/261011-physical-qualification-continuation.json) records fresh pinned OfficeCLI native execution and genuine PowerPoint/package-backed corpus capture. Canonical file/source validators pass; the fixed-policy numerical comparison fails. This is not a claim-capable oracle pass: clean reviewed source, local envelope/role authority, protected signing, independent downloads and attestation remain open. No checklist item is closed; source and thresholds are unchanged.
 
 ## Exit gate
 Cả hai artifact kinds đạt all target gates trên exact subject/digest; actual physical evidence có receipt, không test-double receipts. Nếu thiếu quyền/môi trường giữ blocked.

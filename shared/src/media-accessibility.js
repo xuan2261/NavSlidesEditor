@@ -130,6 +130,8 @@ module.exports = {
   MAX_LONG_DESCRIPTION_LENGTH,
   MAX_MEDIA_DESCRIPTION_LENGTH,
   MAX_TRACKS,
+  MAX_TRACK_LABEL_LENGTH,
+  MAX_TRACK_LANGUAGE_LENGTH,
   TRACK_KINDS,
   normalizeImageAccessibility,
   normalizeMediaAccessibility,

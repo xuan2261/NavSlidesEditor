@@ -167,7 +167,7 @@ Chỉ implementation được chạy, CREATE tests trước, use built/staged ru
 npx vitest run shared/tests/education/live-player-state.test.js client/src/components/education/live-player-controls.test.jsx client/src/hooks/use-game-player.test.js client/src/hooks/use-game-socket.test.js client/src/pages/game-player-join-page.test.jsx client/src/pages/game-player-matching-card.test.jsx
 npm run vendor
 $env:PLAYWRIGHT_USE_DEV_SERVERS='1'
-npx playwright test tests/e2e/live/education-four-corners-relay.spec.js tests/e2e/live/education-trivia-scatter.spec.js tests/e2e/live/education-typed-quiz.spec.js tests/e2e/live/education-player-lifecycle.spec.js --project=chromium-live --workers=1
+npx playwright test tests/e2e/live/education-four-corners-relay.spec.js tests/e2e/live/education-relay-expiry.spec.js tests/e2e/live/education-trivia-scatter.spec.js tests/e2e/live/education-typed-quiz.spec.js tests/e2e/live/education-player-lifecycle.spec.js tests/e2e/live/education-player-stale-frame.spec.js --project=chromium-live --workers=1
 npx playwright test tests/e2e/games/education-live-local-file.spec.js --project=chromium --workers=1
 ```
 

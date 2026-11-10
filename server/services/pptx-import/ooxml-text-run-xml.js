@@ -1,3 +1,4 @@
+const { decodeXml } = require('../../../shared/src/pptx-xml-entities')
 const P_URIS = new Set([
   'http://schemas.openxmlformats.org/presentationml/2006/main',
   'http://purl.oclc.org/ooxml/presentationml/main',
@@ -5,6 +6,12 @@ const P_URIS = new Set([
 const A_URIS = new Set([
   'http://schemas.openxmlformats.org/drawingml/2006/main',
   'http://purl.oclc.org/ooxml/drawingml/main',
+])
+const TABLE_GRAPHIC_DATA_URIS = new Set([
+  'http://schemas.openxmlformats.org/drawingml/2006/table',
+  'http://schemas.openxmlformats.org/drawingml/2006/main/table',
+  'http://purl.oclc.org/ooxml/drawingml/table',
+  'http://purl.oclc.org/ooxml/drawingml/main/table',
 ])
 
 function error(code, message) {
@@ -29,25 +36,6 @@ function validText(value) {
   return true
 }
 
-function decodeXml(value) {
-  const entities = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" }
-  let output = ''
-  let cursor = 0
-  const matcher = /&(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);/g
-  for (const match of value.matchAll(matcher)) {
-    if (value.slice(cursor, match.index).includes('&')) return null
-    output += value.slice(cursor, match.index)
-    const token = match[0].slice(1, -1)
-    if (Object.prototype.hasOwnProperty.call(entities, token)) output += entities[token]
-    else {
-      const point = Number.parseInt(token.slice(token.startsWith('#x') ? 2 : 1), token.startsWith('#x') ? 16 : 10)
-      if (!Number.isInteger(point) || point > 0x10ffff || point < 0) return null
-      output += String.fromCodePoint(point)
-    }
-    cursor = match.index + match[0].length
-  }
-  return value.slice(cursor).includes('&') ? null : output + value.slice(cursor)
-}
 
 function tagEnd(xml, start) {
   let quote = null
@@ -81,8 +69,10 @@ function openTag(xml, start, end, inherited) {
     const name = /^[^\s=/>]+/u.exec(body.slice(cursor))?.[0]
     if (!name) error('TEXT_XML_INVALID', 'Missing XML attribute name')
     cursor += name.length
+    while (/[ \t\r\n]/u.test(body[cursor])) cursor += 1
     if (body[cursor] !== '=') error('TEXT_XML_INVALID', 'Missing XML attribute value')
     cursor += 1
+    while (/[ \t\r\n]/u.test(body[cursor])) cursor += 1
     const quote = body[cursor]
     if (quote !== '"' && quote !== "'") error('TEXT_XML_INVALID', 'Unquoted XML attribute')
     const valueStart = ++cursor
@@ -193,4 +183,4 @@ function patchPlainRun(xml, nativeId, before, after) {
   }
 }
 
-module.exports = { patchPlainRun, validText }
+module.exports = { patchPlainRun, validText, parseXml, descendants, isNode, attr, textContent, decodeXml, P_URIS, A_URIS, TABLE_GRAPHIC_DATA_URIS }

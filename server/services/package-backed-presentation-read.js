@@ -3,13 +3,16 @@ const { normalizePptxImportedPresentationForRead } = require('./presentation-nor
 const { getReadablePackageStore } = require('./pptx-import/package-store-runtime')
 const {
   resolveEditorProjectionContext,
-  verifyEditorPackageBytes,
+  createEditorPackageRead,
 } = require('./pptx-import/package-authority-snapshot')
 const {
   hasExactCompatibilityHead,
   mergeCompatibilityPresentation,
 } = require('./pptx-import/compatibility-view')
-const { getTrustedImportMetadata, decorateTrustedImportMetadata } = require('./pptx-import/trusted-import-metadata')
+const {
+  getTrustedImportMetadata,
+  decorateTrustedImportMetadata,
+} = require('./pptx-import/trusted-import-metadata')
 
 function authorityError(reasonCode) {
   return Object.assign(new Error(reasonCode), {
@@ -69,15 +72,22 @@ function resolvePackageBackedReadFromState(
   }
 
   // Only a durable successor publication can authorize reading past a stale view.
-  const publicationPending = compatibilityPresentation?.pptxAggregateHead?.generation < head.generation &&
+  const publicationPending =
+    compatibilityPresentation?.pptxAggregateHead?.generation < head.generation &&
     [
       ...(state.compatibilityOutbox || []),
       ...(state.compatibilityDeadLetter || []).map((entry) => entry.write),
-    ].some((write) => write?.operation === 'upsert' &&
-      write.presentationId === presentationId &&
-      hasExactCompatibilityHead(write.presentation, head))
-  if (!hasExactCompatibilityHead(compatibilityPresentation, head) && !publicationPending &&
-      (compatibilityPresentation?.pptxAggregateHead || !isOriginalOnlyHead(state, head))) {
+    ].some(
+      (write) =>
+        write?.operation === 'upsert' &&
+        write.presentationId === presentationId &&
+        hasExactCompatibilityHead(write.presentation, head)
+    )
+  if (
+    !hasExactCompatibilityHead(compatibilityPresentation, head) &&
+    !publicationPending &&
+    (compatibilityPresentation?.pptxAggregateHead || !isOriginalOnlyHead(state, head))
+  ) {
     throw authorityError('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
   }
 
@@ -111,6 +121,10 @@ function resolvePackageBackedReadFromState(
     presentation.pptxAggregateHead = structuredClone(head)
     return { presentation, generation: head.generation }
   }
+  if (context.after && context.after.pptxSemantic) {
+    const { normalizePptxSemanticDocument } = require('revealjs-shared/src/pptx-semantic-document.js')
+    context.after.pptxSemantic = normalizePptxSemanticDocument(context.after.pptxSemantic)
+  }
 
   const presentation = decorateTrustedImportMetadata(
     mergeCompatibilityPresentation(compatibilityPresentation, context.after),
@@ -123,14 +137,21 @@ function resolvePackageBackedReadFromState(
 
 async function resolvePackageBackedRead(presentationId, compatibilityPresentation, options = {}) {
   const store = await getReadablePackageStore()
+  const read = createEditorPackageRead(store)
   const resolved = resolvePackageBackedReadFromState(
-    store.getState(),
+    read.state,
     presentationId,
     compatibilityPresentation,
     options
   )
-  if (resolved.generation !== null)
-    await verifyEditorPackageBytes(store, resolved.presentation.pptxAggregateHead)
+  if (resolved.generation !== null) await read.verifyBytes(resolved.presentation.pptxAggregateHead)
+  if (options.normalize !== false) {
+    resolved.presentation = normalizePptxImportedPresentationForRead(resolved.presentation)
+  }
+  if (resolved.presentation && resolved.presentation.pptxSemantic) {
+    const { normalizePptxSemanticDocument } = require('revealjs-shared/src/pptx-semantic-document.js')
+    resolved.presentation.pptxSemantic = normalizePptxSemanticDocument(resolved.presentation.pptxSemantic)
+  }
   return resolved
 }
 
@@ -140,10 +161,8 @@ async function readAuthoritativePresentation(
 ) {
   const storedPresentation = await findServeablePresentation(presentationId, { normalize: false })
   if (!storedPresentation) return null
-  const compatibilityPresentation = normalize
-    ? normalizePptxImportedPresentationForRead(storedPresentation)
-    : storedPresentation
-  return resolvePackageBackedRead(presentationId, compatibilityPresentation, {
+  return resolvePackageBackedRead(presentationId, storedPresentation, {
+    normalize,
     allowIncompleteAuthority,
   })
 }
@@ -169,20 +188,20 @@ async function readAuthoritativePresentations(
   )
   if (!serveable.length) return []
   const store = await getReadablePackageStore()
-  const state = store.getState()
+  const read = createEditorPackageRead(store)
+  const state = read.state
   const results = []
   for (const storedPresentation of serveable) {
-    const compatibilityPresentation = normalize
-      ? normalizePptxImportedPresentationForRead(storedPresentation)
-      : storedPresentation
     try {
       const resolved = resolvePackageBackedReadFromState(
         state,
         storedPresentation.id,
-        compatibilityPresentation
+        storedPresentation
       )
       if (resolved.generation !== null)
-        await verifyEditorPackageBytes(store, resolved.presentation.pptxAggregateHead)
+        await read.verifyBytes(resolved.presentation.pptxAggregateHead)
+      if (normalize)
+        resolved.presentation = normalizePptxImportedPresentationForRead(resolved.presentation)
       results.push(resolved)
     } catch (err) {
       if (BULK_QUARANTINE_CODES.has(err?.code)) {

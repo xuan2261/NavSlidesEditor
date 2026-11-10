@@ -1,4 +1,5 @@
 import { resolveEffectiveSlide } from 'revealjs-shared'
+import { presentationSlideEntries, slideFieldContext } from 'revealjs-shared/src/presentation-slide-order.js'
 import SlideCanvas from '../SlideCanvas'
 import { api } from '../../utils/api'
 import { showError } from '../../utils/app-feedback'
@@ -10,22 +11,39 @@ export default function EditorCanvasWorkspace({ overlayOpen, c }) {
   const guides = useEditorStore((state) => state.guides)
   const setGuides = useEditorStore((state) => state.setGuides)
   const ownerSlide = c.masterEdit
-    ? { id: `master:${c.masterEdit.id}`, elements: c.masterEdit.fixedElements, background: c.masterEdit.background }
+    ? {
+        id: `master:${c.masterEdit.id}`,
+        elements: c.masterEdit.fixedElements,
+        background: c.masterEdit.background,
+      }
     : c.activeSlide
   const slide = c.masterEdit
     ? ownerSlide
     : resolveEffectiveSlide(ownerSlide, c.presentation.layoutMasters).slide
+  const fieldSlide = presentationSlideEntries(c.presentation).find((entry) => entry.slide.id === ownerSlide?.id)
+  const pptxFieldContext = slideFieldContext(slide, fieldSlide?.slideNumber, { date: new Date() })
   return (
     <div
       inert={overlayOpen ? '' : undefined}
       className="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-workspace"
     >
       <div className="flex-1 flex flex-col relative overflow-hidden">
-      {c.masterEdit && <div className="flex items-center justify-between border-b border-accent bg-primary-light px-3 py-1 text-xs text-text-primary"><span>Editing master: {c.masterEdit.name}</span><button type="button" className="underline" onClick={c.onExitMasterEdit}>Exit master edit</button></div>}
+        {c.masterEdit && (
+          <div className="flex items-center justify-between border-b border-accent bg-primary-light px-3 py-1 text-xs text-text-primary">
+            <span>Editing master: {c.masterEdit.name}</span>
+            <button type="button" className="underline" onClick={c.onExitMasterEdit}>
+              Exit master edit
+            </button>
+          </div>
+        )}
         <SlideCanvas
           editor={c.editor}
           designTokens={c.presentation.designTokens}
           slide={slide}
+          presentationId={c.isTemplate ? undefined : c.presentation.id}
+          fontRevision={c.fontRevision}
+          pptxSemantic={c.masterEdit ? undefined : c.presentation.pptxSemantic}
+          pptxFieldContext={pptxFieldContext}
           selectedElementIds={c.selectedElementIds}
           editingElementId={c.editingElementId}
           showGrid={c.showGrid}
@@ -48,7 +66,9 @@ export default function EditorCanvasWorkspace({ overlayOpen, c }) {
           showRulers={showRulers}
           persistentGuides={guides}
           onAddGuide={(guide) => setGuides((previous) => [...previous, guide])}
-          onRemoveGuide={(index) => setGuides((previous) => previous.filter((_, itemIndex) => itemIndex !== index))}
+          onRemoveGuide={(index) =>
+            setGuides((previous) => previous.filter((_, itemIndex) => itemIndex !== index))
+          }
           onToggleSelectElement={c.toggleElementSelection}
           onStartEdit={c.startEditingElement}
           onStopEdit={c.stopEditingElement}
@@ -60,6 +80,8 @@ export default function EditorCanvasWorkspace({ overlayOpen, c }) {
           onCut={c.handleCut}
           onPaste={c.handlePaste}
           onDuplicate={c.handleDuplicate}
+          onGroup={c.groupElements}
+          onUngroup={c.ungroupElements}
           onBlockedAction={c.notifyBlockedAction}
           safeArea={c.masterEdit?.safeArea}
           onOpenHtmlEditor={c.openHtmlEditor}
@@ -67,11 +89,13 @@ export default function EditorCanvasWorkspace({ overlayOpen, c }) {
           onOpenLatexEditor={c.openLatexEditor}
           masterEdit={Boolean(c.masterEdit)}
           onAddMedia={async (file, dropX, dropY, targetSlideId) => {
-            const targetId = targetSlideId ?? c.authoringSlideRef?.current?.id ?? c.activeSlideRef?.current?.id
+            const targetId =
+              targetSlideId ?? c.authoringSlideRef?.current?.id ?? c.activeSlideRef?.current?.id
             try {
               const result = await api.uploadFile(file)
               if (!result?.url) throw new Error(result?.error || 'Upload failed')
-              const currentSlideId = c.authoringSlideRef?.current?.id ?? c.activeSlideRef?.current?.id
+              const currentSlideId =
+                c.authoringSlideRef?.current?.id ?? c.activeSlideRef?.current?.id
               if (targetId && targetId !== currentSlideId) {
                 throw new Error('Upload canceled because the active slide changed')
               }

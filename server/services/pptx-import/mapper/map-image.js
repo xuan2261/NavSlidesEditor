@@ -10,7 +10,9 @@ async function loadSourceImageBuffer(element, context) {
   if (payload?.buffer) return payload.buffer
   const refs = [element?.ref, element?.fill?.value?.ref].filter(Boolean)
   for (const ref of refs) {
-    const normalized = String(ref || '').replace(/\\/g, '/').replace(/^\/+/, '')
+    const normalized = String(ref || '')
+      .replace(/\\/g, '/')
+      .replace(/^\/+/, '')
     const entry = context.mediaIndex?.files?.get?.(normalized)
     if (!entry) continue
     try {
@@ -38,7 +40,10 @@ async function tryConvertUnsupportedVector(element, context) {
     timeoutMs: context.emfTimeoutMs,
   })
   if (!converted.ok) {
-    return { url: null, warning: { code: converted.code || 'emf-convert-failed', message: converted.error } }
+    return {
+      url: null,
+      warning: { code: converted.code || 'emf-convert-failed', message: converted.error },
+    }
   }
   const persisted = await persistImageBuffer(converted.buffer, 'image/png', context.uploadsDir, {
     signal: context.signal,
@@ -46,7 +51,11 @@ async function tryConvertUnsupportedVector(element, context) {
     mediaTransaction: context.mediaTransaction,
   })
   return persisted.url
-    ? { ...persisted, warning: { code: 'emf-converted-to-png', source: 'emf-wmf' }, converted: true }
+    ? {
+        ...persisted,
+        warning: { code: 'emf-converted-to-png', source: 'emf-wmf' },
+        converted: true,
+      }
     : persisted
 }
 
@@ -117,20 +126,23 @@ async function mapImage(element, context) {
     }
   }
   if (!src) {
-    return [placeholder(
-      element,
-      context.scale,
-      context.zIndex,
-      context.slideIndex,
-      context.warnings,
-      'media-missing',
-      'Image media unavailable'
-    )]
+    return [
+      placeholder(
+        element,
+        context.scale,
+        context.zIndex,
+        context.slideIndex,
+        context.warnings,
+        'media-missing',
+        'Image media unavailable'
+      ),
+    ]
   }
   context.stats.imageCount += 1
-  const box = fitBoxWithinBounds(mapBox(element, context.scale))
+  const box = fitBoxWithinBounds(mapBox(element, context.scale), context.bounds)
   const img = { ...baseElement(element, context.scale, context.zIndex, box), type: 'image', src }
-  const fillMode = typeof element.fill === 'string' ? element.fill : element.fill?.mode || element.fill?.fit
+  const fillMode =
+    typeof element.fill === 'string' ? element.fill : element.fill?.mode || element.fill?.fit
   if (fillMode === 'cover') img.objectFit = 'cover'
   else if (fillMode === 'contain') img.objectFit = 'contain'
   else img.objectFit = 'fill'
@@ -145,16 +157,18 @@ async function mapImage(element, context) {
   if (element.filters) {
     const f = element.filters
     Object.assign(img, mapImageFilters(f))
-    if (typeof f.sharpen === 'number' && f.sharpen > 0) img._pptxImportMeta = { ...(img._pptxImportMeta || {}), _pptxSharpen: f.sharpen }
-    if (typeof f.colorTemperature === 'number') img._pptxImportMeta = { ...(img._pptxImportMeta || {}), _pptxColorTemp: f.colorTemperature }
+    if (typeof f.sharpen === 'number' && f.sharpen > 0)
+      img._pptxImportMeta = { ...(img._pptxImportMeta || {}), _pptxSharpen: f.sharpen }
+    if (typeof f.colorTemperature === 'number')
+      img._pptxImportMeta = { ...(img._pptxImportMeta || {}), _pptxColorTemp: f.colorTemperature }
   }
   if (element.rect) {
     const rawL = readNumber(element.rect.l, 0)
     const rawR = readNumber(element.rect.r, 0)
     const rawT = readNumber(element.rect.t, 0)
     const rawB = readNumber(element.rect.b, 0)
-    const maxVal = Math.max(Math.abs(rawL), Math.abs(rawR), Math.abs(rawT), Math.abs(rawB))
-    const divisor = maxVal > 100 ? 1000 : maxVal >= 1 ? 100 : 1
+    // pptxtojson converts OOXML srcRect values to percentages, even below 1%.
+    const divisor = 100
     const left = Math.min(1, Math.max(0, rawL / divisor))
     const right = Math.min(1, Math.max(0, rawR / divisor))
     const top = Math.min(1, Math.max(0, rawT / divisor))
@@ -167,7 +181,11 @@ async function mapImage(element, context) {
     img.imageH = imageH
     img.imageOffsetX = -Math.round(imageW * left)
     img.imageOffsetY = -Math.round(imageH * top)
-    img._pptxImportMeta = { ...(img._pptxImportMeta || {}), sourceCrop: true, cropData: { top, bottom, left, right } }
+    img._pptxImportMeta = {
+      ...(img._pptxImportMeta || {}),
+      sourceCrop: true,
+      cropData: { top, bottom, left, right },
+    }
   }
   return [img]
 }

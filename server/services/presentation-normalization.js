@@ -1,6 +1,7 @@
 const { CANVAS_SIZE } = require('./pptx-import/constants')
 
 function hasLegacyPptxResolution(presentation) {
+  if (presentation?._pptxMeta?.geometryPolicy === 'native-aspect-v1') return false
   const originalSize = presentation && presentation._pptxMeta && presentation._pptxMeta.originalSize
   const width = Number(originalSize && originalSize.width)
   const height = Number(originalSize && originalSize.height)

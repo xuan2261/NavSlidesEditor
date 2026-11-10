@@ -310,10 +310,14 @@ function validateManifestAuthority(manifest) {
 function rebindImportedAuthority(manifest, presentationId, predecessor, matrixAuthorityEpoch, mediaUrlMap) {
   const sourceHead = manifest.head
   const sourceCurrent = validateManifestAuthority(manifest)
-  const generation = predecessor ? predecessor.generation + 1 : sourceHead.pendingJournalHash !== undefined ? 2 : 1
-  if (!Number.isSafeInteger(generation)) throw new TypeError('Portable destination generation is exhausted')
-  const mapGeneration = (value) => value === 0 ? 0 : value === sourceHead.generation ? generation : Math.max(1, generation - 1)
   const sourceResults = manifest.mutationResults || []
+  // Journals can retain references older than the first result in this package.
+  // Reserve the whole source range above the destination to preserve both those
+  // references and each pending journal's unambiguous immediate predecessor.
+  const span = sourceResults.length ? sourceHead.generation : 1
+  const generation = (predecessor?.generation ?? 0) + span
+  if (!Number.isSafeInteger(generation)) throw new TypeError('Portable destination generation is exhausted')
+  const mapGeneration = (value) => value === 0 ? 0 : generation - (sourceHead.generation - value)
   const results = sourceResults.map((result) => rebindAuthorityResult(result,
     { presentationId, matrixAuthorityEpoch }, mapGeneration, mediaUrlMap))
   // No-op receipts reference an existing committed journal. Rebind that journal
@@ -344,6 +348,68 @@ function rebindImportedAuthority(manifest, presentationId, predecessor, matrixAu
     if (sourceHead.pendingJournalHash !== undefined) head.pendingJournalHash = head.journalRevisionId
   }
   return { head, results, projection: current?.projection || null }
+}
+
+// History may retain project-only semantic edits without materializing a native
+// package. Validate and rebind the same exact authority used by portable import;
+// never route a pending projection through committed lifecycle authority.
+function semanticHistoryManifest(state, head) {
+  const manifest = { head, mutationResults: authorityResultsFor(state, head)
+    .filter(result => result.generation <= head.generation) }
+  if (head.pendingJournalHash !== undefined && !manifest.mutationResults.some(result =>
+    [1, 2, 3].includes(result.projection?.pptxSemantic?.schemaVersion))) {
+    throw Object.assign(portableError('PACKAGE_PENDING_PROJECTION', 'Only semantic project history may retain pending edits'), { status: 409 })
+  }
+  const authority = validateManifestAuthority(manifest)
+  if (head.pendingJournalHash !== undefined) {
+    if (!authority?.projection?.pptxSemantic || ![1, 2, 3].includes(authority.projection.pptxSemantic.schemaVersion)) {
+      throw portableError('PACKAGE_PENDING_PROJECTION', 'Only validated semantic project history may retain a pending projection')
+    }
+    const context = resolveEditedExportContext({ ...state, heads: [head] }, head.presentationId)
+    if (!context.ok || !context.before.pptxSemantic) {
+      throw portableError('PACKAGE_AUTHORITY_UNAVAILABLE', 'Semantic history source authority is unavailable')
+    }
+    require('../semantic-baseline').assertSemanticBaseline(context.before, context.after)
+    require('revealjs-shared/src/pptx-semantic-presentation.js').normalizeSemanticPresentation(context.after)
+  }
+  return manifest
+}
+
+function assertSemanticHistoryAuthority(state, head) {
+  semanticHistoryManifest(state, head)
+}
+
+function rebindSemanticHistoryAuthority(state, retainedHead, current, matrixAuthorityEpoch) {
+  const manifest = semanticHistoryManifest(state, retainedHead)
+  const target = validateManifestAuthority(manifest).projection
+  const { resolveEditorProjectionContext } = require('../package-authority-snapshot')
+  const previous = resolveEditorProjectionContext({ ...state, matrixAuthorityEpoch: current.matrixAuthorityEpoch }, current.presentationId)
+  const previousAuthority = currentAuthorityResult(state, current)
+  if (!previous.ok || !previousAuthority || current.packageRevisionId !== retainedHead.packageRevisionId) {
+    throw portableError('PACKAGE_AUTHORITY_UNAVAILABLE', 'Semantic history requires an exact live package predecessor')
+  }
+  require('../semantic-baseline').assertSemanticBaseline(previous.after, target)
+  const generation = current.generation + 1
+  const journal = require('../mutation-journal').deriveMutationJournal(previous.after, target, {
+    baseRevisionId: current.packageRevisionId, sourceMap: previousAuthority.sourceMap, matrixAuthorityEpoch,
+  })
+  const sourceMap = require('../source-map').rebindSourceMap(previousAuthority.sourceMap, {
+    presentationId: current.presentationId, revisionId: current.packageRevisionId, packageGeneration: generation,
+  })
+  const result = { schemaVersion: RECORD_SCHEMA_VERSION, operation: MUTATION_OPERATIONS.PROJECTION_SAVE,
+    presentationId: current.presentationId, generation, packageRevisionId: current.packageRevisionId,
+    idempotencyKey: `history-restore-${hashRecord({ retainedHead, current })}`,
+    requestIdentity: { expectedGeneration: current.generation, baseRevisionId: current.packageRevisionId, snapshotHash: hashRecord(target) },
+    projection: clone(target), sourceMap, journal,
+    operationIds: journal.operations.map(operation => operation.operationId), state: 'pending-edited-export',
+  }
+  result.requestHash = hashRecord({ operation: result.operation, presentationId: result.presentationId,
+    expectedGeneration: current.generation, baseRevisionId: current.packageRevisionId, after: target })
+  const head = { ...clone(retainedHead), generation, predecessorId: hashRecord(current),
+    matrixAuthorityEpoch, matrixAuthoritySubjects: createMatrixAuthoritySubjects(undefined, matrixAuthorityEpoch),
+    projectionRevisionId: hashRecord(target), sourceMapRevisionId: hashRecord(sourceMap),
+    journalRevisionId: journal.journalHash, pendingJournalHash: journal.journalHash }
+  return { head, results: [result], projection: result.projection }
 }
 
 function changedError(code, message) {
@@ -480,4 +546,5 @@ async function importPresentationPackage(store, bundle, presentationId, options 
   return publishedHead
 }
 
-module.exports = { exportPresentationPackage, importPresentationPackage, validatePortableBundle }
+module.exports = { exportPresentationPackage, importPresentationPackage, validatePortableBundle,
+  assertSemanticHistoryAuthority, rebindSemanticHistoryAuthority }

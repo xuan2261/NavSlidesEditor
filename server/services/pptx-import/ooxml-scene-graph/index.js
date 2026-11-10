@@ -3,6 +3,7 @@ const { parseRelationshipTargets, rejectTraversalTarget } = require('./parse-rel
 const { inspectOoxmlCoverage } = require('../ooxml-inspection')
 const { collectMappedNodeIds, strictLeafNodes, sourceKey } = require('./attach-source-nodes')
 const { resolveSceneGraphStrictPolicy } = require('./strict-policy')
+const { readSlideOrder, relationshipPart } = require('../slide-order')
 
 async function readZipText(zip, entry) {
   const file = zip?.file?.(entry)
@@ -26,18 +27,11 @@ function listZipEntries(zip) {
  */
 async function buildOoxmlSceneGraph(zip) {
   const entries = listZipEntries(zip)
-  const slidePaths = entries
-    .filter((e) => /^ppt\/slides\/slide\d+\.xml$/i.test(e))
-    .sort((a, b) => {
-      const ai = Number(a.match(/slide(\d+)/i)?.[1] || 0)
-      const bi = Number(b.match(/slide(\d+)/i)?.[1] || 0)
-      return ai - bi
-    })
+  const slidePaths = await readSlideOrder(zip)
 
   const slides = []
-  for (const slidePath of slidePaths) {
-    const index = Number(slidePath.match(/slide(\d+)/i)?.[1] || 1) - 1
-    const relPath = `ppt/slides/_rels/slide${index + 1}.xml.rels`
+  for (const [index, slidePath] of slidePaths.entries()) {
+    const relPath = relationshipPart(slidePath)
     const slideXml = await readZipText(zip, slidePath)
     const relXml = await readZipText(zip, relPath)
     const rels = parseRelationshipTargets(relXml, relPath)
@@ -84,7 +78,8 @@ async function buildOoxmlSceneGraph(zip) {
       return acc
     }, {}),
     chartNodes: allNodes.filter((n) => n.graphicKind === 'chart' || n.rels?.chartTarget).length,
-    diagramNodes: allNodes.filter((n) => n.graphicKind === 'diagram' || n.rels?.diagramTarget).length,
+    diagramNodes: allNodes.filter((n) => n.graphicKind === 'diagram' || n.rels?.diagramTarget)
+      .length,
   }
 
   return {

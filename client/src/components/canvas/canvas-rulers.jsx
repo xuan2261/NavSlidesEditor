@@ -1,15 +1,11 @@
 import { cn } from '../../lib/utils'
 
-const SLIDE_W = 960
-const SLIDE_H = 540
-
 const topRulerStyle = {
   position: 'absolute',
   top: 0,
   left: '50%',
   transform: 'translateX(calc(-50% * 1)) scale(var(--ruler-scale, 1))',
   transformOrigin: 'top center',
-  width: SLIDE_W,
   height: 20,
   zIndex: 100,
   cursor: 'crosshair',
@@ -38,7 +34,6 @@ const leftRulerStyle = {
   transform: 'translateY(calc(-50% * 1)) scale(var(--ruler-scale, 1))',
   transformOrigin: 'left center',
   width: 20,
-  height: SLIDE_H,
   zIndex: 100,
   cursor: 'crosshair',
   overflow: 'hidden',
@@ -62,9 +57,10 @@ function getLeftRulerTickStyle(index) {
  * CanvasRulers — horizontal and vertical ruler bars for the slide canvas.
  * Props:
  *   scale      — current zoom scale (used for transform)
+ *   slideWidth / slideHeight — logical slide bounds
  *   onAddGuide — callback({ axis, position })
  */
-export default function CanvasRulers({ scale, onAddGuide }) {
+export default function CanvasRulers({ scale, onAddGuide, slideWidth = 960, slideHeight = 540 }) {
   const handleRulerPointerDown = (axis, event) => {
     if (event.button !== 0) return
     const canvasEl = document.querySelector('.slide-canvas')
@@ -77,7 +73,7 @@ export default function CanvasRulers({ scale, onAddGuide }) {
       const pos = axis === 'x'
         ? (me.clientX - rect.left) / scale
         : (me.clientY - rect.top) / scale
-      if (pos >= 0 && pos <= (axis === 'x' ? SLIDE_W : SLIDE_H)) {
+      if (pos >= 0 && pos <= (axis === 'x' ? slideWidth : slideHeight)) {
         onAddGuide?.({ axis, position: Math.round(pos) })
       }
       document.removeEventListener('pointerup', onUp)
@@ -92,8 +88,8 @@ export default function CanvasRulers({ scale, onAddGuide }) {
     document.addEventListener('pointercancel', onCancel)
   }
 
-  const topStyle = { ...topRulerStyle, transform: `translateX(calc(-50% * 1)) scale(${scale})` }
-  const leftStyle = { ...leftRulerStyle, transform: `translateY(calc(-50% * 1)) scale(${scale})` }
+  const topStyle = { ...topRulerStyle, width: slideWidth, transform: `translateX(calc(-50% * 1)) scale(${scale})` }
+  const leftStyle = { ...leftRulerStyle, height: slideHeight, transform: `translateY(calc(-50% * 1)) scale(${scale})` }
 
   return (
     <>
@@ -104,7 +100,7 @@ export default function CanvasRulers({ scale, onAddGuide }) {
         style={topStyle}
         onPointerDown={(e) => handleRulerPointerDown('x', e)}
       >
-        {Array.from({ length: Math.ceil(SLIDE_W / 50) }, (_, i) => (
+        {Array.from({ length: Math.ceil(slideWidth / 50) }, (_, i) => (
           <div key={i} style={getTopRulerTickStyle(i)}>
             {i * 50}
           </div>
@@ -117,7 +113,7 @@ export default function CanvasRulers({ scale, onAddGuide }) {
         style={leftStyle}
         onPointerDown={(e) => handleRulerPointerDown('y', e)}
       >
-        {Array.from({ length: Math.ceil(SLIDE_H / 50) }, (_, i) => (
+        {Array.from({ length: Math.ceil(slideHeight / 50) }, (_, i) => (
           <div key={i} style={getLeftRulerTickStyle(i)}>
             {i * 50}
           </div>

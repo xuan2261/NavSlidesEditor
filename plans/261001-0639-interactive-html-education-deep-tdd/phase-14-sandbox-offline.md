@@ -164,7 +164,7 @@ npx vitest run shared/tests/education-plugin-isolation.test.js client/src/utils/
 npx vitest run shared/tests/education-native-media-roundtrip.test.js
 npm run vendor
 $env:PLAYWRIGHT_USE_DEV_SERVERS='1'
-npx playwright test tests/e2e/export/education-sandbox-security.spec.js tests/e2e/export/education-portable-file.spec.js --project=chromium --workers=1
+npx playwright test tests/e2e/export/education-sandbox-security.spec.js tests/e2e/export/education-sandbox-counter-security.spec.js tests/e2e/export/education-portable-file.spec.js --project=chromium --workers=1
 npx playwright test tests/e2e/export/education-project-media-roundtrip.spec.js --project=chromium --workers=1
 ```
 

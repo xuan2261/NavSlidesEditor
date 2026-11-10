@@ -1,5 +1,8 @@
 import React, { useMemo } from 'react'
-import { summarizePptxImportWarnings } from '../utils/pptx-import-summary'
+import {
+  summarizePptxImportWarnings,
+  WARNING_CATEGORY_EXPLANATIONS,
+} from '../utils/pptx-import-summary'
 
 /**
  * Editor-only bounded import diagnostics panel.
@@ -19,7 +22,7 @@ export default function PptxImportReportPanel({ presentation, className = '' }) 
         data-testid="pptx-import-report-panel"
         aria-label="PPTX import report unavailable"
       >
-        <p className="text-sm text-slate-500">No import diagnostics available for this presentation.</p>
+        <p className="text-sm text-text-secondary">No import diagnostics available for this presentation.</p>
       </aside>
     )
   }
@@ -34,19 +37,32 @@ export default function PptxImportReportPanel({ presentation, className = '' }) 
       data-testid="pptx-import-report-panel"
       aria-label="PPTX import diagnostics"
     >
-      <h2 className="text-sm font-semibold text-slate-800">Import diagnostics</h2>
+      <h2 className="text-sm font-semibold text-text-primary">Import diagnostics</h2>
       {summaryText ? (
-        <p className="mt-1 text-sm text-slate-700" data-testid="pptx-import-report-summary">
+        <p className="mt-1 text-sm text-text-secondary" data-testid="pptx-import-report-summary">
           {summaryText}
         </p>
       ) : null}
       {byType.length > 0 ? (
-        <ul className="mt-2 list-disc pl-5 text-sm text-slate-600" data-testid="pptx-import-report-types">
-          {byType.map(([type, count]) => (
-            <li key={type}>
-              {type}: {Number(count) || 0}
-            </li>
-          ))}
+        <ul className="mt-2 list-disc pl-5 text-sm text-text-secondary" data-testid="pptx-import-report-types">
+          {byType.map(([type, count]) => {
+            const explanation = WARNING_CATEGORY_EXPLANATIONS[type]
+            return (
+              <li key={type}>
+                <span>
+                  {type}: {Number(count) || 0}
+                </span>
+                {explanation ? (
+                  <p
+                    className="mt-0.5 text-xs text-text-secondary"
+                    data-testid={`pptx-import-report-explanation-${type}`}
+                  >
+                    {explanation}
+                  </p>
+                ) : null}
+              </li>
+            )
+          })}
         </ul>
       ) : null}
       {/* Never render report.jobId or raw diagnostics paths. */}

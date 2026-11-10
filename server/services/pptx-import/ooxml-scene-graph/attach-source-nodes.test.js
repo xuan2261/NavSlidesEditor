@@ -101,6 +101,15 @@ describe('attach-source-nodes', () => {
     })
   })
 
+  it('matches scaled source geometry rather than an unscaled lookalike', () => {
+    const elements = [{ type: 'image', x: 10, y: 20, width: 30, height: 40 }]
+    attachSourceNodes(elements, [
+      { id: 'unscaled-lookalike', kind: 'pic', xfrm: { x: 10, y: 20, cx: 30, cy: 40 } },
+      { id: 'source', kind: 'pic', xfrm: { x: 20, y: 40, cx: 60, cy: 80 } },
+    ], 0, { x: 0.5, y: 0.5 })
+    expect(elements[0]._pptxSource).toMatchObject({ nodeId: 'source', matchedBy: 'geometry', authoritative: true })
+  })
+
   it('matches parsed OOXML point geometry to pptxtojson element coordinates', () => {
     const [node] = parseSpTree(`<p:sld xmlns:p="p" xmlns:a="a"><p:cSld><p:spTree>
       <p:pic><p:nvPicPr><p:cNvPr id="2" name="Picture 1"/></p:nvPicPr>

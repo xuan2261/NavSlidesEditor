@@ -13,6 +13,7 @@ const {
 const { resolveColorField, svgPaint, isTokenVar } = require('./design-tokens.js')
 const { resolveMergedCells } = require('./table-merge-resolver.js')
 const { resolveTableDimensions } = require('./table-layout.js')
+const { tableCellHtml } = require('./table-cell-utils.js')
 const { normalizeLatexForRender } = require('./latex-utils.js')
 const { resolveChartPalette } = require('./chart-colors.js')
 const { normalizeElementAction, serializeElementAction } = require('./element-actions.js')
@@ -26,7 +27,28 @@ const { resolveConnectorGeometry } = require('./connector-geometry.js')
 const { buildTicks, parseDatePos } = require('./timeline-utils.js')
 const { applySvgPaintOverrides } = require('./svg-paint-overrides.js')
 const { resolveChartAuthoringOptions } = require('./chart-authoring-options.js')
-const { marked } = require('marked')
+let markedModule
+try {
+  markedModule = require('marked')
+} catch {
+  try {
+    const fs = typeof require === 'function' ? require('fs') : null
+    const path = typeof require === 'function' ? require('path') : null
+    if (fs && path) {
+      const umdPath = path.join(path.dirname(require.resolve('marked')), 'marked.umd.js')
+      const umdCode = fs.readFileSync(umdPath, 'utf8')
+      const mod = { exports: {} }
+      const fn = new Function('module', 'exports', umdCode)
+      fn(mod, mod.exports)
+      markedModule = mod.exports
+    } else {
+      markedModule = { marked: { parse: (text) => text } }
+    }
+  } catch {
+    markedModule = { marked: { parse: (text) => text } }
+  }
+}
+const { marked } = markedModule
 const { staticGameContent } = require('./education/static-game-content.js')
 const { renderStaticGameSnapshot } = require('./education/static-snapshot.js')
 const { GAME_CATALOG } = require('./education/game-registry.js')
@@ -69,6 +91,9 @@ function mediaPlaybackAttribute(media) {
       endTime: Number(media.endTime) || 0,
       loop: media.loop === true,
       playbackRate: getPlaybackRate(media.playbackRate) || 1,
+      volume: media.volume === undefined ? undefined :
+        typeof media.volume === 'number' && Number.isFinite(media.volume) &&
+        media.volume >= 0 && media.volume <= 1 ? media.volume : 1,
     })
   )}"`
 }
@@ -238,7 +263,11 @@ function importedTextInsetStyle(el) {
   return `padding:${side(insets.top, el.height)}px ${side(insets.right, el.width)}px ${side(insets.bottom, el.height)}px ${side(insets.left, el.width)}px;`
 }
 
-function renderText(el, style, wrap, vis) {
+function renderText(el, style, wrap, vis, opts) {
+  if (el.pptxTextDocument) {
+    const { textBoxSvgString } = require('./pptx-textbox-svg.js')
+    return `<div${wrap} style="${escapeHtml(`${style}${vis}overflow:visible;`)}">${textBoxSvgString(el, opts)}</div>`
+  }
   const resolvedTextColor = safeCssColor(resolveColorField(el.textColor, 'text', 'textColor'), null)
   const tc = resolvedTextColor ? `;color:${resolvedTextColor}` : ''
   const fontFamily = safeCssFontFamily(el.fontFamily)
@@ -273,6 +302,10 @@ function buildCitationHtml(el) {
 
 function renderImage(el, style, wrap, vis, opts) {
   const image = normalizeImageAccessibility(el)
+  if (image.pptxPicture) {
+    const { pictureSvg } = require('./pptx-picture-svg')
+    return `<div${wrap} style="${escapeHtml(`${style}${vis}overflow:visible;`)}">${pictureSvg(image, absoluteSrc)}${buildCitationHtml(image)}</div>`
+  }
   const src = absoluteSrc(sanitizeMediaSrc(image.src))
   const imgFilterParts = [
     image.filterBrightness != null && image.filterBrightness !== 100
@@ -324,9 +357,12 @@ function renderImage(el, style, wrap, vis, opts) {
   return `<div${wrap} style="${escapeHtml(`${style}${borderStyle}${vis}overflow:visible;`)}"><div style="${escapeHtml(clipStyle)}"><img src="${src}" alt="${alt}"${describedBy} style="${escapeHtml(`display:block;width:100%;height:100%;object-fit:${image.objectFit || 'contain'};${filterStyle}${flipStyle}${imgReset}`)}" /></div>${description}${citationHtml}</div>`
 }
 
-function renderShape(el, style, wrap, vis) {
+function renderShape(el, style, wrap, vis, opts) {
   // opacity is emitted once by buildBaseStyle for all types; no per-shape re-apply
-  return `<div${wrap} style="${escapeHtml(`${style}${vis}`)}">${shapeSvgString(el)}</div>`
+  const shapeStyle = el.pptxGeometry
+    ? style.replace('overflow:hidden;', 'overflow:visible;')
+    : style
+  return `<div${wrap} style="${escapeHtml(`${shapeStyle}${vis}`)}">${shapeSvgString(el, opts)}</div>`
 }
 
 function getCodeWalkthroughStep(el) {
@@ -669,6 +705,7 @@ function renderAudio(el, style, wrap, vis, opts) {
 }
 
 function renderTable(el, style, wrap, vis) {
+  const { resolveTableContentExtent, resolveTableInsets } = require('./table-layout.js')
   const data = Array.isArray(el.data) && el.data.length ? el.data : [['']]
   const headerBg =
     resolveColorField(el.headerBgColor, 'table', 'headerBgColor') || 'rgba(99,102,241,0.3)'
@@ -683,8 +720,9 @@ function renderTable(el, style, wrap, vis) {
   const fontSize = el.fontSize || 14
   const cellPadding = el.cellPadding ?? 8
   const cellStyles = el.cellStyles || {}
-  const columnWidths = resolveTableDimensions(el.colWidths, Number(el.width))
-  const rowHeights = resolveTableDimensions(el.rowHeights, Number(el.height))
+  const contentExtent = resolveTableContentExtent(el)
+  const columnWidths = resolveTableDimensions(el.colWidths, contentExtent.width)
+  const rowHeights = resolveTableDimensions(el.rowHeights, contentExtent.height)
   const colgroup = columnWidths
     ? `<colgroup>${columnWidths.map((width) => `<col style="${escapeHtml(`width:${width}px`)}" />`).join('')}</colgroup>`
     : ''
@@ -703,7 +741,10 @@ function renderTable(el, style, wrap, vis) {
       })
       .join('')
   }
-  const { spans, covered } = resolveMergedCells(el.mergedCells)
+  const { spans, covered } = resolveMergedCells(el.mergedCells, {
+    rowCount: data.length,
+    colCount: Math.max(1, ...data.map((row) => (Array.isArray(row) ? row.length : 0))),
+  })
   const rows = data
     .map((row, ri) => {
       const cells = (Array.isArray(row) ? row : [])
@@ -737,7 +778,8 @@ function renderTable(el, style, wrap, vis) {
               : isHeader
                 ? `font-weight:${el.headerIsBold === false ? 400 : 600};`
                 : ''
-          return `<td${spanAttrs} style="${escapeHtml(`padding:${cellPadding}px;${borderCss(ri, ci)}background:${bg};color:${color};font-size:calc(${cellFontSize}px * var(--font-zoom, 1));${familyCss}${weightCss}text-align:${align};vertical-align:${verticalAlign};white-space:pre-wrap;`)}">${escapeHtml(cell ?? '')}</td>`
+          const insets = resolveTableInsets(cellStyles.insets?.[ri]?.[ci], cellPadding)
+          return `<td${spanAttrs} style="${escapeHtml(`padding:${insets.top}px ${insets.right}px ${insets.bottom}px ${insets.left}px;box-sizing:border-box;${borderCss(ri, ci)}background:${bg};color:${color};font-size:calc(${cellFontSize}px * var(--font-zoom, 1));${familyCss}${weightCss}text-align:${align};vertical-align:${verticalAlign};white-space:pre-wrap;`)}">${tableCellHtml(cell)}</td>`
         })
         .join('')
       const rowHeight = rowHeights?.[ri]
@@ -745,7 +787,7 @@ function renderTable(el, style, wrap, vis) {
       return `<tr${rowStyle}>${cells}</tr>`
     })
     .join('')
-  return `<div${wrap} style="${escapeHtml(`${style}${vis}overflow:auto;`)}"><table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed;">${colgroup}${rows}</table></div>`
+  return `<div${wrap} style="${escapeHtml(`${style}${vis}overflow:auto;`)}"><table style="width:100%;height:100%;box-sizing:border-box;border-collapse:collapse;table-layout:fixed;">${colgroup}${rows}</table></div>`
 }
 
 function renderDrawing(el, style, wrap, vis) {
@@ -1020,6 +1062,10 @@ const RENDERERS = {
  * @param {Object} opts - { forPrint: boolean, isHidden: boolean }
  */
 function renderElement(el, slide, opts = {}) {
+  if (opts.semanticFamily?.extent) {
+    el = { ...el, width: opts.semanticFamily.extent.cx / 9525,
+      height: opts.semanticFamily.extent.cy / 9525 }
+  }
   const renderOpts =
     opts.slideBackground === undefined ? { ...opts, slideBackground: slide?.background } : opts
   const style = buildBaseStyle(el, renderOpts)
@@ -1035,15 +1081,71 @@ function renderElement(el, slide, opts = {}) {
   const wrap = `${exportIdAttr}${identity}${dataIdAttr}${fragClass}${fragIdx}`
   const vis = renderOpts.isHidden ? 'visibility:hidden;' : ''
 
+  if (renderOpts.semanticFamily) {
+    renderOpts.semanticOutputMounts?.push({ instanceId: el.pptxInstanceId, slideId: slide.id })
+    const exactStyle = `${style}${vis}overflow:visible;font-synthesis:none;`
+    return `<div${wrap} data-pptx-semantic-mount="${escapeHtml(el.pptxInstanceId)}" data-pptx-semantic-slide="${escapeHtml(slide.id)}" style="${escapeHtml(exactStyle)}"></div>${renderActionSurface(el, style, renderOpts)}`
+  }
   const renderer = isPluginType(el.type) ? renderPlugin : RENDERERS[el.type]
   if (!renderer) return ''
-  return `${renderer(el, style, wrap, vis, renderOpts)}${renderActionSurface(el, style, renderOpts)}`
+  let elementOptions = renderOpts
+  if (renderOpts.pptxSemantic && renderOpts.semanticOutputMounts && el.pptxTextDocument &&
+      el.pptxInstanceId && ['text', 'shape'].includes(el.type)) {
+    const { createTextOutputMount } = require('./pptx-text-output.js')
+    const mount = createTextOutputMount(el, slide, renderOpts.pptxFieldContext)
+    renderOpts.semanticOutputMounts.push(mount)
+    elementOptions = { ...renderOpts, textOutputMount: mount }
+  }
+  return `${renderer(el, style, wrap, vis, elementOptions)}${renderActionSurface(el, style, renderOpts)}`
 }
 
 /**
  * Render all elements of a slide, sorted by zIndex.
  */
 function renderSlideElements(slide, opts = {}) {
+  if (opts.pptxSemantic) {
+    const { semanticRenderTree, semanticLocalElement } = require('./pptx-semantic-render-tree.js')
+    const timingPlan = !opts.forPrint && (slide.hasSourceTiming || slide.sourceTiming)
+      ? require('./pptx-timing-playback').sourceTimingPlayback(opts.pptxSemantic, slide) : null
+    const initialTiming = new Map((timingPlan?.initial || []).map(state => [state.targetInstanceId, state]))
+    const timingMarkup = timingPlan?.steps.length
+      ? `<span style="display:none" data-ns-source-timing="${escapeHtml(JSON.stringify(timingPlan))}">${timingPlan.steps
+          .filter(step => step.index !== null)
+          .map(step => `<span class="fragment" data-fragment-index="${step.index}" data-ns-source-step="${step.index}"></span>`).join('')}</span>` : ''
+    function renderNode(node) {
+      if (node.instanceId ? node.hidden : node.element?.hidden) return ''
+      if (!node.instanceId) return renderElement(node.element, slide, opts)
+      const content =
+        node.kind === 'group'
+          ? node.children.map(renderNode).join('\n')
+          : renderElement(semanticLocalElement(node.element), slide, {
+              ...opts,
+              semanticFamily: node.family,
+              isHidden:
+                opts.forPrint &&
+                node.element.fragment &&
+                (node.element.fragmentIndex || 1) > (opts.maxFragIdx ?? Infinity),
+            })
+      const style = `position:absolute;left:0;top:0;width:0;height:0;overflow:visible;transform-origin:0 0;transform:${node.transform};z-index:${node.paintIndex};${node.kind === 'group' ? `opacity:${node.opacity};` : ''}`
+      const state = initialTiming.get(node.instanceId)
+      const timingStyle = state ? `visibility:${state.visible ? 'visible' : 'hidden'};opacity:${state.opacity};` : ''
+      return `<div data-pptx-instance-id="${escapeHtml(node.instanceId)}" style="${style}${timingStyle}">${content}</div>`
+    }
+    const fieldContext = opts.pptxFieldContext ??
+      (opts.slideNumber || opts.fieldDate
+        ? {
+            slideNumber: opts.slideNumber,
+            slideTitle: slide.title,
+            date: opts.fieldDate,
+            locale: opts.locale,
+            timeZone: opts.timeZone,
+          }
+        : undefined)
+    return semanticRenderTree(opts.pptxSemantic, slide, fieldContext)
+      .map(renderNode)
+      .filter(Boolean)
+      .join('\n') + timingMarkup
+  }
   const { effectiveLines } = resolveConnectorGeometry(slide?.elements || [])
   return (slide.elements || [])
     .filter((el) => !(el.hidden || false))

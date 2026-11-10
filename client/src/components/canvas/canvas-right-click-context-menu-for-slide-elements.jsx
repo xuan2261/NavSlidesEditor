@@ -20,6 +20,9 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { Button } from '../ui'
 import { sanitizeMediaSrc } from '../../utils/url-safety'
 import { computeCropResetGeometry } from './image-crop-geometry'
+import NativePictureProperties from '../properties/native-picture-properties'
+import pictureOperations from 'revealjs-shared/src/pptx-picture-operations.js'
+import { semanticInstance, semanticDefinition } from 'revealjs-shared/src/pptx-semantic-records.js'
 
 const VIEWPORT_GAP = 8
 
@@ -110,10 +113,13 @@ export function getCopyableMediaUrl(element, origin = globalThis.location?.origi
 export default function CanvasContextMenu({
   contextMenu,
   slide,
+  pptxSemantic,
   onCopy,
   onCut,
   onPaste,
   onDuplicate,
+  onGroup,
+  onUngroup,
   onUpdateElement,
   onStartCrop,
   onClose,
@@ -122,6 +128,7 @@ export default function CanvasContextMenu({
 }) {
   const menuRef = useRef(null)
   const [position, setPosition] = useState({ top: 0, left: 0 })
+  const [pictureCropOpen, setPictureCropOpen] = useState(false)
 
   useLayoutEffect(() => {
     if (!contextMenu) return undefined
@@ -145,12 +152,15 @@ export default function CanvasContextMenu({
   if (!contextMenu) return null
 
   const ctxEl = slide?.elements?.find((e) => e.id === contextMenu.elementId)
+  const pictureInstance = semanticInstance(pptxSemantic, ctxEl?.pptxInstanceId)
+  const pictureSource = semanticDefinition(pptxSemantic, pictureInstance?.definitionId)?.content?.pictureDocument
   const contextSelectionIds = contextMenu.contextSelectionIds || [contextMenu.elementId]
   const contextElements = (slide?.elements || []).filter((e) => contextSelectionIds.includes(e.id))
   const hasLockedContext = contextElements.some((e) => e.locked)
   const hasMutableContext = contextElements.some((e) => !e.locked)
   const isReadOnly = !!slide?.locked || hasLockedContext
-  const targetReadOnly = !!slide?.locked || !!ctxEl?.locked
+  const targetReadOnly = !!slide?.locked || !!ctxEl?.locked ||
+    (pictureSource && !pictureOperations.pictureOperationAvailable(pptxSemantic, pictureInstance.id))
   const mutationDisabled = !!slide?.locked || !hasMutableContext
   const currentRef = ctxEl?.snapRef || 'ul'
   const copyableUrl = ['image', 'video'].includes(contextMenu.elementType)
@@ -172,7 +182,7 @@ export default function CanvasContextMenu({
       ref={menuRef}
       role="menu"
       aria-label="Element actions"
-      className="fixed z-[9999] bg-card border border-border shadow-md rounded-md p-1 min-w-[160px] flex flex-col gap-1"
+      className={`fixed z-[9999] bg-card border border-border shadow-md rounded-md p-1 min-w-[160px] flex flex-col gap-1${pictureSource && pictureCropOpen ? ' max-w-[min(320px,calc(100vw-16px))] max-h-[calc(100vh-16px)] overflow-y-auto' : ''}`}
       style={{ top: position.top, left: position.left }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -226,6 +236,16 @@ export default function CanvasContextMenu({
       >
         <Pencil size={14} /> Edit action
       </Button>
+      {onGroup && contextSelectionIds.length > 1 && (
+        <Button variant="ghost" disabled={isReadOnly} onClick={() => { onGroup(); onClose() }}>
+          Group / Regroup (Ctrl+G)
+        </Button>
+      )}
+      {onUngroup && contextMenu.elementType === 'semantic-group' && (
+        <Button variant="ghost" disabled={isReadOnly} onClick={() => { onUngroup(); onClose() }}>
+          Ungroup (Ctrl+Shift+G)
+        </Button>
+      )}
       <div className="h-px bg-border my-1" />
 
       {contextMenu.elementType === 'image' && (
@@ -234,18 +254,32 @@ export default function CanvasContextMenu({
             variant="ghost"
             disabled={targetReadOnly}
             onClick={() => {
+              if (pictureSource) {
+                setPictureCropOpen(!pictureCropOpen)
+                return
+              }
               onStartCrop?.(contextMenu.elementId)
               onClose()
             }}
           >
             <Crop size={14} /> Crop
           </Button>
+          {pictureSource && pictureCropOpen && (
+            <NativePictureProperties key={ctxEl.id} element={ctxEl} document={pptxSemantic}
+              slideLocked={slide?.locked}
+              onUpdate={(updates) => onUpdateElement(ctxEl.id, updates)} />
+          )}
           <Button
             variant="ghost"
             disabled={targetReadOnly}
             onClick={() => {
               const el = slide?.elements?.find((e) => e.id === contextMenu.elementId)
-              if (el && el.imageW != null) {
+              if (pictureSource) {
+                onUpdateElement(contextMenu.elementId, { pptxProjectionOperation: {
+                  type: 'picture.edit', instanceId: ctxEl.pptxInstanceId,
+                  componentId: pictureSource.componentId, command: { type: 'reset-crop' },
+                } })
+              } else if (el && el.imageW != null) {
                 const geometry = computeCropResetGeometry(el)
                 onUpdateElement(contextMenu.elementId, {
                   ...geometry,

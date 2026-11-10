@@ -1,12 +1,21 @@
 import { useState } from 'react'
-import { resolveMergedCells } from 'revealjs-shared'
+import { resolveMergedCells, tableCellText, updateTableCellText } from 'revealjs-shared'
 import { Button, ColorPicker, Select } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
 import { clampTableCell, normalizeTableShape } from './table-properties-utils'
 import FocusedAuthoringTextInput from './focused-authoring-text-input'
 import TableLayoutControls from './table-layout-controls'
 import TableMergeControls from './table-merge-controls'
-export default function TableProperties({ element, onUpdate, elements, selectedElementIds }) {
+import TableCellInsetsControls from './table-cell-insets-controls'
+import NativeTableProperties from '../native-table-properties'
+
+export default function TableProperties(props) {
+  return props.element.tableDocument
+    ? <NativeTableProperties key={props.element.pptxInstanceId || props.element.id} {...props} />
+    : <LegacyTableProperties {...props} />
+}
+
+function LegacyTableProperties({ element, onUpdate, elements, selectedElementIds }) {
   const data = element.data || [['']]
   const [selectedCell, setSelectedCell] = useState({ row: 0, col: 0 })
   const { spans, covered } = resolveMergedCells(element.mergedCells, {
@@ -173,12 +182,11 @@ export default function TableProperties({ element, onUpdate, elements, selectedE
         {data.map((row, ri) => (
           <div key={ri} className="flex">
             {(row || []).map((cell, ci) => (
-              <input
+              <textarea
                 data-testid={`prop-table-cell-${ri}-${ci}`}
                 aria-label={`Table cell row ${ri + 1} column ${ci + 1}`}
                 key={ci}
-                type="text"
-                value={covered.has(`${ri}:${ci}`) ? '' : String(cell ?? '')}
+                value={covered.has(`${ri}:${ci}`) ? '' : tableCellText(cell)}
                 disabled={covered.has(`${ri}:${ci}`)}
                 title={
                   covered.has(`${ri}:${ci}`)
@@ -189,7 +197,7 @@ export default function TableProperties({ element, onUpdate, elements, selectedE
                 onChange={(e) => {
                   if (covered.has(`${ri}:${ci}`)) return
                   const d = data.map((r) => [...r])
-                  d[ri][ci] = e.target.value
+                  d[ri][ci] = updateTableCellText(cell, e.target.value)
                   onUpdate({ data: d })
                 }}
                 className="flex-1 min-w-0 px-1.5 py-1 border border-border bg-card text-text-primary text-[11px] outline-none rounded-none"
@@ -272,6 +280,13 @@ export default function TableProperties({ element, onUpdate, elements, selectedE
             ))}
           </Select>
         </div>
+        <TableCellInsetsControls
+          key={`${element.id}-${clampedCell.row}-${clampedCell.col}-insets`}
+          value={getCellStyle('insets', null)}
+          fallback={element.cellPadding ?? 8}
+          cell={clampedCell}
+          onChange={(value) => updateCellStyle('insets', value)}
+        />
       </div>
     </div>
   )

@@ -3,6 +3,9 @@ import { generateRevealHTML, projectExportValue } from 'revealjs-shared'
 import { generateOfflineHTML } from './offlineExport'
 import { buildArchiveMediaManifestEntries } from './project-media-utils'
 import { api } from './api'
+import {
+  assertOutputActive, prepareSemanticOutputResources, validateSemanticOutputHTML,
+} from './generateHTML'
 
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob)
@@ -71,12 +74,14 @@ async function collectProjectMediaFiles(mediaEntries) {
  * Legacy projections use JSON v1.1 or a media ZIP without package fidelity claims.
  * @param {object} presentation
  */
-export async function exportProject(presentation) {
+export async function exportProject(presentation, { signal } = {}) {
+  assertOutputActive(signal)
   if (presentation?.pptxSourceAvailable === true) {
     if (!presentation.id || !Number.isSafeInteger(presentation.aggregateGeneration) || presentation.aggregateGeneration < 1) {
       throw new Error('Project archive requires a saved package generation')
     }
     const archive = await api.downloadProjectArchive(presentation.id, presentation.aggregateGeneration)
+    assertOutputActive(signal)
     const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '')
     downloadBlob(archive, `${slugify(presentation.title)}-backup-${timestamp}.navslides`)
     return
@@ -103,6 +108,7 @@ export async function exportProject(presentation) {
   zip.file('presentation.json', JSON.stringify(exportPresentation, null, 2))
 
   const included = await collectProjectMediaFiles(mediaEntries)
+  assertOutputActive(signal)
   included.forEach(({ bytes, ...entry }) => {
     zip.file(entry.archivePath, bytes)
   })
@@ -120,11 +126,20 @@ export async function exportProject(presentation) {
   zip.file('manifest.json', JSON.stringify(manifest, null, 2))
 
   try {
-    const html = generateRevealHTML(exportPresentation, { portable: true })
+    const semanticOutputResources = await prepareSemanticOutputResources(presentation, { signal })
+    assertOutputActive(signal)
+    // Projection stripping must not erase the canonical journal used by this
+    // attachment. The archive JSON remains the existing external projection.
+    const htmlPresentation = presentation.pptxSemantic
+      ? { ...exportPresentation, pptxSemantic: presentation.pptxSemantic } : exportPresentation
+    const html = generateRevealHTML(htmlPresentation, { portable: true, semanticOutputResources })
     const offline = await generateOfflineHTML(html, {
       generatedDocument: true,
       strictRequiredAssets: true,
     })
+    assertOutputActive(signal)
+    if (presentation.pptxSemantic) await validateSemanticOutputHTML(offline, { signal })
+    assertOutputActive(signal)
     zip.file('presentation.html', offline)
   } catch (cause) {
     throw Object.assign(
@@ -140,5 +155,6 @@ export async function exportProject(presentation) {
     compression: 'DEFLATE',
     compressionOptions: { level: 6 },
   })
+  assertOutputActive(signal)
   downloadBlob(zipBlob, `${title}-backup-${timestamp}.navslides`)
 }

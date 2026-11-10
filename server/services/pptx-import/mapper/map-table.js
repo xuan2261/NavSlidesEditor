@@ -1,6 +1,7 @@
 const { readNumber } = require('../geometry')
 const { baseElement, placeholder } = require('./utils-base')
-const { normalizeFontFamily, normalizeFontSize, plainText, ptToCanvasPx } = require('./utils-text')
+const { mapTableCellValue } = require('./table-rich-cell')
+const { cellInsets, cellTextStyle, cellVerticalAlign } = require('./table-cell-style')
 
 const DEFAULT_TABLE_BORDER = Object.freeze({ color: '#d1d5db', width: 1, style: 'solid' })
 const TABLE_BORDER_SIDES = ['top', 'right', 'bottom', 'left']
@@ -48,6 +49,7 @@ function pushEmptyCell(row, tableBorders) {
   row.aligns.push('left')
   row.vAligns.push('middle')
   row.borders.push(normalizeBorderSet(null, tableBorders))
+  row.insets.push(null)
 }
 
 function scaleDimensionList(values, axisScale) {
@@ -74,6 +76,7 @@ function mapTable(element, context) {
     aligns: [],
     vAligns: [],
     borders: [],
+    insets: [],
   }
   const tableBorders = element.borders || {
     color: element.borderColor,
@@ -93,29 +96,29 @@ function mapTable(element, context) {
       aligns: [],
       vAligns: [],
       borders: [],
+      insets: [],
     }
 
     for (let ci = 0; ci < cols; ci++) {
-      const cell = row[ci]
-      if (!cell || cell.vMerge === 0 || cell.hMerge === 0) {
+      const rawCell = row[ci]
+      const cell = rawCell && typeof rawCell === 'object' ? rawCell : { text: rawCell ?? '' }
+      if (rawCell == null || cell.vMerge === 0 || cell.hMerge === 0) {
         dataRow.push('')
         pushEmptyCell(cellStylesRow, tableBorders)
         continue
       }
 
-      dataRow.push(plainText(cell.text || cell.content || ''))
-      cellStylesRow.textColors.push(cell.fontColor || null)
-      cellStylesRow.bgColors.push(cell.fillColor || null)
-      cellStylesRow.isBold.push(Boolean(cell.fontBold))
-      const fontSize = normalizeFontSize(cell.fontSize || cell.fontSz)
-      cellStylesRow.fontSizes.push(fontSize ? ptToCanvasPx(fontSize, context.scale) : null)
-      cellStylesRow.fontFamilies.push(
-        normalizeFontFamily(cell.fontFamily || cell.fontFace || cell.font || cell.fontName) || null
-      )
-      const align = cell.align || cell.paragraphAlign || 'left'
-      cellStylesRow.aligns.push(['left', 'center', 'right', 'justify'].includes(align) ? align : 'left')
-      const vAlign = cell.vAlign || 'middle'
-      cellStylesRow.vAligns.push(['top', 'middle', 'bottom'].includes(vAlign) ? vAlign : 'middle')
+      const html = cell.text ?? cell.content ?? ''
+      const textStyle = cellTextStyle(cell, typeof html === 'string' ? html : '', context.scale)
+      dataRow.push(typeof rawCell === 'object' ? mapTableCellValue(html, context.scale, textStyle.bold) : rawCell)
+      cellStylesRow.textColors.push(textStyle.textColor)
+      cellStylesRow.bgColors.push(cell.fillColor ?? null)
+      cellStylesRow.isBold.push(textStyle.bold)
+      cellStylesRow.fontSizes.push(textStyle.fontSize)
+      cellStylesRow.fontFamilies.push(textStyle.fontFamily)
+      cellStylesRow.aligns.push(['left', 'center', 'right', 'justify'].includes(textStyle.align) ? textStyle.align : 'left')
+      cellStylesRow.vAligns.push(cellVerticalAlign(cell.vAlign))
+      cellStylesRow.insets.push(cellInsets(cell, context.scale))
       cellStylesRow.borders.push(normalizeBorderSet(cell.borders || cell.border, tableBorders))
 
       if ((cell.rowSpan && cell.rowSpan > 1) || (cell.colSpan && cell.colSpan > 1)) {
@@ -132,28 +135,33 @@ function mapTable(element, context) {
     cellStyles.aligns.push(cellStylesRow.aligns)
     cellStyles.vAligns.push(cellStylesRow.vAligns)
     cellStyles.borders.push(cellStylesRow.borders)
+    cellStyles.insets.push(cellStylesRow.insets)
   }
 
   context.stats.tableCount += 1
+  const border = normalizeBorderSide(tableBorders)
   const table = {
     ...baseElement(element, context.scale, context.zIndex),
     type: 'table',
     data,
     rows,
     cols,
-    headerRow: true,
-    borderColor: DEFAULT_TABLE_BORDER.color,
-    borderWidth: DEFAULT_TABLE_BORDER.width,
+    headerRow: element.headerRow ?? true,
+    borderColor: border.color,
+    borderWidth: border.width,
     textColor: '#111827',
     cellBgColor: 'transparent',
     headerBgColor: 'rgba(99,102,241,0.18)',
     headerTextColor: '#1e40af',
-    headerIsBold: true,
+    headerIsBold: element.headerIsBold ?? true,
     cellStyles,
     mergedCells,
     colWidths: scaleDimensionList(element.colWidths, context.scale.x),
     rowHeights: scaleDimensionList(element.rowHeights, context.scale.y),
   }
+  if (!cellStyles.insets.some((row) => row.some(Boolean))) delete cellStyles.insets
+  if (element.cellPadding != null) table.cellPadding = element.cellPadding
+  if (element.borderType != null || element.borderStyle != null || tableBorders.style != null) table.borderStyle = border.style
   if (element.fill && element.fill.type === 'color') table.headerBgColor = element.fill.value || table.headerBgColor
   return [table]
 }

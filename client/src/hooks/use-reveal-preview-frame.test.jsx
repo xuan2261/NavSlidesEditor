@@ -13,11 +13,10 @@ describe('useRevealPreviewFrame timer ownership', () => {
     vi.restoreAllMocks()
   })
 
-  it('ignores stale onload callbacks and clears the active generation timers on unmount', () => {
+  it('ignores stale onload callbacks and owns the readiness deadline without polling', () => {
     vi.useFakeTimers()
     const setIntervalSpy = vi.spyOn(globalThis, 'setInterval')
     const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout')
-    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval')
     const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
 
     const view = render(<Harness html="<p>A</p>" frameKey={1} />)
@@ -34,11 +33,10 @@ describe('useRevealPreviewFrame timer ownership', () => {
     expect(setTimeoutSpy).not.toHaveBeenCalled()
 
     activeOnload()
-    const intervalId = setIntervalSpy.mock.results[0].value
     const timeoutId = setTimeoutSpy.mock.results[0].value
     view.unmount()
 
-    expect(clearIntervalSpy).toHaveBeenCalledWith(intervalId)
+    expect(setIntervalSpy).not.toHaveBeenCalled()
     expect(clearTimeoutSpy).toHaveBeenCalledWith(timeoutId)
   })
 
@@ -63,8 +61,6 @@ describe('useRevealPreviewFrame timer ownership', () => {
     })
 
     iframe.onload()
-    vi.advanceTimersByTime(100)
-
     expect(deck.configure).toHaveBeenCalledTimes(1)
     expect(deck.slide).toHaveBeenCalledWith(2, 1, 3)
 

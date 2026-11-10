@@ -4,13 +4,17 @@ import { clampNumber } from '../../utils/number-input'
 import { resolveUrlEntry } from '../../utils/url-safety'
 import { resolveVideoSrc } from '../../utils/migrate-video-src'
 import { computeMixedSource } from '../../utils/selection-mixed-values'
-import { sanitizeMediaTrackSrc } from 'revealjs-shared/src/media-accessibility.js'
+import { sanitizeMediaTrackSrc, MAX_MEDIA_DESCRIPTION_LENGTH, MAX_TRACK_LABEL_LENGTH,
+  MAX_TRACK_LANGUAGE_LENGTH } from 'revealjs-shared/src/media-accessibility.js'
+import MediaPosterInput from './media-poster-input'
+import { useMediaTrackDrafts } from './use-media-track-drafts'
 /**
  * Video/Audio media properties: source URL, poster, controls, autoplay, loop, muted.
  */
 
 export default function MediaProperties({ element, onUpdate, elements, selectedElementIds }) {
   const isVideo = element.type === 'video'
+  const mediaLabel = isVideo ? 'Video' : 'Audio'
   const [trimError, setTrimError] = useState(null)
   const trimErrorId = useId()
   const locked = element.locked === true
@@ -18,8 +22,7 @@ export default function MediaProperties({ element, onUpdate, elements, selectedE
     elements || [element],
     selectedElementIds || [element.id]
   ).isMixed
-  const tracks = Array.isArray(element.tracks) ? element.tracks : []
-  const updateTracks = (next) => onUpdate({ tracks: next })
+  const { tracks, updateTracks, tracksError } = useMediaTrackDrafts(element, onUpdate)
   const updateNumber = (key, value, min = null, max = null) => {
     const next = clampNumber(value, min, max, null)
     if (next === null) return
@@ -43,6 +46,7 @@ export default function MediaProperties({ element, onUpdate, elements, selectedE
         className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-2"
         type="text"
         value={sourceMixed ? '' : isVideo ? resolveVideoSrc(element) : element.src || ''}
+        disabled={locked || Boolean(element.pptxInstanceId)}
         data-mixed={sourceMixed ? 'true' : undefined}
         onChange={(e) => {
           const next = resolveUrlEntry(e.target.value, isVideo ? 'video' : 'audio')
@@ -53,17 +57,7 @@ export default function MediaProperties({ element, onUpdate, elements, selectedE
       {isVideo && (
         <>
           <div className="text-[11px] text-text-muted mb-1">Poster Image URL</div>
-          <Input
-            aria-label="Video poster image URL"
-            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted mb-2"
-            type="text"
-            value={element.poster || ''}
-            onChange={(e) => {
-              const next = resolveUrlEntry(e.target.value, 'image')
-              if (next.value || !e.target.value) onUpdate({ poster: next.value })
-            }}
-            placeholder="Thumbnail URL (optional)"
-          />
+          <MediaPosterInput element={element} onUpdate={onUpdate} />
           <div className="text-[11px] text-text-muted mb-1">Object Fit</div>
           <Select
             aria-label="Video object fit"
@@ -77,59 +71,73 @@ export default function MediaProperties({ element, onUpdate, elements, selectedE
               </option>
             ))}
           </Select>
-          <div className="grid grid-cols-3 gap-2 mb-2">
-            <div>
-              <div className="text-[11px] text-text-muted mb-1">Start Time</div>
-              <Input
-                data-testid="prop-video-start-time"
-                aria-label="Video start time"
-                aria-invalid={trimError === 'startTime' ? true : undefined}
-                aria-describedby={trimError === 'startTime' ? trimErrorId : undefined}
-                className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
-                type="number"
-                min="0"
-                step="0.1"
-                value={element.startTime ?? 0}
-                onChange={(e) => updateNumber('startTime', e.target.value, 0)}
-              />
-            </div>
-            <div>
-              <div className="text-[11px] text-text-muted mb-1">End Time</div>
-              <Input
-                data-testid="prop-video-end-time"
-                aria-label="Video end time"
-                aria-invalid={trimError === 'endTime' ? true : undefined}
-                aria-describedby={trimError === 'endTime' ? trimErrorId : undefined}
-                className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
-                type="number"
-                min="0"
-                step="0.1"
-                value={element.endTime ?? 0}
-                onChange={(e) => updateNumber('endTime', e.target.value, 0)}
-              />
-            </div>
-            <div>
-              <div className="text-[11px] text-text-muted mb-1">Playback Speed</div>
-              <Input
-                data-testid="prop-video-playback-rate"
-                aria-label="Video playback speed"
-                className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
-                type="number"
-                min="0.25"
-                max="4"
-                step="0.25"
-                value={element.playbackRate ?? 1}
-                onChange={(e) => updateNumber('playbackRate', e.target.value, 0.25, 4)}
-              />
-            </div>
-          </div>
-          {trimError && (
-            <p id={trimErrorId} role="alert" className="text-[11px] text-red-400 mb-2">
-              End Time must be greater than Start Time, or 0 for no end limit.
-            </p>
-          )}
         </>
       )}
+      <div className="grid grid-cols-3 gap-2 mb-2">
+        <div>
+          <div className="text-[11px] text-text-muted mb-1">Start Time</div>
+          <Input
+            data-testid={`prop-${element.type}-start-time`}
+            aria-label={`${mediaLabel} start time`}
+            aria-invalid={trimError === 'startTime' ? true : undefined}
+            aria-describedby={trimError === 'startTime' ? trimErrorId : undefined}
+            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
+            type="number"
+            min="0"
+            step="0.1"
+            value={element.startTime ?? 0}
+            onChange={(e) => updateNumber('startTime', e.target.value, 0)}
+          />
+        </div>
+        <div>
+          <div className="text-[11px] text-text-muted mb-1">End Time</div>
+          <Input
+            data-testid={`prop-${element.type}-end-time`}
+            aria-label={`${mediaLabel} end time`}
+            aria-invalid={trimError === 'endTime' ? true : undefined}
+            aria-describedby={trimError === 'endTime' ? trimErrorId : undefined}
+            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
+            type="number"
+            min="0"
+            step="0.1"
+            value={element.endTime ?? 0}
+            onChange={(e) => updateNumber('endTime', e.target.value, 0)}
+          />
+        </div>
+        <div>
+          <div className="text-[11px] text-text-muted mb-1">Playback Speed</div>
+          <Input
+            data-testid={`prop-${element.type}-playback-rate`}
+            aria-label={`${mediaLabel} playback speed`}
+            className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
+            type="number"
+            min="0.25"
+            max="4"
+            step="0.25"
+            value={element.playbackRate ?? 1}
+            onChange={(e) => updateNumber('playbackRate', e.target.value, 0.25, 4)}
+          />
+        </div>
+      </div>
+      {trimError && (
+        <p id={trimErrorId} role="alert" className="text-[11px] text-red-400 mb-2">
+          End Time must be greater than Start Time, or 0 for no end limit.
+        </p>
+      )}
+      <label className="block text-[11px] text-text-muted mb-2">
+        Volume
+        <Input
+          aria-label={`${mediaLabel} volume`}
+          disabled={locked}
+          className="w-full bg-card border border-border px-2 py-1 text-xs mt-1"
+          type="number"
+          min="0"
+          max="1"
+          step="0.05"
+          value={element.volume ?? 1}
+          onChange={(event) => updateNumber('volume', event.target.value, 0, 1)}
+        />
+      </label>
       <div className="flex flex-col gap-1">
         {[
           ['controls', 'Show controls'],
@@ -154,6 +162,7 @@ export default function MediaProperties({ element, onUpdate, elements, selectedE
         <textarea
           aria-label="Media transcript"
           disabled={locked}
+          maxLength={MAX_MEDIA_DESCRIPTION_LENGTH}
           className="w-full min-h-[52px] bg-card border border-border text-text-primary px-2 py-1 text-xs resize-y mb-2"
           value={element.transcript || ''}
           onChange={(event) => onUpdate({ transcript: event.target.value })}
@@ -162,6 +171,7 @@ export default function MediaProperties({ element, onUpdate, elements, selectedE
         <textarea
           aria-label="Media audio description"
           disabled={locked}
+          maxLength={MAX_MEDIA_DESCRIPTION_LENGTH}
           className="w-full min-h-[52px] bg-card border border-border text-text-primary px-2 py-1 text-xs resize-y mb-2"
           value={element.audioDescription || ''}
           onChange={(event) => onUpdate({ audioDescription: event.target.value })}
@@ -182,6 +192,7 @@ export default function MediaProperties({ element, onUpdate, elements, selectedE
             Add track
           </button>
         </div>
+        {tracksError && <p role="alert" className="text-[11px] text-red-400">{tracksError}</p>}
         {tracks.map((track, index) => {
           const safe = sanitizeMediaTrackSrc(track.src)
           const patchTrack = (patch) =>
@@ -245,6 +256,10 @@ export default function MediaProperties({ element, onUpdate, elements, selectedE
                 placeholder="Track URL"
                 className="w-full mt-1 px-1.5 py-1 text-xs"
                 onChange={(event) => {
+                  if (element.pptxInstanceId) {
+                    patchTrack({ src: event.target.value })
+                    return
+                  }
                   const next = sanitizeMediaTrackSrc(event.target.value)
                   if (next || !event.target.value) patchTrack({ src: next })
                 }}
@@ -258,6 +273,7 @@ export default function MediaProperties({ element, onUpdate, elements, selectedE
                 <Input
                   aria-label={`Caption track ${index + 1} language`}
                   disabled={locked}
+                  maxLength={MAX_TRACK_LANGUAGE_LENGTH}
                   value={track.srcLang || ''}
                   placeholder="Language"
                   className="px-1.5 py-1 text-xs"
@@ -266,6 +282,7 @@ export default function MediaProperties({ element, onUpdate, elements, selectedE
                 <Input
                   aria-label={`Caption track ${index + 1} label`}
                   disabled={locked}
+                  maxLength={MAX_TRACK_LABEL_LENGTH}
                   value={track.label || ''}
                   placeholder="Label"
                   className="px-1.5 py-1 text-xs"

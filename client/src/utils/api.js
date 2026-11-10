@@ -219,10 +219,12 @@ export const api = {
       return blob
     }),
 
-  uploadFile: (file) => {
+  uploadFile: (file, { presentationId, purpose, signal } = {}) => {
     const fd = new FormData()
+    if (presentationId) fd.append('presentationId', presentationId)
+    if (purpose) fd.append('purpose', purpose)
     fd.append('file', file)
-    return fetch('/api/upload', { method: 'POST', body: fd }).then(handleResponse)
+    return fetch('/api/upload', { method: 'POST', body: fd, ...(signal ? { signal } : {}) }).then(handleResponse)
   },
   preflightProjectImport: (file, opts = {}) => {
     const fd = new FormData()

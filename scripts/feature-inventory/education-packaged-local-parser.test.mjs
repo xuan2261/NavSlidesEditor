@@ -76,9 +76,11 @@ async function fixture({ declareParser = true } = {}) {
 }
 const verify = (data) => verifyPackagedSources(data.root, data.context, data.resources)
 function linkDirectory(data, target) {
+  // A link entry must not retain the source inventory prefix's trailing separator.
+  const entry = resolve(target)
   const external = join(data.root, 'linked-target')
-  renameSync(target, external)
-  symlinkSync(external, target, 'junction')
+  renameSync(entry, external)
+  symlinkSync(external, entry, process.platform === 'win32' ? 'junction' : 'dir')
 }
 
 describe('frozen packaged local parser byte attestation', () => {

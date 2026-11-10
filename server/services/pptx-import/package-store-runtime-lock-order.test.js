@@ -4,7 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { createRequire } from 'node:module'
 import JSZip from 'jszip'
-import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const require = createRequire(import.meta.url)
 
@@ -34,17 +34,33 @@ async function publishImport(jobId, title) {
   zip.file('ppt/presentation.xml', `<p:presentation name="${title}" />`)
   const bytes = await zip.generateAsync({ type: 'nodebuffer' })
   const presentation = { id: 'race-destination', title, slides: [] }
-  const result = await packageRuntime.withPackageStore((store) => store.commitImport(bytes, {
-    jobId,
-    presentationId: presentation.id,
-    projection: presentation,
-    sourceMap: { entries: {} },
-    compatibilityPresentation: presentation,
-  }))
+  const result = await packageRuntime.withPackageStore((store) =>
+    store.commitImport(bytes, {
+      jobId,
+      presentationId: presentation.id,
+      projection: presentation,
+      sourceMap: { entries: {} },
+      compatibilityPresentation: presentation,
+    })
+  )
   return { ...result, bytes }
 }
 
 describe('package compatibility replay lock order', () => {
+  it('copies full state only for the durable acknowledgement mutation', async () => {
+    const store = packageRuntime.getPackageStore()
+    const snapshots = vi.spyOn(store, 'getState')
+    try {
+      expect(await packageRuntime.drainPackageCompatibilityOutbox()).toBe(1)
+      expect(snapshots).toHaveBeenCalledTimes(1)
+      snapshots.mockClear()
+      expect(await packageRuntime.drainPackageCompatibilityOutbox()).toBe(0)
+      expect(snapshots).not.toHaveBeenCalled()
+    } finally {
+      snapshots.mockRestore()
+    }
+  })
+
   beforeEach(async () => {
     await packageRuntime.shutdownPackageStore()
     storage.initDataFiles()
@@ -95,9 +111,11 @@ describe('package compatibility replay lock order', () => {
     }
 
     try {
-      failure = packageRuntime.withPackageStore(async () => {
-        throw new Error('action failed')
-      }).catch((error) => error)
+      failure = packageRuntime
+        .withPackageStore(async () => {
+          throw new Error('action failed')
+        })
+        .catch((error) => error)
       await rootRead.promise
 
       directMutation = store.mutate((next) => {
@@ -167,14 +185,16 @@ describe('package compatibility replay lock order', () => {
       const old = await publishImport('loser-job', 'Loser')
       if (operation === 'remove') {
         await packageRuntime.drainPackageCompatibilityOutbox()
-        await packageRuntime.withPackageStore((store) => store.quarantinePresentation(
-          'race-destination', { compatibilityRemove: true }
-        ))
+        await packageRuntime.withPackageStore((store) =>
+          store.quarantinePresentation('race-destination', { compatibilityRemove: true })
+        )
       }
       const store = packageRuntime.getPackageStore()
-      const stale = store.getState().compatibilityOutbox.find((write) =>
-        write.presentationId === 'race-destination' && write.operation === operation
-      )
+      const stale = store
+        .getState()
+        .compatibilityOutbox.find(
+          (write) => write.presentationId === 'race-destination' && write.operation === operation
+        )
       expect(stale).toBeTruthy()
       const locked = deferred()
       const releasePresentations = deferred()
@@ -190,9 +210,9 @@ describe('package compatibility replay lock order', () => {
         }
       })
       await locked.promise
-      const getState = store.getState.bind(store)
-      store.getState = () => {
-        const state = getState()
+      const getCompatibilityState = store.getCompatibilityState.bind(store)
+      store.getCompatibilityState = () => {
+        const state = getCompatibilityState()
         if (state.compatibilityOutbox.some((write) => write.id === stale.id)) captured.resolve()
         return state
       }
@@ -200,23 +220,30 @@ describe('package compatibility replay lock order', () => {
       try {
         draining = packageRuntime.drainPackageCompatibilityOutbox()
         await captured.promise
-        store.getState = getState
+        store.getCompatibilityState = getCompatibilityState
         if (operation === 'upsert') {
-          await packageRuntime.withPackageStore((current) => current.rollbackImport({
-            jobId: 'loser-job', presentationId: 'race-destination',
-          }))
+          await packageRuntime.withPackageStore((current) =>
+            current.rollbackImport({
+              jobId: 'loser-job',
+              presentationId: 'race-destination',
+            })
+          )
         }
         winner = await publishImport('winner-job', 'Winner')
         expect(winner.head.generation).toBe(old.head.generation)
         expect(winner.head.packageRevisionId).not.toBe(old.head.packageRevisionId)
-        winnerWrite = store.getState().compatibilityOutbox.find((write) =>
-          write.operation === 'upsert' &&
-          write.presentation?.pptxAggregateHead?.packageRevisionId === winner.head.packageRevisionId
-        )
+        winnerWrite = store
+          .getState()
+          .compatibilityOutbox.find(
+            (write) =>
+              write.operation === 'upsert' &&
+              write.presentation?.pptxAggregateHead?.packageRevisionId ===
+                winner.head.packageRevisionId
+          )
         releasePresentations.resolve()
         await Promise.all([holding, draining])
       } finally {
-        store.getState = getState
+        store.getCompatibilityState = getCompatibilityState
         releasePresentations.resolve()
         await Promise.allSettled([holding, draining].filter(Boolean))
       }
@@ -225,11 +252,15 @@ describe('package compatibility replay lock order', () => {
       if (operation === 'upsert') expect(row).toBeUndefined()
       else expect(row).toMatchObject({ title: 'Winner', pptxAggregateHead: winner.head })
       const state = store.getState()
-      expect(state.heads.find((head) => head.presentationId === 'race-destination')).toEqual(winner.head)
+      expect(state.heads.find((head) => head.presentationId === 'race-destination')).toEqual(
+        winner.head
+      )
       expect(state.compatibilityOutbox).toEqual(expect.arrayContaining([winnerWrite]))
-      expect(state.owners).toEqual(expect.arrayContaining([
-        expect.objectContaining({ ownerId: 'race-destination', revisionId: winner.revision.id }),
-      ]))
+      expect(state.owners).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ ownerId: 'race-destination', revisionId: winner.revision.id }),
+        ])
+      )
       await packageRuntime.drainPackageCompatibilityOutbox()
       const { readAuthoritativePresentation } = require('../package-backed-presentation-read')
       const opened = await readAuthoritativePresentation('race-destination', { normalize: false })
@@ -252,14 +283,17 @@ describe('package compatibility replay lock order', () => {
       return originalRename(source, destination)
     }
     try {
-      await expect(packageRuntime.drainPackageCompatibilityOutbox())
-        .rejects.toMatchObject({ code: 'EIO' })
+      await expect(packageRuntime.drainPackageCompatibilityOutbox()).rejects.toMatchObject({
+        code: 'EIO',
+      })
     } finally {
       fs.rename = originalRename
     }
     const appliedRows = await storage.readPresentations()
-    expect(appliedRows.find((row) => row.id === 'race-destination'))
-      .toMatchObject({ title: 'Acknowledgement retry', pptxAggregateHead: committed.head })
+    expect(appliedRows.find((row) => row.id === 'race-destination')).toMatchObject({
+      title: 'Acknowledgement retry',
+      pptxAggregateHead: committed.head,
+    })
     expect(store.getState().compatibilityOutbox).toEqual(before.compatibilityOutbox)
     expect(store.getState().jobs).toEqual(before.jobs)
     await packageRuntime.drainPackageCompatibilityOutbox()

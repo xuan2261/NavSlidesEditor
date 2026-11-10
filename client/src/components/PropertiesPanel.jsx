@@ -11,11 +11,20 @@ import TableProperties from './properties/table-properties'
 import MiscProperties from './properties/misc-properties'
 import TimelineProperties from './properties/timeline-properties'
 import ActionControls from './properties/action-controls'
+import NativeRunHyperlinkControls from './properties/native-run-hyperlink-controls'
 import { Button, Input, Select, ColorPicker } from '../components/ui'
 import { MousePointer2 } from 'lucide-react'
 import { clampNumber } from '../utils/number-input'
 import GameTryLauncher from './education/game-try-launcher'
 import InteractionVariableControls from './properties/interaction-variable-controls'
+import NativeGroupFillProperties from './properties/native-group-fill-properties'
+import projectionCapabilities from 'revealjs-shared/src/pptx-projection-capabilities.js'
+import NativeOmmlEditor from './properties/native-omml-editor'
+import { NativeSmartArtEditor } from './native-smartart/native-smartart-editor'
+import NativeInheritanceTextProperties from './properties/native-inheritance-text-properties'
+import InlineEquationEditor from './properties/inline-equation-editor'
+import Task12VectorProperties from './properties/task12-vector-properties'
+import { semanticInstance, semanticDefinition, semanticStyle } from 'revealjs-shared/src/pptx-semantic-records.js'
 
 /**
  * Type-specific property panel router.
@@ -32,7 +41,50 @@ function ElementTypeProperties({
   selectedElementIds,
   slideLocked,
   variables,
+  pptxSemantic,
+  onSemanticOperation,
 }) {
+  if (element.svgDocument) {
+    const available = onSemanticOperation && pptxSemantic && element.pptxInstanceId &&
+      projectionCapabilities.getProjectionCapabilities(pptxSemantic, element.pptxInstanceId)
+        .operations.includes('svg.edit')
+    return <Task12VectorProperties key={element.pptxInstanceId} document={element.svgDocument}
+      instanceId={element.pptxInstanceId} disabled={!!(element.locked || slideLocked || !available)}
+      onSemanticOperation={available ? onSemanticOperation : undefined} />
+  }
+  if (element.ommlDocument || element.smartArtDocument) {
+    const operation = element.ommlDocument ? 'omml.edit' : 'smartart.edit'
+    const available =
+      onSemanticOperation &&
+      pptxSemantic &&
+      element.pptxInstanceId &&
+      projectionCapabilities
+        .getProjectionCapabilities(pptxSemantic, element.pptxInstanceId)
+        .operations.includes(operation)
+    const blocked = !!(element.locked || slideLocked || !available)
+    if (element.ommlDocument)
+      return (
+        <NativeOmmlEditor
+          key={`${element.pptxInstanceId}:${element.ommlDocument.root.componentId}`}
+          document={element.ommlDocument}
+          instanceId={element.pptxInstanceId}
+          mathFrame={element.mathFrame}
+          theme={element.pptxTextContext?.theme}
+          locked={blocked}
+          onSemanticOperation={available ? onSemanticOperation : undefined}
+        />
+      )
+    return (
+      <NativeSmartArtEditor
+        key={`${element.pptxInstanceId}:${element.smartArtDocument.componentId}`}
+        document={element.smartArtDocument}
+        instanceId={element.pptxInstanceId}
+        bounds={element.pptxFamilyBounds}
+        disabled={blocked}
+        onSemanticOperation={available ? onSemanticOperation : undefined}
+      />
+    )
+  }
   switch (element.type) {
     case 'shape':
     case 'line':
@@ -43,6 +95,7 @@ function ElementTypeProperties({
           elements={elements}
           selectedElementIds={selectedElementIds}
           slideLocked={slideLocked}
+          pptxSemantic={pptxSemantic}
         />
       )
     case 'image':
@@ -52,10 +105,29 @@ function ElementTypeProperties({
           onUpdate={onUpdate}
           elements={elements}
           selectedElementIds={selectedElementIds}
+          pptxSemantic={pptxSemantic}
+          slideLocked={slideLocked}
         />
       )
     case 'chart':
-      return <ChartProperties element={element} onUpdate={onUpdate} />
+      return (
+        <ChartProperties
+          element={element}
+          onUpdate={onUpdate}
+          pptxSemantic={pptxSemantic}
+          slideLocked={slideLocked}
+          onSemanticOperation={
+            onSemanticOperation &&
+            element.pptxInstanceId &&
+            pptxSemantic &&
+            projectionCapabilities
+              .getProjectionCapabilities(pptxSemantic, element.pptxInstanceId)
+              .operations.includes('chart.edit')
+              ? onSemanticOperation
+              : undefined
+          }
+        />
+      )
     case 'code':
       return <CodeProperties element={element} onUpdate={onUpdate} onEditCode={onEditCode} />
     case 'video':
@@ -73,6 +145,17 @@ function ElementTypeProperties({
         <TableProperties
           element={element}
           onUpdate={onUpdate}
+          slideLocked={slideLocked}
+          onSemanticOperation={
+            onSemanticOperation &&
+            element.pptxInstanceId &&
+            pptxSemantic &&
+            projectionCapabilities
+              .getProjectionCapabilities(pptxSemantic, element.pptxInstanceId)
+              .operations.includes('table.edit')
+              ? onSemanticOperation
+              : undefined
+          }
           elements={elements}
           selectedElementIds={selectedElementIds}
         />
@@ -148,6 +231,8 @@ export default function PropertiesPanel({
   isTemplate = false,
   focusRequest,
   isMaster = false,
+  editor,
+  editingElementId,
 }) {
   const panelRef = useRef(null)
   const notesRef = useRef(null)
@@ -185,6 +270,18 @@ export default function PropertiesPanel({
     )
   }
 
+  const selectedGroup =
+    selectedElementIds?.length === 1
+      ? semanticInstance(presentation?.pptxSemantic, selectedElementIds[0])
+      : undefined
+  const groupDefinition = semanticDefinition(presentation?.pptxSemantic, selectedGroup?.definitionId)
+  const groupDeclaration =
+    groupDefinition?.kind === 'group' &&
+    selectedGroup.slideId === slide.id &&
+    !selectedGroup.lineage?.tombstone &&
+    !selectedGroup.lineage?.paintOnly
+      ? semanticStyle(presentation?.pptxSemantic, groupDefinition.content.geometrySource?.styleId)?.payload
+      : undefined
   return (
     <div
       ref={panelRef}
@@ -232,6 +329,20 @@ export default function PropertiesPanel({
         </CollapsibleSection>
       </div>
       {/* Element Section */}
+      {groupDeclaration?.paintComponentId && (
+        <div className="min-w-0 p-4 border-b border-border">
+          <NativeGroupFillProperties
+            key={selectedGroup.id}
+            document={presentation.pptxSemantic}
+            frame={{
+              ownerInstanceId: selectedGroup.id,
+              componentId: groupDeclaration.paintComponentId,
+            }}
+            disabled={!!slide.locked}
+            onUpdate={onUpdateElement}
+          />
+        </div>
+      )}
       {selectedElement && (
         <div className="p-4 border-b border-border">
           <h3 className="text-[11px] font-semibold text-text-muted uppercase tracking-[0.06em] mb-3">
@@ -264,6 +375,7 @@ export default function PropertiesPanel({
             onDelete={onDeleteElement}
             elements={slide?.elements || []}
             selectedElementIds={selectedElementIds || []}
+            pptxSemantic={presentation?.pptxSemantic}
           />
 
           {selectedElement.type === 'game' && (
@@ -287,6 +399,34 @@ export default function PropertiesPanel({
             elements={slide?.elements || []}
             selectedElementIds={selectedElementIds || []}
             variables={presentation?.interactionVariables}
+            pptxSemantic={presentation?.pptxSemantic}
+            onSemanticOperation={
+              onUpdateElement && !slide.locked && (selectedElementIds?.length ?? 1) === 1
+                ? (operation) =>
+                    onUpdateElement(selectedElement.id, { pptxProjectionOperation: operation })
+                : undefined
+            }
+          />
+          {selectedElement.type === 'text' && selectedElement.id === editingElementId &&
+            (selectedElementIds?.length ?? 1) === 1 && (
+            <InlineEquationEditor editor={editor} instanceId={selectedElement.pptxInstanceId}
+              locked={!!(slide.locked || selectedElement.locked)} />
+          )}
+          <NativeInheritanceTextProperties
+            key={`${slide.id}:${selectedElement.id}:inheritance-text`}
+            presentation={presentation}
+            element={selectedElement}
+            slide={slide}
+            onUpdate={onUpdateElement && !slide.locked && (selectedElementIds?.length ?? 1) === 1
+              ? (patch) => onUpdateElement(selectedElement.id, patch) : undefined}
+          />
+          <NativeRunHyperlinkControls
+            key={`${slide.id}:${selectedElement.id}:run-hyperlinks`}
+            presentation={presentation}
+            element={selectedElement}
+            slide={slide}
+            onUpdate={onUpdateElement && !slide.locked && (selectedElementIds?.length ?? 1) === 1
+              ? (patch) => onUpdateElement(selectedElement.id, patch) : undefined}
           />
           <CollapsibleSection title="Action" defaultOpen={true}>
             <ActionControls
@@ -300,7 +440,7 @@ export default function PropertiesPanel({
       )}
 
       {/* Presentation Settings */}
-      {!selectedElement && presentation && onUpdatePresentation && (
+      {!selectedElement && !groupDeclaration && presentation && onUpdatePresentation && (
         <CollapsibleSection title="Presentation Settings" defaultOpen={true}>
           <div className="flex flex-col gap-2.5">
             <div>

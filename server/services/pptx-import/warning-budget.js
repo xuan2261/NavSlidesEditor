@@ -21,20 +21,25 @@ function createBoundedWarnings({
   let usedBytes = 0
 
   const originalPush = Array.prototype.push
-  warnings.push = function pushImportWarning(...items) {
-    let accepted = 0
-    for (const item of items) {
-      const size = estimateWarningBytes(item)
-      if (warnings.length >= maxCount || usedBytes + size > maxBytes) {
-        omittedCount += 1
-        continue
+  Object.defineProperty(warnings, 'push', {
+    enumerable: false,
+    writable: true,
+    configurable: true,
+    value: function pushImportWarning(...items) {
+      let accepted = 0
+      for (const item of items) {
+        const size = estimateWarningBytes(item)
+        if (warnings.length >= maxCount || usedBytes + size > maxBytes) {
+          omittedCount += 1
+          continue
+        }
+        originalPush.call(warnings, item)
+        usedBytes += size
+        accepted += 1
       }
-      originalPush.call(warnings, item)
-      usedBytes += size
-      accepted += 1
-    }
-    return accepted
-  }
+      return accepted
+    },
+  })
 
   Object.defineProperty(warnings, 'omittedCount', {
     get() {

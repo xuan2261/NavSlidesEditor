@@ -138,7 +138,7 @@ test('P06-13 manual acknowledgement preserves a newer draft through real unload 
     await saved(request, id, (deck) => ({ title: deck.title, html: deck.slides[0].elements[0].content }), { title: 'Manual submitted A', html })
     expect((await successor).title).toBe('Manual newer B')
     await expect(page.getByRole('button', { name: 'Retry', exact: true })).toBeVisible()
-    await expect(quick(page).getByRole('button', { name: 'Saved', exact: true })).toHaveCount(0)
+    await expect(quick(page).locator('[aria-label="Saved"]')).toHaveCount(0)
     const preserved = await draft()
     expect(preserved.snapshot).toEqual(newer.snapshot)
     expect(preserved.draftId).toBe(newer.draftId)

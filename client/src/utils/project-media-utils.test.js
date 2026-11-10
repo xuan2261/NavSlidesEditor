@@ -8,6 +8,27 @@ import {
 } from './project-media-utils'
 
 describe('project-media-utils', () => {
+  it('includes canonical semantic media in manifests and rebinds it with derived leaves', () => {
+    const input = {
+      slides: [{ id: 's1', elements: [{ id: 'i1', type: 'image', src: '/uploads/a.png' }] }],
+      pptxSemantic: {
+        definitions: {
+          image: { content: { media: { src: '/uploads/a.png', partUri: 'ppt/media/image1.png' } } },
+          hidden: { content: { media: { src: '/uploads/hidden.png' } } },
+        },
+      },
+    }
+    expect(buildArchiveMediaManifestEntries(input).map((ref) => ref.originalUrl)).toEqual([
+      '/uploads/a.png',
+      '/uploads/hidden.png',
+    ])
+    const changed = rewriteProjectMediaUrls(input, { '/uploads/a.png': '/uploads/b.png' })
+    expect(changed.pptxSemantic.definitions.image.content.media.src).toBe('/uploads/b.png')
+    expect(changed.pptxSemantic.definitions.image.content.media.partUri).toBe(
+      'ppt/media/image1.png'
+    )
+    expect(input.pptxSemantic.definitions.image.content.media.src).toBe('/uploads/a.png')
+  })
   it('detects local upload URLs in relative and absolute form', () => {
     expect(isLocalProjectMediaUrl('/uploads/demo.png')).toBe(true)
     expect(isLocalProjectMediaUrl('https://demo.test/uploads/demo.png')).toBe(true)
@@ -15,7 +36,9 @@ describe('project-media-utils', () => {
   })
 
   it('reads canonical and legacy background image fields', () => {
-    expect(getBackgroundImageUrl({ type: 'image', image: '/uploads/bg.png' })).toBe('/uploads/bg.png')
+    expect(getBackgroundImageUrl({ type: 'image', image: '/uploads/bg.png' })).toBe(
+      '/uploads/bg.png'
+    )
     expect(getBackgroundImageUrl({ type: 'image', src: '/uploads/bg-legacy.png' })).toBe(
       '/uploads/bg-legacy.png'
     )
@@ -84,8 +107,57 @@ describe('project-media-utils', () => {
   })
 
   it('collects and rewrites local caption tracks on vertical child slides', () => {
-    const presentation = { slides: [{ children: [{ elements: [{ id: 'audio', type: 'audio', src: '/uploads/audio.mp3', tracks: [{ src: '/uploads/captions.vtt' }] }] }] }] }
-    expect(collectProjectMediaEntries(presentation, { localOnly: true }).map((entry) => entry.originalUrl)).toEqual(['/uploads/audio.mp3', '/uploads/captions.vtt'])
-    expect(rewriteProjectMediaUrls(presentation, { '/uploads/captions.vtt': '/uploads/new.vtt' }).slides[0].children[0].elements[0].tracks[0].src).toBe('/uploads/new.vtt')
+    const presentation = {
+      slides: [
+        {
+          children: [
+            {
+              elements: [
+                {
+                  id: 'audio',
+                  type: 'audio',
+                  src: '/uploads/audio.mp3',
+                  tracks: [{ src: '/uploads/captions.vtt' }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    }
+    expect(
+      collectProjectMediaEntries(presentation, { localOnly: true }).map(
+        (entry) => entry.originalUrl
+      )
+    ).toEqual(['/uploads/audio.mp3', '/uploads/captions.vtt'])
+    expect(
+      rewriteProjectMediaUrls(presentation, { '/uploads/captions.vtt': '/uploads/new.vtt' })
+        .slides[0].children[0].elements[0].tracks[0].src
+    ).toBe('/uploads/new.vtt')
+  })
+  it('collects and rewrites canonical and projected blip source and derived assets', () => {
+    const source = { src: '/uploads/source.png' }
+    const derived = { src: '/uploads/source-lighten.png' }
+    const presentation = {
+      slides: [{ elements: [{ id: 'shape', pptxBlipAsset: source,
+        pptxBlipDerivedAssets: { lighten: derived } }] }],
+      pptxSemantic: { styles: { binding: { kind: 'geometry-blip-binding', payload: {
+        asset: source, derivedAssets: { lighten: derived },
+      } } } },
+    }
+
+    expect(collectProjectMediaEntries(presentation).map(entry => [entry.originalUrl, entry.references.length]))
+      .toEqual([['/uploads/source.png', 2], ['/uploads/source-lighten.png', 2]])
+    const changed = rewriteProjectMediaUrls(presentation, {
+      '/uploads/source.png': '/uploads/rebound-source.png',
+      '/uploads/source-lighten.png': '/uploads/rebound-lighten.png',
+    })
+    expect(changed.pptxSemantic.styles.binding.payload.asset.src).toBe('/uploads/rebound-source.png')
+    expect(changed.pptxSemantic.styles.binding.payload.derivedAssets.lighten.src)
+      .toBe('/uploads/rebound-lighten.png')
+    expect(changed.slides[0].elements[0].pptxBlipAsset.src).toBe('/uploads/rebound-source.png')
+    expect(changed.slides[0].elements[0].pptxBlipDerivedAssets.lighten.src)
+      .toBe('/uploads/rebound-lighten.png')
+    expect(presentation.pptxSemantic.styles.binding.payload.asset.src).toBe('/uploads/source.png')
   })
 })

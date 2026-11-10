@@ -4,6 +4,18 @@ import budgets from './resource-budgets.js'
 const { assertParsedOutputBudget, createMediaBudget } = budgets
 
 describe('PPTX import resource budgets', () => {
+  it('exposes read-only remaining capacity without charging transient decode work', () => {
+    const budget = createMediaBudget(10)
+    expect(budget.remainingBytes).toBe(10)
+    expect(budget.usedBytes).toBe(0)
+    expect(Object.getOwnPropertyDescriptor(budget, 'remainingBytes').set).toBeUndefined()
+    budget.tryReserve(6, 'image')
+    expect(budget.remainingBytes).toBe(4)
+    budget.tryReserve(6, 'image')
+    expect(budget.remainingBytes).toBe(4)
+    expect(budget.tryReserve(5)).toBe(false)
+    expect(budget.remainingBytes).toBe(4)
+  })
   it('rejects parser output whose serialized bytes exceed the budget', () => {
     expect(() => assertParsedOutputBudget({ slides: [{ text: 'x'.repeat(64) }] }, 32))
       .toThrow(/parsed output byte budget/i)

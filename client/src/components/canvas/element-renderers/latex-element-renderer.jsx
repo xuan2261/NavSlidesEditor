@@ -1,4 +1,5 @@
 import { normalizeLatexForRender } from 'revealjs-shared'
+import NativeOmmlRenderer from '../../properties/native-omml-renderer'
 
 function escapeScriptElementContent(value) {
   return String(value || '').replace(/<\//gi, '\\u003c/')
@@ -43,6 +44,14 @@ ${tikzScript}
 }
 
 export function LatexRenderer({ element, isSelected, isDragging }) {
+  if (element.ommlDocument)
+    return (
+      <NativeOmmlRenderer
+        document={element.ommlDocument}
+        mathFrame={element.mathFrame}
+        theme={element.pptxTextContext?.theme}
+      />
+    )
   const html = generateLatexIframeHtml(element.content || '', {
     fontSize: element.fontSize,
     textColor: element.textColor,

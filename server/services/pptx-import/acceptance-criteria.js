@@ -1,4 +1,5 @@
 const { CANVAS_SIZE } = require('./constants')
+const { normalizeSourceSize } = require('./geometry')
 
 const RAW_UNIT_RE = /\b-?\d+(?:\.\d+)?\s*(?:pt|in|cm|mm)\b/i
 const DANGEROUS_CSS_RE = /url\s*\(|expression\s*\(|javascript:|@import\b|\bimport\s*\(|behavior\s*:|binding\s*:/i
@@ -11,7 +12,10 @@ const LENGTH_FIELDS = new Set([
   'colWidths', 'rowHeights',
 ])
 
-function assertResolutionInvariant(presentation, expected = CANVAS_SIZE) {
+function assertResolutionInvariant(presentation, expected) {
+  expected ??= presentation?._pptxMeta?.geometryPolicy === 'native-aspect-v1'
+    ? normalizeSourceSize(presentation._pptxMeta.originalSize).resolution
+    : CANVAS_SIZE
   const actual = presentation?.resolution || {}
   if (actual.width !== expected.width || actual.height !== expected.height) {
     throw new Error(`PPTX acceptance failed: resolution must be ${expected.width}x${expected.height}, got ${actual.width}x${actual.height}`)
@@ -144,7 +148,8 @@ function assertSourceFontSizesWithinTolerance(sourceOutput, presentation, tolera
   const navSlides = presentation?.slides || []
   const scaleY = deriveFontScaleY(presentation)
   for (const [slideIndex, sourceElements] of sourceSlides.entries()) {
-    const navElements = navSlides[slideIndex]?.elements || []
+    const navElements = (navSlides[slideIndex]?.elements || []).filter((element) =>
+      !/^(?:master|layout):/.test(String(element?._pptxSource?.nodeId || '')))
     let navCursor = 0
     for (const sourceElement of sourceElements) {
       const sourceFontPt = firstSourceFontPt(sourceElement)
@@ -195,7 +200,7 @@ function assertNoPrimitivePlaceholders(presentation) {
   }
 }
 
-function assertPresentationAcceptance(presentation, expectedSize = CANVAS_SIZE, sourceOutput = null, options = {}) {
+function assertPresentationAcceptance(presentation, expectedSize, sourceOutput = null, options = {}) {
   assertResolutionInvariant(presentation, expectedSize)
   assertFiniteLengthFields(presentation)
   assertNoRawUnits(presentation)

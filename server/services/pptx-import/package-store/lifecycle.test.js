@@ -269,6 +269,27 @@ describe('package lifecycle ownership', () => {
     await store.releaseWriter()
   })
 
+  it('instantiates a retained legacy template whose metadata was absent from canonical authority', async () => {
+    const store = await createAuthorityStore()
+    try {
+      const template = { ownerType: 'template', ownerId: 'legacy-template' }
+      await store.retainHead(template, 'deck-a')
+      const original = await store.readOriginal(store.getState().heads[0].originalRevisionId)
+      const projection = {
+        ...resolveEditedExportContext(store.getState(), 'deck-a').after,
+        id: 'legacy-destination', _pptxMeta: { originalSize: { width: 960, height: 540 } },
+      }
+      const head = await store.instantiateRetainedHead(template, projection.id, {
+        projection, requireProjectionMatch: true,
+      })
+      expect(head.presentationId).toBe(projection.id)
+      expect(await store.readOriginal(head.originalRevisionId)).toEqual(original)
+      expect(resolveEditedExportContext(store.getState(), projection.id).after.slides).toEqual(projection.slides)
+    } finally {
+      await store.releaseWriter()
+    }
+  })
+
   it('retains history and template revisions and restores forward', async () => {
     const store = await createStore()
     await store.retainHead({ ownerType: 'history', ownerId: 'deck-a:s1' }, 'deck-a')

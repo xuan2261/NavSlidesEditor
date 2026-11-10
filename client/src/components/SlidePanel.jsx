@@ -1,5 +1,16 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { ArrowDown, ArrowDownRight, ArrowUp, Copy, LayoutTemplate, Lock, Plus, Trash2, Unlock, Wand2 } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowDownRight,
+  ArrowUp,
+  Copy,
+  LayoutTemplate,
+  Lock,
+  Plus,
+  Trash2,
+  Unlock,
+  Wand2,
+} from 'lucide-react'
 import { Button } from './ui/Button'
 import { SlideNavigatorItem } from './slide-panel/slide-navigator-item'
 
@@ -28,6 +39,7 @@ export default function SlidePanel(props) {
     resolution = {},
     designTokens,
     layoutMasters,
+    pptxSemantic,
     layoutOptions = [],
     onApplyLayout,
     onChangeLayout,
@@ -66,45 +78,60 @@ export default function SlidePanel(props) {
     menuRef.current.querySelector('[role="menuitem"]:not(:disabled)')?.focus()
   }, [ctxMenu])
 
-  const activate = useCallback((event, index) => {
-    const id = ids[index]
-    activatedIdRef.current = id
-    setSelectedIds((previous) => {
-      if (event.ctrlKey || event.metaKey) {
-        const next = new Set(previous)
-        next.has(id) ? next.delete(id) : next.add(id)
-        return next
-      }
-      if (event.shiftKey && previous.size) {
-        const anchor = ids.findIndex((candidate) => previous.has(candidate))
-        return new Set(ids.slice(Math.min(anchor, index), Math.max(anchor, index) + 1))
-      }
-      return new Set([id])
-    })
-    onSelect(index)
-  }, [ids, onSelect])
+  const activate = useCallback(
+    (event, index) => {
+      const id = ids[index]
+      activatedIdRef.current = id
+      setSelectedIds((previous) => {
+        if (event.ctrlKey || event.metaKey) {
+          const next = new Set(previous)
+          next.has(id) ? next.delete(id) : next.add(id)
+          return next
+        }
+        if (event.shiftKey && previous.size) {
+          const anchor = ids.findIndex((candidate) => previous.has(candidate))
+          return new Set(ids.slice(Math.min(anchor, index), Math.max(anchor, index) + 1))
+        }
+        return new Set([id])
+      })
+      onSelect(index)
+    },
+    [ids, onSelect]
+  )
 
-  const keyDown = useCallback((event, index) => {
-    const destination = event.key === 'ArrowDown' ? Math.min(index + 1, slides.length - 1) : event.key === 'ArrowUp' ? Math.max(index - 1, 0) : event.key === 'Home' ? 0 : event.key === 'End' ? slides.length - 1 : null
-    if (destination !== null) {
-      event.preventDefault()
-      setFocusIndex(destination)
-      buttonsRef.current[destination]?.focus()
-      return
-    }
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      activate(event, index)
-    }
-    if (event.key === 'F10' && event.shiftKey) {
-      event.preventDefault()
-      originRef.current = buttonsRef.current[index]
-      const rect =
-        buttonsRef.current[index]?.getBoundingClientRect() ??
-        event.currentTarget.getBoundingClientRect()
-      setCtxMenu({ x: rect.left + 12, y: rect.top + 12, index })
-    }
-  }, [slides.length, activate])
+  const keyDown = useCallback(
+    (event, index) => {
+      const destination =
+        event.key === 'ArrowDown'
+          ? Math.min(index + 1, slides.length - 1)
+          : event.key === 'ArrowUp'
+            ? Math.max(index - 1, 0)
+            : event.key === 'Home'
+              ? 0
+              : event.key === 'End'
+                ? slides.length - 1
+                : null
+      if (destination !== null) {
+        event.preventDefault()
+        setFocusIndex(destination)
+        buttonsRef.current[destination]?.focus()
+        return
+      }
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault()
+        activate(event, index)
+      }
+      if (event.key === 'F10' && event.shiftKey) {
+        event.preventDefault()
+        originRef.current = buttonsRef.current[index]
+        const rect =
+          buttonsRef.current[index]?.getBoundingClientRect() ??
+          event.currentTarget.getBoundingClientRect()
+        setCtxMenu({ x: rect.left + 12, y: rect.top + 12, index })
+      }
+    },
+    [slides.length, activate]
+  )
 
   const handleFocus = useCallback((index) => {
     setFocusIndex(index)
@@ -143,14 +170,17 @@ export default function SlidePanel(props) {
     setDragOverIndex(null)
   }, [])
 
-  const handleDrop = useCallback((event, index) => {
-    event.preventDefault()
-    if (dragIndexRef.current !== null && dragIndexRef.current !== index) {
-      onMove(dragIndexRef.current, index)
-    }
-    dragIndexRef.current = null
-    setDragOverIndex(null)
-  }, [onMove])
+  const handleDrop = useCallback(
+    (event, index) => {
+      event.preventDefault()
+      if (dragIndexRef.current !== null && dragIndexRef.current !== index) {
+        onMove(dragIndexRef.current, index)
+      }
+      dragIndexRef.current = null
+      setDragOverIndex(null)
+    },
+    [onMove]
+  )
 
   const handleDragEnd = useCallback(() => {
     dragIndexRef.current = null
@@ -190,6 +220,7 @@ export default function SlidePanel(props) {
               resolution={resolution}
               designTokens={designTokens}
               layoutMasters={layoutMasters}
+              pptxSemantic={pptxSemantic}
               currentVerticalIndex={currentVerticalIndex}
               onSelectVertical={onSelectVertical}
               onActivate={activate}

@@ -21,6 +21,7 @@ const seed = {
 
 const h = vi.hoisted(() => ({
   updatePresentation: vi.fn(() => Promise.resolve({})),
+  historyBoundaryOnly: false,
 }))
 
 vi.mock('../../utils/api', () => ({
@@ -34,6 +35,15 @@ vi.mock('../../utils/api', () => ({
   },
 }))
 
+vi.mock('../../components/editor/editor-workspace', async (importOriginal) => {
+  const original = await importOriginal()
+  const EditorWorkspace = original.default
+  return {
+    ...original,
+    default: (props) => h.historyBoundaryOnly ? null : <EditorWorkspace {...props} />,
+  }
+})
+
 import EditorPage from '../EditorPage.jsx'
 
 function renderPage(presentationId = 'char-deck') {
@@ -45,6 +55,7 @@ function renderPage(presentationId = 'char-deck') {
 }
 
 beforeEach(() => {
+  h.historyBoundaryOnly = false
   vi.stubGlobal('indexedDB', undefined)
   useEditorStore.setState({ selectedElementIds: [], editingElementId: null, viewMode: 'normal' })
   usePresentationStore.setState({ presentation: null, saveConflict: null })
@@ -242,5 +253,66 @@ describe('EditorPage history characterization', () => {
     expect((await readEditorDraft('deck-a'))).toBeNull()
     expect(h.updatePresentation.mock.calls.map(([id, body]) => [id, body.title]))
       .toEqual([['deck-b', 'Edited B']])
+  })
+
+  it('[P06-04] coalesces rapid edits within debounce window into a single undo boundary', async () => {
+    renderPage()
+    const title = await screen.findByDisplayValue('Char Deck')
+    vi.useFakeTimers()
+    fireEvent.change(title, { target: { value: 'Rapid 1' } })
+    await act(() => vi.advanceTimersByTimeAsync(100))
+    fireEvent.change(title, { target: { value: 'Rapid 12' } })
+    await act(() => vi.advanceTimersByTimeAsync(100))
+    fireEvent.change(title, { target: { value: 'Rapid 123' } })
+    await act(() => vi.advanceTimersByTimeAsync(600))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(title.value).toBe('Char Deck')
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }))
+    expect(title.value).toBe('Rapid 123')
+  })
+
+  it('[P06-06] enforces history cap and retains valid oldest boundary across deep undo sequence', async () => {
+    // This capacity oracle drives the real page, header, history and persistence;
+    // it does not assert ribbon, navigator, canvas or inspector behavior. Avoid
+    // rerendering those unrelated workspace trees across all 153 transitions.
+    // Every other case in this file keeps the full workspace mounted.
+    h.historyBoundaryOnly = true
+    renderPage()
+    const title = await screen.findByDisplayValue('Char Deck')
+    const undoButton = screen.getByRole('button', { name: 'Undo' })
+    const redoButton = screen.getByRole('button', { name: 'Redo' })
+    vi.useFakeTimers()
+    for (let i = 1; i <= 55; i++) {
+      fireEvent.change(title, { target: { value: `Edit ${i}` } })
+      await act(() => vi.advanceTimersByTimeAsync(600))
+      expect(title.value).toBe(`Edit ${i}`)
+      expect(undoButton.disabled).toBe(false)
+      expect(redoButton.disabled).toBe(true)
+    }
+    expect(title.value).toBe('Edit 55')
+    let undoCount = 0
+    while (!undoButton.disabled && undoCount < 60) {
+      fireEvent.click(undoButton)
+      undoCount++
+      expect(title.value).toBe(`Edit ${55 - undoCount}`)
+      expect(undoButton.disabled).toBe(undoCount === 49)
+      expect(redoButton.disabled).toBe(false)
+    }
+    expect(undoCount).toBe(49)
+    expect(title.value).toBe('Edit 6')
+    expect(undoButton.disabled).toBe(true)
+
+    let redoCount = 0
+    while (!redoButton.disabled && redoCount < 60) {
+      fireEvent.click(redoButton)
+      redoCount++
+      expect(title.value).toBe(`Edit ${6 + redoCount}`)
+      expect(undoButton.disabled).toBe(false)
+      expect(redoButton.disabled).toBe(redoCount === 49)
+    }
+    expect(redoCount).toBe(49)
+    expect(title.value).toBe('Edit 55')
+    expect(redoButton.disabled).toBe(true)
   })
 })

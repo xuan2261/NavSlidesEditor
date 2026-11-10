@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import schemas from './schemas.js'
 
-const { updatePresentationSchema } = schemas
+const { createTemplateSchema, updatePresentationSchema } = schemas
 
 describe('presentation update schema', () => {
   it('accepts game elements as first-class presentation elements', () => {
@@ -65,5 +65,39 @@ describe('presentation update schema', () => {
 
     expect(valid.success).toBe(true)
     expect(invalid.success).toBe(false)
+  })
+
+  it.each([
+    ['presentation', updatePresentationSchema, { slides: [] }],
+    ['template', createTemplateSchema, { title: 'Template', slides: [] }],
+  ])('preserves authored metadata on recursive %s slides', (_, schema, input) => {
+    input.slides = [
+      {
+        id: 'parent',
+        elements: [],
+        locked: true,
+        transition: 'fade',
+        children: [
+          {
+            id: 'child',
+            elements: [],
+            hidden: true,
+            locked: true,
+            transition: 'zoom',
+            transitionDuration: 1.5,
+          },
+        ],
+      },
+    ]
+
+    const result = schema.parse(input)
+
+    expect(result.slides[0]).toMatchObject({ locked: true, transition: 'fade' })
+    expect(result.slides[0].children[0]).toMatchObject({
+      hidden: true,
+      locked: true,
+      transition: 'zoom',
+      transitionDuration: 1.5,
+    })
   })
 })

@@ -68,12 +68,14 @@ directory, then permanently cleans up each imported presentation. Do not pass
 `--actual-manifest-out` — the CLI rejects path overrides; the published run dir
 always contains `actual-manifest.json` next to the captured deck PNGs.
 
-Capture is deterministic at `960x540` with device scale factor `1`. The capture
-implementation passes that viewport as an explicit `page.evaluate` argument
-before setting `--slide-aspect`; browser callbacks must not depend on Node-side
-module globals. A release claim must retain the evidence envelope, manifests,
-receipts, goldens, actuals, and comparison report. A deleted local envelope is
-only an execution receipt, not independently reproducible visual evidence.
+Capture is deterministic at `960x540` with device scale factor `1`. This is the
+output viewport, not a requirement to stretch every deck into a 16:9 canvas.
+The imported deck owns its logical aspect; letterboxing stays outside the slide
+and its background. The capture implementation passes the viewport explicitly
+to `page.evaluate`; browser callbacks must not depend on Node-side module globals.
+A release claim must retain the evidence envelope, manifests, receipts, goldens,
+actuals, and comparison report. A deleted local envelope is only an execution
+receipt, not independently reproducible visual evidence.
 
 
 ```bash
@@ -111,6 +113,44 @@ Integrity may pass with trusted finite below-policy scores; qualification then
 returns non-zero and the report preserves both verdicts. Missing physical
 PowerPoint evidence must remain blocked. Never seed, regenerate, or relabel a
 repository placeholder as a golden.
+
+## Additional typed-feature qualification
+
+The separate `scripts/pptx-semantic-visual-qualification.mjs` gate consumes the
+typed semantic manifest; never pass that manifest to the canonical eleven-deck
+oracle CLI. Its evidence directory has this layout:
+
+```text
+typed-evidence/
+  feature-corpus/<fixture-id>.pptx
+  feature-corpus/corpus-manifest.json  # Optional, but must match if present
+  feature-golden-manifest.json
+  feature-goldens/<fixture-id>/slide-0.png
+  feature-capture-profile.json
+  <profile font aliases>
+  feature-oracle-manifest.json
+  feature-oracle-receipts.json
+```
+
+Keep the golden manifest beside `feature-goldens/`, not inside it. That image
+root admits only the declared fixture directories and exact slide PNG inventory.
+There is no legacy-path fallback. Retained October 30 discovery evidence using
+the old nested layout remains historical diagnostic evidence; do not move,
+rewrite, or repin its frozen files to make admission pass.
+
+`--mode capture --base-url <isolated-loopback-url>` reads frozen source packages,
+the external golden manifest, and a source/implementation/qualifier-bound capture
+profile with hashed fonts and complete object/operation coverage. It never runs
+fixture builders. A profile can instead be supplied through the evidence
+envelope's `featureProfile` alias. Capture exclusively creates `feature-actuals/`
+and returns `qualified: false` with diagnostic scope, even for perfect scores.
+
+The default `--mode qualify` is hermetic: it consumes the audited envelope and
+existing actuals, requires exactly the three approved `app-storage`, `security`,
+and `release` receipts, and recomputes comparisons with the unchanged mean SSIM
+`>= 0.99` and minimum slide SSIM `>= 0.97` gates. Missing native evidence or
+capture prerequisites remain blockers; a successful prerequisite inspection or
+diagnostic capture is not qualification.
 
 ## Editor regression is separate
 

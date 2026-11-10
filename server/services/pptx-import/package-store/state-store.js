@@ -4,6 +4,7 @@ const path = require('node:path')
 const { replaceDurable, writeDurable } = require('./durable-fs')
 const {
   STATE_ROOT_SCHEMA_VERSION,
+  canonicalJson,
   createEmptyState,
   hashRecord,
   validateState,
@@ -33,9 +34,7 @@ class StateStore {
     this.walDir = path.join(rootDir, 'wal')
     this.quarantineDir = path.join(rootDir, 'quarantine')
     this.rootPath = path.join(rootDir, 'state-root.json')
-    this.matrixAuthorityHighWaterPath = path.join(
-      rootDir, 'matrix-authority-epoch-high-water.json'
-    )
+    this.matrixAuthorityHighWaterPath = path.join(rootDir, 'matrix-authority-epoch-high-water.json')
     this.state = createEmptyState()
     this.root = null
     this.pendingMigration = null
@@ -133,9 +132,11 @@ class StateStore {
   async readMatrixAuthorityHighWater() {
     try {
       const record = JSON.parse(await fs.readFile(this.matrixAuthorityHighWaterPath, 'utf8'))
-      if (record?.schemaVersion !== 1 ||
+      if (
+        record?.schemaVersion !== 1 ||
         !Number.isSafeInteger(record.matrixAuthorityEpoch) ||
-        record.matrixAuthorityEpoch < 1) {
+        record.matrixAuthorityEpoch < 1
+      ) {
         throw new TypeError('Invalid matrix authority high-water record')
       }
       return record.matrixAuthorityEpoch
@@ -153,10 +154,15 @@ class StateStore {
       throw new TypeError('Matrix authority epoch regression')
     }
     if (current === matrixAuthorityEpoch) return
-    await writeDurable(this.matrixAuthorityHighWaterPath, JSON.stringify({
-      schemaVersion: 1,
-      matrixAuthorityEpoch,
-    }), undefined, { signal })
+    await writeDurable(
+      this.matrixAuthorityHighWaterPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        matrixAuthorityEpoch,
+      }),
+      undefined,
+      { signal }
+    )
   }
 
   async recoverMatrixAuthorityHighWater() {
@@ -187,7 +193,10 @@ class StateStore {
     for (const recovery of this.pendingWalRecovery) {
       await assertWriter()
       if (recovery.published) {
-        await writeDurable(path.join(this.walDir, `${recovery.transactionId}.completed`), 'completed')
+        await writeDurable(
+          path.join(this.walDir, `${recovery.transactionId}.completed`),
+          'completed'
+        )
         this.recoveryActions.push('completed-published-wal')
         continue
       }
@@ -204,14 +213,17 @@ class StateStore {
     this.pendingWalRecovery = []
   }
 
-  async publish(nextState, {
-    assertWriter,
-    signal,
-    faultAfterIndex = false,
-    faultAfterPrepare = false,
-    faultAfterRoot = false,
-    faultAfterCompletion = false,
-  } = {}) {
+  async publish(
+    nextState,
+    {
+      assertWriter,
+      signal,
+      faultAfterIndex = false,
+      faultAfterPrepare = false,
+      faultAfterRoot = false,
+      faultAfterCompletion = false,
+    } = {}
+  ) {
     signal?.throwIfAborted()
     await assertWriter()
     signal?.throwIfAborted()
@@ -219,7 +231,8 @@ class StateStore {
     await this.persistMatrixAuthorityHighWater(nextState.matrixAuthorityEpoch, { signal })
     signal?.throwIfAborted()
     const transactionId = crypto.randomUUID()
-    const stateHash = hashRecord(nextState)
+    const serializedState = canonicalJson(nextState)
+    const stateHash = crypto.createHash('sha256').update(serializedState).digest('hex')
     const relativeStateFile = path.join('indexes', `${stateHash}.json`)
     const statePath = path.join(this.rootDir, relativeStateFile)
     const prepared = path.join(this.walDir, `${transactionId}.prepared.json`)
@@ -231,7 +244,7 @@ class StateStore {
       } catch (error) {
         if (error.code !== 'ENOENT') throw error
         signal?.throwIfAborted()
-        await writeDurable(statePath, JSON.stringify(nextState), undefined, { signal })
+        await writeDurable(statePath, serializedState, undefined, { signal })
       }
       signal?.throwIfAborted()
       if (faultAfterIndex) throw new Error('Injected fault after index')

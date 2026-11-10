@@ -55,11 +55,11 @@ function geometryBox(element, source = false) {
   return numbers.every(Number.isFinite) ? numbers : null
 }
 
-function geometryMatches(element, node, tolerance = 1.1) {
+function geometryMatches(element, node, scale, tolerance = 1.1) {
   const mapped = geometryBox(element)
   const source = geometryBox(node, true)
   return Boolean(mapped && source
-    && mapped.every((value, index) => Math.abs(value - source[index]) <= tolerance))
+    && mapped.every((value, index) => Math.abs(value - source[index] * (index % 2 === 0 ? scale.x : scale.y)) <= tolerance))
 }
 
 /**
@@ -67,7 +67,7 @@ function geometryMatches(element, node, tolerance = 1.1) {
  * Preserves existing _pptxSource (e.g. layout placeholder inject).
  * @returns {{ elements: object[], assigned: number, unassignedLeaves: object[] }}
  */
-function attachSourceNodes(elements, graphNodes, slideIndex) {
+function attachSourceNodes(elements, graphNodes, slideIndex, scale = { x: 1, y: 1 }) {
   const leaves = leafNodes(graphNodes).map((n) => ({ ...n, _used: false }))
   const list = Array.isArray(elements) ? elements : []
   const mappableLeaves = leaves.filter((node) => !isPreservedOpaqueNode(node))
@@ -142,7 +142,7 @@ function attachSourceNodes(elements, graphNodes, slideIndex) {
     if (el._pptxSource?.nodeId != null && el._pptxSource.nodeId !== '') continue
     const hint = navKindHint(el)
     const node = uniqueUnusedNode(mappableLeaves, (candidate) =>
-      candidate.kind === hint && geometryMatches(el, candidate))
+      candidate.kind === hint && geometryMatches(el, candidate, scale))
     if (node) assign(el, node, 'geometry', true)
   }
 

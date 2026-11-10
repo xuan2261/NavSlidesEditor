@@ -61,12 +61,7 @@ export function getPresentationResolution(presentation) {
   return { width, height }
 }
 
-export function getPptxExportLayout(presentation) {
-  const width = Number(presentation?._pptxMeta?.originalSize?.width)
-  const height = Number(presentation?._pptxMeta?.originalSize?.height)
-  if (width > 0 && height > 0) return { width, height }
-  return getPresentationResolution(presentation)
-}
+export { getPptxExportLayout } from 'revealjs-shared'
 
 export function getPptxLayout(resolution) {
   const width = Number(resolution?.width) || CANVAS_WIDTH

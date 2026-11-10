@@ -223,7 +223,7 @@ The pipeline lives in `.github/workflows/github-actions-ci-pipeline-lint-unit-co
 | `load-smoke` | `grafana/setup-k6-action@v1` | 15 min | yes |
 | `required-checks` | summary | < 1 min | yes — fan-in gate |
 
-`required-checks` fans in on the currently blocking jobs and exits non-zero if any reports `failure`/`cancelled`/`timed_out`. Wire branch protection to require `required-checks` instead of every individual job — keeps the rule list small and stable when shards are renamed.
+The fail-closed fan-in contract belongs to [`scripts/ci/required-checks.mjs`](../scripts/ci/required-checks.mjs). Prefer requiring `Required checks summary` instead of every shard context so branch protection does not drift when shards are renamed.
 
 ### Release-confidence lanes
 
@@ -279,6 +279,15 @@ History restore must remain authorable without reloading: a fresh GET can mask s
 ### Coverage gate
 
 The enforced coverage floors belong to [`vitest.config.mjs`](../vitest.config.mjs). A failed gate is not repaired by lowering them; threshold changes require a dedicated review rather than a verification workaround.
+
+E2E file-size and observable-wait policies are enforced by [`eslint.config.mjs`](../eslint.config.mjs), including the existing bounded status-polling exceptions.
+
+### Node runtime options
+
+The engine contract is owned by [`package.json`](../package.json). Its supported Node defaults permit synchronous ESM loading, required by the shared Markdown renderer. An inherited `NODE_OPTIONS=--no-experimental-require-module` disables that capability; an `ERR_REQUIRE_ESM` under that explicit opt-out is not evidence that the default runtime is incompatible.
+
+Inspect `node -e "console.log(process.version, process.features.require_module, process.env.NODE_OPTIONS)"` before changing parser dependencies or synchronous export APIs. Isolate inherited options in the test process; do not silently rewrite user or machine environment settings.
+
 
 ### Visual baselines: Linux-only via Docker
 

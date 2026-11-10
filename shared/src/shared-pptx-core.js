@@ -23,7 +23,29 @@ function getPresentationResolution(presentation) {
   return { width, height }
 }
 
+function sanitizePptxGeometryMetadata(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+  const metadata = {}
+  const originalSize = value.originalSize
+  if (originalSize && typeof originalSize === 'object' && !Array.isArray(originalSize)) {
+    const size = {}
+    for (const key of ['width', 'height']) {
+      if (typeof originalSize[key] === 'number' && Number.isFinite(originalSize[key])) {
+        size[key] = originalSize[key]
+      }
+    }
+    if (Object.keys(size).length) metadata.originalSize = size
+  }
+  if (value.geometryPolicy === 'native-aspect-v1') metadata.geometryPolicy = value.geometryPolicy
+  return metadata
+}
+
 function getPptxExportLayout(presentation) {
+  // Marked imports use the current logical canvas, including later authored aspect changes.
+  // Legacy imports retain their original-size export layout without migrating stored geometry.
+  if (presentation?._pptxMeta?.geometryPolicy === 'native-aspect-v1') {
+    return getPresentationResolution(presentation)
+  }
   const originalSize = presentation && presentation._pptxMeta && presentation._pptxMeta.originalSize
   const width = Number(originalSize && originalSize.width)
   const height = Number(originalSize && originalSize.height)
@@ -235,6 +257,7 @@ module.exports = {
   normalizeCssColor,
   normalizeImageSource,
   scaleElementBounds,
+  sanitizePptxGeometryMetadata,
   stripHtmlToPlainText,
   toPptFontSize,
 }

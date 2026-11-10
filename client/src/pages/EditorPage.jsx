@@ -3,6 +3,7 @@ import { useEditorStore } from '../stores/editor-store'
 import { useSlideOperations } from '../hooks/use-slide-operations'
 import { createExitEditOnEscape } from '../hooks/tiptap-exit-edit-on-escape'
 import { useClipboard, createDuplicateOperation } from '../hooks/use-clipboard'
+import { usePresentationState } from '../hooks/use-presentation-state'
 import { useElementCreation } from '../hooks/use-element-creation'
 import { useBlockLibrary } from '../hooks/use-block-library'
 import { api } from '../utils/api'
@@ -41,7 +42,7 @@ import { effectiveSlideIdentity, resolveEffectiveSlide } from 'revealjs-shared'
 export { getSelectionIdsForActiveSlideElement }
 export { getElementForActiveSlideEdit, getGameElementForActiveSlide } from './editor-page-helpers'
 export default function EditorPage({ presentationId, isTemplate = false, onGoHome }) {
-  const [presentation, setPresentation] = useState(null)
+  const [presentation, setPresentation, commitPresentationTransaction] = usePresentationState(null)
   const [slidePosition, setAuthoringPosition] = useState({ index: 0, vertical: null })
   const currentSlideIndex = slidePosition.index
   const verticalEdit = slidePosition.vertical
@@ -273,6 +274,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     keepLocalSaveConflict,
     recoverLocalDraft,
     lastSaveError,
+    lastSavedAt,
     loading,
     restorePresentation,
     retryPendingSave,
@@ -327,6 +329,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   }
 
   const { updateCurrentSlide, updateElement, deleteElement } = useEditorElementController({
+    presentation,
     setPresentation,
     mapActive,
     activeSlide,
@@ -540,13 +543,15 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
       }
     )
   }, [])
-  const { performCopy, performPaste, performCut } = useClipboard({
+  const { performCopy, performPaste, performCut, performDuplicate } = useClipboard({
     mapActiveSlide: mapAuthoringTarget,
     setPresentation,
+    commitPresentationTransaction,
     getActiveSlide: getAuthoringSlide,
     getDestinationElements: getLibraryDestinationElements,
     getScopeId: () => JSON.stringify([presentation?.id, getAuthoringSlide()?.id]),
     onInteractionWarnings: notifyInteractionWarnings,
+    getPresentation: () => presentation,
   })
 
   const handleSelectAll = useCallback(() => {
@@ -556,22 +561,44 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
 
   // Wrappers that pass required context to useClipboard callbacks
   const handleCopy = useCallback(() => {
-    performCopy(getAuthoringSlide()?.elements)
+    try {
+      performCopy(getAuthoringSlide()?.elements)
+    } catch (error) {
+      if (!(error instanceof TypeError)) throw error
+      showNotice(error.message)
+    }
   }, [getAuthoringSlide, performCopy])
 
   const handlePaste = useCallback(() => {
     if (getAuthoringSlide()?.locked) return
-    performPaste(useEditorStore.getState().clipboard)
+    try {
+      performPaste(useEditorStore.getState().clipboard)
+    } catch (error) {
+      if (!(error instanceof TypeError)) throw error
+      showNotice(error.message)
+    }
   }, [getAuthoringSlide, performPaste])
 
   const handleCut = useCallback(() => {
     const authoringSlide = getAuthoringSlide()
     if (authoringSlide?.locked) return
-    performCut(authoringSlide?.elements, useEditorStore.getState().selectedElementIds)
+    try {
+      performCut(authoringSlide?.elements, useEditorStore.getState().selectedElementIds)
+    } catch (error) {
+      if (!(error instanceof TypeError)) throw error
+      showNotice(error.message)
+    }
   }, [getAuthoringSlide, performCut])
 
   const handleDuplicate = useCallback(() => {
     if (getAuthoringSlide()?.locked) return
+    try {
+      if (performDuplicate()) return
+    } catch (error) {
+      if (!(error instanceof TypeError)) throw error
+      showNotice(error.message)
+      return
+    }
     // Use createDuplicateOperation directly — reads current selection from store,
     // matching the original SlideCanvas behavior (no clipboard required).
     // Duplicate intentionally leaves the copy/cut clipboard untouched so a prior
@@ -601,6 +628,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     setPresentation,
     mapAuthoringTarget,
     setSelectedElementIds,
+    performDuplicate,
   ])
 
   // Media-library inserts follow the active vertical slide or master authoring surface.
@@ -656,6 +684,8 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     canRedo,
     editingText: Boolean(editingElementId),
     masterEditing: Boolean(masterEdit),
+    pptxSemantic: presentation?.pptxSemantic,
+    presentationId: presentation?.id,
   })
   const commands = useEditorCommandModel({
     openTemplateModal: () => setShowTemplateModal(true),
@@ -869,6 +899,7 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
         c={{
           presentation,
           setPresentation,
+          fontRevision: lastSavedAt,
           currentSlide,
           currentSlideIndex,
           navigateToSlide,

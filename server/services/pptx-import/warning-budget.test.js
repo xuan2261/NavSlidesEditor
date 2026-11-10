@@ -22,6 +22,18 @@ describe('warning budget', () => {
     expect(warnings.omittedCount).toBeGreaterThan(0)
   })
 
+  it('transports retained warning data without collector closures and keeps omission accounting', () => {
+    const warnings = createBoundedWarnings({ maxCount: 1, maxBytes: 1024 })
+    const retained = { type: 'unsupported-source', sourceLocation: { partUri: 'ppt/slides/slide1.xml' } }
+    warnings.push(retained, { type: 'omitted-source' })
+    const transported = structuredClone(warnings)
+    expect(transported).toEqual([retained])
+    expect(warnings.omittedCount).toBe(1)
+    expect(pushImportWarning(warnings, { type: 'another-omitted-source' })).toBe(false)
+    expect(warnings.omittedCount).toBe(2)
+    expect(transported).toEqual([retained])
+  })
+
   it('allows zero-warning usage', () => {
     const warnings = createBoundedWarnings()
     expect(warnings).toHaveLength(0)

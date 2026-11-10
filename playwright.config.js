@@ -17,6 +17,7 @@ const pptxImportSpecs = [
   /tests\/e2e\/critical-pptx-journey\.spec\.js$/,
   /tests\/e2e\/pptx-import-(?:async|fidelity|real-browser-audit|editor-visual-regression)\.spec\.js$/,
   /tests\/e2e\/export\/pptx-import-endpoint-roundtrip-across-multiple-fixtures\.spec\.js$/,
+  /tests[\\/]e2e[\\/]pptx-semantic-edit\.spec\.js$/,
 ]
 const chromiumSnapshotPathTemplate =
   '{snapshotDir}/{testFileDir}/{testFileName}-snapshots/{arg}-chromium{-snapshotSuffix}{ext}'
@@ -144,9 +145,17 @@ module.exports = defineConfig({
       SLIDES_DATA_DIR: dataDir,
       SLIDES_UPLOADS_DIR: uploadsDir,
       VITE_API_PROXY_TARGET: apiTarget,
+      ...(process.env.PPTX_EMF_CONVERT === '1'
+        ? {
+            PPTX_EMF_CONVERT: process.env.PPTX_EMF_CONVERT,
+            PPTX_EMF_BINARY: process.env.PPTX_EMF_BINARY,
+            PPTX_EMF_BINARY_ROOT: process.env.PPTX_EMF_BINARY_ROOT,
+            PPTX_EMF_BINARY_SHA256: process.env.PPTX_EMF_BINARY_SHA256,
+          }
+        : {}),
     },
     url: baseURL,
-    reuseExistingServer: false,
+    reuseExistingServer: Boolean(process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER),
     timeout: 180000,
   },
 })

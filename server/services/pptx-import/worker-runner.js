@@ -72,6 +72,14 @@ function buildParserExecArgv(execArgv = process.execArgv) {
       continue
     }
     if (arg === '--watch' || arg.startsWith('--watch-')) continue
+    // Drop any parent script entrypoint options: forked workers take their own file.
+    if (arg === '-e' || arg === '--eval' || arg === '-p' || arg === '--print') {
+      index += 1
+      continue
+    }
+    if (arg.startsWith('--eval=') || arg.startsWith('--print=') || arg === '-c' || arg === '--check') {
+      continue
+    }
     // Drop any inherited heap cap so we can set our own deterministic ceiling.
     if (arg.startsWith('--max-old-space-size')) {
       if (arg === '--max-old-space-size') index += 1

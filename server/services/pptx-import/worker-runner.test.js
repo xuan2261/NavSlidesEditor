@@ -34,6 +34,34 @@ describe('pptx parser worker runner', () => {
     ).toEqual(['--trace-warnings', '--max-old-space-size=1024'])
   })
 
+  it.each(['-e', '--eval', '-p', '--print'])('removes inherited parent %s code, not worker arguments', (flag) => {
+    expect(buildParserExecArgv(['--trace-warnings', flag, 'process.exit(99)']))
+      .toEqual(['--trace-warnings', '--max-old-space-size=1024'])
+  })
+
+  it.each(['--eval=process.exit(99)', '--print=process.exit(99)'])('removes inherited inline parent entrypoint %s', (flag) => {
+      expect(buildParserExecArgv([flag, '--trace-warnings']))
+        .toEqual(['--trace-warnings', '--max-old-space-size=1024'])
+    })
+
+  it('forks the requested worker instead of evaluating the parent startup script again', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-worker-eval-parent-'))
+    const workerPath = path.join(dir, 'worker.cjs')
+    try {
+      await fs.writeFile(workerPath,
+        "process.on('message',()=>process.send({ok:true, workerFile:__filename}));process.send({type:'ready'})")
+      const result = await runParserWorker('deck.pptx', {
+        workerPath,
+        execArgv: ['-e', 'process.on("message",()=>{})'],
+      })
+      await result.workerClosed
+      expect(result.ok).toBe(true)
+      expect(result.workerFile).toBe(workerPath)
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
   it('builds module paths and Electron Node mode for packaged workers', () => {
     const repoRoot = path.join(os.tmpdir(), 'navslides-electron-resources')
     const inheritedNodePath = path.join(repoRoot, 'custom-node-modules')

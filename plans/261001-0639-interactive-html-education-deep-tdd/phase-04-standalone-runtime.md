@@ -159,7 +159,7 @@ node scripts/build-education-runtime.js --out-dir .tmp/education-runtime-smoke
 npx vitest run shared/tests/education-runtime-session.test.js shared/tests/education-generated-document.test.js scripts/education-runtime-assets.test.js
 npx vitest run scripts/vendor-publication.test.js scripts/verify-runtime-closure.test.js server/vendor-assets.test.js client/src/utils/offlineExport.test.js
 npm run vendor
-$env:PLAYWRIGHT_USE_DEV_SERVERS='1'; npx playwright test tests/e2e/games/standalone-runtime-lifecycle.spec.js --project=chromium --workers=1
+$env:PLAYWRIGHT_USE_DEV_SERVERS='1'; npx playwright test tests/e2e/games/standalone-runtime-lifecycle.spec.js tests/e2e/games/standalone-runtime-touch.spec.js --project=chromium --workers=1
 ```
 
 `npm run vendor` là targeted runtime artifact publication cần phase04, không project-wide client build/lint; test helper dùng same installed esbuild/staging logic, không mô phỏng bundle.

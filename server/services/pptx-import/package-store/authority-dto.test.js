@@ -42,6 +42,50 @@ describe('package authority DTO boundary', () => {
     })
   })
 
+  it.each([stripAuthority, toPresentationEditorDto, toExternalPresentationDto])(
+    'preserves native geometry and source size without granting package authority in %s', (project) => {
+      const record = {
+        id: 'native-deck',
+        resolution: { width: 720, height: 540 },
+        _pptxMeta: {
+          originalSize: { width: 960, height: 720, packagePath: 'secret' },
+          geometryPolicy: 'native-aspect-v1',
+          packageRevisionId: 'forged',
+        },
+        slides: [{ id: 's1', elements: [{ id: 'e1', x: 360, y: 270, width: 72, height: 72 }] }],
+      }
+      const before = structuredClone(record)
+      const projected = JSON.parse(JSON.stringify(project(record)))
+
+      expect(projected.resolution).toEqual(record.resolution)
+      expect(projected._pptxMeta).toEqual({
+        originalSize: { width: 960, height: 720 },
+        geometryPolicy: 'native-aspect-v1',
+      })
+      expect(projected.slides).toEqual(record.slides)
+      expect(projected).not.toHaveProperty('pptxSourceAvailable')
+      expect(projected).not.toHaveProperty('aggregateGeneration')
+      expect(record).toEqual(before)
+    }
+  )
+
+  it.each(['native-aspect-v2', true, { policy: 'native-aspect-v1' }])(
+    'drops unrecognized geometry policies at editor and portable DTO boundaries: %j', (geometryPolicy) => {
+      const record = {
+        _pptxMeta: { originalSize: { width: 720, height: 540 }, geometryPolicy },
+      }
+      for (const project of [stripAuthority, toPresentationEditorDto, toExternalPresentationDto]) {
+        expect(project(record)._pptxMeta).toEqual({ originalSize: { width: 720, height: 540 } })
+      }
+    }
+  )
+
+  it('omits malformed source dimensions without losing a recognized geometry policy', () => {
+    expect(stripAuthority({ _pptxMeta: {
+      originalSize: { width: '720', height: Infinity }, geometryPolicy: 'native-aspect-v1',
+    } })).toEqual({ _pptxMeta: { geometryPolicy: 'native-aspect-v1' } })
+  })
+
   it('strips chart provenance and relationship data from nested chart metadata', () => {
     const value = {
       _pptxChartMeta: {

@@ -96,7 +96,7 @@ Không refactor production trong baseline. Không giữ duplicate expectation `g
 ```powershell
 npx vitest run client/src/utils/element-update-fanout.test.js client/src/data/element-defaults.test.js
 $env:PLAYWRIGHT_USE_DEV_SERVERS='1'
-npx playwright test tests/e2e/education/presentation-baseline.spec.js --project=chromium
+npx playwright test tests/e2e/education/presentation-baseline.spec.js tests/e2e/education/presentation-baseline-offline.spec.js --project=chromium
 ```
 
 Command Playwright trên là proposed: tạo spec trước khi chạy, uses current playwright webServer isolation. Expected feature failures phải ghi rõ; baseline gate chặn phase sau nếu failure do môi trường thay vì contract.

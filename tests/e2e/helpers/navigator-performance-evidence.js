@@ -71,12 +71,22 @@ export async function compareBaseline(receipt) {
       }
     }
   }
-  const isStable = Boolean(baseline.summary.stable && receipt.summary.stable)
-  return { available: true, baselineBuildHash: baseline.environment.build.manifestHash, stable: isStable, pairs, passed: pairs.every((pair) => pair.withinCap), reason: isStable ? null : 'Noise invalidates paired optimization decisions; rerun, never relax cap' }
+  const isStable = Boolean(baseline.summary.complete && receipt.summary.complete && baseline.summary.stable && receipt.summary.stable)
+  return { available: true, baselineBuildHash: baseline.environment.build.manifestHash, stable: isStable, pairs, passed: isStable && pairs.length > 0 && pairs.every((pair) => pair.withinCap), reason: isStable ? null : 'Incomplete data or noise invalidates paired optimization decisions; rerun, never relax cap' }
 }
 export async function saveEvidence(testInfo, filename, value) {
   const file = testInfo.outputPath(filename)
   await writeFile(file, `${JSON.stringify(value, null, 2)}\n`)
   await testInfo.attach(filename, { path: file, contentType: 'application/json' })
+  return file
+}
+
+// Playwright owns its per-test output lifecycle. Any durable copy is opt-in and
+// exclusive-create: a controlled rerun must never replace a historical receipt.
+export async function saveFinalEvidence(testInfo, filename, receipt) {
+  const file = await saveEvidence(testInfo, filename, receipt)
+  if (process.env.NAVIGATOR_REPORT_OUTPUT) {
+    await writeFile(process.env.NAVIGATOR_REPORT_OUTPUT, `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx' })
+  }
   return file
 }

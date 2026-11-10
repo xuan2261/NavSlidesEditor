@@ -31,6 +31,7 @@ export default function EditorNavigator({ visible, overlay, onCloseOverlay, c })
         resolution={c.presentation.resolution}
         designTokens={c.presentation.designTokens}
         layoutMasters={c.presentation.layoutMasters}
+        pptxSemantic={c.presentation.pptxSemantic}
         currentIndex={c.currentSlideIndex}
         onSelect={c.navigateToSlide}
         onAdd={() => c.setShowTemplateModal(true)}

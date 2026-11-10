@@ -1,3 +1,5 @@
+import { tableCellText, replaceTableCellText } from 'revealjs-shared'
+
 export function stripHtml(html) {
   if (typeof DOMParser === 'undefined') return String(html || '').replace(/<[^>]*>/g, '')
   const doc = new DOMParser().parseFromString(html || '', 'text/html')
@@ -115,21 +117,10 @@ export function replaceInHtml(html, searchTerm, replaceTerm, matchCase, global =
   return serializeDocument(doc, html)
 }
 
-function replaceInTableData(data, regex, replaceTerm, global = true) {
-  let didReplace = false
-  const next = (data || []).map((row) =>
-    (row || []).map((cell) => {
-      const text = cell == null ? '' : String(cell)
-      if (!global && didReplace) return cell
-      const replaced = text.replace(regex, replaceTerm)
-      if (replaced !== text) {
-        didReplace = true
-        return replaced
-      }
-      return cell
-    })
+function replaceInTableData(data, regex, replaceTerm) {
+  return (data || []).map((row) =>
+    (row || []).map((cell) => replaceTableCellText(cell, regex, replaceTerm))
   )
-  return next
 }
 
 /**
@@ -141,12 +132,7 @@ export function replaceOnceInTableCell(element, searchTerm, replaceTerm, matchCa
   const data = element.data.map((row, ri) =>
     (row || []).map((cell, ci) => {
       if (ri !== tableRow || ci !== tableCol) return cell
-      const text = cell == null ? '' : String(cell)
-      const start = Math.max(0, Number(pos) || 0)
-      const before = text.slice(0, start)
-      const from = text.slice(start)
-      const replacedFrom = from.replace(regex, replaceTerm)
-      return before + replacedFrom
+      return replaceTableCellText(cell, regex, replaceTerm, { start: pos, global: false })
     })
   )
   return { ...element, data }
@@ -174,7 +160,7 @@ function replaceInElement(element, searchTerm, replaceTerm, matchCase, regex) {
   if (element.type === 'table' && Array.isArray(element.data)) {
     return {
       ...element,
-      data: replaceInTableData(element.data, regex, replaceTerm, true),
+      data: replaceInTableData(element.data, regex, replaceTerm),
       // mergedCells / styles untouched
     }
   }
@@ -202,7 +188,7 @@ export function collectElementSearchMatches(el, searchTerm, matchCase) {
   else if (el.type === 'table' && Array.isArray(el.data)) {
     el.data.forEach((row, ri) => {
       ;(row || []).forEach((cell, ci) => {
-        pushFromText(cell == null ? '' : String(cell), { tableRow: ri, tableCol: ci })
+        pushFromText(tableCellText(cell), { tableRow: ri, tableCol: ci })
       })
     })
   }

@@ -4,8 +4,12 @@ import FormatTabContent from './ribbon-format-tab-element-position-size-rotation
 
 const baseElement = {
   id: 'el-1',
-  x: 100, y: 200, width: 300, height: 150,
-  rotation: 0, locked: false,
+  x: 100,
+  y: 200,
+  width: 300,
+  height: 150,
+  rotation: 0,
+  locked: false,
 }
 
 describe('FormatTabContent — contextual controls', () => {
@@ -17,7 +21,13 @@ describe('FormatTabContent — contextual controls', () => {
   })
 
   describe('shape element', () => {
-    const shape = { ...baseElement, type: 'shape', fill: '#ff0000', stroke: '#000000', strokeWidth: 2 }
+    const shape = {
+      ...baseElement,
+      type: 'shape',
+      fill: '#ff0000',
+      stroke: '#000000',
+      strokeWidth: 2,
+    }
 
     it('shows fill and stroke controls for shape', () => {
       render(<FormatTabContent selectedElement={shape} />)
@@ -39,7 +49,13 @@ describe('FormatTabContent — contextual controls', () => {
   })
 
   describe('image element', () => {
-    const image = { ...baseElement, type: 'image', src: 'test.png', objectFit: 'cover', alt: 'test image' }
+    const image = {
+      ...baseElement,
+      type: 'image',
+      src: 'test.png',
+      objectFit: 'cover',
+      alt: 'test image',
+    }
 
     it('shows object fit control for image', () => {
       render(<FormatTabContent selectedElement={image} />)
@@ -57,6 +73,34 @@ describe('FormatTabContent — contextual controls', () => {
       fireEvent.change(screen.getByLabelText('Object fit'), { target: { value: 'contain' } })
       expect(onUpdateElement).toHaveBeenCalledWith({ objectFit: 'contain' })
     })
+
+    it.each([false, true])(
+      'hides compatibility fit/opacity for native picture selection (mixed=%s)',
+      (mixed) => {
+        const native = { ...image, id: 'native', pptxInstanceId: 'occurrence' }
+        const primary = mixed ? image : native
+        const presentation = {
+          pptxSemantic: {
+            instances: { occurrence: { definitionId: 'source-picture' } },
+            definitions: { 'source-picture': { content: { pictureDocument: {} } } },
+          },
+        }
+        const onUpdateElement = vi.fn()
+        render(
+          <FormatTabContent
+            selectedElement={primary}
+            presentation={presentation}
+            elements={[image, native]}
+            selectedElementIds={mixed ? [image.id, native.id] : [native.id]}
+            onUpdateElement={onUpdateElement}
+          />
+        )
+        expect(screen.queryByLabelText('Object fit')).toBeNull()
+        expect(screen.queryByLabelText('Opacity')).toBeNull()
+        fireEvent.change(screen.getByLabelText('Alt text'), { target: { value: 'Source image' } })
+        expect(onUpdateElement).toHaveBeenCalledWith({ alt: 'Source image' })
+      }
+    )
   })
 
   describe('chart element', () => {
@@ -69,7 +113,9 @@ describe('FormatTabContent — contextual controls', () => {
 
     it('[cap:element.chart depth:behavior] exposes only chart types supported by Properties', () => {
       render(<FormatTabContent selectedElement={chart} />)
-      const values = Array.from(screen.getByLabelText('Chart type').querySelectorAll('option')).map((option) => option.value)
+      const values = Array.from(screen.getByLabelText('Chart type').querySelectorAll('option')).map(
+        (option) => option.value
+      )
       expect(values).toEqual(['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea'])
       expect(values).not.toContain('scatter')
     })

@@ -21,20 +21,20 @@ function queueCompatibilityWrite(state, input) {
   return record
 }
 
-function queueCompatibilityUpsert(state, {
-  presentationId,
-  generation,
-  presentation,
-  updatedAt,
-  trustedImportMetadata,
-  headOnly = false,
-}) {
+function queueCompatibilityUpsert(
+  state,
+  { presentationId, generation, presentation, updatedAt, trustedImportMetadata, headOnly = false }
+) {
   if (!presentation || presentation.id !== presentationId) {
     throw new TypeError('Compatibility presentation identity is invalid')
   }
-  const trusted = trustedImportMetadata === undefined ? undefined : validateTrustedImportMetadata(
-    trustedImportMetadata, presentation.pptxAggregateHead?.originalRevisionId
-  )
+  const trusted =
+    trustedImportMetadata === undefined
+      ? undefined
+      : validateTrustedImportMetadata(
+          trustedImportMetadata,
+          presentation.pptxAggregateHead?.originalRevisionId
+        )
   return queueCompatibilityWrite(state, {
     operation: 'upsert',
     presentationId,
@@ -55,7 +55,7 @@ function queueCompatibilityRemoval(state, { presentationId, generation }) {
 }
 
 function snapshotCompatibilityOutbox(store) {
-  return clone(store.getState().compatibilityOutbox || [])
+  return store.getCompatibilityState().compatibilityOutbox || []
 }
 
 async function acknowledgeCompatibilityOutbox(store, writes, { signal } = {}) {
@@ -64,14 +64,17 @@ async function acknowledgeCompatibilityOutbox(store, writes, { signal } = {}) {
   const captured = new Map(writes.map((write) => [write.id, hashRecord(write)]))
   if (!captured.size) return 0
   let acknowledged = 0
-  await store.mutate((next) => {
-    next.compatibilityOutbox = (next.compatibilityOutbox || []).filter((write) => {
-      if (captured.get(write.id) !== hashRecord(write)) return true
-      acknowledged += 1
-      return false
-    })
-    if (!acknowledged) return false
-  }, { signal })
+  await store.mutate(
+    (next) => {
+      next.compatibilityOutbox = (next.compatibilityOutbox || []).filter((write) => {
+        if (captured.get(write.id) !== hashRecord(write)) return true
+        acknowledged += 1
+        return false
+      })
+      if (!acknowledged) return false
+    },
+    { signal }
+  )
   return acknowledged
 }
 

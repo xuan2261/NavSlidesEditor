@@ -2,6 +2,8 @@
  * Resolve placeholders from slideLayout XML when slide is empty (Phase 08a).
  */
 const { parseSpTree } = require('./ooxml-scene-graph/parse-sptree')
+const { mapBox } = require('./geometry')
+const { readSlideOrder, relationshipPart } = require('./slide-order')
 
 async function readZipText(zip, entry) {
   const file = zip?.file?.(entry)
@@ -17,7 +19,11 @@ async function readZipText(zip, entry) {
  * Find layout path for a slide via rels (slideLayout relationship).
  */
 async function findSlideLayoutPath(zip, slideIndex) {
-  const relPath = `ppt/slides/_rels/slide${slideIndex + 1}.xml.rels`
+  const slidePath =
+    (await readSlideOrder(zip))[slideIndex] ||
+    (!zip?.file?.('ppt/presentation.xml') ? `ppt/slides/slide${slideIndex + 1}.xml` : null)
+  if (!slidePath) return null
+  const relPath = relationshipPart(slidePath)
   const relXml = await readZipText(zip, relPath)
   const m = String(relXml).match(
     /Type="[^"]*slideLayout"[^>]*Target="([^"]+)"|Target="([^"]+)"[^>]*Type="[^"]*slideLayout"/i
@@ -54,18 +60,17 @@ function layoutDecoration(node, zIndex, context = {}) {
   if (node?.ph || node?.kind !== 'shape' || !node.xfrm) return null
   const scheme = context.scheme || {}
   const xml = String(node.sourceXml || '')
-  if ([...xml.matchAll(/<a:t[^>]*>([\s\S]*?)<\/a:t>/gi)].some((match) => match[1].trim())) return null
+  if ([...xml.matchAll(/<a:t[^>]*>([\s\S]*?)<\/a:t>/gi)].some((match) => match[1].trim()))
+    return null
   const preset = xml.match(/<a:prstGeom[^>]*\bprst="([^"]+)"/i)?.[1]?.toLowerCase()
-  const x = Number(node.xfrm.x) || 0
-  const y = Number(node.xfrm.y) || 0
-  const width = Math.max(1, Number(node.xfrm.cx) || 1)
-  const height = Math.max(1, Number(node.xfrm.cy) || 1)
+  const scale = context.scale || { x: 1, y: 1 }
+  const box = mapBox(
+    { left: node.xfrm.x, top: node.xfrm.y, width: node.xfrm.cx, height: node.xfrm.cy },
+    scale
+  )
   const base = {
     id: `layout-decoration-${node.id || zIndex}`,
-    x,
-    y,
-    width,
-    height,
+    ...box,
     zIndex,
     locked: true,
     _pptxSource: {
@@ -96,7 +101,9 @@ function layoutDecoration(node, zIndex, context = {}) {
       ...base,
       type: 'line',
       stroke,
-      strokeWidth: Number.isFinite(lineWidthEmu) ? Math.max(1, lineWidthEmu / 12700) : 1,
+      strokeWidth: Number.isFinite(lineWidthEmu)
+        ? Math.max(1, (lineWidthEmu / 12700) * scale.x)
+        : 1,
     }
   }
   return null
@@ -104,8 +111,13 @@ function layoutDecoration(node, zIndex, context = {}) {
 
 function sameDecoration(left, right) {
   const close = (a, b) => Math.abs((Number(a) || 0) - (Number(b) || 0)) <= 1
-  return left.type === right.type && close(left.x, right.x) && close(left.y, right.y) &&
-    close(left.width, right.width) && close(left.height, right.height)
+  return (
+    left.type === right.type &&
+    close(left.x, right.x) &&
+    close(left.y, right.y) &&
+    close(left.width, right.width) &&
+    close(left.height, right.height)
+  )
 }
 
 async function resolveLayoutFromZip(slide, zip, options = {}) {
@@ -113,7 +125,7 @@ async function resolveLayoutFromZip(slide, zip, options = {}) {
   if (!zip) return { elements, injected: 0, decorativeInjected: 0, layoutPath: null }
 
   const slideIndex = options.slideIndex ?? 0
-  const layoutPath = await findSlideLayoutPath(zip, slideIndex)
+  const layoutPath = options.layoutPath ?? (await findSlideLayoutPath(zip, slideIndex))
   if (!layoutPath) return { elements, injected: 0, decorativeInjected: 0, layoutPath: null }
 
   const layoutXml = await readZipText(zip, layoutPath)
@@ -121,22 +133,32 @@ async function resolveLayoutFromZip(slide, zip, options = {}) {
 
   const nodes = parseSpTree(layoutXml)
   const decorations = nodes
-    .map((node, index) => layoutDecoration(node, index + 1, {
-      scheme: options.scheme,
-      slideIndex,
-      layoutPath,
-    }))
+    .filter((node) => !options.nativeDecorationNodeIds?.has(String(node.id)))
+    .map((node, index) =>
+      layoutDecoration(node, index + 1, {
+        scheme: options.scheme,
+        scale: options.scale,
+        slideIndex,
+        layoutPath,
+      })
+    )
     .filter(Boolean)
-    .filter((candidate) => !elements.some((element) => sameDecoration(element, candidate)))
+    .filter(
+      (candidate) =>
+        options.nativeDecorationNodeIds ||
+        !elements.some((element) => sameDecoration(element, candidate))
+    )
   if (decorations.length) elements.unshift(...decorations)
 
-  const hasText = elements.some(
-    (el) =>
-      (el?.type === 'text' || el?.type === 'shape') &&
-      String(el?.content || el?.text || '')
-        .replace(/<[^>]+>/g, '')
-        .trim().length > 0
-  )
+  const hasText =
+    options.hasSlideText ??
+    elements.some(
+      (el) =>
+        (el?.type === 'text' || el?.type === 'shape') &&
+        String(el?.content || el?.text || '')
+          .replace(/<[^>]+>/g, '')
+          .trim().length > 0
+    )
   if (hasText) {
     return { elements, injected: 0, decorativeInjected: decorations.length, layoutPath }
   }
@@ -150,16 +172,23 @@ async function resolveLayoutFromZip(slide, zip, options = {}) {
     const label = isTitle ? 'Click to edit title' : 'Click to edit text'
     const fontFamily = isTitle ? fonts.major : fonts.minor
     const fontSize = isTitle ? 36 : 18
+    const scale = options.scale || { x: 1, y: 1 }
+    const box = mapBox(
+      {
+        left: node.xfrm?.x ?? 80,
+        top: node.xfrm?.y ?? (isTitle ? 80 : 200),
+        width: node.xfrm?.cx ?? 800,
+        height: node.xfrm?.cy ?? 80,
+      },
+      scale
+    )
     elements.push({
       id: `layout-xml-ph-${node.id || injected}`,
       type: 'text',
-      x: Number(node.xfrm?.x) || 80,
-      y: Number(node.xfrm?.y) || (isTitle ? 80 : 200),
-      width: Number(node.xfrm?.cx) || 800,
-      height: Number(node.xfrm?.cy) || 80,
+      ...box,
       zIndex: elements.length + 1,
       content: `<p>${label}</p>`,
-      fontSize,
+      fontSize: fontSize * scale.y,
       ...(fontFamily ? { fontFamily } : {}),
       textColor: options.scheme?.dk1 || '#111111',
       _pptxSource: {

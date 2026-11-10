@@ -202,6 +202,11 @@ describe('FormatTabContent', () => {
           [null, null],
           [null, null],
         ],
+        insets: [
+          [null, null],
+          [null, null],
+          [null, null],
+        ],
       },
       mergedCells: [],
     })

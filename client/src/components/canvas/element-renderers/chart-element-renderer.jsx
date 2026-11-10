@@ -1,4 +1,5 @@
 import { resolveChartPalette, resolveChartAuthoringOptions } from 'revealjs-shared'
+import NativeChartRenderer from '../../native-chart-renderer'
 
 function safeChartColor(value, fallback) {
   const color = typeof value === 'string' ? value.trim() : ''
@@ -12,7 +13,16 @@ function safeJson(value) {
   return JSON.stringify(value).replace(/</g, '\\u003c')
 }
 
-export function ChartRenderer({ element, isSelected, isDragging, slideBackground }) {
+export function ChartRenderer({ element, chartDocument, isSelected, isDragging, slideBackground }) {
+  const canonicalChart = chartDocument ?? element.chartDocument
+  if (canonicalChart)
+    return (
+      <NativeChartRenderer
+        chartDocument={canonicalChart}
+        theme={element.pptxTextContext?.theme}
+        {...{ isSelected, isDragging }}
+      />
+    )
   const { chartType = 'bar', chartData = {} } = element
   const isScatter = element._pptxChartMeta?.originalType === 'scatterChart'
   const runtimeChartType = isScatter ? 'scatter' : chartType

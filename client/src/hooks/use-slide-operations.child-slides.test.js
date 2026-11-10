@@ -6,6 +6,8 @@ import {
   executeInteractionAction,
   resolveEffectiveSlide,
 } from 'revealjs-shared'
+import { projectHyperlinks } from '../../../tests/pptx-semantic/hyperlink-source-fixture.js'
+import semanticPresentationModule from '../../../shared/src/pptx-semantic-presentation.js'
 
 function makeHarness(initial) {
   let presentation = initial
@@ -34,6 +36,31 @@ beforeEach(() => {
 })
 
 describe('useSlideOperations — vertical child CRUD', () => {
+  it.each(['slide', 'slides', 'child', 'parent'])('duplicates populated source occurrences independently through %s', async (operation) => {
+    const { presentation } = await projectHyperlinks()
+    const original = presentation.slides[0]
+    if (operation === 'child' || operation === 'parent')
+      presentation.slides = [{ id: 'parent-owner', elements: [], children: [original] }, presentation.slides[1]]
+    const before = structuredClone(presentation), { get, deps } = makeHarness(presentation)
+    const { result } = renderHook(() => useSlideOperations(deps))
+    act(() => {
+      if (operation === 'child') result.current.duplicateChildSlide(0, 0)
+      else if (operation === 'slides') result.current.duplicateSlides([0])
+      else result.current.duplicateSlide(0)
+    })
+    const next = semanticPresentationModule.normalizeSemanticPresentation(JSON.parse(JSON.stringify(get())))
+    const copy = operation === 'child' ? next.slides[0].children[1]
+      : operation === 'parent' ? next.slides[1].children[0] : next.slides[1]
+    for (const [index, element] of copy.elements.entries()) {
+      const occurrence = next.pptxSemantic.instances[element.pptxInstanceId]
+      expect(occurrence.slideId).toBe(copy.id)
+      expect(before.pptxSemantic.instances).not.toHaveProperty(occurrence.id)
+      expect(occurrence.definitionId).toBe(before.pptxSemantic.instances[original.elements[index].pptxInstanceId].definitionId)
+    }
+    expect(next.pptxSemantic.definitions).toEqual(before.pptxSemantic.definitions)
+    expect(next.pptxSemantic.sourceSlides).toEqual(before.pptxSemantic.sourceSlides)
+    expect(presentation).toEqual(before)
+  })
   it('addChildSlide appends a child inheriting the parent background', () => {
     const { get, deps } = makeHarness({
       slides: [{ id: 'p0', elements: [], background: { type: 'color', color: '#abc' } }],

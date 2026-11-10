@@ -3,6 +3,8 @@ import { act, renderHook } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useEditorHistoryController } from './use-editor-history-controller'
 import { useKeyboard } from '../use-keyboard'
+import { geometryProjectionFixture } from '../../../../tests/pptx-semantic/geometry-projection-fixture.js'
+import semantic from 'revealjs-shared/src/pptx-semantic-presentation.js'
 
 function useHistoryHarness() {
   const [presentation, setPresentation] = useState(null)
@@ -67,6 +69,50 @@ afterEach(() => {
 afterEach(() => vi.useRealTimers())
 
 describe('explicit authoring history boundaries', () => {
+  it.each(['undo', 'redo'])('keeps restored native source declarations immutable after %s', (transition) => {
+    vi.useFakeTimers()
+    const original = semantic.normalizeSemanticPresentation({ ...geometryProjectionFixture(), id: 'source-history' })
+    const before = structuredClone(original.pptxSemantic)
+    const { result } = renderHook(useHistoryHarness)
+    act(() => {
+      result.current.seedHistory(original)
+      result.current.setPresentation(original)
+    })
+    act(() => result.current.setPresentation({ ...original, title: 'Authored title' }))
+    act(() => result.current.handleUndo())
+    if (transition === 'redo') act(() => result.current.handleRedo())
+    const restored = result.current.presentation
+    expect(restored.title).toBe(transition === 'undo' ? original.title : 'Authored title')
+    expect(() => { restored.pptxSemantic.definitions.definition.source.nativeId = 'forged' }).toThrow(TypeError)
+    expect(restored.pptxSemantic).toEqual(before)
+    expect(original.pptxSemantic).toEqual(before)
+  })
+  it.each(['undo', 'redo'])('keeps the document and subsequent snapshot capture intact after rejected %s', (transition) => {
+    vi.useFakeTimers()
+    const original = semantic.normalizeSemanticPresentation({ ...geometryProjectionFixture(), id: 'atomic-history' })
+    const invalid = JSON.parse(JSON.stringify(original))
+    invalid.pptxSemantic.schemaVersion = 99
+    const { result } = renderHook(useHistoryHarness)
+    act(() => {
+      result.current.seedHistory(transition === 'undo' ? invalid : original)
+      result.current.setPresentation(transition === 'undo' ? invalid : original)
+    })
+    act(() => result.current.setPresentation(transition === 'undo' ? original : invalid))
+    if (transition === 'redo') act(() => result.current.handleUndo())
+    const before = result.current.presentation
+    expect(() => act(() => result.current[transition === 'undo' ? 'handleUndo' : 'handleRedo']()))
+      .toThrow(/Unsupported semantic schema/)
+    expect(result.current.presentation).toBe(before)
+    expect(result.current.canUndo).toBe(transition === 'undo')
+    expect(result.current.canRedo).toBe(transition === 'redo')
+    act(() => result.current.setPresentation({ ...before, title: 'Edit after rejection' }))
+    expect(result.current.canUndo).toBe(true)
+    expect(result.current.canRedo).toBe(false)
+    act(() => result.current.handleUndo())
+    expect(result.current.presentation).toEqual(before)
+    act(() => result.current.handleRedo())
+    expect(result.current.presentation.title).toBe('Edit after rejection')
+  })
   it('keeps two rapid multi-element bundle inserts independently undoable and redoable', () => {
     vi.useFakeTimers()
     const { result } = renderHook(useHistoryHarness)

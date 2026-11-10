@@ -1,3 +1,5 @@
+const { sanitizePptxGeometryMetadata } = require('./shared-pptx-core.js')
+
 // Shared by browser project archives and agent JSON exports. Keep authority fields private.
 const PROJECT_EXPORT_OMITTED_KEYS = new Set([
   '_pptxImportReport', '_pptxSource', '_pptxEdited', '_pptxEditedAt',
@@ -13,11 +15,16 @@ const PROJECT_EXPORT_OMITTED_KEYS = new Set([
 function projectExportValue(value) {
   if (Array.isArray(value)) return value.map(projectExportValue)
   if (!value || typeof value !== 'object') return value
-  return Object.fromEntries(
-    Object.entries(value)
-      .filter(([key]) => !PROJECT_EXPORT_OMITTED_KEYS.has(key))
-      .map(([key, child]) => [key, projectExportValue(child)])
-  )
+  const entries = []
+  for (const [key, child] of Object.entries(value)) {
+    if (key === '_pptxMeta') {
+      const metadata = sanitizePptxGeometryMetadata(child)
+      if (Object.keys(metadata).length) entries.push([key, metadata])
+    } else if (!PROJECT_EXPORT_OMITTED_KEYS.has(key)) {
+      entries.push([key, projectExportValue(child)])
+    }
+  }
+  return Object.fromEntries(entries)
 }
 
 module.exports = { projectExportValue }

@@ -211,6 +211,7 @@ Automation has the highest leverage in:
 
 19 element types: text (TipTap rich text), image (upload/URL, crop, filters, round corners), shape (rectangle, circle, triangle, arrow, star), code (10 themes, 25+ languages), LaTeX / TikZ (KaTeX + TikZJax), HTML embeds, Markdown, Chart.js charts (bar, line, pie, doughnut, radar, polar area), video / audio (with start/end trim, playback speed), table (drag-resize, inline editing), QR code, icon (60+ Lucide icons), callout, drawing, line, SVG, timeline, and **game** (10 interactive game types). The Insert ribbon shows 30+ actions because shapes, technical symbol packs, and games (10 variants) expose sub-variants from existing element types. Action/Hotspot is validated base-element metadata; Smart Connector extends `line` with same-slide endpoint attachments, not a new type. The 19 canonical types are listed in `client/src/data/element-defaults.js`.
 Image alternatives (including decorative and long-description metadata) and video/audio captions, transcripts, audio descriptions, and safe media tracks are authorable browser semantics. Blank non-decorative alternatives and malformed media metadata warn rather than changing legacy decks; transcript text is user-authored, not generated.
+Table cells support mixed rich formatting alongside literal plain-text cells; see the [table/text fidelity boundary](docs/pptx-import-fidelity-report.md#table-and-paragraph-repair-boundary-2026-10-12-working-tree).
 
 ### Slides
 

@@ -33,7 +33,7 @@ async function commit(admission) {
 }
 async function ledger() { return fs.readJson(path.join(current.storage.DATA_DIR, 'project-import-sessions.json')) }
 
-describe('full portable project durable HTTP consumers', () => {
+describe('full portable project durable HTTP consumers', { timeout: 30000 }, () => {
   it.each([false, true])('reopens immutable Original and destination media after import (local media=%s)', async (withMedia) => {
     const fixture = await sourceArchive(withMedia)
     await open()

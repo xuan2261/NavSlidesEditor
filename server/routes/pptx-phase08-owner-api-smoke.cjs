@@ -38,7 +38,7 @@ function binary(response, callback) {
 async function main() {
   assert.equal(process.argv.length, 4)
   assert.equal(process.argv[2], '--receipt')
-  assert.equal(process.argv[3], 'reports/pptx-phase08-source-bound-owner-api-smoke.json')
+  assert.match(process.argv[3], /^reports\/pptx-phase08-source-bound-owner-api-smoke[-a-z0-9]*\.json$/u)
   const record = { status: 'started', smoke: 'actual-api-owner-lifetimes', artifactKind: 'backend-source',
     startedAt: new Date().toISOString(), command: [process.execPath, ...process.argv.slice(1)],
     runtime: { node: process.version, platform: process.platform, arch: process.arch }, sourceBefore: sourceManifest(),

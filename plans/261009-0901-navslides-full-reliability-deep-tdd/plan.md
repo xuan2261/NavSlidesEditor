@@ -33,12 +33,12 @@ Tất cả trạng thái là **triển khai**, không phải trạng thái soạ
 | 08 | [PPTX concurrency, retry và compensation](phase-08-pptx-concurrency.md) | 07 | P1 | in-progress: P08-07/12 now evidenced; final source-bound joint exit open |
 | 09 | [PPTX durable recovery và cleanup ownership](phase-09-pptx-recovery.md) | 08 | P1 | in-progress: implemented; real process-death/startup HTTP passed; final scenario binding open |
 | 10 | [Portable archive: revision, blob, media và authority](phase-10-pptx-portable.md) | 09 | P1 | in-progress: native final04 seven journeys passed; current-input process/browser binding open |
-| 11 | [Container, runtime closure và supply-chain qualification](phase-11-container-runtime.md) | 04, 05, 10 | P1 | blocked: exact Linux/container scan/runtime/backup target unavailable |
-| 12 | [Windows NSIS/portable, OfficeCLI và PowerPoint](phase-12-windows-office-qualification.md) | 10, 11 | P1 | in-progress: producers verified locally; physical/signing/download/attestation blocked |
+| 11 | [Container, runtime closure và supply-chain qualification](phase-11-container-runtime.md) | 04, 05, 10 | P1 | blocked; user deferred Linux/container provisioning for this continuation, release requirement unchanged |
+| 12 | [Windows NSIS/portable, OfficeCLI và PowerPoint](phase-12-windows-office-qualification.md) | 10, 11 | P1 | in-progress: native-aspect contract implemented for new imports, legacy geometry retained; fixed 0.99/0.97 visual gate and authoritative receipts/signing/download/attestation remain open |
 | 13 | [Navigator baseline 50/100/300 slides](phase-13-navigator-baseline.md) | 06, 07 | P2 | blocked: historical collection complete; retained noise oracle invalidates qualification |
 | 14 | [Navigator optimization có điều kiện và accessibility](phase-14-navigator-optimization.md) | 13 | P2 | blocked: candidate receipt fails stability/budget/comparison; controlled rerun required |
 | 15 | [Documentation drift và contract truth](phase-15-documentation-drift.md) | 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 14 | P2 | blocked: current machine facts and edited docs build passed; upstream performance/physical qualification open |
-| 16 | [Final integration, CI evidence và release closeout](phase-16-release-closeout.md) | 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15 | P1 | in-progress: nine audit findings repaired; source-matched affected222/native smoke passed; full/performance/external qualification open |
+| 16 | [Final integration, CI evidence và release closeout](phase-16-release-closeout.md) | 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15 | P1 | in-progress: audit repairs and bounded source-faithful table/paragraph corrections exercised; full fidelity/performance/external qualification open |
 
 Các lanes sau 01: Settings `02→03`; CI `04` và scanner `05`; editor `06`; PPTX `07→08→09→10`. Lane setup release `11→12`, navigator `13→14`, docs `15`, final qualification `16`. Đây không phải --parallel execution mode; owner chung/phụ thuộc vẫn bắt buộc. Phases 11/12 có thể tạo evidence trung gian, phase 16 phải bind final inputs.
 
@@ -47,6 +47,7 @@ Các lanes sau 01: Settings `02→03`; CI `04` và scanner `05`; editor `06`; PP
 - [Decisions, architecture và ownership](decisions-and-boundaries.md): revision/API key, PPTX authority, portable consumers, trust boundaries.
 - [Evidence ledger](evidence-ledger.md): observed/read-only/historical/not-run tách biệt.
 - [Review và artifact validation](review-report.md): red-team dispositions, kiểm tra consistency và giới hạn.
+- [Bounded residual fidelity repair](reports/261011-residual-fidelity-remediation.json): source-preserving table/paragraph corrections and fixed-corpus diagnostics; not full-program or release qualification.
 - [Task mapping](task-map.md): unchecked work items và phase dependencies, dùng hydrate lại khi đổi session.
 
 ## Acceptance toàn chương trình

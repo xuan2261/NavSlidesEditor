@@ -73,9 +73,13 @@ function validateLegacyStateShape(state) {
   }
   for (const key of [
     'blobs', 'revisions', 'heads', 'owners', 'leases', 'jobs', 'mutationResults',
-    'compatibilityOutbox', 'compatibilityDeadLetter', 'candidateBlobs',
   ]) {
     if (!Array.isArray(state[key])) throw new TypeError(`Invalid legacy state ${key} index`)
+  }
+  for (const key of ['compatibilityOutbox', 'compatibilityDeadLetter', 'candidateBlobs']) {
+    if (state[key] !== undefined && !Array.isArray(state[key])) {
+      throw new TypeError(`Invalid legacy state ${key} index`)
+    }
   }
 }
 
@@ -88,6 +92,9 @@ function migrateLegacyState(root, inputState, { highWater = null } = {}) {
   const state = structuredClone(inputState)
   state.schemaVersion = PACKAGE_STATE_SCHEMA_VERSION
   state.matrixAuthorityEpoch = matrixAuthorityEpoch
+  state.compatibilityOutbox ??= []
+  state.compatibilityDeadLetter ??= []
+  state.candidateBlobs ??= []
   state.heads = state.heads.map((head) => ({
     ...head,
     schemaVersion: PACKAGE_HEAD_SCHEMA_VERSION,

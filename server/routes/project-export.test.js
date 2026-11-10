@@ -89,6 +89,30 @@ describe('private full project archive endpoint', () => {
     expect(await zip.file(`package/blobs/${bundle.blobs[0].sha256}`).async('nodebuffer')).toEqual(bundle.blobs[0].bytes)
   })
 
+  it('round-trips native source size and logical geometry through ZIP v2 sanitization', async () => {
+    const metadata = { originalSize: { width: 960, height: 720 }, geometryPolicy: 'native-aspect-v1' }
+    const { committed } = await seed({
+      resolution: { width: 720, height: 540 }, _pptxMeta: { ...metadata, packageRevisionId: 'forged' },
+      slides: [{ id: 's1', elements: [{ id: 'e1', type: 'shape', x: 360, y: 270, width: 72, height: 72 }] }],
+    })
+    const original = await store.readOriginal(committed.head.originalRevisionId)
+    const response = await binary(get())
+    expect(response.status).toBe(200)
+    const zip = await JSZip.loadAsync(response.body)
+    const projection = JSON.parse(await zip.file('presentation.json').async('string'))
+    expect(projection.resolution).toEqual({ width: 720, height: 540 })
+    expect(projection._pptxMeta).toEqual(metadata)
+    expect(projection.slides[0].elements[0]).toMatchObject({ x: 360, y: 270, width: 72, height: 72 })
+    const filePath = path.join(root, 'native.navslides')
+    await fs.writeFile(filePath, response.body)
+    const validated = await require('../services/project-import-archive').validateProjectArchive(filePath, {
+      stagingDir: path.join(root, 'native-stage'),
+    })
+    expect(validated.presentation.resolution).toEqual(projection.resolution)
+    expect(validated.presentation._pptxMeta).toEqual(metadata)
+    expect(await store.readOriginal(committed.head.originalRevisionId)).toEqual(original)
+  })
+
   it('rejects stale generation and missing preconditions without a download', async () => {
     await seed()
     expect(await get('2')).toMatchObject({ status: 409, body: { code: 'SYNC_SOURCE_CHANGED' } })

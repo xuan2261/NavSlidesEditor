@@ -192,6 +192,7 @@ Logic extracted from `EditorPage` lives in `hooks/`.
 
 - **Lock policy:** Delete, Cut, and Duplicate **skip locked** elements (mixed selection operates on free members only). Copy may still include locked elements; paste preserves `locked` when present on the clipboard payload. Group mutations are blocked when any group member is locked or hidden (`hasBlockedGroupMutation`) — surface feedback via `showNotice` + `getBlockedActionNotice`.
 - **Table merges:** `normalizeTableShape` **preserves in-bounds** `mergedCells` on ±row/col; drops only OOB merges (`preserveValidMerges`). Do not reintroduce wipe-all `mergedCells: []`.
+- **Rich table authority:** `{ html: string }` is the sole rich-cell content authority; do not mirror independent plaintext/style fields. Use the canonical access/mutation helpers in [`table-cell-utils.js`](../shared/src/table-cell-utils.js) and [`table-cell-document.js`](../shared/src/table-cell-document.js). Primitive cells remain literal text, not inferred HTML.
 - **Find/replace types:** text, code, markdown, latex, html, shape text, and **table cells** (`data[r][c]`). Keep collect + replace paths in sync via `collectElementSearchMatches`.
 - **Geometry floor:** canvas resize / multi-select W-H fan-out uses `MIN_SIZE` (40). New callout defaults are ≥ 40.
 | `useKeyboard` | `use-keyboard.js` | Keyboard shortcut dispatch |

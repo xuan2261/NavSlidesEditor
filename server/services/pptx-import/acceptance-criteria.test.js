@@ -17,6 +17,15 @@ describe('pptx import acceptance criteria', () => {
       .toThrow(/resolution/i)
   })
 
+  it('rejects stretched new imports and respects an explicit expected-size override', () => {
+    const presentation = {
+      resolution: { width: 960, height: 540 },
+      _pptxMeta: { originalSize: { width: 720, height: 540 }, geometryPolicy: 'native-aspect-v1' },
+    }
+    expect(() => assertResolutionInvariant(presentation)).toThrow(/720x540/)
+    expect(() => assertResolutionInvariant({ ...presentation, resolution: { width: 720, height: 540 } }, { width: 960, height: 540 })).toThrow(/960x540/)
+  })
+
   it('catches raw CSS units and dangerous CSS tokens in rich HTML', () => {
     expect(() => assertNoRawUnits({
       slides: [{ elements: [{ content: '<span style="font-size:24pt">Title</span>' }] }],
@@ -72,6 +81,20 @@ describe('pptx import acceptance criteria', () => {
     expect(() => assertSourceFontSizesWithinTolerance(source, {
       slides: [{ elements: [{ type: 'text', fontSize: 32 }] }],
     })).toThrow(/fontSize/i)
+  })
+
+  it('validates foreground fonts without matching inherited master or layout decorations', () => {
+    const source = { slides: [{ elements: [{ type: 'text', fontSz: 24 }] }] }
+    const decorations = [
+      { type: 'text', fontSize: 11, _pptxSource: { nodeId: 'master:ppt/slideMasters/slideMaster1.xml:7' } },
+      { type: 'shape', fontSize: 24, _pptxSource: { nodeId: 'layout:ppt/slideLayouts/slideLayout1.xml:8' } },
+    ]
+    const presentation = (fontSize) => ({ slides: [{ elements: [
+      ...decorations,
+      { type: 'text', fontSize, _pptxSource: { nodeId: 'slide-0-shape-9' } },
+    ] }] })
+    expect(() => assertSourceFontSizesWithinTolerance(source, presentation(24))).not.toThrow()
+    expect(() => assertSourceFontSizesWithinTolerance(source, presentation(32))).toThrow(/fontSize/i)
   })
 
   it('derives the font scale from a non-uniform imported deck resolution', () => {

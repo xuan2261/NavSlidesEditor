@@ -10,6 +10,7 @@ const { htmlToPptTextRuns, stripHtmlToPlainText } = sharedTextRuns
 const {
   getPresentationResolution,
   getPptxExportLayout,
+  getPptxLayout,
   getShapeType,
   mapArrowType,
   mapLineDashType,
@@ -69,6 +70,28 @@ describe('shared pptx utilities', () => {
 
     expect(getPresentationResolution(presentation)).toEqual({ width: 960, height: 540 })
     expect(getPptxExportLayout(presentation)).toEqual({ width: 720, height: 540 })
+  })
+
+  it.each([
+    [{ width: 720, height: 540 }, { width: 10, height: 7.5 }],
+    [{ width: 960, height: 540 }, { width: 10, height: 5.625 }],
+  ])('uses marked logical resolution for export, including authored resizing: %j', (resolution, expectedLayout) => {
+    const presentation = {
+      resolution,
+      _pptxMeta: { originalSize: { width: 960, height: 720 }, geometryPolicy: 'native-aspect-v1' },
+    }
+    const layout = getPptxLayout(getPptxExportLayout(presentation))
+    expect(layout).toEqual(expectedLayout)
+    const bounds = scaleElementBounds({ x: 0, y: 0, width: 72, height: 72 }, resolution, layout)
+    expect(bounds.w).toBe(bounds.h)
+    expect(presentation._pptxMeta.originalSize).toEqual({ width: 960, height: 720 })
+  })
+
+  it('keeps unrecognized policies on the legacy original-size export path', () => {
+    expect(getPptxExportLayout({
+      resolution: { width: 960, height: 540 },
+      _pptxMeta: { originalSize: { width: 720, height: 540 }, geometryPolicy: 'native-aspect-v2' },
+    })).toEqual({ width: 720, height: 540 })
   })
 
   it('falls back to canvas resolution for native NavSlides export layout', () => {

@@ -18,6 +18,8 @@ const { errorHandler } = require('./middleware/error-handler')
 const { createLocalMutationIngressPolicy } = require('./middleware/local-mutation-ingress')
 const { generateRevealHTML } = require('revealjs-shared')
 const { readAuthoritativePresentation } = require('./services/package-backed-presentation-read')
+const { prepareSemanticOutputResources, assertSemanticOutputArtifact } =
+  require('./services/pptx-import/semantic-output-resources')
 const { recordView } = require('./routes/analytics')
 const { setupSocketHandlers } = require('./services/socket-handler')
 const { setupGameSocketHandlers } = require('./services/game-socket-handler')
@@ -113,6 +115,7 @@ function drainServerTransports(server, timeoutMs) {
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const presentationsRouter = require('./routes/presentations')
+const { createSemanticFontRouter } = require('./routes/pptx-semantic-fonts')
 const templatesRouter = require('./routes/templates')
 const shareRouter = require('./routes/share')
 const uploadRouter = require('./routes/upload')
@@ -266,6 +269,7 @@ app.use('/api/presentations', shareRouter) // /:id/share
 app.use('/api/presentations', historyRouter) // /:id/snapshot(s), /:id/restore
 app.use('/api/presentations', projectExportRouter) // /:id/project-archive
 app.use('/api/presentations', presentationsRouter) // CRUD + export + present + duplicate + save-as-template
+app.use('/api/presentations', createSemanticFontRouter())
 app.use('/api/templates', templatesRouter)
 app.use('/api/upload', uploadRouter)
 app.post('/api/pptx/import', uploadLimiter)
@@ -314,6 +318,7 @@ async function renderShareView(presentationId, req, res) {
   // token. The authoritative reader returns null for missing or trashed decks.
   const resolved = await readAuthoritativePresentation(presentationId)
   if (!resolved) return res.status(404).send('Presentation not found')
+  const semanticOutputResources = await prepareSemanticOutputResources(resolved.presentation)
 
   // Keep html embeds trusted and programmable in share mode too.
   // We only normalize customCSS risky URL/expression patterns.
@@ -326,10 +331,12 @@ async function renderShareView(presentationId, req, res) {
       .replace(/url\s*\(\s*['"]?\s*javascript/gi, 'url(/* blocked */')
   }
 
-  const html = generateRevealHTML(sanitized, { baseUrl: getServingBaseUrl(req) })
+  const html = generateRevealHTML(sanitized, {
+    baseUrl: getServingBaseUrl(req), semanticOutputResources,
+  })
   res.setHeader('Content-Type', 'text/html')
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
-  res.send(html)
+  res.send(assertSemanticOutputArtifact(html, semanticOutputResources))
 }
 
 // Analytics and Expiry handler

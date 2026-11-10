@@ -115,6 +115,12 @@ Repo default branch/master expectation và permissions là live configuration, k
 
 Nếu oracle fail: giữ evidence/fixture, dừng dependent phase, xác định root cause; không auto retry conflict hoặc dùng fallback để biến lỗi thành success. Nếu thiếu prerequisite external: hoàn thành phần độc lập, ghi exact missing capability/owner và giữ gate blocked. Fault cleanup chỉ ở temp roots; không đụng dữ liệu người dùng. Secrets/plaintext API key/capabilities không vào receipt. Mọi thay đổi yêu cầu publish/quyền/ký số phải theo authorization riêng.
 
+## Authorized release-readiness reconciliation — 2026-11-07
+
+User authorized final Gate06/10 reconciliation and extension into release readiness, not commit/push/tag/publication or gate waivers. Independent read-only closeout review confirms release remains OPEN: exact final-subject full integration/coverage/E2E and packaged/container runtime smoke are not qualified; stable within-budget navigator baseline/comparison is absent; POSIX permissions, authorized hosted graph, candidate-image scan/SBOM/container backup, exact-subject Office/fidelity and protected signing/download/attestation evidence remain required. Existing physical fidelity failure is not converted to a pass. Historical capability reports are not claims that today's tools are unavailable.
+
+Local Gate06/10 evidence is reconciled separately in the phase documents and ledger. It does not clear dependencies 02/03/04/05/11/12/13/14/15 or establish a clean frozen release subject. Do not launch an all-target release or fabricate target receipts while these prerequisites are unqualified. Next release prerequisite: agree/provision the exact candidate and missing target/hosted qualification inputs; then run the declared current-input integration and target checks without changing frozen policies. No release artifact was published.
+
 ## Re-audit repair: eleven findings, TDD execution
 
 User-authorized scope: repair all eleven re-audit findings using regression-first TDD. Pre-fix production/module/UI/CLI observations are retained outside the repository in `local://navslides-post-cook-reaudit-evidence-index.json`; they are diagnosis evidence, not final qualification.
@@ -138,3 +144,14 @@ Ownership: one integration owner; disjoint frontend, PPTX import compensation, p
 Non-goals: no performance policy reduction, new compatibility shims, remote CI dispatch, live GitHub settings, commit/push/publish, or replacement of missing physical Linux/Windows/Office/signing evidence. External qualification and full-program acceptance remain open unless separately proven.
 
 Backend verification: actual production Node/HTTP/disk smokes passed for [media preparation compensation](reports/re-audit-media-runtime.json), [high-water authority recovery](reports/re-audit-epoch-runtime.json), [deferred template publication](reports/re-audit-template-runtime.json), [repeated portable replacement/replay](reports/re-audit-portable-runtime.json), and [retained cancellation plus overlapping terminal replay](reports/re-audit-session-runtime.json). The session proof uses two fresh process restarts for each cancellation reason. [Scanner/lease CLI proof](reports/re-audit-scanner-lease-runtime.json) covers seven verifier cases and eight native local-origin Git workflow cases; metadata/GitHub boundaries are explicitly synthetic. Final regression, frontend browser proof and integration gates are not yet closed.
+
+## Audit recommendation follow-through
+
+The authorized `--tdd --advice` follow-through is recorded in [scoped implementation evidence](reports/cook-recommendations-result.json) and the [evidence ledger](evidence-ledger.md#cook-follow-through-on-audit-recommendations). It repairs NSIS tool isolation, restores declared OCR/QR dependencies and corrects unsupported default-Node/PowerPoint findings. Existing release acceptance and unchecked exit criteria remain open; local focused/runtime evidence does not substitute for exact-subject Linux, Office corpus, signing or independent-download qualification.
+
+The [final local full-suite run](reports/cook-recommendations-fullcoverage.json) now passes on the unchanged declared build subject: 6,887 tests passed, zero failed, three platform-skipped. [Final production export journeys](reports/cook-recommendations-e2e02.json) also pass without retries. This supersedes the earlier six-failure local test result for the repaired inputs, not the outstanding platform, performance, scenario-mapping or publication gates. Full Playwright collection remains distinct from full E2E execution.
+
+## Bounded residual fidelity continuation
+
+[Source-faithful residual repair](reports/261011-residual-fidelity-remediation.json) implements the proven table and paragraph projection corrections, including real editor/Present/HTML-export geometry checks and independently reviewed explicit-tab lifecycle repairs. The evidence ledger owns the cached-field and malformed-media limits. Fixed full-corpus SSIM remains an independent gate, not a reason to alter source bytes, golden images or thresholds. This continuation does not check off final integration, physical qualification or release acceptance.
+

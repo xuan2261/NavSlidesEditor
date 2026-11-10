@@ -70,7 +70,8 @@ describe('pptx group and transform fidelity', () => {
       expect(shape.y).toBeGreaterThanOrEqual(0)
       expect(shape.width).toBeGreaterThan(0)
       expect(shape.height).toBeGreaterThan(0)
-      expect(shape.rotation).toBe(15)
+      // The outer reflection reverses the inner rotation: 30 - (-15).
+      expect(shape.rotation).toBe(45)
     })
   })
 
@@ -142,9 +143,33 @@ describe('pptx group and transform fidelity', () => {
                   width: 240,
                   height: 140,
                   elements: [
-                    { type: 'shape', shapType: 'rect', left: 10, top: 10, width: 40, height: 40, fill: '#ef4444' },
-                    { type: 'shape', shapType: 'rect', left: 60, top: 10, width: 40, height: 40, fill: '#22c55e' },
-                    { type: 'shape', shapType: 'rect', left: 110, top: 10, width: 40, height: 40, fill: '#3b82f6' },
+                    {
+                      type: 'shape',
+                      shapType: 'rect',
+                      left: 10,
+                      top: 10,
+                      width: 40,
+                      height: 40,
+                      fill: '#ef4444',
+                    },
+                    {
+                      type: 'shape',
+                      shapType: 'rect',
+                      left: 60,
+                      top: 10,
+                      width: 40,
+                      height: 40,
+                      fill: '#22c55e',
+                    },
+                    {
+                      type: 'shape',
+                      shapType: 'rect',
+                      left: 110,
+                      top: 10,
+                      width: 40,
+                      height: 40,
+                      fill: '#3b82f6',
+                    },
                   ],
                 },
               ],

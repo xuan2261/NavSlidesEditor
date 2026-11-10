@@ -1,4 +1,3 @@
-const { CANVAS_SIZE } = require('../constants')
 const { sanitizeHtml } = require('../sanitize')
 const { clampBox, mapBox, mapLineGeometry, readNumber } = require('../geometry')
 const { arrowMarker, colorValue, gradientBackground, svgAttr } = require('./utils-color')
@@ -41,7 +40,7 @@ function mapShape(element, context) {
   if (shape === 'line') {
     context.stats.shapeCount += 1
     const lineGeom = mapLineGeometry(element, context.scale)
-    const box = baseElement(element, context.scale, context.zIndex, clampBox(lineGeom.box, CANVAS_SIZE))
+    const box = baseElement(element, context.scale, context.zIndex, clampBox(lineGeom.box, context.bounds))
     const { x1, y1, x2, y2 } = lineGeom.endpoints
     const normType = String(element.shapType || '').toLowerCase()
     const explicitStart = arrowMarker(element.beginArrowType || element.arrowStart || element.startArrowType)
@@ -92,7 +91,11 @@ function mapShape(element, context) {
     textColor: '#111827',
     ...textMetadata,
   }
-  if (textHtml) mapped.textHtml = textHtml
+  if (textHtml) {
+    mapped.textHtml = textHtml
+    const verticalAlign = { up: 'top', mid: 'middle', down: 'bottom' }[element.vAlign]
+    if (['top', 'middle', 'bottom'].includes(verticalAlign)) mapped.textVerticalAlign = verticalAlign
+  }
   const textInsets = extractTextInsets(element, context.scale, box)
   if (textHtml) {
     mapped._pptxImportMeta = buildPptxTextImportMeta(box, mapped, {

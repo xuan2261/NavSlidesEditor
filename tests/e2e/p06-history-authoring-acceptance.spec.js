@@ -55,3 +55,38 @@ test('P06-07/08 deleted text Undo caret and locked master selection remain autho
     receipt.runs.push({ scenarioId: 'P06-08', status: 'pending-identity', masterEditUndoRedoX: [222, 100, 222], survivingSelection: true, deletionClearsSelection: true, storedMasterLocked: true, localContentUnchanged: true })
   })
 })
+
+test('P06-07 toolbar Undo and Redo keep a formatted live caret writable through save and reload', async ({ page, browser, request }, info) => {
+  test.setTimeout(120000)
+  await historyJourney({ page, browser, request }, info, ['P06-07'], async ({ create, receipt }) => {
+    const original = '<p><strong>Alpha</strong></p>'
+    const restored = '<p><strong>Alpha!</strong></p>'
+    const final = '<p><strong>Alpha!?</strong></p>'
+    const id = await create('P06 formatted live history', { slides: [slide([text('formatted', original)])] })
+    await page.goto(`/editor/${id}`)
+    await content(page, 'formatted').dblclick()
+    const editor = page.locator('.ProseMirror')
+    await expect(editor.locator('strong')).toHaveText('Alpha')
+    await editor.click()
+    await page.keyboard.press('ControlOrMeta+End')
+    await page.keyboard.type('!')
+    await expect(editor.locator('strong')).toHaveText('Alpha!')
+    await quick(page).getByRole('button', { name: 'Undo', exact: true }).click()
+    await expect(editor).toHaveCount(1)
+    await expect(editor.locator('strong')).toHaveText('Alpha')
+    await quick(page).getByRole('button', { name: 'Redo', exact: true }).click()
+    await expect(editor.locator('strong')).toHaveText('Alpha!')
+    await saved(request, id, (deck) => deck.slides[0].elements[0].content, restored)
+    await editor.click()
+    await page.keyboard.press('ControlOrMeta+End')
+    await page.keyboard.type('?')
+    await expect(editor.locator('strong')).toHaveText('Alpha!?')
+    await page.keyboard.press('Escape')
+    await saved(request, id, (deck) => deck.slides[0].elements[0].content, final)
+    await page.reload()
+    await expect(content(page, 'formatted').locator('strong')).toHaveText('Alpha!?')
+    await content(page, 'formatted').dblclick()
+    await expect(editor.locator('strong')).toHaveText('Alpha!?')
+    receipt.runs.push({ scenarioId: 'P06-07', status: 'pending-identity', original, restored, persistedAndReloaded: final, survivingEditorAfterUndo: true, nextCaretInput: '?' })
+  })
+})

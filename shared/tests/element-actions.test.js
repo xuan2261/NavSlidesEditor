@@ -21,8 +21,12 @@ describe('element action policy', () => {
     expect(normalizeElementAction({ kind: 'url', url: 'javascript:alert(1)' }).action).toBeNull()
     expect(normalizeElementAction({ kind: 'url', url: 'https://example.test/\nnext' }).action).toBeNull()
     expect(normalizeElementAction({ kind: 'script', url: 'https://example.test' }).action).toBeNull()
+    expect(normalizeElementAction({ kind: 'url', url: 'https://user:pass@example.test' }).action).toBeNull()
+    expect(normalizeElementAction({ kind: 'url', url: '//network.invalid/path' }).action).toBeNull()
+    expect(normalizeElementAction({ kind: 'url', url: 'https://example.test\\secrets' }).action).toBeNull()
+    expect(normalizeElementAction({ kind: 'email', url: 'mailto:' }).action).toBeNull()
+    expect(normalizeElementAction({ kind: 'slide', slideId: ' leading' }).action).toBeNull()
   })
-
   it('serializes normalized action data without executable HTML delimiters', () => {
     expect(serializeElementAction({ kind: 'url', url: 'https://example.test/<script>' })).toBe('')
     expect(serializeElementAction({ kind: 'next', label: 'Go <now>' })).not.toContain('<')

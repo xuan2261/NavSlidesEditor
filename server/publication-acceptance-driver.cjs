@@ -1,5 +1,6 @@
 const { fork } = require('node:child_process')
 const path = require('node:path')
+const fs = require('node:fs')
 module.exports = function launch(root) {
   const child = fork(path.join(__dirname, 'publication-acceptance-child.cjs'), [], {
     execArgv: [], silent: true, windowsHide: true,
@@ -10,8 +11,8 @@ module.exports = function launch(root) {
   const waiters = new Set()
   let exit
   let failure
-  child.stdout.resume()
-  child.stderr.resume()
+  child.stdout.pipe(fs.createWriteStream(path.join(root, 'child-stdout.log')))
+  child.stderr.pipe(fs.createWriteStream(path.join(root, 'child-stderr.log')))
   const closed = new Promise((resolve) => child.once('close', (code, signal) => {
     exit = { code, signal }; resolve(exit)
     for (const waiter of waiters) waiter.reject(new Error(`Child exited ${code}/${signal}`))

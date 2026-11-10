@@ -1,0 +1,378 @@
+{
+  "mode": "importer-qualification",
+  "corpusDir": "C:\\Work\\NavSlidesEditor\\server\\data\\test-corpus",
+  "manifestDigest": "b33ce28e3a867b77758eb0ce90716ae5443d0914a5d91a56e2f91ea432b760ed",
+  "importerOptions": {
+    "bestEffort": {},
+    "strict": {
+      "strict": true
+    }
+  },
+  "sourceHashes": {
+    "background-image-notes-footer.pptx": "1e80dba1ca8f7411858147ade13d206b8253a2ccc72bec1898fca1d77910c74e",
+    "Bai_2_1.pptx": "c883745a73a3a75dbbac0aabf1f3b052543c8cbb12cb0302955d84532c957150",
+    "Bai_2_2.pptx": "e433a1780b7e7b0b69d98cb7e2d7e99b487c47736b89b1649bd311360352d044",
+    "Bai_2_5.pptx": "053c0a0cbf3fe47f3f86bfc284acdc47f8ecff87eee05fe7b4bb8e4d1730f8e8",
+    "chart-bars-lines.pptx": "fe9f5f6daf514a5d8c711a9a0247b75e05a7a45eae7f44435d83e0831682af29",
+    "chart-pie-scatter.pptx": "bcd9db44be9ba0f36102427a4832a47c416a605eeea9a564c7a26376be7d8046",
+    "diagram-process-flow.pptx": "4689835f096ee63c45c7fbfde89705d10538898ad69c5e6ff735496be30ef0e1",
+    "math-rich-text.pptx": "29bf9f07c6075a5db495fc471fd76a5bd88dddd5852a35b3f99a860c4a37ed39",
+    "non-default-4x3-resolution.pptx": "4b29747595b94191b82328fba01ad092f9d69727df461d130532fe565d6a916e",
+    "STTre_Duc.pptx": "a68431f7d42ad92c410b5db67d06ce548c581312ea3b57ae83767c9650afc2c6",
+    "table-shapes-media.pptx": "10d5a673e94cb9d27cfe44a740bd5fd971728021553682551e094f1bf379a1f2"
+  },
+  "results": [
+    {
+      "deck": "background-image-notes-footer.pptx",
+      "sourceSha256": "1e80dba1ca8f7411858147ade13d206b8253a2ccc72bec1898fca1d77910c74e",
+      "sourceHashes": {
+        "bestEffort": "1e80dba1ca8f7411858147ade13d206b8253a2ccc72bec1898fca1d77910c74e",
+        "strict": "1e80dba1ca8f7411858147ade13d206b8253a2ccc72bec1898fca1d77910c74e"
+      },
+      "importerOptions": {
+        "bestEffort": {},
+        "strict": {
+          "strict": true
+        }
+      },
+      "evidence": {
+        "available": true,
+        "sceneGraphMappedNodes": 5,
+        "sceneGraphUnmapped": 0,
+        "chartCoverageGapCount": 0,
+        "smartArtCoverageGapCount": 0,
+        "permanentPlaceholderCount": 0,
+        "blockers": []
+      },
+      "strictOutcome": {
+        "status": "passed",
+        "type": null,
+        "message": null
+      },
+      "errorDetails": [],
+      "blockers": [],
+      "passed": true
+    },
+    {
+      "deck": "Bai_2_1.pptx",
+      "sourceSha256": "c883745a73a3a75dbbac0aabf1f3b052543c8cbb12cb0302955d84532c957150",
+      "sourceHashes": {
+        "bestEffort": "c883745a73a3a75dbbac0aabf1f3b052543c8cbb12cb0302955d84532c957150",
+        "strict": "c883745a73a3a75dbbac0aabf1f3b052543c8cbb12cb0302955d84532c957150"
+      },
+      "importerOptions": {
+        "bestEffort": {},
+        "strict": {
+          "strict": true
+        }
+      },
+      "evidence": {
+        "available": true,
+        "sceneGraphMappedNodes": 318,
+        "sceneGraphUnmapped": 0,
+        "chartCoverageGapCount": 0,
+        "smartArtCoverageGapCount": 0,
+        "permanentPlaceholderCount": 0,
+        "blockers": []
+      },
+      "strictOutcome": {
+        "status": "passed",
+        "type": null,
+        "message": null
+      },
+      "errorDetails": [],
+      "blockers": [],
+      "passed": true
+    },
+    {
+      "deck": "Bai_2_2.pptx",
+      "sourceSha256": "e433a1780b7e7b0b69d98cb7e2d7e99b487c47736b89b1649bd311360352d044",
+      "sourceHashes": {
+        "bestEffort": "e433a1780b7e7b0b69d98cb7e2d7e99b487c47736b89b1649bd311360352d044",
+        "strict": "e433a1780b7e7b0b69d98cb7e2d7e99b487c47736b89b1649bd311360352d044"
+      },
+      "importerOptions": {
+        "bestEffort": {},
+        "strict": {
+          "strict": true
+        }
+      },
+      "evidence": {
+        "available": true,
+        "sceneGraphMappedNodes": 510,
+        "sceneGraphUnmapped": 0,
+        "chartCoverageGapCount": 0,
+        "smartArtCoverageGapCount": 0,
+        "permanentPlaceholderCount": 0,
+        "blockers": []
+      },
+      "strictOutcome": {
+        "status": "passed",
+        "type": null,
+        "message": null
+      },
+      "errorDetails": [],
+      "blockers": [],
+      "passed": true
+    },
+    {
+      "deck": "Bai_2_5.pptx",
+      "sourceSha256": "053c0a0cbf3fe47f3f86bfc284acdc47f8ecff87eee05fe7b4bb8e4d1730f8e8",
+      "sourceHashes": {
+        "bestEffort": "053c0a0cbf3fe47f3f86bfc284acdc47f8ecff87eee05fe7b4bb8e4d1730f8e8",
+        "strict": "053c0a0cbf3fe47f3f86bfc284acdc47f8ecff87eee05fe7b4bb8e4d1730f8e8"
+      },
+      "importerOptions": {
+        "bestEffort": {},
+        "strict": {
+          "strict": true
+        }
+      },
+      "evidence": {
+        "available": true,
+        "sceneGraphMappedNodes": 561,
+        "sceneGraphUnmapped": 0,
+        "chartCoverageGapCount": 0,
+        "smartArtCoverageGapCount": 0,
+        "permanentPlaceholderCount": 0,
+        "blockers": []
+      },
+      "strictOutcome": {
+        "status": "passed",
+        "type": null,
+        "message": null
+      },
+      "errorDetails": [],
+      "blockers": [],
+      "passed": true
+    },
+    {
+      "deck": "chart-bars-lines.pptx",
+      "sourceSha256": "fe9f5f6daf514a5d8c711a9a0247b75e05a7a45eae7f44435d83e0831682af29",
+      "sourceHashes": {
+        "bestEffort": "fe9f5f6daf514a5d8c711a9a0247b75e05a7a45eae7f44435d83e0831682af29",
+        "strict": "fe9f5f6daf514a5d8c711a9a0247b75e05a7a45eae7f44435d83e0831682af29"
+      },
+      "importerOptions": {
+        "bestEffort": {},
+        "strict": {
+          "strict": true
+        }
+      },
+      "evidence": {
+        "available": true,
+        "sceneGraphMappedNodes": 4,
+        "sceneGraphUnmapped": 0,
+        "chartCoverageGapCount": 0,
+        "smartArtCoverageGapCount": 0,
+        "permanentPlaceholderCount": 0,
+        "blockers": []
+      },
+      "strictOutcome": {
+        "status": "passed",
+        "type": null,
+        "message": null
+      },
+      "errorDetails": [],
+      "blockers": [],
+      "passed": true
+    },
+    {
+      "deck": "chart-pie-scatter.pptx",
+      "sourceSha256": "bcd9db44be9ba0f36102427a4832a47c416a605eeea9a564c7a26376be7d8046",
+      "sourceHashes": {
+        "bestEffort": "bcd9db44be9ba0f36102427a4832a47c416a605eeea9a564c7a26376be7d8046",
+        "strict": "bcd9db44be9ba0f36102427a4832a47c416a605eeea9a564c7a26376be7d8046"
+      },
+      "importerOptions": {
+        "bestEffort": {},
+        "strict": {
+          "strict": true
+        }
+      },
+      "evidence": {
+        "available": true,
+        "sceneGraphMappedNodes": 4,
+        "sceneGraphUnmapped": 0,
+        "chartCoverageGapCount": 0,
+        "smartArtCoverageGapCount": 0,
+        "permanentPlaceholderCount": 0,
+        "blockers": []
+      },
+      "strictOutcome": {
+        "status": "passed",
+        "type": null,
+        "message": null
+      },
+      "errorDetails": [],
+      "blockers": [],
+      "passed": true
+    },
+    {
+      "deck": "diagram-process-flow.pptx",
+      "sourceSha256": "4689835f096ee63c45c7fbfde89705d10538898ad69c5e6ff735496be30ef0e1",
+      "sourceHashes": {
+        "bestEffort": "4689835f096ee63c45c7fbfde89705d10538898ad69c5e6ff735496be30ef0e1",
+        "strict": "4689835f096ee63c45c7fbfde89705d10538898ad69c5e6ff735496be30ef0e1"
+      },
+      "importerOptions": {
+        "bestEffort": {},
+        "strict": {
+          "strict": true
+        }
+      },
+      "evidence": {
+        "available": true,
+        "sceneGraphMappedNodes": 18,
+        "sceneGraphUnmapped": 0,
+        "chartCoverageGapCount": 0,
+        "smartArtCoverageGapCount": 0,
+        "permanentPlaceholderCount": 0,
+        "blockers": []
+      },
+      "strictOutcome": {
+        "status": "passed",
+        "type": null,
+        "message": null
+      },
+      "errorDetails": [],
+      "blockers": [],
+      "passed": true
+    },
+    {
+      "deck": "math-rich-text.pptx",
+      "sourceSha256": "29bf9f07c6075a5db495fc471fd76a5bd88dddd5852a35b3f99a860c4a37ed39",
+      "sourceHashes": {
+        "bestEffort": "29bf9f07c6075a5db495fc471fd76a5bd88dddd5852a35b3f99a860c4a37ed39",
+        "strict": "29bf9f07c6075a5db495fc471fd76a5bd88dddd5852a35b3f99a860c4a37ed39"
+      },
+      "importerOptions": {
+        "bestEffort": {},
+        "strict": {
+          "strict": true
+        }
+      },
+      "evidence": {
+        "available": true,
+        "sceneGraphMappedNodes": 6,
+        "sceneGraphUnmapped": 0,
+        "chartCoverageGapCount": 0,
+        "smartArtCoverageGapCount": 0,
+        "permanentPlaceholderCount": 0,
+        "blockers": []
+      },
+      "strictOutcome": {
+        "status": "passed",
+        "type": null,
+        "message": null
+      },
+      "errorDetails": [],
+      "blockers": [],
+      "passed": true
+    },
+    {
+      "deck": "non-default-4x3-resolution.pptx",
+      "sourceSha256": "4b29747595b94191b82328fba01ad092f9d69727df461d130532fe565d6a916e",
+      "sourceHashes": {
+        "bestEffort": "4b29747595b94191b82328fba01ad092f9d69727df461d130532fe565d6a916e",
+        "strict": "4b29747595b94191b82328fba01ad092f9d69727df461d130532fe565d6a916e"
+      },
+      "importerOptions": {
+        "bestEffort": {},
+        "strict": {
+          "strict": true
+        }
+      },
+      "evidence": {
+        "available": true,
+        "sceneGraphMappedNodes": 4,
+        "sceneGraphUnmapped": 0,
+        "chartCoverageGapCount": 0,
+        "smartArtCoverageGapCount": 0,
+        "permanentPlaceholderCount": 0,
+        "blockers": []
+      },
+      "strictOutcome": {
+        "status": "passed",
+        "type": null,
+        "message": null
+      },
+      "errorDetails": [],
+      "blockers": [],
+      "passed": true
+    },
+    {
+      "deck": "STTre_Duc.pptx",
+      "sourceSha256": "a68431f7d42ad92c410b5db67d06ce548c581312ea3b57ae83767c9650afc2c6",
+      "sourceHashes": {
+        "bestEffort": "a68431f7d42ad92c410b5db67d06ce548c581312ea3b57ae83767c9650afc2c6",
+        "strict": "a68431f7d42ad92c410b5db67d06ce548c581312ea3b57ae83767c9650afc2c6"
+      },
+      "importerOptions": {
+        "bestEffort": {},
+        "strict": {
+          "strict": true
+        }
+      },
+      "evidence": {
+        "available": true,
+        "sceneGraphMappedNodes": 171,
+        "sceneGraphUnmapped": 0,
+        "chartCoverageGapCount": 0,
+        "smartArtCoverageGapCount": 0,
+        "permanentPlaceholderCount": 0,
+        "blockers": []
+      },
+      "strictOutcome": {
+        "status": "passed",
+        "type": null,
+        "message": null
+      },
+      "errorDetails": [],
+      "blockers": [],
+      "passed": true
+    },
+    {
+      "deck": "table-shapes-media.pptx",
+      "sourceSha256": "10d5a673e94cb9d27cfe44a740bd5fd971728021553682551e094f1bf379a1f2",
+      "sourceHashes": {
+        "bestEffort": "10d5a673e94cb9d27cfe44a740bd5fd971728021553682551e094f1bf379a1f2",
+        "strict": "10d5a673e94cb9d27cfe44a740bd5fd971728021553682551e094f1bf379a1f2"
+      },
+      "importerOptions": {
+        "bestEffort": {},
+        "strict": {
+          "strict": true
+        }
+      },
+      "evidence": {
+        "available": true,
+        "sceneGraphMappedNodes": 6,
+        "sceneGraphUnmapped": 0,
+        "chartCoverageGapCount": 0,
+        "smartArtCoverageGapCount": 0,
+        "permanentPlaceholderCount": 0,
+        "blockers": []
+      },
+      "strictOutcome": {
+        "status": "passed",
+        "type": null,
+        "message": null
+      },
+      "errorDetails": [],
+      "blockers": [],
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "errorDetails": [],
+  "exitCode": 0,
+  "qualificationEnvironment": {
+    "emfConversion": {
+      "enabled": true,
+      "binary": "C:\\Program Files\\ImageMagick-7.1.2-Q16-HDRI\\magick.exe",
+      "trustedRoot": "C:\\Program Files\\ImageMagick-7.1.2-Q16-HDRI",
+      "sha256": "1e51e64fe5b6610165fff0c9d1299e167e875aaa04214111029b4b376ee1e74d"
+    }
+  }
+}

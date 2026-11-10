@@ -2,6 +2,8 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { pushHistory } from '../../utils/history-stack'
 import { reconcileSelectionAfterHistory } from '../../utils/history-selection-reconciler'
 import { resolveHistoryAuthoringSlide } from '../../utils/history-authoring-slide'
+import semantic from 'revealjs-shared/src/pptx-semantic-presentation.js'
+import { semanticInstances, semanticInstance, semanticDefinition, replaceSemanticRecords } from 'revealjs-shared/src/pptx-semantic-records.js'
 
 const clone = (value) => JSON.parse(JSON.stringify(value))
 
@@ -39,7 +41,7 @@ export function useEditorHistoryController({
 
   const commitPendingSnapshot = useCallback(() => {
     if (pendingSnapshotRef.current === null) return
-    historyRef.current = pushHistory(historyRef.current, pendingSnapshotRef.current)
+    historyRef.current = pushHistory(historyRef.current, clone(pendingSnapshotRef.current))
     pendingSnapshotRef.current = null
   }, [])
 
@@ -70,7 +72,7 @@ export function useEditorHistoryController({
       applyingUndoRef.current = false
       return
     }
-    pendingSnapshotRef.current = clone(presentation)
+    pendingSnapshotRef.current = presentation
     redoStackRef.current = []
     setHasChanges(true)
     publishHistoryState()
@@ -126,11 +128,51 @@ export function useEditorHistoryController({
     ]
   )
 
-  const restore = useCallback(
+  const prepareRestore = useCallback(
     (state) => {
-      setPresentation(state)
-      setCurrentSlideIndex((index) => Math.min(index, state.slides.length - 1))
-      reconcile(state)
+      let restored = state
+      if (state.pptxSemantic && presentation?.pptxSemantic) {
+        let patchInstances = null
+        let patchDefinitions = null
+        // A saved source occurrence cannot disappear from the baseline.
+        // Undo removes its authored presence, not its retained identity.
+        for (const [id, instance] of semanticInstances(presentation.pptxSemantic)) {
+          if (semanticInstance(state.pptxSemantic, id)) continue
+          patchDefinitions ??= {}
+          if (!semanticDefinition(state.pptxSemantic, instance.definitionId) && !patchDefinitions[instance.definitionId]) {
+            patchDefinitions[instance.definitionId] = semanticDefinition(presentation.pptxSemantic, instance.definitionId)
+          }
+          patchInstances ??= {}
+          patchInstances[id] = {
+            ...instance,
+            lineage: {
+              ...instance.lineage,
+              tombstone: true,
+              deleted: true,
+              ...(instance.lineage?.paintOnly ? { paintOnly: false } : {}),
+            },
+          }
+        }
+        if (patchInstances || patchDefinitions) {
+          restored = {
+            ...state,
+            pptxSemantic: replaceSemanticRecords(state.pptxSemantic, {
+              definitions: patchDefinitions || undefined,
+              instances: patchInstances || undefined,
+            }),
+          }
+        }
+      }
+      return semantic.normalizeSemanticPresentation(restored)
+    },
+    [presentation]
+  )
+
+  const restore = useCallback(
+    (canonical) => {
+      reconcile(canonical)
+      setPresentation(canonical)
+      setCurrentSlideIndex((index) => Math.min(index, canonical.slides.length - 1))
     },
     [reconcile, setCurrentSlideIndex, setPresentation]
   )
@@ -138,6 +180,7 @@ export function useEditorHistoryController({
   const handleUndo = useCallback(() => {
     commitPendingSnapshot()
     if (historyRef.current.length < 2) return
+    const canonical = prepareRestore(historyRef.current[historyRef.current.length - 2])
     applyingUndoRef.current = true
     redoStackRef.current = pushHistory(
       redoStackRef.current,
@@ -146,19 +189,20 @@ export function useEditorHistoryController({
     historyRef.current = historyRef.current.slice(0, -1)
     setHasChanges(historyRef.current.length > 1)
     publishHistoryState()
-    restore(historyRef.current[historyRef.current.length - 1])
-  }, [commitPendingSnapshot, publishHistoryState, restore])
+    restore(canonical)
+  }, [commitPendingSnapshot, prepareRestore, publishHistoryState, restore])
 
   const handleRedo = useCallback(() => {
     if (!redoStackRef.current.length) return
+    const canonical = prepareRestore(redoStackRef.current[redoStackRef.current.length - 1])
     applyingUndoRef.current = true
     const state = redoStackRef.current[redoStackRef.current.length - 1]
     redoStackRef.current = redoStackRef.current.slice(0, -1)
     historyRef.current = pushHistory(historyRef.current, state)
     setHasChanges(historyRef.current.length > 1)
     publishHistoryState()
-    restore(state)
-  }, [publishHistoryState, restore])
+    restore(canonical)
+  }, [prepareRestore, publishHistoryState, restore])
 
   return {
     ...availability,

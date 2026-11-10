@@ -318,11 +318,10 @@ describe('validated edited export pending materialization', () => {
     try {
       const firstHead = await destination.importPresentationPackage(bundle, 'portable-copy')
       const request = { ...sourceRequest, presentationId: 'portable-copy', expectedGeneration: firstHead.generation }
-      expect(firstHead.generation).toBe(1)
       const firstReplay = replayRequest(destination.getState(), request)
-      expect(firstReplay).toMatchObject({ expectedGeneration: 1, pendingEdit: false })
+      expect(firstReplay).toMatchObject({ expectedGeneration: firstHead.generation, pendingEdit: false })
       expect(await executeValidatedEditedExport(request, { store: destination }))
-        .toMatchObject({ ok: true, idempotent: true, generation: 1, bytes: result.bytes })
+        .toMatchObject({ ok: true, idempotent: true, generation: firstHead.generation, bytes: result.bytes })
       const history = { ownerType: 'history', ownerId: 'portable-copy:before-replace' }
       const template = { ownerType: 'template', ownerId: 'portable-template-before-replace' }
       await destination.retainHead(history, 'portable-copy')
@@ -333,9 +332,9 @@ describe('validated edited export pending materialization', () => {
       const secondHead = await destination.importPresentationPackage(bundle, 'portable-copy', {
         replace: true, expectedHead: firstHead,
       })
+      expect(secondHead.generation).toBeGreaterThan(firstHead.generation)
       const state = destination.getState()
       const currentRequest = { ...request, expectedGeneration: secondHead.generation }
-      expect(secondHead.generation).toBe(2)
       expect(secondHead.packageRevisionId).toBe(firstHead.packageRevisionId)
       expect(state.mutationResults).toContainEqual(firstReceipt)
       expect(state.owners.filter((owner) => owner.ownerType !== 'presentation')).toEqual(retainedOwners)
@@ -344,7 +343,7 @@ describe('validated edited export pending materialization', () => {
       expect(current).toMatchObject({ ok: true, pendingEdit: false, head: secondHead })
       if (pathUnderTest === 'request selection') {
         expect(replayRequest(state, currentRequest)).toMatchObject({
-          expectedGeneration: 2, after: current.after, baseRevisionId: committed.revision.id, pendingEdit: false,
+          expectedGeneration: secondHead.generation, after: current.after, baseRevisionId: committed.revision.id, pendingEdit: false,
         })
       } else {
         // Exercise the real execution boundary independently of replayRequest:
@@ -357,10 +356,10 @@ describe('validated edited export pending materialization', () => {
         })
         const reboundRequest = { ...firstReplay, expectedGeneration: secondHead.generation, after: current.after }
         expect(await service.execute(reboundRequest)).toMatchObject({
-          ok: true, idempotent: true, generation: 2, revisionId: secondHead.packageRevisionId, bytes: result.bytes,
+          ok: true, idempotent: true, generation: secondHead.generation, revisionId: secondHead.packageRevisionId, bytes: result.bytes,
         })
         expect(await executeValidatedEditedExport(currentRequest, { store: destination })).toMatchObject({
-          ok: true, idempotent: true, generation: 2, bytes: result.bytes,
+          ok: true, idempotent: true, generation: secondHead.generation, bytes: result.bytes,
         })
         expect(await service.execute({ ...reboundRequest, after: snapshot('<p>Different identity</p>') }))
           .toMatchObject({ ok: false, status: 409, reasonCode: 'IDEMPOTENCY_KEY_CONFLICT' })

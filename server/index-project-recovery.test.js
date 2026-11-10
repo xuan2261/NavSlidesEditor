@@ -205,12 +205,32 @@ describe('P09 real production startup after abrupt process death', () => {
   it('P09-13 unreadable ledger starts live but remains degraded without replacing its intent', async () => {
     const resource = await createRoot()
     const ledger = path.join(resource.root, 'data', 'project-import-sessions.json')
+    const intent = path.join(ledger, 'retained-intent')
+    const retained = Buffer.from('preserve-exactly')
     await fs.mkdir(ledger, { recursive: true })
-    await fs.writeFile(path.join(ledger, 'retained-intent'), 'preserve-exactly')
-    const { url } = await reopen(resource)
-    expect((await fetch(`${url}/health/live`)).status).toBe(200)
-    expect((await fetch(`${url}/health/ready`)).status).toBe(503)
-    expect((await fetch(`${url}/api/pptx/import`, { method: 'POST' })).status).toBe(503)
-    expect(await fs.readFile(path.join(ledger, 'retained-intent'), 'utf8')).toBe('preserve-exactly')
+    await fs.writeFile(intent, retained)
+    const originalMode = (await fs.stat(ledger)).mode & 0o777
+    try {
+      const { url } = await reopen(resource)
+      expect((await fetch(`${url}/health/live`)).status).toBe(200)
+      const ready = await fetch(`${url}/health/ready`)
+      expect(ready.status).toBe(503)
+      expect((await ready.json()).reasons).toContain('DURABLE_RECOVERY_REQUIRED')
+      expect((await fetch(`${url}/api/pptx/import`, { method: 'POST' })).status).toBe(503)
+      expect((await fs.stat(ledger)).isDirectory()).toBe(true)
+      if (process.platform !== 'win32') {
+        // Startup applies secret-file mode 0600 to this deliberately invalid ledger directory.
+        expect((await fs.stat(ledger)).mode & 0o777).toBe(0o600)
+        if (typeof process.getuid === 'function' && process.getuid() !== 0) {
+          await expect(fs.readFile(intent)).rejects.toMatchObject({ code: 'EACCES' })
+        }
+      }
+    } finally {
+      // Restore traversal only after unreadability/admission assertions and child shutdown,
+      // including assertion failures, so byte inspection and afterEach cleanup remain possible.
+      try { for (const child of resource.children) await child.kill() }
+      finally { if (process.platform !== 'win32') await fs.chmod(ledger, originalMode) }
+    }
+    expect(await fs.readFile(intent)).toEqual(retained)
   }, 25000)
 })

@@ -4,6 +4,8 @@ import { hasBlockedGroupMutation } from '../../utils/active-slide-selection'
 import { computeClampedBatchDelta } from '../../components/canvas/use-canvas-pointer-interaction'
 import { GAME_SHORTCUT_CONFIG } from '../../utils/game-shortcut-config'
 import { useElementCycle } from '../use-element-cycle-through-slide-elements-hook'
+import { EMU_TO_CSS } from '../../utils/pptx-semantic-geometry-bridge'
+import { semanticInstance } from 'revealjs-shared/src/pptx-semantic-records.js'
 
 export function useEditorKeyboardController(c) {
   const { cycleNext, cyclePrev } = useElementCycle(
@@ -47,6 +49,38 @@ export function useEditorKeyboardController(c) {
         if (dx === 0 && dy === 0) return
         e.preventDefault()
         if (hasBlockedGroupMutation(slide, ids)) return c.notifyBlockedAction('group-locked')
+        const semantic = c.presentation?.pptxSemantic
+        if (semantic) {
+          const selected = ids
+            .map((id) => {
+              const element = slide.elements?.find((item) => item.id === id)
+              const instance = semanticInstance(semantic, element?.pptxInstanceId || id)
+              return { id, element, instance }
+            })
+            .filter(
+              ({ element, instance }) =>
+                instance?.slideId === slide.id &&
+                !instance.lineage?.tombstone &&
+                !instance.lineage?.paintOnly &&
+                !element?.locked
+            )
+          const roots = selected.filter(({ instance }) => {
+            let parent = instance.parentInstanceId
+            while (parent !== null && parent !== undefined) {
+              if (selected.some((item) => item.instance.id === parent)) return false
+              parent = semanticInstance(semantic, parent)?.parentInstanceId
+            }
+            return true
+          })
+          if (roots.length)
+            c.updateElements(
+              roots.map(({ id }) => ({
+                id,
+                semanticWorldOperation: [1, 0, 0, 1, dx / EMU_TO_CSS, dy / EMU_TO_CSS],
+              }))
+            )
+          return
+        }
         const moving = (slide?.elements || [])
           .filter((el) => ids.includes(el.id) && !el.locked)
           .map((el) => ({
@@ -91,9 +125,10 @@ export function useEditorKeyboardController(c) {
       const shortcut = getGameShortcut(c, 'timer')
       const el = c.activeGameElement
       if (!shortcut || !el) return
-      const payload = shortcut.action === 'startTimer'
-        ? { duration: shortcut.duration ?? el.timerDuration ?? 30 }
-        : {}
+      const payload =
+        shortcut.action === 'startTimer'
+          ? { duration: shortcut.duration ?? el.timerDuration ?? 30 }
+          : {}
       c.emitGameShortcutAction(shortcut.action, payload)
     },
     onGameNext: () => emitConfiguredGameShortcut(c, 'nextPhase'),

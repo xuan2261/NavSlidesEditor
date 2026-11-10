@@ -82,9 +82,8 @@ export default function GameProperties({ element, onUpdate, onDelete, variables 
               event.preventDefault()
               const next = tabs[(tabs.indexOf(tab) + 1) % tabs.length]
               setActiveTab(next)
-              event.currentTarget.parentElement
-                .querySelectorAll('[role="tab"]')
-                [tabs.indexOf(next)]?.focus()
+              const nextTab = event.currentTarget.parentElement.querySelectorAll('[role="tab"]')[tabs.indexOf(next)]
+              nextTab?.focus()
             }}
             className={`flex-1 px-2 py-1.5 text-[11px] ${activeTab === tab ? 'text-accent border-b-2 border-accent' : 'text-text-muted'}`}
           >

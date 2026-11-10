@@ -70,4 +70,34 @@ describe('summarizePptxImportWarnings', () => {
     expect(summary).toContain('grouped-complex (5)')
     expect(summary).toContain('omitted 0')
   })
+
+  it('classifies emf-converted-to-png under approximated warning group with visible raster preview limitation note', () => {
+    const summary = summarizePptxImportWarnings({
+      warnings: [{ type: 'emf-converted-to-png' }],
+      stats: { slideCount: 1, imageCount: 1 },
+    })
+    expect(summary).toContain('Warning groups: approximated 1, placeholder 0, failed 0, other 0.')
+    expect(summary).toContain('emf-converted-to-png (1)')
+    expect(summary).toContain('raster PNG preview')
+    expect(summary).toContain('source vector primitives are not editable')
+    expect(summary).not.toContain('native vector editable')
+  })
+
+  it('discloses raster preview limitations from durable reportSummary alone without diagnostics', () => {
+    const summary = summarizePptxImportWarnings({
+      presentationId: 'pres-2',
+      reportSummary: {
+        schemaVersion: 1,
+        warningCount: 1,
+        byType: { 'emf-converted-to-png': 1 },
+        unsupportedFeatureCount: 0,
+        omittedCount: 0,
+      },
+    })
+    expect(summary).toContain('warnings 1')
+    expect(summary).toContain('emf-converted-to-png (1)')
+    expect(summary).toContain('raster PNG preview')
+    expect(summary).toContain('source vector primitives are not editable')
+    expect(summary).not.toContain('native vector editable')
+  })
 })

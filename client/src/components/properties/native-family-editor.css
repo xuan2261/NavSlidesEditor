@@ -1,0 +1,95 @@
+.native-family-editor {
+  @apply flex min-w-0 max-w-full flex-col gap-2 text-sm text-text-primary;
+  overflow-wrap: anywhere;
+}
+
+.native-family-editor,
+.native-family-editor * {
+  box-sizing: border-box;
+}
+
+.native-family-editor fieldset {
+  @apply m-0 flex w-full min-w-0 flex-col gap-2 border-0 p-0;
+}
+
+.native-family-editor legend {
+  @apply mb-2 text-sm font-medium;
+}
+
+.native-family-editor label {
+  @apply flex min-w-0 flex-col gap-1 text-sm text-text-secondary;
+}
+
+.native-family-editor input,
+.native-family-editor select,
+.native-family-editor textarea {
+  @apply w-full min-w-0 max-w-full min-h-9 rounded-md border border-solid border-border bg-card px-2 py-2 text-sm text-text-primary transition-colors focus:border-focus focus:outline-none focus:ring-2 focus:ring-focus disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.native-family-editor textarea {
+  @apply resize-y;
+}
+
+.native-family-editor button {
+  @apply min-h-8 min-w-0 max-w-full whitespace-normal rounded-md border border-solid border-border bg-card px-2 py-2 text-sm font-medium text-text-primary transition-colors hover:border-border-strong hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-secondary disabled:pointer-events-none disabled:opacity-50;
+  overflow-wrap: anywhere;
+}
+
+.native-family-editor .native-family-actions {
+  @apply flex min-w-0 flex-wrap gap-2;
+}
+
+.native-family-actions > button {
+  flex: 1 1 8rem;
+}
+
+.native-family-editor ul {
+  @apply m-0 min-w-0 list-none space-y-2 p-0;
+}
+
+.native-family-editor li {
+  @apply min-w-0;
+}
+
+.native-family-editor li > button {
+  @apply mt-1 block;
+}
+
+.native-family-editor .native-family-identity {
+  @apply text-xs text-text-secondary;
+}
+
+.native-family-editor [role='alert'] {
+  @apply text-sm text-danger;
+}
+
+.native-family-editor .native-equation-preview {
+  @apply min-w-0 max-w-full rounded-md border border-solid border-border bg-white p-2;
+}
+
+.native-family-editor summary {
+  @apply mb-2 cursor-pointer rounded text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus;
+}
+
+.native-family-editor .native-equation-tree ul {
+  @apply space-y-1;
+}
+
+.native-family-editor .native-equation-tree button {
+  @apply w-full text-left font-normal;
+  padding-inline-start: calc(0.5rem + var(--native-tree-depth) * 0.5rem);
+}
+
+.native-family-editor .native-equation-tree button[aria-pressed='true'] {
+  @apply border-focus bg-active font-medium;
+}
+
+@media (pointer: coarse) {
+  .native-family-editor button,
+  .native-family-editor input,
+  .native-family-editor select,
+  .native-family-editor textarea {
+    min-height: 44px;
+    font-size: 17px;
+  }
+}

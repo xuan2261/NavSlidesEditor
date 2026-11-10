@@ -6,6 +6,10 @@ import MixedValueNotice from './mixed-value-notice'
 import ShapeKindControl from './shape-kind-control'
 import ShapeRichLabelEditor from './shape-rich-label-editor'
 import FocusedAuthoringTextInput from './focused-authoring-text-input'
+import GeometryProperties from './geometry-properties'
+import geometryRecords from 'revealjs-shared/src/pptx-geometry-style-records.js'
+import { resolveSemanticText } from '../../utils/pptx-semantic-text-bridge'
+import { semanticInstance } from 'revealjs-shared/src/pptx-semantic-records.js'
 /**
  * Shape and Line specific properties.
  */
@@ -35,10 +39,22 @@ export default function ShapeProperties({
   elements,
   selectedElementIds,
   slideLocked = false,
+  pptxSemantic,
 }) {
   const isLine = element.type === 'line'
+  const canonicalLabel = resolveSemanticText({ pptxSemantic }, element)
   const mixedId = useId()
   const selectionIds = selectedElementIds || [element.id]
+  const canonicalGeometrySelected = (elements || [element]).some((candidate) => {
+    const instance = semanticInstance(pptxSemantic, candidate.pptxInstanceId)
+    return (
+      selectionIds.includes(candidate.id) &&
+      instance &&
+      [1, 2].includes(
+        geometryRecords.geometryProvider(pptxSemantic, instance).geometry?.schemaVersion
+      )
+    )
+  })
   const richLabelSelected = (elements || [element]).some(
     (candidate) =>
       selectionIds.includes(candidate.id) && candidate.type === 'shape' && candidate.textHtml
@@ -61,12 +77,21 @@ export default function ShapeProperties({
 
   return (
     <>
-      <ShapeKindControl
+      <GeometryProperties
         element={element}
-        elements={elements}
-        selectedElementIds={selectedElementIds}
+        pptxSemantic={pptxSemantic}
         onUpdate={onUpdate}
+        slideLocked={slideLocked}
+        selectedElementIds={selectedElementIds}
       />
+      {!canonicalGeometrySelected && (
+        <ShapeKindControl
+          element={element}
+          elements={elements}
+          selectedElementIds={selectedElementIds}
+          onUpdate={onUpdate}
+        />
+      )}
       <div className={`grid ${isLine ? 'grid-cols-1' : 'grid-cols-2'} gap-2 mb-2.5`}>
         {!isLine && (
           <div className="flex flex-col gap-1">
@@ -271,37 +296,40 @@ export default function ShapeProperties({
         />
       </div>
 
-      {!isLine && (element.shape === 'rect' || element.shape === 'rounded-rect') && (
-        <div className="mb-2.5">
-          <div className="text-[11px] text-text-muted mb-1">
-            Corner Radius: {element.borderRadius || 0}px
+      {!canonicalGeometrySelected &&
+        !isLine &&
+        (element.shape === 'rect' || element.shape === 'rounded-rect') && (
+          <div className="mb-2.5">
+            <div className="text-[11px] text-text-muted mb-1">
+              Corner Radius: {element.borderRadius || 0}px
+            </div>
+            <input
+              data-testid="prop-shape-border-radius"
+              aria-label="Shape corner radius"
+              type="range"
+              className="w-full accent-accent"
+              min="0"
+              max="100"
+              value={element.borderRadius || 0}
+              onChange={(e) => {
+                const value = clampNumber(e.target.value, 0, 100, null)
+                if (value === null) return
+                onUpdate({ borderRadius: value })
+              }}
+            />
           </div>
-          <input
-            data-testid="prop-shape-border-radius"
-            aria-label="Shape corner radius"
-            type="range"
-            className="w-full accent-accent"
-            min="0"
-            max="100"
-            value={element.borderRadius || 0}
-            onChange={(e) => {
-              const value = clampNumber(e.target.value, 0, 100, null)
-              if (value === null) return
-              onUpdate({ borderRadius: value })
-            }}
-          />
-        </div>
-      )}
+        )}
 
-      {!isLine && element.textHtml && (
+      {!isLine && (element.textHtml || canonicalLabel) && (
         <ShapeRichLabelEditor
           element={element}
           selectedElementIds={selectedElementIds}
           disabled={slideLocked}
+          pptxSemantic={pptxSemantic}
           onUpdate={onUpdate}
         />
       )}
-      {!isLine && !element.textHtml && (
+      {!isLine && !element.textHtml && !canonicalLabel && (
         <div className="flex flex-col gap-1 mb-2.5">
           <div className="text-[11px] text-text-muted">Label Text</div>
           <Input
@@ -320,7 +348,7 @@ export default function ShapeProperties({
         </div>
       )}
 
-      {!isLine && element.text && (
+      {!isLine && element.text && !canonicalLabel && (
         <div className="grid grid-cols-2 gap-2 mb-2.5">
           <div className="flex flex-col gap-1">
             <div className="text-[11px] text-text-muted">Text Size</div>

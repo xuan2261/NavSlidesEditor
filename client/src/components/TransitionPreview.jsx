@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { X, RotateCcw } from 'lucide-react'
 import { Button } from '../components/ui'
 import { generateOfflineHTML } from '../utils/offlineExport'
+import { prepareSemanticOutputResources } from '../utils/generateHTML'
 import { resolveEffectiveTransition } from 'revealjs-shared'
 import { useRevealPreviewFrame } from '../hooks/use-reveal-preview-frame'
 import { useTransitionPreviewDialog } from '../hooks/use-transition-preview-dialog'
@@ -21,8 +22,7 @@ export default function TransitionPreview({
   onClose,
 }) {
   const [key, setKey] = useState(0)
-  const [previewHtml, setPreviewHtml] = useState('')
-  const [previewError, setPreviewError] = useState(null)
+  const [prepared, setPrepared] = useState(null)
   const dialogRef = useRef(null)
   const closeButtonRef = useRef(null)
   const previewSlides = useMemo(
@@ -50,35 +50,41 @@ export default function TransitionPreview({
   const selectedTransition = transitionOverride || effective.transition
   const previewSource = useMemo(() => {
     if (!slide1 || !slide2) return null
-    return buildTransitionPreviewHtml({
+    return {
       presentation,
       currentSlide: slide1,
       nextSlide: slide2,
       transitionOverride: selectedTransition,
-    })
+    }
   }, [presentation, slide1, slide2, selectedTransition])
-  const resolution = previewSource?.resolution || { width: 960, height: 540 }
-  const { iframeRef } = useRevealPreviewFrame(previewHtml, null, key)
+  const matching = prepared?.source === previewSource
+  const previewHtml = matching ? prepared.html : ''
+  const previewError = matching ? prepared.error : null
+  const resolution = presentation?.resolution || { width: 960, height: 540 }
+  const { iframeRef, error: frameError, status } = useRevealPreviewFrame(previewHtml, null, key)
 
   useEffect(() => {
     if (!previewSource) return undefined
-    let active = true
-    generateOfflineHTML(previewSource.html, { generatedDocument: true, strictRequiredAssets: true })
+    const controller = new AbortController()
+    prepareSemanticOutputResources(presentation, { signal: controller.signal })
+      .then((semanticOutputResources) => {
+        if (controller.signal.aborted) return null
+        const { html } = buildTransitionPreviewHtml({ ...previewSource, semanticOutputResources })
+        return generateOfflineHTML(html, { generatedDocument: true, strictRequiredAssets: true })
+      })
       .then((offlineHtml) => {
-        if (active) {
-          setPreviewError(null)
-          setPreviewHtml(offlineHtml)
+        if (!controller.signal.aborted && offlineHtml) {
+          setPrepared({ source: previewSource, html: offlineHtml, error: null })
         }
       })
-      .catch(() => {
-        if (!active) return
-        setPreviewError('Offline assets could not be fully inlined; using local assets.')
-        setPreviewHtml(previewSource.html)
+      .catch((cause) => {
+        if (controller.signal.aborted) return
+        setPrepared({ source: previewSource, html: '', error: cause.message })
       })
     return () => {
-      active = false
+      controller.abort()
     }
-  }, [previewSource])
+  }, [previewSource, presentation])
 
   useTransitionPreviewDialog({ dialogRef, closeButtonRef, onClose })
 
@@ -197,13 +203,13 @@ export default function TransitionPreview({
               transformOrigin: 'center center',
             }}
             title="Transition Preview"
-            sandbox="allow-scripts"
-            aria-busy={!previewHtml}
+            sandbox={presentation?.pptxSemantic ? 'allow-scripts allow-same-origin' : 'allow-scripts'}
+            aria-busy={status !== 'ready'}
           />
         </div>
-        {previewError && (
+        {(previewError || frameError) && (
           <p className="px-4 pb-3 text-[11px] text-text-muted" role="status">
-            {previewError}
+            {previewError || frameError}
           </p>
         )}
       </div>

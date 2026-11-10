@@ -6,7 +6,7 @@
     "worktreeState": "dirty-audit-fixes-locally-verified",
     "workspaces": ["server", "client", "shared", "website"]
   },
-  "status": "nine-audit-findings-repaired; final-qualification-blocked",
+  "status": "gate06-and-gate10-closed-20261107; final-release-qualification-blocked",
   "scope": "Current status summary, not a release receipt. Historical artifacts certify only their recorded inputs; scoped repair evidence does not close the full plan.",
   "phases": {
     "01_baseline": "completed-planning-baseline; not-current-source-certification",
@@ -14,11 +14,11 @@
     "03_settings_ui_draft": "audit-fixes-source-matched-green-and-browser-smoke; joint-posix-gate-open",
     "04_ci_summary": "local-contracts; hosted-github-dispatch-blocked",
     "05_scanner_evidence": "reduced-scan-observed; candidate-image-scan-blocked",
-    "06_history_autosave": "historical-scoped-evidence; current-full-qualification-open",
-    "07_pptx_publication": "audited-authority-fixes-source-matched-green-and-native-smoke; phase-final-binding-open",
-    "08_pptx_concurrency": "audited-restoration-fixes-source-matched-green-and-native-smoke; phase-final-binding-open",
-    "09_pptx_recovery": "audited-expiry-fix-green-with-deadline-process-death-abort-neighbors; physical-backup-gates-open",
-    "10_pptx_portable": "audited-sidecar-and-noop-replay-fixes-green-and-native-smoke; full-phase-qualification-open",
+    "06_history_autosave": "closed-20261107; 87-source-bound-focused-and-seven-traced-native-passed; not-release-qualification",
+    "07_pptx_publication": "closed-per-ledger-20261104; scoped-phase-evidence-not-final-release-qualification",
+    "08_pptx_concurrency": "closed-per-ledger-20261105; scoped-phase-evidence-not-final-release-qualification",
+    "09_pptx_recovery": "closed-per-ledger-20261106; process-termination-not-power-loss-qualification",
+    "10_pptx_portable": "closed-20261107; 214-bound-tests-seven-browser-journeys-five-process-boundaries; not-release-qualification",
     "11_container_runtime": "physical-target-qualification-blocked",
     "12_windows_office_qualification": "string-runtime-subject-consumers-green; synthetic-cli-smoke-only; physical-office-signing-blocked",
     "13_navigator_baseline": "historical-measurement-completed",
@@ -27,6 +27,20 @@
     "16_release_closeout": "in-progress; current-input-performance-and-external-qualification-open"
   },
   "verification": {
+    "finalGateReconciliation20261107": {
+      "authorization": "User authorized conditional Gate06/10 closure and release-readiness extension; no publication authorized",
+      "gate06": "closed",
+      "gate10": "closed",
+      "focusedReports": ["reports/p06-bound-20261107.json", "reports/p10-bound-20261107.json"],
+      "focusedIdentityReports": ["reports/p06-bound-20261107-identity.json", "reports/p10-bound-20261107-identity.json"],
+      "nativeHistoryReport": "reports/p06-final-exit-20261107.json",
+      "nativeHistoryTraces": "reports/p06-final-exit-artifacts-20261107/",
+      "portableBrowserReport": "reports/p10-e2e-portable-20261106-run1.json",
+      "portableProcessReport": "reports/p10-process-kill-20261106-run1.json",
+      "recordedFileHashesMatchWorkspaceAtReconciliation": true,
+      "releaseDecision": "blocked; exact final candidate integration, performance and external target/hosted qualification remain required",
+      "limits": "Distinct execution manifest scopes; no invented common digest, clean candidate SHA, Office/fidelity pass, power-loss proof or release acceptance. Raw receipts unchanged."
+    },
     "auditFixes": {
       "status": "passed-scoped-local-verification",
       "findingsRepaired": 9,

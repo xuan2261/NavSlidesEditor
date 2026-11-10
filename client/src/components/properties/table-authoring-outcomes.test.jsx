@@ -109,7 +109,6 @@ describe('table authored consumer outcomes', () => {
       const cells = screen.getByTestId(target).querySelectorAll('td')
       expect(cells[0].style.fontWeight).toBe('400')
       expect(cells[1].style.fontWeight).toBe('600')
-      expect(cells[0].style.padding).toBe('0px')
       expect(cells[0].style.borderWidth).toBe('0px')
       expect(cells[3].style.background).toBe('rgb(18, 52, 86)')
     }
@@ -143,13 +142,31 @@ describe('table authored consumer outcomes', () => {
       const node = screen.getByTestId(target)
       const columns = node.querySelectorAll('col')
       expect(parseFloat(columns[0].style.width) / parseFloat(columns[1].style.width)).toBeCloseTo(2)
-      const extent = target === 'canvas-table' ? 100 : saved().height
-      const heights = [...node.querySelectorAll('tr')].map((row) => {
-        expect(row.style.height.endsWith(target === 'canvas-table' ? '%' : 'px')).toBe(true)
-        return parseFloat(row.style.height)
-      })
+      const extent = saved().height - 1 // Half of each outer 1px collapsed border belongs to the grid.
+      const heights = [...node.querySelectorAll('tr')].map((row) => parseFloat(row.style.height))
       for (const height of heights) expect(height / extent).toBeCloseTo(1 / 3)
       expect(heights.reduce((total, height) => total + height, 0)).toBeCloseTo(extent)
+    }
+  })
+
+  it('edits source per-cell insets without losing other sides through resize, merge, or reopen', () => {
+    render(<Authoring initial={{ ...table, cellStyles: { ...table.cellStyles,
+      insets: [[{ top: 3.6, right: 3.6, bottom: 3.6, left: 3.6 }]],
+    } }} />)
+    expect(screen.getByLabelText('Selected cell row 1 column 1 left inset').value).toBe('3.6')
+    change('Selected cell row 1 column 1 left inset', '0')
+    fireEvent.click(screen.getByRole('button', { name: 'Merge selected cell right' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Add table row' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Reopen table' }))
+    expect(saved().cellStyles.insets[0][0]).toEqual({ top: 3.6, right: 3.6, bottom: 3.6, left: 0 })
+    expect(screen.getByLabelText('Selected cell row 1 column 1 left inset').value).toBe('0')
+    for (const target of ['canvas-table', 'export-table']) {
+      const cell = screen.getByTestId(target).querySelector('td')
+      expect(cell.colSpan).toBe(2)
+      expect(cell.style.paddingLeft).toBe('0px')
+      expect(cell.style.paddingTop).toBe('3.6px')
+      expect(cell.style.paddingRight).toBe('3.6px')
+      expect(cell.style.paddingBottom).toBe('3.6px')
     }
   })
 })

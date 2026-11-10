@@ -5,6 +5,7 @@ const fs = require('fs').promises
 const crypto = require('crypto')
 const uuidv4 = () => require('node:crypto').randomUUID()
 const { UPLOADS_DIR, withUploadHashes } = require('../services/storage')
+const { inspectPictureUpload } = require('../services/pptx-import/picture-replacement-validation')
 
 async function computeFileHash(filePath) {
   const buffer = await fs.readFile(filePath)
@@ -64,6 +65,16 @@ const router = express.Router()
 router.post('/', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
 
+  const isPictureReplacement = req.body.purpose === 'picture-replacement'
+  let pictureReceipt
+  if (isPictureReplacement) {
+    try {
+      pictureReceipt = await inspectPictureUpload(req.file.path, req.body.presentationId, req.file.filename)
+    } catch {
+      await fs.unlink(req.file.path).catch(() => {})
+      return res.status(400).json({ error: 'Invalid picture replacement upload', code: 'invalid-picture-upload' })
+    }
+  }
   const isCaption = path.extname(req.file.path).toLowerCase() === '.vtt'
   if (isCaption) {
     try {
@@ -116,33 +127,52 @@ router.post('/', upload.single('file'), async (req, res) => {
   // SHA-256 deduplication
   const presentationId = req.body.presentationId || 'global'
   const fileHash = await computeFileHash(req.file.path)
-  const result = await withUploadHashes(async (hashes) => {
-    const presHashes = hashes[presentationId] || {}
+  let result
+  try {
+    result = await withUploadHashes(async (hashes) => {
+      const presHashes = hashes[presentationId] || {}
 
-    if (presHashes[fileHash]) {
-      const existingFilename = presHashes[fileHash].filename
-      const existingPath = path.join(UPLOADS_DIR, existingFilename)
-      try {
-        await fs.access(existingPath)
-        await fs.unlink(req.file.path).catch(() => {})
-        return { url: `/uploads/${existingFilename}`, deduped: true }
-      } catch {
-        // Existing file was deleted — fall through to store new file
-        delete presHashes[fileHash]
+      if (presHashes[fileHash]) {
+        const existingFilename = presHashes[fileHash].filename
+        const existingPath = path.join(UPLOADS_DIR, existingFilename)
+        try {
+          await fs.access(existingPath)
+          if (isPictureReplacement) {
+            const existing = await inspectPictureUpload(existingPath, presentationId, existingFilename)
+            if (existing.sha256 !== fileHash) throw new Error('Picture upload bytes changed')
+            pictureReceipt = existing
+          }
+          await fs.unlink(req.file.path).catch(() => {})
+          return {
+            url: `/uploads/${existingFilename}`, deduped: true,
+            ...(isPictureReplacement ? { pictureReplacement: pictureReceipt } : {}),
+          }
+        } catch (error) {
+          if (isPictureReplacement && error.code !== 'ENOENT') throw error
+          // Existing file was deleted — fall through to store new file
+          delete presHashes[fileHash]
+        }
       }
-    }
 
-    const stats = await fs.stat(req.file.path)
-    presHashes[fileHash] = {
-      filename: req.file.filename,
-      originalName: req.file.originalname,
-      size: stats.size,
-      mimeType: req.file.mimetype,
-      uploadedAt: new Date().toISOString(),
-    }
-    hashes[presentationId] = presHashes
-    return { url: `/uploads/${req.file.filename}`, deduped: false }
-  })
+      const stats = await fs.stat(req.file.path)
+      presHashes[fileHash] = {
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        size: stats.size,
+        mimeType: req.file.mimetype,
+        uploadedAt: new Date().toISOString(),
+      }
+      hashes[presentationId] = presHashes
+      return {
+        url: `/uploads/${req.file.filename}`, deduped: false,
+        ...(isPictureReplacement ? { pictureReplacement: pictureReceipt } : {}),
+      }
+    })
+  } catch (error) {
+    await fs.unlink(req.file.path).catch(() => {})
+    if (!isPictureReplacement) throw error
+    return res.status(400).json({ error: 'Invalid picture replacement upload', code: 'invalid-picture-upload' })
+  }
 
   res.json(result)
 })

@@ -21,6 +21,8 @@ const { withPackageStore } = require('../services/pptx-import/package-store-runt
 const { toExternalPresentationDto } = require('../services/pptx-import/package-store/dto')
 const { hashRecord } = require('../services/pptx-import/package-store/schemas')
 const { getServingBaseUrl } = require('../utils/serving-origin')
+const { prepareSemanticOutputResources, assertSemanticOutputArtifact } =
+  require('../services/pptx-import/semantic-output-resources')
 
 const router = express.Router()
 const syncRemoteTails = new Map()
@@ -247,6 +249,7 @@ async function prepareBulkWorkspace(workspace, baseUrl) {
     const uploadRefs = new Set()
 
     for (const resolved of authoritativePresentations) {
+      const semanticOutputResources = await prepareSemanticOutputResources(resolved.presentation)
       const presentation = toExternalPresentationDto(
         normalizePptxImportedPresentationForRead(resolved.presentation)
       )
@@ -256,7 +259,9 @@ async function prepareBulkWorkspace(workspace, baseUrl) {
       fs.ensureDirSync(folder)
       fs.writeFileSync(
         path.join(folder, 'presentation.html'),
-        generateRevealHTML(presentation, { baseUrl })
+        assertSemanticOutputArtifact(generateRevealHTML(presentation, {
+          baseUrl, semanticOutputResources,
+        }), semanticOutputResources)
       )
       fs.writeFileSync(
         path.join(folder, 'presentation.json'),
@@ -302,6 +307,7 @@ async function prepareSingleWorkspace(workspace, presentationId, baseUrl) {
       throw presentationNotFoundError()
     }
 
+    const semanticOutputResources = await prepareSemanticOutputResources(resolved.presentation)
     const presentation = toExternalPresentationDto(
       normalizePptxImportedPresentationForRead(resolved.presentation)
     )
@@ -312,7 +318,9 @@ async function prepareSingleWorkspace(workspace, presentationId, baseUrl) {
     fs.ensureDirSync(folder)
     fs.writeFileSync(
       path.join(folder, 'presentation.html'),
-      generateRevealHTML(presentation, { baseUrl })
+      assertSemanticOutputArtifact(generateRevealHTML(presentation, {
+        baseUrl, semanticOutputResources,
+      }), semanticOutputResources)
     )
     fs.writeFileSync(path.join(folder, 'presentation.json'), JSON.stringify(presentation, null, 2))
     if (bundle) writePackageBundle(folder, bundle)

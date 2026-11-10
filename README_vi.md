@@ -44,6 +44,7 @@ NavSlides Editor có **19 loại phần tử chuẩn**. Dải lệnh Insert hi�
 - **Charts** — biểu đồ cột, đường, tròn, doughnut, radar, và vùng cực qua Chart.js với dữ liệu có thể chỉnh sửa
 - **Video / audio** — nhúng các tệp phương tiện qua URL hoặc tải lên với các phím điều khiển, tùy chọn tự động phát, lặp lại, và tắt tiếng
 - **Tables** — đối tượng bảng có thể kéo/thay đổi kích thước với hàng tiêu đề, khả năng chỉnh sửa trực tiếp trên ô (inline cell editing), và tùy chỉnh phong cách
+  Ô bảng hỗ trợ định dạng rich text hỗn hợp cùng ô văn bản thuần giữ nguyên ký tự; xem [ranh giới fidelity của bảng và đoạn văn](docs/pptx-import-fidelity-report.md#table-and-paragraph-repair-boundary-2026-10-12-working-tree).
 - **Icons** — thư viện có thể tìm kiếm với hơn 60 biểu tượng SVG dạng Lucide có thể tùy chỉnh màu sắc và đường viền
 - **Callout bubbles** — các vòng tròn chú thích có đánh số với khả năng tùy chỉnh màu sắc và kích thước
 - **Game** — 10 loại game tương tác: name picker, hot potato, Jeopardy, four corners, relay race, trivia champ, scattergories, live poll, word cloud và matching

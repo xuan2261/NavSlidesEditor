@@ -4,6 +4,7 @@ const path = require('node:path')
 const { openPackageStore } = require('./index')
 const { hashRecord } = require('./schemas')
 const { resolveEditedExportContext } = require('../validated-edited-export-context')
+const { resolveEditorProjectionContext } = require('../package-authority-snapshot')
 
 const resources = []
 async function storeFor(id, title) {
@@ -41,6 +42,96 @@ afterEach(async () => {
 })
 
 describe('portable retained and supplied authority', () => {
+  it('retains older-package journal references when only the current committed authority is exported', async () => {
+    const { deriveMutationJournal } = require('../mutation-journal')
+    const { buildImportSourceMap, rebindSourceMap } = require('../source-map')
+    const source = await storeFor('source', 'Original')
+    const original = source.getState().heads[0].originalRevisionId
+    const before = { id: 'source', title: 'Original', slides: [{ id: 's1', elements: [
+      { id: 'e1', type: 'shape', x: 1, y: 2, width: 30, height: 40 },
+    ] }] }
+    const after = structuredClone(before)
+    after.slides[0].elements[0].x = 4
+    const baselineMap = await buildImportSourceMap(before, null, null, {
+      revisionId: original, packageGeneration: 1,
+    })
+    for (const bytes of ['intermediate package', 'current package']) {
+      await source.commitOriginal(Buffer.from(bytes), { ownerType: 'presentation', ownerId: 'source' })
+    }
+    await source.mutate((next) => {
+      const head = next.heads.find((item) => item.presentationId === 'source')
+      const sourceMap = rebindSourceMap(baselineMap, {
+        presentationId: 'source', revisionId: head.packageRevisionId, packageGeneration: head.generation,
+      })
+      const journal = deriveMutationJournal(before, after, {
+        sourceMap: baselineMap, baseRevisionId: original, matrixAuthorityEpoch: next.matrixAuthorityEpoch,
+      })
+      Object.assign(head, { originalRevisionId: original, projectionRevisionId: hashRecord(after),
+        sourceMapRevisionId: hashRecord(sourceMap), journalRevisionId: journal.journalHash })
+      next.mutationResults.push({ schemaVersion: 1, operation: 'validated-edited-export',
+        presentationId: 'source', idempotencyKey: 'current-committed', generation: head.generation,
+        packageRevisionId: head.packageRevisionId, projection: after, sourceMap, journal,
+        operationIds: journal.operations.map((operation) => operation.operationId), state: 'committed' })
+    })
+    const bundle = await source.exportPresentationPackage('source')
+    const destination = await storeFor('destination')
+    await destination.importPresentationPackage(bundle, 'destination')
+
+    const roundtrip = await destination.exportPresentationPackage('destination')
+    expect(roundtrip.manifest.mutationResults[0].journal.operations[0].sourceRef)
+      .toMatchObject({ revisionId: original, packageGeneration: 1 })
+    expect(resolveEditorProjectionContext(destination.getState(), 'destination'))
+      .toMatchObject({ ok: true, after: { id: 'destination', slides: [{ elements: [{ x: 4 }] }] } })
+    expect(await destination.readOriginal(roundtrip.manifest.head.originalRevisionId))
+      .toEqual(Buffer.from('Original'))
+  })
+
+  it.each([false, true])('keeps multi-save undo/redo authority readable after portable import (replace=%s)', async (replace) => {
+    const { deriveMutationJournal } = require('../mutation-journal')
+    const { rebindSourceMap } = require('../source-map')
+    const source = await storeFor('source', 'Initial')
+    const originalBundle = await source.exportPresentationPackage('source')
+    for (const title of ['Edited', 'Initial', 'Edited']) {
+      await source.mutate((next) => {
+        const head = next.heads.find((item) => item.presentationId === 'source')
+        const before = next.mutationResults.find((item) => item.generation === head.generation)
+        const after = { ...before.projection, title }
+        const journal = deriveMutationJournal(before.projection, after, {
+          sourceMap: before.sourceMap, baseRevisionId: head.packageRevisionId,
+          matrixAuthorityEpoch: next.matrixAuthorityEpoch,
+        })
+        const generation = head.generation + 1
+        const sourceMap = rebindSourceMap(before.sourceMap, {
+          presentationId: 'source', revisionId: head.packageRevisionId, packageGeneration: generation,
+        })
+        Object.assign(head, { generation, projectionRevisionId: hashRecord(after),
+          sourceMapRevisionId: hashRecord(sourceMap), journalRevisionId: journal.journalHash,
+          pendingJournalHash: journal.journalHash })
+        next.mutationResults.push({ schemaVersion: 1, operation: 'projection-save', presentationId: 'source',
+          idempotencyKey: `save-${generation}`, generation, packageRevisionId: head.packageRevisionId,
+          projection: after, sourceMap, journal, state: 'pending-edited-export',
+          operationIds: journal.operations.map((operation) => operation.operationId) })
+      })
+    }
+    expect(resolveEditorProjectionContext(source.getState(), 'source')).toMatchObject({ ok: true })
+    const bundle = await source.exportPresentationPackage('source')
+    const frozen = JSON.stringify(bundle)
+    const destination = await storeFor('destination')
+    if (replace) await destination.importPresentationPackage(originalBundle, 'destination')
+    const previous = destination.getState().heads[0]
+    await destination.importPresentationPackage(bundle, 'destination', replace ? {
+      replace: true, expectedHead: previous,
+    } : {})
+
+    expect(resolveEditorProjectionContext(destination.getState(), 'destination'))
+      .toMatchObject({ ok: true, after: { id: 'destination', title: 'Edited' } })
+    expect(await destination.readOriginal(destination.getState().heads[0].originalRevisionId))
+      .toEqual(Buffer.from('Initial'))
+    expect(JSON.stringify(bundle)).toBe(frozen)
+    expect(resolveEditorProjectionContext(source.getState(), 'source'))
+      .toMatchObject({ ok: true, after: { id: 'source', title: 'Edited' } })
+  })
+
   it('keeps snapshot restore and template instantiation readable after replacement', async () => {
     const source = await storeFor('source', 'Incoming')
     const bundle = await source.exportPresentationPackage('source')
@@ -74,6 +165,25 @@ describe('portable retained and supplied authority', () => {
       .toMatchObject({ ok: true, after: { id: 'destination', title: 'Previous' } })
     expect(await destination.readOriginal(previous.originalRevisionId))
       .toEqual(Buffer.from('Previous'))
+  })
+
+  it.each([false, true])('keeps a restored deck readable after portable import (replace=%s)', async (replace) => {
+    const source = await storeFor('source', 'Restored content')
+    const history = { ownerType: 'history', ownerId: 'source:snapshot' }
+    await source.retainHead(history, 'source')
+    await source.restoreForward('source', history, {
+      expectedCurrentHead: source.getState().heads[0],
+    })
+    const bundle = await source.exportPresentationPackage('source')
+    const destination = await storeFor('destination', replace ? 'Previous content' : undefined)
+    await destination.importPresentationPackage(bundle, 'destination', replace ? {
+      replace: true, expectedHead: destination.getState().heads[0],
+    } : {})
+
+    expect(resolveEditorProjectionContext(destination.getState(), 'destination'))
+      .toMatchObject({ ok: true, after: { id: 'destination', title: 'Restored content' } })
+    expect(await destination.readOriginal(destination.getState().heads[0].originalRevisionId))
+      .toEqual(Buffer.from('Restored content'))
   })
 
   it.each(['foreign-revision', 'foreign-generation', 'unsupported-schema'])(

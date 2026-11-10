@@ -11,6 +11,7 @@ const { createMediaBudget } = require('./resource-budgets')
 const { runShadowReconciliation } = require('./reconciliation')
 const { buildImportSourceMap } = require('./source-map')
 const { createBoundedWarnings } = require('./warning-budget')
+const { projectSemanticImport } = require('./semantic-projector')
 
 function finiteSceneStats(mappedStats) {
   return Object.fromEntries(
@@ -20,7 +21,12 @@ function finiteSceneStats(mappedStats) {
   )
 }
 
-function buildImportStats({ mappedStats = {}, parsed = {}, startedAt = Date.now(), now = Date.now() }) {
+function buildImportStats({
+  mappedStats = {},
+  parsed = {},
+  startedAt = Date.now(),
+  now = Date.now(),
+}) {
   return {
     parser: 'pptxtojson',
     packageVersion: parsed.packageVersion,
@@ -70,7 +76,11 @@ async function importPptxFile(filePath, options = {}) {
   // Scene graph is inventory truth (Phase 03); mapper still uses pptxtojson payloads.
   let sceneGraph = null
   try {
-    options.onProgress?.({ stage: 'scene-graph', percent: 70, message: 'Building OOXML scene graph' })
+    options.onProgress?.({
+      stage: 'scene-graph',
+      percent: 70,
+      message: 'Building OOXML scene graph',
+    })
     sceneGraph = await buildOoxmlSceneGraph(packageInfo.zip)
   } catch (err) {
     // Non-fatal unless strict later — surface diagnostic
@@ -78,6 +88,7 @@ async function importPptxFile(filePath, options = {}) {
   }
 
   options.signal?.throwIfAborted?.()
+  const mediaBudget = options.mediaBudget || createMediaBudget(options.maxAggregateMediaBytes)
   const mapped = await mapPptxOutput({
     output: parsed.output,
     zip: packageInfo.zip,
@@ -85,7 +96,7 @@ async function importPptxFile(filePath, options = {}) {
     uploadsDir: options.uploadsDir || UPLOADS_DIR,
     onProgress: options.onProgress,
     signal: options.signal,
-    mediaBudget: options.mediaBudget || createMediaBudget(options.maxAggregateMediaBytes),
+    mediaBudget,
     mediaTransaction: options.mediaTransaction,
     sceneGraph: sceneGraph && !sceneGraph.error ? sceneGraph : null,
     strict: strictPolicy.strict,
@@ -120,7 +131,8 @@ async function importPptxFile(filePath, options = {}) {
   if (strictPolicy.strict) {
     try {
       assertPresentationAcceptance(mapped.presentation, undefined, parsed.output, {
-        strictPrimitives: process.env.PPTX_SLA_STRICT_PRIMITIVES === '1' || options.strictPrimitives === true,
+        strictPrimitives:
+          process.env.PPTX_SLA_STRICT_PRIMITIVES === '1' || options.strictPrimitives === true,
       })
     } catch (err) {
       throw new PptxImportError(err.message || 'PPTX acceptance failed', {
@@ -142,6 +154,20 @@ async function importPptxFile(filePath, options = {}) {
     shadowReconciliation = shadowResult.shadow
   }
 
+  let semanticProjection = null
+  if (options.semanticImport === true) {
+    semanticProjection = await projectSemanticImport({
+      zip: packageInfo.zip,
+      presentation: mapped.presentation,
+      uploadsDir: options.uploadsDir || UPLOADS_DIR,
+      signal: options.signal,
+      mediaBudget,
+      mediaTransaction: options.mediaTransaction,
+      adapters: options.semanticAdapters,
+      geometryInheritance: options.geometryInheritance === true,
+    })
+    mapped.presentation = semanticProjection.presentation
+  }
   const stats = buildImportStats({ mappedStats: mapped.stats, parsed, startedAt: started })
   const sourceMap = await buildImportSourceMap(
     mapped.presentation,
@@ -151,21 +177,30 @@ async function importPptxFile(filePath, options = {}) {
   )
   if (sceneGraph?.stats) stats.sceneGraph = sceneGraph.stats
   stats.primitivePlaceholderCount = (mapped.presentation?.slides || []).reduce((sum, slide) => {
-    return (
-      sum +
-      (slide.elements || []).filter((el) => el?.importPlaceholderType).length
-    )
+    return sum + (slide.elements || []).filter((el) => el?.importPlaceholderType).length
   }, 0)
 
   const mapOmitted = Number(mapped.warnings?.omittedCount) || 0
   const combinedWarnings = createBoundedWarnings()
-  for (const warning of mapped.warnings || []) combinedWarnings.push(warning)
+  for (const warning of mapped.warnings || []) {
+    if (semanticProjection && warning.type === 'native-layout-flattened') continue
+    combinedWarnings.push(warning)
+  }
   for (const warning of sceneWarnings || []) combinedWarnings.push(warning)
-  const accumulateOmittedCount = mapOmitted + (Number(combinedWarnings.omittedCount) || 0)
+  for (const warning of semanticProjection?.warnings || []) combinedWarnings.push(warning)
+  const accumulateOmittedCount = mapOmitted + (Number(semanticProjection?.warnings?.omittedCount) || 0) +
+    (Number(combinedWarnings.omittedCount) || 0)
 
   return {
     ...mapped,
     sourceMap,
+    ...(semanticProjection
+      ? {
+          semanticAdmission: semanticProjection.admission,
+          semanticInventory: semanticProjection.inventory,
+          trustedSemanticImportMetadata: semanticProjection.trustedSemanticImportMetadata,
+        }
+      : {}),
     stats,
     sceneGraph: sceneGraph?.stats
       ? { stats: sceneGraph.stats, slideCount: sceneGraph.slides?.length }

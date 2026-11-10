@@ -90,6 +90,54 @@ describe('useEditorPersistenceController conflict recovery', () => {
     api.restoreSnapshot.mockReset().mockResolvedValue(snapshot('Restored', 3))
   })
 
+  it('keeps native import geometry through save, reopen, and snapshot restoration', async () => {
+    const imported = {
+      ...snapshot('Native import'),
+      resolution: { width: 720, height: 540 },
+      _pptxMeta: {
+        originalSize: { width: 9144000, height: 6858000 },
+        geometryPolicy: 'native-aspect-v1',
+      },
+      slides: [{ id: 'slide-1', elements: [{
+        id: 'edge', type: 'shape', shape: 'rect', x: 640, y: 490, width: 80, height: 50,
+      }] }],
+    }
+    const seedHistory = vi.fn()
+    api.getPresentation.mockResolvedValue(imported)
+    api.updatePresentation.mockImplementation(async (_id, body) => ({
+      ...body, aggregateGeneration: 2,
+    }))
+    const first = renderHook(() => useHarness('deck-1', seedHistory))
+    await flushMicrotasks()
+    expect(first.result.current.presentation.resolution).toEqual(imported.resolution)
+    expect(first.result.current.presentation.slides[0].elements).toEqual(imported.slides[0].elements)
+    act(() => first.result.current.setPresentation({
+      ...first.result.current.presentation, title: 'Saved native import',
+    }))
+    act(() => first.result.current.controller.handleManualSave())
+    await flushMicrotasks()
+    const saved = api.updatePresentation.mock.calls[0][1]
+    expect(saved.resolution).toEqual(imported.resolution)
+    expect(saved._pptxMeta).toEqual(imported._pptxMeta)
+    expect(saved.slides[0].elements).toEqual(imported.slides[0].elements)
+    first.unmount()
+
+    api.getPresentation.mockResolvedValue({ ...saved, aggregateGeneration: 2 })
+    const reopened = renderHook(() => useHarness('deck-1', seedHistory))
+    await flushMicrotasks()
+    expect(reopened.result.current.presentation.resolution).toEqual(imported.resolution)
+    expect(reopened.result.current.presentation._pptxMeta).toEqual(imported._pptxMeta)
+    api.restoreSnapshot.mockResolvedValue({ ...imported, aggregateGeneration: 3 })
+    await act(async () => reopened.result.current.controller.restorePresentation('native-snapshot'))
+    expect(reopened.result.current.presentation.resolution).toEqual(imported.resolution)
+    expect(reopened.result.current.presentation._pptxMeta).toEqual(imported._pptxMeta)
+    expect(reopened.result.current.presentation.slides[0].elements).toEqual(imported.slides[0].elements)
+    expect(seedHistory).toHaveBeenLastCalledWith(expect.objectContaining({
+      resolution: imported.resolution, _pptxMeta: imported._pptxMeta,
+    }))
+    reopened.unmount()
+  })
+
   it('exposes an interrupted draft without replacing the loaded remote state', async () => {
     const draft = {
       key: 'presentation:deck-1',

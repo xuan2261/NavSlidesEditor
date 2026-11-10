@@ -9,6 +9,7 @@ const { assertStagingOwned, removeProjectImportStaging } = require('./project-im
 const { recoverProjectPackage } = require('./project-import-package-session')
 const { sameIdentity, sameIntent } = require('./project-import-media-session-identity')
 const { cancelProjectImportUnlocked, isCancellationIntent } = require('./project-import-media-session-cancellation')
+const { adoptProjectImportPictureReplacements } = require('./pptx-import/picture-replacement-validation')
 
 function receipt(record) {
   return { status: record.state, sessionId: record.sessionId,
@@ -69,6 +70,7 @@ async function recoverProjectImportUnlocked(snapshot, { signal } = {}) {
   await assertStagingOwned(record, { signal })
   try {
     await verifyPlacements(record, signal)
+    await adoptProjectImportPictureReplacements(record.presentation, record.intendedPresentationId, record.placements || [])
     const expected = record.packageBundlePath === undefined ? buildImportedPresentation(record) : null
     const existing = (await readPresentations()).find((item) => item.id === record.intendedPresentationId)
     signal?.throwIfAborted()

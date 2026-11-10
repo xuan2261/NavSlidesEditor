@@ -1,5 +1,5 @@
 import { decodePng, encodePngRgba } from './png-rgba.js'
-import { VIEWPORT, capturePresentSlides, captureRevealSlides, expectedRevealSlideCount, writePresentHtml } from './capture-present.js'
+import { capturePresentSlides, captureRevealSlides, expectedRevealSlideCount } from './capture-present.js'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
@@ -42,9 +42,6 @@ describe('capture-present', () => {
   const dirs = []
   afterEach(async () => Promise.all(dirs.splice(0).map((dir) => fs.rm(dir, { recursive: true, force: true }))))
 
-  it('exposes deterministic viewport 960x540', () => {
-    expect(VIEWPORT).toEqual({ width: 960, height: 540 })
-  })
 
   it('does not launch a browser after its capture deadline expires', async () => {
     const controller = new AbortController()
@@ -90,6 +87,7 @@ describe('capture-present', () => {
       async goto(url) { calls.push(['goto', url]) },
       async setContent() { calls.push(['setContent']) },
       async waitForFunction() { calls.push(['waitForFunction']) },
+      async screenshot({ path: output }) { await fs.writeFile(output, png([0, 0, 0])) },
       async evaluate(_callback, argument) {
         if (argument === undefined) return [{ ordinal: 0, h: 0, v: 0 }]
         if (argument?.revealConfig) {
@@ -121,15 +119,6 @@ describe('capture-present', () => {
       ['goto', 'http://127.0.0.1:3202/'],
       ['setContent'],
     ])
-    expect(calls).toContainEqual(['configure', {
-      revealConfig: expect.objectContaining({
-        controls: false,
-        progress: false,
-        transition: 'none',
-        backgroundTransition: 'none',
-      }),
-      viewport: VIEWPORT,
-    }])
   })
 
   it('counts vertical source slides as distinct Reveal leaves', () => {
@@ -187,16 +176,4 @@ describe('capture-present', () => {
       .rejects.toThrow('reveal-slide-count-mismatch')
   })
 
-  it('writePresentHtml emits reveal markup', async () => {
-    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'present-html-'))
-    dirs.push(dir)
-    const file = path.join(dir, 'deck.html')
-    await writePresentHtml({
-      title: 'Oracle', theme: 'white',
-      slides: [{ id: 's1', elements: [{ type: 'text', content: '<p>Hi</p>', x: 0, y: 0, width: 100, height: 40 }] }],
-    }, file)
-    const html = await fs.readFile(file, 'utf8')
-    expect(html).toMatch(/reveal/i)
-    expect(html).toMatch(/Hi/)
-  })
 })

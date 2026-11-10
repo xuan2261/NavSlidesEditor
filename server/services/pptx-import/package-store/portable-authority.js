@@ -6,6 +6,7 @@ const { serverTextTransports } = require('../validated-edited-export-context')
 const { rewritePresentationMedia } = require('../../project-import-presentation')
 const { validateMatrixAuthoritySubject, createMatrixAuthoritySubject } = require('../canonical-feature-matrix')
 const { reasonCodeSubject } = require('../reason-code-contract')
+const { propertyPath, propertyEnvelope, propertyEnvelopeValue } = require('../generic-journal-property-path')
 
 const SUBJECT_FIELDS = ['featureMatrixSchemaVersion', 'featureMatrixVersion', 'featureMatrixHash', 'matrixAuthoritySubject', 'reasonCodeSubject']
 const clone = (value) => structuredClone(value)
@@ -48,15 +49,15 @@ function snapshotFor(operation, value, type) {
   if (operation.kind === 'slide-add' || operation.kind === 'slide-delete') return { slides: [value] }
   if (operation.kind === 'element-add' || operation.kind === 'element-delete') return { slides: [{ elements: [value] }] }
   if (operation.kind !== 'property-change' || !operation.property) return null
-  if (operation.targetKind === 'presentation') return { slides: [], [operation.property]: value }
+  if (operation.targetKind === 'presentation') return { slides: [], [operation.property]: propertyEnvelope(operation, value) }
   if (operation.targetKind === 'slide') return { slides: [{ elements: [], [operation.property]: value }] }
   return { slides: [{ elements: [{ type, [operation.property]: value }] }] }
 }
-function rewriteSnapshot(operation, value, mediaUrlMap, type) {
+function rewriteSnapshot(operation, value, mediaUrlMap, type, destinationId) {
   const snapshot = snapshotFor(operation, value, type)
   if (!snapshot) return value
-  const rewritten = rewritePresentationMedia(snapshot, mediaUrlMap)
-  if (operation.kind === 'property-change' && operation.targetKind === 'presentation') return rewritten[operation.property]
+  const rewritten = rewritePresentationMedia(snapshot, mediaUrlMap, destinationId)
+  if (operation.kind === 'property-change' && operation.targetKind === 'presentation') return propertyEnvelopeValue(operation, rewritten[operation.property])
   const slide = rewritten.slides[0]
   if (operation.kind.startsWith('slide-')) return slide
   if (operation.kind.startsWith('element-')) return slide.elements[0]
@@ -99,6 +100,7 @@ function validateAuthorityResult(result, head) {
       (journal.metadata && !/^[a-f0-9]{64}$/u.test(journal.metadata.requestHash))) invalid()
   for (const operation of journal.operations) {
     if (!operation || typeof operation.kind !== 'string') invalid()
+    try { propertyPath(operation) } catch { invalid() }
     if (operation.sourceRef) {
       const ref = createSourceRef(operation.sourceRef)
       if (journal.baseRevisionId && ref.revisionId !== journal.baseRevisionId) invalid()
@@ -107,7 +109,7 @@ function validateAuthorityResult(result, head) {
 }
 function rebindAuthorityResult(result, identity, mapGeneration, mediaUrlMap) {
   const rebound = { ...clone(result), presentationId: identity.presentationId, generation: mapGeneration(result.generation) }
-  rebound.projection = { ...rewritePresentationMedia(result.projection, mediaUrlMap), id: identity.presentationId }
+  rebound.projection = rewritePresentationMedia(result.projection, mediaUrlMap, identity.presentationId)
   rebound.sourceMap = rebindSourceMap(result.sourceMap, { presentationId: identity.presentationId, revisionId: result.packageRevisionId, packageGeneration: rebound.generation })
   if (result.requestIdentity) {
     rebound.requestIdentity = { ...clone(result.requestIdentity), expectedGeneration: mapGeneration(result.requestIdentity.expectedGeneration), snapshotHash: hashRecord(rebound.projection) }
@@ -133,9 +135,9 @@ function rebindAuthorityResult(result, identity, mapGeneration, mediaUrlMap) {
     journal.operations = journal.operations.map((operation) => {
       const next = clone(operation)
       for (const field of ['before', 'after']) {
-        if (Object.hasOwn(next, field)) next[field] = rewriteSnapshot(operation, next[field], mediaUrlMap, typeFor(operation))
+        if (Object.hasOwn(next, field)) next[field] = rewriteSnapshot(operation, next[field], mediaUrlMap, typeFor(operation), identity.presentationId)
       }
-      if (next.inverse && Object.hasOwn(next.inverse, 'value')) next.inverse.value = rewriteSnapshot(operation, next.inverse.value, mediaUrlMap, typeFor(operation))
+      if (next.inverse && Object.hasOwn(next.inverse, 'value')) next.inverse.value = rewriteSnapshot(operation, next.inverse.value, mediaUrlMap, typeFor(operation), identity.presentationId)
       if (next.sourceRef) next.sourceRef = { ...next.sourceRef, packageGeneration: mapGeneration(next.sourceRef.packageGeneration) }
       if ((next.targetKind === 'presentation' || next.kind === 'slide-reorder') &&
           next.targetId === result.presentationId) next.targetId = identity.presentationId

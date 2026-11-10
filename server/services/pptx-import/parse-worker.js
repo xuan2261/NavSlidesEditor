@@ -3,6 +3,8 @@ const { classifyError, sanitizeDiagnostic } = require('./diagnostics')
 const { assertUsableParserOutput } = require('./output-usability')
 const { validatePptxPackage } = require('./pptx-guards')
 const { assertParsedOutputBudget } = require('./resource-budgets')
+const { orderParserSlides } = require('./slide-order')
+const { loadPptxtojson } = require('./pptxtojson-runtime')
 
 function toArrayBuffer(buffer) {
   return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
@@ -10,8 +12,7 @@ function toArrayBuffer(buffer) {
 
 async function parseFile(filePath, originalName, signal) {
   const validated = await validatePptxPackage(filePath, originalName, { signal })
-  const { parse } = require('pptxtojson/dist/index.cjs')
-  const pkg = require('pptxtojson/package.json')
+  const { parse, packageVersion } = loadPptxtojson()
   const buffer = await fs.readFile(filePath, signal ? { signal } : undefined)
   signal?.throwIfAborted?.()
   sendProgress('parsing', 5, 'Reading PPTX archive')
@@ -27,6 +28,7 @@ async function parseFile(filePath, originalName, signal) {
       videoMode: 'blob',
       audioMode: 'blob',
     })
+    await orderParserSlides(output, validated.zip)
     signal?.throwIfAborted?.()
   } finally {
     clearInterval(heartbeat)
@@ -36,7 +38,7 @@ async function parseFile(filePath, originalName, signal) {
   return {
     ok: true,
     parser: 'pptxtojson',
-    packageVersion: pkg.version,
+    packageVersion,
     output,
     parsedOutputBytes: assertParsedOutputBudget(output),
     packageInfo: {

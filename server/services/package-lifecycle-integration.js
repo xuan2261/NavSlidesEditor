@@ -72,40 +72,27 @@ async function releasePackageOwnerWithRetry(owner) {
 }
 
 function getPackageOwnerRecords(owner) {
-  return withStore((store) => store.getState().owners.filter((item) =>
-    item.ownerType === owner.ownerType && item.ownerId === owner.ownerId
-  ))
+  return withStore((store) => store.getOwnerRecords(owner))
 }
 
 function getPackageHistoryOwners(presentationId) {
-  const prefix = `${presentationId}:`
-  return withStore((store) => store.getState().owners.filter((item) =>
-    item.ownerType === 'history' && item.ownerId.startsWith(prefix)
-  ))
+  return withStore((store) => store.getHistoryOwnerRecords(presentationId))
 }
 
 function packageOwnerExists(owner) {
-  return withStore((store) => store.getState().owners.some((item) =>
-    item.ownerType === owner.ownerType && item.ownerId === owner.ownerId
-  ))
+  return withStore((store) => store.hasOwner(owner))
 }
 
 function packagePresentationExists(presentationId) {
-  return withStore((store) => store.getState().heads.some((head) =>
-    head.presentationId === presentationId
-  ))
+  return withStore((store) => store.hasPresentationHead(presentationId))
 }
 
 function getPackageHead(presentationId) {
-  return withStore((store) => store.getState().heads.find((head) =>
-    head.presentationId === presentationId
-  ) || null)
+  return withStore((store) => store.getPresentationHead(presentationId))
 }
 
 function packageCompatibilityPending(presentationId) {
-  return withStore((store) => store.getState().compatibilityOutbox.some((record) =>
-    record.presentationId === presentationId
-  ))
+  return withStore((store) => store.hasCompatibilityPending(presentationId))
 }
 
 function getRestorablePackageHead(presentationId, owner) {

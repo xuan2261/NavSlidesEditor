@@ -5,6 +5,7 @@ import {
   cloneSlideWithNewIds,
   deleteSlidesAtIndices,
   duplicateSlidesAtIndices,
+  withDeletedSlideOccurrences,
 } from './slide-operation-helpers'
 import { invalidatePptxFitMetaForUpdates } from '../utils/pptx-import-meta'
 import { getRotatedAABB } from '../components/canvas/use-canvas-resize-rotate'
@@ -19,6 +20,12 @@ import {
   isPureUnlockUpdate,
 } from '../utils/element-update-fanout'
 import { showNotice } from '../utils/app-feedback'
+import { applySemanticGeometry, semanticCompatibility, withoutSemanticGeometry } from '../utils/pptx-semantic-geometry-bridge'
+import { semanticSelection, groupSemanticSelection, ungroupSemanticSelection,
+  regroupSemanticSelection, semanticDeletion } from '../components/canvas/canvas-semantic-group-commands'
+import { deleteSlideElements } from '../utils/delete-slide-elements'
+import { semanticInstance } from 'revealjs-shared/src/pptx-semantic-records.js'
+
 
 /**
  * Hook encapsulating multi-element operations (align, group, delete-selected)
@@ -66,23 +73,28 @@ export function useSlideOperations({
       setPresentation((prev) => {
         if (!prev) return prev
         const lockIntents = updates?.some((update) => Object.hasOwn(update, 'locked')) ? [] : null
-        return mapActive(
+        let semantic = prev.pptxSemantic
+        const result = mapActive(
           prev,
           (s) => {
             if (s.locked) return s
             const requested = (updates || []).filter(({ id, ...partial }) => {
               const element = (s.elements || []).find((candidate) => candidate.id === id)
-              return element && (!element.locked || isPureUnlockUpdate(partial))
+              const inst = semanticInstance(semantic, id)
+              return (element && (!element.locked || isPureUnlockUpdate(partial))) ||
+                (!element && inst && !inst.lineage?.tombstone)
             })
             if (!requested.length) return s
+            if (semantic) semantic = applySemanticGeometry(semantic, s, requested)
             if (lockIntents) {
               for (const update of requested) {
                 if (Object.hasOwn(update, 'locked')) lockIntents.push(update)
               }
             }
-            const batch = buildConnectorUpdateBatch(s.elements || [], requested)
+            const batch = buildConnectorUpdateBatch(s.elements || [], requested.map(({ id, ...partial }) =>
+              ({ id, ...withoutSemanticGeometry(s.elements.find((e) => e.id === id), partial) })))
             const byId = new Map(batch.map(({ id, ...partial }) => [id, partial]))
-            return {
+            const updated = {
               ...s,
               elements: (s.elements || []).map((el) =>
                 byId.has(el.id)
@@ -90,9 +102,11 @@ export function useSlideOperations({
                   : el
               ),
             }
+            return semantic ? semanticCompatibility(semantic, updated, prev.pptxSemantic) : updated
           },
           lockIntents
         )
+        return semantic ? { ...result, pptxSemantic: semantic } : result
       })
     },
     [setPresentation, mapActive]
@@ -130,12 +144,21 @@ export function useSlideOperations({
     )
     const deletableIds = ids.filter((id) => !lockedIds.has(id))
     if (!deletableIds.length) return
-    setPresentation((prev) =>
-      mapActive(prev, (s) => {
-        const elements = (s.elements || []).filter((el) => !deletableIds.includes(el.id))
-        return { ...s, elements: applyConnectorDependentPatches(elements, deletableIds) }
+    const deletedIds = presentation?.pptxSemantic
+      ? semanticDeletion(presentation.pptxSemantic, activeSlide, deletableIds).elementIds : deletableIds
+    if ((activeSlide?.elements || []).some((element) => deletedIds.includes(element.id) && element.locked)) return
+    setPresentation((prev) => {
+      let semantic = prev.pptxSemantic
+      const result = mapActive(prev, (s) => {
+        if (s.locked) return s
+        const deletion = semantic ? semanticDeletion(semantic, s, deletableIds) : null
+        const removed = deletion?.elementIds || deletableIds
+        if ((s.elements || []).some((element) => removed.includes(element.id) && element.locked)) return s
+        if (deletion) semantic = deletion.document
+        return deleteSlideElements(s, removed)
       })
-    )
+      return semantic ? { ...result, pptxSemantic: semantic } : result
+    })
     if (lockedIds.size) {
       setSelectedElementIds(ids.filter((id) => lockedIds.has(id)))
     } else {
@@ -151,6 +174,7 @@ export function useSlideOperations({
     setSelectedElementIds,
     setEditingElementId,
     mapActive,
+    presentation,
   ])
 
   // ── Group / ungroup ────────────────────────────────────────────────────────
@@ -162,22 +186,50 @@ export function useSlideOperations({
     if (hasBlockedGroupMutation(slide, ids)) return
     if ((slide?.elements || []).some((el) => ids.includes(el.id) && el.locked)) return
     const groupId = crypto.randomUUID()
+    if (presentation?.pptxSemantic) {
+      const selected = semanticSelection(presentation.pptxSemantic, slide, ids)
+      if (selected.length !== ids.length) throw new TypeError('Cannot mix legacy and semantic groups')
+      const restoredGroupId = regroupSemanticSelection(presentation.pptxSemantic, selected)?.groupId
+      setPresentation((prev) => {
+        const selected = semanticSelection(prev.pptxSemantic, slide, ids)
+        if (selected.length !== ids.length) throw new TypeError('Cannot mix legacy and semantic groups')
+        const restored = regroupSemanticSelection(prev.pptxSemantic, selected)
+        const semantic = restored?.document || groupSemanticSelection(prev.pptxSemantic, selected, groupId)
+        return { ...mapActive(prev, (s) => semanticCompatibility(semantic, s, prev.pptxSemantic)), pptxSemantic: semantic }
+      })
+      setSelectedElementIds([restoredGroupId || groupId])
+      return
+    }
     setPresentation((prev) =>
       mapActive(prev, (s) => ({
         ...s,
         elements: (s.elements || []).map((el) => (ids.includes(el.id) ? { ...el, groupId } : el)),
       }))
     )
-  }, [setPresentation, selectedElementIdsRef, activeSlideOf, mapActive])
+  }, [setPresentation, selectedElementIdsRef, activeSlideOf, mapActive, presentation, setSelectedElementIds])
 
   const ungroupElements = useCallback(() => {
     const ids = selectedElementIdsRef.current
     if (!ids.length) return
+    if (presentation?.pptxSemantic) {
+      try {
+        ungroupSemanticSelection(presentation.pptxSemantic,
+          semanticSelection(presentation.pptxSemantic, activeSlideOf(), ids))
+      } catch (error) {
+        showNotice(error.message)
+        return
+      }
+    }
     setPresentation((prev) => {
       if (!prev) return prev
       const slide = activeSlideOf()
       if (slide?.locked) return prev
       if (hasBlockedGroupMutation(slide, ids)) return prev
+      if (prev.pptxSemantic) {
+        const selected = semanticSelection(prev.pptxSemantic, slide, ids)
+        const semantic = ungroupSemanticSelection(prev.pptxSemantic, selected)
+        return { ...mapActive(prev, (s) => semanticCompatibility(semantic, s, prev.pptxSemantic)), pptxSemantic: semantic }
+      }
       const groupIds = new Set(
         (slide?.elements || [])
           .filter((el) => ids.includes(el.id) && el.groupId)
@@ -195,7 +247,7 @@ export function useSlideOperations({
         ),
       }))
     })
-  }, [setPresentation, selectedElementIdsRef, activeSlideOf, mapActive])
+  }, [setPresentation, selectedElementIdsRef, activeSlideOf, mapActive, presentation])
 
   // ── Alignment ──────────────────────────────────────────────────────────────
   const alignElements = useCallback(
@@ -350,7 +402,7 @@ export function useSlideOperations({
         currentSlideIndexRef.current
       )
       if (result.slides === presentation.slides) return
-      setPresentation((prev) => ({ ...prev, slides: result.slides }))
+      setPresentation((prev) => withDeletedSlideOccurrences(prev, result.slides))
       setCurrentSlideIndex(result.currentSlideIndex)
     },
     [presentation, setPresentation, setCurrentSlideIndex, currentSlideIndexRef]
@@ -358,44 +410,66 @@ export function useSlideOperations({
 
   const duplicateSlide = useCallback(
     (index) => {
-      if (!presentation) return
-      const result = duplicateSlidesAtIndices(
-        presentation.slides,
-        [index],
-        undefined,
-        0,
-        presentation.layoutMasters
-      )
-      if (result.warnings.length)
-        showNotice(result.warnings.map((warning) => warning.error).join('\n'), {
+      let targetIndex = 0
+      let warnings = []
+      setPresentation((prev) => {
+        if (!prev) return prev
+        const result = duplicateSlidesAtIndices(
+          prev.slides,
+          [index],
+          undefined,
+          0,
+          prev.layoutMasters,
+          prev.pptxSemantic
+        )
+        targetIndex = result.currentSlideIndex
+        warnings = result.warnings
+        return {
+          ...prev,
+          slides: result.slides,
+          ...(result.pptxSemantic ? { pptxSemantic: result.pptxSemantic } : {}),
+        }
+      })
+      if (warnings.length)
+        showNotice(warnings.map((warning) => warning.error).join('\n'), {
           title: 'Repair interaction targets',
           testId: 'interaction-reference-notice',
         })
-      setPresentation((prev) => ({ ...prev, slides: result.slides }))
-      setCurrentSlideIndex(result.currentSlideIndex)
+      setCurrentSlideIndex(targetIndex)
     },
-    [presentation, setPresentation, setCurrentSlideIndex]
+    [setPresentation, setCurrentSlideIndex]
   )
 
   const duplicateSlides = useCallback(
     (indices) => {
-      if (!presentation) return
-      const result = duplicateSlidesAtIndices(
-        presentation.slides,
-        indices,
-        undefined,
-        0,
-        presentation.layoutMasters
-      )
-      if (result.warnings.length)
-        showNotice(result.warnings.map((warning) => warning.error).join('\n'), {
+      let targetIndex = 0
+      let warnings = []
+      setPresentation((prev) => {
+        if (!prev) return prev
+        const result = duplicateSlidesAtIndices(
+          prev.slides,
+          indices,
+          undefined,
+          0,
+          prev.layoutMasters,
+          prev.pptxSemantic
+        )
+        targetIndex = result.currentSlideIndex
+        warnings = result.warnings
+        return {
+          ...prev,
+          slides: result.slides,
+          ...(result.pptxSemantic ? { pptxSemantic: result.pptxSemantic } : {}),
+        }
+      })
+      if (warnings.length)
+        showNotice(warnings.map((warning) => warning.error).join('\n'), {
           title: 'Repair interaction targets',
           testId: 'interaction-reference-notice',
         })
-      setPresentation((prev) => ({ ...prev, slides: result.slides }))
-      setCurrentSlideIndex(result.currentSlideIndex)
+      setCurrentSlideIndex(targetIndex)
     },
-    [presentation, setPresentation, setCurrentSlideIndex]
+    [setPresentation, setCurrentSlideIndex]
   )
 
   const deleteSlides = useCallback(
@@ -407,7 +481,7 @@ export function useSlideOperations({
         currentSlideIndexRef.current
       )
       if (result.slides === presentation.slides) return
-      setPresentation((prev) => ({ ...prev, slides: result.slides }))
+      setPresentation((prev) => withDeletedSlideOccurrences(prev, result.slides))
       setCurrentSlideIndex(result.currentSlideIndex)
     },
     [presentation, setPresentation, setCurrentSlideIndex, currentSlideIndexRef]
@@ -461,7 +535,7 @@ export function useSlideOperations({
         const child = parent?.children?.[childIndex]
         if (!child) return prev
         const warnings = []
-        const dup = cloneSlideWithNewIds(child, undefined, prev.layoutMasters, warnings)
+        const cloned = cloneSlideWithNewIds(child, undefined, prev.layoutMasters, warnings, prev.pptxSemantic)
         if (warnings.length)
           showNotice(warnings.map((warning) => warning.error).join('\n'), {
             title: 'Repair interaction targets',
@@ -469,10 +543,11 @@ export function useSlideOperations({
           })
         return {
           ...prev,
+          ...(cloned.pptxSemantic ? { pptxSemantic: cloned.pptxSemantic } : {}),
           slides: prev.slides.map((slide, index) => {
             if (index !== parentIndex) return slide
             const children = [...(slide.children || [])]
-            children.splice(childIndex + 1, 0, dup)
+            children.splice(childIndex + 1, 0, cloned.slide)
             return { ...slide, children }
           }),
         }
@@ -487,14 +562,12 @@ export function useSlideOperations({
         if (!prev) return prev
         const parent = prev.slides[parentIndex]
         if (!parent?.children?.[childIndex]) return prev
-        return {
-          ...prev,
-          slides: prev.slides.map((s, i) =>
-            i === parentIndex
-              ? { ...s, children: s.children.filter((_, ci) => ci !== childIndex) }
-              : s
-          ),
-        }
+        const slides = prev.slides.map((s, i) =>
+          i === parentIndex
+            ? { ...s, children: s.children.filter((_, ci) => ci !== childIndex) }
+            : s
+        )
+        return withDeletedSlideOccurrences(prev, slides)
       })
     },
     [setPresentation]

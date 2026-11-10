@@ -38,7 +38,7 @@ async function recoverProjectPackage(record, { signal } = {}) {
       signal, mediaUrlMap,
       beforePublication: async ({ head, projection }) => {
         signal?.throwIfAborted()
-        const presentation = projection || { ...rewritePresentationMedia(record.presentation, mediaUrlMap), id: record.intendedPresentationId }
+        const presentation = projection || rewritePresentationMedia(record.presentation, mediaUrlMap, record.intendedPresentationId)
         const checkpoint = { ...record, presentation,
           packageOutcome: { head, originalSha256: original.blobSha256, originalByteLength: originalBlob.byteLength } }
         record = await updateSession(record.sessionId, (current) => {

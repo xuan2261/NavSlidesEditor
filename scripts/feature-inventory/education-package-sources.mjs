@@ -3,7 +3,8 @@ import { resolve, dirname } from 'node:path'
 import { readFileSync, existsSync } from 'node:fs'
 import { digest, fileHash, inside } from './education-evidence-files.mjs'
 import { assertFrozenSubject } from './education-qualification-stage.mjs'
-import { verifyInstallerPayload, assertPlainPath } from './education-installer-payload.mjs'
+import { verifyInstallerPayload } from './education-installer-payload.mjs'
+import { assertPlainPath } from './education-nsis-tool.mjs'
 import manifestRuntime from '../ci/artifact-manifest-runtime.cjs'
 
 export async function verifyPackageStage(context, { resources, installer, exe }) {

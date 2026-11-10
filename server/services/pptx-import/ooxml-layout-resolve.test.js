@@ -81,4 +81,15 @@ describe('ooxml-layout-resolve (T8.1)', () => {
     expect(elements[1]).toMatchObject({ x: 1, y: 3, width: 10, height: 1, stroke: '#000000', strokeWidth: 1 })
     expect(elements[2]).toBe(authored)
   })
+
+  it('applies uniform import scale once to native XML placeholder and decoration geometry', async () => {
+    const zip = new JSZip()
+    zip.file('ppt/slideLayouts/slideLayout1.xml', `<p:sldLayout xmlns:p="p" xmlns:a="a"><p:cSld><p:spTree>
+      <p:sp><p:nvSpPr><p:cNvPr id="2"/><p:nvPr><p:ph type="title"/></p:nvPr></p:nvSpPr><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="5080000" cy="1270000"/></a:xfrm></p:spPr></p:sp>
+      <p:sp><p:nvSpPr><p:cNvPr id="3"/></p:nvSpPr><p:spPr><a:xfrm><a:off x="1270000" y="2540000"/><a:ext cx="1270000" cy="1270000"/></a:xfrm><a:prstGeom prst="rect"/><a:solidFill><a:srgbClr val="005AA9"/></a:solidFill></p:spPr></p:sp>
+    </p:spTree></p:cSld></p:sldLayout>`)
+    const { elements } = await resolveLayoutFromZip({ elements: [] }, zip, { scale: { x: 0.5, y: 0.5 } })
+    expect(elements.find((element) => element.type === 'text')).toMatchObject({ x: 0, y: 0, width: 200, height: 50, fontSize: 18 })
+    expect(elements.find((element) => element.type === 'shape')).toMatchObject({ x: 50, y: 100, width: 50, height: 50, fill: '#005AA9' })
+  })
 })

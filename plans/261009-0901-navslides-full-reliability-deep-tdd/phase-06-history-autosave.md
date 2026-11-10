@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "History, autosave, rich text và selection"
-status: in-progress
+status: completed
 priority: P1
 effort: ""
 dependencies: [1]
@@ -64,6 +64,14 @@ C = critical dữ liệu/gate; H = high; M = medium. Đây là scenario được
 | P06-13 | M | Manual save và unload recovery | Committed snapshot đúng, newer draft không xóa |
 | P06-14 | H | Server restore tạo Before restore | Có thể đảo restore; original owner còn |
 
+### Executed matrix reconciliation — 2026-11-07
+
+- P06-01–06: bound focused receipt `reports/p06-bound-20261107.json`; mounted history characterization asserts exact A/B/C snapshots through repeated Undo/Redo, immediate Undo/new-branch invalidation, coalescing, initial clean state and oldest retained history boundary. No replacement history implementation or duplicate regression was introduced.
+- P06-07/08: focused rich-text/layout/selection controllers plus native authoring journeys assert writable formatted caret, deleted text Undo and locked-master/local-target separation through save/reload.
+- P06-09–13: bound save/persistence controller assertions and five corresponding native save/conflict/recovery scenarios cover queued newer edits, late route responses, actual failed connection/retry, Use Remote fencing and manual acknowledgement/unload recovery.
+- P06-14: native restore scenario proves reversible Before restore and unchanged downloadable Original, including package pending-projection refusal.
+- Verification: 87/87 focused assertions, exit 0, matching manifests in `reports/p06-bound-20261107-identity.json`; final traced native receipt `reports/p06-final-exit-20261107.json` passes seven journeys, zero skipped/flaky/unexpected, all seven attached identities matched. Seven retained `trace.zip` files are linked under `reports/p06-final-exit-artifacts-20261107/`; actual content/Original hashes remain in browser receipts. Each execution binds its own input, not a joint Phase06–10 digest. Changelog records verified existing behavior.
+
 ## Refactor
 Sau GREEN, chỉ giản lược owner vừa sửa và loại obsolete path do cutover. Giữ existing patterns; không thêm abstraction/service chưa cần. Không đổi oracle để khớp behavior lỗi. Chỉ thêm permanent regression khi bảo vệ consumer-visible invariant trong matrix.
 
@@ -79,13 +87,13 @@ npx playwright test tests/e2e/editor-history-errors.spec.js tests/e2e/version-hi
 Quan sát editor thật cùng rich text/master/selection, pending save và reload; lưu trace/video và actual content hash ở đúng SHA.
 
 ## Deliverables / checklist
-- [ ] 06.1 Chốt phase-entry evidence, callers, môi trường và baseline.
-- [ ] 06.2 Viết/reuse matrix regression trước thay behavior; lưu RED hoặc existing-GREEN đúng nguyên nhân.
-- [ ] 06.3 Hoàn thành implementation/verification steps; không hạ policy hoặc bỏ invariant.
-- [ ] 06.4 Focused regression và runtime smoke đạt, receipt gắn SHA/artifact/fixture identity.
-- [ ] 06.5 Cập nhật tài liệu/changelog cho thay đổi permanent, giữ limits; không mark code fix khi chỉ verification.
+- [x] 06.1 Chốt phase-entry evidence, callers, môi trường và baseline.
+- [x] 06.2 Viết/reuse matrix regression trước thay behavior; lưu RED hoặc existing-GREEN đúng nguyên nhân (P06-01..P06-14 mapped; P06-04 debounce coalesce và P06-06 history cap characterization added; P06-13 exact oracle tightened).
+- [x] 06.3 Hoàn thành implementation/verification steps; không hạ policy hoặc bỏ invariant (repaired P06-13 saved indicator oracle, verified TipTap rich text, layout master authoring, queued save and draft recovery fencing).
+- [x] 06.4 Focused regression và runtime smoke đạt, receipt gắn SHA/artifact/fixture identity; final traced native run passed 2026-11-07.
+- [x] 06.5 Cập nhật tài liệu/changelog; existing implementation verified, no redundant history rewrite.
 
-Execution: historical root `reports/p06-acceptance-closure.json` giữ native initial5 RED (restore generations2/3 nhưng save gửi1→409). Main repair restored generation/history/interaction lifecycle và transport/teardown fencing: `reports/p06-restored-adoption-green02.json` focused40 pass; `reports/p06-native-summary-final02.json` native5 pass, before/after source6b0171… matched. Native IDs07/08/09/10/11/12/14 được chạy; exact13 manual-save/newer-draft/unload oracle và current fullcoverage mapping vẫn mở. Không promote historical root17 hoặc old build. Xem [execution ledger](evidence-ledger.md#execution-ledger-reconciliation).
+Execution / closure 2026-11-07: Gate CLOSED under user's conditional closure authorization. Existing redo snapshot regression and P06-01–14 interactions mapped above passed: focused 87/87 (exit 0, command in `reports/p06-bound-20261107-identity.json`) and final native seven/seven (exit 0, `reports/p06-final-exit-20261107.json`). Native invocation: Node Playwright CLI, three `p06-history-{authoring,save,restore}-acceptance.spec.js` files, Chromium, one worker, zero retries, `--trace=on`; seven traces retained. Recorded focused/native files have no differences against the current workspace. Historical restore RED and intermediate receipts remain preserved. This is scoped local phase qualification, not physical Office, joint Phase06–10, clean final SHA or release qualification.
 
 ## Exit gate
 Existing redo regression được xác nhận; mọi C/H interaction pass hoặc có blocker rõ ràng không gọi complete. Không thêm redundant history implementation.

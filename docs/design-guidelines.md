@@ -106,6 +106,18 @@ Default font families offered in the font picker (verified in Toolbar):
 - Smart guides appear when element edge or center aligns within 6px of another element or canvas edge/center
 - Snaps to guide position on release
 
+### Native geometry point editing
+
+- Selected, unlocked imported custom shapes expose source-bound point handles.
+- Handle chrome uses `selection` and `focus` tokens. Markers are 8 CSS pixels and
+  hit targets are 44 CSS pixels, compensated for reflection, skew and canvas zoom.
+- Drag previews only the local path; release commits one geometry operation.
+  Escape or pointer cancellation restores the path without persisting a change.
+- Arrow keys move one local logical pixel; Shift moves ten. The inspector exposes
+  authored path-grid coordinates and native adjustment values separately.
+- Canonical geometry uses its native preset and adjustment controls rather than
+  the legacy shape-kind and corner-radius controls.
+
 ### Resize
 
 - 8 resize handles on selection box
@@ -174,12 +186,14 @@ Default font families offered in the font picker (verified in Toolbar):
 ### Toolbars and Ribbon
 
 **Ribbon Architecture (default):**
+
 - `RibbonHeaderBar` displays tabs: Home, Insert, Design, Format, Transitions, Animations, View
 - `RibbonPanel` shows controls for the active tab
 - Active tab persists to `localStorage` and syncs via `ui-store.activeTab`
 - Tab-based organization groups related commands (insert elements, apply design, configure animations)
 
 **Responsive ribbon contract:**
+
 - `RibbonDensityProvider` selects compact, condensed, or wide density from the ribbon container; lower-frequency groups move into a named **More** menu rather than relying on an invisible horizontal scrollbar.
 - The active panel owns its overflow behavior and inactive panels are hidden and cannot intercept pointer events.
 - Group surfaces retain `data-ribbon-content-row`, `data-ribbon-section`, and `data-ribbon-section-label` hooks for keyboard and layout contracts.
@@ -187,6 +201,7 @@ Default font families offered in the font picker (verified in Toolbar):
 - At 320, 768, and 1024 CSS-pixel viewports, page-level horizontal overflow is not an acceptable fallback; owned ribbon overflow must not cover the canvas, status, or inspector controls.
 
 **Contextual Format tab (dynamic):**
+
 - The Format tab is hidden from the tab bar when nothing is selected and appears only when an element is selected. Selection context flows through `ui-store.formatContext` (`{ hasSelection, elementType }`) instead of prop-drilling `selectedElement` through `RibbonHeaderBar`.
 - The tab label is type-specific via `formatTabLabel(type)`: Shape Format (`shape`/`line`), Picture Format (`image`), Table Design (`table`), Chart Design (`chart`), Code (`code`), Media (`video`/`audio`), and Format for text/unknown.
 - Format auto-activates on the first render of a new selection (none → some). Once the user navigates to another tab while the selection persists, later type changes must not yank them back to Format.
@@ -194,17 +209,20 @@ Default font families offered in the font picker (verified in Toolbar):
 - Both `Tabs.Root` value props (`RibbonPanel` and `RibbonHeaderBar`) coerce a persisted `activeTab='format'` to `home` when `!hasSelection` (`effectiveTab` guard) so a reload never flashes an empty Format panel before an async effect can correct it.
 
 **Big-button hierarchy:**
+
 - A tab's primary action is promoted to `RibbonBigButton` (icon ~22px over an 11px label, ~52px tall) for PowerPoint-style visual hierarchy; secondary actions stay compact where the active density permits.
 - Applied to: Home → Paste; Insert → Text Box (`onAddText`) and Picture (`onAddImageUpload`, file upload — not the URL-prompt `onAddImage`, which remains a small button).
 - Big buttons accept an explicit `aria-label` so the visible label can differ from the stable accessible name used by tests/automation (e.g. visible "Text Box" / accessible "Add text", `data-testid="ribbon-insert-text"`).
 
 **Status bar (PowerPoint-style):**
+
 - `StatusBar` (rendered globally in `MainLayout`, outside the editor tree) shows attribution + version always, and gates the editor cluster (zoom + slide position + view switcher) on `ui-store.slidePosition.total > 0`, which doubles as the "editor active" signal (only `EditorPage` calls `setSlidePosition`).
 - Zoom uses a range slider (`min=10 max=400 step=5` percent) two-way bound to `ui-store.zoom`, keeping the −/+/Fit buttons and the percent display.
 - Slide position renders `Slide {current+1} / {total}` for top-level parent slides only.
 - The view switcher toggles `editor-store.viewMode` (Normal / Slide Sorter) and triggers the registered `ui-store.presentHandler` for Present. `setPresentHandler` uses a plain `set` (never the function-updater idiom) so registering the handler never opens the present window.
 
 **Toolbar styling:**
+
 - Background: `--bg-secondary`
 - Icon buttons: 32×32px, `--text-secondary` idle, `--text-primary` hover, `--accent` active/selected
 - Separator: 1px vertical `--border` between groups
@@ -271,18 +289,18 @@ NavSlides Editor uses a token-based design system defined in `shared/src/design-
 
 ### Token Taxonomy
 
-| Token key | Field | Default |
-| --- | --- | --- |
-| `colors.bg` | Slide background | `#0f172a` |
-| `colors.surface` | Card / panel surface | `#1e293b` |
-| `colors.accent` | Primary accent | `#6366f1` |
-| `colors.accent2` | Secondary accent | `#8b5cf6` |
-| `colors.text` | Body text | `#f8fafc` |
-| `colors.muted` | Muted / secondary text | `#94a3b8` |
-| `fonts.heading` | Heading font family | `Inter` |
-| `fonts.body` | Body font family | `Inter` |
-| `radius` | Border radius scale | `0.5rem` |
-| `spacingScale` | Spacing multiplier | `1` |
+| Token key        | Field                  | Default   |
+| ---------------- | ---------------------- | --------- |
+| `colors.bg`      | Slide background       | `#0f172a` |
+| `colors.surface` | Card / panel surface   | `#1e293b` |
+| `colors.accent`  | Primary accent         | `#6366f1` |
+| `colors.accent2` | Secondary accent       | `#8b5cf6` |
+| `colors.text`    | Body text              | `#f8fafc` |
+| `colors.muted`   | Muted / secondary text | `#94a3b8` |
+| `fonts.heading`  | Heading font family    | `Inter`   |
+| `fonts.body`     | Body font family       | `Inter`   |
+| `radius`         | Border radius scale    | `0.5rem`  |
+| `spacingScale`   | Spacing multiplier     | `1`       |
 
 ### 'auto' Sentinel
 
@@ -292,15 +310,15 @@ Element color fields may be set to `'auto'`. At render time `resolveAutoColor(va
 
 `shared/src/theme-presets.js` exports `THEME_PRESETS` (39 presets) and `getThemePreset(id)`. Each preset: `{ id, label, category, revealTheme, tokens }`.
 
-| Category | Count | Examples |
-| --- | --- | --- |
-| minimal | 5 | minimal-dark, minimal-light |
-| editorial | 5 | editorial-serif, editorial-mono |
-| developer | 7 | dev-dark, dev-terminal |
-| corporate | 6 | corporate-blue, corporate-slate |
-| creative | 8 | creative-gradient, creative-neon |
-| earthy | 4 | earthy-warm, earthy-forest |
-| bold | 4 | bold-contrast, bold-vivid |
+| Category  | Count | Examples                         |
+| --------- | ----- | -------------------------------- |
+| minimal   | 5     | minimal-dark, minimal-light      |
+| editorial | 5     | editorial-serif, editorial-mono  |
+| developer | 7     | dev-dark, dev-terminal           |
+| corporate | 6     | corporate-blue, corporate-slate  |
+| creative  | 8     | creative-gradient, creative-neon |
+| earthy    | 4     | earthy-warm, earthy-forest       |
+| bold      | 4     | bold-contrast, bold-vivid        |
 
 Surfaced in the Design ribbon ThemeGallery with live-switch and "Apply to all" as one undoable step. New decks seed tokens from the selected preset.
 
@@ -308,16 +326,16 @@ Surfaced in the Design ribbon ThemeGallery with live-switch and "Apply to all" a
 
 Slide backgrounds support `type: 'fx'` with shape `{ name, params, fallbackColor }`. The `shared/src/fx/` registry powers both the editor canvas (`slide-background-fx-canvas.jsx`) and the `htmlGenerator`-inlined browser runtime.
 
-| FX name | Effect |
-| --- | --- |
-| `gradient-blob` | Animated color blobs |
-| `starfield` | Moving star particles |
-| `matrix-rain` | Falling character rain |
-| `constellation` | Connected star network |
-| `particle-burst` | Radiating particles |
-| `knowledge-graph` | Animated node graph |
-| `orbit-ring` | Orbiting ring elements |
-| `sparkle-trail` | Sparkle trail effect |
+| FX name           | Effect                 |
+| ----------------- | ---------------------- |
+| `gradient-blob`   | Animated color blobs   |
+| `starfield`       | Moving star particles  |
+| `matrix-rain`     | Falling character rain |
+| `constellation`   | Connected star network |
+| `particle-burst`  | Radiating particles    |
+| `knowledge-graph` | Animated node graph    |
+| `orbit-ring`      | Orbiting ring elements |
+| `sparkle-trail`   | Sparkle trail effect   |
 
 `fallbackColor` is used for print/PDF paths. The runtime honors `prefers-reduced-motion` (static first frame).
 

@@ -21,6 +21,9 @@ const EDUCATION_ASSET_PATHS = Object.freeze({
   runtimeJs: '/vendor/navslides-education/runtime.js',
   runtimeCss: '/vendor/navslides-education/runtime.css',
 })
+const SEMANTIC_OUTPUT_ASSET_PATHS = Object.freeze({
+  runtimeJs: '/vendor/navslides-semantic-output/runtime.js',
+})
 
 const REVEAL_THEME_NAMES = SUPPORTED_REVEAL_THEMES
 
@@ -35,6 +38,7 @@ const REVEAL_REQUIRED_VENDOR_PATHS = Object.freeze(
     ...Object.values(REVEAL_ASSET_PATHS),
     ...Object.values(REVEAL_THEME_PATHS),
     ...Object.values(EDUCATION_ASSET_PATHS),
+    ...Object.values(SEMANTIC_OUTPUT_ASSET_PATHS),
   ].map((assetPath) => assetPath.slice('/vendor/'.length))
 )
 
@@ -42,6 +46,7 @@ const REVEAL_REQUIRED_OFFLINE_ASSET_PATHS = Object.freeze([
   ...Object.values(REVEAL_ASSET_PATHS),
   ...Object.values(REVEAL_THEME_PATHS),
   ...Object.values(EDUCATION_ASSET_PATHS),
+  ...Object.values(SEMANTIC_OUTPUT_ASSET_PATHS),
 ])
 
 const REVEAL_VENDOR_COPY_SPEC = Object.freeze({
@@ -54,6 +59,7 @@ function revealThemePath(theme) {
 }
 
 module.exports = {
+  SEMANTIC_OUTPUT_ASSET_PATHS,
   EDUCATION_ASSET_PATHS,
   REVEAL_ASSET_PATHS,
   REVEAL_REQUIRED_OFFLINE_ASSET_PATHS,

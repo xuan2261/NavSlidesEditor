@@ -212,7 +212,7 @@ $env:PLAYWRIGHT_USE_DEV_SERVERS='0'
 npm run vendor
 npm run build
 npm run runtime:verify
-npx playwright test tests/e2e/education/ordinary-elements-release.spec.js tests/e2e/education/game-surfaces-release.spec.js tests/e2e/education/static-exports-release.spec.js --project=chromium --workers=1
+npx playwright test tests/e2e/education/ordinary-elements-release.spec.js tests/e2e/education/game-surfaces-release.spec.js tests/e2e/education/static-exports-release.spec.js tests/e2e/education/static-exports-chart-decoder.spec.js --project=chromium --workers=1
 npx playwright test tests/e2e/live/education-release-live.spec.js --project=chromium-live --workers=1
 npm test
 npm run lint

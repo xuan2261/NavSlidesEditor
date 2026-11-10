@@ -17,6 +17,7 @@ import { GameLeaderboardOverlay } from './game-leaderboard-overlay'
 import EditorModalsSecondary from './editor-modals-secondary'
 import { useUIStore } from '../stores/ui-store'
 import { applySorterSlideOperation, getSorterCurrentDestination } from '../utils/slide-sorter-operations'
+import projectionOperations from 'revealjs-shared/src/pptx-projection-operation.js'
 
 /**
  * Presentational mount point for the editor's modal/overlay JSX, lifted out of
@@ -91,8 +92,8 @@ export default function EditorModals(props) {
     const slideId = presentation.slides[index]?.id
     if (!slideId) return
     setPresentation((prev) => {
-      const slides = applySorterSlideOperation(prev.slides, operation, slideId, toIndex)
-      return slides === prev.slides ? prev : { ...prev, slides }
+      const next = applySorterSlideOperation(prev, operation, slideId, toIndex)
+      return next === prev ? prev : next
     })
   }
 
@@ -178,6 +179,13 @@ export default function EditorModals(props) {
       {showTimeline && (
         <AnimationTimeline
           slide={currentSlide}
+          pptxSemantic={presentation?.pptxSemantic}
+          onSourceTimingOperation={(operation) => {
+            if (operation.slideId !== currentSlide?.id) throw new TypeError('Timing edit targets a different active slide')
+            const projected = projectionOperations.applyPresentationProjectionOperation(presentation, operation)
+            setPresentation(previous => previous === presentation
+              ? projected : projectionOperations.applyPresentationProjectionOperation(previous, operation))
+          }}
           onUpdateElement={(id, updates) => updateElement(id, updates)}
           onClose={() => setShowTimeline(false)}
           onPreview={() => setShowAnimationPreview(true)}

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { normalizeElementAction, resolveEffectiveElements } from 'revealjs-shared'
+import { RUN_ACTION_KINDS } from 'revealjs-shared/src/pptx-text-hyperlinks.js'
 import { Button, Input, Select } from '../../components/ui'
 
 const KINDS = [
@@ -43,6 +44,7 @@ export default function ActionControls({
   presentation,
   slide,
   compact = false,
+  runScoped = false,
 }) {
   const draft = element.action || null
   const validation = normalizeElementAction(draft)
@@ -95,14 +97,18 @@ export default function ActionControls({
     SCORE_KINDS.has(kind) &&
     draft?.variableId &&
     !variables.some((variable) => variable.id === draft.variableId)
+  const missingSlide = kind === 'slide' && draft?.slideId && presentation &&
+    slides.filter((candidate) => candidate.id === draft.slideId).length !== 1
   const error =
     draft?.referenceError ||
     validation.error ||
-    (missingTarget
-      ? 'Target is unavailable in this effective slide.'
-      : missingVariable
-        ? 'Score variable is unavailable. Choose a declared variable.'
-        : '')
+    (missingSlide
+      ? 'Destination slide is unavailable. Choose an existing slide to repair it.'
+      : missingTarget
+        ? 'Target is unavailable in this effective slide.'
+        : missingVariable
+          ? 'Score variable is unavailable. Choose a declared variable.'
+          : '')
   return (
     <div
       ref={editorRef}
@@ -111,12 +117,12 @@ export default function ActionControls({
     >
       <label className={compact ? 'sr-only' : 'text-[11px] text-text-muted'}>
         <Select
-          aria-label="Element action"
+          aria-label={runScoped ? 'Run action' : 'Element action'}
           className={classes}
           value={kind}
           onChange={(event) => begin(event.target.value)}
         >
-          {KINDS.map(([value, label]) => (
+          {KINDS.filter(([value]) => !runScoped || value === 'none' || RUN_ACTION_KINDS.has(value)).map(([value, label]) => (
             <option key={value} value={value}>
               {label}
             </option>
@@ -131,6 +137,7 @@ export default function ActionControls({
           onChange={(event) => update({ slideId: event.target.value })}
         >
           <option value="">Choose slide…</option>
+          {missingSlide && <option value={draft.slideId}>Unavailable destination</option>}
           {slides.map((slide) => (
             <option key={slide.id} value={slide.id}>
               {slide.label}
@@ -195,7 +202,7 @@ export default function ActionControls({
           Reset deck variables (otherwise preserve scores)
         </label>
       )}
-      {!compact && (
+      {!compact && !runScoped && (
         <Select
           aria-label="Initial runtime visibility"
           className={classes}
@@ -235,7 +242,7 @@ export default function ActionControls({
             placeholder="Accessible label (optional)"
             onChange={(event) => update({ label: event.target.value })}
           />
-          <label className="flex items-center gap-1 text-[11px] text-text-muted">
+          {!runScoped && <label className="flex items-center gap-1 text-[11px] text-text-muted">
             <input
               aria-label="Transparent hotspot"
               type="checkbox"
@@ -243,7 +250,7 @@ export default function ActionControls({
               onChange={(event) => update({ hotspot: event.target.checked })}
             />
             Transparent hotspot
-          </label>
+          </label>}
         </>
       )}
       {error && (

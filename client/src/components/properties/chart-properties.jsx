@@ -1,10 +1,104 @@
 import { Button, Input, Select, ColorPicker } from '../../components/ui'
 import FocusedAuthoringTextInput from './focused-authoring-text-input'
+import { useState } from 'react'
+import projectionCapabilities from 'revealjs-shared/src/pptx-projection-capabilities.js'
+import NativeChartProperties from '../native-chart-properties'
+
+function ProjectionSeriesValues({ instanceId, series, index, disabled, onUpdate }) {
+  const [draft, setDraft] = useState(null)
+  const [invalid, setInvalid] = useState(false)
+  return (
+    <Input
+      data-testid={`prop-chart-values-${index}`}
+      aria-label={`${series.label || 'Series'} values`}
+      aria-invalid={invalid}
+      disabled={disabled}
+      value={draft ?? series.data.join(', ')}
+      onBlur={() => {
+        if (!invalid) setDraft(null)
+      }}
+      onChange={(event) => {
+        const text = event.target.value
+        const parts = text.split(',').map((part) => part.trim())
+        const values = parts.map(Number)
+        const valid =
+          parts.length === series.data.length &&
+          parts.every(Boolean) &&
+          values.every(Number.isFinite)
+        setDraft(text)
+        setInvalid(!valid)
+        if (valid)
+          onUpdate({
+            pptxProjectionOperation: {
+              type: projectionCapabilities.SERIES_VALUES,
+              instanceId,
+              componentId: series.componentId,
+              values,
+            },
+          })
+      }}
+    />
+  )
+}
+
+function ProjectionChartProperties({ element, pptxSemantic, onUpdate }) {
+  const operations = projectionCapabilities.getProjectionCapabilities(
+    pptxSemantic,
+    element.pptxInstanceId
+  ).operations
+  let editable = !element.locked && operations.includes(projectionCapabilities.SERIES_VALUES)
+  if (editable) {
+    try {
+      projectionCapabilities.assertProjectionChartBinding(pptxSemantic, element)
+    } catch (error) {
+      if (!(error instanceof TypeError)) throw error
+      editable = false
+    }
+  }
+  return (
+    <div className="mb-2.5">
+      <div className="mb-2 text-[11px] text-text-secondary">
+        {editable
+          ? 'Numeric series values can be edited in NavSlides.'
+          : 'Source-bound chart data is read-only.'}{' '}
+        Native PPTX export requires separate qualification.
+      </div>
+      {(element.chartData?.datasets || []).map((series, index) => (
+        <label
+          key={`${element.pptxInstanceId}:${series.componentId || index}`}
+          className="mb-2 block text-xs text-text-secondary"
+        >
+          {series.label || `Series ${index + 1}`}
+          <ProjectionSeriesValues
+            instanceId={element.pptxInstanceId}
+            series={series}
+            index={index}
+            disabled={!editable}
+            onUpdate={onUpdate}
+          />
+        </label>
+      ))}
+    </div>
+  )
+}
 /**
  * Chart-specific properties: chart type, labels, values, series label, color.
  */
 
-export default function ChartProperties({ element, onUpdate }) {
+export default function ChartProperties({ element, onUpdate, pptxSemantic, chartDocument, onSemanticOperation }) {
+  const canonicalChart = chartDocument ?? element.chartDocument
+  if (canonicalChart)
+    return <NativeChartProperties chartDocument={canonicalChart}
+      instanceId={element.pptxInstanceId} locked={element.locked}
+      onSemanticOperation={onSemanticOperation} />
+  if (element.pptxInstanceId)
+    return (
+      <ProjectionChartProperties
+        element={element}
+        pptxSemantic={pptxSemantic}
+        onUpdate={onUpdate}
+      />
+    )
   const chartData = element.chartData || {}
   const axisTitles = element.axisTitles || {}
   const chartMeta = element._pptxChartMeta

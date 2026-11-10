@@ -1,16 +1,16 @@
-import { writeFile } from 'node:fs/promises'
 import { test, expect } from '@playwright/test'
 import { apiDeletePresentation } from './fixtures/test-fixtures.js'
 import { BUDGET, REPETITIONS, SEED, VIEWPORT, contentHash, installPackage, installSynthetic, restoreCanonical, shuffled, syntheticDeck } from './helpers/navigator-performance-fixtures.js'
 import { captureAttribution, installProbe } from './helpers/navigator-performance-probe.js'
 import { behaviorSmoke, measureInteractions, witness } from './helpers/navigator-performance-interactions.js'
-import { compareBaseline, environmentEvidence, saveEvidence, summarize } from './helpers/navigator-performance-evidence.js'
+import { compareBaseline, environmentEvidence, saveEvidence, saveFinalEvidence, summarize } from './helpers/navigator-performance-evidence.js'
 import { executionIdentityGate, finishExecutionIdentity } from './helpers/execution-identity-gate.js'
 
 // Run alone after phases06/07 and a production build:
 // npx playwright test tests/e2e/navigator-performance.spec.js --project=chromium --workers=1 --retries=0
 // Candidate comparison: set NAVIGATOR_BASELINE_INPUT to the saved navigator-baseline.json.
 // Evidence lives in Playwright's per-test output directory and HTML report attachments.
+// Optional durable receipt: NAVIGATOR_REPORT_OUTPUT=<new, unique file path> (never overwritten).
 test.use({ viewport: VIEWPORT, deviceScaleFactor: 1, headless: true, trace: 'off', video: 'off' })
 test('phase13 isolated production navigator baseline and stable-ID behavior', async ({ browser, browserName, request }, testInfo) => {
   test.setTimeout(7200000)
@@ -124,8 +124,7 @@ test('phase13 isolated production navigator baseline and stable-ID behavior', as
         receipt.comparison = await compareBaseline(receipt)
       }
       const outputFilename = isCandidate ? 'navigator-candidate.json' : 'navigator-baseline.json'
-      await saveEvidence(testInfo, outputFilename, receipt)
-      await writeFile(`plans/261009-0901-navslides-full-reliability-deep-tdd/reports/${outputFilename}`, `${JSON.stringify(receipt, null, 2)}\n`)
+      await saveFinalEvidence(testInfo, outputFilename, receipt)
     }
     catch (error) { evidenceError = error; receipt.evidenceError = error.stack || error.message }
   }

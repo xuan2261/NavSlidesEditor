@@ -69,6 +69,7 @@ function isCommittedAuthority(result) {
     result.operation === MUTATION_OPERATIONS.VALIDATED_EDITED_EXPORT
 }
 
+// Mutable authority must be rehashed on every read, even when its head is unchanged.
 function matchesHeadAuthority(result, head) {
   return result.projection && result.sourceMap &&
     head.projectionRevisionId === hashRecord(result.projection) &&
@@ -111,7 +112,8 @@ function resolveEditedExportContext(state, presentationId) {
     return failed('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
   }
   try {
-    return Object.freeze({
+    const pendingEdit = Boolean(pending && hashRecord(committed.projection) !== hashRecord(after))
+    const context = Object.freeze({
       ok: true,
       head,
       before: committed.projection,
@@ -120,9 +122,10 @@ function resolveEditedExportContext(state, presentationId) {
       pendingJournalHash: head.pendingJournalHash,
       committedJournalHash: committed.journal?.journalHash ?? null,
       textTransports: serverTextTransports(after),
-      pendingEdit: Boolean(pending && hashRecord(committed.projection) !== hashRecord(after)),
-      textExportEligible: !pending || !hasNonTextChanges(committed.projection, after),
+      pendingEdit,
+      textExportEligible: !pending || (!pendingEdit ? true : !hasNonTextChanges(committed.projection, after)),
     })
+    return context
   } catch {
     return failed('CANONICAL_TEXT_JOURNAL_INVALID')
   }

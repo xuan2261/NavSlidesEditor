@@ -30,6 +30,20 @@ describe('pptx geometry helpers', () => {
     expect(normalized.scale.y).toBe(1)
   })
 
+  it.each([
+    [{ width: 720, height: 540 }, { width: 720, height: 540 }, 1],
+    [{ width: 1080, height: 1920 }, { width: 304, height: 540 }, 0.28125],
+    [{ width: 1920, height: 1080 }, { width: 960, height: 540 }, 0.5],
+    [{ width: 1920, height: 540 }, { width: 960, height: 270 }, 0.5],
+  ])('preserves square geometry for source size %j', (size, resolution, factor) => {
+    const normalized = normalizeSourceSize(size)
+    expect(normalized.resolution).toEqual(resolution)
+    expect(normalized.scale).toEqual({ x: factor, y: factor })
+    const square = mapBox({ left: 0, top: 0, width: 200, height: 200 }, normalized.scale)
+    expect(square.width).toBe(square.height)
+    expect(square.width).toBe(Math.round(200 * factor))
+  })
+
   it('maps box with nullish-safe coordinate reads', () => {
     const box = mapBox({ left: 0, top: 0, width: 100, height: 50 }, { x: 0.5, y: 2 })
     expect(box).toEqual({ x: 0, y: 0, width: 50, height: 100 })

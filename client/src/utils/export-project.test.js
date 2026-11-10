@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import JSZip from 'jszip'
-import { exportProject } from './export-project'
+import { exportProject, toProjectExportPresentation } from './export-project'
 
 vi.mock('revealjs-shared', async (importOriginal) => ({
   ...(await importOriginal()),
@@ -101,10 +101,30 @@ describe('exportProject', () => {
     vi.unstubAllGlobals()
   })
 
+  it.each(['native-aspect-v2', true, { policy: 'native-aspect-v1' }])(
+    'does not transport unknown geometry policies as native semantics: %j', (geometryPolicy) => {
+      const source = {
+        resolution: { width: 720, height: 540 },
+        _pptxMeta: { originalSize: { width: 720, height: 540 }, geometryPolicy, packageRevisionId: 'forged' },
+        slides: [],
+      }
+      const exported = toProjectExportPresentation(source)
+      expect(exported._pptxMeta).toEqual({ originalSize: { width: 720, height: 540 } })
+      expect(exported.resolution).toEqual(source.resolution)
+      expect(source._pptxMeta.geometryPolicy).toEqual(geometryPolicy)
+    }
+  )
+
   it('exports a JSON projection without editor diagnostics when there is no local media', async () => {
     await exportProject({
       id: 'deck-json',
       title: 'JSON Export',
+      resolution: { width: 720, height: 540 },
+      _pptxMeta: {
+        originalSize: { width: 960, height: 720, packagePath: 'private' },
+        geometryPolicy: 'native-aspect-v1',
+        packageRevisionId: 'forged',
+      },
       _pptxImportReport: {
         jobId: 'job-json-secret',
         createdAt: '2026-07-26T00:00:00.000Z',
@@ -122,12 +142,17 @@ describe('exportProject', () => {
     const data = JSON.parse(new TextDecoder().decode(await downloadedBlob.arrayBuffer()))
     expect(data.presentation).toMatchObject({
       id: 'deck-json',
+      resolution: { width: 720, height: 540 },
+      _pptxMeta: { originalSize: { width: 960, height: 720 }, geometryPolicy: 'native-aspect-v1' },
       slides: [{ id: 'slide-json', elements: [{ id: 'element-json' }] }],
     })
     expect(data.presentation).not.toHaveProperty('_pptxImportReport')
     expect(data.presentation).not.toHaveProperty('pptxOriginal')
     expect(JSON.stringify(data)).not.toContain('job-json-secret')
     expect(JSON.stringify(data)).not.toContain('original-secret')
+    expect(data.presentation._pptxMeta).toEqual({
+      originalSize: { width: 960, height: 720 }, geometryPolicy: 'native-aspect-v1',
+    })
   })
 
   it('rejects missing media without downloading a partial archive', async () => {
