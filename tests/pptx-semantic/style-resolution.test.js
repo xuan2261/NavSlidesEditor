@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { resolveProperty, resolveProperties } from '../../shared/src/pptx-style-resolution'
-import { TEXT_DOCUMENT_LIMITS, TEXT_PROPERTY_SCOPES } from '../../shared/src/pptx-text-document'
+import { TEXT_DOCUMENT_LIMITS, TEXT_PROPERTY_SCOPES, normalizeTextProperties, normalizeTextDocument, cloneOwnedTextData, validateOwnedTextProperties } from '../../shared/src/pptx-text-document'
 
 const source = (part) => ({ part, path: '/sp[1]/txBody/p[1]' })
 const layer = (id, kind, properties, extra = {}) => ({
@@ -19,6 +19,81 @@ const theme = {
 }
 
 describe('property-specific source style resolution', () => {
+  it('copies shallow-frozen nested mutables freshly and never skips public validation', () => {
+    const input = Object.freeze({ fontLatin: { typeface: 'Before' } })
+    const first = normalizeTextProperties(input, 'run')
+    const second = normalizeTextProperties(input, 'run')
+    expect(second).not.toBe(first)
+    expect(second.fontLatin).not.toBe(input.fontLatin)
+    first.fontLatin.typeface = 'Detached'
+    input.fontLatin.typeface = 'After'
+    expect(normalizeTextProperties(input, 'run').fontLatin.typeface).toBe('After')
+    input.fontLatin.typeface = 17
+    expect(() => normalizeTextProperties(input, 'run')).toThrow(TypeError)
+    second.fontLatin.typeface = 17
+    expect(() => normalizeTextProperties(second, 'run')).toThrow(TypeError)
+    const doc = Object.freeze({ schemaVersion: 1, componentId: 'text', paragraphs: [], body: { autofit: { mode: 'normal', fontScale: 100000 } } })
+    const output = normalizeTextDocument(doc)
+    expect(normalizeTextDocument(output)).not.toBe(output)
+    doc.body.autofit.fontScale = -1
+    expect(() => normalizeTextDocument(doc)).toThrow(TypeError)
+  })
+
+  it('reuses owned property proofs only for the exact successfully validated scope', () => {
+    const owned = cloneOwnedTextData({ bold: true, fontLatin: { typeface: 'Owned' } })
+    expect(validateOwnedTextProperties(owned, 'run')).toBe(owned)
+    expect(validateOwnedTextProperties(owned, 'run')).toBe(owned)
+    expect(cloneOwnedTextData(owned)).toBe(owned)
+    expect(() => validateOwnedTextProperties(owned, 'body')).toThrow(TypeError)
+    expect(() => validateOwnedTextProperties(owned, 'unknown')).toThrow(TypeError)
+    const detached = normalizeTextProperties(owned, 'run')
+    expect(detached.fontLatin).not.toBe(owned.fontLatin)
+    detached.fontLatin.typeface = 'Changed'
+    expect(owned.fontLatin.typeface).toBe('Owned')
+  })
+
+  it('isolates owned composition results by complete scope and theme and detaches each output', () => {
+    const layers = cloneOwnedTextData({ target, entries: [layer('p', 'paragraph', { direction: 'rtl', fontLatin: { typeface: '+mn-lt' } })] })
+    const ownedTheme = cloneOwnedTextData(theme)
+    const input = { scope: 'run', layers, theme: ownedTheme }
+    const first = resolveProperties(input)
+    first.fontLatin.source.path = 'mutated'
+    first.fontLatin.dependencyIds.push('mutated')
+    first.fontLatin.authored.typeface = 'mutated'
+    const again = resolveProperties(input)
+    expect(again.fontLatin.resolved).toBe('Example Sans')
+    expect(again.fontLatin.authored.typeface).toBe('+mn-lt')
+    expect(again.fontLatin.source.path).not.toBe('mutated')
+    expect(again.fontLatin.dependencyIds).toEqual(['p', 'theme:1'])
+    expect(resolveProperties({ scope: 'paragraph', layers }).direction.resolved).toBe('rtl')
+    expect(resolveProperties({ scope: 'run', layers }).fontLatin.unsupportedReason).toBe('missing-theme-font')
+    const changed = cloneOwnedTextData({ ...theme, fonts: { minor: { latin: 'Other' } } })
+    expect(resolveProperties({ ...input, theme: changed }).fontLatin.resolved).toBe('Other')
+  })
+
+  it('never caches composition by shallow-frozen raw layer identity', () => {
+    const properties = { fontLatin: { typeface: 'Before' } }
+    const layers = Object.freeze({ target, entries: [layer('r', 'run', properties)] })
+    const input = { scope: 'run', layers }
+    expect(resolveProperties(input).fontLatin.resolved).toBe('Before')
+    properties.fontLatin.typeface = 'After'
+    expect(resolveProperties(input).fontLatin.resolved).toBe('After')
+    properties.fontLatin.typeface = 42
+    expect(() => resolveProperties(input)).toThrow(TypeError)
+  })
+
+  it('charges reused owned subtrees against aggregate node and depth budgets', () => {
+    const leaf = cloneOwnedTextData({ value: 'x' })
+    let deep = leaf
+    for (let i = 0; i < TEXT_DOCUMENT_LIMITS.maxDepth; i++) deep = { child: deep }
+    expect(() => cloneOwnedTextData(deep)).toThrow(/budget/)
+    const many = Array(60000).fill(leaf)
+    const owned = cloneOwnedTextData(many)
+    expect(() => cloneOwnedTextData([owned, owned, owned])).toThrow(/budget/)
+    const bytes = cloneOwnedTextData({ text: 'x'.repeat(1000000) })
+    expect(() => cloneOwnedTextData(Array(5).fill(bytes))).toThrow(/bytes/)
+  })
+
   it('retains an explicit false or zero and records the exact winning source', () => {
     const direct = layer('direct', 'run', { bold: false })
     const parent = layer('paragraph', 'paragraph', { bold: true })
@@ -153,6 +228,71 @@ describe('property-specific source style resolution', () => {
 })
 
 describe('checked scope style resolution', () => {
+  it('runs common layer matching once per composition, not once per property', () => {
+    const layers = cloneOwnedTextData({ target, entries: [
+      layer('layout', 'layoutList', { bold: true }, { placeholder: { index: 0, type: 'body' } }),
+    ] })
+    // Observe the actual predicate operation, not source text or unsafe input
+    // accessors. Context discovery and common eligibility each match it once.
+    const startsWith = String.prototype.startsWith
+    let matches = 0
+    const spy = vi.spyOn(String.prototype, 'startsWith').mockImplementation(function (prefix, ...args) {
+      if (String(this) === 'layoutList' && prefix === 'layout') matches++
+      return startsWith.call(this, prefix, ...args)
+    })
+    let first, second, coldMatches, warmMatches
+    try {
+      first = resolveProperties({ scope: 'run', layers })
+      coldMatches = matches
+      second = resolveProperties({ scope: 'run', layers })
+      warmMatches = matches - coldMatches
+    } finally { spy.mockRestore() }
+    expect(first.bold.resolved).toBe(true)
+    expect(second).toEqual(first)
+    expect(coldMatches).toBe(2)
+    expect(warmMatches).toBe(coldMatches)
+  })
+
+  it('keeps mixed-rank, level, reference and fallback behavior for every property and scope', () => {
+    const entries = [
+      layer('z', 'run', { bold: false }),
+      layer('ä', 'run', { italic: true }),
+      layer('a', 'run', {}),
+      layer('body', 'body', { insetLeftEmu: 0 }),
+      layer('paragraph', 'paragraph', { tabs: [], direction: 'rtl', bulletFont: 'text' }),
+      layer('wrong-level', 'shapeList', { fontSizePt: 99 }, { level: 8 }),
+      layer('layout', 'layoutList', {}, { level: 0, placeholder: { index: 0, type: 'title' } }),
+      layer('layout-default', 'layoutList', { fontSizePt: 24 }, { placeholder: { index: 0, type: 'title' } }),
+      layer('wrong-layout', 'layoutFontReference', { fontLatin: { typeface: 'Wrong' } }, { placeholder: { index: 9 } }),
+      layer('reference', 'fontReference', { fontLatin: { typeface: '+mn-lt' }, bold: true, highlight: { kind: 'srgb', value: 'FFFFFF' } }),
+      layer('master-title', 'masterList', { underline: 'sng' }, { placeholder: { type: 'title' } }),
+      layer('master-body', 'masterList', { fontEastAsian: { typeface: 'Wrong' } }, { placeholder: { type: 'body' } }),
+      layer('text-style', 'masterTextStyle', { fontComplexScript: { typeface: '+mn-cs', script: 'Arab' } }, { category: 'title' }),
+      layer('presentation', 'presentationDefault', { direction: 'ltr', fontSizePt: 18 }),
+      layer('theme-default', 'theme', { fontEastAsian: { typeface: '+mn-ea' }, color: { kind: 'scheme', value: 'accent1' }, strike: 'sngStrike' }),
+    ]
+    for (const context of [target, { level: 0 }, { level: 1, placeholder: { index: 0 } }]) {
+      for (const selectedTheme of [theme, undefined]) {
+        for (const scope of Object.keys(TEXT_PROPERTY_SCOPES)) {
+          const input = { scope, layers: { target: context, entries }, ...(selectedTheme ? { theme: selectedTheme } : {}) }
+          const batch = resolveProperties(input)
+          for (const property of TEXT_PROPERTY_SCOPES[scope])
+            expect(batch[property]).toEqual(resolveProperty({ property, ...input }))
+          expect(resolveProperties({ ...input, layers: { ...input.layers, entries: [...entries].reverse() } })).toEqual(batch)
+        }
+      }
+    }
+    const run = resolveProperties({ scope: 'run', layers: { target, entries }, theme })
+    expect(run.bold).toMatchObject({ resolved: false, dependencyIds: ['a', 'ä', 'z'] })
+    expect(run.fontSizePt).toMatchObject({ resolved: 24, source: { layerId: 'layout-default' } })
+    expect(run.underline.source.layerId).toBe('master-title')
+    expect(run.fontLatin.resolved).toBe('Example Sans')
+    expect(run.fontEastAsian.unsupportedReason).toBe('missing-theme-font')
+    expect(run.color.resolved).toEqual({ rgb: 'FF0000', alpha: 1 })
+    expect(run.highlight.unsupportedReason).toBe('property-not-defined')
+    expect(run.strike.unsupportedReason).toBe('property-not-defined')
+  })
+
   it('matches individual results for every scope, including provenance and explicit clearing', () => {
     const entries = [
       layer('body', 'body', { insetLeftEmu: 0, anchorCenter: false }),
@@ -335,6 +475,68 @@ describe('checked scope style resolution', () => {
     lastPadded.source.path = lastPadded.source.path.slice(0, -(longest.length - shortest.length))
     expect(bytes({ property: longest, ...input })).toBe(TEXT_DOCUMENT_LIMITS.maxBytes)
     expect(Object.keys(resolveProperties(input))).toEqual(TEXT_PROPERTY_SCOPES.run)
+    const ownedInput = cloneOwnedTextData(input)
+    expect(Object.keys(resolveProperties(ownedInput))).toEqual(TEXT_PROPERTY_SCOPES.run)
+    expect(Object.keys(resolveProperties(ownedInput))).toEqual(TEXT_PROPERTY_SCOPES.run)
+    // A warmed positive receipt must not waive aggregate envelope charging.
+    expect(() => resolveProperties({ ...ownedInput, extra: true })).toThrow('JSON bytes')
+  })
+
+  it.each([false, true])('rejects envelope extras and unknown dispatch scopes (warm: %s)', warm => {
+    const layers = cloneOwnedTextData({ target, entries: [layer('r', 'run', { bold: false })] })
+    const input = { scope: 'run', layers }
+    if (warm) expect(resolveProperties(input).bold.resolved).toBe(false)
+    for (const scope of ['unknown', 'constructor', '__proto__', 'toString'])
+      expect(() => resolveProperties({ ...input, scope })).toThrow(TypeError)
+    for (const key of ['extra', 'properties', 'property'])
+      expect(() => resolveProperties({ ...input, [key]: true })).toThrow(TypeError)
+    for (const key of ['__proto__', 'constructor', 'prototype'])
+      expect(() => resolveProperties(JSON.parse(`{"scope":"run","${key}":{},"layers":{"target":{},"entries":[]}}`))).toThrow(TypeError)
+    expect(resolveProperties(input).bold.resolved).toBe(false)
+  })
+
+  it('does not confuse admitted JSON with successful validation or context resolution', () => {
+    const layers = cloneOwnedTextData({ target, entries: [layer('r', 'run', { bold: true })] })
+    expect(resolveProperties({ scope: 'run', layers }).bold.resolved).toBe(true)
+    const invalidTheme = cloneOwnedTextData({ ...theme, id: 'r' })
+    for (let i = 0; i < 2; i++)
+      expect(() => resolveProperties({ scope: 'run', layers, theme: invalidTheme })).toThrow('duplicate theme ID')
+    const invalidLayers = cloneOwnedTextData({ target, entries: [layer('bad', 'run', { bold: 'true' })] })
+    for (let i = 0; i < 2; i++)
+      expect(() => resolveProperties({ scope: 'run', layers: invalidLayers })).toThrow(TypeError)
+    const conflicting = cloneOwnedTextData({ target, entries: ['body', 'title'].map((type, index) =>
+      layer(`layout-${index}`, 'layoutList', {}, { placeholder: { index: 0, type } })) })
+    for (let i = 0; i < 2; i++)
+      expect(() => resolveProperties({ scope: 'run', layers: conflicting })).toThrow('conflicting layout placeholder types')
+  })
+
+  it.each([false, true])('charges complete owned envelopes before rejecting extras (warm: %s)', warm => {
+    const layers = cloneOwnedTextData({ target, entries: [] })
+    if (warm) resolveProperties({ scope: 'run', layers })
+    const bytes = cloneOwnedTextData({ text: 'x'.repeat(1000000) })
+    expect(() => resolveProperties({ scope: 'run', layers, extra: Array(5).fill(bytes) })).toThrow('JSON bytes')
+    const nodes = cloneOwnedTextData(Array(60000).fill(null))
+    expect(() => resolveProperties({ scope: 'run', layers, extra: Array(6).fill(nodes) })).toThrow('JSON budget')
+    let deep = cloneOwnedTextData({ leaf: true })
+    for (let i = 0; i < TEXT_DOCUMENT_LIMITS.maxDepth; i++) deep = { child: deep }
+    expect(() => resolveProperties({ scope: 'run', layers, extra: deep })).toThrow('JSON budget')
+    expect(resolveProperties({ scope: 'run', layers }).bold.resolved).toBeNull()
+  })
+
+  it('revalidates raw shallow-frozen themes and targets after owned-layer hits', () => {
+    const layers = cloneOwnedTextData({ target, entries: [layer('r', 'run', { fontLatin: { typeface: '+mn-lt' } })] })
+    const mutableTheme = structuredClone(theme)
+    Object.freeze(mutableTheme)
+    const input = { scope: 'run', layers, theme: mutableTheme }
+    expect(resolveProperties(input).fontLatin.resolved).toBe('Example Sans')
+    mutableTheme.fonts.minor.latin = 'Changed'
+    expect(resolveProperties(input).fontLatin.resolved).toBe('Changed')
+    mutableTheme.colors.dk1 = 'bad'
+    expect(() => resolveProperties(input)).toThrow(TypeError)
+    const rawLayers = Object.freeze({ target: { level: 0 }, entries: layers.entries })
+    expect(resolveProperties({ scope: 'run', layers: rawLayers }).bold.resolved).toBeNull()
+    rawLayers.target.level = 9
+    expect(() => resolveProperties({ scope: 'run', layers: rawLayers })).toThrow(TypeError)
   })
 
   it('retains aggregate node and depth limits even for declarations unused by the scope', () => {

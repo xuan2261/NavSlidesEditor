@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  normalizeTextDocument, normalizeTextProperties, evaluateFontProfile, TEXT_DOCUMENT_LIMITS,
+  normalizeTextDocument, normalizeOwnedTextDocument, cloneOwnedTextData,
+  normalizeTextProperties, evaluateFontProfile, TEXT_DOCUMENT_LIMITS,
 } from '../../shared/src/pptx-text-document'
 
 function document() {
@@ -31,6 +32,47 @@ function document() {
 }
 
 describe('canonical text document', () => {
+  it('retains only complete owned schema proof while public output stays mutable and detached', () => {
+    const raw = document()
+    const owned = normalizeOwnedTextDocument(raw)
+    expect(owned).not.toBe(raw)
+    expect(normalizeOwnedTextDocument(owned)).toBe(owned)
+    expect(Object.isFrozen(owned.paragraphs[0].runs[0].properties)).toBe(true)
+    const mutable = normalizeTextDocument(owned)
+    mutable.paragraphs[0].runs[0].text = 'changed'
+    expect(owned.paragraphs[0].runs[0].text).toBe(raw.paragraphs[0].runs[0].text)
+    mutable.paragraphs[0].runs[0].componentId = mutable.componentId
+    expect(() => normalizeOwnedTextDocument(mutable)).toThrow(TypeError)
+    const invalid = cloneOwnedTextData({ ...raw, unsupported: true })
+    expect(() => normalizeOwnedTextDocument(invalid)).toThrow(TypeError)
+    expect(() => normalizeOwnedTextDocument(invalid)).toThrow(TypeError)
+  })
+
+  it('does not trust frozen caller identity or its mutable descendants', () => {
+    const raw = Object.freeze(document())
+    normalizeOwnedTextDocument(raw)
+    raw.paragraphs[0].runs[0].properties.fontSizePt = NaN
+    expect(() => normalizeOwnedTextDocument(raw)).toThrow(TypeError)
+  })
+
+  it('charges cached JSON receipts at every aggregate occurrence and depth', () => {
+    const owned = normalizeOwnedTextDocument(document())
+    const chain = (leaf, count) => {
+      for (let i = 0; i < count; i++) leaf = { child: leaf }
+      return leaf
+    }
+    for (let depth = 0; depth <= TEXT_DOCUMENT_LIMITS.maxDepth; depth++) {
+      const cached = chain(owned, depth)
+      const raw = chain(document(), depth)
+      let rawFails = false
+      try { cloneOwnedTextData(raw) } catch { rawFails = true }
+      if (rawFails) expect(() => cloneOwnedTextData(cached)).toThrow(TypeError)
+      else expect(cloneOwnedTextData(cached)).toEqual(raw)
+    }
+    // Each occurrence consumes bytes even when every leaf is already owned.
+    expect(() => cloneOwnedTextData(Array(20000).fill(owned))).toThrow(TypeError)
+  })
+
   it('roundtrips local proofing separately from inheritable visual style', () => {
     const input = document()
     input.paragraphs[0].runs[3].proofing = { smtClean: false }

@@ -5,6 +5,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import { afterEach, describe, expect, it } from 'vitest'
 import canonicalModule from './services/pptx-import/evidence/canonical-hash.js'
+import stateIndexModule from './services/pptx-import/package-store/state-index-loader.js'
 import { launchRecoveryChild } from './recovery-test-driver.js'
 
 const resources = []
@@ -103,7 +104,7 @@ describe('P09 real production startup after abrupt process death', () => {
         const { child, url } = await reopen(resource)
         expect((await fetch(`${url}/health/ready`)).status).toBe(200)
         const root = await readJson(resource, 'state-root.json')
-        const state = await readJson(resource, root.stateFile)
+        const { state } = await stateIndexModule.loadStateIndex(path.join(resource.root, 'data'), root)
         const head = state.heads.find((item) => item.presentationId === receipt.presentationId)
         const job = state.jobs.find((item) => item.id === receipt.jobId)
         expect(job).toMatchObject({ status: 'completed', outcomeRevisionId: head.packageRevisionId,
@@ -139,13 +140,13 @@ describe('P09 real production startup after abrupt process death', () => {
     const resource = await createRoot()
     const receipt = await crash(resource, 'pptx-rollback')
     const beforeRoot = await readJson(resource, 'state-root.json')
-    const before = await readJson(resource, beforeRoot.stateFile)
+    const { state: before } = await stateIndexModule.loadStateIndex(path.join(resource.root, 'data'), beforeRoot)
     expect(before.jobs.find((job) => job.id === receipt.jobId)).toMatchObject({
       status: 'completed', reconcileRequired: true, transactionState: 'reconcile-required',
     })
     const { url } = await reopen(resource)
     const afterRoot = await readJson(resource, 'state-root.json')
-    const after = await readJson(resource, afterRoot.stateFile)
+    const { state: after } = await stateIndexModule.loadStateIndex(path.join(resource.root, 'data'), afterRoot)
     const job = after.jobs.find((item) => item.id === receipt.jobId)
     const head = after.heads.find((item) => item.presentationId === receipt.presentationId)
     expect(job.outcomeHeadHash).toBe(canonicalModule.hashCanonical(head))

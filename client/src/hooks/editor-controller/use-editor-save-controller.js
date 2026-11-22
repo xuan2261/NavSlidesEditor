@@ -163,7 +163,7 @@ export function useEditorSaveController({ isTemplate }) {
             }
           : snapshot
       const draft = createEditorDraft({ snapshot: body, isTemplate, attemptId, draftId })
-      const draftWritePromise = writeEditorDraft(draft)
+      const draftWritePromise = writeEditorDraft(draft, { acknowledgeLocalPublication: true })
       // Uncertain remote writes retry with their original key before successors;
       // deterministic local rejections are superseded by the corrected queue.
       queueRef.current = {

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   clearEditorDraft,
   createEditorDraft,
@@ -35,6 +35,28 @@ describe('editor draft storage', () => {
       id: 'deck-1',
       attemptId: 9,
       snapshot: { title: 'pending' },
+    })
+  })
+
+  it('serializes a plain capture once and isolates mutations immediately', async () => {
+    const pending = createEditorDraft({ snapshot: snapshot('before'), attemptId: 1 })
+    const stringify = vi.spyOn(JSON, 'stringify')
+    let writing
+    try {
+      writing = writeEditorDraft(pending, { acknowledgeLocalPublication: true })
+      expect(stringify).toHaveBeenCalledTimes(1)
+    } finally {
+      stringify.mockRestore()
+    }
+    pending.snapshot.title = 'after'
+    pending.snapshot.slides[0].elements.push({ id: 'later' })
+    await expect(writing).resolves.toBe(true)
+    await expect(readEditorDraft('deck-1')).resolves.toMatchObject({
+      snapshot: { title: 'before', slides: [{ elements: [] }] },
+    })
+    await writeEditorDraft(pending)
+    await expect(readEditorDraft('deck-1')).resolves.toMatchObject({
+      snapshot: { title: 'after', slides: [{ elements: [{ id: 'later' }] }] },
     })
   })
 

@@ -2,8 +2,9 @@
  * Zod schemas for API request validation.
  */
 const { z } = require('zod')
+const { isProxy } = require('node:util').types
 const {
-  normalizeSemanticPresentation,
+  validateSemanticPresentationBindings,
 } = require('revealjs-shared/src/pptx-semantic-presentation.js')
 const { geometryLocalExtent } = require('revealjs-shared/src/pptx-geometry-style-resolution.js')
 const { semanticInstance, semanticDefinition } = require('revealjs-shared/src/pptx-semantic-records.js')
@@ -169,9 +170,9 @@ function validatePresentationLayouts(presentation, ctx) {
   visitSlides(presentation.slides)
 }
 
-function validatePresentationSemantic(presentation, ctx) {
+function validatePresentationSemantic(presentation, ctx, semanticContext) {
   try {
-    const normalized = normalizeSemanticPresentation(presentation)
+    const document = validateSemanticPresentationBindings(presentation, semanticContext)
     const visit = (slides, path = ['slides']) =>
       (slides || []).forEach((slide, index) => {
         const slidePath = [...path, index]
@@ -181,14 +182,14 @@ function validatePresentationSemantic(presentation, ctx) {
             ['height', 'cy'],
           ]) {
             if (element[field] !== 0) continue
-            const instance = semanticInstance(normalized.pptxSemantic, element.pptxInstanceId)
-            const definition = instance && semanticDefinition(normalized.pptxSemantic, instance.definitionId)
+            const instance = semanticInstance(document, element.pptxInstanceId)
+            const definition = instance && semanticDefinition(document, instance.definitionId)
             const geometry = definition?.content.geometry
             const override =
               instance?.overrides.components?.[geometry?.componentId]?.geometryDocument
             const extent =
-              [2, 3].includes(normalized.pptxSemantic?.schemaVersion) && instance
-                ? geometryLocalExtent(normalized.pptxSemantic, instance.id)
+              [2, 3].includes(document?.schemaVersion) && instance
+                ? geometryLocalExtent(document, instance.id)
                 : override
                   ? { cx: override.width, cy: override.height }
                   : definition?.content.extent
@@ -208,6 +209,7 @@ function validatePresentationSemantic(presentation, ctx) {
         visit(slide.children, [...slidePath, 'children'])
       })
     visit(presentation.slides)
+    if (document !== undefined) presentation.pptxSemantic = document
   } catch (error) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -263,7 +265,7 @@ const semanticSlideSchema = createSlideSchema(
     .transform(admitGameElement)
 )
 // ─── Create Presentation ─────────────────────────────────────────────────────
-const createPresentationSchema = z
+const createPresentationInputSchema = z
   .object({
     title: z.string().max(500).optional(),
     theme: z.string().max(100).optional(),
@@ -279,7 +281,8 @@ const createPresentationSchema = z
   .transform(admitPresentationInteractions)
 
 // ─── Update Presentation ─────────────────────────────────────────────────────
-const updatePresentationSchema = z
+function updatePresentationInputSchemaWithCandidate(predecessor) {
+  return z
   .object({
     title: z.string().max(500).optional(),
     theme: z.string().max(100).optional(),
@@ -290,7 +293,95 @@ const updatePresentationSchema = z
   })
   .passthrough()
   .superRefine(validatePresentationLayouts)
-  .superRefine(validatePresentationSemantic)
+  .superRefine((presentation, ctx) => validatePresentationSemantic(presentation, ctx, { predecessor }))
+}
+const updatePresentationInputSchema = updatePresentationInputSchemaWithCandidate()
+
+// Request admission is not a semantic producer cache. Bind the exact raw root
+// to a complete owned output only after every refinement/transform succeeds.
+// Mutable parser roots must never acquire reusable semantic validation receipts.
+const presentationAdmissions = new WeakMap()
+
+// Inspect the original request before Zod's object reconstruction can erase
+// hidden properties or invoke getters. This is a descriptor contract, not a
+// JSON-value restriction: passthrough metadata may legitimately be undefined.
+function auditPresentationDescriptors(value, ctx, path = [], ancestors = new Set()) {
+  if (!value || typeof value !== 'object') return true
+  if (isProxy(value)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path, message: 'Expected plain own enumerable request data' })
+    return false
+  }
+  const prototype = Object.getPrototypeOf(value)
+  if ((!Array.isArray(value) && prototype !== Object.prototype && prototype !== null) ||
+      ancestors.has(value)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path, message: 'Expected plain own enumerable request data' })
+    return false
+  }
+  ancestors.add(value)
+  let valid = true
+  for (const key of Reflect.ownKeys(value)) {
+    if (Array.isArray(value) && key === 'length') continue
+    const descriptor = Object.getOwnPropertyDescriptor(value, key)
+    const childPath = [...path, String(key)]
+    if (typeof key !== 'string' || !descriptor.enumerable || !Object.hasOwn(descriptor, 'value')) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: childPath, message: 'Expected plain own enumerable request data' })
+      valid = false
+    } else if (!auditPresentationDescriptors(descriptor.value, ctx, childPath, ancestors)) valid = false
+  }
+  ancestors.delete(value)
+  return valid
+}
+
+function ownedPresentationSchema(schema, receiptSchema = schema) {
+  return z.any().transform((rawBody, ctx) => {
+    if (!auditPresentationDescriptors(rawBody, ctx)) return z.NEVER
+    const result = schema.safeParse(rawBody)
+    if (!result.success) {
+      for (const issue of result.error.issues) ctx.addIssue(issue)
+      return z.NEVER
+    }
+    // Zod passthrough fields can still alias rawBody. Detach every editable
+    // field before next()/any await, but retain the checked owned semantic root.
+    const { pptxSemantic, ...editable } = result.data
+    const owned = structuredClone(editable)
+    const seal = (value) => {
+      if (!value || typeof value !== 'object') return
+      for (const child of Object.values(value)) seal(child)
+      Object.freeze(value)
+    }
+    seal(owned)
+    const body = Object.freeze({
+      ...owned,
+      ...(pptxSemantic !== undefined ? { pptxSemantic } : {}),
+    })
+    presentationAdmissions.set(body, { schema: receiptSchema, body })
+    return body
+  })
+}
+
+function admittedPresentationBody(body, schema) {
+  const receipt = presentationAdmissions.get(body)
+  // Replacement by later middleware must undergo whole-body admission again.
+  // No receipt is ever read from a raw mutable identity.
+  return receipt?.schema === schema ? receipt.body : ownedPresentationSchema(schema).parse(body)
+}
+
+function admittedCreatePresentationBody(body) {
+  return admittedPresentationBody(body, createPresentationInputSchema)
+}
+
+function admittedUpdatePresentationBody(body) {
+  return admittedPresentationBody(body, updatePresentationInputSchema)
+}
+
+const createPresentationSchema = ownedPresentationSchema(createPresentationInputSchema)
+const updatePresentationSchema = ownedPresentationSchema(updatePresentationInputSchema)
+
+function updatePresentationSchemaWithCandidate(predecessor) {
+  return ownedPresentationSchema(
+    updatePresentationInputSchemaWithCandidate(predecessor), updatePresentationInputSchema
+  )
+}
 
 // ─── Templates ───────────────────────────────────────────────────────────────
 const createTemplateSchema = z
@@ -363,8 +454,11 @@ const aiTranslateSchema = z.object({
 })
 
 module.exports = {
+  admittedCreatePresentationBody,
+  admittedUpdatePresentationBody,
   createPresentationSchema,
   updatePresentationSchema,
+  updatePresentationSchemaWithCandidate,
   createTemplateSchema,
   updateTemplateSchema,
   saveAsTemplateSchema,

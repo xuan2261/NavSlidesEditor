@@ -58,7 +58,7 @@ function resolvePackageBackedReadFromState(
   state,
   presentationId,
   compatibilityPresentation,
-  { allowIncompleteAuthority = false } = {}
+  { allowIncompleteAuthority = false, getAdmittedSnapshot } = {}
 ) {
   const head = state.heads.find((item) => item.presentationId === presentationId)
   if (!head) {
@@ -121,13 +121,26 @@ function resolvePackageBackedReadFromState(
     presentation.pptxAggregateHead = structuredClone(head)
     return { presentation, generation: head.generation }
   }
-  if (context.after && context.after.pptxSemantic) {
+  // Authority checks above always run against this read's defensive state.
+  // Reuse only the store-owned, content/head-bound admitted snapshot, never a
+  // cached publication. Detach editable fields; only certified semantics share.
+  const admitted = getAdmittedSnapshot?.(presentationId, head, undefined, context.after)
+  let after = context.after
+  if (admitted) {
+    const { pptxSemantic: rawSemantic, ...editable } = context.after
+    // Admission sanitizes save envelopes; read publication must retain the exact
+    // committed fields (including legacy geometry and trusted nested metadata).
+    after = {
+      ...structuredClone(editable),
+      ...(rawSemantic === undefined ? {} : { pptxSemantic: admitted.pptxSemantic }),
+    }
+  } else if (after?.pptxSemantic) {
     const { normalizePptxSemanticDocument } = require('revealjs-shared/src/pptx-semantic-document.js')
-    context.after.pptxSemantic = normalizePptxSemanticDocument(context.after.pptxSemantic)
+    after = { ...after, pptxSemantic: normalizePptxSemanticDocument(after.pptxSemantic) }
   }
 
   const presentation = decorateTrustedImportMetadata(
-    mergeCompatibilityPresentation(compatibilityPresentation, context.after),
+    mergeCompatibilityPresentation(compatibilityPresentation, after),
     getTrustedImportMetadata(state, head)
   )
   presentation.id = presentationId
@@ -142,7 +155,7 @@ async function resolvePackageBackedRead(presentationId, compatibilityPresentatio
     read.state,
     presentationId,
     compatibilityPresentation,
-    options
+    { ...options, getAdmittedSnapshot: store.getAuthoritativeSaveSnapshot?.bind(store) }
   )
   if (resolved.generation !== null) await read.verifyBytes(resolved.presentation.pptxAggregateHead)
   if (options.normalize !== false) {
@@ -159,7 +172,10 @@ async function readAuthoritativePresentation(
   presentationId,
   { normalize = true, allowIncompleteAuthority = false } = {}
 ) {
-  const storedPresentation = await findServeablePresentation(presentationId, { normalize: false })
+  const storedPresentation = await findServeablePresentation(presentationId, {
+    normalize: false,
+    normalizeSemantic: false,
+  })
   if (!storedPresentation) return null
   return resolvePackageBackedRead(presentationId, storedPresentation, {
     normalize,
@@ -196,12 +212,17 @@ async function readAuthoritativePresentations(
       const resolved = resolvePackageBackedReadFromState(
         state,
         storedPresentation.id,
-        storedPresentation
+        storedPresentation,
+        { getAdmittedSnapshot: store.getAuthoritativeSaveSnapshot?.bind(store) }
       )
       if (resolved.generation !== null)
         await read.verifyBytes(resolved.presentation.pptxAggregateHead)
       if (normalize)
         resolved.presentation = normalizePptxImportedPresentationForRead(resolved.presentation)
+      if (resolved.presentation?.pptxSemantic) {
+        const { normalizePptxSemanticDocument } = require('revealjs-shared/src/pptx-semantic-document.js')
+        resolved.presentation.pptxSemantic = normalizePptxSemanticDocument(resolved.presentation.pptxSemantic)
+      }
       results.push(resolved)
     } catch (err) {
       if (BULK_QUARANTINE_CODES.has(err?.code)) {

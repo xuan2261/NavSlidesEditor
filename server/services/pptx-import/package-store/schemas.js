@@ -1,4 +1,4 @@
-const crypto = require('node:crypto')
+const { canonicalJson, hashRecord } = require('./canonical-json')
 const { MUTATION_OPERATIONS } = require('../mutation-operation-scope')
 const { validateMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
 
@@ -282,22 +282,6 @@ function createEmptyState(fencingEpoch = 0) {
     compatibilityDeadLetter: [],
     candidateBlobs: [],
   }
-}
-
-function canonicalJson(value) {
-  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`
-  if (value && typeof value === 'object') {
-    return `{${Object.keys(value)
-      .filter((key) => value[key] !== undefined)
-      .sort()
-      .map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`)
-      .join(',')}}`
-  }
-  return JSON.stringify(value)
-}
-
-function hashRecord(value) {
-  return crypto.createHash('sha256').update(canonicalJson(value)).digest('hex')
 }
 
 module.exports = {

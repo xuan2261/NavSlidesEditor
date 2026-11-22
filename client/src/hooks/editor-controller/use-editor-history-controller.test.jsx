@@ -5,6 +5,7 @@ import { useEditorHistoryController } from './use-editor-history-controller'
 import { useKeyboard } from '../use-keyboard'
 import { geometryProjectionFixture } from '../../../../tests/pptx-semantic/geometry-projection-fixture.js'
 import semantic from 'revealjs-shared/src/pptx-semantic-presentation.js'
+import { replaceSemanticRecords } from 'revealjs-shared/src/pptx-semantic-records.js'
 
 function useHistoryHarness() {
   const [presentation, setPresentation] = useState(null)
@@ -69,6 +70,47 @@ afterEach(() => {
 afterEach(() => vi.useRealTimers())
 
 describe('explicit authoring history boundaries', () => {
+  it('isolates mutable public undo/redo shells from retained snapshots', () => {
+    vi.useFakeTimers()
+    const { result } = renderHook(useHistoryHarness)
+    const original = { ...deck([{ id: 'text', style: { color: 'red' } }]), settings: { values: [1] } }
+    act(() => {
+      result.current.seedHistory(original)
+      result.current.setPresentation(original)
+    })
+    original.settings.values.push(2)
+    act(() => result.current.setPresentation({ ...deck([{ id: 'next' }]), settings: { values: [3] } }))
+    act(() => vi.advanceTimersByTime(500))
+    act(() => result.current.handleUndo())
+    expect(result.current.presentation.settings.values).toEqual([1])
+    result.current.presentation.settings.values.push(99)
+    result.current.presentation.slides[0].elements[0].style.color = 'blue'
+    act(() => result.current.handleRedo())
+    result.current.presentation.settings.values.push(99)
+    act(() => result.current.handleUndo())
+    expect(result.current.presentation.settings.values).toEqual([1])
+    expect(result.current.presentation.slides[0].elements[0].style.color).toBe('red')
+    act(() => result.current.handleRedo())
+    expect(result.current.presentation.settings.values).toEqual([3])
+  })
+
+  it('still rejects a certified but invalid semantic root at restoration', () => {
+    vi.useFakeTimers()
+    const original = semantic.normalizeSemanticPresentation({ ...geometryProjectionFixture(), id: 'certified-history' })
+    const invalid = { ...original, pptxSemantic: replaceSemanticRecords(original.pptxSemantic, {
+      instances: { i1: { ...original.pptxSemantic.instances.i1, slideId: 'unknown' } },
+    }) }
+    const { result } = renderHook(useHistoryHarness)
+    act(() => {
+      result.current.seedHistory(invalid)
+      result.current.setPresentation(invalid)
+    })
+    act(() => result.current.setPresentation(original))
+    expect(() => act(() => result.current.handleUndo())).toThrow()
+    expect(result.current.presentation).toBe(original)
+    expect(result.current.canUndo).toBe(true)
+    expect(result.current.canRedo).toBe(false)
+  })
   it.each(['undo', 'redo'])('keeps restored native source declarations immutable after %s', (transition) => {
     vi.useFakeTimers()
     const original = semantic.normalizeSemanticPresentation({ ...geometryProjectionFixture(), id: 'source-history' })

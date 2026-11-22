@@ -1,6 +1,44 @@
 const { hashRecord } = require('./package-store/schemas')
 const { transportFromTipTapContent } = require('./tiptap-single-plain-run-eligibility')
 const { MUTATION_OPERATIONS } = require('./mutation-operation-scope')
+const { types } = require('node:util')
+const { isCheckedImmutableSemanticValue } = require('revealjs-shared/src/pptx-semantic-records.js')
+
+const immutableData = new WeakSet()
+function admittedData(value, visiting = new Set()) {
+  if (value === null || value === undefined) return true
+  if (typeof value !== 'object') return ['string', 'boolean'].includes(typeof value) ||
+    (typeof value === 'number' && Number.isFinite(value))
+  if (types.isProxy(value)) return false
+  if (immutableData.has(value) || isCheckedImmutableSemanticValue(value)) return true
+  if (!Object.isFrozen(value) || visiting.has(value)) return false
+  const array = Array.isArray(value)
+  const proto = Object.getPrototypeOf(value)
+  if (array ? proto !== Array.prototype : proto !== Object.prototype && proto !== null) return false
+  const descriptors = Object.getOwnPropertyDescriptors(value)
+  if (array && (Reflect.ownKeys(descriptors).length !== value.length + 1 ||
+      Array.from({ length: value.length }, (_, i) => i).some((i) => !Object.hasOwn(descriptors, i)))) return false
+  visiting.add(value)
+  const valid = Reflect.ownKeys(descriptors).every((key) => {
+    const d = descriptors[key]
+    return typeof key === 'string' && Object.hasOwn(d, 'value') &&
+      (d.enumerable || (array && key === 'length')) && admittedData(d.value, visiting)
+  })
+  visiting.delete(value)
+  if (valid) immutableData.add(value)
+  return valid
+}
+
+function equalNonText(a, b) {
+  if (a === b) return true // Only reached after recursive immutable plain-data admission.
+  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false
+  if (Array.isArray(a) !== Array.isArray(b)) return false
+  if (Array.isArray(a)) return a.length === b.length && a.every((v, i) => equalNonText(v, b[i]))
+  const keys = (value) => Object.keys(value).filter((key) => value[key] !== undefined &&
+    !(value.type === 'text' && key === 'content'))
+  const ak = keys(a), bk = keys(b)
+  return ak.length === bk.length && ak.every((key) => bk.includes(key) && equalNonText(a[key], b[key]))
+}
 
 function failed(reasonCode) {
   return Object.freeze({ ok: false, reasonCode })
@@ -30,6 +68,7 @@ function withoutTextContent(value) {
 }
 
 function hasNonTextChanges(before, after) {
+  if (admittedData(before) && admittedData(after)) return !equalNonText(before, after)
   return hashRecord(withoutTextContent(before)) !== hashRecord(withoutTextContent(after))
 }
 

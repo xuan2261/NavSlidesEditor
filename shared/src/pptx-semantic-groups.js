@@ -9,6 +9,7 @@ const {
 
 const { IDENTITY, multiply, invert, transformPoint } = require('./pptx-affine.js')
 const { semanticGroupPaint } = require('./pptx-semantic-paint.js')
+const { semanticSlideOccurrences } = require('./pptx-slide-projection-cache.js')
 
 function activeInstance(document, id) {
   const instance = semanticInstance(document, id) ?? document.instances?.[id]
@@ -185,8 +186,8 @@ function semanticInstanceTree(input, slideId) {
 function instanceTree(document, slideId) {
   const nodes = new Map()
   const parentIds = new Map()
-  for (const [, instance] of semanticInstances(document)) {
-    if (instance.slideId !== slideId || instance.lineage?.tombstone === true) continue
+  for (const [, instance] of semanticSlideOccurrences(document, slideId)) {
+    if (instance.lineage?.tombstone === true) continue
     const def = semanticDefinition(document, instance.definitionId) ?? document.definitions?.[instance.definitionId]
     nodes.set(instance.id, {
       instanceId: instance.id,

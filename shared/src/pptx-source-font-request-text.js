@@ -4,7 +4,8 @@ const { collectOmmlFontRequests } = require('./pptx-omml-source-style')
 
 // Resolve the same explicit text properties consumed by the layout engine.
 // Physical font registration never supplies missing occurrence declarations.
-function requestTextFonts(text, { context, sourceText = text, defaults = {}, source, add, issue }) {
+function requestTextFonts(text, { context, sourceText = text, defaults = {}, source, add, issue,
+  resolveStyle = (input, all = false) => (all ? resolveProperties : resolveProperty)(input) }) {
   for (const [p, paragraph] of text.paragraphs.entries()) {
     const sourceIndex = sourceText.paragraphs.findIndex((entry) => entry.componentId === paragraph.componentId)
     const original = sourceText.paragraphs[sourceIndex]
@@ -50,13 +51,13 @@ function requestTextFonts(text, { context, sourceText = text, defaults = {}, sou
       let inheritedProperties
       function resolved(property) {
         if (Object.hasOwn(direct, property)) {
-          return resolveProperty({ property, scope: 'run', ...(context?.theme ? { theme: context.theme } : {}),
+          return resolveStyle({ property, scope: 'run', ...(context?.theme ? { theme: context.theme } : {}),
             layers: { target: {}, entries: [{ id: 'effective-run', kind: 'run',
               source: { part: source.part, path: location.path },
               properties: { [property]: direct[property] } }] } })
         }
         if (!layers) return { resolved: null, unsupportedReason: 'property-not-defined' }
-        inheritedProperties ??= resolveProperties({ scope: 'run', theme: context.theme, layers })
+        inheritedProperties ??= resolveStyle({ scope: 'run', theme: context.theme, layers }, true)
         return inheritedProperties[property]
       }
       const bold = resolved('bold').resolved ?? false
@@ -96,7 +97,7 @@ function requestTextFonts(text, { context, sourceText = text, defaults = {}, sou
         const paragraphProperty = (property) => {
           const layers = inherited?.paragraph
           if (!Object.hasOwn(properties, property) && !layers) return { resolved: null }
-          return resolveProperty({ property, scope: 'paragraph',
+          return resolveStyle({ property, scope: 'paragraph',
             ...(context?.theme ? { theme: context.theme } : {}),
             layers: { target: { ...layers?.target,
               ...(properties.level !== undefined ? { level: properties.level } : {}) },

@@ -1,10 +1,16 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { act, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { act, cleanup, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { PptxSourceFontProvider } from '../../client/src/contexts/pptx-source-font-context'
 import { usePptxSourceFonts } from '../../client/src/hooks/use-pptx-source-fonts'
 import SlideCanvas from '../../client/src/components/SlideCanvas'
+
+import { normalizePptxSemanticDocument } from '../../shared/src/pptx-semantic-document.js'
+
+const flush = () => act(async () => { await vi.runOnlyPendingTimersAsync() })
+beforeEach(() => { vi.useFakeTimers() })
+afterEach(() => { cleanup(); vi.useRealTimers() })
 
 const canvasLoad = vi.hoisted(() => vi.fn())
 vi.mock('../../client/src/hooks/use-pptx-source-font-loader', () => ({
@@ -44,7 +50,7 @@ describe('actual source font provider lifecycle', () => {
     const view = render(<SlideCanvas editor={null} presentationId="deck" fontRevision={1}
       pptxSemantic={model()} slide={{ id: 's', elements: [] }} selectedElementIds={[]}
       editingElementId={null} showGrid={false} resolution={{ width: 960, height: 540 }} />)
-    await act(async () => {})
+    await flush()
     expect(screen.getByText('ready:canvas')).toBeTruthy()
     expect(canvasLoad).toHaveBeenCalledWith(expect.objectContaining({ presentationId: 'deck' }))
     view.unmount()
@@ -62,6 +68,8 @@ describe('actual source font provider lifecycle', () => {
         fontRevision={revision} loadRuntime={load}><Consumer /></PptxSourceFontProvider>
     const view = render(renderProvider(model()))
     expect(screen.getByText('loading:none')).toBeTruthy()
+    expect(load).not.toHaveBeenCalled()
+    await flush()
     view.rerender(renderProvider(model('Different Source')))
     expect(calls[0].signal.aborted).toBe(true)
     await act(async () => { first.resolve({ fontRuntime: a, sourceIdentity: 'a' }) })
@@ -81,10 +89,10 @@ describe('actual source font provider lifecycle', () => {
     const semantic = model()
     const props = { presentationId: 'deck', pptxSemantic: semantic, loadRuntime: load }
     const view = render(<PptxSourceFontProvider {...props} fontRevision={1}><Consumer /></PptxSourceFontProvider>)
-    await act(async () => {})
+    await flush()
     expect(screen.getByText('unavailable:none')).toBeTruthy()
     view.rerender(<PptxSourceFontProvider {...props} fontRevision={2}><Consumer /></PptxSourceFontProvider>)
-    await act(async () => {})
+    await flush()
     expect(load).toHaveBeenCalledTimes(2)
     expect(screen.getByText('ready:saved')).toBeTruthy()
     view.unmount()
@@ -97,20 +105,20 @@ describe('actual source font provider lifecycle', () => {
       <PptxSourceFontProvider presentationId="deck" pptxSemantic={semantic}
         fontRevision={revision} loadRuntime={load}><Consumer /></PptxSourceFontProvider>
     const view = render(renderProvider(model(), 1))
-    await act(async () => {})
+    await flush()
     const changed = model()
     changed.instances.i.localTransform[4] = 998
     Object.assign(changed.definitions.d.content.textDocument.paragraphs[0].runs[0].properties,
       { fontSizePt: 30, color: { kind: 'srgb', value: 'FF0000' } })
     view.rerender(renderProvider(changed, 2))
     expect(screen.getByText('ready:physical')).toBeTruthy()
-    await act(async () => {})
+    await flush()
     expect(load).toHaveBeenCalledOnce()
     expect(runtime.dispose).not.toHaveBeenCalled()
     view.rerender(renderProvider(model('KaTeX_Main', true), 2))
     expect(screen.getByText('loading:none')).toBeTruthy()
     expect(runtime.dispose).toHaveBeenCalledOnce()
-    await act(async () => {})
+    await flush()
     expect(load).toHaveBeenCalledTimes(2)
     view.unmount()
   })
@@ -121,6 +129,7 @@ describe('actual source font provider lifecycle', () => {
       .mockResolvedValueOnce({ fontRuntime: runtime, sourceIdentity: 'saved' })
     const props = { presentationId: 'deck', pptxSemantic: model(), loadRuntime: load }
     const view = render(<PptxSourceFontProvider {...props} fontRevision={1}><Consumer /></PptxSourceFontProvider>)
+    await flush()
     view.rerender(<PptxSourceFontProvider {...props} fontRevision={2}><Consumer /></PptxSourceFontProvider>)
     await act(async () => { pending.resolve(Promise.reject(new Error('stale'))) })
     expect(load).toHaveBeenCalledTimes(2)
@@ -138,7 +147,7 @@ describe('actual source font provider lifecycle', () => {
     const provider = (face) => <PptxSourceFontProvider presentationId="deck"
       pptxSemantic={model(face)} loadRuntime={load}><Consumer /></PptxSourceFontProvider>
     const view = render(provider('First'))
-    await act(async () => {})
+    await flush()
     expect(screen.getByText('ready:first')).toBeTruthy()
     view.rerender(provider('Second'))
     expect(firstRuntime.dispose).toHaveBeenCalledOnce()
@@ -161,7 +170,7 @@ describe('actual source font provider lifecycle', () => {
     const provider = () => <PptxSourceFontProvider presentationId="deck" pptxSemantic={semantic}
       loadRuntime={load}><Consumer /></PptxSourceFontProvider>
     const view = render(provider())
-    await act(async () => {})
+    await flush()
     semantic.definitions.d.content.textDocument.paragraphs[0].defaultRunProperties.italic = true
     view.rerender(provider())
     expect(screen.getByText('loading:none')).toBeTruthy()
@@ -170,11 +179,11 @@ describe('actual source font provider lifecycle', () => {
     view.unmount()
   })
 
-  it('inherits only matching face identities as nested scopes diverge and rejoin', async () => {
+  it('inherits only exact validated documents as nested scopes diverge and rejoin', async () => {
     const shared = { name: 'shared', dispose: vi.fn() }, own = { name: 'own', dispose: vi.fn() }
     const load = vi.fn().mockResolvedValueOnce({ fontRuntime: shared })
       .mockResolvedValueOnce({ fontRuntime: own })
-    const semantic = model()
+    const semantic = normalizePptxSemanticDocument(model())
     const provider = (nested) => <PptxSourceFontProvider presentationId="deck"
       pptxSemantic={semantic} loadRuntime={load}>
       <PptxSourceFontProvider presentationId="deck" pptxSemantic={nested} loadRuntime={load}>
@@ -182,10 +191,10 @@ describe('actual source font provider lifecycle', () => {
       </PptxSourceFontProvider>
     </PptxSourceFontProvider>
     const view = render(provider(semantic))
-    await act(async () => {})
+    await flush()
     view.rerender(provider(model('Different Source')))
     expect(screen.getByText('loading:none')).toBeTruthy()
-    await act(async () => {})
+    await flush()
     expect(screen.getByText('ready:own')).toBeTruthy()
     view.rerender(provider(semantic))
     expect(screen.getByText('ready:shared')).toBeTruthy()

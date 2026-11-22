@@ -293,10 +293,29 @@ it('retains typed chart ownership through journal safe snapshots and replay', as
     targetKind: 'presentation',
     targetId: saved.id,
     property: 'title',
-    before: saved.title,
     after: changed.title,
+    affectedProperties: ['title'],
+    sourceRef: null,
+    impactClosure: [],
   })
-  const replayed = replayJournal(saved, changedJournal)
+  const operation = changedJournal.operations[0]
+  expect(operation.before).toBe(saved.title)
+  expect(operation.inverse.value).toBe(saved.title)
+  // JSON transport omits undefined operands; their canonical bytes and replay
+  // contract must remain identical to the historical own-undefined encoding.
+  const historical = {
+    ...changedJournal,
+    operations: [{ ...operation, before: saved.title, inverse: { value: saved.title } }],
+  }
+  const transported = clone(changedJournal)
+  expect(canonicalJson(transported)).toBe(canonicalJson(changedJournal))
+  expect(canonicalJson(transported)).toBe(canonicalJson(historical))
+  const replayed = replayJournal(saved, transported)
+  expect(canonicalJson(replayJournal(saved, historical))).toBe(canonicalJson(changed))
+  const inverse = clone({
+    operations: [{ ...operation, before: operation.after, after: operation.inverse.value }],
+  })
+  expect(canonicalJson(replayJournal(replayed, inverse))).toBe(canonicalJson(saved))
   expect(canonicalJson(replayed)).toBe(canonicalJson(changed))
   expect(canonicalJson(replayJournal(replayed, changedJournal))).toBe(canonicalJson(replayed))
   expect(replayed.pptxSemantic).toEqual(saved.pptxSemantic)

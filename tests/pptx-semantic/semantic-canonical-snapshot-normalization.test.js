@@ -236,6 +236,22 @@ describe('canonical snapshot operation-scoped normalization', () => {
     expect(() => canonicalEditableSnapshotWithOutputBudget(input)).toThrow()
   })
 
+  it.each([1, 3])('isolates save snapshot semantics and preserves mutable edit copies (schema %i)', (schemaVersion) => {
+    const { canonicalSaveSnapshot } = require(modulePaths[1])
+    const input = fixture()
+    if (schemaVersion === 3) input.pptxSemantic = compactSemanticGraph(input.pptxSemantic)
+    const saved = canonicalSaveSnapshot(input)
+    const instanceId = Object.keys(saved.pptxSemantic.instances)[0]
+    input.pptxSemantic.instances[instanceId].localTransform[4] = 99
+    expect(saved.pptxSemantic.instances[instanceId].localTransform[4]).toBe(0)
+    expect(() => { saved.pptxSemantic.instances[instanceId].localTransform[4] = 12 }).toThrow(TypeError)
+    const editable = canonicalEditableSnapshot(saved)
+    editable.pptxSemantic.instances[instanceId].localTransform[4] = 12
+    expect(saved.pptxSemantic.instances[instanceId].localTransform[4]).toBe(0)
+    expect(canonicalSaveSnapshot(editable).pptxSemantic.instances[instanceId].localTransform[4]).toBe(12)
+    expect(() => canonicalSaveSnapshot(saved, { maxSnapshotBytes: 1 })).toThrow(/aggregate bytes/)
+  })
+
   it.each(['accessor', 'nonplain', 'cycle', 'deep', 'source'])(
     'rejects adversarial typed content through both public boundaries: %s',
     (kind) => {
@@ -295,4 +311,24 @@ describe('canonical snapshot operation-scoped normalization', () => {
     expect(canonicalEditableSnapshot(input)).toEqual(input)
     expect(normalization).not.toHaveBeenCalled()
   })
+})
+
+it('recharges mutable roots, detached raw metadata and deep aliases at exact byte limits', () => {
+  const root = fixture()
+  root.pptxSemantic = semantic.normalizePptxSemanticDocument(root.pptxSemantic)
+  root.note = 'escaped\n"é'
+  const exact = Buffer.byteLength(JSON.stringify(root))
+  expect(assertSnapshotBudget(root, { maxSnapshotBytes: exact })).toBe(exact)
+  expect(assertSnapshotBudget(root, { maxSnapshotBytes: exact })).toBe(exact)
+  expect(() => assertSnapshotBudget(root, { maxSnapshotBytes: exact - 1 })).toThrow(/aggregate bytes/)
+  expect(() => assertSnapshotBudget(root, { maxStringBytes: 1 })).toThrow(/strings/)
+  root.packagePath = { nested: { alias: root.pptxSemantic } }
+  const aliased = Buffer.byteLength(JSON.stringify(root))
+  expect(assertSnapshotBudget(root, { maxSnapshotBytes: aliased })).toBe(aliased)
+  expect(() => assertSnapshotBudget(root, { maxSnapshotBytes: aliased - 1 })).toThrow(/aggregate bytes/)
+  root.packagePath = structuredClone(root.packagePath)
+  Object.freeze(root.packagePath)
+  root.packagePath.nested.changed = 'x'.repeat(100)
+  expect(() => assertSnapshotBudget(root, { maxSnapshotBytes: aliased })).toThrow(/aggregate bytes/)
+  expect(() => assertSnapshotBudget(root, { maxDepth: 1 })).toThrow(/nesting/)
 })

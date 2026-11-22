@@ -131,7 +131,8 @@ async function scenario(boundary, receipt) {
         assert.equal(listed.json().filter((row) => row.id === intent.presentationId).length, 1)
         if (boundary.startsWith('pptx-')) {
           const stateRoot = await json(fixture, 'state-root.json')
-          const state = await json(fixture, stateRoot.stateFile)
+          const { state } = await require('./services/pptx-import/package-store/state-index-loader').loadStateIndex(
+            path.join(fixture, 'data'), stateRoot)
           const head = state.heads.find((entry) => entry.presentationId === intent.presentationId)
           const job = state.jobs.find((entry) => entry.id === intent.jobId)
           sample.authority = { presentationId: head.presentationId, generation: head.generation,

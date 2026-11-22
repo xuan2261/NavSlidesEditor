@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { usePresentationStore } from '../../stores/presentation-store'
 import { migratePresentation } from '../../utils/editor-presentation-migration'
 import { api } from '../../utils/api'
-import { readEditorDraft } from '../../utils/editor-draft-store'
+import { prepareEditorDraftBaseline, readEditorDraft } from '../../utils/editor-draft-store'
 import { useEditorRecoveryController } from './use-editor-recovery-controller'
 import { useEditorSaveController } from './use-editor-save-controller'
 import { useEditorServerStateController } from './use-editor-server-state-controller'
@@ -113,6 +113,7 @@ export function useEditorPersistenceController({
   useEffect(() => {
     if (!presentationId) return
     const epoch = ++loadEpochRef.current
+    let preparationTimer
     resetEditorInteraction()
     // Hide stale or failed-route state before every replacement request.
     setLoading(true)
@@ -136,6 +137,7 @@ export function useEditorPersistenceController({
         skipAutosaveRef.current = migrated
         seedHistory(migrated)
         setPresentation(migrated)
+        presentationRef.current = migrated
         if (migrated.gridSize) setGridSize(migrated.gridSize)
         firstLoadRef.current = true
         return readEditorDraft(presentationId, isTemplate)
@@ -144,6 +146,21 @@ export function useEditorPersistenceController({
             if (epoch !== loadEpochRef.current || routeKeyRef.current !== routeKey) return
             setSaveRecovery(draft)
             setLoading(false)
+            if (migrated.pptxSemantic) {
+              const semantic = migrated.pptxSemantic
+              const generation = migrated.aggregateGeneration
+              const isCurrent = () =>
+                epoch === loadEpochRef.current && routeKeyRef.current === routeKey &&
+                loadedRouteKeyRef.current === routeKey &&
+                presentationRef.current?.id === presentationId && migrated.id === presentationId &&
+                presentationRef.current.aggregateGeneration === generation &&
+                presentationRef.current.pptxSemantic === semantic && migrated.pptxSemantic === semantic
+              // A separate task keeps even preparation's synchronous capture and
+              // IDB checkpoint off the mandatory recovery/readiness path.
+              preparationTimer = setTimeout(() => {
+                if (isCurrent()) void prepareEditorDraftBaseline(migrated, isTemplate, isCurrent)
+              }, 0)
+            }
           })
       })
       .catch((error) => {
@@ -157,6 +174,10 @@ export function useEditorPersistenceController({
         skipAutosaveRef.current = null
         setLoading(false)
       })
+    return () => {
+      clearTimeout(preparationTimer)
+      if (loadEpochRef.current === epoch) loadEpochRef.current += 1
+    }
   }, [
     clearSaveConflict,
     isTemplate,

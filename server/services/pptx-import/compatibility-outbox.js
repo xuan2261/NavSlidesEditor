@@ -1,7 +1,21 @@
+const { isDeepStrictEqual } = require('node:util')
+const { captureCompatibilityWrites } = require('./package-store/owned-outbox-ack')
 const { RECORD_SCHEMA_VERSION, hashRecord } = require('./package-store/schemas')
 const { validateTrustedImportMetadata } = require('./trusted-import-metadata')
+const { isCertifiedSemanticDocument } = require('revealjs-shared/src/pptx-semantic-records.js')
 
 function clone(value) {
+  if (value && typeof value === 'object' && value.presentation) {
+    const semantic = value.presentation.pptxSemantic
+    if (isCertifiedSemanticDocument(semantic)) {
+      const { presentation, ...record } = value
+      const { pptxSemantic: _semantic, ...editable } = presentation
+      return {
+        ...structuredClone(record),
+        presentation: { ...structuredClone(editable), pptxSemantic: semantic },
+      }
+    }
+  }
   return structuredClone(value)
 }
 
@@ -42,7 +56,7 @@ function queueCompatibilityUpsert(
     ...(typeof updatedAt === 'string' ? { updatedAt } : {}),
     ...(headOnly ? { headOnly: true } : {}),
     ...(trusted === undefined ? {} : { trustedImportMetadata: trusted }),
-    presentation: clone(presentation),
+    presentation,
   })
 }
 
@@ -61,13 +75,17 @@ function snapshotCompatibilityOutbox(store) {
 async function acknowledgeCompatibilityOutbox(store, writes, { signal } = {}) {
   signal?.throwIfAborted()
   if (!Array.isArray(writes)) throw new TypeError('Compatibility writes must be an array')
-  const captured = new Map(writes.map((write) => [write.id, hashRecord(write)]))
+  if (typeof store.acknowledgeCompatibilityWrites === 'function') {
+    return store.acknowledgeCompatibilityWrites(writes, { signal })
+  }
+  // Legacy lightweight fixtures may implement only mutate.
+  const captured = captureCompatibilityWrites(writes)
   if (!captured.size) return 0
   let acknowledged = 0
   await store.mutate(
     (next) => {
       next.compatibilityOutbox = (next.compatibilityOutbox || []).filter((write) => {
-        if (captured.get(write.id) !== hashRecord(write)) return true
+        if (!isDeepStrictEqual(captured.get(write.id), write)) return true
         acknowledged += 1
         return false
       })

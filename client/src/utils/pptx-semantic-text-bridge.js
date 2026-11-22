@@ -1,4 +1,5 @@
 import { normalizeTextDocument } from 'revealjs-shared/src/pptx-text-document.js'
+import { normalizePptxSemanticDocument } from 'revealjs-shared/src/pptx-semantic-document.js'
 import { assertCanonicalTextEdit } from 'revealjs-shared/src/pptx-text-operations.js'
 import { sanitizeRichTextHtml } from 'revealjs-shared/src/content-safety.js'
 import { invalidatePptxFitMetaForUpdates } from './pptx-import-meta'
@@ -448,7 +449,9 @@ export function commitSemanticText(previous, element, document, html, mapTarget)
   const instance = semanticInstance(previous.pptxSemantic, target.instanceId)
   return {
     ...projected,
-    pptxSemantic: replaceSemanticRecords(previous.pptxSemantic, {
+    // Publish one fully validated root to every render/font consumer. The
+    // replacement helper certifies immutability only, not semantic validity.
+    pptxSemantic: normalizePptxSemanticDocument(replaceSemanticRecords(previous.pptxSemantic, {
       instances: {
         [target.instanceId]: {
           ...instance,
@@ -464,6 +467,6 @@ export function commitSemanticText(previous, element, document, html, mapTarget)
           },
         },
       },
-    }),
+    })),
   }
 }

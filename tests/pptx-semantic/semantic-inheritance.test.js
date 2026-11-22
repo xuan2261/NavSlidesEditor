@@ -159,12 +159,13 @@ describe('Task14 linked inheritance editing', () => {
       type: 'text-document',
       document: baseDoc,
     }))
-    const rendered = semanticRenderTree(withField.pptxSemantic, withField.slides[0], {
+    const fieldContext = {
       slideNumber: 42,
       slideTitle: 'Actual Slide Title',
       date: new Date('2026-10-21T12:00:00Z'),
       locale: 'en-GB', timeZone: 'UTC',
-    })
+    }
+    const rendered = semanticRenderTree(withField.pptxSemantic, withField.slides[0], fieldContext)
     const el = rendered.find((n) => n.instanceId === instance.id)?.element
     const runs = el.pptxTextDocument.paragraphs[0].runs
     expect(runs[1].text).toBe('42')
@@ -174,6 +175,14 @@ describe('Task14 linked inheritance editing', () => {
     expect(runs[3].field).toEqual({ id: `${baseDoc.componentId}:field3`, type: 'datetime1' })
     expect(runs[3].text).toBe('21/10/2026')
     expect(materializeTextDocument(withField.pptxSemantic, instance.id).paragraphs[0].runs[3].text).toBe('2026-01-01')
+    fieldContext.slideNumber = 7
+    fieldContext.slideTitle = 'Updated title'
+    fieldContext.date.setUTCDate(22)
+    const refreshed = semanticRenderTree(withField.pptxSemantic, withField.slides[0], fieldContext)
+      .find((node) => node.instanceId === instance.id).element.pptxTextDocument.paragraphs[0].runs
+    expect(refreshed[1].text).toBe('7')
+    expect(refreshed[2].text).toBe('Updated title')
+    expect(refreshed[3].text).toBe('22/10/2026')
     expect(withField.pptxSemantic.definitions).toEqual(presentation.pptxSemantic.definitions)
   })
 

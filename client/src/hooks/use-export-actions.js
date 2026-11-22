@@ -89,22 +89,26 @@ export function useExportActions(
     },
     [flushPendingSave, presentation]
   )
-  const pptxCleanStateRef = useRef({ presentationId: null, fingerprint: '', locallyEdited: false })
-  const cleanState = pptxCleanStateRef.current
-  if (cleanState.presentationId !== presentation?.id) {
-    cleanState.presentationId = presentation?.id || null
-    cleanState.fingerprint =
-      presentation?.pptxOriginal || presentation?.pptxSourceAvailable
-        ? pptxContentFingerprint(presentation)
-        : ''
-    cleanState.locallyEdited = false
-  } else if (
-    !cleanState.locallyEdited &&
-    cleanState.fingerprint &&
-    cleanState.fingerprint !== pptxContentFingerprint(presentation)
+  const pptxCleanStateRef = useRef(null)
+  if (
+    !pptxCleanStateRef.current ||
+    pptxCleanStateRef.current.presentationId !== presentation?.id ||
+    pptxCleanStateRef.current.generation !== presentation?.aggregateGeneration
   ) {
-    cleanState.locallyEdited = true
+    // Capture content, not a mutable deck reference. Ordinary renders must not
+    // serialize the deck; exact comparison belongs at the export boundary.
+    // Replace the baseline so older callbacks retain their own generation.
+    pptxCleanStateRef.current = {
+      presentationId: presentation?.id,
+      generation: presentation?.aggregateGeneration,
+      fingerprint:
+        presentation?.pptxOriginal || presentation?.pptxSourceAvailable
+          ? pptxContentFingerprint(presentation)
+          : '',
+      locallyEdited: false,
+    }
   }
+  const cleanState = pptxCleanStateRef.current
 
   const onExportPDF = useCallback(async () => {
     // Preserve the synchronous legacy caller and reserve semantic popups in the
@@ -151,6 +155,13 @@ export function useExportActions(
         Number.isSafeInteger(presentation.aggregateGeneration)
           ? presentation.aggregateGeneration
           : undefined
+      if (
+        !cleanState.locallyEdited &&
+        cleanState.fingerprint &&
+        cleanState.fingerprint !== pptxContentFingerprint(presentation)
+      ) {
+        cleanState.locallyEdited = true
+      }
       const canDownloadOriginal = Boolean(
         presentation?.id &&
         (presentation?.pptxSourceAvailable ||

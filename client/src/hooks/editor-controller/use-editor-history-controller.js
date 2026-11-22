@@ -5,7 +5,7 @@ import { resolveHistoryAuthoringSlide } from '../../utils/history-authoring-slid
 import semantic from 'revealjs-shared/src/pptx-semantic-presentation.js'
 import { semanticInstances, semanticInstance, semanticDefinition, replaceSemanticRecords } from 'revealjs-shared/src/pptx-semantic-records.js'
 
-const clone = (value) => JSON.parse(JSON.stringify(value))
+import { cloneHistorySnapshot } from './editor-history-snapshot'
 
 export function useEditorHistoryController({
   presentation,
@@ -41,7 +41,7 @@ export function useEditorHistoryController({
 
   const commitPendingSnapshot = useCallback(() => {
     if (pendingSnapshotRef.current === null) return
-    historyRef.current = pushHistory(historyRef.current, clone(pendingSnapshotRef.current))
+    historyRef.current = pushHistory(historyRef.current, cloneHistorySnapshot(pendingSnapshotRef.current))
     pendingSnapshotRef.current = null
   }, [])
 
@@ -52,7 +52,7 @@ export function useEditorHistoryController({
 
   const seedHistory = useCallback(
     (snapshot) => {
-      historyRef.current = [clone(snapshot)]
+      historyRef.current = [cloneHistorySnapshot(snapshot)]
       redoStackRef.current = []
       pendingSnapshotRef.current = null
       seededRef.current = true
@@ -130,7 +130,9 @@ export function useEditorHistoryController({
 
   const prepareRestore = useCallback(
     (state) => {
-      let restored = state
+      // Public consumers may mutate shell fields even when no semantic child
+      // exists. Never publish a shell retained by undo/redo.
+      let restored = cloneHistorySnapshot(state)
       if (state.pptxSemantic && presentation?.pptxSemantic) {
         let patchInstances = null
         let patchDefinitions = null
@@ -155,7 +157,7 @@ export function useEditorHistoryController({
         }
         if (patchInstances || patchDefinitions) {
           restored = {
-            ...state,
+            ...restored,
             pptxSemantic: replaceSemanticRecords(state.pptxSemantic, {
               definitions: patchDefinitions || undefined,
               instances: patchInstances || undefined,

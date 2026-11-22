@@ -208,6 +208,63 @@ describe('useExportActions', () => {
     expect(h.downloadPptxOriginal).not.toHaveBeenCalled()
   })
 
+  it('captures exact content only at baseline changes and the export boundary', async () => {
+    const serialize = vi.fn(() => ({ text: 'source' }))
+    const imported = {
+      ...presentation,
+      pptxSourceAvailable: true,
+      aggregateGeneration: 1,
+      slides: [{ id: 's1', elements: [{ toJSON: serialize }] }],
+    }
+    const { result, rerender } = renderHook(({ deck }) => useExportActions(deck), {
+      initialProps: { deck: imported },
+    })
+    expect(serialize).toHaveBeenCalledTimes(1)
+    rerender({ deck: imported })
+    rerender({ deck: { ...imported, updatedAt: 'later' } })
+    expect(serialize).toHaveBeenCalledTimes(1)
+    h.downloadPptxOriginal.mockRejectedValueOnce(Object.assign(new Error('missing'), { status: 404 }))
+    await act(async () => result.current.onExportPPTX())
+    expect(serialize).toHaveBeenCalledTimes(2)
+    expect(h.downloadPptxOriginal).toHaveBeenCalledWith('p1', 1)
+    rerender({ deck: { ...imported, aggregateGeneration: 2 } })
+    expect(serialize).toHaveBeenCalledTimes(3)
+    rerender({ deck: { ...imported, id: 'p2', aggregateGeneration: 2 } })
+    expect(serialize).toHaveBeenCalledTimes(4)
+  })
+
+  it('keeps an older export callback bound to its captured baseline after an id change', async () => {
+    const imported = {
+      ...presentation,
+      pptxSourceAvailable: true,
+      aggregateGeneration: 1,
+      slides: [{ id: 's1', elements: [{ content: 'source' }] }],
+    }
+    const { result, rerender } = renderHook(({ deck }) => useExportActions(deck), {
+      initialProps: { deck: imported },
+    })
+    const olderExport = result.current.onExportPPTX
+    imported.slides[0].elements[0].content = 'edited'
+    rerender({ deck: { ...imported, id: 'p2' } })
+    await act(async () => olderExport())
+    expect(h.downloadPptxOriginal).not.toHaveBeenCalled()
+    expect(h.exportToPptx).toHaveBeenCalledWith(imported, { teacherReveal: false })
+  })
+
+  it.each([false, true])('detects in-place edits without a dirty flag (rerender: %s)', async (renderAgain) => {
+    const imported = {
+      ...presentation,
+      pptxOriginal: { id: 'original-1', sha256: 'a'.repeat(64) },
+      slides: [{ id: 's1', elements: [{ id: 'e1', content: 'source' }] }],
+    }
+    const { result, rerender } = renderHook(() => useExportActions(imported))
+    imported.slides[0].elements[0].content = 'in-place edit'
+    if (renderAgain) rerender()
+    await act(async () => result.current.onExportPPTX())
+    expect(h.downloadPptxOriginal).not.toHaveBeenCalled()
+    expect(h.exportToPptx).toHaveBeenCalledWith(imported, { teacherReveal: false })
+  })
+
   it('never downloads original bytes when the server marks the presentation dirty', async () => {
     const serverDirty = {
       ...presentation,

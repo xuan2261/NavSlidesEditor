@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
 import React from 'react'
 import { act, cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { PptxSourceFontProvider } from '../../client/src/contexts/pptx-source-font-context'
 import { usePptxSourceFonts } from '../../client/src/hooks/use-pptx-source-fonts'
 
+import { normalizePptxSemanticDocument } from '../../shared/src/pptx-semantic-document.js'
+
 const hash = 'a'.repeat(64)
-const semantic = { schemaVersion: 1, definitions: { d: { id: 'd', kind: 'text',
+const semantic = normalizePptxSemanticDocument({ schemaVersion: 1, definitions: { d: { id: 'd', kind: 'text',
   source: { partUri: 'ppt/slides/slide1.xml', nativeId: '1', preconditionHash: hash },
   components: ['body', 'p', 'r'].map((id, i) => ({ id, kind: i === 2 ? 'run' : 'paragraph',
     locator: { path: [0, i], preconditionHash: hash } })),
@@ -15,7 +17,7 @@ const semantic = { schemaVersion: 1, definitions: { d: { id: 'd', kind: 'text',
       defaultRunProperties: { fontLatin: { typeface: 'KaTeX_Main' } },
       runs: [{ componentId: 'r', kind: 'text', text: 'Source', properties: {} }] }] } },
 } }, instances: { i: { id: 'i', slideId: 's', definitionId: 'd', parentInstanceId: null,
-  localTransform: [1, 0, 0, 1, 0, 0], paintIndex: 0, overrides: {} } }, styles: {}, fonts: {} }
+  localTransform: [1, 0, 0, 1, 0, 0], paintIndex: 0, overrides: {} } }, styles: {}, fonts: {} })
 const deferred = () => {
   let resolve
   const promise = new Promise((done) => { resolve = done })
@@ -29,7 +31,9 @@ const provider = (load, children = <Consumer />) =>
   <PptxSourceFontProvider presentationId="deck" pptxSemantic={semantic} loadRuntime={load}>
     {children}
   </PptxSourceFontProvider>
-afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
+const flush = () => act(async () => { await vi.runOnlyPendingTimersAsync() })
+beforeEach(() => { vi.useFakeTimers() })
+afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
 
 describe('source font provider browser environment ownership', () => {
   it.each([
@@ -45,7 +49,8 @@ describe('source font provider browser environment ownership', () => {
     const load = vi.fn().mockResolvedValueOnce({ fontRuntime: first })
       .mockImplementationOnce(() => pending.promise)
     const view = render(provider(load))
-    await act(async () => {})
+    await flush()
+    expect(screen.getByText('ready:first')).toBeTruthy()
     act(() => { profile = changed; window.dispatchEvent(new Event(event)) })
     expect(screen.getByText('loading:none')).toBeTruthy()
     expect(first.dispose).toHaveBeenCalledOnce()
@@ -66,6 +71,8 @@ describe('source font provider browser environment ownership', () => {
     const load = vi.fn().mockImplementationOnce(() => first.promise)
       .mockImplementationOnce(() => second.promise).mockImplementationOnce(() => third.promise)
     render(provider(load))
+    await flush()
+    expect(screen.getByText('loading:none')).toBeTruthy()
     act(() => { dpr = 3; window.dispatchEvent(new Event('resize')) })
     act(() => { dpr = 1; window.dispatchEvent(new Event('resize')) })
     expect(load).toHaveBeenCalledTimes(3)
@@ -84,7 +91,8 @@ describe('source font provider browser environment ownership', () => {
     const runtime = { name: 'shared', dispose: vi.fn() }
     const load = vi.fn().mockResolvedValue({ fontRuntime: runtime })
     const view = render(provider(load, provider(load)))
-    await act(async () => {})
+    await flush()
+    expect(screen.getByText('ready:shared')).toBeTruthy()
     act(() => {
       window.dispatchEvent(new Event('resize'))
       window.dispatchEvent(new Event('pageshow'))
@@ -111,7 +119,7 @@ describe('source font provider browser environment ownership', () => {
     vi.stubGlobal('matchMedia', matchMedia)
     const load = vi.fn().mockImplementation(async () => ({ fontRuntime: { dispose: vi.fn() } }))
     const view = render(provider(load))
-    await act(async () => {})
+    await flush()
     expect(matchMedia).toHaveBeenLastCalledWith('(resolution: 1dppx)')
     await act(async () => { dpr = 3; media[0].dispatchEvent(new Event('change')) })
     expect(load).toHaveBeenCalledTimes(2)

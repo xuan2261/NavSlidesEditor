@@ -4,7 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import JSZip from 'jszip'
 import { createRequire } from 'node:module'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 const { hashRecord } = await import('./pptx-import/package-store/schemas.js')
 
@@ -16,7 +16,6 @@ process.env.SLIDES_DATA_DIR = dataDir
 
 const storage = await import('./storage.js')
 const { openPackageStore } = await import('./pptx-import/package-store/index.js')
-const { PackageStore } = createRequire(import.meta.url)('./pptx-import/package-store/index.js')
 const { readAuthoritativePresentation } = await import('./package-backed-presentation-read.js')
 
 async function withStore(action) {
@@ -91,21 +90,40 @@ async function seedProjectedImport(extra = {}) {
 }
 
 describe('package-backed presentation reader authority boundary', () => {
-  it('uses one real defensive store snapshot across single and bulk read authority checks', async () => {
+  it('isolates single and bulk authority reads and recharges cached admission budgets without mutation', async () => {
     await seedProjectedImport()
-    const stored = await storage.readPresentations()
-    const snapshot = vi.spyOn(PackageStore.prototype, 'getState')
+    const runtime = createRequire(import.meta.url)('./pptx-import/package-store-runtime.js')
+    const store = await runtime.initializePackageStore({ rootDir: storage.DATA_DIR })
     try {
+      const stored = await storage.readPresentations()
+      const before = store.getState()
+      const rootBytes = await fs.readFile(path.join(storage.DATA_DIR, 'state-root.json'))
       const resolved = await readAuthoritativePresentation('deck-reader', { normalize: false })
       expect(resolved.presentation.title).toBe('Canonical import')
-      expect(snapshot).toHaveBeenCalledTimes(1)
-      snapshot.mockClear()
+      const expected = structuredClone(resolved)
+      const head = resolved.presentation.pptxAggregateHead
+      const admitted = store.getAuthoritativeSaveSnapshot('deck-reader', head)
+      expect(store.getAuthoritativeSaveSnapshot('deck-reader', head)).toBe(admitted)
+      expect(() => store.getAuthoritativeSaveSnapshot('deck-reader', head, {
+        maxSnapshotBytes: 1,
+      })).toThrow(expect.objectContaining({ code: 'SNAPSHOT_BUDGET_EXCEEDED' }))
+      expect(store.getAuthoritativeSaveSnapshot('deck-reader', head)).toBe(admitted)
+
+      resolved.presentation.title = 'Caller mutation'
+      resolved.presentation.slides.push({ id: 'caller-slide', elements: [] })
+      resolved.presentation.pptxAggregateHead.generation += 100
       const { readAuthoritativePresentations } =
         await import('./package-backed-presentation-read.js')
-      expect(await readAuthoritativePresentations(stored, { normalize: false })).toEqual([resolved])
-      expect(snapshot).toHaveBeenCalledTimes(1)
+      const bulk = await readAuthoritativePresentations(stored, { normalize: false })
+      expect(bulk).toEqual([expected])
+      bulk[0].presentation.title = 'Bulk caller mutation'
+      bulk[0].presentation.slides.push({ id: 'bulk-slide', elements: [] })
+      expect(await readAuthoritativePresentation('deck-reader', { normalize: false })).toEqual(expected)
+      expect(store.getState()).toEqual(before)
+      expect(await storage.readPresentations()).toEqual(stored)
+      expect(await fs.readFile(path.join(storage.DATA_DIR, 'state-root.json'))).toEqual(rootBytes)
     } finally {
-      snapshot.mockRestore()
+      await runtime.shutdownPackageStore()
     }
   })
 

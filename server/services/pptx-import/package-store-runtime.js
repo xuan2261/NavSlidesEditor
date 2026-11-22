@@ -5,8 +5,7 @@ const {
   acknowledgeCompatibilityOutbox,
   snapshotCompatibilityOutbox,
 } = require('./compatibility-outbox')
-const { applyCompatibilityWrites, hasExactCompatibilityHead } = require('./compatibility-view')
-const { hashRecord } = require('./package-store/schemas')
+const { applyCompatibilityWrites } = require('./compatibility-view')
 
 let activeStore = null
 let activeRoot = null
@@ -100,12 +99,7 @@ async function withPackageStore(action) {
 }
 
 function isCapturedWriteCurrent(store, write) {
-  const state = store.getCompatibilityState()
-  const queued = state.compatibilityOutbox.find((record) => record.id === write.id)
-  if (!queued || hashRecord(queued) !== hashRecord(write)) return false
-  const head = state.heads.find((item) => item.presentationId === write.presentationId)
-  if (write.operation === 'remove') return !head
-  return hasExactCompatibilityHead(write.presentation, head)
+  return store.isCompatibilityWriteCurrent(write)
 }
 
 async function withCompatibilityDrain(action) {

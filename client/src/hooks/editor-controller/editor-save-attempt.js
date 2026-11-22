@@ -29,7 +29,7 @@ export function rebaseEditorSaveEntry(entry, generation, isTemplate) {
     draftId: entry.draftId,
   })
   entry.draftUpdatedAt = draft.updatedAt
-  entry.draftWritePromise = writeEditorDraft(draft)
+  entry.draftWritePromise = writeEditorDraft(draft, { acknowledgeLocalPublication: true })
 }
 
 export function adoptEditorSaveGeneration({

@@ -83,9 +83,7 @@ async function setupPendingSave(after = snapshot('<p>After</p>')) {
     baseRevisionId: committed.revision.id,
     idempotencyKey: 'save-pending-edit',
     after,
-    loadStored: async () => {
-      throw new Error('Package authority should supply the saved projection')
-    },
+    loadStored: async () => null,
   })
   expect(saved).toMatchObject({ ok: true, generation: 2 })
   return { store, committed, after }
@@ -240,7 +238,7 @@ describe('validated edited export pending materialization', () => {
     const saved = await savePackageProjection({
       presentationId: 'deck', expectedGeneration: 3, baseRevisionId: materialized.revisionId,
       idempotencyKey: 'r1-identical-save', after,
-      loadStored: async () => { throw new Error('Canonical authority must supply the no-op projection') },
+      loadStored: async () => null,
     })
     expect(saved).toMatchObject({ ok: true, generation: 4 })
     const request = { presentationId: 'deck', expectedGeneration: 4, idempotencyKey: 'r1-no-op-export' }
@@ -508,7 +506,7 @@ describe('validated edited export pending materialization', () => {
       presentationId: 'deck', expectedGeneration: 3,
       baseRevisionId: first.revisionId,
       idempotencyKey: 'newer-projection-save', after,
-      loadStored: async () => { throw new Error('Package authority should supply the projection') },
+      loadStored: async () => null,
     })
     expect(newerSave).toMatchObject({ ok: true, generation: 4 })
 

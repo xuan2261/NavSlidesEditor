@@ -1,4 +1,10 @@
+// @vitest-environment node
 import { describe, expect, it } from 'vitest'
+import canonicalModule from './canonical-snapshot.js'
+import baselineModule from './semantic-baseline.js'
+import graphModule from '../../../shared/src/pptx-semantic-source-graph.js'
+import recordsModule from '../../../shared/src/pptx-semantic-records.js'
+import deltasModule from './generic-journal-property-path.js'
 import journalModule from './mutation-journal.js'
 import plannerModule from './transactional-patch-planner.js'
 
@@ -21,7 +27,89 @@ const base = {
   ],
 }
 
+const semanticFixture = () => ({ id: 'deck', slides: [], pptxSemantic: {
+  schemaVersion: 1,
+  definitions: { d1: { id: 'd1', kind: 'text', source: { partUri: 'ppt/slides/slide1.xml', nativeId: '7', preconditionHash: 'a'.repeat(64) }, components: [], content: {} } },
+  instances: {}, styles: {}, fonts: {},
+} })
+
 describe('canonical mutation journal', () => {
+  it.each([1, 3])('matches full mutable oracle bytes, IDs, inverse and hash for schema %i', (version) => {
+    const input = semanticFixture()
+    if (version === 3) input.pptxSemantic = graphModule.compactSemanticGraph(input.pptxSemantic)
+    const before = canonicalModule.canonicalSaveSnapshot(input)
+    const id = Object.keys(before.pptxSemantic.definitions)[0]
+    const changed = recordsModule.replaceSemanticRecords(before.pptxSemantic, {
+      definitions: { [id]: { ...before.pptxSemantic.definitions[id], content: { edited: true } } },
+    })
+    const candidates = [changed, { ...changed, fonts: { body: { family: 'Arial' } } }]
+    if (version === 3) candidates.push({ ...changed, partUris: [...changed.partUris, 'ppt/slides/unused.xml'] })
+    for (const semantic of candidates) {
+      const after = canonicalModule.canonicalSaveSnapshot({ ...before, pptxSemantic: semantic })
+      for (const [left, right] of [[before, after], [after, before]]) {
+        const options = { matrixAuthorityEpoch: 1 }
+        const fast = deriveMutationJournal(left, right, options)
+        const oracle = deriveMutationJournal(structuredClone(left), structuredClone(right), options)
+        expect(JSON.stringify(fast)).toBe(JSON.stringify(oracle))
+        expect(replayJournal(left, fast)).toEqual(right)
+        const inverse = { operations: [...fast.operations].reverse().map(op => ({ ...op, before: op.after, after: op.inverse.value })) }
+        expect(replayJournal(right, inverse)).toEqual(left)
+      }
+    }
+  })
+
+  it('skips immutable dictionary, record and catalog references but retains mutable getter traversal', () => {
+    const record = { id: 'same' }; const dictionary = { same: record }
+    const before = { definitions: dictionary, instances: { same: record }, partUris: ['a'] }
+    const after = { ...before, instances: { same: record } }
+    const fast = []; const full = []
+    deltasModule.semanticPropertyDeltas(before, after, (...args) => fast.push(args), true)
+    deltasModule.semanticPropertyDeltas(before, after, (...args) => full.push(args))
+    expect(fast).toEqual([])
+    expect(full.map(([path]) => path)).toEqual([['definitions', 'same'], ['instances', 'same'], ['partUris']])
+    let reads = 0
+    Object.defineProperty(after.instances, 'same', { enumerable: true, get() { reads++; return record } })
+    deltasModule.semanticPropertyDeltas(before, after, () => {})
+    expect(reads).toBe(1)
+  })
+
+  it('validates identical raw envelopes and rejects forged source changes after admission', () => {
+    const raw = semanticFixture()
+    raw.pptxSemantic.definitions.d1.kind = 'invalid'
+    expect(() => baselineModule.assertSemanticBaseline(raw, raw)).toThrow()
+    const before = canonicalModule.canonicalSaveSnapshot(semanticFixture())
+    const forged = JSON.parse(JSON.stringify(before))
+    forged.pptxSemantic.definitions.d1.content.forged = true
+    const after = canonicalModule.canonicalSaveSnapshot(forged)
+    expect(() => baselineModule.assertSemanticBaseline(before, after)).toThrow(/baseline is immutable/)
+    expect(() => baselineModule.assertSemanticBaseline(before, forged)).toThrow(/baseline is immutable/)
+  })
+  it('treats absent property operands exactly like historical own-undefined bytes and inverse replay', async () => {
+    const { canonicalJson, hashRecord } = (await import('./package-store/schemas.js')).default
+    const before = canonicalEditableSnapshot({ id: 'deck', slides: [] })
+    const after = canonicalEditableSnapshot({ ...before, title: 'Added' })
+    for (const [left, right] of [[before, after], [after, before]]) {
+      const journal = deriveMutationJournal(left, right, { matrixAuthorityEpoch: 1 })
+      const operation = journal.operations[0]
+      const oldOperation = { ...operation, before: operation.before, after: operation.after,
+        inverse: { value: operation.inverse.value } }
+      const old = { ...journal, operations: [oldOperation] }
+      expect(canonicalJson(journal)).toBe(canonicalJson(old))
+      expect(hashRecord(journal)).toBe(hashRecord(old))
+      const { schemaVersion, operationId, ...oldInput } = oldOperation
+      expect(operationId).toBe(`op-${hashRecord(oldInput).slice(0, 24)}`)
+      const { schemaVersion: version, baseRevisionId, journalHash, operations, ...subjects } = journal
+      expect(journalHash).toBe(hashRecord({ ...subjects, operations: old.operations }))
+      for (const value of [old, journal, JSON.parse(JSON.stringify(journal))]) {
+        expect(replayJournal(left, value)).toEqual(right)
+        expect(replayJournal(right, { operations: [{ ...value.operations[0], before: operation.after,
+          after: operation.inverse.value }] })).toEqual(left)
+      }
+      expect(Object.hasOwn(operation, 'before')).toBe(operation.before !== undefined)
+      expect(Object.hasOwn(operation, 'after')).toBe(operation.after !== undefined)
+      expect(Object.hasOwn(operation.inverse, 'value')).toBe(operation.inverse.value !== undefined)
+    }
+  })
   it('strips forged authority recursively and enforces budgets before cloning', () => {
     const clean = canonicalEditableSnapshot(base)
     expect(clean).not.toHaveProperty('_pptxEdited')

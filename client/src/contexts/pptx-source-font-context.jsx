@@ -1,9 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { loadPptxSourceFontRuntime } from '../hooks/use-pptx-source-font-loader'
-import { collectSemanticFontRequests } from 'revealjs-shared/src/pptx-source-font-request.js'
+import { collectSemanticFontRequests, readCachedSemanticFontRequests } from 'revealjs-shared/src/pptx-source-font-request.js'
+import { normalizePptxSemanticDocument } from 'revealjs-shared/src/pptx-semantic-document.js'
 
 const empty = { status: 'idle', fontRuntime: null, sourceIdentity: null, issues: [] }
 export const PptxSourceFontContext = createContext(empty)
+// Ownership follows exact admitted roots, not the public runtime snapshot.
+const PptxSourceFontOwnerContext = createContext(null)
+const invalidState = { ...empty, status: 'unavailable', issues: [{ code: 'source-font-declarations-invalid' }] }
 
 // Match the measurer's browser identity, not viewport geometry or touch support.
 const browserProfile = (document) => {
@@ -33,6 +37,7 @@ function subscribeBrowserProfile(document, notify) {
 }
 
 function SourceFontSession({
+  mode, inherited, inheritedValue,
   presentationId, requestIdentity, fontRevision, children, outputDocument, loadRuntime, pptxSemantic,
 }) {
   const environment = useSyncExternalStore(
@@ -40,7 +45,7 @@ function SourceFontSession({
     () => browserProfile(outputDocument),
     () => browserProfile(outputDocument),
   )
-  const loadingState = {
+  const loadingState = useMemo(() => ({
     ...empty,
     status: 'loading',
     presentationId,
@@ -48,24 +53,25 @@ function SourceFontSession({
     outputDocument,
     loadRuntime,
     environment,
-  }
-  const [state, setState] = useState(loadingState)
-  const matching =
-    state.outputDocument === outputDocument &&
-    state.loadRuntime === loadRuntime &&
-    state.environment === environment &&
-    state.presentationId === presentationId &&
-    state.requestIdentity === requestIdentity
-  // Forget a disposed identity even when navigation later returns to the same
-  // source while another registration is still pending.
-  if (!matching) setState(loadingState)
+  }), [presentationId, requestIdentity, outputDocument, loadRuntime, environment])
+  const binding = useMemo(() => ({}),
+    [mode, presentationId, requestIdentity, outputDocument, loadRuntime, environment])
+  const generation = useRef(0)
+  const [stored, setState] = useState(null)
+  const matching = stored?.binding === binding && stored.generation === generation.current
+  // Inactive transitions must forget ready state, even if repaired to the exact
+  // same request later. Never publish a runtime disposed by effect cleanup.
+  if (stored && !matching) setState(null)
   const resource = useRef(null),
     revision = useRef(fontRevision)
   useEffect(() => {
     revision.current = fontRevision
-    resource.current?.retry(fontRevision)
-  }, [fontRevision])
+    if (mode === 'active') resource.current?.retry(fontRevision)
+  }, [fontRevision, mode])
   useEffect(() => {
+    if (mode !== 'active') return
+    const currentGeneration = ++generation.current
+    const publish = (value) => setState({ binding, generation: currentGeneration, value })
     const controller = new AbortController()
     let runtime = null,
       loading = false,
@@ -88,7 +94,7 @@ function SourceFontSession({
             return
           }
           runtime = result.fontRuntime
-          setState({
+          publish({
             status: 'ready',
             outputDocument,
             loadRuntime,
@@ -107,7 +113,7 @@ function SourceFontSession({
             start()
             return
           }
-          setState({
+          publish({
             ...empty,
             status: 'unavailable',
             outputDocument,
@@ -131,16 +137,30 @@ function SourceFontSession({
     resource.current = owner
     start()
     return () => {
+      ++generation.current
       controller.abort()
       runtime?.dispose()
       if (resource.current === owner) resource.current = null
     }
-  }, [presentationId, requestIdentity, outputDocument, loadRuntime, environment])
-  const value = matching ? state : loadingState
+  }, [binding, mode, presentationId, requestIdentity, outputDocument, loadRuntime, environment])
+  // State already contains the full request binding and loader result (including
+  // diagnostics/provenance). Root edits and revision acknowledgements alone must
+  // not notify every public font consumer.
+  const value = mode === 'inherited' ? inheritedValue
+    : mode === 'invalid' ? invalidState
+    : mode === 'idle' ? empty
+    : mode === 'pending' ? loadingState
+    : matching ? stored.value : loadingState
+  const localOwner = useMemo(() => ({ presentationId, requestIdentity, fontRevision,
+    outputDocument, loadRuntime, pptxSemantic }),
+  [presentationId, requestIdentity, fontRevision, outputDocument, loadRuntime, pptxSemantic])
   return (
-    <PptxSourceFontContext.Provider value={{ ...value, fontRevision, pptxSemantic }}>
-      {children}
-    </PptxSourceFontContext.Provider>
+    <PptxSourceFontOwnerContext.Provider value={mode === 'inherited' ? inherited
+      : mode === 'active' || mode === 'pending' ? localOwner : null}>
+      <PptxSourceFontContext.Provider value={value}>
+        {children}
+      </PptxSourceFontContext.Provider>
+    </PptxSourceFontOwnerContext.Provider>
   )
 }
 
@@ -152,34 +172,49 @@ export function PptxSourceFontProvider({
   document: outputDocument = globalThis.document,
   loadRuntime = loadPptxSourceFontRuntime,
 }) {
-  const inherited = useContext(PptxSourceFontContext)
-  let requestIdentity = null,
+  const inherited = useContext(PptxSourceFontOwnerContext)
+  const inheritedValue = useContext(PptxSourceFontContext)
+  const coldStarted = useRef(false)
+  const [, collectionCompleted] = useState(0)
+  let requestIdentity = null, normalized = null, pending = false, inherit = false,
     invalid = false
   try {
-    // Save acknowledgements can retry delivery, but do not identify font faces.
-    // Derive the identity from the current declarations, including nested scopes.
-    if (pptxSemantic) requestIdentity = collectSemanticFontRequests(pptxSemantic).identity
+    // Admission/recovery remains synchronous and mandatory. Only collection of
+    // the first cold root yields a task; edits keep synchronous layout semantics.
+    if (pptxSemantic) {
+      normalized = normalizePptxSemanticDocument(pptxSemantic)
+      const cached = readCachedSemanticFontRequests(normalized)
+      const exactParent = inherited?.pptxSemantic === normalized &&
+        inherited.presentationId === presentationId &&
+        inherited.outputDocument === outputDocument && inherited.loadRuntime === loadRuntime &&
+        Object.is(inherited.fontRevision, fontRevision)
+      if (exactParent) { inherit = true; requestIdentity = inherited.requestIdentity }
+      else if (cached) requestIdentity = cached.identity
+      else if (!coldStarted.current && presentationId) pending = true
+      else requestIdentity = collectSemanticFontRequests(normalized).identity
+    }
   } catch {
     invalid = true
   }
-  if (invalid || !presentationId || !requestIdentity) {
-    const value = invalid
-      ? { ...empty, status: 'unavailable', issues: [{ code: 'source-font-declarations-invalid' }] }
-      : empty
-    return <PptxSourceFontContext.Provider value={value}>{children}</PptxSourceFontContext.Provider>
-  }
-  if (
-    inherited.presentationId === presentationId &&
-    inherited.requestIdentity === requestIdentity &&
-    inherited.outputDocument === outputDocument &&
-    inherited.loadRuntime === loadRuntime &&
-    Object.is(inherited.fontRevision, fontRevision)
-  )
-    return children
+  useEffect(() => {
+    if (!pending || invalid) return
+    coldStarted.current = true
+    let cancelled = false
+    const task = setTimeout(() => {
+      if (cancelled) return
+      // Errors are re-observed by the synchronous path on the next render.
+      try { collectSemanticFontRequests(normalized) } catch { /* fail closed below */ }
+      if (!cancelled) collectionCompleted(value => value + 1)
+    }, 0)
+    return () => { cancelled = true; clearTimeout(task) }
+  }, [pending, invalid, normalized, presentationId, outputDocument, loadRuntime, fontRevision])
+  const mode = invalid ? 'invalid' : inherit ? 'inherited' : pending ? 'pending'
+    : !presentationId || !requestIdentity ? 'idle' : 'active'
   return (
     <SourceFontSession
+      mode={mode} inherited={inherited} inheritedValue={inheritedValue}
       presentationId={presentationId} requestIdentity={requestIdentity} fontRevision={fontRevision}
-      outputDocument={outputDocument} loadRuntime={loadRuntime} pptxSemantic={pptxSemantic}
+      outputDocument={outputDocument} loadRuntime={loadRuntime} pptxSemantic={normalized}
     >
       {children}
     </SourceFontSession>

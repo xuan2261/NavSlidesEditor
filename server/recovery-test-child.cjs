@@ -98,15 +98,16 @@ async function main() {
   const jobId = jobs.createJob()
   receipt.jobId = jobId
   if (mode === 'pptx-json') {
-    const mutate = packageRuntime.getPackageStore().mutate.bind(packageRuntime.getPackageStore())
-    packageRuntime.getPackageStore().mutate = async (...args) => {
+    const store = packageRuntime.getPackageStore()
+    const acknowledge = store.acknowledgeCompatibilityWrites.bind(store)
+    store.acknowledgeCompatibilityWrites = async (writes, ...args) => {
       const rows = await storage.readPresentations()
-      const projection = rows.find((row) => row.id !== 'retained-winner')
+      const projection = rows.find((row) => writes.some((write) => write.presentationId === row.id))
       if (projection) {
         receipt.presentationId = projection.id
         await pause(mode, receipt) // JSON applied; exact outbox ack has not mutated authority.
       }
-      return mutate(...args)
+      return acknowledge(writes, ...args)
     }
   }
   await route.runImport({ jobId, filePath: file, originalName: 'process-death.pptx', jobManager: jobs,

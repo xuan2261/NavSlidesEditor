@@ -23,8 +23,12 @@ function fixture() {
     })),
     mutationResults: [{ presentationId: 'unrelated', projection: { slides: [] } }],
   }
+  const root = Object.freeze({})
   const store = {
-    getState: vi.fn(() => structuredClone(state)),
+    getState: vi.fn(() => { throw Error('Byte reads must not clone public history') }),
+    getOwnedAuthorityState: vi.fn(() =>
+      authority.acquireOwnedAuthorityState(store, state, root)
+    ),
     readBlob: vi.fn(async (hash) => {
       const revision = state.revisions.find((item) => item.blobSha256 === hash)
       if (!revision) throw Error('Missing blob')
@@ -35,11 +39,12 @@ function fixture() {
 }
 
 describe('operation-scoped package byte verification', () => {
-  it('takes one defensive snapshot for both owned revision lookups and byte checks', async () => {
+  it('takes one owned immutable snapshot for both revision lookups and byte checks', async () => {
     const { head, state, store } = fixture()
     const before = structuredClone(state)
     await authority.verifyEditorPackageBytes(store, head)
-    expect(store.getState).toHaveBeenCalledTimes(1)
+    expect(store.getOwnedAuthorityState).toHaveBeenCalledTimes(1)
+    expect(store.getState).not.toHaveBeenCalled()
     expect(store.readBlob).toHaveBeenCalledTimes(2)
     expect(state).toEqual(before)
   })
@@ -49,26 +54,32 @@ describe('operation-scoped package byte verification', () => {
     const read = authority.createEditorPackageRead(store)
     expect(read.state).toEqual(state)
     expect(read.state).not.toBe(state)
+    expect(read.state).toBe(store.getOwnedAuthorityState.mock.results[0].value)
+    expect(() => { read.state.heads[0].packageRevisionId = 'forged' }).toThrow()
+    expect(() => { read.state.owners[0].ownerId = 'forged' }).toThrow()
+    expect(() => { read.state.revisions[0].blobSha256 = 'forged' }).toThrow()
     const capturedHead = structuredClone(head)
     // A later publication must not mix new pointers into an already captured read.
     state.heads[0].packageRevisionId = 'later'
     await read.verifyBytes(capturedHead)
-    expect(store.getState).toHaveBeenCalledTimes(1)
+    expect(store.getOwnedAuthorityState).toHaveBeenCalledTimes(1)
+    expect(store.getState).not.toHaveBeenCalled()
     expect(read.state.heads[0].packageRevisionId).toBe('current')
     const next = authority.createEditorPackageRead(store)
     await expect(next.verifyBytes(read.state.heads[0])).rejects.toMatchObject({
       code: 'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE',
       status: 422,
     })
-    expect(store.getState).toHaveBeenCalledTimes(2)
+    expect(store.getOwnedAuthorityState).toHaveBeenCalledTimes(2)
+    expect(store.getState).not.toHaveBeenCalled()
   })
 
   it.each(['original', 'current'])(
     'still rejects corrupt %s bytes from the snapshot',
     async (id) => {
-      const { head, store } = fixture()
+      const { head, state, store } = fixture()
       const readBlob = store.readBlob.getMockImplementation()
-      const hash = store.getState().revisions.find((revision) => revision.id === id).blobSha256
+      const hash = state.revisions.find((revision) => revision.id === id).blobSha256
       store.readBlob.mockImplementation((requested) =>
         requested === hash ? Buffer.from('corrupt') : readBlob(requested)
       )
@@ -103,6 +114,7 @@ describe('operation-scoped package byte verification', () => {
     state.owners = state.owners.filter((owner) => owner.revisionId === 'original')
     await authority.createEditorPackageRead(store).verifyBytes(head)
     expect(store.readBlob).toHaveBeenCalledTimes(1)
-    expect(store.getState).toHaveBeenCalledTimes(1)
+    expect(store.getOwnedAuthorityState).toHaveBeenCalledTimes(1)
+    expect(store.getState).not.toHaveBeenCalled()
   })
 })

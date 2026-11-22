@@ -14,10 +14,7 @@ export const SlideNavigatorItem = memo(function SlideNavigatorItem({
   actionsActive,
   dragOver,
   slideCount,
-  resolution,
-  designTokens,
-  layoutMasters,
-  pptxSemantic,
+  renderViews,
   onActivate,
   onFocus,
   onKeyDown,
@@ -140,10 +137,7 @@ export const SlideNavigatorItem = memo(function SlideNavigatorItem({
         )}
         <SlideThumbnailPreview
           slide={slide}
-          resolution={resolution}
-          designTokens={designTokens}
-          layoutMasters={layoutMasters}
-          pptxSemantic={pptxSemantic}
+          renderView={renderViews.view}
           className="m-1.5"
         />
       </button>
@@ -194,10 +188,7 @@ export const SlideNavigatorItem = memo(function SlideNavigatorItem({
                   </span>
                   <SlideThumbnailPreview
                     slide={child}
-                    resolution={resolution}
-                    designTokens={designTokens}
-                    layoutMasters={layoutMasters}
-                    pptxSemantic={pptxSemantic}
+                    renderView={renderViews.children[childIndex]}
                     className="min-h-[24px]"
                   />
                 </button>

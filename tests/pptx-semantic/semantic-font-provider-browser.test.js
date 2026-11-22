@@ -32,6 +32,8 @@ beforeAll(async () => {
     import {PptxSourceFontProvider} from './client/src/contexts/pptx-source-font-context.jsx';
     import {usePptxSourceFonts} from './client/src/hooks/use-pptx-source-fonts.js';
     import {loadPptxSourceFontRuntime} from './client/src/hooks/use-pptx-source-font-loader.js';
+    import {normalizePptxSemanticDocument} from './shared/src/pptx-semantic-document.js';
+    globalThis.admitFonts=normalizePptxSemanticDocument;
     import {collectSemanticFontRequests} from './shared/src/pptx-source-font-request.js';
     const roots = new Map();
     function Consumer({id}) {
@@ -93,7 +95,8 @@ describe('production font provider with real HTTP bytes and browser measurement'
           }
           addEventListener('font-state', listener)
         })
-        globalThis.mountFonts('profile', semantic, 1, true)
+        const admitted = globalThis.admitFonts(semantic)
+        globalThis.mountFonts('profile', admitted, 1, true)
         await globalThis.profileReady
         globalThis.desktopRuntime = globalThis.states.profile.fontRuntime
         globalThis.desktopSource = globalThis.states.profile.sourceIdentity
@@ -184,6 +187,34 @@ describe('production font provider with real HTTP bytes and browser measurement'
       aliasesDiffer: true, secondValid: null, remaining: 1, final: 0, frames: 0 })
     expect(result.width).toBeGreaterThan(40)
     expect(result.outputWidth).toBeCloseTo(result.width, 5)
+  })
+
+  it('invalidates a mutated raw root rather than inheriting its previous face identity', async () => {
+    const result = await page.evaluate(async (semantic) => {
+      const state = (status, trigger) => new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('raw mutation deadline')), 10000)
+        const listener = ({ detail }) => {
+          if (detail.id !== 'mutable' || detail.status !== status) return
+          clearTimeout(timer); removeEventListener('font-state', listener); resolve()
+        }
+        addEventListener('font-state', listener); trigger()
+      })
+      try {
+        await state('ready', () => globalThis.mountFonts('mutable', semantic))
+        const runtime = globalThis.states.mutable.fontRuntime
+        const identity = globalThis.fontKey(semantic)
+        semantic.definitions.d.content.textDocument.paragraphs[0].defaultRunProperties.bold = true
+        await state('unavailable', () => globalThis.mountFonts('mutable', semantic))
+        return { changed: identity !== globalThis.fontKey(semantic),
+          runtimeHidden: globalThis.states.mutable.fontRuntime === null,
+          issues: globalThis.states.mutable.issues,
+          oldValidation: runtime.measurement.validate(runtime.fontProfile, runtime.rendererProfile),
+          faces: document.fonts.size, frames: document.querySelectorAll('iframe').length }
+      } finally { globalThis.unmountFonts('mutable') }
+    }, semantic)
+    expect(result).toMatchObject({ changed: true, runtimeHidden: true,
+      issues: [{ code: 'source-font-source-stale' }],
+      oldValidation: 'stale-table-output-fonts', faces: 0, frames: 0 })
   })
 
   it('rejects stale unsaved source and byte corruption without a font fallback', async () => {

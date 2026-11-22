@@ -22,6 +22,7 @@ import { TableRenderer } from '../canvas/element-renderers/table-element-rendere
 import { TimelineRenderer } from '../canvas/element-renderers/timeline-element-renderer'
 import { sanitizeThumbnailHtml, sanitizeThumbnailSvg } from './thumbnail-markup-safety'
 import semanticTree from 'revealjs-shared/src/pptx-semantic-render-tree.js'
+import projectionCache from 'revealjs-shared/src/pptx-slide-projection-cache.js'
 import { semanticElement } from '../../utils/pptx-semantic-geometry-bridge'
 import NativeOmmlRenderer from '../properties/native-omml-renderer'
 
@@ -267,7 +268,121 @@ function SafeElement({ element, tokens, outputPixelScale }) {
   )
 }
 
-export const SlideThumbnailPreview = memo(function SlideThumbnailPreview({
+// Raw nodes are owned/frozen and their identity certifies the entire render
+// envelope (catalogs, occurrences, ancestry, connectors and slide values).
+const thumbnailProjections = new WeakMap()
+function thumbnailProjection(document, rawNodes) {
+  const previous = thumbnailProjections.get(rawNodes)
+  if (previous) return previous
+  function project(nodes) {
+    return Object.freeze(nodes.map((node) => Object.freeze({
+      ...node,
+      projectedElement: node.kind !== 'group' && node.element && node.instanceId
+        ? Object.freeze(semanticElement(document, node.instanceId, node.element)) : node.element,
+      children: project(node.children || []),
+    })))
+  }
+  const result = project(rawNodes)
+  thumbnailProjections.set(rawNodes, result)
+  return result
+}
+
+// Default shallow React comparison only: no mutable slide identity comparator.
+const SemanticContent = memo(function SemanticContent({ nodes, tokens, outputPixelScale }) {
+  const element = (value) => (
+    <div key={value.id} style={elementStyle(value)}>
+      <SafeElement element={value} tokens={tokens} outputPixelScale={outputPixelScale} />
+    </div>
+  )
+  function nodeContent(node) {
+    if (node.hidden) return null
+    if (!node.instanceId) return element(node.element)
+    return (
+      <div key={node.instanceId} data-thumbnail-instance-id={node.instanceId}
+        style={{ position: 'absolute', left: 0, top: 0, transform: node.transform,
+          transformOrigin: '0 0', overflow: 'visible', zIndex: node.paintIndex,
+          ...(node.kind === 'group' ? { opacity: node.opacity } : {}) }}>
+        {node.kind !== 'group' && element(node.projectedElement)}
+        {node.children.map(nodeContent)}
+      </div>
+    )
+  }
+  return nodes.map(nodeContent)
+})
+
+// Admit shared values once per panel render, comparing descriptors rather than
+// mutable input identities. A failed admission is never a reusable context.
+export function deriveNavigatorContext(options, previous) {
+  try {
+    const values = Object.create(null)
+    for (const key of ['resolution', 'designTokens', 'layoutMasters']) {
+      const descriptor = Object.getOwnPropertyDescriptor(options, key)
+      if (descriptor && !('value' in descriptor)) return null
+      values[key] = descriptor?.value
+    }
+    return projectionCache.ownedSlideSnapshot(values, previous)
+  } catch {
+    return null
+  }
+}
+
+// The optional context keeps direct callers compatible; the panel supplies its
+// single admission to every parent and child. Semantic roots never enter it.
+export function deriveNavigatorView(slide, options, previous, context = deriveNavigatorContext(options, previous?.context)) {
+  const { resolution, designTokens, layoutMasters, pptxSemantic } = options
+  let admission = null
+  if (context) {
+    try {
+      admission = projectionCache.ownedSlideSnapshot(slide, previous?.admission)
+    } catch {
+      // Preserve legacy handling for exotic slides without certifying reuse.
+    }
+  }
+  const admitted = Boolean(context && admission)
+  const source = admitted ? admission : slide
+  const effectiveSlide = admitted && admission === previous?.admission && context === previous?.context
+    ? previous.effectiveSlide
+    : source?.layoutId
+      ? resolveEffectiveSlide(source, admitted ? context.layoutMasters : layoutMasters).slide : source
+  const values = admitted ? null : JSON.stringify({ slide, effectiveSlide, resolution, designTokens, semantic: Boolean(pptxSemantic) })
+  const ownedEffective = admitted ? projectionCache.ownedSlideSnapshot(effectiveSlide) : effectiveSlide
+  let semanticNodes = null
+  if (pptxSemantic && effectiveSlide) {
+    try {
+      const prior = admitted && projectionCache.priorSlideProjection(pptxSemantic, ownedEffective)
+      semanticNodes = thumbnailProjection(pptxSemantic,
+        prior || semanticTree.immutableSemanticRenderTree(pptxSemantic, ownedEffective))
+    } catch (error) {
+      semanticNodes = error
+    }
+  }
+  // Mutable inputs still go through validation/projection and value comparison on
+  // every render. Only the immutable projection API can supply the fast identity hit.
+  const nodeValues = semanticNodes instanceof Error ? null
+    : semanticNodes === previous?.semanticNodes ? previous.nodeValues : JSON.stringify(semanticNodes)
+  if (previous && admitted && admission === previous.admission && context === previous.context &&
+      Boolean(pptxSemantic) === previous.semantic && !(semanticNodes instanceof Error) &&
+      (semanticNodes === previous.semanticNodes || nodeValues === previous.nodeValues)) return previous
+  const freezeOwned = (value) => {
+    if (value && typeof value === 'object') {
+      Object.values(value).forEach(freezeOwned)
+      Object.freeze(value)
+    }
+    return value
+  }
+  const owned = admitted ? { ...context, slide: admission, effectiveSlide: ownedEffective }
+    : freezeOwned(JSON.parse(values))
+  return Object.freeze({
+    context, admission, values, nodeValues, semanticNodes,
+    slide: owned.slide,
+    effectiveSlide: owned.effectiveSlide,
+    resolution: owned.resolution,
+    designTokens: owned.designTokens,
+    semantic: Boolean(pptxSemantic),
+  })
+}
+
+export function SlideThumbnailPreview({
   slide,
   width,
   height,
@@ -275,22 +390,27 @@ export const SlideThumbnailPreview = memo(function SlideThumbnailPreview({
   designTokens,
   layoutMasters,
   pptxSemantic,
+  renderView,
   className = '',
   'data-testid': testId,
 }) {
+  if (renderView) {
+    slide = renderView.effectiveSlide
+    resolution = renderView.resolution
+    designTokens = renderView.designTokens
+    layoutMasters = undefined
+  }
   const sourceWidth = width || resolution?.width || 960
   const sourceHeight = height || resolution?.height || 540
   const hostRef = useRef(null)
   const [scale, setScale] = useState(0)
   const outputPixelScale = useOutputPixelScale(scale)
-  const effectiveSlide = useMemo(
-    () => (slide?.layoutId ? resolveEffectiveSlide(slide, layoutMasters).slide : slide),
-    [slide, layoutMasters]
+  const effectiveSlide = renderView ? renderView.effectiveSlide
+    : slide?.layoutId ? resolveEffectiveSlide(slide, layoutMasters).slide : slide
+  const tokenValues = JSON.stringify(
+    mergeTokens(mergeTokens(DEFAULT_TOKENS, designTokens), effectiveSlide?.designTokens)
   )
-  const tokens = useMemo(
-    () => mergeTokens(mergeTokens(DEFAULT_TOKENS, designTokens), effectiveSlide?.designTokens),
-    [designTokens, effectiveSlide?.designTokens]
-  )
+  const tokens = useMemo(() => JSON.parse(tokenValues), [tokenValues])
   const elements = useMemo(() => {
     const source = effectiveSlide?.elements || []
     const { effectiveLines } = resolveConnectorGeometry(source)
@@ -304,57 +424,22 @@ export const SlideThumbnailPreview = memo(function SlideThumbnailPreview({
       <SafeElement element={element} tokens={tokens} outputPixelScale={outputPixelScale} />
     </div>
   )
-  const semanticNodes = useMemo(() => {
+  const semanticNodes = (() => {
+    if (renderView) return renderView.semanticNodes
     if (!pptxSemantic || !effectiveSlide) return null
     try {
-      const rawNodes = semanticTree.semanticRenderTree(pptxSemantic, effectiveSlide)
-      function projectNodes(nodes) {
-        return nodes.map((node) => {
-          const projectedElement =
-            node.kind !== 'group' && node.element && node.instanceId
-              ? semanticElement(pptxSemantic, node.instanceId, node.element)
-              : node.element
-          return {
-            ...node,
-            projectedElement,
-            children: node.children ? projectNodes(node.children) : [],
-          }
-        })
-      }
-      return projectNodes(rawNodes)
+      const rawNodes = semanticTree.immutableSemanticRenderTree(pptxSemantic, effectiveSlide)
+      return thumbnailProjection(pptxSemantic, rawNodes)
     } catch (error) {
       return error
     }
-  }, [pptxSemantic, effectiveSlide])
-  function renderSemanticNode(node) {
-    if (node.hidden) return null
-    if (!node.instanceId) return renderElement(node.element)
-    return (
-      <div
-        key={node.instanceId}
-        data-thumbnail-instance-id={node.instanceId}
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          transform: node.transform,
-          transformOrigin: '0 0',
-          overflow: 'visible',
-          zIndex: node.paintIndex,
-          ...(node.kind === 'group' ? { opacity: node.opacity } : {}),
-        }}
-      >
-        {node.kind !== 'group' && renderElement(node.projectedElement)}
-        {node.children.map(renderSemanticNode)}
-      </div>
-    )
-  }
+  })()
   let content
-  if (pptxSemantic) {
+  if (renderView ? renderView.semantic : pptxSemantic) {
     if (semanticNodes instanceof Error) {
       content = <span data-thumbnail-error>{semanticNodes.message}</span>
     } else if (semanticNodes) {
-      content = semanticNodes.map(renderSemanticNode)
+      content = <SemanticContent nodes={semanticNodes} tokens={tokens} outputPixelScale={outputPixelScale} />
     }
   } else content = elements.map(renderElement)
 
@@ -406,4 +491,4 @@ export const SlideThumbnailPreview = memo(function SlideThumbnailPreview({
       </div>
     </div>
   )
-})
+}

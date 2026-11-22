@@ -1864,13 +1864,15 @@ describe('Presentations API', () => {
     const fixture = await createNativeRouteFixture(app)
     try {
       const head = fixture.store.getState().heads.find((item) => item.presentationId === fixture.id)
-      const staleHead = fixture.store.metadata.state.heads.find(
+      const rawState = fixture.store.getState()
+      const staleHead = rawState.heads.find(
         (item) => item.presentationId === fixture.id
       )
       staleHead.matrixAuthoritySubjects = {
         ...staleHead.matrixAuthoritySubjects,
         journal: { ...staleHead.matrixAuthoritySubjects.journal, hash: '0'.repeat(64) },
       }
+      fixture.store.metadata.state = rawState
 
       const saved = await nativeSave(
         app,
@@ -2067,16 +2069,16 @@ describe('Presentations API', () => {
   it('maps an inner package head race to a current-generation conflict', async () => {
     const fixture = await createNativeRouteFixture(app)
     try {
-      const originalMutate = fixture.store.mutate.bind(fixture.store)
+      const originalCommit = fixture.store.commitProjectionSave.bind(fixture.store)
       let injected = false
-      fixture.store.mutate = async (mutator, options) => {
+      fixture.store.commitProjectionSave = async (params, options) => {
         if (!injected) {
           injected = true
-          await originalMutate((next) => {
+          await fixture.store.mutate((next) => {
             next.heads.find((head) => head.presentationId === fixture.id).generation += 1
           })
         }
-        return originalMutate(mutator, options)
+        return originalCommit(params, options)
       }
 
       const response = await nativeSave(
@@ -2158,15 +2160,15 @@ describe('Presentations API', () => {
         const initialPackageRevisionId = fixture.store
           .getState()
           .heads.find((head) => head.presentationId === fixture.id).packageRevisionId
-        const originalMutate = fixture.store.mutate.bind(fixture.store)
-        fixture.store.mutate = (mutator, options) =>
-          originalMutate(mutator, { ...options, [fault]: true })
+        const originalCommit = fixture.store.commitProjectionSave.bind(fixture.store)
+        fixture.store.commitProjectionSave = (params, options) =>
+          originalCommit(params, { ...options, [fault]: true })
         const body = {
           aggregateGeneration: 1,
           slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>After</p>' }] }],
         }
         const failed = await nativeSave(app, fixture.id, body, `fault-${fault}`)
-        fixture.store.mutate = originalMutate
+        fixture.store.commitProjectionSave = originalCommit
         expect(failed.status).toBe(500)
         expect(
           (await storage.readPresentations()).find((item) => item.id === fixture.id).slides[0]

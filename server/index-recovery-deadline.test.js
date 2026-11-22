@@ -5,6 +5,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import { afterEach, describe, expect, it } from 'vitest'
 import { launchRecoveryChild } from './recovery-test-driver.js'
+import stateIndexModule from './services/pptx-import/package-store/state-index-loader.js'
 const entry = new URL('./recovery-test-child.cjs', import.meta.url)
 const resources = []
 const hash = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex')
@@ -16,7 +17,7 @@ async function launch(resource, mode) {
 async function authority(root) {
   const data = path.join(root, 'data')
   const stateRoot = await fs.readFile(path.join(data, 'state-root.json'))
-  const state = JSON.parse(await fs.readFile(path.join(data, JSON.parse(stateRoot).stateFile), 'utf8'))
+  const { state } = await stateIndexModule.loadStateIndex(data, JSON.parse(stateRoot))
   return { stateRoot, state, rows: await fs.readFile(path.join(data, 'presentations.json')),
     media: await fs.readFile(path.join(data, 'upload-hashes.json')) }
 }

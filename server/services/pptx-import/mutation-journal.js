@@ -1,5 +1,5 @@
 const { hashRecord } = require('./package-store/schemas')
-const { canonicalEditableSnapshot } = require('./canonical-snapshot')
+const { canonicalEditableSnapshot, reusableCanonicalSaveSnapshot } = require('./canonical-snapshot')
 const { deriveCanonicalPlainTextJournal } = require('./canonical-plain-text-journal')
 const {
   CANONICAL_FEATURE_MATRIX_VERSION, FEATURE_MATRIX_SCHEMA_VERSION, createMatrixAuthoritySubject,
@@ -38,7 +38,14 @@ function propertyChange(before, after, property, context, path) {
     : targetKind === 'slide' ? { targetKind, slideId: before.id, parentSlideId: context.parentSlideId ?? null }
       : { targetKind, slideId: context.slideId, elementId: before.id }
   const ref = targetKind === 'element' ? source(context, before.id) : null
-  return op({ kind: 'property-change', ...address, property, ...(path ? { path } : {}), before: structuredClone(ownValue(before, property)), after: structuredClone(ownValue(after, property)), affectedProperties: [property], sourceRef: ref, impactClosure: impactClosure(ref, property), inverse: { value: structuredClone(ownValue(before, property)) } })
+  const previous = ownValue(before, property); const next = ownValue(after, property)
+  // Absent operands replay as undefined and have identical canonical bytes.
+  // Do not manufacture own-undefined fields that invalidate publication proof.
+  return op({ kind: 'property-change', ...address, property, ...(path ? { path } : {}),
+    ...(previous === undefined ? {} : { before: structuredClone(previous) }),
+    ...(next === undefined ? {} : { after: structuredClone(next) }),
+    affectedProperties: [property], sourceRef: ref, impactClosure: impactClosure(ref, property),
+    inverse: { ...(previous === undefined ? {} : { value: structuredClone(previous) }) } })
 }
 function properties(before, after, context) {
   const ignored = new Set(context.targetKind === 'presentation' ? ['id', 'slides'] : ['id', 'elements', 'children'])
@@ -52,7 +59,7 @@ function properties(before, after, context) {
         if (valueHash(previous) !== valueHash(next)) changes.push(propertyChange(
           { id: before.id, [property]: previous }, { id: after.id, [property]: next }, property, context, path
         ))
-      })
+      }, context.immutableSemantic)
       return changes
     }
     return valueHash(left) !== valueHash(right) ? [propertyChange(before, after, property, context)] : []
@@ -94,7 +101,8 @@ function nodes(kind, before, after, context) {
 }
 function deriveMutationJournal(beforeInput, afterInput, options = {}) {
   const before = safeSnapshot(beforeInput, options.budgets); const after = safeSnapshot(afterInput, options.budgets)
-  const context = { ...options, targetKind: 'presentation', presentationId: before.id, parentSlideId: null }
+  const context = { ...options, targetKind: 'presentation', presentationId: before.id, parentSlideId: null,
+    immutableSemantic: reusableCanonicalSaveSnapshot(before, options.budgets) && reusableCanonicalSaveSnapshot(after, options.budgets) }
   const operations = [...properties(before, after, context), ...nodes('slide', before.slides, after.slides, context)]
   // Deletes release old lineage before additions; final sibling ordering follows membership changes.
   const rank = (item) => item.kind.endsWith('-delete') ? 0 : item.kind === 'property-change' ? 1 : item.kind.endsWith('-add') ? 2 : 3

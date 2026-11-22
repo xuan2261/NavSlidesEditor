@@ -1,5 +1,6 @@
 // @vitest-environment node
 import fs from 'node:fs/promises'
+import crypto from 'node:crypto'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -62,7 +63,8 @@ describe('P09 package store actual process death', () => {
         }
       }
       const rootAfter = JSON.parse(await fs.readFile(path.join(data, 'state-root.json'), 'utf8'))
-      expect(rootAfter.stateHash).toBe(schemaModule.hashRecord(state))
+      const indexBytes = await fs.readFile(path.join(data, rootAfter.stateFile))
+      expect(rootAfter.stateHash).toBe(crypto.createHash('sha256').update(indexBytes).digest('hex'))
       const identity = schemaModule.hashRecord(state)
       await store.releaseWriter()
       resource.store = await storeModule.openPackageStore({ rootDir: data })

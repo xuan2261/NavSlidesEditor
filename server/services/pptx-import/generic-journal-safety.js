@@ -1,10 +1,13 @@
-const { assertSnapshotBudget, canonicalEditableSnapshotWithOutputBudget, CanonicalOutputBudgetError } = require('./canonical-snapshot')
+const { assertSnapshotBudget, canonicalSaveSnapshot, reusableCanonicalSaveSnapshot, CanonicalOutputBudgetError } = require('./canonical-snapshot')
 const { cloneFrozen, isPlainRecord } = require('./own-plain-data')
 
 function invalid(message) {
   throw new TypeError(`Invalid generic journal: ${message}`)
 }
 function safeSnapshot(value, budgets) {
+  // Only sealed outputs carrying this module's exact budget receipt qualify.
+  // Identity admission is still required; arbitrary frozen inputs take the full path.
+  if (reusableCanonicalSaveSnapshot(value, budgets)) return assertUniqueIdentities(value, budgets)
   let snapshot
   try {
     const semantic = value && typeof value === 'object' ? value.pptxSemantic : undefined
@@ -13,9 +16,9 @@ function safeSnapshot(value, budgets) {
       delete withoutSemantic.pptxSemantic
       const cloned = structuredClone(cloneFrozen(withoutSemantic))
       cloned.pptxSemantic = semantic
-      snapshot = canonicalEditableSnapshotWithOutputBudget(cloned, budgets)
+      snapshot = canonicalSaveSnapshot(cloned, budgets)
     } else {
-      snapshot = canonicalEditableSnapshotWithOutputBudget(structuredClone(cloneFrozen(value)), budgets)
+      snapshot = canonicalSaveSnapshot(structuredClone(cloneFrozen(value)), budgets)
     }
   } catch (error) {
     if (error instanceof CanonicalOutputBudgetError) throw error.cause

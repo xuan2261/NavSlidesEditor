@@ -13,7 +13,10 @@ const {
   HISTORY_DIR,
 } = require('../services/storage')
 const { validate } = require('../middleware/validate')
-const { createPresentationSchema, updatePresentationSchema } = require('../middleware/schemas')
+const {
+  createPresentationSchema, updatePresentationSchemaWithCandidate,
+  admittedCreatePresentationBody, admittedUpdatePresentationBody,
+} = require('../middleware/schemas')
 const {
   normalizePptxImportedPresentationForRead,
 } = require('../services/presentation-normalization')
@@ -40,6 +43,7 @@ const { getPackageGeneration, savePackageProjection } = require('../services/gen
 const {
   drainPackageCompatibilityOutbox,
   getReadablePackageStore,
+  getPackageStore,
 } = require('../services/pptx-import/package-store-runtime')
 const {
   readAuthoritativePresentation,
@@ -51,6 +55,42 @@ const { withHistoryLock } = require('../services/history-lock')
 const { uuidv4, isSafePresentationId } = require('./presentations-helpers')
 
 const router = express.Router()
+
+// Hints, never authority: the pure admission API proves exact wire equality.
+// Weak roots and a bounded per-store LRU do not retain semantic history.
+const MAX_SEMANTIC_PREDECESSORS = 64
+const semanticPredecessors = new WeakMap()
+function activePackageStore() {
+  try { return getPackageStore() } catch { return null }
+}
+function semanticCandidate(store, id) {
+  const entries = store && semanticPredecessors.get(store)
+  const reference = entries?.get(id)
+  const document = reference?.deref()
+  if (reference) {
+    entries.delete(id)
+    if (document) entries.set(id, reference)
+  }
+  return document
+}
+function rememberSemanticCandidate(store, id, document) {
+  if (!store || store !== activePackageStore() || !document || !Object.isFrozen(document)) return
+  const { normalizePptxSemanticDocument } = require('revealjs-shared/src/pptx-semantic-document.js')
+  if (normalizePptxSemanticDocument(document) !== document) return
+  let entries = semanticPredecessors.get(store)
+  if (!entries) semanticPredecessors.set(store, entries = new Map())
+  entries.delete(id)
+  entries.set(id, new WeakRef(document))
+  while (entries.size > MAX_SEMANTIC_PREDECESSORS) entries.delete(entries.keys().next().value)
+}
+function validateUpdateWithCandidate(req, res, next) {
+  const store = activePackageStore()
+  const schema = updatePresentationSchemaWithCandidate(semanticCandidate(store, req.params.id))
+  return validate(schema)(req, res, (error) => {
+    if (!error) rememberSemanticCandidate(store, req.params.id, req.body.pptxSemantic)
+    next(error)
+  })
+}
 
 function assertNewPresentationId(presentations, id) {
   if (presentations.some((presentation) => presentation.id === id)) {
@@ -102,7 +142,7 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
   let presentationPublished = false
   try {
     // RT-04: never accept client-supplied pptxOriginal path bindings
-    const safeBody = sanitizeClientEditableData(stripClientPptxOriginalPaths(req.body) || {})
+    const safeBody = sanitizeClientEditableData(stripClientPptxOriginalPaths(admittedCreatePresentationBody(req.body)) || {})
     const {
       title,
       theme,
@@ -338,8 +378,11 @@ router.get('/trash/list', async (req, res) => {
 // GET /api/presentations/:id
 router.get('/:id', async (req, res) => {
   try {
+    const store = activePackageStore()
     const resolved = await readAuthoritativePresentation(req.params.id)
     if (!resolved) return res.status(404).json({ error: 'Not found' })
+    // Seed the checked owned semantic root, not the mutable editor DTO.
+    rememberSemanticCandidate(store, req.params.id, resolved.presentation.pptxSemantic)
     res.json(
       toPresentationEditorDto(normalizePresentationNotes(resolved.presentation), {
         aggregateGeneration: resolved.generation,
@@ -351,14 +394,15 @@ router.get('/:id', async (req, res) => {
 })
 
 // PUT /api/presentations/:id
-router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
+router.put('/:id', validateUpdateWithCandidate, async (req, res) => {
   try {
     let packageResult
-    const expectedGeneration = req.body?.aggregateGeneration
-    const baseRevisionId = req.body?.baseRevisionId
-    const idempotencyKey = req.get('Idempotency-Key') || req.body?.idempotencyKey
+    const admittedBody = admittedUpdatePresentationBody(req.body)
+    const expectedGeneration = admittedBody.aggregateGeneration
+    const baseRevisionId = admittedBody.baseRevisionId
+    const idempotencyKey = req.get('Idempotency-Key') || admittedBody.idempotencyKey
     // RT-04: client cannot inject/rebind pptxOriginal (paths or id steal)
-    const safeBody = sanitizeClientEditableData(req.body)
+    const safeBody = sanitizeClientEditableData(admittedBody)
     delete safeBody.aggregateGeneration
     delete safeBody.baseRevisionId
     delete safeBody.idempotencyKey
@@ -390,8 +434,9 @@ router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
       // The package outbox is the sole compatibility writer for package-backed saves;
       // avoid a second JSON critical section that could overwrite a newer generation.
       await drainPackageCompatibilityOutbox()
-      const presentations = await readPresentations()
-      result = presentations.find((item) => item.id === req.params.id) || null
+      // Respond with this receipt's captured publication, not a newer disk row
+      // paired with this save's older generation. The durable drain is still required.
+      result = packageResult.responsePresentation
     } else {
       result = await withPresentations(async (presentations) => {
         const index = presentations.findIndex((p) => p.id === req.params.id)

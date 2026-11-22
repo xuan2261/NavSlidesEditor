@@ -111,8 +111,14 @@ describe('generated semantic matrix hierarchy', () => {
     slide.elements[0].hidden = true
     model.instances.leaf.overrides.hidden = false
     expect(render(model, slide).textContent).toBe('Editable')
-    model.instances.g.overrides.hidden = true
-    expect(render(model, slide).textContent).toBe('')
+    const hidden = {
+      ...model,
+      instances: {
+        ...model.instances,
+        g: { ...model.instances.g, overrides: { hidden: true } },
+      },
+    }
+    expect(render(hidden, slide).textContent).toBe('')
   })
   it('rejects non-container descendants rather than consuming and dropping their render leaf', () => {
     const { model, slide } = fixture()

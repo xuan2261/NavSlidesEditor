@@ -120,7 +120,7 @@ function hasCanonicalTextJournal(context, matrixAuthorityEpoch) {
 async function editedExportAvailability(presentation, options = productionComposition()) {
   try {
     const store = options.store || await getReadablePackageStore()
-    const state = store.getState()
+    const state = store.getOwnedAuthorityState()
     const context = resolveEditedExportContext(state, presentation.id)
     if (!context.ok) return unavailable(context.reasonCode)
     if (!context.textExportEligible) return unavailable('CANONICAL_TEXT_JOURNAL_INVALID')

@@ -1,7 +1,14 @@
 // Canonical project text, not HTML and not native package/source-map authority.
 // Units: font/spacing points remain points; coordinates remain EMU; percentages
 // remain OOXML 1/1000 percent; rotation remains 1/60000 degree. No defaults/fitting.
-const validRunHyperlinks = (...args) => require('./pptx-text-hyperlinks').validRunHyperlinks(...args)
+// Resolve only on first use: these modules can cycle back through text contracts.
+let semanticRecords, ommlDocument, geometryColor, geometryDocument, textHyperlinks
+const getSemanticRecords = () => semanticRecords ||= require('./pptx-semantic-records')
+const getOmmlDocument = () => ommlDocument ||= require('./pptx-omml-document')
+const getGeometryColor = () => geometryColor ||= require('./pptx-geometry-color')
+const getGeometryDocument = () => geometryDocument ||= require('./pptx-geometry-document')
+const getTextHyperlinks = () => textHyperlinks ||= require('./pptx-text-hyperlinks')
+const validRunHyperlinks = (...args) => getTextHyperlinks().validRunHyperlinks(...args)
 const TEXT_DOCUMENT_LIMITS = Object.freeze({
   maxParagraphs: 4096,
   maxRuns: 65536,
@@ -44,10 +51,36 @@ function record(value, fields, required = []) {
 // Same descriptor/plain-object boundary as education/plugin-message-contract:
 // reject accessors, symbols, special prototypes, holes, cycles and magic keys.
 function cloneTextData(input) {
+  return cloneTextDataCore(input, false)
+}
+// Internal owned handoff: public normalizers always allocate detached output.
+const ownedTextReceipts = new WeakMap()
+const ownedDocumentReceipts = new WeakMap()
+const textBudgetKey = () => `text-contract-v1:${Object.values(TEXT_DOCUMENT_LIMITS).join(':')}`
+function cloneOwnedTextData(input) {
+  return cloneTextDataCore(input, true)
+}
+function cloneTextDataCore(input, reuseOwned) {
+  // Limits are mutable in tests/embedders: receipts describe one complete budget.
+  const budgetKey = textBudgetKey()
+  const staged = []
   const ancestors = new Set()
   let nodes = 0,
     bytes = 0
+  const frames = []
+  const records = reuseOwned ? getSemanticRecords() : null
   function clone(value, depth) {
+    const receipt = reuseOwned && value && typeof value === 'object' && ownedTextReceipts.get(value)?.get(budgetKey)
+    if (receipt) {
+      nodes += receipt.nodes
+      bytes += receipt.bytes
+      for (const frame of frames) frame.depth = Math.max(frame.depth, depth + receipt.depth)
+      if (nodes > TEXT_DOCUMENT_LIMITS.maxNodes || depth + receipt.depth > TEXT_DOCUMENT_LIMITS.maxDepth)
+        fail('JSON budget')
+      if (bytes > TEXT_DOCUMENT_LIMITS.maxBytes) fail('JSON bytes')
+      return value
+    }
+    for (const frame of frames) frame.depth = Math.max(frame.depth, depth)
     if (++nodes > TEXT_DOCUMENT_LIMITS.maxNodes || depth > TEXT_DOCUMENT_LIMITS.maxDepth)
       fail('JSON budget')
     if (value === null || typeof value === 'boolean') return value
@@ -65,6 +98,9 @@ function cloneTextData(input) {
     if (keys.length > TEXT_DOCUMENT_LIMITS.maxRuns || (list && keys.length !== value.length))
       fail('JSON keys')
     ancestors.add(value)
+    const startNodes = nodes - 1, startBytes = bytes
+    const frame = { depth, omml: false }
+    frames.push(frame)
     const result = list ? [] : {}
     for (const key of keys) {
       const descriptor = Object.getOwnPropertyDescriptor(value, key)
@@ -84,7 +120,8 @@ function cloneTextData(input) {
           Object.getOwnPropertyDescriptor(value, 'kind')?.value === 'equation' &&
           descriptor.value && typeof descriptor.value === 'object') {
         if (ancestors.has(descriptor.value)) fail('plain JSON')
-        const subtree = require('./pptx-omml-document').cloneOmmlData(descriptor.value)
+        for (const frame of frames) frame.omml = true
+        const subtree = getOmmlDocument().cloneOmmlData(descriptor.value)
         // The safe mutable clone has its own depth budget, but every JSON value
         // and key still consumes the same aggregate text node/byte budgets.
         const measure = (node) => {
@@ -99,15 +136,42 @@ function cloneTextData(input) {
           }
         }
         measure(subtree)
+        if (reuseOwned) {
+          const freeze = (node) => {
+            if (!node || typeof node !== 'object') return
+            for (const child of Object.values(node)) freeze(child)
+            Object.freeze(node)
+          }
+          freeze(subtree)
+        }
         result[key] = subtree
       } else {
         result[key] = clone(descriptor.value, depth + 1)
       }
     }
     ancestors.delete(value)
+    frames.pop()
+    if (reuseOwned) {
+      Object.freeze(result)
+      if (!frame.omml) {
+        const receipt = { nodes: nodes - startNodes, bytes: bytes - startBytes, depth: frame.depth - depth }
+        staged.push([result, receipt])
+        // Only checked allocations, never merely frozen caller objects, qualify.
+        if (records.isCheckedImmutableSemanticValue(value) ||
+            records.isOwnedDecodedSemanticValue(value))
+          staged.push([value, receipt])
+      }
+    }
     return result
   }
-  return clone(input, 0)
+  const result = clone(input, 0)
+  // A failed aggregate clone publishes no partial producer receipts.
+  for (const [value, receipt] of staged) {
+    let budgets = ownedTextReceipts.get(value)
+    if (!budgets) ownedTextReceipts.set(value, budgets = new Map())
+    budgets.set(budgetKey, receipt)
+  }
+  return result
 }
 const font = (v) =>
   record(
@@ -158,7 +222,7 @@ const color = (v) =>
   (v.kind === 'srgb'
     ? /^[\da-fA-F]{6}$/.test(v.value)
     : v.kind === 'preset'
-      ? require('./pptx-geometry-color').isGeometryColorValue('preset', v.value)
+      ? getGeometryColor().isGeometryColorValue('preset', v.value)
       : /^(dk[12]|lt[12]|bg[12]|tx[12]|accent[1-6]|hlink|folHlink|phClr)$/.test(v.value))
 const numbering = oneOf(
   'alphaLcParenBoth',
@@ -228,7 +292,7 @@ const outlineColor = (v) => {
 const outlineFill = oneOf('none', 'solid')
 const outlineDash = (v) => record(v, {
   kind: oneOf('preset'),
-  value: (value) => Object.hasOwn(require('./pptx-geometry-document').PRESET_DASH_PATTERNS, value),
+  value: (value) => Object.hasOwn(getGeometryDocument().PRESET_DASH_PATTERNS, value),
 }, ['kind', 'value'])
 const outline = (v) => {
   if (!record(v, {
@@ -354,27 +418,50 @@ const TEXT_PROPERTY_SCOPES = Object.freeze({
   paragraph: Object.freeze(Object.keys(PARAGRAPH)),
   body: Object.freeze(Object.keys(BODY)),
 })
-const normalizedProperties = new WeakSet()
-const normalizedTextDocs = new WeakSet()
+const ownedPropertyScopes = new WeakMap()
 function validProperties(value, scope) {
   return record(value, scope === 'run' ? RUN : scope === 'paragraph' ? PARAGRAPH : BODY)
 }
 function normalizeTextProperties(input, scope) {
-  if (normalizedProperties.has(input)) return input
   const value = cloneTextData(input)
   if (scope !== undefined && !Object.hasOwn(TEXT_PROPERTY_SCOPES, scope)) fail('property scope')
   if (
     scope ? !validProperties(value, scope) : !record(value, Object.assign({}, RUN, PARAGRAPH, BODY))
   )
     fail('properties')
-  normalizedProperties.add(value)
-  if (Object.isFrozen(input)) normalizedProperties.add(input)
+  return value
+}
+function validateOwnedTextProperties(input, scope) {
+  if (scope !== undefined && !Object.hasOwn(TEXT_PROPERTY_SCOPES, scope)) fail('property scope')
+  const owned = ownedTextReceipts.get(input)?.has(textBudgetKey())
+  if (owned && ownedPropertyScopes.get(input)?.has(scope)) return input
+  const value = owned ? input : cloneOwnedTextData(input)
+  if (scope ? !validProperties(value, scope) : !record(value, Object.assign({}, RUN, PARAGRAPH, BODY)))
+    fail('properties')
+  const scopes = ownedPropertyScopes.get(value) ?? new Set()
+  scopes.add(scope)
+  ownedPropertyScopes.set(value, scopes)
   return value
 }
 function normalizeTextDocument(input) {
-  if (normalizedTextDocs.has(input)) return input
-  const value = cloneTextData(input),
-    ids = new Set()
+  return validateTextDocument(cloneTextData(input))
+}
+// Internal immutable handoff. JSON ownership and successful schema validation
+// are separate receipts; neither raw freezing nor producer identity is proof.
+function normalizeOwnedTextDocument(input) {
+  const cloned = cloneOwnedTextData(input)
+  const key = textBudgetKey()
+  const value = ownedTextReceipts.get(input)?.has(key) ? input : cloned
+  if (!ownedDocumentReceipts.get(value)?.has(key)) {
+    validateTextDocument(value)
+    const receipts = ownedDocumentReceipts.get(value) ?? new Set()
+    receipts.add(key)
+    ownedDocumentReceipts.set(value, receipts)
+  }
+  return value
+}
+function validateTextDocument(value) {
+  const ids = new Set()
   let runCount = 0,
     textLength = 0
   const component = (v) => {
@@ -386,7 +473,7 @@ function normalizeTextDocument(input) {
     typeof v === 'string' && (textLength += v.length) <= TEXT_DOCUMENT_LIMITS.maxTextLength
   const proofing = (p) => record(p, { smtClean: bool, dirty: bool, err: bool, noProof: bool }) && Object.keys(p).length > 0
   const equation = (document) => {
-    require('./pptx-omml-document').normalizeOmmlDocument(document)
+    getOmmlDocument().normalizeOmmlDocument(document)
     const visit = (node) => component(node.componentId) &&
       (node.text === undefined || text(node.text)) && node.children.every(visit)
     return visit(document.root)
@@ -440,8 +527,6 @@ function normalizeTextDocument(input) {
     )
   )
     fail('document schema, component IDs or text budget')
-  normalizedTextDocs.add(value)
-  if (Object.isFrozen(input)) normalizedTextDocs.add(input)
   return value
 }
 const location = (v) => record(v, { part: string, path: string }, ['part', 'path'])
@@ -554,7 +639,10 @@ module.exports = {
   TEXT_DOCUMENT_LIMITS,
   TEXT_PROPERTY_SCOPES,
   cloneTextData,
+  cloneOwnedTextData,
+  validateOwnedTextProperties,
   normalizeTextProperties,
   normalizeTextDocument,
+  normalizeOwnedTextDocument,
   evaluateFontProfile,
 }

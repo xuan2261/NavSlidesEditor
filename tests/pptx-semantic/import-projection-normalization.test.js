@@ -85,7 +85,7 @@ describe('import operation-scoped validated projection reuse', () => {
         freeze(model)
       }
       expect(capabilities.getProjectionCapabilities(model, 'i1')).toEqual({ operations: [] })
-      expect(() => capabilities.getProjectionCapabilitiesForInstances(model)).toThrow()
+      expect(() => capabilities.getProjectionCapabilitiesForInstances(model)).toThrow(semantic.PptxSemanticValidationError)
       expect(invoked).toBe(false)
     }
   )

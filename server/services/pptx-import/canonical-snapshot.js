@@ -12,6 +12,38 @@ const {
   semanticInstance,
 } = require('revealjs-shared/src/pptx-semantic-records.js')
 const { isDeepStrictEqual } = require('node:util')
+const { isCertifiedSemanticDocument } = require('revealjs-shared/src/pptx-semantic-records.js')
+
+// Receipts belong only to fully admitted outputs, never mutable caller inputs.
+// A receipt becomes reusable only after the entire output is sealed.
+const saveSnapshotReceipts = new WeakMap()
+// Only private transitive certification permits reuse, never shallow freezing.
+const snapshotSemanticBudgetReceipts = new WeakMap()
+
+function freezeSaveData(value) {
+  if (value === null || ['string', 'number', 'boolean'].includes(typeof value)) return true
+  if (!value || typeof value !== 'object') return false
+  if (isCertifiedSemanticDocument(value)) return true
+  const prototype = Object.getPrototypeOf(value)
+  if (!Array.isArray(value) && prototype !== Object.prototype && prototype !== null) return false
+  for (const child of Object.values(value)) if (!freezeSaveData(child)) return false
+  Object.freeze(value)
+  return true
+}
+
+function freezeCanonicalSaveSnapshot(snapshot) {
+  const receipt = saveSnapshotReceipts.get(snapshot)
+  if (!receipt) throw new TypeError('Expected an admitted canonical save snapshot')
+  if (!receipt.immutable) receipt.immutable = freezeSaveData(snapshot)
+  return snapshot
+}
+
+function reusableCanonicalSaveSnapshot(snapshot, limits = {}) {
+  const receipt = saveSnapshotReceipts.get(snapshot)
+  return Boolean(receipt?.immutable && Object.keys(DEFAULTS).every(
+    (key) => Object.is(receipt.limits[key], { ...DEFAULTS, ...limits }[key])
+  ))
+}
 
 const INTERNAL_KEYS = new Set([
   'sourceRef',
@@ -54,6 +86,7 @@ function checkSnapshotBudget(snapshot, limits, normalizeSemantic) {
   let stringBytes = 0
   let objectKeys = 0
   let semantic
+  let pendingReceipt
   const visit = (value, depth, key, typedSemantic = false, role = '', slideId, typedGraph = false) => {
     if (!typedSemantic && depth > budget.maxDepth) throw budgetError('nesting')
     if (typeof value === 'string') {
@@ -75,7 +108,24 @@ function checkSnapshotBudget(snapshot, limits, normalizeSemantic) {
         // Schema three structural complexity is bounded by its validated graph
         // contract, not the passthrough key budget. Strings, elements and final
         // encoded bytes still include it; legacy schemas retain key accounting.
-        visit(semantic, depth + 1, childKey, true, '', undefined, semantic.schemaVersion === 3)
+        const receipt = snapshotSemanticBudgetReceipts.get(semantic)
+        if (receipt) {
+          stringBytes += receipt.stringBytes
+          objectKeys += receipt.objectKeys
+          elements += receipt.elements
+          if (stringBytes > budget.maxStringBytes) throw budgetError('strings')
+          if (objectKeys > budget.maxObjectKeys) throw budgetError('passthrough properties')
+          if (elements > budget.maxElements) throw budgetError('elements')
+        } else {
+          const before = { stringBytes, objectKeys, elements }
+          visit(semantic, depth + 1, childKey, true, '', undefined, semantic.schemaVersion === 3)
+          if (isCertifiedSemanticDocument(semantic)) pendingReceipt = {
+            stringBytes: stringBytes - before.stringBytes,
+            objectKeys: objectKeys - before.objectKeys,
+            elements: elements - before.elements,
+            encodedBytes: Buffer.byteLength(JSON.stringify(semantic)),
+          }
+        }
       } else {
         const isChartChild = childKey === 'chartDocument' && role === 'element' && Boolean(value?.pptxInstanceId)
         const isOmmlChild = childKey === 'ommlDocument' && role === 'element' && Boolean(value?.pptxInstanceId)
@@ -176,8 +226,18 @@ function checkSnapshotBudget(snapshot, limits, normalizeSemantic) {
         }
       : snapshot
   visit(accountedSnapshot, 0, '', false, 'root')
-  const encodedBytes = Buffer.byteLength(JSON.stringify(accountedSnapshot))
+  // Every occurrence is charged, including aliases in raw metadata.
+  let omittedBytes = 0
+  const encodedBytes = Buffer.byteLength(JSON.stringify(accountedSnapshot, (key, value) => {
+    const receipt = value && typeof value === 'object'
+      ? snapshotSemanticBudgetReceipts.get(value) || (value === semantic ? pendingReceipt : null)
+      : null
+    if (!receipt) return value
+    omittedBytes += receipt.encodedBytes - 4 // JSON null placeholder
+    return null
+  })) + omittedBytes
   if (encodedBytes > budget.maxSnapshotBytes) throw budgetError('aggregate bytes')
+  if (pendingReceipt) snapshotSemanticBudgetReceipts.set(semantic, pendingReceipt)
   return encodedBytes
 }
 
@@ -207,15 +267,19 @@ function sanitize(value, isRoot = true) {
   return Object.fromEntries(entries)
 }
 
-function buildCanonicalSnapshot(snapshot, limits) {
+function buildCanonicalSnapshot(snapshot, limits, retainSemantic = false) {
   let normalized = snapshot
   checkSnapshotBudget(snapshot, limits, () => {
     normalized = normalizeSemanticPresentation(snapshot)
     return normalized.pptxSemantic
   })
-  const root = structuredClone(
-    normalized === snapshot ? normalizeSemanticPresentation(snapshot) : normalized
-  )
+  const presentation = normalized === snapshot ? normalizeSemanticPresentation(snapshot) : normalized
+  // Save/journal readers can share the certified immutable graph. Editable
+  // callers still receive a fully isolated mutable clone.
+  const { pptxSemantic, ...editable } = presentation
+  const root = retainSemantic && pptxSemantic !== undefined
+    ? { ...structuredClone(editable), pptxSemantic }
+    : structuredClone(presentation)
   for (const key of ['createdAt', 'updatedAt', 'deletedAt']) delete root[key]
   return { snapshot: sanitize(root), semantic: normalized.pptxSemantic }
 }
@@ -230,11 +294,10 @@ class CanonicalOutputBudgetError extends Error {
   }
 }
 
-function canonicalEditableSnapshotWithOutputBudget(snapshot, limits) {
-  const built = buildCanonicalSnapshot(snapshot, limits)
-  // The semantic output is an exact isolated clone of this certified graph.
-  // Reuse its validation only synchronously, before the mutable output escapes;
-  // all materialized output bytes, depth and element budgets are still charged.
+function outputBudgetSnapshot(snapshot, limits, retainSemantic) {
+  const built = buildCanonicalSnapshot(snapshot, limits, retainSemantic)
+  // The output contains either the certified graph or an exact isolated clone.
+  // Charge all output budgets while its validated source is still in scope.
   try {
     checkSnapshotBudget(built.snapshot, limits, () => built.semantic)
   } catch (error) {
@@ -243,9 +306,23 @@ function canonicalEditableSnapshotWithOutputBudget(snapshot, limits) {
   return built.snapshot
 }
 
+function canonicalEditableSnapshotWithOutputBudget(snapshot, limits) {
+  return outputBudgetSnapshot(snapshot, limits, false)
+}
+
+function canonicalSaveSnapshot(snapshot, limits) {
+  if (reusableCanonicalSaveSnapshot(snapshot, limits)) return snapshot
+  const output = outputBudgetSnapshot(snapshot, limits, true)
+  saveSnapshotReceipts.set(output, { limits: { ...DEFAULTS, ...limits }, immutable: false })
+  return freezeCanonicalSaveSnapshot(output)
+}
+
 module.exports = {
   assertSnapshotBudget,
   canonicalEditableSnapshot,
   canonicalEditableSnapshotWithOutputBudget,
+  canonicalSaveSnapshot,
+  freezeCanonicalSaveSnapshot,
+  reusableCanonicalSaveSnapshot,
   CanonicalOutputBudgetError,
 }

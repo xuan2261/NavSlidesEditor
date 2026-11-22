@@ -19,11 +19,13 @@ function projectDraftFields(authored, normalized) {
   )
 }
 
-function normalizeOverrides(slide, layouts, policy) {
+function normalizeOverrides(slide, layouts, policy, canonicalLayouts) {
   const layout = isId(slide.layoutId)
     ? layouts.find((master) => master.id === slide.layoutId)
     : null
-  const patches = normalizeLayoutOverrides(slide.layoutOverrides)?.elementPatches
+  const patches = (
+    canonicalLayouts ? slide.layoutOverrides : normalizeLayoutOverrides(slide.layoutOverrides)
+  )?.elementPatches
   if (!layout || !patches) return slide.layoutOverrides
   const sanitized = { ...slide.layoutOverrides.elementPatches }
   for (const [id, patch] of Object.entries(patches)) {
@@ -46,7 +48,7 @@ function normalizeOverrides(slide, layouts, policy) {
   return { ...slide.layoutOverrides, elementPatches: sanitized }
 }
 
-function normalizePresentationGames(presentation, { validate = true } = {}) {
+function normalizeGames(presentation, { validate = true } = {}, canonicalLayouts = false) {
   const policy = { validate }
   const normalizeElement = (element) =>
     element?.type === 'game' ? normalizeGameElement(element, policy) : element
@@ -58,17 +60,25 @@ function normalizePresentationGames(presentation, { validate = true } = {}) {
         fixedElements: normalizeElements(master.fixedElements),
       }))
     : presentation.layoutMasters
-  const layouts = normalizeLayoutMasters(layoutMasters) || []
+  const layouts = canonicalLayouts
+    ? layoutMasters || []
+    : normalizeLayoutMasters(layoutMasters) || []
   const normalizeSlides = (slides) =>
     Array.isArray(slides)
-      ? slides.map((slide) => ({
-          ...slide,
-          ...(Array.isArray(slide.elements) ? { elements: normalizeElements(slide.elements) } : {}),
-          ...(slide.layoutOverrides
-            ? { layoutOverrides: normalizeOverrides(slide, layouts, policy) }
-            : {}),
-          ...(Array.isArray(slide.children) ? { children: normalizeSlides(slide.children) } : {}),
-        }))
+      ? slides.map((source) => {
+          const overrides = canonicalLayouts && normalizeLayoutOverrides(source.layoutOverrides)
+          const slide = overrides ? { ...source, layoutOverrides: overrides } : source
+          return {
+            ...slide,
+            ...(Array.isArray(slide.elements)
+              ? { elements: normalizeElements(slide.elements) }
+              : {}),
+            ...(slide.layoutOverrides
+              ? { layoutOverrides: normalizeOverrides(slide, layouts, policy, canonicalLayouts) }
+              : {}),
+            ...(Array.isArray(slide.children) ? { children: normalizeSlides(slide.children) } : {}),
+          }
+        })
       : slides
   return normalizePresentationInteractions(
     {
@@ -82,4 +92,18 @@ function normalizePresentationGames(presentation, { validate = true } = {}) {
   )
 }
 
-module.exports = { normalizePresentationGames }
+function normalizePresentationGames(presentation, options) {
+  return normalizeGames(presentation, options)
+}
+
+function normalizePresentationEducation(presentation, options) {
+  // Canonicalize master structure once, before game configs and effective overrides.
+  const layoutMasters = normalizeLayoutMasters(presentation.layoutMasters)
+  return normalizeGames(
+    { ...presentation, ...(layoutMasters ? { layoutMasters } : {}) },
+    options,
+    true
+  )
+}
+
+module.exports = { normalizePresentationGames, normalizePresentationEducation }

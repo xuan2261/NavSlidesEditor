@@ -553,7 +553,8 @@ describe('package lifecycle ownership', () => {
       expect(() => resolvePackageBackedReadFromState(recovered, 'deck-b', oldRow))
         .toThrow('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
       const root = JSON.parse(await fs.readFile(path.join(store.rootDir, 'state-root.json'), 'utf8'))
-      const published = JSON.parse(await fs.readFile(path.join(store.rootDir, root.stateFile), 'utf8'))
+      const { loadStateIndex } = require('./state-index-loader')
+      const { state: published } = await loadStateIndex(store.rootDir, root)
       expect(published.compatibilityOutbox).toEqual(recovered.compatibilityOutbox)
       expect(published.heads).toEqual(recovered.heads)
       expect(recovered.compatibilityOutbox).toEqual(expect.arrayContaining([

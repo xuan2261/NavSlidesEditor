@@ -45,11 +45,11 @@ async function findPresentationById(id) {
  * @param {{ normalize?: boolean }} [opts] normalize defaults to true.
  * @returns {Promise<object|null>}
  */
-async function findServeablePresentation(id, { normalize = true } = {}) {
+async function findServeablePresentation(id, { normalize = true, normalizeSemantic = true } = {}) {
   const presentations = await readPresentations()
   const found = presentations.find((p) => p.id === id)
   if (!found || found.deletedAt) return null
-  if (found.pptxSemantic) {
+  if (normalizeSemantic && found.pptxSemantic) {
     const { normalizePptxSemanticDocument } = require('revealjs-shared/src/pptx-semantic-document.js')
     found.pptxSemantic = normalizePptxSemanticDocument(found.pptxSemantic)
   }

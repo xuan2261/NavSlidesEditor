@@ -5,7 +5,11 @@ import { expandedTextContextDocument } from './text-context-fixture-utils'
 
 const require = createRequire(import.meta.url)
 const { projectSemanticImport } = require('../../server/services/pptx-import/semantic-projector')
-const { materializeTextDocument } = require('../../shared/src/pptx-text-materialization')
+const { materializeTextDocument, materializeTextTheme } = require('../../shared/src/pptx-text-materialization')
+const {
+  replaceSemanticRecords, certifyImmutableSemanticDocument, semanticInstance, semanticDefinition,
+} = require('../../shared/src/pptx-semantic-records')
+const { normalizePptxSemanticDocument } = require('../../shared/src/pptx-semantic-document')
 let semantic, instanceId
 
 beforeAll(async () => {
@@ -53,8 +57,8 @@ describe('document-local occurrence text caching', () => {
     const result = materializeTextDocument(changed, instanceId)
     expect(result.paragraphs[0].runs[0].text).toBe('Changed source text')
     expect(original.paragraphs[0].runs[0].text).toBe('Text')
-    expect(materializeTextDocument(source, instanceId)).toBe(original)
-    expect(materializeTextDocument(changed, instanceId)).toBe(result)
+    expect(materializeTextDocument(source, instanceId)).toEqual(original)
+    expect(materializeTextDocument(changed, instanceId)).toEqual(result)
   })
 
   it.each(['declarations', 'theme'])('reads changed text-context %s with a shared instance', change => {
@@ -84,8 +88,8 @@ describe('document-local occurrence text caching', () => {
     expect(original.paragraphs[0].runs[0].properties).toMatchObject({
       fontSizePt: 18, fontLatin: { typeface: 'Minor' },
     })
-    expect(materializeTextDocument(source, instanceId)).toBe(original)
-    expect(materializeTextDocument(changed, instanceId)).toBe(result)
+    expect(materializeTextDocument(source, instanceId)).toEqual(original)
+    expect(materializeTextDocument(changed, instanceId)).toEqual(result)
   })
 
   it('reads changed inheritance styles with a shared instance and unchanged text context', () => {
@@ -115,7 +119,90 @@ describe('document-local occurrence text caching', () => {
     expect(original.paragraphs[0].runs[0]).toMatchObject({
       text: 'Text', properties: { bold: false },
     })
-    expect(materializeTextDocument(source, instanceId)).toBe(original)
-    expect(materializeTextDocument(changed, instanceId)).toBe(result)
+    expect(materializeTextDocument(source, instanceId)).toEqual(original)
+    expect(materializeTextDocument(changed, instanceId)).toEqual(result)
+  })
+})
+
+function freeze(value) {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.values(value).forEach(freeze)
+    Object.freeze(value)
+  }
+  return value
+}
+
+describe('certified occurrence materialization reuse', () => {
+  it.each([false, true])('isolates native text edits from the retained source (compact: %s)', compact => {
+    const { compactSemanticGraph } = require('../../shared/src/pptx-semantic-source-graph')
+    const source = normalizePptxSemanticDocument(compact ? compactSemanticGraph(semantic) : semantic)
+    const original = materializeTextDocument(source, instanceId)
+
+    const instance = semanticInstance(source, instanceId)
+    const definition = semanticDefinition(source, instance.definitionId)
+    const edited = structuredClone(definition.content.textDocument)
+    edited.paragraphs[0].runs[0].text = 'Native input'
+    const ownEdit = replaceSemanticRecords(source, {
+      instances: { [instanceId]: { ...instance, overrides: {
+        ...instance.overrides, components: { [edited.componentId]: { textDocument: edited } },
+      } } },
+    })
+    expect(materializeTextDocument(ownEdit, instanceId).paragraphs[0].runs[0].text).toBe('Native input')
+    expect(original.paragraphs[0].runs[0].text).toBe('Text')
+  })
+
+  it.each(['definition', 'declaration', 'theme', 'inheritance'])('invalidates certified %s edits', change => {
+    const source = certifyImmutableSemanticDocument(freeze(expandedTextContextDocument(semantic)))
+    const instance = source.instances[instanceId]
+    const original = materializeTextDocument(source, instanceId)
+    const theme = materializeTextTheme(source, instanceId)
+    let patch
+    if (change === 'definition') {
+      const definition = structuredClone(source.definitions[instance.definitionId])
+      definition.content.textDocument.paragraphs[0].runs[0].text = 'Changed source'
+      patch = { definitions: { [instance.definitionId]: definition } }
+    } else if (change === 'inheritance') {
+      patch = { styles: { projectText: { kind: 'inheritance-override', origin: 'project',
+        baseDefinitionId: instance.definitionId, values: { label: 'Changed source', textStyle: { bold: true } } } } }
+    } else {
+      const context = structuredClone(source.styles[instance.textSourceBinding.contextId])
+      if (change === 'theme') {
+        context.payload.theme.fonts.minor.latin = 'Changed Minor'
+        context.payload.theme.colors.dk1 = 'FF0000'
+      } else for (const paragraph of context.payload.paragraphs)
+        for (const layers of [paragraph.run, ...paragraph.runs.map(run => run.layers)])
+          for (const entry of layers.entries)
+            if (entry.properties.fontSizePt === 18) entry.properties.fontSizePt = 30
+      patch = { styles: { [instance.textSourceBinding.contextId]: context } }
+    }
+    const changed = replaceSemanticRecords(source, patch)
+    const result = materializeTextDocument(changed, instanceId)
+    expect(result).not.toBe(original)
+    if (change === 'definition' || change === 'inheritance')
+      expect(result.paragraphs[0].runs[0].text).toBe('Changed source')
+    if (change === 'inheritance') expect(result.paragraphs[0].runs[0].properties.bold).toBe(true)
+    if (change === 'declaration') expect(result.paragraphs[0].runs[0].properties.fontSizePt).toBe(30)
+    if (change === 'theme') {
+      expect(result.paragraphs[0].runs[0].properties.fontLatin.typeface).toBe('Changed Minor')
+      expect(result.paragraphs[0].runs[0].properties.color)
+        .not.toEqual(original.paragraphs[0].runs[0].properties.color)
+      expect(materializeTextTheme(changed, instanceId).colors.dk1).toBe('FF0000')
+      expect(materializeTextTheme(changed, instanceId).fonts.minor.latin).toBe('Changed Minor')
+      expect(theme.fonts.minor.latin).toBe('Minor')
+    }
+  })
+
+  it('does not reuse text or theme for a raw mutable document identity', () => {
+    const source = expandedTextContextDocument(semantic)
+    const instance = source.instances[instanceId]
+    const original = materializeTextDocument(source, instanceId)
+    expect(materializeTextTheme(source, instanceId).fonts.minor.latin).toBe('Minor')
+    source.definitions[instance.definitionId].content.textDocument.paragraphs[0].runs[0].text = 'Mutated'
+    source.styles[instance.textSourceBinding.contextId].payload.theme.fonts.minor.latin = 'Mutated Font'
+    expect(materializeTextDocument(source, instanceId).paragraphs[0].runs[0]).toMatchObject({
+      text: 'Mutated', properties: { fontLatin: { typeface: 'Mutated Font' } },
+    })
+    expect(materializeTextTheme(source, instanceId).fonts.minor.latin).toBe('Mutated Font')
+    expect(original.paragraphs[0].runs[0].text).toBe('Text')
   })
 })

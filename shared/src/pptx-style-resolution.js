@@ -1,5 +1,7 @@
 const {
   cloneTextData,
+  cloneOwnedTextData,
+  validateOwnedTextProperties,
   normalizeTextProperties,
   TEXT_PROPERTY_SCOPES,
 } = require('./pptx-text-document')
@@ -81,7 +83,7 @@ const placeholder = (v) =>
     type: (t) => PH_TYPES.includes(t),
   })
 const properties = (v) => {
-  normalizeTextProperties(v)
+  validateOwnedTextProperties(v)
   return true
 }
 const fontSet = (v) =>
@@ -176,15 +178,8 @@ function validate(input) {
   }
   if (input.theme && ids.has(input.theme.id)) fail('duplicate theme ID')
 }
-function applies(entry, target, property, order, masterType) {
+function appliesCommon(entry, target, order, masterType) {
   if (!order.includes(entry.kind)) return false
-  if (
-    (entry.kind.endsWith('FontReference') ||
-      entry.kind === 'fontReference' ||
-      entry.kind === 'theme') &&
-    !['fontLatin', 'fontEastAsian', 'fontComplexScript', 'color'].includes(property)
-  )
-    return false
   if (entry.kind.startsWith('layout')) {
     if (
       !target.placeholder ||
@@ -353,14 +348,29 @@ function resolutionContext(layers) {
     (layout.length ? 'obj' : (layers.target.placeholder?.type ?? 'obj'))
   return { layout, masterType }
 }
-function resolvePropertyCore(property, { layers, theme }, order, { layout, masterType }) {
+function candidateGroups({ layers }, order, { layout, masterType }) {
   const candidates = layers.entries
-    .filter((e) => applies(e, layers.target, property, order, masterType))
+    .filter((e) => appliesCommon(e, layers.target, order, masterType))
     .map((entry) => ({
       entry,
       rank: order.indexOf(entry.kind) * 2 + (entry.level === undefined ? 1 : 0),
     }))
     .sort((a, b) => a.rank - b.rank || a.entry.id.localeCompare(b.entry.id, 'en'))
+  const groups = []
+  for (let index = 0; index < candidates.length;) {
+    const rank = candidates[index].rank, entries = []
+    while (index < candidates.length && candidates[index].rank === rank)
+      entries.push(candidates[index++].entry)
+    const kind = entries[0].kind
+    groups.push({
+      entries,
+      dependencies: kind.startsWith('master') ? [...layout, ...entries] : entries,
+      restricted: kind.endsWith('FontReference') || kind === 'fontReference' || kind === 'theme',
+    })
+  }
+  return groups
+}
+function resolvePropertyCore(property, { theme }, groups) {
   const result = {
     property,
     authored: null,
@@ -369,12 +379,9 @@ function resolvePropertyCore(property, { layers, theme }, order, { layout, maste
     dependencyIds: [],
     unsupportedReason: 'property-not-defined',
   }
-  for (let index = 0; index < candidates.length;) {
-    const rank = candidates[index].rank,
-      group = []
-    while (index < candidates.length && candidates[index].rank === rank)
-      group.push(candidates[index++].entry)
-    const dependencies = group[0].kind.startsWith('master') ? [...layout, ...group] : group
+  for (const { entries: group, dependencies, restricted } of groups) {
+    if (restricted && !['fontLatin', 'fontEastAsian', 'fontComplexScript', 'color'].includes(property))
+      continue
     for (const entry of dependencies)
       if (!result.dependencyIds.includes(entry.id)) result.dependencyIds.push(entry.id)
     const declarations = group.filter((entry) => Object.hasOwn(entry.properties, property))
@@ -407,16 +414,26 @@ function resolvePropertyCore(property, { layers, theme }, order, { layout, maste
  * Layout entries carry the matched placeholder type even with empty properties.
  */
 function resolveProperty(input) {
-  const data = cloneTextData(input)
+  const data = cloneOwnedTextData(input)
   validate(data)
   const order = propertyOrder(data.property, data.scope)
-  return resolvePropertyCore(data.property, data, order, resolutionContext(data.layers))
+  const groups = candidateGroups(data, order, resolutionContext(data.layers))
+  return detachResult(resolvePropertyCore(data.property, data, groups))
 }
 /**
  * Resolve every property in one explicit scope with one invocation-owned clone
- * and full declaration validation. Results have the same contract as individual
- * resolveProperty calls, with no retained caller data or cross-call cache.
+ * and full declaration validation. Composition reuse is limited to owned layers,
+ * the complete theme identity and exact scope; public outputs remain detached.
  */
+// JSON ownership proves immutable admission, not style validity. Only validate()
+// can issue a receipt for the exact owned layers, complete theme and scope.
+const validationReceipts = new WeakMap()
+const compositions = new WeakMap()
+function detachResult(value) {
+  if (!value || typeof value !== 'object') return value
+  if (Array.isArray(value)) return value.map(detachResult)
+  return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, detachResult(child)]))
+}
 function resolveProperties(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input) ||
       Object.getPrototypeOf(input) !== Object.prototype || Object.hasOwn(input, 'property'))
@@ -432,12 +449,35 @@ function resolveProperties(input) {
     { property: SCOPE_ENVELOPE_PROPERTY[scope.value] },
     Object.getOwnPropertyDescriptors(input)
   )
-  const data = cloneTextData(envelope)
+  // Even hits charge the complete original envelope, including reused subtrees.
+  const data = cloneOwnedTextData(envelope)
+  // Reject envelope extras even when the dependencies have a validation receipt;
+  // the full clone above always charges the original root budget.
+  if (Object.keys(data).some((key) => !['property', 'scope', 'layers', 'theme'].includes(key)))
+    fail('input')
+  return detachResult(resolveValidatedProperties(validatedComposition(data)))
+}
+function validatedComposition(data) {
+  const cached = validationReceipts.get(data.layers)
+  const hit = cached?.find((entry) => entry.scope === data.scope && entry.theme === data.theme)
+  if (hit) return hit
   validate(data)
+  const receipt = { layers: data.layers, theme: data.theme, scope: data.scope }
+  validationReceipts.set(data.layers,
+    [...(cached ?? []).filter((entry) => entry.scope !== data.scope), receipt])
+  return receipt
+}
+// Private: the sole caller supplies an explicit successful validation receipt,
+// never merely an admitted JSON clone. Results cannot manufacture that proof.
+function resolveValidatedProperties(data) {
+  const hit = compositions.get(data)
+  if (hit) return hit
   const context = resolutionContext(data.layers)
+  const groups = candidateGroups(data, SCOPE_ORDERS[data.scope], context)
   const results = {}
   for (const property of TEXT_PROPERTY_SCOPES[data.scope])
-    results[property] = resolvePropertyCore(property, data, propertyOrder(property, data.scope), context)
+    results[property] = resolvePropertyCore(property, data, groups)
+  compositions.set(data, results)
   return results
 }
 function resolveRgbPaint(input) {

@@ -4,6 +4,7 @@ import EditorWorkspace from './editor-workspace'
 import { PptxSourceFontProvider } from '../../contexts/pptx-source-font-context'
 import { usePptxSourceFonts } from '../../hooks/use-pptx-source-fonts'
 import { familyDocumentsFixture } from '../../../../tests/pptx-semantic/family-documents-fixture'
+import { normalizePptxSemanticDocument } from 'revealjs-shared/src/pptx-semantic-document.js'
 
 const load = vi.hoisted(() => vi.fn())
 vi.mock('../../hooks/use-pptx-source-font-loader', () => ({ loadPptxSourceFontRuntime: load }))
@@ -32,18 +33,24 @@ function Probe({ label }) {
 afterEach(() => {
   cleanup()
   load.mockReset()
+  vi.useRealTimers()
 })
 
 describe('one source-font owner for canvas and inspector', () => {
   it('shares the workspace runtime with nested canvas scope and retains it on ACK', async () => {
+    const semantic = normalizePptxSemanticDocument((await familyDocumentsFixture()).table)
+    vi.useFakeTimers()
     const runtime = { name: 'workspace', dispose: vi.fn() }
     load.mockResolvedValue({ fontRuntime: runtime, sourceIdentity: 'source' })
     const c = {
-      presentation: { id: 'deck', pptxSemantic: (await familyDocumentsFixture()).table },
+      presentation: { id: 'deck', pptxSemantic: semantic },
       fontRevision: new Date(0),
     }
     const view = render(<EditorWorkspace c={c} workspaceTier="wide" />)
-    await act(async () => {})
+    expect(screen.getByTestId('canvas').textContent).toBe('loading:none')
+    expect(screen.getByTestId('inspector').textContent).toBe('loading:none')
+    expect(load).not.toHaveBeenCalled()
+    await act(async () => { await vi.runOnlyPendingTimersAsync() })
     expect(screen.getByTestId('canvas').textContent).toBe('ready:workspace')
     expect(screen.getByTestId('inspector').textContent).toBe('ready:workspace')
     expect(load).toHaveBeenCalledOnce()
@@ -57,6 +64,8 @@ describe('one source-font owner for canvas and inspector', () => {
   it.each(['presentation', 'outputDocument'])(
     'does not inherit across a different %s boundary',
     async (boundary) => {
+      const semantic = normalizePptxSemanticDocument((await familyDocumentsFixture()).table)
+      vi.useFakeTimers()
       let count = 0
       const runtimes = []
       load.mockImplementation(async () => {
@@ -64,7 +73,6 @@ describe('one source-font owner for canvas and inspector', () => {
         runtimes.push(runtime)
         return { fontRuntime: runtime }
       })
-      const semantic = (await familyDocumentsFixture()).table
       const child =
         boundary === 'presentation'
           ? { presentationId: 'other' }
@@ -77,7 +85,10 @@ describe('one source-font owner for canvas and inspector', () => {
           </PptxSourceFontProvider>
         </PptxSourceFontProvider>
       )
-      await act(async () => {})
+      expect(screen.getByTestId('outer').textContent).toBe('loading:none')
+      expect(screen.getByTestId('inner').textContent).toBe('loading:none')
+      expect(load).not.toHaveBeenCalled()
+      await act(async () => { await vi.runOnlyPendingTimersAsync() })
       expect(load).toHaveBeenCalledTimes(2)
       expect(screen.getByTestId('outer').textContent).not.toBe(
         screen.getByTestId('inner').textContent

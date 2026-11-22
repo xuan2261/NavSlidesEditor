@@ -1,7 +1,59 @@
 const crypto = require('node:crypto')
+const { isDeepStrictEqual, types } = require('node:util')
+const { isCheckedImmutableSemanticValue } = require('revealjs-shared/src/pptx-semantic-records.js')
+const { canonicalSaveSnapshot, reusableCanonicalSaveSnapshot } = require('./canonical-snapshot')
 const { getReadablePackageStore } = require('./package-store-runtime')
 const { hashCanonical } = require('./evidence/canonical-hash')
-const { hashRecord } = require('./package-store/schemas')
+const {
+  canonicalJson,
+  hashRecord,
+} = require('./package-store/schemas')
+
+// Admission is stronger than serialization: raw authority must not hide fields
+// that canonical JSON or structuredClone would silently omit. Cache only the
+// recursive plain-data immutability proof, never a second serialization receipt.
+const immutableCanonicalData = new WeakSet()
+function isImmutableCanonicalData(value, visiting = new Set()) {
+  const invalid = () => { throw snapshotError('INVALID_AUTHORITY_DATA', 'Authority requires plain own enumerable data') }
+  if (value === null || value === undefined) return true
+  if (typeof value !== 'object') {
+    if (!['string', 'boolean', 'number'].includes(typeof value) ||
+        (typeof value === 'number' && !Number.isFinite(value))) invalid()
+    return true
+  }
+  if (types.isProxy(value)) invalid()
+  if (immutableCanonicalData.has(value)) return true
+  // Checked clones own dense, finite JSON-only plain graphs, recursively frozen
+  // at allocation. This is a data/ownership proof, NOT semantic admission (a
+  // broadly certified document alone does not establish these invariants).
+  if (isCheckedImmutableSemanticValue(value)) {
+    immutableCanonicalData.add(value)
+    return true
+  }
+  if (visiting.has(value)) invalid()
+  const array = Array.isArray(value)
+  const prototype = Object.getPrototypeOf(value)
+  if (array ? prototype !== Array.prototype :
+      prototype !== Object.prototype && prototype !== null) invalid()
+  const descriptors = Object.getOwnPropertyDescriptors(value)
+  if (array) {
+    if (Reflect.ownKeys(descriptors).length !== descriptors.length.value + 1) invalid()
+    for (let index = 0; index < descriptors.length.value; index++) {
+      if (!Object.hasOwn(descriptors, index)) invalid()
+    }
+  }
+  visiting.add(value)
+  let immutable = Object.isFrozen(value)
+  for (const key of Reflect.ownKeys(descriptors)) {
+    const descriptor = descriptors[key]
+    if (typeof key !== 'string' || !Object.hasOwn(descriptor, 'value') ||
+        (!descriptor.enumerable && !(array && key === 'length'))) invalid()
+    if (!isImmutableCanonicalData(descriptor.value, visiting)) immutable = false
+  }
+  visiting.delete(value)
+  if (immutable) immutableCanonicalData.add(value)
+  return immutable
+}
 const { createSourceMap } = require('./source-map')
 const { deriveMutationJournal } = require('./mutation-journal')
 const { validateMatrixAuthoritySubjects } = require('./canonical-feature-matrix')
@@ -15,8 +67,92 @@ const {
   resolvePackageRevisionBytes,
 } = require('./package-revision-resolver')
 
-// Authority records are mutable; verify current content rather than object identity.
+// An index is not proof. Keep detached, sealed full dependencies, not a second
+// giant canonical string. Raw queries must match every dependency exactly.
 const verifiedJournalCache = new Map()
+const verifiedJournalIdentities = new WeakMap()
+function journalScope({ presentationId, generation, packageRevisionId, matrixAuthorityEpoch }) {
+  return JSON.stringify([presentationId, generation, packageRevisionId, matrixAuthorityEpoch])
+}
+function ownedDependency(value) {
+  return isImmutableCanonicalData(value) ? value : sealAuthority(structuredClone(value))
+}
+function matchesVerifiedJournal(scope, dependencies) {
+  const { previousProjection, currentProjection } = dependencies
+  const identities = previousProjection && verifiedJournalIdentities.get(previousProjection)
+  const receipt = identities?.get(currentProjection)
+  if (receipt?.scope === scope && Object.keys(dependencies).every(
+    (key) => receipt.dependencies[key] === dependencies[key])) return true
+  const retained = verifiedJournalCache.get(scope)
+  if (!retained || !isDeepStrictEqual(retained, dependencies)) return false
+  // Promote only fully immutable tuples; mutable caller identities never prove content.
+  if (Object.values(dependencies).every((value) => isImmutableCanonicalData(value))) {
+    let afters = verifiedJournalIdentities.get(previousProjection)
+    if (!afters) verifiedJournalIdentities.set(previousProjection, afters = new WeakMap())
+    afters.set(currentProjection, { scope, dependencies: Object.freeze({ ...dependencies }) })
+  }
+  return true
+}
+
+// Mutable metadata identities are never authority receipts. Recheck the complete
+// content/version envelope before sharing a private, recursively sealed copy.
+// Durable publication clones lose canonical admission identities. Recover only
+// the latest save's certified outputs, by complete deep equality.
+// These are admission receipts, never a substitute for journal verification.
+const publishedSaveReceipts = new WeakMap()
+function retainPublishedSaveReceipts(store, snapshots) {
+  publishedSaveReceipts.set(store, snapshots
+    .filter((snapshot) => reusableCanonicalSaveSnapshot(snapshot))
+    .map((snapshot) => ({ snapshot })))
+}
+function equivalentPublishedSaveSnapshot(store, projection, limits) {
+  const candidates = publishedSaveReceipts.get(store)
+  if (!candidates?.length) return null
+  // This bounded latest-publication list is compared in full; serializing the
+  // same projection again adds no authority beyond exact deep equality.
+  return candidates.find((candidate) =>
+    reusableCanonicalSaveSnapshot(candidate.snapshot, limits) &&
+    isDeepStrictEqual(candidate.snapshot, projection))?.snapshot || null
+}
+const ownedStates = new WeakMap()
+const ownedContexts = new WeakMap()
+function sealAuthority(value) {
+  if (!value || typeof value !== 'object' || immutableCanonicalData.has(value)) return value
+  for (const child of Object.values(value)) sealAuthority(child)
+  return Object.freeze(value)
+}
+function acquireOwnedAuthorityState(store, state, root) {
+  const previous = ownedStates.get(store)
+  // No canonical full-state walk on the published read path. Trust requires
+  // recursive plain-data immutability of BOTH graphs, never shallow freeze,
+  // generation, root hash, or mutable identity. Unowned callers keep exact proof.
+  const immutableState = isImmutableCanonicalData(state)
+  const immutableRoot = isImmutableCanonicalData(root)
+  const immutable = immutableState && immutableRoot
+  if (immutable && previous?.sourceState === state && previous.sourceRoot === root)
+    return previous.state
+  const envelope = immutable ? null : canonicalJson({ root, state })
+  const version = immutable ? null : sha256(envelope)
+  if (!immutable && previous?.version === version && previous.envelope === envelope)
+    return previous.state
+  // Immutable publication children already belong to the store. Copy only the
+  // result shells that may receive a certified save receipt, not historical data.
+  const copy = immutable
+    ? { ...state, mutationResults: (state.mutationResults || []).map((result) => ({ ...result })) }
+    : structuredClone(state)
+  for (const result of copy.mutationResults || []) {
+    if (!result.projection) continue
+    const admitted = equivalentPublishedSaveSnapshot(store, result.projection)
+    if (admitted) result.projection = admitted
+  }
+  const snapshot = sealAuthority(copy)
+  ownedContexts.set(snapshot, new Map())
+  ownedStates.set(store, {
+    version, envelope, state: snapshot,
+    sourceState: immutable ? state : null, sourceRoot: immutable ? root : null,
+  })
+  return snapshot
+}
 
 function recordVerifiedJournal({
   presentationId,
@@ -30,13 +166,14 @@ function recordVerifiedJournal({
   operationIds,
 }) {
   if (!presentationId || !generation || !packageRevisionId || !matrixAuthorityEpoch) return
-  const prevProjHash = hashRecord(previousProjection)
-  const currProjHash = hashRecord(currentProjection)
-  const prevMapHash = hashRecord(previousSourceMap)
-  const journalHash = hashRecord(journal)
-  const opIdsHash = hashRecord(operationIds)
-  const verifiedKey = `${presentationId}:${generation}:${packageRevisionId}:${matrixAuthorityEpoch}:${prevProjHash}:${currProjHash}:${prevMapHash}:${journalHash}:${opIdsHash}`
-  verifiedJournalCache.set(verifiedKey, true)
+  const scope = journalScope({ presentationId, generation, packageRevisionId, matrixAuthorityEpoch })
+  const dependencies = Object.freeze(Object.fromEntries(Object.entries({
+    previousProjection, currentProjection, previousSourceMap, journal, operationIds,
+  }).map(([key, value]) => [key, ownedDependency(value)])))
+  verifiedJournalCache.set(scope, dependencies)
+  let afters = verifiedJournalIdentities.get(dependencies.previousProjection)
+  if (!afters) verifiedJournalIdentities.set(dependencies.previousProjection, afters = new WeakMap())
+  afters.set(dependencies.currentProjection, { scope, dependencies })
   if (verifiedJournalCache.size > 1000) {
     const first = verifiedJournalCache.keys().next().value
     verifiedJournalCache.delete(first)
@@ -182,6 +319,15 @@ function editorResultAllowed(result) {
 
 // Editor saves are authoritative projections, not qualified native package mutations.
 function resolveEditorProjectionContext(state, presentationId) {
+  const cache = ownedContexts.get(state)
+  if (cache?.has(presentationId)) return cache.get(presentationId)
+  const result = resolveUncachedEditorProjectionContext(state, presentationId)
+  // Only a complete successful validation/rederivation authorizes reuse.
+  if (cache && result.ok) cache.set(presentationId, sealAuthority(result))
+  return result
+}
+
+function resolveUncachedEditorProjectionContext(state, presentationId) {
   const failed = (reasonCode = 'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE') => ({
     ok: false,
     reasonCode,
@@ -286,21 +432,34 @@ function resolveEditorProjectionContext(state, presentationId) {
         journalEpoch > state.matrixAuthorityEpoch
       )
         return failed()
-      const prevProjHash = hashRecord(previous[0].projection)
-      const currProjHash = hashRecord(current.projection)
-      const prevMapHash = hashRecord(previous[0].sourceMap)
-      const journalHash = hashRecord(current.journal)
-      const opIdsHash = hashRecord(current.operationIds)
-      const verifiedKey = `${head.presentationId}:${head.generation}:${head.packageRevisionId}:${journalEpoch}:${prevProjHash}:${currProjHash}:${prevMapHash}:${journalHash}:${opIdsHash}`
-      if (!verifiedJournalCache.has(verifiedKey)) {
-        const expected = deriveMutationJournal(previous[0].projection, current.projection, {
+      const scope = journalScope({
+        presentationId: head.presentationId, generation: head.generation,
+        packageRevisionId: head.packageRevisionId, matrixAuthorityEpoch: journalEpoch,
+      })
+      const dependencies = {
+        previousProjection: previous[0].projection,
+        currentProjection: current.projection,
+        previousSourceMap: previous[0].sourceMap,
+        journal: current.journal,
+        operationIds: current.operationIds,
+      }
+      if (!matchesVerifiedJournal(scope, dependencies)) {
+        // Re-admit BOTH persisted operands under the same save policy. Cold
+        // publications have no private admission receipts, while a live save
+        // may restore only its current projection's receipt. Never let that
+        // asymmetric provenance select different validation/replay semantics.
+        // Raw history remains hash-bound above; admission still charges raw
+        // metadata and output budgets and does not rewrite the durable format.
+        const before = canonicalSaveSnapshot(previous[0].projection)
+        const after = canonicalSaveSnapshot(current.projection)
+        const expected = deriveMutationJournal(before, after, {
           baseRevisionId: head.packageRevisionId,
           sourceMap: previous[0].sourceMap,
           matrixAuthorityEpoch: journalEpoch,
         })
         if (
-          hashRecord(expected) !== journalHash ||
-          hashRecord(expected.operations.map((item) => item.operationId)) !== opIdsHash
+          hashRecord(expected) !== hashRecord(current.journal) ||
+          hashRecord(expected.operations.map((item) => item.operationId)) !== hashRecord(current.operationIds)
         )
           return failed()
         recordVerifiedJournal({
@@ -331,10 +490,12 @@ function resolveEditorProjectionContext(state, presentationId) {
 }
 
 function createEditorPackageRead(store) {
-  const state = store.getState()
-  // Resolvers share this operation's defensive copy, never a live store view.
+  const state = store.getOwnedAuthorityState()
+  // Preserve the exact owned publication and its validation identities. Public
+  // reads remain detached; only the explicit read-only route shares authority.
   const snapshotStore = {
-    getState: () => state,
+    getOwnedAuthorityState: () => state,
+    getState: () => structuredClone(state),
     readBlob: (hash) => store.readBlob(hash),
   }
   return {
@@ -350,7 +511,7 @@ async function verifyEditorPackageBytes(store, head) {
 async function verifyEditorPackageBytesFromSnapshot(store, head) {
   try {
     await resolveImmutableOriginalRevisionBytes({ presentationId: head.presentationId }, { store })
-    if (isOwned(store.getState(), head.presentationId, head.packageRevisionId)) {
+    if (isOwned(store.getOwnedAuthorityState(), head.presentationId, head.packageRevisionId)) {
       await resolvePackageRevisionBytes(
         { presentationId: head.presentationId, revisionId: head.packageRevisionId },
         { store }
@@ -365,7 +526,10 @@ async function verifyEditorPackageBytesFromSnapshot(store, head) {
 }
 
 module.exports = {
+  retainPublishedSaveReceipts,
   readPackageAuthoritySnapshot,
+  acquireOwnedAuthorityState,
+  equivalentPublishedSaveSnapshot,
   resolveEditorProjectionContext,
   createEditorPackageRead,
   verifyEditorPackageBytes,

@@ -14,7 +14,7 @@ const {
   INHERITANCE_EDIT,
 } = require('revealjs-shared/src/pptx-projection-capabilities.js')
 const { FAMILY_OPERATION_TYPES } = require('revealjs-shared/src/pptx-family-operations.js')
-const { CATALOGS } = require('revealjs-shared/src/pptx-semantic-records.js')
+const { CATALOGS, isCertifiedSemanticDocument } = require('revealjs-shared/src/pptx-semantic-records.js')
 
 const ROOT_FIELDS = ['schemaVersion', 'originalRevisionId', 'elements', 'projection']
 const ENTRY_FIELDS = ['slideId', 'elementId', 'type', 'metadata', 'fitBaseline']
@@ -308,7 +308,12 @@ function decorateTrustedImportMetadata(projection, sidecar) {
   if (sidecar === undefined) return projection
   const trusted = validateTrustedImportMetadata(sidecar, sidecar.originalRevisionId)
   if (!trusted?.elements?.length) return projection
-  const result = structuredClone(projection)
+  // Metadata decoration only mutates editable slide fields. Preserve the owned
+  // immutable semantic graph rather than discarding its validation receipts.
+  const { pptxSemantic, ...editable } = projection
+  const result = isCertifiedSemanticDocument(pptxSemantic)
+    ? { ...structuredClone(editable), pptxSemantic }
+    : structuredClone(projection)
   const entries = new Map(
     (trusted?.elements || []).map((entry) => [
       keyFor(entry.slideId, entry.elementId, entry.type),

@@ -4,10 +4,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../../utils/api'
 import { usePresentationStore } from '../../stores/presentation-store'
 import { useEditorPersistenceController } from './use-editor-persistence-controller'
+import { geometryProjectionFixture } from '../../../../tests/pptx-semantic/geometry-projection-fixture'
 import {
   clearEditorDraft,
   createEditorDraft,
   readEditorDraft,
+  prepareEditorDraftBaseline,
   writeEditorDraft,
 } from '../../utils/editor-draft-store'
 
@@ -31,6 +33,7 @@ vi.mock('../../utils/editor-draft-store', () => ({
     idempotencyKey: snapshot.idempotencyKey || null,
     attemptId,
   })),
+  prepareEditorDraftBaseline: vi.fn().mockResolvedValue(false),
   readEditorDraft: vi.fn().mockResolvedValue(null),
   writeEditorDraft: vi.fn().mockResolvedValue(true),
 }))
@@ -84,6 +87,7 @@ describe('useEditorPersistenceController conflict recovery', () => {
     api.updatePresentation.mockReset()
     api.updateTemplate.mockReset()
     readEditorDraft.mockReset().mockResolvedValue(null)
+    prepareEditorDraftBaseline.mockReset().mockResolvedValue(false)
     clearEditorDraft.mockReset().mockResolvedValue(true)
     usePresentationStore.setState({ saveConflict: null, presentation: null, loading: true })
     api.getPresentation.mockResolvedValue(snapshot('Remote', 1))
@@ -136,6 +140,64 @@ describe('useEditorPersistenceController conflict recovery', () => {
       resolution: imported.resolution, _pptxMeta: imported._pptxMeta,
     }))
     reopened.unmount()
+  })
+
+  it('decides recovery and exposes the editor before invoking slow optional preparation', async () => {
+    let finishRead
+    let finishPreparation
+    const draft = { snapshot: snapshot('Interrupted local edit') }
+    api.getPresentation.mockResolvedValue({
+      ...geometryProjectionFixture(), id: 'deck-1', title: 'Source-backed remote', aggregateGeneration: 1,
+    })
+    readEditorDraft.mockImplementationOnce(() => new Promise(resolve => { finishRead = resolve }))
+    const { result, unmount } = renderHook(() => useHarness())
+    prepareEditorDraftBaseline.mockImplementation(() => {
+      // Assert at invocation, not only after its async tail: capture/normalize
+      // in the real function happens synchronously before the first await.
+      expect(result.current.controller.loading).toBe(false)
+      expect(result.current.controller.saveRecovery).toBe(draft)
+      return new Promise(resolve => { finishPreparation = resolve })
+    })
+    await flushMicrotasks()
+    expect(readEditorDraft).toHaveBeenCalledWith('deck-1', false)
+    expect(result.current.controller.loading).toBe(true)
+    expect(prepareEditorDraftBaseline).not.toHaveBeenCalled()
+    await act(async () => finishRead(draft))
+    expect(result.current.controller.loading).toBe(false)
+    expect(result.current.controller.saveRecovery).toBe(draft)
+    expect(prepareEditorDraftBaseline).not.toHaveBeenCalled()
+    await act(async () => vi.advanceTimersByTimeAsync(0))
+    expect(prepareEditorDraftBaseline).toHaveBeenCalledOnce()
+    expect(result.current.controller.loading).toBe(false)
+    expect(result.current.presentation.title).toBe('Source-backed remote')
+    const isCurrent = prepareEditorDraftBaseline.mock.calls[0][2]
+    expect(isCurrent()).toBe(true)
+    act(() => result.current.setPresentation({ ...result.current.presentation, aggregateGeneration: 2 }))
+    expect(isCurrent()).toBe(false)
+    await act(async () => finishPreparation(false))
+    unmount()
+  })
+
+  it.each(['source', 'generation', 'route', 'unmount'])('fences deferred preparation after %s changes', async (change) => {
+    api.getPresentation.mockResolvedValue({
+      ...geometryProjectionFixture(), id: 'deck-1', title: 'Source-backed remote', aggregateGeneration: 1,
+    })
+    const { result, rerender, unmount } = renderHook(({ id }) => useHarness(id), {
+      initialProps: { id: 'deck-1' },
+    })
+    await flushMicrotasks()
+    expect(result.current.controller.loading).toBe(false)
+    if (change === 'unmount') unmount()
+    else if (change === 'route') {
+      api.getPresentation.mockReturnValueOnce(new Promise(() => {}))
+      rerender({ id: 'deck-2' })
+    } else act(() => result.current.setPresentation({
+      ...result.current.presentation,
+      ...(change === 'source' ? { pptxSemantic: {} } : { aggregateGeneration: 2 }),
+    }))
+    await act(async () => vi.advanceTimersByTimeAsync(0))
+    expect(prepareEditorDraftBaseline).not.toHaveBeenCalled()
+    if (change !== 'unmount') unmount()
   })
 
   it('exposes an interrupted draft without replacing the loaded remote state', async () => {

@@ -9,15 +9,19 @@ function assertSegment(segment) {
   if (typeof segment !== 'string' || !segment || segment.length > 1024 || UNSAFE_KEYS.has(segment)) invalid()
   return segment
 }
-function semanticPropertyDeltas(before, after, emit) {
+function semanticPropertyDeltas(before, after, emit, immutable = false) {
   for (const field of [...new Set([...Object.keys(before), ...Object.keys(after)])].sort()) {
     const left = Object.hasOwn(before, field) ? before[field] : undefined
     const right = Object.hasOwn(after, field) ? after[field] : undefined
     assertSegment(field)
+    if (immutable && left === right) continue
     if (DICTIONARIES.has(field) && isPlainRecord(left) && isPlainRecord(right)) {
       for (const id of [...new Set([...Object.keys(left), ...Object.keys(right)])].sort()) {
         assertSegment(id)
-        emit([field, id], Object.hasOwn(left, id) ? left[id] : undefined, Object.hasOwn(right, id) ? right[id] : undefined)
+        const previous = Object.hasOwn(left, id) ? left[id] : undefined
+        const next = Object.hasOwn(right, id) ? right[id] : undefined
+        if (immutable && previous === next) continue
+        emit([field, id], previous, next)
       }
     } else emit([field], left, right)
   }

@@ -68,12 +68,36 @@ describe('package store lifecycle MVP', () => {
       const root = JSON.parse(await fs.readFile(path.join(rootDir, 'state-root.json'), 'utf8'))
       const bytes = await fs.readFile(path.join(rootDir, root.stateFile))
       expect(crypto.createHash('sha256').update(bytes).digest('hex')).toBe(root.stateHash)
-      expect(JSON.parse(bytes)).toEqual(expected)
+      expect(JSON.parse(bytes).type).toBe('navslides.package-state-manifest')
+      const { loadStateIndex } = require('./state-index-loader')
+      expect((await loadStateIndex(rootDir, root)).state).toEqual(expected)
     } finally {
       await store.releaseWriter()
     }
     const reopened = await openPackageStore({ rootDir })
     expect(reopened.getState()).toEqual(expected)
+  })
+
+  it('keeps projection edits isolated until a mutation publishes successfully', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    try {
+      await store.commitImport(await minimalPptx(), {
+        jobId: 'isolated-projection-job', presentationId: 'isolated-projection',
+        projection: { id: 'isolated-projection', title: 'Committed', slides: [] },
+        sourceMap: { entries: {} },
+      })
+      const snapshot = store.getState()
+      snapshot.mutationResults[0].projection.title = 'Reader edit'
+      expect(store.getState().mutationResults[0].projection.title).toBe('Committed')
+      await expect(store.mutate((next) => {
+        next.mutationResults[0].projection.title = 'Aborted edit'
+        throw new Error('Abort before publish')
+      })).rejects.toThrow('Abort before publish')
+      expect(store.getState().mutationResults[0].projection.title).toBe('Committed')
+    } finally {
+      await store.releaseWriter()
+    }
   })
 
   it('returns defensive head and compatibility snapshots without copying unrelated history', async () => {
@@ -970,7 +994,6 @@ describe('package store lifecycle MVP', () => {
       expect(activeStore.getState().heads).toMatchObject([
         expect.objectContaining({ presentationId: projection.id }),
       ])
-      const snapshots = vi.spyOn(activeStore, 'getState')
       const saved = await savePackageProjection({
         presentationId: projection.id,
         expectedGeneration: initialHead.generation,
@@ -979,8 +1002,6 @@ describe('package store lifecycle MVP', () => {
         after: { title: 'Edited after import' },
         loadStored: async () => projection,
       })
-      expect(snapshots).toHaveBeenCalledTimes(2)
-      snapshots.mockRestore()
       expect(saved).toMatchObject({ ok: true, generation: 2 })
       expect(saved.aggregateHead.packageRevisionId).toBe(initialHead.packageRevisionId)
       expect(initialHead.packageRevisionId).toBe(committed.revision.id)

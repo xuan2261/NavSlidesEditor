@@ -1,3 +1,4 @@
+const { jsonStringByteLength, primitiveCloneMetrics } = require('./pptx-semantic-clone-metrics.js')
 const ID_FIELDS = new Set([
   'id', 'componentId', 'definitionId', 'contextId', 'declarationIds',
   'transformDeclarationIds', 'occurrenceId', 'styleId', 'resourcesId',
@@ -18,12 +19,77 @@ const CATALOGS = [
 ]
 const dictionaryKinds = new Set(['definitions', 'instances', 'styles', 'components'])
 const indices = new WeakMap()
+// Representation-only wire membership, never a validation/admission receipt.
+// Dictionary ownership includes its records; freezing/certification alone is not proof.
+const wireMembershipIndices = new WeakMap()
+function wireMembershipIndex(dictionary) {
+  if (!isCheckedImmutableSemanticValue(dictionary)) return null
+  let index = wireMembershipIndices.get(dictionary)
+  if (!index) {
+    index = { keys: Object.freeze(Object.keys(dictionary)), kinds: null }
+    wireMembershipIndices.set(dictionary, index)
+  }
+  return index
+}
+function wireKindKeys(dictionary, index, kind) {
+  if (!index.kinds) {
+    const kinds = new Map()
+    for (const key of index.keys) {
+      const wire = dictionary[key]
+      if (!wire) continue
+      const bucket = kinds.get(wire.kind)
+      if (bucket) bucket.push(key)
+      else kinds.set(wire.kind, [key])
+    }
+    for (const bucket of kinds.values()) Object.freeze(bucket)
+    index.kinds = kinds
+  }
+  return index.kinds.get(kind) || EMPTY_WIRE_KEYS
+}
+const EMPTY_WIRE_KEYS = Object.freeze([])
 const decodedRecords = new WeakMap()
 const decodedResources = new WeakMap()
 const certifiedImmutableDocuments = new WeakSet()
+// Decode receipts are representation-only, never semantic admission. Require
+// an immutable root and the complete checked catalog tuple: certification alone
+// cannot prove catalog ownership. Root identity fixes all dependencies (including
+// styles/resource pools); a replacement catalog therefore gets a fresh cache.
+const decodeCacheRoots = new WeakSet()
+function canCacheDecode(document) {
+  if (decodeCacheRoots.has(document)) return true
+  if (!(isCheckedImmutableSemanticValue(document) || certifiedImmutableDocuments.has(document)) ||
+      !CATALOGS.every((field) => isCheckedImmutableSemanticValue(document[field]))) return false
+  decodeCacheRoots.add(document)
+  return true
+}
+// Producer provenance, not validation authority. No public setter exists.
+const semanticPredecessors = new WeakMap()
+function semanticRecordPredecessor(document) {
+  if (!isCertifiedSemanticDocument(document)) return undefined
+  const provenance = semanticPredecessors.get(document)
+  const previous = provenance?.previous.deref()
+  // A missing/collected predecessor disables incremental indexing. Only this
+  // detached, frozen read result owns the resolved root, never stored lineage.
+  return previous ? Object.freeze({ previous, instanceIds: provenance.instanceIds }) : undefined
+}
+function rememberPredecessor(next, previous, changedInstanceIds) {
+  // Never replace weak lineage with a strong history chain on older runtimes.
+  if (typeof WeakRef !== 'function') return
+  const instanceIds = changedInstanceIds.map((id) => {
+    const key = previous.schemaVersion === 3 ? String(recordKey(previous, id)) : id
+    return previous.schemaVersion === 3 && /^(0|[1-9]\d*)$/.test(key)
+      ? semanticIdentity(previous, Number(key)) : key
+  })
+  semanticPredecessors.set(next, Object.freeze({ previous: new WeakRef(previous), instanceIds: Object.freeze(instanceIds) }))
+}
 // Only roots allocated and recursively frozen by the checked clone qualify.
-// This proof grants no successful-normalization status or decoding cache yet.
+// This proof grants no successful-normalization status or decode success receipt.
 const immutableCloneRoots = new WeakSet()
+// Read-only handoff: only a fully successful checked allocation publishes metrics.
+const cloneMetrics = new WeakMap()
+function checkedCloneBudgetMetrics(value) {
+  return isCheckedImmutableSemanticValue(value) ? cloneMetrics.get(value) : undefined
+}
 const AUTHORITY_KEYS = new Set([
   '__proto__',
   'constructor',
@@ -43,11 +109,35 @@ const AUTHORITY_KEYS = new Set([
   'capabilityHash',
 ])
 
-function cloneImmutableSemanticDocument(input, limits, ErrorType = TypeError) {
+// Transfer representation caches only: no certification or admission receipts.
+function transferPredecessorDecodeCaches(document, previous) {
+  if (document === previous || !isCheckedImmutableSemanticValue(previous) ||
+      document.schemaVersion !== previous.schemaVersion ||
+      document.styles !== previous.styles ||
+      !CATALOGS.every((field) => document[field] === previous[field])) return
+  const records = decodedRecords.get(previous)
+  if (records) {
+    const retained = new Map()
+    for (const [cacheKey, value] of records) {
+      const separator = cacheKey.indexOf(':')
+      const kind = cacheKey.slice(0, separator)
+      const key = cacheKey.slice(separator + 1)
+      if (Object.prototype.hasOwnProperty.call(document[kind] || {}, key) &&
+          document[kind][key] === previous[kind]?.[key]) retained.set(cacheKey, value)
+    }
+    decodedRecords.set(document, retained)
+  }
+  if (decodedResources.has(previous)) decodedResources.set(document, decodedResources.get(previous))
+  if (indices.has(previous)) indices.set(document, indices.get(previous))
+}
+
+function cloneImmutableSemanticDocument(input, limits, ErrorType = TypeError, predecessor) {
   function fail(message) { throw new ErrorType(message) }
   let nodes = 0
   const ancestors = new Set()
-  function clone(value, depth = 0) {
+  const stagedMetrics = new WeakMap()
+  const completed = []
+  function clone(value, depth = 0, candidate) {
     if (value && typeof value === 'object') {
       if (ancestors.has(value)) fail('Semantic content cycle')
       if (immutableCloneRoots.has(value)) return value
@@ -72,7 +162,19 @@ function cloneImmutableSemanticDocument(input, limits, ErrorType = TypeError) {
       fail('Semantic content must be a plain data record')
     }
     ancestors.add(value)
-    const result = Array.isArray(value) ? [] : {}
+    const array = Array.isArray(value)
+    // Candidates are exclusively checked-owned allocations. Still inspect every
+    // raw descriptor and recurse before deciding equivalence (including key order).
+    if (!isCheckedImmutableSemanticValue(candidate) || Array.isArray(candidate) !== array) candidate = undefined
+    const keys = Reflect.ownKeys(value).filter((key) => !(array && key === 'length'))
+    const candidateKeys = candidate ? Object.keys(candidate) : []
+    let equal = !!candidate && keys.length === candidateKeys.length &&
+      keys.every((key, index) => key === candidateKeys[index])
+    let result = equal ? undefined : array ? [] : {}
+    const metrics = { nodeCount: 1, maxRelativeDepth: 0,
+      maxArrayLength: array ? value.length : 0, jsonBytes: 2 }
+    let measured = true
+    let entries = 0
     for (const key of Reflect.ownKeys(value)) {
       if (Array.isArray(value) && key === 'length') continue
       if (typeof key !== 'string' || AUTHORITY_KEYS.has(key))
@@ -81,21 +183,55 @@ function cloneImmutableSemanticDocument(input, limits, ErrorType = TypeError) {
       if (!descriptor || !('value' in descriptor) || !descriptor.enumerable) {
         fail('Semantic content must use enumerable data property')
       }
-      if (Array.isArray(value) && !/^(?:0|[1-9]\d*)$/.test(key)) fail('Invalid semantic array key')
-      result[key] = clone(descriptor.value, depth + 1)
+      if (Array.isArray(value)) {
+        const index = Number(key)
+        if (!Number.isInteger(index) || index < 0 || index >= value.length || String(index) !== key) {
+          fail('Invalid semantic array key')
+        }
+      }
+      const child = clone(descriptor.value, depth + 1, candidate?.[key])
+      if (equal && !Object.is(child, candidate[key])) {
+        equal = false
+        result = array ? [] : {}
+        for (let index = 0; index < entries; index++) result[keys[index]] = candidate[keys[index]]
+      }
+      if (result) result[key] = child
+      const childMetrics = child !== null && typeof child === 'object'
+        ? stagedMetrics.get(child) || checkedCloneBudgetMetrics(child)
+        : primitiveCloneMetrics(child)
+      // An owned survivor of an earlier failed allocation has no receipt yet.
+      // Keep ownership, but let the budget helper measure it via its fallback.
+      if (!childMetrics) measured = false
+      else {
+        metrics.nodeCount += childMetrics.nodeCount
+        metrics.maxRelativeDepth = Math.max(metrics.maxRelativeDepth, 1 + childMetrics.maxRelativeDepth)
+        metrics.maxArrayLength = Math.max(metrics.maxArrayLength, childMetrics.maxArrayLength)
+        metrics.jsonBytes += childMetrics.jsonBytes + (array ? 0 : jsonStringByteLength(key) + 1)
+      }
+      if (entries++) metrics.jsonBytes++
     }
     ancestors.delete(value)
+    if (equal) return candidate
     const frozen = Object.freeze(result)
     immutableCloneRoots.add(frozen)
+    if (measured) {
+      stagedMetrics.set(frozen, Object.freeze(metrics))
+      completed.push(frozen)
+    }
     return frozen
   }
-  const document = clone(input)
+  const document = clone(input, 0, isCheckedImmutableSemanticValue(predecessor) ? predecessor : undefined)
+  for (const value of completed) cloneMetrics.set(value, stagedMetrics.get(value))
   if (document && typeof document === 'object') {
     immutableCloneRoots.add(document)
     if (decodedRecords.has(input)) decodedRecords.set(document, decodedRecords.get(input))
     if (decodedResources.has(input)) decodedResources.set(document, decodedResources.get(input))
     if (indices.has(input)) indices.set(document, indices.get(input))
+    // The checked clone preserves all enumerable JSON values exactly. Transfer
+    // IDs only, never caller patch record references or validation authority.
+    if (semanticPredecessors.has(input)) semanticPredecessors.set(document, semanticPredecessors.get(input))
   }
+  if (document && typeof document === 'object') transferPredecessorDecodeCaches(document, predecessor)
   return document
 }
 
@@ -132,8 +268,11 @@ function certifyImmutableSemanticDocument(document) {
     throw new TypeError('Cannot certify mutable or shallow-frozen semantic document as immutable')
   }
   certifiedImmutableDocuments.add(document)
-  immutableCloneRoots.delete(document)
   return document
+}
+
+function isCheckedImmutableSemanticValue(value) {
+  return value !== null && typeof value === 'object' && immutableCloneRoots.has(value)
 }
 
 function isCertifiedSemanticDocument(document) {
@@ -143,6 +282,12 @@ const own = (object, key) => Object.prototype.hasOwnProperty.call(object, key)
 const plain = (value) => value !== null && typeof value === 'object' && !Array.isArray(value)
 const textEncoder = new TextEncoder()
 const bytes = (value) => {
+  if (typeof value === 'string') return jsonStringByteLength(value)
+  if (typeof value === 'number' && Number.isFinite(value)) return JSON.stringify(value).length
+  if (value === true) return 4
+  if (value === false) return 5
+  if (value === null) return 4
+  // Keep actual JSON dispatch for containers and unsupported primitives.
   const json = JSON.stringify(value)
   return typeof Buffer !== 'undefined'
     ? Buffer.byteLength(json, 'utf8')
@@ -153,8 +298,27 @@ function at(values, index, name) {
   if (!Array.isArray(values) || !Number.isSafeInteger(index) || index < 0 || index >= values.length) invalid(`${name} reference`)
   return values[index]
 }
+// Structural success is separate from whole-document semantic admission. The
+// validator reads schemaVersion and these catalogs only (including the three
+// source/scope catalogs). Its scope-depth cap is a fixed 256, not a caller limit.
+// A weak identity trie retains no raw document or replaceable catalog roots.
+const graphStructureReceipts = new WeakMap()
+function graphReceiptSlot(document) {
+  const roots = CATALOGS.map((field) => document[field])
+  if (!roots.every(isCheckedImmutableSemanticValue)) return null
+  let slots = graphStructureReceipts
+  for (const root of roots) {
+    let next = slots.get(root)
+    if (!next) slots.set(root, next = new WeakMap())
+    slots = next
+  }
+  // schemaVersion is exactly 3 here; use the final checked root as the leaf key.
+  return { slots, key: roots[roots.length - 1] }
+}
 function validateGraphStructure(document) {
   if (!document || document.schemaVersion !== 3) return
+  const receipt = graphReceiptSlot(document)
+  if (receipt?.slots.has(receipt.key)) return
   for (const catalog of CATALOGS) {
     if (!Array.isArray(document[catalog])) invalid(`Invalid semantic ${catalog} catalog`)
   }
@@ -188,12 +352,54 @@ function validateGraphStructure(document) {
       p = document.declarationScopes[p].parent
     }
   }
+  // Neither clone ownership nor certification alone grants this receipt.
+  if (receipt) receipt.slots.set(receipt.key, true)
 }
-function freeze(value) {
-  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
-    for (const child of Object.values(value)) freeze(child)
-    Object.freeze(value)
+// A raw Object.freeze is only shallow. Keep this transitive proof private and
+// separate from checked-clone ownership (and successful validation receipts).
+const deeplyFrozenValues = new WeakSet()
+const decoderAllocations = new WeakSet()
+const ownedDecodedValues = new WeakSet()
+function decoderAllocated(value) {
+  decoderAllocations.add(value)
+  return value
+}
+function freezeDecoded(value) {
+  return freeze(value, new Set(), true)
+}
+function isOwnedDecodedSemanticValue(value) {
+  return value !== null && typeof value === 'object' && ownedDecodedValues.has(value)
+}
+function freeze(value, ancestors = new Set(), decoded = false) {
+  if (!value || typeof value !== 'object') return value
+  // Frozen/checked membership never upgrades a raw value to decoder ownership;
+  // previously proved decoder descendants already retain their private receipt.
+  if (immutableCloneRoots.has(value) || deeplyFrozenValues.has(value)) return value
+  if (ancestors.has(value)) invalid('Semantic content cycle')
+  const prototype = Object.getPrototypeOf(value)
+  if (prototype !== null && prototype !== Object.prototype && prototype !== Array.prototype) {
+    invalid('Semantic content must be a plain data record')
   }
+  ancestors.add(value)
+  // Freeze first so proxy descriptor invariants apply, and inspect descriptors
+  // rather than reading properties: getter results are not owned data.
+  Object.freeze(value)
+  // Producer ownership is proved bottom-up during this same traversal, never
+  // by generic patch freezing or by checked-clone/validation authority. A raw
+  // passthrough child blocks its ancestors, but not independent owned siblings.
+  let owned = decoded && decoderAllocations.has(value)
+  for (const key of Reflect.ownKeys(value)) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key)
+    if (!descriptor || !('value' in descriptor)) {
+      invalid('Semantic content must use data properties')
+    }
+    const child = descriptor.value
+    freeze(child, ancestors, decoded)
+    if (child !== null && typeof child === 'object' && !ownedDecodedValues.has(child)) owned = false
+  }
+  ancestors.delete(value)
+  deeplyFrozenValues.add(value)
+  if (owned) ownedDecodedValues.add(value)
   return value
 }
 function semanticIdentity(document, reference) {
@@ -251,19 +457,25 @@ function evaluationBudget() {
     },
   }
 }
-function decodeValue(document, value, field = '', depth = 0, budget = evaluationBudget(), inGuide = false) {
+function decodeValue(document, value, field = '', depth = 0, budget = evaluationBudget(), inGuide = false, materialize = true, decodeChild = null) {
   budget.visit(depth)
   if (Array.isArray(value)) {
     budget.charge(2 + Math.max(0, value.length - 1))
     if (field === 'edges' || field === 'relationships') {
-      return value.map((ref) => {
-        if (typeof ref === 'object' && ref !== null) return decodeValue(document, ref, field, depth + 1, budget, inGuide)
+      const decodeReference = (ref) => {
+        if (typeof ref === 'object' && ref !== null) return decodeValue(document, ref, field, depth + 1, budget, inGuide, materialize)
         const relation = at(document.sourceRelationships, ref, 'relationship')
         if (relation.kind !== field) invalid('relationship kind')
-        return decodeValue(document, relation.value, field, depth + 1, budget, inGuide)
-      })
+        return decodeValue(document, relation.value, field, depth + 1, budget, inGuide, materialize)
+      }
+      if (materialize) return decoderAllocated(value.map(decodeReference))
+      value.forEach(decodeReference)
+      return
     }
-    return value.map((child) => decodeValue(document, child, field, depth + 1, budget, inGuide))
+    const decodeElement = (child) => decodeValue(document, child, field, depth + 1, budget, inGuide, materialize)
+    if (materialize) return decoderAllocated(value.map(decodeElement))
+    value.forEach(decodeElement)
+    return
   }
   if (plain(value)) {
     const keys = Object.keys(value)
@@ -275,7 +487,7 @@ function decodeValue(document, value, field = '', depth = 0, budget = evaluation
     if (keys.length === 1 && own(value, 'valueId')) {
       const property = at(document.typedPropertyValues, value.valueId, 'property')
       if (property.kind !== field || !PROPERTY_FIELDS.has(field)) invalid('property kind')
-      return decodeValue(document, property.value, field, depth + 1, budget, inGuide)
+      return decodeValue(document, property.value, field, depth + 1, budget, inGuide, materialize)
     }
     for (const [ref, kind] of [['sourceId', 'source'], ['textSourceId', 'text'], ['locatorId', 'locator']]) {
       if (keys.length !== 1 || !own(value, ref)) continue
@@ -288,16 +500,20 @@ function decodeValue(document, value, field = '', depth = 0, budget = evaluation
         : kind === 'locator'
           ? { ...locator, preconditionHash: part.preconditionHash }
           : { ...part, partUri, componentLocator: { ...locator, preconditionHash: part.preconditionHash } }
-      return decodeValue(document, result, '', depth + 1, budget, inGuide)
+      return decodeValue(document, result, '', depth + 1, budget, inGuide, materialize)
     }
-    const result = {}
+    const result = materialize ? decoderAllocated({}) : undefined
     budget.charge(2 + Math.max(0, keys.length - 1))
     for (const [key, child] of Object.entries(value)) {
       const decodedKey = dictionaryKinds.has(field) && /^(0|[1-9]\d*)$/.test(key)
         ? semanticIdentity(document, Number(key)) : key
       if (decodedKey === undefined) invalid('dictionary identity')
       budget.charge(bytes(decodedKey) + 1)
-      Object.defineProperty(result, decodedKey, { value: decodeValue(document, child, key, depth + 1, budget, inGuide || key === 'sourceGuideList' || key === 'guides'), enumerable: true, writable: true, configurable: true })
+      const guide = inGuide || key === 'sourceGuideList' || key === 'guides'
+      const decoded = decodeChild
+        ? decodeChild(child, key, depth + 1, budget, guide)
+        : decodeValue(document, child, key, depth + 1, budget, guide, materialize)
+      if (materialize) Object.defineProperty(result, decodedKey, { value: decoded, enumerable: true, writable: true, configurable: true })
     }
     return result
   }
@@ -334,15 +550,15 @@ function resourceValue(document, pool, id, kind, budget = evaluationBudget()) {
   if (typeof id !== 'string' || !/^record-(0|[1-9]\d*)$/.test(id)) invalid('resource identity')
   const resource = pool.payload.records[id]
   if (!resource || resource.kind !== kind) invalid('resource kind/reference')
-  const certified = certifiedImmutableDocuments.has(document)
-  let pools = certified ? decodedResources.get(document) : undefined
+  const cacheable = canCacheDecode(document)
+  let pools = cacheable ? decodedResources.get(document) : undefined
   let resources = pools?.get(pool)
   const cached = resources?.get(id)
   if (cached) {
     budget.replay(cached.cost)
     return cached.value
   }
-  const before = certified ? budget.snapshot() : null
+  const before = cacheable ? budget.snapshot() : null
   let wire = resource.value
   if (kind === 'font' && wire.descriptorId !== undefined) {
     const descriptor = at(document.fontDescriptors, wire.descriptorId, 'font descriptor')
@@ -356,7 +572,7 @@ function resourceValue(document, pool, id, kind, budget = evaluationBudget()) {
     const location = at(document.sourceLocations, resource.value.source.textSourceId, 'provenance source')
     value.preconditionHash = at(document.sourceParts, location.part, 'provenance part').preconditionHash
   }
-  if (certified) {
+  if (cacheable) {
     const after = budget.snapshot()
     if (!pools) {
       pools = new WeakMap()
@@ -366,7 +582,7 @@ function resourceValue(document, pool, id, kind, budget = evaluationBudget()) {
       resources = new Map()
       pools.set(pool, resources)
     }
-    resources.set(id, { value: freeze(value), cost: {
+    resources.set(id, { value: freezeDecoded(value), cost: {
       visited: after.visited - before.visited,
       size: after.size - before.size,
     } })
@@ -380,16 +596,16 @@ function decodeContext(document, wire, budget = evaluationBudget()) {
   const resourceKey = recordKey(document, context.resourcesId)
   const pool = document.styles[resourceKey]
   if (pool?.kind !== 'text-context-resources' || pool.origin !== 'source') invalid('text pool')
-  const inventory = (refs, kind) => refs.flatMap((ref) => {
+  const inventory = (refs, kind) => decoderAllocated(refs.flatMap((ref) => {
     const value = at(document.textInventories, ref, 'text inventory')
     if (value.kind !== kind) invalid('text inventory kind')
     return value.records.map((id) => resourceValue(document, pool, id, kind === 'fontRequests' ? 'font' : 'provenance', budget))
-  })
+  }))
   context.theme = resourceValue(document, pool, shape.theme, 'theme', budget)
   context.fontRequests = inventory(shape.fontRequests, 'fontRequests')
   context.provenance = inventory(wire.provenance, 'provenance')
   for (const layers of contextLayerSets(context)) {
-    layers.entries = scopeRecords(document, layers.scope).map((id) => resourceValue(document, pool, id, 'declaration', budget))
+    layers.entries = decoderAllocated(scopeRecords(document, layers.scope).map((id) => resourceValue(document, pool, id, 'declaration', budget)))
     delete layers.scope
   }
   context.schemaVersion = 1
@@ -397,27 +613,40 @@ function decodeContext(document, wire, budget = evaluationBudget()) {
   if (bytes(context) > 8388608) invalid('context evaluation byte budget')
   return context
 }
+// The typed pool has two distinct obligations: generic wire admission (including
+// unused fields), then resource expansion. Keep the former's exact depth/byte/
+// visit charges, but do not allocate its discarded records tree. Other payload
+// fields still use the generic decoder; this is not a schema-admission shortcut.
+function decodeResourcePool(document, wire, budget) {
+  const decodeRecords = (child, key, depth, budget, guide) =>
+    decodeValue(document, child, key, depth, budget, guide, key !== 'records')
+  const decodePayload = (child, key, depth, budget, guide) =>
+    decodeValue(document, child, key, depth, budget, guide, true, key === 'payload' ? decodeRecords : null)
+  return decodeValue(document, wire, '', 0, budget, false, true, decodePayload)
+}
 function semanticRecord(document, kind, id) {
   if (!document || id === undefined || id === null) return undefined
   if (document.schemaVersion !== 3) return document[kind]?.[id]
   const key = recordKey(document, id)
   if (key === undefined) return undefined
   const cacheKey = kind + ':' + key
-  const isCertified = certifiedImmutableDocuments.has(document)
-  let docMap = isCertified ? decodedRecords.get(document) : undefined
+  const cacheable = canCacheDecode(document)
+  let docMap = cacheable ? decodedRecords.get(document) : undefined
   if (docMap && docMap.has(cacheKey)) return docMap.get(cacheKey)
   const wire = document[kind]?.[key]
   if (!wire) return undefined
   const budget = evaluationBudget()
-  const value = decodeValue(document, kind === 'styles' && wire.kind === 'text-context'
-    ? { ...wire, payload: null } : wire, '', 0, budget)
+  const value = kind === 'styles' && wire.kind === 'text-context-resources'
+    ? decodeResourcePool(document, wire, budget)
+    : decodeValue(document, kind === 'styles' && wire.kind === 'text-context'
+      ? { ...wire, payload: null } : wire, '', 0, budget)
   if (kind === 'styles' && wire.kind === 'text-context') value.payload = decodeContext(document, wire.payload, budget)
   if (kind === 'styles' && wire.kind === 'text-context-resources') {
-    value.payload.records = Object.fromEntries(Object.entries(wire.payload.records).map(([k, record]) =>
-      [k, { kind: record.kind, value: resourceValue(document, wire, k, record.kind, budget) }]))
+    value.payload.records = decoderAllocated(Object.fromEntries(Object.entries(wire.payload.records).map(([k, record]) =>
+      [k, decoderAllocated({ kind: record.kind, value: resourceValue(document, wire, k, record.kind, budget) })])))
   }
-  const result = freeze(value)
-  if (isCertified) {
+  const result = freezeDecoded(value)
+  if (cacheable) {
     if (!docMap) {
       docMap = new Map()
       decodedRecords.set(document, docMap)
@@ -436,7 +665,18 @@ function* semanticRecords(document, kind, filter = null) {
     : filter && typeof filter === 'object' && filter.kind
       ? (wire) => wire && wire.kind === filter.kind
       : null
-  for (const key of Object.keys(document[kind])) {
+  const dictionary = document[kind]
+  const index = wireMembershipIndex(dictionary)
+  // Function predicates retain the full scan, invocation count and order. Only
+  // a data-valued object kind selector can use wire membership. Accessors keep
+  // the original predicate path and are never treated as identity proof.
+  const selector = index && filter && typeof filter === 'object'
+    ? Object.getOwnPropertyDescriptor(filter, 'kind') : null
+  const selectedKind = selector && typeof selector.value === 'string' && selector.value
+  const keys = index
+    ? selectedKind ? wireKindKeys(dictionary, index, selectedKind) : index.keys
+    : Object.keys(dictionary)
+  for (const key of keys) {
     const wire = document[kind][key]
     if (predicate && !predicate(wire)) continue
     const id = document.schemaVersion === 3 && /^(0|[1-9]\d*)$/.test(key)
@@ -489,6 +729,8 @@ function encodeWireRecord(document, kind, record) {
 
 function replaceSemanticRecords(document, patch = {}) {
   if (!document) return document
+  const changedInstanceIds = []
+  const stylesChanged = patch.styles && Object.keys(patch.styles).length > 0
   const isCertified = certifiedImmutableDocuments.has(document)
   if (document.schemaVersion !== 3) {
     let changed = false
@@ -497,6 +739,7 @@ function replaceSemanticRecords(document, patch = {}) {
       if (!patch[kind]) continue
       const dict = { ...(next[kind] || {}) }
       for (const [id, rec] of Object.entries(patch[kind])) {
+        if (kind === 'instances') changedInstanceIds.push(id)
         if (rec === null) {
           delete dict[id]
         } else {
@@ -510,8 +753,9 @@ function replaceSemanticRecords(document, patch = {}) {
     if (isCertified) {
       freeze(next)
       certifiedImmutableDocuments.add(next)
+      rememberPredecessor(next, document, changedInstanceIds)
       const prevDocMap = decodedRecords.get(document)
-      if (prevDocMap) {
+      if (prevDocMap && !stylesChanged) {
         const nextDocMap = new Map(prevDocMap)
         for (const kind of ['definitions', 'instances', 'styles']) {
           if (!patch[kind]) continue
@@ -521,7 +765,7 @@ function replaceSemanticRecords(document, patch = {}) {
         }
         decodedRecords.set(next, nextDocMap)
       }
-      if (decodedResources.has(document)) decodedResources.set(next, decodedResources.get(document))
+      if (!stylesChanged && decodedResources.has(document)) decodedResources.set(next, decodedResources.get(document))
       if (indices.has(document)) indices.set(next, indices.get(document))
     }
     return next
@@ -533,11 +777,13 @@ function replaceSemanticRecords(document, patch = {}) {
     if (!patch[kind]) continue
     const dict = { ...(next[kind] || {}) }
     for (const [id, rec] of Object.entries(patch[kind])) {
+      if (kind === 'instances') changedInstanceIds.push(id)
       const key = String(recordKey(document, id))
       if (rec === null) {
         delete dict[key]
       } else {
-        dict[key] = encodeWireRecord(document, kind, rec)
+        // Check/freeze caller-retained data before encoding can read it.
+        dict[key] = encodeWireRecord(document, kind, isCertified ? freeze(rec) : rec)
       }
       changed = true
     }
@@ -547,8 +793,12 @@ function replaceSemanticRecords(document, patch = {}) {
   if (isCertified) {
     freeze(next)
     certifiedImmutableDocuments.add(next)
+    rememberPredecessor(next, document, changedInstanceIds)
+    // Styles can supply resources to any decoded context. Drop the whole decode
+    // cache on style edits; catalog indexes remain valid and instance-only edits
+    // still reuse unaffected records and resource expansions.
     const prevDocMap = decodedRecords.get(document)
-    if (prevDocMap) {
+    if (prevDocMap && !stylesChanged) {
       const nextDocMap = new Map(prevDocMap)
       for (const kind of ['definitions', 'instances', 'styles']) {
         if (!patch[kind]) continue
@@ -559,7 +809,7 @@ function replaceSemanticRecords(document, patch = {}) {
       }
       decodedRecords.set(next, nextDocMap)
     }
-    if (decodedResources.has(document)) decodedResources.set(next, decodedResources.get(document))
+    if (!stylesChanged && decodedResources.has(document)) decodedResources.set(next, decodedResources.get(document))
     if (indices.has(document)) indices.set(next, indices.get(document))
   }
   return next
@@ -578,9 +828,13 @@ module.exports = {
   semanticInstances,
   semanticStyles,
   replaceSemanticRecords,
+  semanticRecordPredecessor,
   validateGraphStructure,
   canonicalSemanticRevision,
   cloneImmutableSemanticDocument,
+  checkedCloneBudgetMetrics,
   certifyImmutableSemanticDocument,
   isCertifiedSemanticDocument,
+  isCheckedImmutableSemanticValue,
+  isOwnedDecodedSemanticValue,
 }

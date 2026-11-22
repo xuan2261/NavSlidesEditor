@@ -2,6 +2,7 @@ const {
   semanticDefinition,
   semanticInstance,
   semanticStyle,
+  isCertifiedSemanticDocument,
 } = require('./pptx-semantic-records.js')
 
 const { createSemanticInstanceReader } = require('./pptx-semantic-groups.js')
@@ -28,25 +29,20 @@ function semanticCssMatrix(matrix) {
   transformPoint(matrix, { x: 0, y: 0 })
   return `matrix(${[...matrix.slice(0, 4), matrix[4] * EMU_TO_CSS, matrix[5] * EMU_TO_CSS].join(',')})`
 }
-const slideRenderTreeCache = new WeakMap()
-
-function semanticRenderTree(input, slide, fieldContext) {
-  if (slide && typeof slide === 'object') {
-    const cached = slideRenderTreeCache.get(slide)
-    if (cached && cached.input === input && cached.fieldContext === fieldContext && cached.elements === slide.elements) {
-      let match = true
-      const doc = (input && input.document) || input
-      for (const [id, instRef] of cached.instances) {
-        if ((semanticInstance(doc, id) ?? doc.instances?.[id]) !== instRef) {
-          match = false
-          break
-        }
-      }
-      if (match) return cached.result
-    }
-  }
+const { slideProjections, projectionEnvelope, sameEnvelope, ownImmutable } = require('./pptx-slide-projection-cache.js')
+function renderTree(input, slide, fieldContext, immutable) {
   const reader = createSemanticInstanceReader(input)
   const document = reader.document
+  // Normalization (and its budget/validation receipts) always precedes lookup.
+  // Raw or shallow-frozen inputs cannot admit a render-cache entry.
+  const envelope = isCertifiedSemanticDocument(input)
+    ? projectionEnvelope(document, slide, fieldContext) : null
+  // Admission and projection must consume the same values. A proxy can expose
+  // different descriptor and get views; never render/cache its live get view.
+  if (envelope) slide = envelope.snapshot
+  const previous = envelope && slideProjections.get(slide.id)
+  if (previous && sameEnvelope(previous.envelope, envelope))
+    return immutable ? previous.result : structuredClone(previous.result)
   const elements = new Map()
   const legacy = []
   for (const element of slide.elements || []) {
@@ -155,18 +151,25 @@ function semanticRenderTree(input, slide, fieldContext) {
       throw new TypeError('Unrendered semantic occurrence')
   }
   const result = [...roots, ...legacy].sort((left, right) => left.paintIndex - right.paintIndex)
-  if (slide && typeof slide === 'object') {
-    const instances = []
-    for (const element of slide.elements || []) {
-      if (element.pptxInstanceId) {
-        instances.push([element.pptxInstanceId, semanticInstance(document, element.pptxInstanceId) ?? document.instances?.[element.pptxInstanceId]])
-      }
-    }
-    slideRenderTreeCache.set(slide, { input, fieldContext, elements: slide.elements, result, instances })
+  if (envelope) {
+    // Only an owned clone is frozen; never freeze caller slide/legacy values.
+    const owned = ownImmutable(result)
+    slideProjections.delete(slide.id)
+    slideProjections.set(slide.id, { envelope, result: owned })
+    if (slideProjections.size > 128) slideProjections.delete(slideProjections.keys().next().value)
+    return immutable ? owned : structuredClone(owned)
   }
-  return result
+  return immutable ? ownImmutable(result) : result
+}
+// Public API retains caller-owned mutable outputs. Internal consumers explicitly
+// opt into recursively frozen owned values, never mutable-input identity reuse.
+function semanticRenderTree(input, slide, fieldContext) {
+  return renderTree(input, slide, fieldContext, false)
+}
+function immutableSemanticRenderTree(input, slide, fieldContext) {
+  return renderTree(input, slide, fieldContext, true)
 }
 function semanticLocalElement(element) {
   return { ...element, x: 0, y: 0, rotation: 0, flipH: false, flipV: false }
 }
-module.exports = { EMU_TO_CSS, semanticCssMatrix, semanticRenderTree, semanticLocalElement }
+module.exports = { EMU_TO_CSS, semanticCssMatrix, semanticRenderTree, immutableSemanticRenderTree, semanticLocalElement }

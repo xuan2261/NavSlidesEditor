@@ -9,7 +9,7 @@ const {
   validateTextHyperlinkBindings,
   validateTextHyperlinkOverride,
 } = require('./pptx-text-hyperlink-bindings.js')
-const { normalizeTextDocument } = require('./pptx-text-document.js')
+const { normalizeOwnedTextDocument } = require('./pptx-text-document.js')
 const {
   validateTextListSource,
   isTextListSourceComponent,
@@ -40,13 +40,17 @@ const {
   validateInheritanceStyleRecords,
 } = require('./pptx-geometry-style-records.js')
 const {
+  CATALOGS,
   semanticRecord,
   semanticStyle,
   validateGraphStructure,
   cloneImmutableSemanticDocument,
   certifyImmutableSemanticDocument,
   isCertifiedSemanticDocument,
+  isCheckedImmutableSemanticValue,
 } = require('./pptx-semantic-records.js')
+
+const { chargeSemanticBudget, measureSemanticBudget } = require('./pptx-semantic-budget-receipts.js')
 
 const DEFINITION_KINDS = new Set([
   'presentation-properties',
@@ -104,13 +108,24 @@ function fail(message) {
   throw new PptxSemanticValidationError(message)
 }
 
-// Only this module's successfully validated, deeply frozen outputs are reusable.
-// Mutable inputs and externally frozen lookalikes must always traverse validation.
+// Successful receipts may also be attached to certified immutable producer roots.
+// Certification alone never substitutes for validation under the exact limits.
 const normalizedDocuments = new WeakMap()
 const validatedDefinitionsCache = new WeakMap()
-const validatedInstancesCache = new WeakSet()
+const validatedInstancesCache = new WeakMap()
+const validatedStylesCache = new WeakMap()
+// Compare immutable dependency roots, not the instances dictionary: local edits
+// may reuse unchanged occurrences, but never validation from another provider.
+const validationContext = (document, limits) => [
+  document.schemaVersion, document.definitions, document.styles,
+  document.fonts, document.sourceSlides,
+  ...CATALOGS.map((field) => document[field]),
+  ...Object.keys(limits).sort().flatMap((key) => [key, limits[key]]),
+]
+const sameContext = (left, right) => left?.length === right.length &&
+  right.every((root, index) => root === left[index])
 
-function normalizePptxSemanticDocument(input, options = {}) {
+function normalizePptxSemanticDocument(input, options = {}, { predecessor } = {}) {
   const schema =
     input && typeof input === 'object'
       ? Object.getOwnPropertyDescriptor(input, 'schemaVersion')
@@ -128,10 +143,14 @@ function normalizePptxSemanticDocument(input, options = {}) {
   for (const value of Object.values(limits)) {
     if (!Number.isSafeInteger(value) || value < 1) fail('Invalid semantic budget')
   }
-  const validatedLimits = normalizedDocuments.get(input)
+  const validated = normalizedDocuments.get(input)
+  const validatedLimits = validated?.limits
   if (validatedLimits && Object.keys(limits).length === Object.keys(validatedLimits).length &&
-      Object.keys(limits).every((key) => limits[key] === validatedLimits[key])) return input
-  const document = cloneImmutableSemanticDocument(input, limits, PptxSemanticValidationError)
+      Object.keys(limits).every((key) => limits[key] === validatedLimits[key])) return validated.document
+  // Charge every occurrence, including checked clone shortcuts. Only owned
+  // subtrees with exact context-independent metrics can skip inspection.
+  chargeSemanticBudget(input, limits, PptxSemanticValidationError)
+  const document = cloneImmutableSemanticDocument(input, limits, PptxSemanticValidationError, predecessor)
   if (
     !record(document) ||
     ![1, 2, 3].includes(document.schemaVersion) ||
@@ -159,9 +178,7 @@ function normalizePptxSemanticDocument(input, options = {}) {
   ) {
     fail('Unsupported semantic schema')
   }
-  if (new TextEncoder().encode(JSON.stringify(document)).byteLength > limits.maxBytes) {
-    fail('Semantic byte budget exceeded')
-  }
+  measureSemanticBudget(document, limits, PptxSemanticValidationError)
   for (const field of ['definitions', 'instances', 'styles', 'fonts']) {
     if (!record(document[field])) fail(`Invalid semantic ${field} dictionary`)
   }
@@ -203,7 +220,7 @@ function normalizePptxSemanticDocument(input, options = {}) {
   }
   function textDocument(value) {
     try {
-      return normalizeTextDocument(value)
+      return normalizeOwnedTextDocument(value)
     } catch (error) {
       fail(error.message)
     }
@@ -216,7 +233,9 @@ function normalizePptxSemanticDocument(input, options = {}) {
     }
   }
   let componentIds, familyBindings, sourceDefinitions, componentCount
-  const cachedDefs = validatedDefinitionsCache.get(document.definitions)
+  const context = validationContext(document, limits)
+  const receiptForDefinitions = validatedDefinitionsCache.get(document.definitions)
+  const cachedDefs = sameContext(receiptForDefinitions?.context, context) ? receiptForDefinitions : null
   if (cachedDefs) {
     componentIds = cachedDefs.componentIds
     familyBindings = cachedDefs.familyBindings
@@ -395,13 +414,8 @@ function normalizePptxSemanticDocument(input, options = {}) {
     }
     componentIds.set(key, isSchema3 ? new Set(decodedDef.components.map(component => component.id)) : components)
   }
-  validatedDefinitionsCache.set(document.definitions, {
-    componentIds,
-    familyBindings,
-    sourceDefinitions,
-    componentCount,
-  })
 }
+  if (componentCount > limits.maxComponents) fail('Semantic component budget exceeded')
   if (document.schemaVersion === 2) {
     try {
       validateGeometryStyleRecords(document, { maxBytes: limits.maxBytes })
@@ -430,23 +444,21 @@ function normalizePptxSemanticDocument(input, options = {}) {
     ]) {
       if (!Array.isArray(document[cat])) fail(`Invalid semantic ${cat} catalog`)
     }
-    for (let i = 0; i < document.declarationScopes.length; i++) {
-      let p = document.declarationScopes[i]?.parent
-      let d = 0
-      while (p !== null && p !== undefined) {
-        if (!Number.isSafeInteger(p) || p < 0 || p >= document.declarationScopes.length || !document.declarationScopes[p]) {
-          fail('Dangling declaration scope parent')
-        }
-        if (++d > 256 || p === i) fail('Semantic scope cycle/depth exceeded')
-        p = document.declarationScopes[p]?.parent
-      }
-    }
+    // validateGraphStructure above checks every scope entry and parent, then
+    // detects any repeated ancestor (not just a return to this scope) with
+    // the same fixed 256-edge depth cap. Its checked-catalog receipt proves
+    // these immutable dependencies, so a second ancestry walk adds no checks.
     try {
-      validateInheritanceStyleRecords(document)
+      // Only successful admission of these checked immutable dependencies may
+      // skip style validation; ownership/certification alone is not a receipt.
+      if (!isCheckedImmutableSemanticValue(document.styles) ||
+          !sameContext(validatedStylesCache.get(document.styles), context))
+        validateInheritanceStyleRecords(document)
     } catch (error) {
       fail(error.message)
     }
   }
+  const pendingInstances = []
   for (const [key, instance] of Object.entries(document.instances)) {
     const isSchema3 = document.schemaVersion === 3
     const validInstanceId = isSchema3
@@ -477,7 +489,7 @@ function normalizePptxSemanticDocument(input, options = {}) {
       parentId = parent.parentInstanceId
       if (++depth > limits.maxDepth) fail('Semantic parent budget exceeded')
     }
-    if (cachedDefs && validatedInstancesCache.has(instance)) continue
+    if (sameContext(validatedInstancesCache.get(instance), context)) continue
     let decodedDefinition, decodedInstance
     try {
       decodedDefinition = isSchema3
@@ -662,7 +674,7 @@ function normalizePptxSemanticDocument(input, options = {}) {
         }
       }
     }
-    validatedInstancesCache.add(instance)
+    pendingInstances.push(instance)
   }
   try {
     validateTextContextBindings(document)
@@ -678,9 +690,20 @@ function normalizePptxSemanticDocument(input, options = {}) {
   } catch (error) {
     fail(error.message)
   }
-  normalizedDocuments.set(document, limits)
+  // Publish subtree receipts only after the entire immutable document succeeds.
+  // Failed sibling/global validation must not prime a later incremental call.
+  validatedDefinitionsCache.set(document.definitions, {
+    context, componentIds, familyBindings, sourceDefinitions, componentCount,
+  })
+  for (const instance of pendingInstances) validatedInstancesCache.set(instance, context)
+  if (document.schemaVersion === 3 && isCheckedImmutableSemanticValue(document.styles))
+    validatedStylesCache.set(document.styles, context)
+  // Reuse the actual validated output, not a second immutable input root.
+  // Certification alone proves neither successful validation nor these budgets.
+  const receipt = { limits, document }
+  normalizedDocuments.set(document, receipt)
   if (isCertifiedSemanticDocument(input)) {
-    normalizedDocuments.set(input, limits)
+    normalizedDocuments.set(input, receipt)
   }
   return document
 }

@@ -129,7 +129,7 @@ describe('useEditorSaveController route ownership', () => {
         title: 'Edit during export',
         aggregateGeneration: 3,
       }),
-    }))
+    }), { acknowledgeLocalPublication: true })
   })
 
   it('rejects a concurrent validated export token without releasing the active barrier', () => {
@@ -209,6 +209,10 @@ describe('useEditorSaveController route ownership', () => {
   })
 
   it('records the snapshot before an in-flight request can outlive teardown', async () => {
+    let acknowledgePublication
+    writeEditorDraft.mockImplementationOnce(() => new Promise((resolve) => {
+      acknowledgePublication = resolve
+    }))
     let rejectRequest
     api.updatePresentation.mockImplementationOnce(() => new Promise((_, reject) => {
       rejectRequest = reject
@@ -222,8 +226,11 @@ describe('useEditorSaveController route ownership', () => {
 
     expect(writeEditorDraft).toHaveBeenCalledWith(expect.objectContaining({
       snapshot: expect.objectContaining({ title: 'Pending' }),
-    }))
+    }), { acknowledgeLocalPublication: true })
     expect(writeEditorDraft).toHaveBeenCalledTimes(1)
+    expect(api.updatePresentation).not.toHaveBeenCalled()
+    acknowledgePublication(true)
+    await settle()
     expect(api.updatePresentation).toHaveBeenCalledTimes(1)
 
     act(() => result.current.flush())

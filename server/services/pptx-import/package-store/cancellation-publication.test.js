@@ -51,19 +51,37 @@ function startAck(controller) {
 describe('P09-R2 actual package ACK publication barrier', () => {
   it.each(['index', 'prepare', 'root'])('retains durable outbox, head and owners after an aborted stalled %s write', async stage => {
     const entered = deferred(), release = deferred()
-    const original = nativeFs.writeFile
-    vi.spyOn(nativeFs, 'writeFile').mockImplementation(async (file, ...args) => {
-      const result = await original(file, ...args)
-      const name = String(file)
-      const matches = stage === 'index' ? path.dirname(name) === path.join(root, 'indexes')
-        : stage === 'prepare' ? name.endsWith('.prepared.json')
+    if (stage === 'index') {
+      const original = nativeFs.open
+      vi.spyOn(nativeFs, 'open').mockImplementation(async (file, ...args) => {
+        const handle = await original(file, ...args)
+        const name = String(file)
+        if (path.dirname(name) === path.join(root, 'indexes') &&
+            path.basename(name).startsWith('.candidate-') && name.endsWith('.tmp') && args[0] === 'wx') {
+          const sync = handle.sync.bind(handle)
+          handle.sync = async () => {
+            // All streamed bytes are durable, but the index is not published yet.
+            await sync()
+            entered.resolve()
+            await release.promise
+          }
+        }
+        return handle
+      })
+    } else {
+      const original = nativeFs.writeFile
+      vi.spyOn(nativeFs, 'writeFile').mockImplementation(async (file, ...args) => {
+        const result = await original(file, ...args)
+        const name = String(file)
+        const matches = stage === 'prepare' ? name.endsWith('.prepared.json')
           : name.startsWith(path.join(root, 'state-root.json.')) && name.endsWith('.tmp')
-      if (matches) {
-        entered.resolve()
-        await release.promise
-      }
-      return result
-    })
+        if (matches) {
+          entered.resolve()
+          await release.promise
+        }
+        return result
+      })
+    }
     const controller = new AbortController()
     const pending = startAck(controller)
     await entered.promise

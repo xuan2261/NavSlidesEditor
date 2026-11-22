@@ -1,6 +1,7 @@
 const {
   cloneTextData,
-  normalizeTextDocument,
+  cloneOwnedTextData,
+  normalizeOwnedTextDocument,
   TEXT_PROPERTY_SCOPES,
 } = require('./pptx-text-document')
 const { expandTextContext } = require('./pptx-semantic-text-context-codec')
@@ -8,9 +9,35 @@ const { resolveProperties } = require('./pptx-style-resolution')
 const { evaluateTextFieldPreviews } = require('./pptx-text-field-preview')
 const { resolveGeometryColorPaint } = require('./pptx-geometry-color')
 const { findInheritanceOverride } = require('./pptx-inheritance-targets')
-const { semanticInstance, semanticDefinition, semanticStyle, semanticStyles } = require('./pptx-semantic-records')
+const {
+  semanticInstance, semanticDefinition, semanticStyle, semanticStyles,
+  isCertifiedSemanticDocument, CATALOGS,
+} = require('./pptx-semantic-records')
 
+// An occurrence survives edits to other occurrences. Its text does not depend
+// on the instances dictionary, but does depend on every source/style catalog
+// used by semantic decoding and inherited text/theme resolution.
+// Cache only owned results; recursively protect nested values from consumers.
+function freezeOwnedResult(value, seen = new WeakSet()) {
+  if (!value || typeof value !== 'object' || seen.has(value)) return value
+  seen.add(value)
+  for (const child of Object.values(value)) freezeOwnedResult(child, seen)
+  return Object.freeze(value)
+}
 const cache = new WeakMap()
+const DEPENDENCIES = ['schemaVersion', 'definitions', 'styles', ...CATALOGS]
+function cachedOccurrence(document, instance) {
+  if (!instance || !isCertifiedSemanticDocument(document)) return undefined
+  const cached = cache.get(instance)
+  return cached && DEPENDENCIES.every((key, index) => document[key] === cached.dependencies[index])
+    ? cached : undefined
+}
+function cacheOccurrence(document, instance, value) {
+  if (instance && isCertifiedSemanticDocument(document)) {
+    freezeOwnedResult(value)
+    cache.set(instance, { dependencies: DEPENDENCIES.map((key) => document[key]), ...value })
+  }
+}
 const DIRECT_KIND = Object.freeze({ body: 'body', paragraph: 'paragraph', run: 'run' })
 
 function source(path) {
@@ -63,7 +90,7 @@ function textTheme(theme, document, resourcesId) {
   return { ...theme, colors, ...(Object.keys(colorAlpha).length ? { colorAlpha } : {}) }
 }
 
-function materializeProperties(scope, layers, direct, path, additional = []) {
+function materializeProperties(scope, layers, direct, path, additional = [], compositions) {
   const ownerScoped = direct.owner
     ? Object.fromEntries(Object.entries(direct.owner).filter(([k]) => TEXT_PROPERTY_SCOPES[scope].includes(k)))
     : undefined
@@ -90,11 +117,19 @@ function materializeProperties(scope, layers, direct, path, additional = []) {
   if (own && Object.keys(own).length)
     entries.unshift({ id: `effective-${kind}`, kind, source: source(path), properties: own })
   const result = {}
-  const properties = resolveProperties({
-    scope,
-    layers: { ...layers, entries },
-    ...(direct.theme ? { theme: direct.theme } : {}),
-  })
+  // Invocation-local canonical tuples: full expanded source/decode context is
+  // fixed for this materialization. Keep the complete value key: layers, target,
+  // generated source paths, scoped source/owner/local declarations, paragraph
+  // defaults and theme are not all owned identities. Raw identity shortcuts
+  // would hide mutable children or conflate provenance across occurrences.
+  const tuple = { layers: { ...layers, entries }, ...(direct.theme ? { theme: direct.theme } : {}) }
+  const key = JSON.stringify(tuple)
+  let admitted = compositions.get(key)
+  if (!admitted) {
+    admitted = cloneOwnedTextData(tuple)
+    compositions.set(key, admitted)
+  }
+  const properties = resolveProperties({ scope, ...admitted })
   for (const property of TEXT_PROPERTY_SCOPES[scope]) {
     const resolved = canonicalResolved(property, properties[property])
     if (resolved !== undefined) result[property] = resolved
@@ -103,19 +138,18 @@ function materializeProperties(scope, layers, direct, path, additional = []) {
 }
 
 function materializeTextDocument(document, instanceId, fieldContext) {
-  let byInstance = cache.get(document)
-  if (!byInstance) {
-    byInstance = new Map()
-    cache.set(document, byInstance)
-  }
-  if (byInstance.has(instanceId)) {
-    const materialized = byInstance.get(instanceId)
-    return fieldContext ? evaluateTextFieldPreviews(materialized, fieldContext) : materialized
-  }
   const instance = semanticInstance(document, instanceId)
+  const cached = cachedOccurrence(document, instance)
+  if (cached && Object.hasOwn(cached, 'text')) {
+    if (cached.text === undefined) return undefined
+    return fieldContext ? evaluateTextFieldPreviews(cached.text, fieldContext) : cached.text
+  }
   const definition = semanticDefinition(document, instance?.definitionId)
   const sourceText = definition?.content.textDocument
-  if (!sourceText) return undefined
+  if (!sourceText) {
+    cacheOccurrence(document, instance, { ...cached, text: undefined })
+    return undefined
+  }
   const directOverride = instance.overrides.components?.[sourceText.componentId]?.textDocument
   const ownerInheritanceOverride = findInheritanceOverride(document, instance)
   const sourceRuns = sourceText.paragraphs?.flatMap((p) => p.runs).filter((r) => r.kind === 'text') || []
@@ -124,23 +158,26 @@ function materializeTextDocument(document, instanceId, fieldContext) {
   const directLabel = directRuns.length === 1 ? directRuns[0].text : null
   const labelLocallyOverridden = Boolean(directOverride && sourceLabel !== null && directLabel !== sourceLabel)
 
-  let effective = directOverride ? cloneTextData(directOverride) : cloneTextData(sourceText)
+  let effective = normalizeOwnedTextDocument(directOverride ?? sourceText)
+  let working
+  const mutableText = () => working ??= cloneTextData(effective)
   if (!labelLocallyOverridden && ownerInheritanceOverride?.values?.label !== undefined) {
     const runs = effective.paragraphs?.flatMap((p) => p.runs).filter((r) => r.kind === 'text')
     if (runs?.length === 1) {
-      runs[0].text = ownerInheritanceOverride.values.label
+      const mutableRuns = mutableText().paragraphs.flatMap((p) => p.runs).filter((r) => r.kind === 'text')
+      mutableRuns[0].text = ownerInheritanceOverride.values.label
     }
   }
 
   const payload = semanticStyle(document, instance.textSourceBinding?.contextId)?.payload
   if (!payload) {
-    const normalized = normalizeTextDocument(effective)
-    byInstance.set(instanceId, normalized)
+    const normalized = working ? normalizeOwnedTextDocument(working) : effective
+    cacheOccurrence(document, instance, { ...cached, text: normalized })
     return fieldContext ? evaluateTextFieldPreviews(normalized, fieldContext) : normalized
   }
   const context = expandTextContext(payload, { styles: document.styles })
   const theme = textTheme(context.theme, document, payload.resourcesId)
-  const result = cloneTextData(effective)
+  const result = mutableText()
 
   function localDiff(directObj = {}, sourceObj = {}) {
     if (!directOverride) return {}
@@ -154,6 +191,7 @@ function materializeTextDocument(document, instanceId, fieldContext) {
   }
 
   const ownerTextStyle = ownerInheritanceOverride?.values?.textStyle
+  const compositions = new Map()
 
   result.body = materializeProperties(
     'body',
@@ -164,7 +202,7 @@ function materializeTextDocument(document, instanceId, fieldContext) {
       local: localDiff(directOverride?.body, sourceText.body),
       theme,
     },
-    'body'
+    'body', [], compositions
   )
 
   const sourceParagraphs = new Map(
@@ -190,7 +228,7 @@ function materializeTextDocument(document, instanceId, fieldContext) {
         local: localDiff(directPara?.properties, sourcePara?.properties),
         theme,
       },
-      `paragraphs[${index}].properties`
+      `paragraphs[${index}].properties`, [], compositions
     )
 
     paragraph.defaultRunProperties = materializeProperties(
@@ -203,7 +241,7 @@ function materializeTextDocument(document, instanceId, fieldContext) {
         theme,
       },
       `paragraphs[${index}].defaultRunProperties`,
-      ['run']
+      ['run'], compositions
     )
 
     const sourceRunsMap = new Map(
@@ -231,7 +269,7 @@ function materializeTextDocument(document, instanceId, fieldContext) {
           theme,
         },
         `paragraphs[${index}].runs[${runIndex}].properties`,
-        ['paragraph']
+        ['paragraph'], compositions
       )
     }
 
@@ -247,21 +285,26 @@ function materializeTextDocument(document, instanceId, fieldContext) {
           theme,
         },
         `paragraphs[${index}].endRunProperties`,
-        ['paragraph']
+        ['paragraph'], compositions
       )
     }
   }
-  const normalized = normalizeTextDocument(result)
-  byInstance.set(instanceId, normalized)
+  // Changed declarations/text must earn fresh schema proof, never source proof.
+  const normalized = normalizeOwnedTextDocument(result)
+  cacheOccurrence(document, instance, { ...cached, text: normalized, theme })
   return fieldContext ? evaluateTextFieldPreviews(normalized, fieldContext) : normalized
 }
 
 function materializeTextTheme(document, instanceId) {
   const instance = semanticInstance(document, instanceId)
+  const cached = cachedOccurrence(document, instance)
+  if (cached && Object.hasOwn(cached, 'theme')) return cached.theme
   const payload = semanticStyle(document, instance?.textSourceBinding?.contextId)?.payload
   if (!payload) return undefined
   const context = expandTextContext(payload, { styles: document.styles })
-  return textTheme(context.theme, document, payload.resourcesId)
+  const theme = textTheme(context.theme, document, payload.resourcesId)
+  cacheOccurrence(document, instance, { ...cached, theme })
+  return theme
 }
 
 module.exports = { materializeTextDocument, materializeTextTheme }

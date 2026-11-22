@@ -47,18 +47,42 @@ async function publishImport(jobId, title) {
 }
 
 describe('package compatibility replay lock order', () => {
-  it('copies full state only for the durable acknowledgement mutation', async () => {
+  it('applies replay before durable acknowledgement and isolates caller snapshots', async () => {
     const store = packageRuntime.getPackageStore()
-    const snapshots = vi.spyOn(store, 'getState')
+    const before = store.getState()
+    const callerSnapshot = store.getCompatibilityState()
+    callerSnapshot.compatibilityOutbox[0].presentationId = 'history-deck'
+    callerSnapshot.compatibilityOutbox.length = 0
+    expect((await storage.readPresentations()).map((row) => row.id)).toContain('deleted-deck')
+
+    const acknowledge = store.acknowledgeCompatibilityWrites.bind(store)
+    const acknowledgement = vi.spyOn(store, 'acknowledgeCompatibilityWrites')
+      .mockImplementation(async (...args) => {
+        // JSON replay must be durable before its retry record can be removed.
+        expect(await storage.readPresentations()).toEqual([
+          { id: 'history-deck', title: 'History', slides: [] },
+        ])
+        expect(store.getCompatibilityState().compatibilityOutbox).toEqual(before.compatibilityOutbox)
+        return acknowledge(...args)
+      })
     try {
       expect(await packageRuntime.drainPackageCompatibilityOutbox()).toBe(1)
-      expect(snapshots).toHaveBeenCalledTimes(1)
-      snapshots.mockClear()
-      expect(await packageRuntime.drainPackageCompatibilityOutbox()).toBe(0)
-      expect(snapshots).not.toHaveBeenCalled()
+      expect(acknowledgement).toHaveBeenCalledTimes(1)
     } finally {
-      snapshots.mockRestore()
+      acknowledgement.mockRestore()
     }
+
+    await packageRuntime.shutdownPackageStore()
+    await packageRuntime.initializePackageStore({ rootDir: storage.DATA_DIR })
+    const recovered = packageRuntime.getPackageStore().getState()
+    expect(recovered.compatibilityOutbox).toEqual([])
+    expect(recovered.heads).toEqual(before.heads)
+    expect(recovered.owners).toEqual(before.owners)
+    expect(recovered.jobs).toEqual(before.jobs)
+    expect(await packageRuntime.drainPackageCompatibilityOutbox()).toBe(0)
+    expect(await storage.readPresentations()).toEqual([
+      { id: 'history-deck', title: 'History', slides: [] },
+    ])
   })
 
   beforeEach(async () => {

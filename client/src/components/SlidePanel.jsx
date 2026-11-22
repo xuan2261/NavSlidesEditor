@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { Button } from './ui/Button'
 import { SlideNavigatorItem } from './slide-panel/slide-navigator-item'
+import { deriveNavigatorContext, deriveNavigatorView } from './slide-panel/slide-thumbnail-preview'
 
 const menuClass =
   'flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-hover focus:bg-hover focus:outline-none disabled:opacity-45'
@@ -56,7 +57,25 @@ export default function SlidePanel(props) {
   const buttonsRef = useRef([])
   const originRef = useRef(null)
   const menuRef = useRef(null)
-  const ids = useMemo(() => slides.map(slideId), [slides])
+  const previousViews = useRef([])
+  const previousContext = useRef(null)
+  const options = { resolution, designTokens, layoutMasters, pptxSemantic }
+  const context = deriveNavigatorContext(options, previousContext.current)
+  previousContext.current = context
+  // Slides and layout/token inputs may be mutated in place. Do not memoize this
+  // admission pass by input identity; the immutable tree API validates first.
+  const navigatorViews = slides.map((slide, index) => {
+    const previous = previousViews.current[index]
+    const view = deriveNavigatorView(slide, options, previous?.view, context)
+    const children = (slide.children || []).map((child, childIndex) =>
+      deriveNavigatorView(child, options, previous?.children[childIndex], context))
+    if (previous?.view === view && children.length === previous.children.length &&
+        children.every((child, childIndex) => child === previous.children[childIndex])) return previous
+    return { view, children }
+  })
+  previousViews.current = navigatorViews
+  const idValues = JSON.stringify(slides.map(slideId))
+  const ids = useMemo(() => JSON.parse(idValues), [idValues])
   const effectiveSelectedIds = ids.some((id) => selectedIds.has(id))
     ? selectedIds
     : new Set([ids[currentIndex]])
@@ -206,10 +225,11 @@ export default function SlidePanel(props) {
       </div>
       <nav aria-label="Slides" className="flex-1 overflow-y-auto p-2">
         <ul className="space-y-2">
-          {slides.map((slide, index) => (
+          {slides.map((_, index) => (
             <SlideNavigatorItem
               key={ids[index]}
-              slide={slide}
+              slide={navigatorViews[index].view.slide}
+              renderViews={navigatorViews[index]}
               index={index}
               current={index === currentIndex}
               selected={effectiveSelectedIds.has(ids[index])}
@@ -217,10 +237,6 @@ export default function SlidePanel(props) {
               actionsActive={index === activeActionIndex}
               dragOver={index === dragOverIndex}
               slideCount={slides.length}
-              resolution={resolution}
-              designTokens={designTokens}
-              layoutMasters={layoutMasters}
-              pptxSemantic={pptxSemantic}
               currentVerticalIndex={currentVerticalIndex}
               onSelectVertical={onSelectVertical}
               onActivate={activate}

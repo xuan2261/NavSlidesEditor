@@ -1,6 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react'
 import { useEditorStore } from '../stores/editor-store'
 import { useSlideOperations } from '../hooks/use-slide-operations'
+import { useEditorWorkspaceWidth } from '../hooks/use-editor-workspace-width'
 import { createExitEditOnEscape } from '../hooks/tiptap-exit-edit-on-escape'
 import { useClipboard, createDuplicateOperation } from '../hooks/use-clipboard'
 import { usePresentationState } from '../hooks/use-presentation-state'
@@ -81,10 +82,9 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen)
   const showDesignIdeas = useUIStore((s) => s.showDesignIdeas)
   const setShowDesignIdeas = useUIStore((s) => s.setShowDesignIdeas)
-  const [workspaceWidth, setWorkspaceWidth] = useState(1440)
+  const { workspaceRef, workspaceWidth } = useEditorWorkspaceWidth()
   const [activeWorkspaceOverlay, setActiveWorkspaceOverlay] = useState(null)
   const [inspectorFocus, setInspectorFocus] = useState(null)
-  const workspaceRef = useRef(null)
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen)
   const setActiveTab = useUIStore((s) => s.setActiveTab)
   const setFormatContext = useUIStore((s) => s.setFormatContext)
@@ -292,14 +292,6 @@ export default function EditorPage({ presentationId, isTemplate = false, onGoHom
     seedHistory,
     resetEditorInteraction,
   })
-
-  useEffect(() => {
-    const node = workspaceRef.current
-    if (!node || typeof ResizeObserver === 'undefined') return undefined
-    const observer = new ResizeObserver(([entry]) => setWorkspaceWidth(entry.contentRect.width))
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [loading])
 
   // When presentation first loads, clear editor content
   useEffect(() => {

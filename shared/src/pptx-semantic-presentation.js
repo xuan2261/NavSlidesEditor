@@ -19,12 +19,12 @@ const {
   semanticInstances,
 } = require('./pptx-semantic-records.js')
 
-function normalizeSemanticPresentation(presentation) {
-  if (presentation.pptxSemantic === undefined) return presentation
-  const document = normalizePptxSemanticDocument(presentation.pptxSemantic)
+function normalizePresentationBindings(presentation, context) {
+  if (presentation.pptxSemantic === undefined) return undefined
+  const document = normalizePptxSemanticDocument(presentation.pptxSemantic, {}, context)
   for (const [, definition] of semanticDefinitions(document)) validateTimingDefinition(definition)
   // checks every slide/occurrence before publication.
-  if (presentation.slides === undefined) return { ...presentation, pptxSemantic: document }
+  if (presentation.slides === undefined) return document
   const slides = new Set()
   const linked = new Set()
   function fail(message) {
@@ -93,6 +93,62 @@ function normalizeSemanticPresentation(presentation) {
     if (definition?.kind !== 'group' && !preserved && !linked.has(instance.id))
       fail('Missing semantic element occurrence')
   }
+  return document
+}
+
+// Pre-extraction check inventory (none assumed redundant with graph validation):
+// - timing: ownership, node/target scope, overlay schema, order/trigger/durations.
+// - schema 2 geometry: context/transform, colors/phClr, matrix bindings and
+//   unsupported entries, group fill, gradient/image/pattern patches, geometry
+//   normalization and fill/stroke paint conversion/local extent.
+// - schema 2 effects: resolved overlay blip binding kind and source origin.
+// - families: normalization, journal replay/table identities, SVG markup,
+//   text context expansion and OMML frame materialization (all may throw).
+// - pictures: image type/src, positive geometry, supported effects/fill/path
+//   modes, picture materialization and world transform.
+// - media: component ownership and effective playback fields/trim interval.
+// Keep the exact chain, schema gates and depth-first error order until dedicated
+// validators have equivalence proofs; admission must not silently omit checks.
+// Admission deliberately executes the existing projection routines one element
+// at a time: they contain additional validation (inventoried above), so
+// normalizing the semantic graph alone is not sufficient publication admission.
+function validateSemanticPresentationBindings(presentation, context) {
+  const document = normalizePresentationBindings(presentation, context)
+  if (document === undefined || presentation.slides === undefined) return document
+  function visit(items) {
+    for (const slide of items) {
+      if (slide.sourceTimingDefinitionIds !== undefined) timingDefinitions(document, slide)
+      if (slide.sourceTiming !== undefined) normalizeSourceTiming(document, slide)
+      for (const element of slide.elements || []) projectElement(document, element)
+      if (slide.children) visit(slide.children)
+    }
+  }
+  visit(presentation.slides)
+  return document
+}
+
+function projectElement(document, element) {
+  const geometry = document.schemaVersion === 2 && element.pptxInstanceId
+    ? materializeGeometry(document, element.pptxInstanceId) : undefined
+  return mediaCompatibilityElement(document, pictureCompatibilityElement(
+    document,
+    familyCompatibilityElement(
+      document,
+      document.schemaVersion === 2
+        ? geometryEffectOverlayCompatibilityElement(
+            document,
+            geometryCompatibilityElement(document, element, geometry),
+            geometry
+          )
+        : element
+    )
+  ))
+}
+
+function normalizeSemanticPresentation(presentation) {
+  const document = normalizePresentationBindings(presentation)
+  if (document === undefined) return presentation
+  if (presentation.slides === undefined) return { ...presentation, pptxSemantic: document }
   function project(items) {
     return items.map((slide) => ({
       ...slide,
@@ -103,30 +159,12 @@ function normalizeSemanticPresentation(presentation) {
         ? { sourceTiming: normalizeSourceTiming(document, slide) }
         : {}),
       elements: (slide.elements || []).map((element) => {
-        const geometry = document.schemaVersion === 2 && element.pptxInstanceId
-          ? materializeGeometry(document, element.pptxInstanceId) : undefined
-        return mediaCompatibilityElement(document, pictureCompatibilityElement(
-          document,
-          familyCompatibilityElement(
-            document,
-            document.schemaVersion === 2
-              ? geometryEffectOverlayCompatibilityElement(
-                  document,
-                  geometryCompatibilityElement(document, element, geometry),
-                  geometry
-                )
-              : element
-          )
-        ))
+        return projectElement(document, element)
       }),
       ...(slide.children ? { children: project(slide.children) } : {}),
     }))
   }
-  return {
-    ...presentation,
-    slides: project(presentation.slides),
-    pptxSemantic: document,
-  }
+  return { ...presentation, slides: project(presentation.slides), pptxSemantic: document }
 }
 
-module.exports = { normalizeSemanticPresentation }
+module.exports = { normalizeSemanticPresentation, validateSemanticPresentationBindings }
