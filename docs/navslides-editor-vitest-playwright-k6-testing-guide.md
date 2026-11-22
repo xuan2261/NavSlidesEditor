@@ -207,7 +207,7 @@ Phase 9 wires `grafana/setup-k6-action@v1` into `.github/workflows/github-action
 
 ## CI integration (Phase 9)
 
-The pipeline lives in `.github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml` and runs on PRs + pushes to `master`/`main`. A nightly soft-warning workflow `nightly-ribbon-layout-768px-soft-warning-no-pr-gate.yml` runs the 768px ribbon overflow specs without gating PRs.
+The pipeline lives in `.github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml` and runs on PRs + pushes to `master`/`main` (including the 768px ribbon responsive specs inside `e2e-chromium` shards).
 
 | Job                        | Tool                                                       | Wall budget  | Gate?                            |
 | -------------------------- | ---------------------------------------------------------- | ------------ | -------------------------------- |

@@ -32,7 +32,7 @@ describe('container supply-chain workflow contract', () => {
     expect(main).toContain('container-supply-chain:')
     expect(main).toMatch(/required-checks:[\s\S]*- container-supply-chain/)
     expect(main).toContain('container-supply-chain-v1-')
-    expect(main).toContain('release-target-policy-v1 evidence')
+    expect(main).toContain('release-target-policy-v4 evidence')
     expect(release).toContain('container-supply-chain:')
     expect(release).toMatch(/verification:[\s\S]*needs: \[resolve, container-supply-chain\]/)
     expect(policy.targets['linux-ci'].requiredGates).toContain('supply-chain')

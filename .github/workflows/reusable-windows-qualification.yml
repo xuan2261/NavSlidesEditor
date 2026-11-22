@@ -12,10 +12,11 @@ on:
       linux_receipt_artifact: { required: true, type: string }
       officecli_receipt_artifact: { required: true, type: string }
       fidelity_receipt_artifact: { required: true, type: string }
-      gate_policy_version: { required: true, type: string }
+      gate_policy_version: { required: true, type: string, default: 'release-target-policy-v4' }
     outputs:
       windows_artifact: { value: '${{ jobs.qualify.outputs.windows_artifact }}' }
       receipt_artifact: { value: '${{ jobs.qualify.outputs.receipt_artifact }}' }
+      signing_mode: { value: '${{ jobs.qualify.outputs.signing_mode }}' }
 permissions: { contents: read, actions: read, id-token: write, attestations: write }
 jobs:
   qualify:
@@ -25,6 +26,7 @@ jobs:
     outputs:
       windows_artifact: ${{ steps.names.outputs.windows }}
       receipt_artifact: ${{ steps.names.outputs.receipt }}
+      signing_mode: ${{ steps.signing-mode.outputs.mode }}
     env:
       GH_TOKEN: ${{ github.token }}
       WINDOWS_SIGNING_SCRIPT: ${{ secrets.WINDOWS_SIGNING_SCRIPT }}
@@ -52,6 +54,18 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: '22.23.3', cache: npm }
       - run: npm ci
+      - id: signing-mode
+        name: Resolve Windows Authenticode signing mode (resolveWindowsSigningMode)
+        shell: pwsh
+        run: |
+          $raw = node scripts/ci/authenticode-policy.mjs mode config/release-target-policy.json
+          if ($LASTEXITCODE -ne 0) { throw 'Windows signing mode resolution failed' }
+          $resolved = $raw | ConvertFrom-Json
+          "mode=$($resolved.mode)" >> $env:GITHUB_OUTPUT
+          if ($resolved.mode -eq 'authenticode-unsigned') {
+            New-Item -ItemType Directory -Force evidence/authenticode | Out-Null
+            Set-Content -Path evidence/authenticode/unsigned-release-disclosure.md -Value $resolved.unsignedReleaseDisclosure -Encoding utf8
+          }
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with: { name: '${{ inputs.client_artifact }}', run-id: '${{ inputs.client_run_id }}', github-token: '${{ github.token }}', path: . }
       - run: node scripts/ci/verify-client-dist-manifest.mjs --root client/dist --manifest client-dist-manifest.json --subject "${{ inputs.subject_sha }}"
@@ -86,12 +100,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'NSIS/portable completeness failed' }
           node scripts/verify-runtime-closure.js --root dist-electron/win-unpacked/resources --require-client-dist | Out-File -Encoding utf8 evidence/runtime-closure.json
           if ($LASTEXITCODE -ne 0) { throw 'Electron runtime closure failed' }
-      - name: Sign with protected external signer
+      - name: Sign with protected external signer when WINDOWS_SIGNING_* credentials are configured
+        if: steps.signing-mode.outputs.mode == 'signed'
         shell: pwsh
         run: |
-          foreach ($value in @($env:WINDOWS_SIGNING_SCRIPT, $env:WINDOWS_SIGNING_SUBJECT, $env:WINDOWS_SIGNING_THUMBPRINT, $env:RFC3161_TIMESTAMP_URL)) {
-            if ([string]::IsNullOrWhiteSpace($value)) { throw 'protected signing policy input missing' }
-          }
           if (-not [IO.Path]::IsPathRooted($env:WINDOWS_SIGNING_SCRIPT)) { throw 'signing script must be absolute' }
           $script = [IO.Path]::GetFullPath($env:WINDOWS_SIGNING_SCRIPT)
           $checkout = [IO.Path]::GetFullPath($env:GITHUB_WORKSPACE) + [IO.Path]::DirectorySeparatorChar
@@ -100,9 +112,10 @@ jobs:
           New-Item -ItemType Directory -Force evidence/authenticode/signer | Out-Null
           & $script -ArtifactsPath (Resolve-Path dist-electron) -TimestampUrl $env:RFC3161_TIMESTAMP_URL -EvidencePath (Resolve-Path evidence/authenticode/signer)
           if ($LASTEXITCODE -ne 0) { throw 'external signer failed' }
-      - name: Independently capture pre-upload signature chain and RFC3161 proof
+      - name: Capture pre-upload signature or authenticode-unsigned evidence
         shell: pwsh
         run: |
+          New-Item -ItemType Directory -Force evidence/authenticode | Out-Null
           foreach ($exe in Get-ChildItem dist-electron/*.exe) {
             node scripts/ci/release-receipt-workflow.mjs authenticode-pre $exe.FullName evidence/authenticode
             if ($LASTEXITCODE -ne 0) { throw "independent pre-upload verification failed: $($exe.Name)" }
@@ -115,12 +128,12 @@ jobs:
           "stage=electron-windows-stage-v1-${{ inputs.subject_sha }}" >> $env:GITHUB_OUTPUT
           "windows=electron-windows-v1-${{ inputs.subject_sha }}" >> $env:GITHUB_OUTPUT
           "receipt=windows-qualification-receipt-v1-${{ inputs.subject_sha }}" >> $env:GITHUB_OUTPUT
-      - name: Stage signed artifacts for independent download
+      - name: Stage artifacts for independent download
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force staged-windows/evidence/authenticode | Out-Null
           Copy-Item dist-electron/*.exe staged-windows/
-          Copy-Item evidence/authenticode/*.json staged-windows/evidence/authenticode/
+          Copy-Item evidence/authenticode/* staged-windows/evidence/authenticode/
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with: { name: '${{ steps.names.outputs.stage }}', path: staged-windows/, if-no-files-found: error, retention-days: 30 }
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4

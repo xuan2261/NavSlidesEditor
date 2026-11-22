@@ -155,7 +155,7 @@ export function stageSyntheticLinuxCli(root) {
 
 export function stageSyntheticWindowsCli(root) {
   const fixture = stageSyntheticLinuxCli(root)
-  const base = { schemaVersion: 'release-receipt-v1', policyVersion: 'release-target-policy-v1',
+  const base = { schemaVersion: 'release-receipt-v1', policyVersion: 'release-target-policy-v4',
     subjectSha: syntheticSubject, clientDigest: fixture.clientDigest,
     lockHashes: { workspace: sha256('{}'), electron: sha256('{}') } }
   base.qualificationId = createQualificationId(base)

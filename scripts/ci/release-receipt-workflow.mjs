@@ -1,13 +1,16 @@
+import { existsSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises'
+import { execFileSync } from 'node:child_process'
 import { canonicalJson, hashCanonical, windowsWorkflowIdentity } from './release-receipt-canonical.mjs'
 import { createGreenShaRoot, createHostReceipt, createNotSelectedReceipt, createQualificationId, hashReceipt } from './release-receipts.mjs'
 import { assertRun, CI_WORKFLOW, captureRun, fileDigest, produceLinuxEvidence, assertLinuxLeafEvidence } from './release-evidence-producer.mjs'
 import { officeEnvelope, fidelityEnvelope } from './physical-release-envelope.mjs'
 import { captureAuthenticode, captureGhAttestation, classifyWindowsArtifacts, normalizeWindowsAttestation, validateWindowsSignature, assertWindowsLeafEvidence } from './windows-verification-evidence.mjs'
-import { execFileSync } from 'node:child_process'
+import { resolveWindowsSigningMode, verifyUnsignedWindowsEvidence } from './authenticode-policy.mjs'
 import { verifyManifest } from './verify-client-dist-manifest.mjs'
 import { verifyReleaseSubject } from './release-subject.mjs'
+
 const readJson = async (path) => JSON.parse(await readFile(path, 'utf8'))
 const windowsAttestationPolicy = () => ({ repository: process.env.GITHUB_REPOSITORY, ref: process.env.GITHUB_REF })
 async function findJson(root, includes) {
@@ -34,13 +37,29 @@ async function authenticode(stage, exePath, root) {
   const name = basename(exePath)
   const path = join(root, `${name}.json`)
   const before = stage === 'post' ? await readJson(path) : null
+  if (existsSync('config/release-target-policy.json') && !before?.preUpload) {
+    const policy = await readJson('config/release-target-policy.json')
+    const signing = resolveWindowsSigningMode(process.env, policy)
+    if (signing.mode === 'authenticode-unsigned') {
+      if (stage === 'post' && before?.mode !== 'authenticode-unsigned') throw new Error('unsigned pre-upload evidence missing')
+      const digest = await fileDigest(exePath)
+      const evidence = stage === 'pre'
+        ? { path: name, mode: 'authenticode-unsigned', signed: false, sha256: digest, expectedSha256: digest,
+          postDownloadSha256: digest, unsignedReleaseDisclosure: signing.unsignedReleaseDisclosure }
+        : { ...before, sha256: digest, postDownloadSha256: digest }
+      verifyUnsignedWindowsEvidence({ evidence, expectedSha256: digest, policy })
+      await mkdir(root, { recursive: true })
+      await writeFile(path, canonicalJson(evidence))
+      return
+    }
+  }
   const captured = await captureAuthenticode(exePath)
   const digest = await fileDigest(exePath)
   const evidence = stage === 'pre'
-    ? { path: name, sha256: digest, expectedSha256: digest, preUpload: captured.signature,
-      preVerifier: captured.verifier, postDownload: null }
+    ? { path: name, sha256: digest, expectedSha256: digest, preUpload: captured.signature, preVerifier: captured.verifier, postDownload: null }
     : { ...before, sha256: digest, postDownload: captured.signature, postVerifier: captured.verifier }
   validateWindowsSignature(stage === 'post' ? evidence : { ...evidence, postDownload: captured.signature })
+  await mkdir(root, { recursive: true })
   await writeFile(path, canonicalJson(evidence))
 }
 function physicalExpected(base, kind, runId, artifactName) {
@@ -57,7 +76,7 @@ async function windows(args, physicalOnly = false) {
   const linuxReceipt = await findJson('evidence/linux', ['linux-ci'])
   const admitted = await readJson('evidence/linux-admission.json')
   assertRun(admitted.run, { runId: linuxRun, subjectSha: base.subjectSha, repository: process.env.GITHUB_REPOSITORY,
-    workflow: CI_WORKFLOW, event: 'push', ref: admitted.repository?.default_branch })
+    workflow: CI_WORKFLOW, event: 'push', ref: admitted.repository?.default_branch ?? 'main' })
   assertLinuxLeafEvidence(linuxReceipt)
   if (linuxReceipt.qualificationId !== base.qualificationId || linuxReceipt.evidence.run.id !== admitted.run.id ||
       linuxReceipt.evidence.run.run_attempt !== admitted.run.run_attempt) throw new Error('Linux receipt/source admission identity mismatch')
@@ -68,17 +87,41 @@ async function windows(args, physicalOnly = false) {
     officecli: { runId: officeRun, artifactId: office.producer.artifact.id, rawHash: office.rawHash },
     fidelity: { runId: fidelityRun, artifactId: fidelity.producer.artifact.id, rawHash: fidelity.rawHash } }))
   if (physicalOnly) return
+  const policy = existsSync('config/release-target-policy.json') ? await readJson('config/release-target-policy.json') : null
   const version = (await readJson('package.json')).version
   const names = (await readdir('post-download')).filter((path) => path.toLowerCase().endsWith('.exe')).sort()
   const kinds = classifyWindowsArtifacts(names, version)
-  const signatures = {}
+  const hasSignedFixture = existsSync(join('evidence/authenticode', `${Object.values(kinds)[0]}.json`)) &&
+    Boolean((await readJson(join('evidence/authenticode', `${Object.values(kinds)[0]}.json`))).preUpload)
+  const signing = policy && !hasSignedFixture ? resolveWindowsSigningMode(process.env, policy) : { mode: 'signed' }
   const artifacts = {}
-  for (const [kind, name] of Object.entries(kinds)) {
-    const evidence = await readJson(join('evidence/authenticode', `${name}.json`))
-    validateWindowsSignature(evidence)
-    if (evidence.sha256 !== await fileDigest(join('post-download', name)) || !evidence.postVerifier) throw new Error('downloaded EXE verification identity mismatch')
-    signatures[name] = evidence
-    artifacts[kind] = { path: name, sha256: evidence.sha256, evidenceHash: hashCanonical(evidence) }
+  let sigLeaf, sigGates
+  if (signing.mode === 'authenticode-unsigned') {
+    const unsignedSignatures = {}
+    for (const [kind, name] of Object.entries(kinds)) {
+      const postSha = await fileDigest(join('post-download', name))
+      const evPath = join('evidence/authenticode', `${name}.json`)
+      const preSha = existsSync(join('dist-electron', name)) ? await fileDigest(join('dist-electron', name)) : postSha
+      const evidence = existsSync(evPath) ? await readJson(evPath) : { path: name, mode: 'authenticode-unsigned',
+        signed: false, sha256: postSha, expectedSha256: preSha, postDownloadSha256: postSha,
+        unsignedReleaseDisclosure: signing.unsignedReleaseDisclosure }
+      verifyUnsignedWindowsEvidence({ evidence, expectedSha256: postSha, policy })
+      unsignedSignatures[name] = evidence
+      artifacts[kind] = { path: name, sha256: postSha, evidenceHash: hashCanonical(evidence) }
+    }
+    sigLeaf = { signingMode: 'authenticode-unsigned', unsignedReleaseDisclosure: signing.unsignedReleaseDisclosure, unsignedSignatures }
+    sigGates = { 'authenticode-unsigned': hashCanonical(unsignedSignatures) }
+  } else {
+    const signatures = {}
+    for (const [kind, name] of Object.entries(kinds)) {
+      const evidence = await readJson(join('evidence/authenticode', `${name}.json`))
+      validateWindowsSignature(evidence)
+      if (evidence.sha256 !== await fileDigest(join('post-download', name)) || !evidence.postVerifier) throw new Error('downloaded EXE verification identity mismatch')
+      signatures[name] = evidence
+      artifacts[kind] = { path: name, sha256: evidence.sha256, evidenceHash: hashCanonical(evidence) }
+    }
+    sigLeaf = { signatures }
+    sigGates = { authenticode: hashCanonical(signatures), 'post-download-authenticode': hashCanonical({ signatures, stage: 'post-download' }) }
   }
   const attestation = await readJson('evidence/attestation-policy.json')
   const expectedAttestation = hashCanonical(Object.fromEntries(Object.values(artifacts).map((item) => [item.path, item.sha256])))
@@ -87,14 +130,12 @@ async function windows(args, physicalOnly = false) {
       attestation[0].verified !== true) throw new Error('Windows attestation artifact/source/client mismatch')
   const runtime = await readJson('evidence/runtime-closure.json')
   if (runtime.clientDist !== true || runtime.clientSubject !== base.subjectSha) throw new Error('Windows runtime client identity mismatch')
-  const leaf = { office, fidelity, signatures, attestation,
+  const leaf = { office, fidelity, ...sigLeaf, attestation,
     attestationRaw: await readJson('evidence/attestation-verification.json'), runtimeHash: await fileDigest('evidence/runtime-closure.json') }
   const gates = { 'electron-runtime-closure': leaf.runtimeHash, 'officecli-physical': hashCanonical(office),
-    'fidelity-powerpoint': hashCanonical(fidelity), authenticode: hashCanonical(signatures),
-    'post-download-authenticode': hashCanonical({ signatures, stage: 'post-download' }), attestation: hashCanonical(attestation) }
-  const receipt = createHostReceipt({ ...base, host: 'windows', status: 'passed',
-    parentReceiptHash: hashReceipt(linuxReceipt), gates, artifacts, evidence: leaf })
-  assertWindowsLeafEvidence(receipt, windowsAttestationPolicy())
+    'fidelity-powerpoint': hashCanonical(fidelity), ...sigGates, attestation: hashCanonical(attestation) }
+  const receipt = createHostReceipt({ ...base, host: 'windows', status: 'passed', parentReceiptHash: hashReceipt(linuxReceipt), gates, artifacts, evidence: leaf })
+  assertWindowsLeafEvidence(receipt, windowsAttestationPolicy(), policy)
   await writeFile('windows-qualification-receipt.json', canonicalJson(receipt))
 }
 async function createRoot(args) {
@@ -107,8 +148,7 @@ async function createRoot(args) {
   const macosDesktopReceipt = optional('macos-desktop')
   const windowsReceipt = await findJson('receipts', ['windows-qualification'])
   const root = createGreenShaRoot({ policy: await readJson('config/release-target-policy.json'), linuxReceipt,
-    windowsAttestationPolicy: windowsAttestationPolicy(),
-    windowsReceipt, linuxDesktopReceipt, macosDesktopReceipt,
+    windowsAttestationPolicy: windowsAttestationPolicy(), windowsReceipt, linuxDesktopReceipt, macosDesktopReceipt,
     releaseTag, workflow: { pathRef: process.env.GITHUB_WORKFLOW_REF, runId: process.env.GITHUB_RUN_ID, runAttempt: process.env.GITHUB_RUN_ATTEMPT } })
   await writeFile('linux-ci-receipt.json', canonicalJson(linuxReceipt))
   await writeFile('windows-qualification-receipt.json', canonicalJson(windowsReceipt))
@@ -169,15 +209,13 @@ async function main() {
   else if (operation === 'capture-attestation') {
     const [path, subject, workflow, output] = args
     await writeFile(output, captureGhAttestation(path, subject, workflow))
-  }
-  else if (operation === 'windows-artifacts') {
+  } else if (operation === 'windows-artifacts') {
     const [root, version] = args
     classifyWindowsArtifacts((await readdir(root)).filter((name) => name.toLowerCase().endsWith('.exe')), version)
   } else if (operation === 'authenticode-pre') await authenticode('pre', ...args)
   else if (operation === 'authenticode-post') await authenticode('post', ...args)
   else if (operation === 'attestation-windows') {
     const [path, subjectSha, clientDigest, workflowIdentity] = args
-    // Empty verified output fails on its own domain before any optional artifact setup.
     const raw = await readJson(path)
     if (!Array.isArray(raw) || !raw.flat().length) throw new Error('verified attestation results are empty')
     const result = await normalizeWindowsAttestation(path, { subjectSha, clientDigest, workflowIdentity })

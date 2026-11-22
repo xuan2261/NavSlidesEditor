@@ -8,6 +8,7 @@ import { verifyManifest } from './verify-client-dist-manifest.mjs'
 import { verifyContainerSupplyChain } from '../verify-container-supply-chain.js'
 
 export const CI_WORKFLOW = '.github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml'
+export const DEFAULT_RELEASE_BRANCHES = ['master', 'main']
 // GitHub names include the reusable job suffix; these are the actual caller names.
 export const REQUIRED_JOB_NAMES = [
   'Lint / quality', 'Unit + Coverage Gate / quality', 'Vitest performance budget / quality',
@@ -26,10 +27,12 @@ export async function fileDigest(path) {
 }
 function numeric(value) { return Number.isSafeInteger(Number(value)) && Number(value) > 0 }
 export function assertRun(run, expected, completed = true) {
+  const refBranch = expected.ref?.replace(/^refs\/heads\//, '')
+  const allowedBranches = DEFAULT_RELEASE_BRANCHES.includes(refBranch) ? DEFAULT_RELEASE_BRANCHES : [refBranch]
   if (!numeric(run?.id) || !numeric(run.run_attempt) || String(run.id) !== String(expected.runId) ||
       (expected.runAttempt && String(run.run_attempt) !== String(expected.runAttempt)) ||
       run.head_sha !== expected.subjectSha || run.repository?.full_name !== expected.repository ||
-      run.path !== expected.workflow || !expected.ref || run.head_branch !== expected.ref.replace(/^refs\/heads\//, '') ||
+      run.path !== expected.workflow || !refBranch || !allowedBranches.includes(run.head_branch) ||
       run.event !== expected.event || (completed && (run.status !== 'completed' || run.conclusion !== 'success'))) {
     throw new Error('producer run/source/workflow/event/ref/attempt identity mismatch')
   }
@@ -96,10 +99,6 @@ export async function produceLinuxEvidence(root, base, expected) {
   }
   verifyManifest({ root: join(root, 'client', 'client/dist'), manifest: clientPath, subject: base.subjectSha,
     baseDir: process.cwd(), dirty: false, buildCommand: 'npm run build' })
-  const leaf = { schemaVersion: 'release-leaf-evidence-v1', subjectSha: base.subjectSha,
-    clientDigest: base.clientDigest, run, jobs, artifacts,
-    files: { client: await inventory(join(root, 'client')), docker: await inventory(join(root, 'docker')),
-      supplyChain: await inventory(join(root, 'supply-chain')), reports: await inventory(join(root, 'reports')) } }
   const runtime = await json(join(root, 'docker', 'docker-runtime-closure.json'))
   if (runtime.clientDist !== true || runtime.clientSubject !== base.subjectSha) throw new Error('Docker runtime closure evidence did not pass')
   const policyPath = 'config/container-vulnerability-policy.json'
@@ -123,6 +122,10 @@ export async function produceLinuxEvidence(root, base, expected) {
     { 'navslides-editor-image.tar': await fileDigest(join(root, 'docker', 'navslides-editor-image.tar')) },
     { subjectSha: base.subjectSha, clientDigest: base.clientDigest,
       workflowIdentity: `https://github.com/${expected.repository}/.github/workflows/reusable-docker-qualification.yml@refs/heads/${run.head_branch}` })
+  const leaf = { schemaVersion: 'release-leaf-evidence-v1', subjectSha: base.subjectSha,
+    clientDigest: base.clientDigest, supplyChainStatus: chain.status, run, jobs, artifacts,
+    files: { client: await inventory(join(root, 'client')), docker: await inventory(join(root, 'docker')),
+      supplyChain: await inventory(join(root, 'supply-chain')), reports: await inventory(join(root, 'reports')) } }
   const gates = linuxEvidenceGates(leaf)
   return { gates, evidence: leaf }
 }

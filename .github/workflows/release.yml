@@ -69,13 +69,16 @@ jobs:
           set -euo pipefail
           BASE="$(gh repo view "${{ github.repository }}" --json defaultBranchRef --jq '.defaultBranchRef.name')"
           test -n "$BASE"
-          RUN="$(gh api -X GET "repos/${{ github.repository }}/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml/runs" -f head_sha="$SUBJECT_SHA" -f branch="$BASE" -f event=push -f status=success -f per_page=100 --jq '.workflow_runs[0] | [.id,.head_sha,.conclusion,.head_branch,.event,.path] | @tsv')"
+          RUN="$(gh api -X GET "repos/${{ github.repository }}/actions/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml/runs" -f head_sha="$SUBJECT_SHA" -f event=push -f status=success -f per_page=100 --jq --arg base "$BASE" '[.workflow_runs[] | select(.head_branch == "master" or .head_branch == "main" or .head_branch == $base)][0] | [.id,.head_sha,.conclusion,.head_branch,.event,.path] | @tsv')"
           IFS=$'\t' read -r RUN_ID CI_HEAD CONCLUSION CI_BRANCH CI_EVENT CI_WORKFLOW <<< "$RUN"
           # Nonfinal && operands bypass errexit; each admission guard must stand alone.
           test -n "$RUN_ID"
           test "$CI_HEAD" = "$SUBJECT_SHA"
           test "$CONCLUSION" = success
-          test "$CI_BRANCH" = "$BASE"
+          case "$CI_BRANCH" in
+            master|main|"$BASE") ;;
+            *) echo "unexpected CI head_branch: $CI_BRANCH" >&2; exit 1 ;;
+          esac
           test "$CI_EVENT" = push
           test "$CI_WORKFLOW" = .github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml
           [[ "$OFFICECLI_RUN" =~ ^[1-9][0-9]*$ && "$FIDELITY_RUN" =~ ^[1-9][0-9]*$ ]]
@@ -99,7 +102,7 @@ jobs:
     with:
       subject_sha: ${{ needs.resolve.outputs.subject_sha }}
       release_tag: ${{ needs.resolve.outputs.tag }}
-      gate_policy_version: release-target-policy-v1
+      gate_policy_version: release-target-policy-v4
       linux_ci_run_id: ${{ needs.resolve.outputs.linux_ci_run_id }}
       officecli_receipt_run_id: ${{ needs.resolve.outputs.officecli_receipt_run_id }}
       fidelity_receipt_run_id: ${{ needs.resolve.outputs.fidelity_receipt_run_id }}
@@ -133,12 +136,14 @@ jobs:
         with: { name: '${{ needs.verification.outputs.green_receipt_artifact }}', path: root-evidence }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: '22.23.3' }
-      - name: Verify subject DAG manifest and independently downloaded signed bytes
+      - name: Verify subject DAG manifest and independently downloaded Windows EXE bytes
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
+          WINDOWS_SIGNING_SCRIPT: ${{ secrets.WINDOWS_SIGNING_SCRIPT }}
           WINDOWS_SIGNING_SUBJECT: ${{ vars.WINDOWS_SIGNING_SUBJECT }}
           WINDOWS_SIGNING_THUMBPRINT: ${{ vars.WINDOWS_SIGNING_THUMBPRINT }}
+          RFC3161_TIMESTAMP_URL: ${{ vars.RFC3161_TIMESTAMP_URL }}
           WINDOWS_VERIFIER_PATH: ${{ vars.WINDOWS_VERIFIER_PATH }}
           WINDOWS_VERIFIER_SHA256: ${{ vars.WINDOWS_VERIFIER_SHA256 }}
           WINDOWS_VERIFIER_VERSION: ${{ vars.WINDOWS_VERIFIER_VERSION }}
@@ -169,6 +174,20 @@ jobs:
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with: { name: '${{ needs.verify-staged-assets.outputs.staged_artifact }}', path: release-assets }
+      - name: Build release disclosure notes (authenticode-unsigned & advisory)
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs'
+          const root = JSON.parse(readFileSync('release-assets/root-evidence/green-sha-root-receipt.json', 'utf8'))
+          const lines = []
+          if (root.signing?.mode === 'authenticode-unsigned' && root.signing.unsignedReleaseDisclosure) {
+            lines.push(root.signing.unsignedReleaseDisclosure)
+          }
+          if (root.containerSecurityAdvisory?.mode === 'user-risk-accepted') {
+            lines.push('**Container vulnerability scan is advisory (`user-risk-accepted`):** Container security pass is not claimed (`securityPassClaim: false`).')
+          }
+          writeFileSync('release-disclosure.md', lines.length ? `${lines.join('\n\n')}\n` : '')
+          NODE
       - name: Draft existing-tag release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
@@ -177,7 +196,10 @@ jobs:
           draft: true
           prerelease: ${{ needs.resolve.outputs.kind == 'rc' }}
           generate_release_notes: true
-          files: release-assets/post-download/*.exe
+          body_path: release-disclosure.md
+          files: |
+            release-assets/post-download/*.exe
+            release-assets/root-evidence/green-sha-root-receipt.json
 
   publish-final:
     if: needs.resolve.outputs.kind == 'final'
@@ -190,6 +212,20 @@ jobs:
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with: { name: '${{ needs.verify-staged-assets.outputs.staged_artifact }}', path: release-assets }
+      - name: Build final release disclosure notes (authenticode-unsigned & advisory)
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs'
+          const root = JSON.parse(readFileSync('release-assets/root-evidence/green-sha-root-receipt.json', 'utf8'))
+          const lines = []
+          if (root.signing?.mode === 'authenticode-unsigned' && root.signing.unsignedReleaseDisclosure) {
+            lines.push(root.signing.unsignedReleaseDisclosure)
+          }
+          if (root.containerSecurityAdvisory?.mode === 'user-risk-accepted') {
+            lines.push('**Container vulnerability scan is advisory (`user-risk-accepted`):** Container security pass is not claimed (`securityPassClaim: false`).')
+          }
+          writeFileSync('release-disclosure.md', lines.length ? `${lines.join('\n\n')}\n` : '')
+          NODE
       - name: Publish verified final assets
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
@@ -197,4 +233,7 @@ jobs:
           target_commitish: ${{ needs.resolve.outputs.subject_sha }}
           draft: false
           prerelease: false
-          files: release-assets/post-download/*.exe
+          body_path: release-disclosure.md
+          files: |
+            release-assets/post-download/*.exe
+            release-assets/root-evidence/green-sha-root-receipt.json

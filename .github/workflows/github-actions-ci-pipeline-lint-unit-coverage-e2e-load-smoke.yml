@@ -197,6 +197,6 @@ jobs:
         run: node scripts/ci/release-receipt-workflow.mjs capture-run evidence "$GITHUB_RUN_ID" linux
       - name: Independently verify downloaded Docker provenance
         run: node scripts/ci/release-receipt-workflow.mjs capture-attestation evidence/docker/navslides-editor-image.tar "${{ inputs.subject_sha || github.sha }}" .github/workflows/reusable-docker-qualification.yml evidence/docker/docker-verified.json
-      - run: node scripts/ci/release-receipt-workflow.mjs linux "${{ inputs.subject_sha || github.sha }}" "${{ needs.build.outputs.client_digest }}" release-target-policy-v1 evidence
+      - run: node scripts/ci/release-receipt-workflow.mjs linux "${{ inputs.subject_sha || github.sha }}" "${{ needs.build.outputs.client_digest }}" release-target-policy-v4 evidence
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with: { name: 'linux-ci-receipt-v1-${{ inputs.subject_sha || github.sha }}', path: linux-ci-receipt.json, if-no-files-found: error, retention-days: 30 }

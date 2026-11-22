@@ -1,34 +1,6 @@
 // Vite pre-bundling-safe inline config: no require() chain, constants inlined directly
 // This avoids Vite's esbuild from timing out on large CJS modules in the require tree
-const shapeUtils = require('./shapeUtils.js')
-const htmlGenerator = require('./htmlGenerator.js')
-const slideNotes = require('./slideNotes.js')
-const sharedColorUtils = require('./shared-color-utils.js')
-const sharedHtmlParser = require('./shared-html-parser.js')
-const sharedTextRuns = require('./shared-text-runs.js')
-const sharedSlideNotes = require('./shared-slide-notes.js')
-const sharedPptxCore = require('./shared-pptx-core.js')
 const contentSafety = require('./content-safety.js')
-const aiSlideContract = require('./types/ai-slide-contract.js')
-const designTokens = require('./design-tokens.js')
-const themePresets = require('./theme-presets.js')
-const fxRegistry = require('./fx/index.js')
-const tableMergeResolver = require('./table-merge-resolver.js')
-const latexUtils = require('./latex-utils.js')
-const pptxExportPolicy = require('./pptx-export-policy.js')
-const transitionSettings = require('./transition-settings.js')
-const chartColors = require('./chart-colors.js')
-const pptxImageOptions = require('./pptx-image-options.js')
-const pptxTableWarnings = require('./pptx-table-warnings.js')
-const pptxMediaOptions = require('./pptx-media-options.js')
-const revealRuntimeAssets = require('./reveal-runtime-assets.js')
-const elementActions = require('./element-actions.js')
-const connectorGeometry = require('./connector-geometry.js')
-const slideLayouts = require('./slide-layouts.js')
-const slideLayoutNormalization = require('./slide-layout-normalization.js')
-const mediaAccessibility = require('./media-accessibility.js')
-const projectImportContentValidation = require('./project-import-content-validation.js')
-const pptxGeometryBlipAssets = require('./pptx-geometry-blip-assets.js')
 
 const TEXT_COLORS = [
   '#ffffff',
@@ -103,37 +75,37 @@ function isLightColor(hex) {
 }
 
 module.exports = {
-  ...shapeUtils,
-  ...htmlGenerator,
-  ...slideNotes,
-  ...sharedColorUtils,
-  ...sharedHtmlParser,
-  ...sharedTextRuns,
-  ...sharedSlideNotes,
-  ...sharedPptxCore,
-  ...contentSafety,
-  ...aiSlideContract,
-  ...designTokens,
-  ...themePresets,
-  ...fxRegistry,
-  ...tableMergeResolver,
+  ...require('./shapeUtils.js'),
+  ...require('./htmlGenerator.js'),
+  ...require('./slideNotes.js'),
+  ...require('./shared-color-utils.js'),
+  ...require('./shared-html-parser.js'),
+  ...require('./shared-text-runs.js'),
+  ...require('./shared-slide-notes.js'),
+  ...require('./shared-pptx-core.js'),
+  ...require('./content-safety.js'),
+  ...require('./types/ai-slide-contract.js'),
+  ...require('./design-tokens.js'),
+  ...require('./theme-presets.js'),
+  ...require('./fx/index.js'),
+  ...require('./table-merge-resolver.js'),
   ...require('./table-layout.js'),
   ...require('./table-cell-utils.js'),
-  ...latexUtils,
-  ...pptxExportPolicy,
-  ...transitionSettings,
-  ...chartColors,
-  ...pptxImageOptions,
-  ...pptxTableWarnings,
-  ...pptxMediaOptions,
-  ...revealRuntimeAssets,
-  ...elementActions,
-  ...connectorGeometry,
-  ...slideLayouts,
-  ...slideLayoutNormalization,
-  ...mediaAccessibility,
-  ...projectImportContentValidation,
-  ...pptxGeometryBlipAssets,
+  ...require('./latex-utils.js'),
+  ...require('./pptx-export-policy.js'),
+  ...require('./transition-settings.js'),
+  ...require('./chart-colors.js'),
+  ...require('./pptx-image-options.js'),
+  ...require('./pptx-table-warnings.js'),
+  ...require('./pptx-media-options.js'),
+  ...require('./reveal-runtime-assets.js'),
+  ...require('./element-actions.js'),
+  ...require('./connector-geometry.js'),
+  ...require('./slide-layouts.js'),
+  ...require('./slide-layout-normalization.js'),
+  ...require('./media-accessibility.js'),
+  ...require('./project-import-content-validation.js'),
+  ...require('./pptx-geometry-blip-assets.js'),
   ...require('./timeline-utils.js'),
   ...require('./svg-paint-overrides.js'),
   ...require('./chart-authoring-options.js'),

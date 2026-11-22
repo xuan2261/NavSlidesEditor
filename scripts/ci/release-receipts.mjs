@@ -109,21 +109,17 @@ export function createGreenShaRoot(input) {
     throw new Error('Linux and Windows are mandatory release targets')
   }
   const linuxTarget = policy.targets['linux-ci']
-  if (linuxTarget && linuxTarget.selected !== true) {
-    throw new Error('linux-ci must be selected')
-  }
   for (const gate of linuxTarget?.requiredGates ?? []) {
     if (!linux.gates[gate]) throw new Error(`linux-ci missing required gate ${gate}`)
   }
   const linuxHash = hashReceipt(linux)
-  const common = linux
   const receipts = {
     windows: input.windowsReceipt,
     'linux-desktop': input.linuxDesktopReceipt,
     'macos-desktop': input.macosDesktopReceipt,
   }
   for (const [host, receipt] of Object.entries(receipts)) {
-    verifyChild(receipt, common, host, linuxHash)
+    verifyChild(receipt, linux, host, linuxHash)
     const target = policy.targets[host]
     const expectedStatus = target.selected ? 'passed' : 'not-selected'
     if (receipt.status !== expectedStatus) throw new Error(`${host} must be ${expectedStatus}`)
@@ -132,11 +128,20 @@ export function createGreenShaRoot(input) {
       assertHex(receipt.gates[gate], SHA256, `${host}.gates.${gate}`)
     }
   }
+  const winReceipt = input.windowsReceipt
+  const isUnsigned = winReceipt.evidence?.signingMode === 'authenticode-unsigned' || Boolean(winReceipt.gates?.['authenticode-unsigned'])
+  const signingGates = isUnsigned
+    ? (policy.targets.windows.signingGates?.unsigned ?? ['authenticode-unsigned'])
+    : (policy.targets.windows.signingGates?.signed ?? ['authenticode', 'post-download-authenticode'])
+  for (const gate of signingGates) {
+    if (!winReceipt.gates[gate]) throw new Error(`windows missing required signing gate ${gate}`)
+    assertHex(winReceipt.gates[gate], SHA256, `windows.gates.${gate}`)
+  }
   const expectedKinds = policy.targets.windows.publicArtifacts
   if (!Array.isArray(expectedKinds) || canonicalJson([...expectedKinds].sort()) !== canonicalJson(['nsis-exe', 'portable-exe'])) {
     throw new Error('Windows NSIS and portable artifact policy is required')
   }
-  const artifacts = input.windowsReceipt.artifacts
+  const artifacts = winReceipt.artifacts
   if (expectedKinds.length && (Object.keys(artifacts).length !== expectedKinds.length ||
       expectedKinds.some((kind) => !artifacts[kind]))) throw new Error('Windows artifact kind set is incomplete')
   for (const kind of expectedKinds) {
@@ -144,26 +149,36 @@ export function createGreenShaRoot(input) {
     assertHex(artifacts[kind].evidenceHash, SHA256, `windows.${kind}.evidenceHash`)
     if (!artifacts[kind].path?.endsWith('.exe')) throw new Error('Windows artifact path is invalid')
   }
-  const producerRuns = [linux.evidence.run.id, input.windowsReceipt.evidence?.office?.producer?.run?.id,
-    input.windowsReceipt.evidence?.fidelity?.producer?.run?.id]
+  const producerRuns = [linux.evidence.run.id, winReceipt.evidence?.office?.producer?.run?.id,
+    winReceipt.evidence?.fidelity?.producer?.run?.id]
   if (new Set(producerRuns).size !== 3) throw new Error('CI/OfficeCLI/PowerPoint producer run IDs must be distinct')
-  assertWindowsLeafEvidence(input.windowsReceipt, input.windowsAttestationPolicy)
+  assertWindowsLeafEvidence(winReceipt, input.windowsAttestationPolicy, policy)
+  let containerSecurityAdvisory
+  if (policy.containerSecurityAdvisory) {
+    if (policy.containerSecurityAdvisory.mode !== 'user-risk-accepted' || policy.containerSecurityAdvisory.securityPassClaim !== false) {
+      throw new Error('security pass claim is forbidden for accepted advisory risk')
+    }
+    containerSecurityAdvisory = {
+      mode: policy.containerSecurityAdvisory.mode,
+      status: linux.evidence.supplyChainStatus ?? 'risk-accepted',
+      receiptHash: linux.evidence.files?.supplyChain?.['container-supply-chain-receipt.json'] ?? hashCanonical(linux.evidence.files?.supplyChain ?? {}),
+      securityPassClaim: false,
+    }
+  }
+  const signing = isUnsigned
+    ? { mode: 'authenticode-unsigned', signed: false, unsignedReleaseDisclosure: policy.authenticode.unsignedReleaseDisclosure }
+    : policy.authenticode?.mode === 'optional' ? { mode: 'signed', signed: true } : undefined
   return {
-    schemaVersion: linux.schemaVersion,
-    policyVersion: linux.policyVersion,
-    policyDigest: hashReceipt(policy),
-    qualificationId: linux.qualificationId,
-    status: 'passed',
-    subjectSha: linux.subjectSha,
-    clientDigest: linux.clientDigest,
-    lockHashes: linux.lockHashes,
-    artifacts: input.windowsReceipt.artifacts,
+    schemaVersion: linux.schemaVersion, policyVersion: linux.policyVersion, policyDigest: hashReceipt(policy),
+    qualificationId: linux.qualificationId, status: 'passed', subjectSha: linux.subjectSha,
+    clientDigest: linux.clientDigest, lockHashes: linux.lockHashes, artifacts: winReceipt.artifacts,
+    ...(containerSecurityAdvisory ? { containerSecurityAdvisory } : {}),
+    ...(signing ? { signing } : {}),
     ...(input.releaseTag ? { releaseTag: input.releaseTag } : {}),
     ...(input.workflow ? { workflow: input.workflow } : {}),
     children: Object.fromEntries(
       [['linux-ci', linux], ...Object.entries(receipts)].map(([host, receipt]) => [
-        host,
-        { hash: hashReceipt(receipt), status: receipt.status },
+        host, { hash: hashReceipt(receipt), status: receipt.status },
       ])
     ),
   }

@@ -40,7 +40,7 @@ describe('release producer boundary (synthetic negative inputs, not qualificatio
     const root = sandbox()
     const fixture = stageSyntheticLinuxCli(root)
     fixture.put('evidence/supply-chain/container-supply-chain-receipt.json', { status: 'passed' })
-    const result = run(root, 'linux', subject, fixture.clientDigest, 'release-target-policy-v1', 'evidence')
+    const result = run(root, 'linux', subject, fixture.clientDigest, 'release-target-policy-v4', 'evidence')
     expect(result.error).toBeUndefined()
     expect(result.status).not.toBe(0)
     expect(existsSync(join(root, 'linux-ci-receipt.json'))).toBe(false)
@@ -48,7 +48,7 @@ describe('release producer boundary (synthetic negative inputs, not qualificatio
 
   it('rejects Linux qualification without an evidence root', () => {
     const root = sandbox()
-    const result = run(root, 'linux', subject, client, 'release-target-policy-v1')
+    const result = run(root, 'linux', subject, client, 'release-target-policy-v4')
     expect(result.error).toBeUndefined()
     expect(result.status).not.toBe(0)
     expect(existsSync(join(root, 'linux-ci-receipt.json'))).toBe(false)
@@ -71,7 +71,7 @@ describe('release producer boundary (synthetic negative inputs, not qualificatio
     const fixture = stageSyntheticLinuxCli(root)
     const manifest = JSON.parse(readFileSync(join(root, 'evidence/client/client-dist-manifest.json'), 'utf8'))
     expect(manifest.build.inputHash).toBe(createSubject(root).subjectHash)
-    const result = run(root, 'linux', subject, fixture.clientDigest, 'release-target-policy-v1', 'evidence')
+    const result = run(root, 'linux', subject, fixture.clientDigest, 'release-target-policy-v4', 'evidence')
     expect(result.error).toBeUndefined()
     expect(result.status).toBe(0)
     const receipt = JSON.parse(readFileSync(join(root, 'linux-ci-receipt.json'), 'utf8'))
@@ -93,7 +93,7 @@ describe('release producer boundary (synthetic negative inputs, not qualificatio
     const root = sandbox()
     const fixture = stageSyntheticLinuxCli(root)
     fixture.put('evidence/docker/docker-runtime-closure.json', { clientDist: true, clientSubject })
-    const result = run(root, 'linux', subject, fixture.clientDigest, 'release-target-policy-v1', 'evidence')
+    const result = run(root, 'linux', subject, fixture.clientDigest, 'release-target-policy-v4', 'evidence')
     expect(result.error).toBeUndefined()
     expect(result.status).toBe(1)
     expect(existsSync(join(root, 'linux-ci-receipt.json'))).toBe(false)
@@ -101,7 +101,7 @@ describe('release producer boundary (synthetic negative inputs, not qualificatio
   it('Audit regression: Windows accepts the runtime producer string through the actual receipt consumer', () => {
     const root = sandbox()
     const fixture = stageSyntheticWindowsCli(root)
-    const result = run(root, 'windows', subject, fixture.clientDigest, 'release-target-policy-v1',
+    const result = run(root, 'windows', subject, fixture.clientDigest, 'release-target-policy-v4',
       '101', '202', '303', 'officecli-synthetic-test-double', 'fidelity-synthetic-test-double')
     expect(result.error).toBeUndefined()
     expect(result.status).toBe(0)
@@ -125,7 +125,7 @@ describe('release producer boundary (synthetic negative inputs, not qualificatio
     const root = sandbox()
     const fixture = stageSyntheticWindowsCli(root)
     fixture.put('evidence/runtime-closure.json', { clientDist: true, clientSubject })
-    const result = run(root, 'windows', subject, fixture.clientDigest, 'release-target-policy-v1',
+    const result = run(root, 'windows', subject, fixture.clientDigest, 'release-target-policy-v4',
       '101', '202', '303', 'officecli-synthetic-test-double', 'fidelity-synthetic-test-double')
     expect(result.error).toBeUndefined()
     expect(result.status).toBe(1)
@@ -141,7 +141,7 @@ describe('release producer boundary (synthetic negative inputs, not qualificatio
     if (failure === 'client bytes') fixture.put('evidence/client/client/dist/index.html', 'tampered actual bytes')
     if (failure === 'scanner invocation') fixture.put('evidence/supply-chain/container-trivy.json', { SchemaVersion: 2, Results: [] })
     fixture.put('evidence/linux-admission.json', admission)
-    const result = run(root, 'linux', subject, fixture.clientDigest, 'release-target-policy-v1', 'evidence')
+    const result = run(root, 'linux', subject, fixture.clientDigest, 'release-target-policy-v4', 'evidence')
     expect(result.error).toBeUndefined()
     expect(result.status).not.toBe(0)
     expect(existsSync(join(root, 'linux-ci-receipt.json'))).toBe(false)
@@ -163,7 +163,7 @@ describe('release producer boundary (synthetic negative inputs, not qualificatio
   it('round-trips full synthetic receipt DAG and rejects a changed child through current CLI', () => {
     const root = sandbox()
     const fixture = stageSyntheticLinuxCli(root)
-    const linux = run(root, 'linux', subject, fixture.clientDigest, 'release-target-policy-v1', 'evidence')
+    const linux = run(root, 'linux', subject, fixture.clientDigest, 'release-target-policy-v4', 'evidence')
     expect(linux.status).toBe(0)
     const linuxReceipt = JSON.parse(readFileSync(join(root, 'linux-ci-receipt.json'), 'utf8'))
     const windowsReceipt = createHostReceipt({ ...linuxReceipt, host: 'windows', parentReceiptHash: hashReceipt(linuxReceipt),
@@ -171,7 +171,7 @@ describe('release producer boundary (synthetic negative inputs, not qualificatio
     fixture.put('receipts/linux-ci-receipt.json', linuxReceipt)
     fixture.put('receipts/windows-qualification-receipt.json', windowsReceipt)
     fixture.put('config/release-target-policy.json', JSON.parse(readFileSync(resolve('config/release-target-policy.json'), 'utf8')))
-    const created = run(root, 'create-root', subject, fixture.clientDigest, 'release-target-policy-v1', 'v1.17.0')
+    const created = run(root, 'create-root', subject, fixture.clientDigest, 'release-target-policy-v4', 'v1.17.0')
     expect(created.status).toBe(0)
     const verified = run(root, 'verify-root', '.')
     expect(verified.status).toBe(0)
@@ -185,7 +185,7 @@ describe('release producer boundary (synthetic negative inputs, not qualificatio
     })
     expect(run(root, 'verify-root', '.').status).toBe(1)
     expect(readFileSync(join(root, rootPath), 'utf8')).toBe(frozenRoot)
-    expect(run(root, 'create-root', subject, fixture.clientDigest, 'release-target-policy-v1', 'v1.17.0').status).toBe(0)
+    expect(run(root, 'create-root', subject, fixture.clientDigest, 'release-target-policy-v4', 'v1.17.0').status).toBe(0)
     expect(run(root, 'verify-root', '.').status).toBe(0)
     fixture.put(policyPath, originalPolicy)
     expect(run(root, 'verify-root', '.').status).toBe(1)

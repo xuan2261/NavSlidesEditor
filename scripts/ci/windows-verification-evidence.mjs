@@ -1,10 +1,10 @@
 import { execFileSync } from 'node:child_process'
 import { readFile, readdir } from 'node:fs/promises'
 import { basename, isAbsolute, resolve } from 'node:path'
+import { createRequire } from 'node:module'
 import { fileDigest, assertRun, assertArtifact } from './release-evidence-producer.mjs'
 import { hashCanonical, sha256, windowsWorkflowIdentity } from './release-receipt-canonical.mjs'
-import { verifyAuthenticodeEvidence } from './authenticode-policy.mjs'
-import { createRequire } from 'node:module'
+import { verifyAuthenticodeEvidence, verifyUnsignedWindowsEvidence } from './authenticode-policy.mjs'
 import { assertAuthoritativeReceipt } from '../officecli/physical-feasibility-receipt.mjs'
 
 export function classifyWindowsArtifacts(names, version) {
@@ -66,9 +66,6 @@ export function captureGhAttestation(path, subjectSha, workflow) {
   } catch { throw new Error('actual gh attestation verification failed') }
 }
 
-// Windows trust verification is executed against the file, never against signer JSON.
-// RFC3161 evidence is extracted from the embedded CMS attribute, not inferred from
-// TimeStamperCertificate. SignedCms validates the token and its message imprint.
 const CAPTURE = String.raw`
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Security.Cryptography.Pkcs
@@ -155,10 +152,13 @@ export function validateWindowsSignature(evidence) {
   return verifyAuthenticodeEvidence({ evidence, expected: { publisherSubject: process.env.WINDOWS_SIGNING_SUBJECT,
     publisherThumbprint: process.env.WINDOWS_SIGNING_THUMBPRINT } })
 }
-export function assertWindowsLeafEvidence(receipt, policy) {
+export function assertWindowsLeafEvidence(receipt, policy, releasePolicy = null) {
   const workflowIdentity = windowsWorkflowIdentity(policy)
   const leaf = receipt.evidence
-  if (!leaf?.signatures || !leaf.office || !leaf.fidelity || !Array.isArray(leaf.attestation)) throw new Error('Windows actual leaf evidence is required')
+  const isUnsigned = leaf?.signingMode === 'authenticode-unsigned' || Boolean(receipt.gates?.['authenticode-unsigned'])
+  if (!(isUnsigned ? leaf?.unsignedSignatures : leaf?.signatures) || !leaf?.office || !leaf.fidelity || !Array.isArray(leaf.attestation)) {
+    throw new Error('Windows actual leaf evidence is required')
+  }
   for (const kind of ['office', 'fidelity']) {
     const item = leaf[kind]
     if (item.status !== 'passed' || item.subjectSha !== receipt.subjectSha || item.clientDigest !== receipt.clientDigest ||
@@ -177,23 +177,40 @@ export function assertWindowsLeafEvidence(receipt, policy) {
       leaf.fidelity.evaluation?.gate?.qualification?.verdict !== 'passed' ||
       leaf.fidelity.evidenceHash !== hashCanonical(leaf.fidelity.evaluation)) throw new Error('physical raw/evaluation leaf binding mismatch')
   const artifacts = Object.values(receipt.artifacts)
-  if (artifacts.length !== 2 || Object.keys(leaf.signatures).length !== 2) throw new Error('Windows signature artifact completeness mismatch')
-  for (const artifact of artifacts) {
-    const signature = leaf.signatures[artifact.path]
-    if (!signature?.preVerifier || !signature?.postVerifier || signature.postDownload?.chainTrusted !== true ||
-        signature.preUpload?.chainTrusted !== true || signature.sha256 !== artifact.sha256 ||
-        [signature.preVerifier, signature.postVerifier].some((verifier) => !verifier?.version || verifier.scriptHash !== WINDOWS_CAPTURE_HASH ||
-          ['executableHash', 'signtoolHash', 'signtoolOutputHash', 'captureHash'].some((key) => !/^[a-f0-9]{64}$/.test(verifier[key]))) ||
-        hashCanonical(signature) !== artifact.evidenceHash) throw new Error('independent Windows signature leaf mismatch')
-    verifyAuthenticodeEvidence({ evidence: signature, expected: { publisherSubject: signature.preUpload.signerSubject,
-      publisherThumbprint: signature.preUpload.signerThumbprint } })
+  let signingGates
+  if (isUnsigned) {
+    if (leaf.signatures || receipt.gates?.authenticode || receipt.gates?.['post-download-authenticode'] ||
+        artifacts.length !== 2 || Object.keys(leaf.unsignedSignatures).length !== 2 ||
+        leaf.unsignedReleaseDisclosure !== releasePolicy?.authenticode?.unsignedReleaseDisclosure) {
+      throw new Error('unsigned Windows leaf completeness/disclosure mismatch')
+    }
+    for (const artifact of artifacts) {
+      const entry = leaf.unsignedSignatures[artifact.path]
+      verifyUnsignedWindowsEvidence({ evidence: entry, expectedSha256: artifact.sha256, policy: releasePolicy })
+      if (hashCanonical(entry) !== artifact.evidenceHash) throw new Error('unsigned Windows signature leaf mismatch')
+    }
+    signingGates = { 'authenticode-unsigned': hashCanonical(leaf.unsignedSignatures) }
+  } else {
+    if (leaf.unsignedSignatures || receipt.gates?.['authenticode-unsigned'] || artifacts.length !== 2 || Object.keys(leaf.signatures).length !== 2) {
+      throw new Error('Windows signature artifact completeness mismatch')
+    }
+    for (const artifact of artifacts) {
+      const signature = leaf.signatures[artifact.path]
+      if (!signature?.preVerifier || !signature?.postVerifier || signature.postDownload?.chainTrusted !== true ||
+          signature.preUpload?.chainTrusted !== true || signature.sha256 !== artifact.sha256 ||
+          [signature.preVerifier, signature.postVerifier].some((verifier) => !verifier?.version || verifier.scriptHash !== WINDOWS_CAPTURE_HASH ||
+            ['executableHash', 'signtoolHash', 'signtoolOutputHash', 'captureHash'].some((key) => !/^[a-f0-9]{64}$/.test(verifier[key]))) ||
+          hashCanonical(signature) !== artifact.evidenceHash) throw new Error('independent Windows signature leaf mismatch')
+      verifyAuthenticodeEvidence({ evidence: signature, expected: { publisherSubject: signature.preUpload.signerSubject,
+        publisherThumbprint: signature.preUpload.signerThumbprint } })
+    }
+    signingGates = { authenticode: hashCanonical(leaf.signatures), 'post-download-authenticode': hashCanonical({ signatures: leaf.signatures, stage: 'post-download' }) }
   }
   const normalized = normalizeGhAttestations(leaf.attestationRaw,
     Object.fromEntries(artifacts.map((artifact) => [artifact.path, artifact.sha256])),
     { subjectSha: receipt.subjectSha, clientDigest: receipt.clientDigest, workflowIdentity })
   if (hashCanonical(normalized) !== hashCanonical(leaf.attestation)) throw new Error('Windows attestation raw/leaf mismatch')
   const gates = { 'electron-runtime-closure': leaf.runtimeHash, 'officecli-physical': hashCanonical(leaf.office),
-    'fidelity-powerpoint': hashCanonical(leaf.fidelity), authenticode: hashCanonical(leaf.signatures),
-    'post-download-authenticode': hashCanonical({ signatures: leaf.signatures, stage: 'post-download' }), attestation: hashCanonical(leaf.attestation) }
+    'fidelity-powerpoint': hashCanonical(leaf.fidelity), ...signingGates, attestation: hashCanonical(leaf.attestation) }
   for (const [gate, digest] of Object.entries(gates)) if (receipt.gates[gate] !== digest) throw new Error(`Windows gate leaf hash mismatch: ${gate}`)
 }
