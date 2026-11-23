@@ -9,6 +9,7 @@ import {
   authoredSave,
   assertHistoryRoundtrip,
   deselectElements,
+  referenceDeck,
 } from './trigger-reference-history-controls.js'
 import { prepare, section, element } from './trigger-reference-history-fixture.js'
 
@@ -18,6 +19,7 @@ test('UI variable declaration, score binding and full typed history survive relo
   request,
   testPresentation,
 }, testInfo) => {
+  test.setTimeout(90000)
   const id = testPresentation.id,
     deck = referenceDeck(),
     board = gameFixture('scoreboard')

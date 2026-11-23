@@ -523,7 +523,10 @@ async function runImport({
         }
         const unpublished = await withPackageStore(async (store) => {
           await store.reload()
-          const state = store.getState()
+          const state =
+            typeof store.getOwnedAuthorityState === 'function'
+              ? store.getOwnedAuthorityState()
+              : store.getState()
           return (
             !store.getJob(jobId) &&
             !state.heads.some((head) => head.presentationId === publishedPresentationId) &&
@@ -545,6 +548,10 @@ async function runImport({
         await packageRollback({ jobId, presentationId: publishedPresentationId })
         const proven = await withPackageStore((store) => {
           const job = store.getJob(jobId)
+          const hasHead =
+            typeof store.hasPresentationHead === 'function'
+              ? store.hasPresentationHead(publishedPresentationId)
+              : store.getState().heads.some((head) => head.presentationId === publishedPresentationId)
           return (
             job?.kind === 'import' &&
             job.presentationId === publishedPresentationId &&
@@ -554,7 +561,7 @@ async function runImport({
             DURABLE_OUTCOME_FIELDS.every(
               (field) => before?.[field] !== undefined && job[field] === before[field]
             ) &&
-            !store.getState().heads.some((head) => head.presentationId === publishedPresentationId)
+            !hasHead
           )
         })
         if (!proven)
@@ -578,7 +585,8 @@ async function runImport({
           originalName,
           semanticImport: true,
           geometryInheritance: true,
-          allowMappedFallbackOnSemanticUnimplemented: true,
+          allowMappedFallbackOnSemanticUnimplemented:
+            Boolean(packageCommit) && process.env.PPTX_EMF_CONVERT !== '0',
           onProgress: (progress) => jobManager.emitProgress(jobId, progress),
           signal: abortController.signal,
           mediaTransaction,

@@ -302,7 +302,9 @@ class PackageStore {
           currentGeneration: this.metadata.state.generation,
         })
       }
-      const next = clone(this.metadata.state)
+      const next = clone(this.metadata.state, {
+        preserveSealedResults: Boolean(options.readOnlyResults),
+      })
       const changed = await mutator(next)
       options.signal?.throwIfAborted()
       if (changed === false) return this.getState()
@@ -345,7 +347,7 @@ class PackageStore {
         matrixAuthorityEpoch,
         matrixAuthoritySubjects: createMatrixAuthoritySubjects(undefined, matrixAuthorityEpoch),
       }))
-    }, options)
+    }, { ...options, readOnlyResults: true })
     return this.metadata.state.matrixAuthorityEpoch
   }
   async addOwner(revisionId, owner, options) {
@@ -355,7 +357,7 @@ class PackageStore {
     }
     await this.mutate((next) => {
       next.owners.push({ schemaVersion: RECORD_SCHEMA_VERSION, revisionId, ...owner })
-    }, options)
+    }, { ...(options || {}), readOnlyResults: true })
   }
   async releaseOwner(owner) {
     validateOwner(owner)
@@ -367,7 +369,23 @@ class PackageStore {
       next.owners = next.owners.filter(
         (item) => item.ownerType !== owner.ownerType || item.ownerId !== owner.ownerId
       )
-    })
+      if (owner.ownerType === 'permanent-delete') {
+        const presId = owner.ownerId
+        const stillReferenced =
+          next.heads.some((h) => h.presentationId === presId) ||
+          next.owners.some(
+            (item) =>
+              item.ownerId === presId ||
+              item.retainedHead?.presentationId === presId ||
+              (item.ownerType === 'history' && item.ownerId.startsWith(`${presId}:`))
+          )
+        if (!stillReferenced) {
+          next.mutationResults = next.mutationResults.filter(
+            (result) => result.presentationId !== presId
+          )
+        }
+      }
+    }, { readOnlyResults: true })
     return true
   }
   async duplicatePresentationOwner(sourceId, destinationId, options = {}) {
@@ -415,7 +433,7 @@ class PackageStore {
           ...job.provisionalOwner,
         })
       }
-    })
+    }, { readOnlyResults: true })
     return job
   }
   getJob(id) {

@@ -82,6 +82,7 @@ module.exports = defineConfig({
         /tests\/e2e\/a11y\/tablet-touch-editor-interactions\.spec\.js$/,
         /tests[\\/]e2e[\\/]education[\\/]desktop-runtime-release\.spec\.js$/,
         /tests[\\/]e2e[\\/]pptx-semantic-edit\.spec\.js$/,
+        /tests[\\/]e2e[\\/]navigator-performance\.spec\.js$/,
         ...pptxImportSpecs,
       ],
       use: { ...devices['Desktop Chrome'] },
@@ -111,7 +112,11 @@ module.exports = defineConfig({
       testMatch: pptxImportSpecs,
       workers: 1,
       snapshotPathTemplate: chromiumSnapshotPathTemplate,
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        trace: 'off',
+        video: 'off',
+      },
     },
     {
       name: 'chromium-visual',

@@ -111,7 +111,7 @@ test('P06-13 manual acknowledgement preserves a newer draft through real unload 
     const html = `<p>${'x'.repeat(70 * 1024)}</p>`
     const id = await create('Manual original', { slides: [slide([text('large', html)])] })
     const key = `navslides-editor-draft:presentation:${id}`
-    const draft = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)), key)
+    const draft = () => page.evaluate((k) => { const p = JSON.parse(localStorage.getItem(k)); return p?.record ?? p }, key)
     await page.goto(`/editor/${id}`)
     await expect(titleInput(page)).toHaveValue('Manual original')
     const held = await holdNextSave(page, id)
@@ -121,7 +121,7 @@ test('P06-13 manual acknowledgement preserves a newer draft through real unload 
     expect(submitted.title).toBe('Manual submitted A')
     expect(submitted.slides[0].elements[0].content).toBe(html)
     await titleInput(page).fill('Manual newer B')
-    await expect.poll(async () => (await draft())?.snapshot.title).toBe('Manual newer B')
+    await expect.poll(async () => (await draft())?.snapshot?.title).toBe('Manual newer B')
     const newer = await draft()
     expect(newer.snapshot.slides[0].elements[0].content).toBe(html)
     let blockSuccessor = true

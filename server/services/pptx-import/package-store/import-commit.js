@@ -237,7 +237,7 @@ async function publishImport(store, prepared, options = {}) {
       outcomeGeneration: head.generation,
       outcomeHeadHash: hashCanonical(head),
     })
-  }, options.faults)
+  }, { ...(options.faults || {}), readOnlyResults: true })
 
   return {
     blob,
@@ -325,7 +325,7 @@ async function rollbackImport(store, { jobId, presentationId }) {
       job.cancellationPoint = 'rolled-back'
       job.updatedAt = new Date().toISOString()
     }
-  })
+  }, { readOnlyResults: true })
 }
 
 module.exports = { commitImport, prepareImport, publishImport, rollbackImport }

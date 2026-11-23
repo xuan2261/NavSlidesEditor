@@ -37,7 +37,7 @@ function detachedClone(value) {
   return output
 }
 
-function clone(value) {
+function clone(value, options = {}) {
   if (value && typeof value === 'object') {
     const hasMutation = Array.isArray(value.mutationResults)
     const hasOutbox = Array.isArray(value.compatibilityOutbox)
@@ -46,6 +46,7 @@ function clone(value) {
       const cloned = detachedClone(state)
       if (hasMutation) {
         cloned.mutationResults = mutationResults.map((result) => {
+          if (options.preserveSealedResults && isSealedCanonicalData(result)) return result
           const semantic = result.projection?.pptxSemantic
           if (!(isCertifiedSemanticDocument(semantic) && sealCanonicalData(semantic))) return detachedClone(result)
           const { projection, ...record } = result

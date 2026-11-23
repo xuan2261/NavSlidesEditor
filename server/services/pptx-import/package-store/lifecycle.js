@@ -177,7 +177,7 @@ async function quarantinePresentation(store, presentationId, options = {}) {
         generation: expectedHead.generation,
       })
     }
-  }, options)
+  }, { ...options, readOnlyResults: true })
   return clone(expectedHead)
 }
 
@@ -228,7 +228,7 @@ async function restoreQuarantinedHead(
         },
       })
     }
-  }, options)
+  }, { ...options, readOnlyResults: true })
   return store.metadata.state.heads.find((item) => item.presentationId === presentationId)
 }
 
@@ -256,7 +256,7 @@ async function retainHead(store, owner, presentationId, options = {}) {
     for (const revisionId of revisionIdsFor(expectedHead)) {
       addOwner(next, revisionId, owner, expectedHead)
     }
-  }, options)
+  }, { ...options, readOnlyResults: true })
   return clone(expectedHead)
 }
 

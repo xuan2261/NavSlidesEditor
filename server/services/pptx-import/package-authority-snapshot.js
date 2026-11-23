@@ -206,7 +206,10 @@ async function readPackageAuthoritySnapshot(presentationId, { store: providedSto
     throw snapshotError('INVALID_PRESENTATION_ID', 'A presentation identifier is required')
   }
   const store = providedStore || (await getReadablePackageStore())
-  const state = store.getState()
+  const state =
+    typeof store.getOwnedAuthorityState === 'function'
+      ? store.getOwnedAuthorityState()
+      : store.getState()
   const head = state.heads.find((item) => item.presentationId === presentationId)
   if (!head)
     throw snapshotError('PACKAGE_HEAD_UNAVAILABLE', 'Authoritative package head is unavailable')

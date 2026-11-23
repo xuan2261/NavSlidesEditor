@@ -21,7 +21,10 @@ function boundPredecessors(root, depth = MAX_PREDECESSOR_DEPTH) {
 // await. Neither retained mutator references nor a shallow freeze are receipts.
 // Strings are immutable UTF-8 write inputs, retained only for this transaction.
 function preparePublication(draft, previousRoot, streaming = false, storage) {
-  const state = isOwnedOutboxSuccessor(draft) || isOwnedProjectionSave(draft) ? draft : clone(draft)
+  const state =
+    isOwnedOutboxSuccessor(draft) || isOwnedProjectionSave(draft)
+      ? draft
+      : clone(draft, { preserveSealedResults: true })
   validateState(state)
   sealPublication(state)
   return serializePublication(state, previousRoot, streaming, storage)

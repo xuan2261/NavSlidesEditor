@@ -173,7 +173,7 @@ async function importPptxFile(filePath, options = {}) {
       const canFallback =
         options.allowMappedFallbackOnSemanticUnimplemented === true &&
         err?.code === 'PPTX_SEMANTIC_ADMISSION_FAILED' &&
-        !/external/i.test(String(err?.message || ''))
+        !/missing\/ambiguous image relationship|external/i.test(String(err?.message || ''))
       if (!canFallback) throw err
       semanticFallbackWarning = {
         type: 'semantic-projection-fallback',
