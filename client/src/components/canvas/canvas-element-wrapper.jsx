@@ -584,10 +584,22 @@ export default function CanvasElement({
       }}
     >
       <div data-element-content style={contentLayerStyle}>
-        {element.type === 'text' && !isEditing && element.pptxTextDocument && (
-          <div className="slide-text-content" style={{ width: '100%', height: '100%', overflow: 'visible' }}
-            dangerouslySetInnerHTML={{ __html: textBoxSvgString(element, { fontRuntime, theme: element.pptxTextTheme }) }} />
-        )}
+        {element.type === 'text' && !isEditing && element.pptxTextDocument && (() => {
+          try {
+            return (
+              <div className="slide-text-content" style={{ width: '100%', height: '100%', overflow: 'visible' }}
+                dangerouslySetInnerHTML={{ __html: textBoxSvgString(element, { fontRuntime, theme: element.pptxTextTheme }) }} />
+            )
+          } catch (error) {
+            return (
+              <div role="alert" data-component-id={error.componentId || element.pptxTextDocument.componentId}
+                data-render-error={error.code}
+                style={{ width: '100%', height: '100%', overflow: 'hidden', fontSize: 12, lineHeight: 1.3 }}>
+                {error.message}
+              </div>
+            )
+          }
+        })()}
         {element.type === 'text' && !isEditing && !element.pptxTextDocument && (
           <div
             ref={contentRef}

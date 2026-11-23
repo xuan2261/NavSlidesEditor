@@ -316,13 +316,31 @@ export function ShapeRenderer({
           </defs>
         )}
         {renderShape()}
-        {element.pptxTextDocument ? (
-          <g
-            dangerouslySetInnerHTML={{
-              __html: shapeLabel.shapeLabelSvgString({ ...element, pptxGeometry: geometry }, { fontRuntime, theme: element.pptxTextTheme }),
-            }}
-          />
-        ) : element.textHtml ? (
+        {element.pptxTextDocument ? (() => {
+          try {
+            return (
+              <g
+                dangerouslySetInnerHTML={{
+                  __html: shapeLabel.shapeLabelSvgString({ ...element, pptxGeometry: geometry }, { fontRuntime, theme: element.pptxTextTheme }),
+                }}
+              />
+            )
+          } catch (error) {
+            return (
+              <foreignObject x={0} y={0} width={viewportWidth} height={viewportHeight}>
+                <div
+                  xmlns="http://www.w3.org/1999/xhtml"
+                  role="alert"
+                  data-component-id={error.componentId || element.pptxTextDocument.componentId}
+                  data-render-error={error.code}
+                  style={{ width: '100%', height: '100%', overflow: 'hidden', fontSize: 12, lineHeight: 1.3 }}
+                >
+                  {error.message}
+                </div>
+              </foreignObject>
+            )
+          }
+        })() : element.textHtml ? (
           <foreignObject x={0} y={0} width={w} height={h}>
             <div
               xmlns="http://www.w3.org/1999/xhtml"

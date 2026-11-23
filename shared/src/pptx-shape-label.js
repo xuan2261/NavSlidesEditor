@@ -167,8 +167,12 @@ function shapeLabelSvgString(element, options = {}) {
     ['left', 'insetLeftEmu'], ['right', 'insetRightEmu'],
     ['top', 'insetTopEmu'], ['bottom', 'insetBottomEmu'],
   ]) bodyStyle.push(`${side}:${(body[key] ?? 0) * EMU_TO_CSS}px`)
+  const mount = options.textOutputMount
   const layout = measuredLayout(document, element, geometry, rect, options)
   const hasEquations = document.paragraphs.some((paragraph) => paragraph.runs.some((run) => run.kind === 'equation'))
+  if (mount && !options.requireMeasuredText && hasEquations && layout?.html == null) {
+    return `<g data-pptx-semantic-mount="${escapePlainText(mount.instanceId)}" data-pptx-semantic-slide="${escapePlainText(mount.slideId)}"></g>`
+  }
   if ((options.requireMeasuredText || hasEquations) && layout?.html == null) {
     const code = layout?.issueCode ?? 'browser-measurement-required'
     throw Object.assign(new TypeError(`Canonical text layout unavailable: ${code}`), {
@@ -187,7 +191,6 @@ function shapeLabelSvgString(element, options = {}) {
     : ''
   const layoutState = measured !== null ? 'measured' : layout?.issueCode ? 'unsupported-preview' : 'unmeasured-preview'
   const result = `<g data-pptx-shape-label="${escapePlainText(document.componentId)}" data-pptx-text-layout="${layoutState}"${layout?.issueCode ? ` data-pptx-text-layout-issue="${escapePlainText(layout.issueCode)}"` : ''} transform="matrix(${scale[0] / EMU_TO_CSS} 0 0 ${scale[3] / EMU_TO_CSS} 0 0)"><foreignObject x="${rect.l * EMU_TO_CSS}" y="${rect.t * EMU_TO_CSS}" width="${(rect.r - rect.l) * EMU_TO_CSS}" height="${(rect.b - rect.t) * EMU_TO_CSS}" style="overflow:visible;"><div xmlns="http://www.w3.org/1999/xhtml" data-pptx-text-body="${escapePlainText(document.componentId)}"${autofit} style="${escapePlainText(bodyStyle.join(';'))}">${html}</div></foreignObject></g>`
-  const mount = options.textOutputMount
   return mount ? `<g data-pptx-semantic-mount="${escapePlainText(mount.instanceId)}" data-pptx-semantic-slide="${escapePlainText(mount.slideId)}">${result}</g>` : result
 }
 
