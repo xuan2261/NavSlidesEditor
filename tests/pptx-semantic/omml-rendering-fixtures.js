@@ -1,4 +1,14 @@
-import { createCanvas } from '@napi-rs/canvas'
+import path from 'node:path'
+import { createCanvas, GlobalFonts } from '@napi-rs/canvas'
+
+if (!GlobalFonts.has('Cambria Math')) {
+  for (const face of ['Regular', 'Bold', 'Italic', 'BoldItalic']) {
+    GlobalFonts.registerFromPath(
+      path.resolve(`server/vendor/katex/dist/fonts/KaTeX_Main-${face}.ttf`),
+      'Cambria Math',
+    )
+  }
+}
 
 export const M = 'http://schemas.openxmlformats.org/officeDocument/2006/math'
 export const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'

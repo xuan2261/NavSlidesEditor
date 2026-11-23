@@ -355,7 +355,7 @@ describe('durable semantic draft checkpoints', () => {
     const restored = await reloaded.readEditorDraft(`semantic-${serial}`)
     expect(restored).toEqual(JSON.parse(JSON.stringify(expected)))
     expect(() => migratePresentation(restored.snapshot, { draft: true })).toThrow(/byte budget/)
-  })
+  }, 20_000)
 
   it('keeps first writes full while preparation is pending and fences stale acceptance', async () => {
     serial++

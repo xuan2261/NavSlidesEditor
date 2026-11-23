@@ -74,8 +74,14 @@ export const SemanticEquation = Node.create({
   },
   addProseMirrorPlugins() {
     return [new Plugin({
-      appendTransaction: (transactions, _oldState, state) => {
+      appendTransaction: (transactions, oldState, state) => {
         if (!transactions.some((transaction) => transaction.docChanged) || !state.doc.firstChild?.attrs.pptxParagraph) return null
+        const keepEquationSelection =
+          oldState.selection instanceof NodeSelection &&
+          oldState.selection.node.type.name === this.name &&
+          !(state.selection instanceof NodeSelection) &&
+          transactions.some((transaction) => transaction.getMeta('history$')) &&
+          state.doc.nodeAt(oldState.selection.from)?.type.name === this.name
         const atoms = []
         state.doc.descendants((node, position) => {
           if (node.type.name === this.name) atoms.push({ node, position })
@@ -95,7 +101,10 @@ export const SemanticEquation = Node.create({
           transaction.setNodeMarkup(position, undefined, { ...node.attrs,
             pptxRun: { ...node.attrs.pptxRun, run, identitySeed: run.componentId } })
         })
-        return transaction.docChanged ? transaction.setMeta('addToHistory', false) : null
+        if (keepEquationSelection) {
+          transaction.setSelection(NodeSelection.create(transaction.doc, oldState.selection.from))
+        }
+        return transaction.docChanged || keepEquationSelection ? transaction.setMeta('addToHistory', false) : null
       },
     })]
   },

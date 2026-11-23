@@ -3,7 +3,7 @@
 // reset before applying canonical run declarations; it never alters source data.
 const TEXT_SHAPING_RESET = 'font-stretch:normal;font-variant:normal;font-feature-settings:normal;' +
   'font-variation-settings:normal;font-optical-sizing:none;font-size-adjust:none;' +
-  'word-spacing:0;text-transform:none;text-indent:0;text-rendering:auto;' +
+  'word-spacing:0;text-transform:none;text-indent:0;text-rendering:geometricPrecision;' +
   'writing-mode:horizontal-tb;text-orientation:mixed;text-combine-upright:none;'
 
 // Font coverage is checked from the same SFNT bytes loaded into FontFace. A

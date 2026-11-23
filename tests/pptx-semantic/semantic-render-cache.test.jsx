@@ -154,14 +154,14 @@ describe('semantic render cache public ownership and dependencies', () => {
     const { container, rerender } = render(preview(input))
     const paint = () => container.querySelector('svg > g > path[data-pptx-geometry-path="path"]').style.fill
     expect(container.querySelector('[data-thumbnail-error]')).toBeNull()
-    expect(paint()).toBe('#FF0000')
+    expect(paint()).toBe('rgb(255, 0, 0)')
 
     const changed = changedStyles(input, change)
     rerender(preview(changed))
     expect(container.querySelector('[data-thumbnail-error]')).toBeNull()
-    expect(paint()).toBe('#ABCDEF')
+    expect(paint()).toBe('rgb(171, 205, 239)')
 
     rerender(preview(input))
-    expect(paint()).toBe('#FF0000')
+    expect(paint()).toBe('rgb(255, 0, 0)')
   })
 })

@@ -40,10 +40,11 @@ function SourceFontSession({
   mode, inherited, inheritedValue,
   presentationId, requestIdentity, fontRevision, children, outputDocument, loadRuntime, pptxSemantic,
 }) {
+  const trackEnvironment = mode === 'active' || mode === 'pending'
   const environment = useSyncExternalStore(
-    useCallback((notify) => subscribeBrowserProfile(outputDocument, notify), [outputDocument]),
-    () => browserProfile(outputDocument),
-    () => browserProfile(outputDocument),
+    useCallback((notify) => (trackEnvironment ? subscribeBrowserProfile(outputDocument, notify) : () => {}), [trackEnvironment, outputDocument]),
+    () => (trackEnvironment ? browserProfile(outputDocument) : null),
+    () => (trackEnvironment ? browserProfile(outputDocument) : null),
   )
   const loadingState = useMemo(() => ({
     ...empty,

@@ -4,13 +4,17 @@ const path = require('node:path')
 const crypto = require('node:crypto')
 const assert = require('node:assert/strict')
 const { auditBlobFiles } = require('./services/pptx-import/package-store/collector')
+const { loadStateIndex } = require('./services/pptx-import/package-store/state-index-loader')
+const { StateRecordStore } = require('./services/pptx-import/package-store/state-record-store')
 const sha = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex')
 async function disk(root, name) { return fs.readFile(path.join(root, 'data', name)) }
 async function authority(root) {
+  const dataDir = path.join(root, 'data')
   const rootBytes = await disk(root, 'state-root.json')
   const pointer = JSON.parse(rootBytes)
   const stateBytes = await disk(root, pointer.stateFile)
-  return { pointer, state: JSON.parse(stateBytes), rootSha256: sha(rootBytes), stateSha256: sha(stateBytes) }
+  const { state } = await loadStateIndex(dataDir, pointer, { recordStore: new StateRecordStore(dataDir) })
+  return { pointer, state, rootSha256: sha(rootBytes), stateSha256: sha(stateBytes) }
 }
 async function prepareFence(store, source, input, receipt, root, url) {
   await store.mutate(() => {}) // Establish a real committed predecessor, never fabricate a root.
