@@ -246,7 +246,8 @@ router.get('/:id/pptx-original', async (req, res) => {
 router.post(
   '/:id/pptx-edited',
   createEditedExportHandler({
-    findPresentation: (id) => findServeablePresentation(id, { normalize: false }),
+    findPresentation: (id) =>
+      findServeablePresentation(id, { normalize: false, normalizeSemantic: false }),
     getReplay: hasValidatedEditedReplay,
     getAvailability: editedExportAvailability,
     execute: executeValidatedEditedExport,

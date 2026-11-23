@@ -18,9 +18,14 @@ function assertSafeInputPath(filePath) {
   return resolved
 }
 
+function pathFor(candidate) {
+  return /^[a-zA-Z]:[\\/]/.test(String(candidate || '')) ? path.win32 : path
+}
+
 function resolveConverterBinary(options = {}) {
   const binary = options.binary || process.env.PPTX_EMF_BINARY || 'magick'
-  if (!path.isAbsolute(binary)) {
+  const binaryPath = pathFor(binary)
+  if (!binaryPath.isAbsolute(binary)) {
     return {
       ok: false,
       error: 'emf-binary-must-be-absolute',
@@ -28,13 +33,14 @@ function resolveConverterBinary(options = {}) {
     }
   }
 
-  const base = path.basename(binary).replace(/\.exe$/i, '')
+  const base = binaryPath.basename(binary).replace(/\.exe$/i, '')
   if (!ALLOWED_BINARIES.has(base)) {
     return { ok: false, error: 'binary-not-allowlisted', code: 'POLICY' }
   }
 
   const trustedRoot = options.trustedRoot || process.env.PPTX_EMF_BINARY_ROOT
-  if (typeof trustedRoot !== 'string' || !trustedRoot || !path.isAbsolute(trustedRoot)) {
+  const rootPath = pathFor(trustedRoot)
+  if (typeof trustedRoot !== 'string' || !trustedRoot || !rootPath.isAbsolute(trustedRoot)) {
     return { ok: false, error: 'emf-binary-root-must-be-absolute', code: 'POLICY' }
   }
   const expectedHash = String(options.sha256 || process.env.PPTX_EMF_BINARY_SHA256 || '').toLowerCase()
@@ -116,7 +122,13 @@ async function convertVectorImage(inputPath, outputPath, options = {}) {
   return new Promise((resolve) => {
     let child
     try {
-      child = spawn(resolvedBinary.binary, [input, output], {
+      const converterBase = pathFor(resolvedBinary.binary)
+        .basename(resolvedBinary.binary)
+        .replace(/\.exe$/i, '')
+        .toLowerCase()
+      const converterArgs =
+        converterBase === 'inkscape' ? [input, `--export-filename=${output}`] : [input, output]
+      child = spawn(resolvedBinary.binary, converterArgs, {
         shell: false,
         windowsHide: true,
         timeout: options.timeoutMs || 30_000,

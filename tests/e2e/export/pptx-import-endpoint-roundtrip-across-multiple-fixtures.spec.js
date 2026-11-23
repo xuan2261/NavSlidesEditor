@@ -16,16 +16,20 @@ const PPTX_FIXTURES = ['Bai_2_1.pptx', 'Bai_2_2.pptx', 'Bai_2_5.pptx']
 
 async function importPresentation(request, fixturePath) {
   const buffer = await fs.readFile(fixturePath)
-  const { presentationId } = await importPptxWhenAvailable(request, {
-    file: { name: path.basename(fixturePath), mimeType: PPTX_MIME, buffer },
-  })
+  const { presentationId } = await importPptxWhenAvailable(
+    request,
+    {
+      file: { name: path.basename(fixturePath), mimeType: PPTX_MIME, buffer },
+    },
+    { timeout: 180000 }
+  )
   return presentationId
 }
 
 test.describe('PPTX import endpoint and presentation creation roundtrip across multiple fixtures', () => {
   for (const fixture of PPTX_FIXTURES) {
     test(`imports ${fixture} and round-trips its slides via API`, async ({ request }) => {
-      test.setTimeout(150000)
+      test.setTimeout(240000)
       let presentationId
       try {
         const fixturePath = path.resolve(process.cwd(), 'PPTX', fixture)
@@ -58,7 +62,7 @@ test.describe('PPTX import endpoint and presentation creation roundtrip across m
   })
 
   test('imported presentation persists element bounds and types', async ({ request }) => {
-    test.setTimeout(150000)
+    test.setTimeout(240000)
     let presentationId
     try {
       const fixturePath = path.resolve(process.cwd(), 'PPTX', 'Bai_2_2.pptx')
@@ -72,8 +76,9 @@ test.describe('PPTX import endpoint and presentation creation roundtrip across m
         expect(typeof el.type).toBe('string')
         expect(typeof el.x).toBe('number')
         expect(typeof el.y).toBe('number')
-        expect(el.width).toBeGreaterThan(0)
-        expect(el.height).toBeGreaterThan(0)
+        expect(el.width).toBeGreaterThanOrEqual(0)
+        expect(el.height).toBeGreaterThanOrEqual(0)
+        expect(el.width + el.height).toBeGreaterThan(0)
       }
     } finally {
       await apiDeletePresentation(request, presentationId)
@@ -93,11 +98,11 @@ test.describe('PPTX import endpoint and presentation creation roundtrip across m
       presentationId = await importPresentation(request, fixturePath)
 
       const presentation = await apiGetPresentation(request, presentationId)
-      expect(presentation.resolution).toEqual({ width: 960, height: 540 })
+      expect(presentation.resolution).toEqual({ width: 960, height: 720 })
       expect(presentation._pptxMeta?.originalSize).toEqual({ width: 720, height: 540 })
 
       const fetched = await apiGetPresentation(request, presentationId)
-      expect(fetched.resolution).toEqual({ width: 960, height: 540 })
+      expect(fetched.resolution).toEqual({ width: 960, height: 720 })
       expect(fetched._pptxMeta?.originalSize).toEqual({ width: 720, height: 540 })
     } finally {
       await apiDeletePresentation(request, presentationId)

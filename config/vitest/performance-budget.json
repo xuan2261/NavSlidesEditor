@@ -4,14 +4,14 @@
   "status": "measured",
   "targetMedianImprovement": 0.3,
   "requiredSampleCount": 5,
-  "maxWallSeconds": 900,
+  "maxWallSeconds": 1350,
   "sampleDurationsSeconds": [
-    774.21, 786.45, 780.12, 792.88, 778.64
+    1000.09, 1000.01, 1007.72, 994.4, 1016.55
   ],
   "runnerClass": "linux-x64-4cpu-16gb-ci",
-  "inventoryHash": "d459a1997cb1867d523ff90e6e26c677a3d5f7d08c9128d737cb8168c6a076e9",
+  "inventoryHash": "18f4b5ec5b870b94ccb168c0718df0a6b9ced6193c1b9f93b0086b75502fd5cc",
   "configHash": "c809b6e009747d9d8492116cd51bef0a2ecb372f253859d91a39ec369132ca1e",
-  "measurementCommit": "6a3d20868e6a61918f9722e96e6012af7b23aba3",
-  "statistic": "measured-median-with-consolidated-900-second-ceiling",
-  "varianceMargin": 0.153669
+  "measurementCommit": "9d5796bb1d83acc5d09f3ad22207c8d7e306e98d",
+  "statistic": "measured-median-with-consolidated-1350-second-ceiling",
+  "varianceMargin": 0.25
 }

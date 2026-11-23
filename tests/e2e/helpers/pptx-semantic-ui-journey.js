@@ -101,7 +101,10 @@ export async function closeOverlay(page, interaction = 'pointer') {
   const overlay = page.getByRole('button', { name: 'Close workspace overlay', exact: true })
   if (await overlay.isVisible()) {
     if (interaction === 'pointer') {
-      await overlay.click({ force: true })
+      const navigatorDialog = page.getByRole('dialog', { name: 'Slide navigator', exact: true })
+      const box = await overlay.boundingBox()
+      const x = (await navigatorDialog.isVisible()) && box ? Math.max(8, box.width - 8) : 8
+      await overlay.click({ position: { x, y: 8 } })
     } else {
       await overlay.focus()
       await page.keyboard.press('Escape')

@@ -48,46 +48,89 @@ test.describe('Game scoring and leaderboard over sockets', () => {
     request,
   }) => {
     const gameId = `e2e-game-${Date.now()}-${Math.floor(Math.random() * 1e6)}`
-    // Single question, no timeLimit → scoring is deterministic (correct=10, wrong=0).
+    // Single question, timeLimit: null → scoring is deterministic (correct=10, wrong=0).
     const created = await request.post('/api/games', {
       data: {
         gameId,
         gameType: 'hot-potato',
-        options: { questions: [{ id: 'q1', correctIndex: 1, points: 10 }] },
+        options: {
+          questions: [
+            {
+              id: 'q1',
+              question: '2 + 2?',
+              options: ['3', '4'],
+              correctIndex: 1,
+              points: 10,
+              timeLimit: null,
+            },
+          ],
+        },
       },
     })
     expect(created.ok()).toBeTruthy()
     const createdBody = await created.json()
 
+    const host = await connectGameSocket()
     const alice = await connectGameSocket()
     const bob = await connectGameSocket()
     try {
-      const aliceJoined = waitForEvent(alice, 'game-leaderboard')
-      alice.emit('game-join', {
+      const hostSessionP = waitForEvent(host, 'game-session')
+      host.emit('game-join', {
         gameId,
-        playerName: 'Alice',
-        playerId: 'p-alice',
+        playerName: 'Host',
+        playerId: 'p-host',
         role: 'host',
         hostCapability: createdBody.hostCapability,
       })
+      const hostSession = await hostSessionP
+
+      const aliceJoined = waitForEvent(alice, 'game-leaderboard')
+      alice.emit('game-join', { gameId, playerName: 'Alice', playerId: 'p-alice' })
       await aliceJoined
 
       const bobJoined = waitForEvent(bob, 'game-leaderboard')
       bob.emit('game-join', { gameId, playerName: 'Bob', playerId: 'p-bob' })
       await bobJoined
 
-      const question = waitForEvent(alice, 'game-question')
-      alice.emit('game-next', { gameId })
-      await question
+      const questionP = waitForEvent(alice, 'game-question')
+      host.emit('game-next', {
+        gameId,
+        roomInstanceId: createdBody.roomInstanceId,
+        generation: createdBody.generation,
+        roundId: createdBody.roundId,
+        commandId: 'cmd-next-1',
+      })
+      const activeQuestion = await questionP
+
+      const roundEnvelope = {
+        gameId,
+        roomInstanceId: activeQuestion.roomInstanceId,
+        generation: activeQuestion.generation,
+        roundId: activeQuestion.roundId,
+      }
 
       const aliceResult = waitForEvent(alice, 'game-answer-result')
-      alice.emit('game-answer', { gameId, questionId: 'q1', answerIndex: 1, timeSpentMs: 500 })
+      alice.emit('game-answer', {
+        ...roundEnvelope,
+        commandId: 'cmd-alice-1',
+        attemptId: 'att-alice-1',
+        questionId: 'q1',
+        answerIndex: 1,
+        timeSpentMs: 500,
+      })
       const aliceScore = await aliceResult
       expect(aliceScore.correct).toBe(true)
       expect(aliceScore.totalScore).toBe(10)
 
       const bobResult = waitForEvent(bob, 'game-answer-result')
-      bob.emit('game-answer', { gameId, questionId: 'q1', answerIndex: 0, timeSpentMs: 500 })
+      bob.emit('game-answer', {
+        ...roundEnvelope,
+        commandId: 'cmd-bob-1',
+        attemptId: 'att-bob-1',
+        questionId: 'q1',
+        answerIndex: 0,
+        timeSpentMs: 500,
+      })
       const bobScore = await bobResult
       expect(bobScore.correct).toBe(false)
       expect(bobScore.totalScore).toBe(0)
@@ -96,12 +139,28 @@ test.describe('Game scoring and leaderboard over sockets', () => {
       const lbRes = await request.get(`/api/games/${gameId}/leaderboard`)
       expect(lbRes.ok()).toBeTruthy()
       const leaderboard = await lbRes.json()
-      expect(leaderboard[0]).toMatchObject({ name: 'Alice', score: 10 })
+      expect(leaderboard.find((p) => p.name === 'Alice')).toMatchObject({ name: 'Alice', score: 10 })
       expect(leaderboard.find((p) => p.name === 'Bob')).toMatchObject({ score: 0 })
+      const aliceIdx = leaderboard.findIndex((p) => p.name === 'Alice')
+      const bobIdx = leaderboard.findIndex((p) => p.name === 'Bob')
+      expect(aliceIdx).toBeGreaterThanOrEqual(0)
+      expect(aliceIdx).toBeLessThan(bobIdx)
+
+      await request
+        .delete(`/api/games/${gameId}`, {
+          data: {
+            ...roundEnvelope,
+            commandId: 'cmd-delete-1',
+            playerId: 'p-host',
+            sessionToken: hostSession.sessionToken,
+            hostCapability: createdBody.hostCapability,
+          },
+        })
+        .catch(() => {})
     } finally {
+      host.disconnect()
       alice.disconnect()
       bob.disconnect()
-      await request.delete(`/api/games/${gameId}`).catch(() => {})
     }
   })
 })

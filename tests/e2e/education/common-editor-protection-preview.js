@@ -1,5 +1,5 @@
 import { expect } from '../fixtures/test-fixtures.js'
-import { geometry, captureCommon } from './common-editor.js'
+import { geometry, captureCommon, selectCommon } from './common-editor.js'
 
 export async function inspectAlignedPreview(page, s, aligned, changedGeometry, other, panel, info) {
   await page.reload()

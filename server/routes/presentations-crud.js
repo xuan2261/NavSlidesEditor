@@ -562,11 +562,17 @@ router.delete('/:id/permanent', async (req, res) => {
         ownerType: 'permanent-delete',
         ownerId: presId,
       }
+      const presentationOwner = {
+        ownerType: 'presentation',
+        ownerId: presId,
+      }
       let retainedOwnerExists = false
+      let presentationOwnerExists = false
       let compatibilityPending = false
       let historyOwners = []
       try {
         retainedOwnerExists = await packageLifecycle.packageOwnerExists(retainedOwner)
+        presentationOwnerExists = await packageLifecycle.packageOwnerExists(presentationOwner)
         historyOwners = await packageLifecycle.getPackageHistoryOwners(presId)
         if (!presentation)
           compatibilityPending = await packageLifecycle.packageCompatibilityPending(presId)
@@ -587,7 +593,8 @@ router.delete('/:id/permanent', async (req, res) => {
         livePackageBacked = await packageLifecycle.packagePresentationExists(presId)
         // A retained permanent-delete owner is durable evidence that a prior
         // attempt already quarantined the package and now needs reconciliation.
-        packageBacked = packageBacked || livePackageBacked || retainedOwnerExists
+        packageBacked =
+          packageBacked || livePackageBacked || retainedOwnerExists || presentationOwnerExists
       } catch {
         throw Object.assign(
           new Error('Package lifecycle is temporarily unavailable; retry deletion'),
@@ -819,6 +826,13 @@ router.delete('/:id/permanent', async (req, res) => {
           } catch (error) {
             cleanupErrors.push(error)
           }
+        }
+      }
+      if (!livePackageBacked && presentationOwnerExists) {
+        try {
+          await packageLifecycle.releasePackageOwnerWithRetry(presentationOwner)
+        } catch (error) {
+          cleanupErrors.push(error)
         }
       }
       if (retainedHead || retainedOwnerExists) {

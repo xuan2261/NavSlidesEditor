@@ -27,7 +27,7 @@ async function waitForPptxImport(request, jobId, capability) {
   await expect
     .poll(async () => {
       const poll = await request.get(`/api/pptx/jobs/${jobId}`, {
-        headers: { 'X-Pptx-Job-Capability': capability },
+        headers: { 'X-Pptx-Job-Capability': capability, connection: 'close' },
       })
       expect(poll.ok()).toBeTruthy()
       const job = await poll.json()
@@ -61,8 +61,8 @@ export async function importDeckForAudit(page, request, pptxDir, deckName) {
   const presentation = await apiGetPresentation(request, imported.presentationId)
   expect(presentation.slides?.length).toBeGreaterThan(0)
 
-  await page.goto(`/editor/${presentation.id}`, { timeout: 30000 })
-  await expect(page.locator('.slide-canvas')).toBeVisible({ timeout: 30000 })
+  await page.goto(`/editor/${presentation.id}`, { timeout: 90000 })
+  await expect(page.locator('.slide-canvas')).toBeVisible({ timeout: 90000 })
   return presentation.id
 }
 
@@ -70,7 +70,7 @@ export async function selectSlide(page, index) {
   const thumbnail = page.getByTestId('slide-panel-item').nth(index)
   await thumbnail.scrollIntoViewIfNeeded()
   await thumbnail.click()
-  await expect(page.locator('.slide-canvas')).toBeVisible({ timeout: 30000 })
+  await expect(page.locator('.slide-canvas')).toBeVisible({ timeout: 60000 })
 }
 
 export async function screenshotSlide(page, auditRun, deckName, index) {

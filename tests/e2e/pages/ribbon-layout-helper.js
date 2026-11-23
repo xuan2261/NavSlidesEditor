@@ -45,7 +45,7 @@ export const CRITICAL_VISIBLE_CONTROLS = {
 
 export const GROUP_STATE_EXPECTATIONS = [
   { name: 'Home idle', tab: 'Home', expected: ['Clipboard', 'Text', 'Canvas', 'Arrange'] },
-  { name: 'Insert default', tab: 'Insert', expected: ['Basic', 'Shapes', 'Content', 'Media', 'Embed', 'Advanced'] },
+  { name: 'Insert default', tab: 'Insert', expected: ['Education', 'Basic', 'Shapes', 'Content', 'Media', 'Embed', 'Advanced'] },
   { name: 'Transitions default', tab: 'Transitions', expected: ['Transition', 'Slide', 'Speed', 'Auto-Advance', 'Preview'] },
   { name: 'Animations default', tab: 'Animations', expected: ['Animation', 'Order', 'Preview'] },
   { name: 'View default', tab: 'View', expected: ['Show', 'Tools', 'Window'] },

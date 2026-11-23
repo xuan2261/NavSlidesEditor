@@ -67,13 +67,17 @@ test.describe('Live timer broadcast via game-timer socket events to viewer', () 
     await page.goto(`/live/${roomCode}`)
     await expect(page.locator('iframe[title="Live Presentation"]')).toBeVisible({ timeout: 15000 })
 
-    presenterSocket.emit('game-timer-start', { elementId: TIMER_ELEMENT_ID, duration: 60 })
+    presenterSocket.emit('game-timer-start', {
+      effectiveSlideId: 'slide-1',
+      elementId: TIMER_ELEMENT_ID,
+      duration: 60,
+    })
 
     const state = await waitWithLastSample(
       'viewer __timerStates has running timer',
       async () =>
         page.evaluate((id) => {
-          const s = window.__timerStates?.[id]
+          const s = window.__timerStates?.[JSON.stringify(['slide-1', id])]
           return s && s.running && s.duration === 60 ? s : null
         }, TIMER_ELEMENT_ID)
     )
@@ -86,16 +90,31 @@ test.describe('Live timer broadcast via game-timer socket events to viewer', () 
     await page.goto(`/live/${roomCode}`)
     await expect(page.locator('iframe[title="Live Presentation"]')).toBeVisible({ timeout: 15000 })
 
-    presenterSocket.emit('game-timer-start', { elementId: TIMER_ELEMENT_ID, duration: 30 })
+    presenterSocket.emit('game-timer-start', {
+      effectiveSlideId: 'slide-1',
+      elementId: TIMER_ELEMENT_ID,
+      duration: 30,
+    })
     await waitWithLastSample(
       'timer started on viewer',
-      async () => page.evaluate((id) => window.__timerStates?.[id]?.running === true, TIMER_ELEMENT_ID)
+      async () =>
+        page.evaluate(
+          (id) => window.__timerStates?.[JSON.stringify(['slide-1', id])]?.running === true,
+          TIMER_ELEMENT_ID
+        )
     )
 
-    presenterSocket.emit('game-timer-pause', { elementId: TIMER_ELEMENT_ID })
+    presenterSocket.emit('game-timer-pause', {
+      effectiveSlideId: 'slide-1',
+      elementId: TIMER_ELEMENT_ID,
+    })
     await waitWithLastSample(
       'timer paused on viewer',
-      async () => page.evaluate((id) => window.__timerStates?.[id]?.running === false, TIMER_ELEMENT_ID)
+      async () =>
+        page.evaluate(
+          (id) => window.__timerStates?.[JSON.stringify(['slide-1', id])]?.running === false,
+          TIMER_ELEMENT_ID
+        )
     )
   })
 
@@ -103,18 +122,29 @@ test.describe('Live timer broadcast via game-timer socket events to viewer', () 
     await page.goto(`/live/${roomCode}`)
     await expect(page.locator('iframe[title="Live Presentation"]')).toBeVisible({ timeout: 15000 })
 
-    presenterSocket.emit('game-timer-start', { elementId: TIMER_ELEMENT_ID, duration: 45 })
+    presenterSocket.emit('game-timer-start', {
+      effectiveSlideId: 'slide-1',
+      elementId: TIMER_ELEMENT_ID,
+      duration: 45,
+    })
     await waitWithLastSample(
       'timer started',
-      async () => page.evaluate((id) => window.__timerStates?.[id]?.running === true, TIMER_ELEMENT_ID)
+      async () =>
+        page.evaluate(
+          (id) => window.__timerStates?.[JSON.stringify(['slide-1', id])]?.running === true,
+          TIMER_ELEMENT_ID
+        )
     )
 
-    presenterSocket.emit('game-timer-stop', { elementId: TIMER_ELEMENT_ID })
+    presenterSocket.emit('game-timer-stop', {
+      effectiveSlideId: 'slide-1',
+      elementId: TIMER_ELEMENT_ID,
+    })
     await waitWithLastSample(
       'timer stopped on viewer',
       async () =>
         page.evaluate((id) => {
-          const s = window.__timerStates?.[id]
+          const s = window.__timerStates?.[JSON.stringify(['slide-1', id])]
           return s && s.running === false && s.remaining === 0
         }, TIMER_ELEMENT_ID)
     )
@@ -126,7 +156,11 @@ test.describe('Live timer broadcast via game-timer socket events to viewer', () 
     // get the running timer in its join-time timer:sync.
     let synced = false
     presenterSocket.on('timer:sync', () => { synced = true })
-    presenterSocket.emit('game-timer-start', { elementId: TIMER_ELEMENT_ID, duration: 90 })
+    presenterSocket.emit('game-timer-start', {
+      effectiveSlideId: 'slide-1',
+      elementId: TIMER_ELEMENT_ID,
+      duration: 90,
+    })
     await waitWithLastSample('presenter receives timer:sync echo', async () => synced)
 
     const lateViewer = await context.newPage()
@@ -137,7 +171,7 @@ test.describe('Live timer broadcast via game-timer socket events to viewer', () 
       'late viewer hydrated with running timer',
       async () =>
         lateViewer.evaluate((id) => {
-          const s = window.__timerStates?.[id]
+          const s = window.__timerStates?.[JSON.stringify(['slide-1', id])]
           return s && s.running === true ? s : null
         }, TIMER_ELEMENT_ID)
     )

@@ -155,18 +155,32 @@ async function importPptxFile(filePath, options = {}) {
   }
 
   let semanticProjection = null
+  let semanticFallbackWarning = null
   if (options.semanticImport === true) {
-    semanticProjection = await projectSemanticImport({
-      zip: packageInfo.zip,
-      presentation: mapped.presentation,
-      uploadsDir: options.uploadsDir || UPLOADS_DIR,
-      signal: options.signal,
-      mediaBudget,
-      mediaTransaction: options.mediaTransaction,
-      adapters: options.semanticAdapters,
-      geometryInheritance: options.geometryInheritance === true,
-    })
-    mapped.presentation = semanticProjection.presentation
+    try {
+      semanticProjection = await projectSemanticImport({
+        zip: packageInfo.zip,
+        presentation: mapped.presentation,
+        uploadsDir: options.uploadsDir || UPLOADS_DIR,
+        signal: options.signal,
+        mediaBudget,
+        mediaTransaction: options.mediaTransaction,
+        adapters: options.semanticAdapters,
+        geometryInheritance: options.geometryInheritance === true,
+      })
+      mapped.presentation = semanticProjection.presentation
+    } catch (err) {
+      const canFallback =
+        options.allowMappedFallbackOnSemanticUnimplemented === true &&
+        err?.code === 'PPTX_SEMANTIC_ADMISSION_FAILED' &&
+        !/external/i.test(String(err?.message || ''))
+      if (!canFallback) throw err
+      semanticFallbackWarning = {
+        type: 'semantic-projection-fallback',
+        code: 'PPTX_SEMANTIC_ADMISSION_FAILED',
+        message: sanitizeDiagnostic(err),
+      }
+    }
   }
   const stats = buildImportStats({ mappedStats: mapped.stats, parsed, startedAt: started })
   const sourceMap = await buildImportSourceMap(
@@ -188,6 +202,7 @@ async function importPptxFile(filePath, options = {}) {
   }
   for (const warning of sceneWarnings || []) combinedWarnings.push(warning)
   for (const warning of semanticProjection?.warnings || []) combinedWarnings.push(warning)
+  if (semanticFallbackWarning) combinedWarnings.push(semanticFallbackWarning)
   const accumulateOmittedCount = mapOmitted + (Number(semanticProjection?.warnings?.omittedCount) || 0) +
     (Number(combinedWarnings.omittedCount) || 0)
 

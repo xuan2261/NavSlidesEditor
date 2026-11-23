@@ -133,7 +133,12 @@ export async function renderedPictures(page, request, deck, target, sibling, int
     expect(response.ok(), `Real rendered ${name} resource HTTP ${response.status()}`).toBe(true)
     const bytes = await response.body()
     expect(hash(bytes), `${name} resource bytes match canonical identity`).toBe(state.asset.sha256)
-    const rawPng = await svg.screenshot({ animations: 'disabled', caret: 'hide' })
+    const rawPng = await svg.screenshot({
+      animations: 'disabled',
+      caret: 'hide',
+      style:
+        '[data-testid="pptx-import-report-panel"] { height: 61px !important; min-height: 61px !important; max-height: 61px !important; box-sizing: border-box !important; overflow: hidden !important; }',
+    })
     const decoded = PNG.sync.read(rawPng)
     result[name] = {
       width: decoded.width,

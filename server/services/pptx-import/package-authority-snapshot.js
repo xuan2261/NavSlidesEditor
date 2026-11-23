@@ -490,7 +490,10 @@ function resolveUncachedEditorProjectionContext(state, presentationId) {
 }
 
 function createEditorPackageRead(store) {
-  const state = store.getOwnedAuthorityState()
+  const state =
+    typeof store.getOwnedAuthorityState === 'function'
+      ? store.getOwnedAuthorityState()
+      : store.getState()
   // Preserve the exact owned publication and its validation identities. Public
   // reads remain detached; only the explicit read-only route shares authority.
   const snapshotStore = {

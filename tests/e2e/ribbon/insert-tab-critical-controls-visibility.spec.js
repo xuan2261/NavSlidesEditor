@@ -93,11 +93,11 @@ test.describe('Insert Tab Critical Controls Visibility', () => {
 
     for (const game of [
       'Name Picker',
-      'Hot Potato',
+      'Hot Potato Quiz',
       'Jeopardy',
       'Four Corners',
       'Relay Race',
-      'Trivia',
+      'Trivia Championship',
       'Scattergories',
       'Live Poll',
       'Word Cloud',

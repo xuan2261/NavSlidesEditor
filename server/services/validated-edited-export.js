@@ -152,12 +152,19 @@ async function editedExportAvailability(presentation, options = productionCompos
 
 async function hasValidatedEditedReplay(request, options = {}) {
   const store = options.store || getPackageStore()
-  return Boolean(replayRequest(store.getState(), request))
+  const state =
+    typeof store.getOwnedAuthorityState === 'function'
+      ? store.getOwnedAuthorityState()
+      : store.getState()
+  return Boolean(replayRequest(state, request))
 }
 
 async function executeValidatedEditedExport(request, options = productionComposition()) {
   const store = options.store || getPackageStore()
-  const state = store.getState()
+  const state =
+    typeof store.getOwnedAuthorityState === 'function'
+      ? store.getOwnedAuthorityState()
+      : store.getState()
   const replay = replayRequest(state, request)
   const context = replay ? null : resolveEditedExportContext(state, request.presentationId)
   if (!replay && !context.ok) return blocked(context.reasonCode)

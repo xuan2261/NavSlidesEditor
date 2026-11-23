@@ -30,7 +30,8 @@ async function waitForTrustedIframe(iframeLocator) {
   await expect
     .poll(
       async () => {
-        return frame.evaluate(
+        const target = frame.childFrames()[0] || frame
+        return target.evaluate(
           () => document.getElementById('trusted-html-status')?.textContent || null
         )
       },

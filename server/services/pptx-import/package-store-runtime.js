@@ -127,12 +127,13 @@ async function drainPackageCompatibilityOutbox({ signal } = {}) {
     })
     if (!writes.length) return 0
 
+    const readableStore = await getReadablePackageStore()
     const applied = []
     const obsolete = []
     const poisoned = []
     const candidateWrites = []
     for (const write of writes) {
-      if (isCapturedWriteCurrent(getPackageStore(), write)) {
+      if (isCapturedWriteCurrent(readableStore, write)) {
         candidateWrites.push(write)
       } else {
         obsolete.push(write)
@@ -142,10 +143,11 @@ async function drainPackageCompatibilityOutbox({ signal } = {}) {
       const write = candidateWrites[0]
       signal?.throwIfAborted()
       try {
+        const currentStore = await getReadablePackageStore()
         const didApply = await withPresentations(
           (presentations) => {
             signal?.throwIfAborted()
-            if (!isCapturedWriteCurrent(getPackageStore(), write)) return false
+            if (!isCapturedWriteCurrent(currentStore, write)) return false
             applyCompatibilityWrites(presentations, [write])
             return true
           },
@@ -167,26 +169,31 @@ async function drainPackageCompatibilityOutbox({ signal } = {}) {
     } else if (candidateWrites.length > 1) {
       signal?.throwIfAborted()
       try {
+        const currentStore = await getReadablePackageStore()
         await withPresentations(
           (presentations) => {
             signal?.throwIfAborted()
-            const stillCurrent = candidateWrites.filter((w) => isCapturedWriteCurrent(getPackageStore(), w))
+            const stillCurrent = candidateWrites.filter((w) =>
+              isCapturedWriteCurrent(currentStore, w)
+            )
             applyCompatibilityWrites(presentations, stillCurrent)
             return true
           },
           { signal }
         )
+        const postStore = await getReadablePackageStore()
         for (const write of candidateWrites) {
-          if (isCapturedWriteCurrent(getPackageStore(), write)) applied.push(write)
+          if (isCapturedWriteCurrent(postStore, write)) applied.push(write)
           else obsolete.push(write)
         }
       } catch (error) {
         if (signal?.aborted) throw error
         for (const write of candidateWrites) {
           try {
+            const currentStore = await getReadablePackageStore()
             const didApply = await withPresentations(
               (presentations) => {
-                if (!isCapturedWriteCurrent(getPackageStore(), write)) return false
+                if (!isCapturedWriteCurrent(currentStore, write)) return false
                 applyCompatibilityWrites(presentations, [write])
                 return true
               },

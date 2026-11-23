@@ -17,7 +17,6 @@ const pptxImportSpecs = [
   /tests\/e2e\/critical-pptx-journey\.spec\.js$/,
   /tests\/e2e\/pptx-import-(?:async|fidelity|real-browser-audit|editor-visual-regression)\.spec\.js$/,
   /tests\/e2e\/export\/pptx-import-endpoint-roundtrip-across-multiple-fixtures\.spec\.js$/,
-  /tests[\\/]e2e[\\/]pptx-semantic-edit\.spec\.js$/,
 ]
 const chromiumSnapshotPathTemplate =
   '{snapshotDir}/{testFileDir}/{testFileName}-snapshots/{arg}-chromium{-snapshotSuffix}{ext}'
@@ -82,6 +81,7 @@ module.exports = defineConfig({
         /tests\/e2e\/visual-regression\.spec\.js$/,
         /tests\/e2e\/a11y\/tablet-touch-editor-interactions\.spec\.js$/,
         /tests[\\/]e2e[\\/]education[\\/]desktop-runtime-release\.spec\.js$/,
+        /tests[\\/]e2e[\\/]pptx-semantic-edit\.spec\.js$/,
         ...pptxImportSpecs,
       ],
       use: { ...devices['Desktop Chrome'] },

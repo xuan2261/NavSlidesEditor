@@ -45,7 +45,7 @@ beforeAll(async () => {
       const face=state.fontRuntime?.fontProfile.faces[0];
       return <><output data-id={id}>{state.status}</output>{face &&
         <span data-font-proof={id} style={{fontFamily:state.fontRuntime.fontFamilies[face.id],
-          fontSize:'18pt',fontSynthesis:'none',whiteSpace:'pre'}}>MMMM iii</span>}</>
+          fontSize:'18pt',fontSynthesis:'none',whiteSpace:'pre',textRendering:'geometricPrecision'}}>MMMM iii</span>}</>
     }
     globalThis.states={};
     globalThis.loadFonts=loadPptxSourceFontRuntime;

@@ -31,6 +31,7 @@ async function readContext(inventory, graph, occurrenceId) {
   if (!P_URIS.has(presentation.root.uri) || presentation.root.local !== 'presentation')
     presentation.fail(presentation.root, 'presentation root')
   const slideList = presentation.one(presentation.root, 'sldIdLst', P_URIS)
+  const presentationRels = slideList?.children?.length ? await graph.relations(presentation) : []
   const slideRelations = []
   for (const n of slideList?.children || []) {
     if (!P_URIS.has(n.uri) || n.local !== 'sldId') presentation.fail(n, 'slide identity')
@@ -42,8 +43,7 @@ async function readContext(inventory, graph, occurrenceId) {
     )
     if (ids.length !== 1) presentation.fail(n, 'slide relationship identity')
     const id = decodeXml(ids[0].value)
-    const rels = await graph.relations(presentation)
-    const matches = rels.filter(
+    const matches = presentationRels.filter(
       (r) => r.Id === id && [...graph.R].some((uri) => r.Type === `${uri}/slide`)
     )
     if (matches.length !== 1) presentation.fail(n, 'slide relationship binding')

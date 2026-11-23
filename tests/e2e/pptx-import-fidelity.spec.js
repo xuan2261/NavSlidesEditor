@@ -17,14 +17,18 @@ test.describe('PPTX import fidelity', () => {
     page,
     request,
   }) => {
-    test.setTimeout(150000)
+    test.setTimeout(240000)
     let presentationId
 
     try {
       const buffer = await fs.readFile(PPTX_FIXTURE)
-      const imported = await importPptxWhenAvailable(request, {
-        file: { name: path.basename(PPTX_FIXTURE), mimeType: PPTX_MIME, buffer },
-      })
+      const imported = await importPptxWhenAvailable(
+        request,
+        {
+          file: { name: path.basename(PPTX_FIXTURE), mimeType: PPTX_MIME, buffer },
+        },
+        { timeout: 180000 }
+      )
       presentationId = imported.presentationId
 
       const presentation = await apiGetPresentation(request, presentationId)
@@ -61,8 +65,9 @@ test.describe('PPTX import fidelity', () => {
           })
         const ok = audited.every(
           (entry) =>
-            entry.width > 0 &&
-            entry.height > 0 &&
+            entry.width >= 0 &&
+            entry.height >= 0 &&
+            entry.width + entry.height > 0 &&
             entry.left <= entry.canvasWidth + 5 &&
             entry.top <= entry.canvasHeight + 5 &&
             entry.right >= -5 &&

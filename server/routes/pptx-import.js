@@ -232,7 +232,11 @@ async function isPresentationListable(
       head?.originalRevisionId !== expected.revisionId
     )
       return false
-    const state = (await getReadablePackageStore()).getState()
+    const readableStore = await getReadablePackageStore()
+    const state =
+      typeof readableStore.getOwnedAuthorityState === 'function'
+        ? readableStore.getOwnedAuthorityState()
+        : readableStore.getState()
     const current = state.heads.find((item) => item.presentationId === presentationId)
     if (!current || hashCanonical(current) !== hashCanonical(head)) return false
     const receipt = state.jobs.find(
@@ -574,6 +578,7 @@ async function runImport({
           originalName,
           semanticImport: true,
           geometryInheritance: true,
+          allowMappedFallbackOnSemanticUnimplemented: true,
           onProgress: (progress) => jobManager.emitProgress(jobId, progress),
           signal: abortController.signal,
           mediaTransaction,

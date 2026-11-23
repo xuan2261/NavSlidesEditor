@@ -243,7 +243,10 @@ async function publishImport(store, prepared, options = {}) {
     blob,
     revision,
     inventory: authority.opcManifest,
-    head: store.getState().heads.find((head) => head.presentationId === presentationId),
+    head:
+      typeof store.getPresentationHead === 'function'
+        ? store.getPresentationHead(presentationId)
+        : store.getState().heads.find((head) => head.presentationId === presentationId),
   }
 }
 

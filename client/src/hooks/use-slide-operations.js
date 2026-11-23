@@ -410,66 +410,62 @@ export function useSlideOperations({
 
   const duplicateSlide = useCallback(
     (index) => {
-      let targetIndex = 0
-      let warnings = []
-      setPresentation((prev) => {
-        if (!prev) return prev
-        const result = duplicateSlidesAtIndices(
-          prev.slides,
-          [index],
-          undefined,
-          0,
-          prev.layoutMasters,
-          prev.pptxSemantic
-        )
-        targetIndex = result.currentSlideIndex
-        warnings = result.warnings
-        return {
-          ...prev,
-          slides: result.slides,
-          ...(result.pptxSemantic ? { pptxSemantic: result.pptxSemantic } : {}),
-        }
-      })
-      if (warnings.length)
-        showNotice(warnings.map((warning) => warning.error).join('\n'), {
+      if (!presentation) return
+      const result = duplicateSlidesAtIndices(
+        presentation.slides,
+        [index],
+        undefined,
+        0,
+        presentation.layoutMasters,
+        presentation.pptxSemantic
+      )
+      setPresentation((prev) =>
+        prev
+          ? {
+              ...prev,
+              slides: result.slides,
+              ...(result.pptxSemantic ? { pptxSemantic: result.pptxSemantic } : {}),
+            }
+          : prev
+      )
+      if (result.warnings.length)
+        showNotice(result.warnings.map((warning) => warning.error).join('\n'), {
           title: 'Repair interaction targets',
           testId: 'interaction-reference-notice',
         })
-      setCurrentSlideIndex(targetIndex)
+      setCurrentSlideIndex(result.currentSlideIndex)
     },
-    [setPresentation, setCurrentSlideIndex]
+    [presentation, setPresentation, setCurrentSlideIndex]
   )
 
   const duplicateSlides = useCallback(
     (indices) => {
-      let targetIndex = 0
-      let warnings = []
-      setPresentation((prev) => {
-        if (!prev) return prev
-        const result = duplicateSlidesAtIndices(
-          prev.slides,
-          indices,
-          undefined,
-          0,
-          prev.layoutMasters,
-          prev.pptxSemantic
-        )
-        targetIndex = result.currentSlideIndex
-        warnings = result.warnings
-        return {
-          ...prev,
-          slides: result.slides,
-          ...(result.pptxSemantic ? { pptxSemantic: result.pptxSemantic } : {}),
-        }
-      })
-      if (warnings.length)
-        showNotice(warnings.map((warning) => warning.error).join('\n'), {
+      if (!presentation) return
+      const result = duplicateSlidesAtIndices(
+        presentation.slides,
+        indices,
+        undefined,
+        0,
+        presentation.layoutMasters,
+        presentation.pptxSemantic
+      )
+      setPresentation((prev) =>
+        prev
+          ? {
+              ...prev,
+              slides: result.slides,
+              ...(result.pptxSemantic ? { pptxSemantic: result.pptxSemantic } : {}),
+            }
+          : prev
+      )
+      if (result.warnings.length)
+        showNotice(result.warnings.map((warning) => warning.error).join('\n'), {
           title: 'Repair interaction targets',
           testId: 'interaction-reference-notice',
         })
-      setCurrentSlideIndex(targetIndex)
+      setCurrentSlideIndex(result.currentSlideIndex)
     },
-    [setPresentation, setCurrentSlideIndex]
+    [presentation, setPresentation, setCurrentSlideIndex]
   )
 
   const deleteSlides = useCallback(

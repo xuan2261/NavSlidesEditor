@@ -96,8 +96,10 @@ test.describe('Parallax Features E2E', () => {
     const html = await exportRes.text()
     expect(html).toContain('font-weight: 700')
     expect(html).toContain('line-height: 1.5')
-    expect(html).toContain('https://example.com/video.mp4#t=4,9')
-    expect(html).toContain('this.playbackRate=1.5')
+    expect(html).toContain('src="https://example.com/video.mp4"')
+    expect(html).toContain(
+      'data-ns-media-playback="{&quot;startTime&quot;:4,&quot;endTime&quot;:9,&quot;loop&quot;:false,&quot;playbackRate&quot;:1.5}"'
+    )
     expect(html).toContain('Launch')
     expect(html).toContain('Photo by Test Author')
   })

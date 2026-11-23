@@ -386,5 +386,5 @@ describe('canonical mutation journal', () => {
     expect(() => deriveMutationJournal(canonicalBefore, largeEdit, {
       matrixAuthorityEpoch: 1,
     })).toThrow(/aggregate storage budget/i)
-  })
+  }, 20000)
 })

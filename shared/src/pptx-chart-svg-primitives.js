@@ -96,7 +96,7 @@ function text(document, value, localStyle, path, runtime) {
     width: measured.width,
     height: measured.height,
     at(x, y, anchor = 'start') {
-      return `<text data-chart-text="${escape(path)}" x="${x}" y="${y + measured.baseline}" text-anchor="${anchor}" fill="#${style.color}" font-family="${alias}" font-size="${(style.fontSizePt * 4) / 3}" font-weight="${style.bold ? 700 : 400}" font-style="${style.italic ? 'italic' : 'normal'}"${style.language ? ` lang="${escape(style.language)}"` : ''} style="font-synthesis:none;white-space:pre" xml:space="preserve">${escape(value)}</text>`
+      return `<text data-chart-text="${escape(path)}" x="${x}" y="${y + measured.baseline}" text-anchor="${anchor}" fill="#${style.color}" font-family="${alias}" font-size="${(style.fontSizePt * 4) / 3}" font-weight="${style.bold ? 700 : 400}" font-style="${style.italic ? 'italic' : 'normal'}"${style.language ? ` lang="${escape(style.language)}"` : ''} style="font-synthesis:none;white-space:pre;text-rendering:geometricPrecision" xml:space="preserve">${escape(value)}</text>`
     },
   }
 }

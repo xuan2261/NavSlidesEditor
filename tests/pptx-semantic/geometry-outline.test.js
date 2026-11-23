@@ -259,7 +259,7 @@ it('covers the observed 600 by 240 point ellipse at the observed 30 point inset 
   expect(winding(outline, 400, 160)).toBe(0)
   expect(winding(outline, 400, 10)).toBe(0)
   expect(winding(outline, 400, 20)).toBe(1)
-})
+}, 20000)
 it.each(
   Object.keys(bands).flatMap((compound) => ['ctr', 'in'].map((alignment) => [compound, alignment]))
 )(

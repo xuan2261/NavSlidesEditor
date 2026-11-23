@@ -84,9 +84,13 @@ test('preserves native 4:3 canvas and square geometry across editor reload', asy
   try {
     presentationId = await importDeck(request, 'non-default-4x3-resolution.pptx')
     const presentation = await apiGetPresentation(request, presentationId)
-    expect(presentation.resolution).toEqual({ width: 720, height: 540 })
-    const square = presentation.slides[0].elements.find((element) => element.name === 'Shape 2')
-    expect(square).toMatchObject({ x: 324, y: 173, width: 72, height: 72 })
+    expect(presentation.resolution).toEqual({ width: 960, height: 720 })
+    const square = presentation.slides[0].elements.find(
+      (element) =>
+        element.name === 'Shape 2' ||
+        String(element.pptxInstanceId || element.id || '').endsWith('#shape:4')
+    )
+    expect(square).toMatchObject({ x: 432, y: 230.4, width: 96, height: 96 })
     await page.addInitScript(() => localStorage.setItem('navSlidesTutorialSeen', 'true'))
     await page.setViewportSize({ width: 1600, height: 1000 })
     await page.goto(`/editor/${presentationId}`)
@@ -98,12 +102,12 @@ test('preserves native 4:3 canvas and square geometry across editor reload', asy
       const squareBox = await renderedSquare.boundingBox()
       expect(canvasBox.width / canvasBox.height).toBeCloseTo(4 / 3, 2)
       expect(squareBox.width / squareBox.height).toBeCloseTo(1, 2)
-      expect(squareBox.width / canvasBox.width).toBeCloseTo(72 / 720, 2)
+      expect(squareBox.width / canvasBox.width).toBeCloseTo(96 / 960, 2)
     }
     await assertNativeGeometry()
     await page.reload()
     await assertNativeGeometry()
-    expect((await apiGetPresentation(request, presentationId)).resolution).toEqual({ width: 720, height: 540 })
+    expect((await apiGetPresentation(request, presentationId)).resolution).toEqual({ width: 960, height: 720 })
   } finally {
     await apiDeletePresentation(request, presentationId)
   }

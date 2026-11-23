@@ -502,7 +502,7 @@ ${hasSourceTiming ? `    var disposeSourceTiming = (${attachSourceTimingPlayback
 ` : ''}
     var params = new URLSearchParams(window.location.search);
     var revealConfig = {
-      hash: true,
+      hash: window.location.protocol !== 'about:',
       width: ${resW},
       height: ${resH},
       margin: 0,

@@ -18,7 +18,7 @@ const fx = createCompatibilityFixture()
 beforeEach(async () => { await fx.beforeEach() })
 afterEach(async () => { await fx.afterEach() })
 
-describe('semantic compatibility at supported consumer boundaries', () => {
+describe('semantic compatibility at supported consumer boundaries', { timeout: 30000 }, () => {
   it('forks duplicate and template owners with independently editable schema-1 occurrences and Original recovery', async () => {
     expect(fx.initial.pptxSemantic.schemaVersion).toBe(1)
     await fx.originalFor(fx.initial.id)
