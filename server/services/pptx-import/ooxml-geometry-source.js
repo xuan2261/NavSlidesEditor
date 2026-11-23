@@ -4,7 +4,7 @@ const { parseXml, attr, decodeXml, A_URIS } = require('./ooxml-text-run-xml')
 const {
   normalizeGeometryDocument,
   normalizeGeometryTemplate,
-} = require('../../../shared/src/pptx-geometry-document')
+} = require('revealjs-shared/src/pptx-geometry-document')
 let presets
 const fail = (detail) => {
   throw new TypeError(`Unsupported DrawingML geometry source: ${detail}`)

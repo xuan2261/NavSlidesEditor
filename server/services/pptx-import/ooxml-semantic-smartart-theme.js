@@ -2,7 +2,7 @@ const { relationshipPart } = require('./slide-order')
 const { resolveTarget } = require('./package-store/raw-zip')
 const { A_URIS, P_URIS } = require('./ooxml-text-run-xml')
 const { readTableColor } = require('./ooxml-semantic-table-properties')
-const { resolveRgbPaint, resolveProperty } = require('../../../shared/src/pptx-style-resolution')
+const { resolveRgbPaint, resolveProperty } = require('revealjs-shared/src/pptx-style-resolution')
 const R = ['http://schemas.openxmlformats.org/officeDocument/2006/relationships',
   'http://purl.oclc.org/ooxml/officeDocument/relationships']
 

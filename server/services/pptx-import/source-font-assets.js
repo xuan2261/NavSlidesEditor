@@ -1,7 +1,7 @@
 const fs = require('node:fs/promises')
 const path = require('node:path')
 const { createHash } = require('node:crypto')
-const { cloneTextData, evaluateFontProfile } = require('../../../shared/src/pptx-text-document')
+const { cloneTextData, evaluateFontProfile } = require('revealjs-shared/src/pptx-text-document')
 const { inspectSourceFont } = require('./source-font-assets-metadata')
 const { readSourceFontCollection, extractSourceFontCollectionFace } = require('./source-font-collection')
 

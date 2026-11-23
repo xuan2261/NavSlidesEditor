@@ -1,7 +1,7 @@
 const { attr, decodeXml, P_URIS, A_URIS } = require('./ooxml-text-run-xml')
 const { readColorSource } = require('./ooxml-color-source')
 const { resolveTarget } = require('./package-store/raw-zip')
-const { PRESENTATION_PROPERTIES } = require('../../../shared/src/pptx-presentation-properties')
+const { PRESENTATION_PROPERTIES } = require('revealjs-shared/src/pptx-presentation-properties')
 const R = [
   'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
   'http://purl.oclc.org/ooxml/officeDocument/relationships',

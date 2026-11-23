@@ -4,16 +4,16 @@ const { relationshipPart } = require('./slide-order')
 const { resolveTarget } = require('./package-store/raw-zip')
 const { persistZipMediaRef } = require('./media')
 const { extractGeometryImageMetadata } = require('./geometry-image-metadata')
-const { geometryThemeCategories } = require('../../../shared/src/pptx-geometry-style-records')
-const { GEOMETRY_PATTERN_PRESETS } = require('../../../shared/src/pptx-geometry-pattern')
+const { geometryThemeCategories } = require('revealjs-shared/src/pptx-geometry-style-records')
+const { GEOMETRY_PATTERN_PRESETS } = require('revealjs-shared/src/pptx-geometry-pattern')
 const {
   EFFECT_RANGES,
   EFFECT_LIST_ORDER,
   validateGeometryEffectGraph,
   unwrapGeometryEffectValue,
-} = require('../../../shared/src/pptx-geometry-effect-program')
-const { overlayBlips } = require('../../../shared/src/pptx-geometry-effect-overlay-bindings')
-const { GEOMETRY_COLOR_KINDS } = require('../../../shared/src/pptx-geometry-color')
+} = require('revealjs-shared/src/pptx-geometry-effect-program')
+const { overlayBlips } = require('revealjs-shared/src/pptx-geometry-effect-overlay-bindings')
+const { GEOMETRY_COLOR_KINDS } = require('revealjs-shared/src/pptx-geometry-color')
 const { readColorSource } = require('./ooxml-color-source')
 const REL = new Set([
   'http://schemas.openxmlformats.org/package/2006/relationships',

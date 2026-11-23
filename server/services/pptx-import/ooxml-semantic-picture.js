@@ -1,7 +1,7 @@
 const { createHash } = require('node:crypto')
 const { attr, decodeXml, A_URIS, P_URIS } = require('./ooxml-text-run-xml')
 const { extractGeometryImageMetadata } = require('./geometry-image-metadata')
-const { pictureParameters } = require('../../../shared/src/pptx-picture-document')
+const { pictureParameters } = require('revealjs-shared/src/pptx-picture-document')
 const R = new Set([
   'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
   'http://purl.oclc.org/ooxml/officeDocument/relationships',

@@ -1,5 +1,5 @@
 const { A_URIS, P_URIS, decodeXml, descendants } = require('./ooxml-text-run-xml')
-const { normalizeTextProperties } = require('../../../shared/src/pptx-text-document')
+const { normalizeTextProperties } = require('revealjs-shared/src/pptx-text-document')
 
 // No inferred defaults or opaque declaration bag. bodyPr has no standalone
 // inventory ID: its exact direct shape/txBody ancestry owns these properties.

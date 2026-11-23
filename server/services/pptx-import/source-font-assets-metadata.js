@@ -1,4 +1,4 @@
-const { readFontCoverage } = require('../../../shared/src/pptx-text-layout-font')
+const { readFontCoverage } = require('revealjs-shared/src/pptx-text-layout-font')
 
 // Only physical single-face SFNT is admitted by the consuming browser runtime.
 // Identity comes from name/OS2/head tables, never the containing file's name.

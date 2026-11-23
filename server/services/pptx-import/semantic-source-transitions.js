@@ -1,5 +1,5 @@
-const { MC } = require('../../../shared/src/pptx-transition-xml')
-const { readTransitionDocument } = require('../../../shared/src/pptx-transition-document')
+const { MC } = require('revealjs-shared/src/pptx-transition-xml')
+const { readTransitionDocument } = require('revealjs-shared/src/pptx-transition-document')
 function readSemanticTransition({ source, node, xml, roots }) {
   const path = source.componentLocators[0].path
   const slide = roots[0]

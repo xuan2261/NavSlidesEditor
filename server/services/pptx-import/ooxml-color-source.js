@@ -3,7 +3,7 @@ const {
   isGeometryColorValue,
   GEOMETRY_COLOR_TRANSFORM_RANGES,
   GEOMETRY_COLOR_TRANSFORMS,
-} = require('../../../shared/src/pptx-geometry-color')
+} = require('revealjs-shared/src/pptx-geometry-color')
 
 // Shared DrawingML color grammar; callers retain their source ownership and diagnostics.
 function readColorSource(node, { check, number, raw, wrap, fail }) {

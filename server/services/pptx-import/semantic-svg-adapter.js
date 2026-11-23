@@ -2,7 +2,7 @@ const { createHash } = require('node:crypto')
 const { parseSvgSource } = require('./ooxml-semantic-svg')
 const { resolveTarget } = require('./package-store/raw-zip')
 const { A_URIS, attr, decodeXml } = require('./ooxml-text-run-xml')
-const { PARAMETERS, primitiveGeometry } = require('../../../shared/src/pptx-vector-primitives')
+const { PARAMETERS, primitiveGeometry } = require('revealjs-shared/src/pptx-vector-primitives')
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const R_URIS = new Set([
   'http://schemas.openxmlformats.org/officeDocument/2006/relationships',

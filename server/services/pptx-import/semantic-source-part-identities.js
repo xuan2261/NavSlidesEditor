@@ -3,7 +3,7 @@ const { resolveTarget } = require('./package-store/raw-zip')
 const {
   SOURCE_PART_IDENTITIES,
   validIdentityValue,
-} = require('../../../shared/src/pptx-source-part-identities')
+} = require('revealjs-shared/src/pptx-source-part-identities')
 const R = [
   'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
   'http://purl.oclc.org/ooxml/officeDocument/relationships',

@@ -2,7 +2,7 @@ const { createHash } = require('node:crypto')
 const { collectSemanticFontRequests } = require('./semantic-font-request')
 const { resolveSemanticFontDelivery } = require('./semantic-font-delivery')
 const { SOURCE_FONT_LIMITS } = require('./source-font-assets')
-const { PORTABLE_LIMITS } = require('../../../shared/src/education/portable-resource-contract')
+const { PORTABLE_LIMITS } = require('revealjs-shared/src/education/portable-resource-contract')
 
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const failure = (code, issues = [{ code }], status = 422) =>

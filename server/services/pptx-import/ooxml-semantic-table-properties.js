@@ -1,5 +1,5 @@
-const { normalizeTextProperties } = require('../../../shared/src/pptx-text-document')
-const { validateTableProperties } = require('../../../shared/src/pptx-table-properties')
+const { normalizeTextProperties } = require('revealjs-shared/src/pptx-text-document')
+const { validateTableProperties } = require('revealjs-shared/src/pptx-table-properties')
 const { textContent } = require('./ooxml-text-run-xml')
 
 function readTableColor(node, source) {

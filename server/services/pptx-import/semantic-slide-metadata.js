@@ -1,7 +1,7 @@
 const { attr, decodeXml, textContent, descendants, P_URIS, A_URIS } = require('./ooxml-text-run-xml')
 const { resolveTarget } = require('./package-store/raw-zip')
 const { relationshipPart } = require('./slide-order')
-const { SOURCE_PART_IDENTITIES } = require('../../../shared/src/pptx-source-part-identities')
+const { SOURCE_PART_IDENTITIES } = require('revealjs-shared/src/pptx-source-part-identities')
 
 const R = new Set([
   'http://schemas.openxmlformats.org/officeDocument/2006/relationships',

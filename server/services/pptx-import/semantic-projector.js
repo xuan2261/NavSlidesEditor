@@ -7,23 +7,23 @@ const { convertEmfWmfBuffer } = require('./vector-media-convert')
 const { resolveTarget } = require('./package-store/raw-zip')
 const { relationshipPart } = require('./slide-order')
 const { PptxImportError } = require('./diagnostics')
-const { normalizePptxSemanticDocument } = require('../../../shared/src/pptx-semantic-document')
-const { compactSemanticGraph } = require('../../../shared/src/pptx-semantic-source-graph')
-const { normalizeSemanticPresentation } = require('../../../shared/src/pptx-semantic-presentation')
+const { normalizePptxSemanticDocument } = require('revealjs-shared/src/pptx-semantic-document')
+const { compactSemanticGraph } = require('revealjs-shared/src/pptx-semantic-source-graph')
+const { normalizeSemanticPresentation } = require('revealjs-shared/src/pptx-semantic-presentation')
 const { readSemanticTextAdmission } = require('./ooxml-semantic-text-admission')
 const { readPictureSource, pictureMedia } = require('./ooxml-semantic-picture')
 const { extractGeometryImageMetadata } = require('./geometry-image-metadata')
 const { readSemanticMedia } = require('./ooxml-semantic-media')
 const { readSemanticTiming } = require('./ooxml-semantic-timing')
 const { buildSemanticTextStyleContexts } = require('./ooxml-semantic-text-context')
-const { compactTextContexts } = require('../../../shared/src/pptx-semantic-text-context-codec')
+const { compactTextContexts } = require('revealjs-shared/src/pptx-semantic-text-context-codec')
 const { readNativeCreationIdentity } = require('./ooxml-native-creation-identity')
 const { projectPresentationProperties } = require('./semantic-presentation-properties')
 const { projectSourcePartIdentities } = require('./semantic-source-part-identities')
 const { projectSourceGuideLists } = require('./semantic-source-guides')
 const { projectSourceTransitions } = require('./semantic-source-transitions')
 const { projectTheme3dAppearance } = require('./ooxml-theme-3d-appearance')
-const { sourceTransition } = require('../../../shared/src/pptx-transition-document')
+const { sourceTransition } = require('revealjs-shared/src/pptx-transition-document')
 const { projectSlideMetadata } = require('./semantic-slide-metadata')
 const { validateNotesSourceExtensions } = require('./semantic-notes-source-extensions')
 const { readShape3dAppearance } = require('./ooxml-shape-3d-appearance')
@@ -33,9 +33,9 @@ const { projectChartFrame } = require('./semantic-chart-adapter')
 const { projectSmartArtFrame } = require('./semantic-smartart-adapter')
 const { projectOmmlShape } = require('./semantic-omml-adapter')
 const { standaloneEquationTopology } = require('./ooxml-semantic-text-equation')
-const { resolveRgbPaint } = require('../../../shared/src/pptx-style-resolution')
-const { materializeTextDocument } = require('../../../shared/src/pptx-text-materialization')
-const { textDocumentHtml } = require('../../../shared/src/pptx-shape-label')
+const { resolveRgbPaint } = require('revealjs-shared/src/pptx-style-resolution')
+const { materializeTextDocument } = require('revealjs-shared/src/pptx-text-materialization')
+const { textDocumentHtml } = require('revealjs-shared/src/pptx-shape-label')
 const { readGeometrySource } = require('./ooxml-geometry-source')
 const { readSemanticSvgPicture } = require('./semantic-svg-adapter')
 const {
@@ -44,18 +44,18 @@ const {
 } = require('./ooxml-geometry-style-source')
 const { sourceNamespace, sourceSlidesForImport } = require('./semantic-source-slides')
 const { stageGeometryBlipSourceAssets } = require('./geometry-blip-source-assets')
-const { geometryProvider } = require('../../../shared/src/pptx-geometry-style-records')
+const { geometryProvider } = require('revealjs-shared/src/pptx-geometry-style-records')
 const {
   resolveGeometryTransform,
   materializeGeometry,
-} = require('../../../shared/src/pptx-geometry-style-resolution')
+} = require('revealjs-shared/src/pptx-geometry-style-resolution')
 const {
   PRESET_DASH_PATTERNS,
   LINE_END_TYPES,
   LINE_END_SIZES,
   geometryFillPaint,
   geometryStrokePaint,
-} = require('../../../shared/src/pptx-geometry-document')
+} = require('revealjs-shared/src/pptx-geometry-document')
 const {
   leafTransform,
   groupTransform,
@@ -63,7 +63,7 @@ const {
   invert,
   transformPoint,
   IDENTITY,
-} = require('../../../shared/src/pptx-affine')
+} = require('revealjs-shared/src/pptx-affine')
 const EMU_TO_CSS = 96 / 914400
 const REL_URIS = new Set(['http://schemas.openxmlformats.org/package/2006/relationships'])
 const R_URIS = new Set([

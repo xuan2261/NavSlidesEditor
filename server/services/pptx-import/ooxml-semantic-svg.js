@@ -1,6 +1,6 @@
 const { parseXml, decodeXml } = require('./ooxml-text-run-xml')
-const { PARAMETERS, normalizePrimitive, primitiveCommands } = require('../../../shared/src/pptx-vector-primitives')
-const { svgNumbers, svgTransform } = require('../../../shared/src/pptx-vector-transform')
+const { PARAMETERS, normalizePrimitive, primitiveCommands } = require('revealjs-shared/src/pptx-vector-primitives')
+const { svgNumbers, svgTransform } = require('revealjs-shared/src/pptx-vector-transform')
 const MAX_PATH_LENGTH = 1_048_576
 const MAX_PATH_COMMANDS = 16_384
 const MAX_COORDINATE = 1e12

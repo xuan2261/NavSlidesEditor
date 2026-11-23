@@ -1,4 +1,4 @@
-const { decodeXml } = require('../../../shared/src/pptx-xml-entities')
+const { decodeXml } = require('revealjs-shared/src/pptx-xml-entities')
 const P_URIS = new Set([
   'http://schemas.openxmlformats.org/presentationml/2006/main',
   'http://purl.oclc.org/ooxml/presentationml/main',

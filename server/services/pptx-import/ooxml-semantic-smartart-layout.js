@@ -3,7 +3,7 @@ const {
   LAYOUT_CHILDREN,
   normalizeSmartArtLayout,
   layoutFailure,
-} = require('../../../shared/src/pptx-smartart-layout-declarations')
+} = require('revealjs-shared/src/pptx-smartart-layout-declarations')
 const D_URIS = new Set([
   'http://schemas.openxmlformats.org/drawingml/2006/diagram',
   'http://purl.oclc.org/ooxml/drawingml/diagram',

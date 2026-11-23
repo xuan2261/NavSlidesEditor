@@ -1,7 +1,7 @@
 const { A_URIS, P_URIS, descendants } = require('./ooxml-text-run-xml')
 const { textListStyleSource } = require('./ooxml-semantic-text-list-style-source')
 const { listParagraphProperties } = require('./ooxml-semantic-text-list-style-properties')
-const { normalizeTextListStyle } = require('../../../shared/src/pptx-text-list-style')
+const { normalizeTextListStyle } = require('revealjs-shared/src/pptx-text-list-style')
 
 function readSemanticTextListStyle(context) {
   const source = textListStyleSource(context), { node } = context

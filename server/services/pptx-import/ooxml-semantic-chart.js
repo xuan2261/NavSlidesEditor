@@ -4,14 +4,14 @@ const { relationshipPart } = require('./slide-order')
 const { resolveTarget } = require('./package-store/raw-zip')
 const { PptxImportError } = require('./diagnostics')
 const { readWorkbookLiterals } = require('./chart-workbook-literals')
-const { chartVisualReader } = require('../../../shared/src/pptx-chart-source-visual')
+const { chartVisualReader } = require('revealjs-shared/src/pptx-chart-source-visual')
 const { nativeChartReader } = require('./chart-native-reader')
 const {
   CHART_FAMILIES,
   CHART_OPTION_TYPES,
   validateChartOption,
   normalizeChartDocument,
-} = require('../../../shared/src/pptx-chart-document')
+} = require('revealjs-shared/src/pptx-chart-document')
 const C = new Set([
   'http://schemas.openxmlformats.org/drawingml/2006/chart',
   'http://purl.oclc.org/ooxml/drawingml/chart',

@@ -1,5 +1,5 @@
 const { P_URIS, A_URIS } = require('./ooxml-text-run-xml')
-const { leafTransform } = require('../../../shared/src/pptx-affine')
+const { leafTransform } = require('revealjs-shared/src/pptx-affine')
 const { frameSource } = require('./semantic-frame-adapter-source')
 
 function readFrameIdentity(s, nonvisual, shape = false, readApplication) {

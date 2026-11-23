@@ -1,4 +1,4 @@
-const { validateView3D } = require('../../../shared/src/pptx-chart-native-contract')
+const { validateView3D } = require('revealjs-shared/src/pptx-chart-native-contract')
 function nativeChartReader({ one, children, attributes, scalar, integer, option, visual, fail }) {
   function projection(node) {
     attributes(node)

@@ -1,7 +1,7 @@
 const { attr, decodeXml, P_URIS, A_URIS } = require('./ooxml-text-run-xml')
 const { resolveTarget } = require('./package-store/raw-zip')
 const { readColorSource } = require('./ooxml-color-source')
-const { GUIDE_NAMESPACE, GUIDE_OWNERS } = require('../../../shared/src/pptx-source-guides')
+const { GUIDE_NAMESPACE, GUIDE_OWNERS } = require('revealjs-shared/src/pptx-source-guides')
 const R = ['http://schemas.openxmlformats.org/officeDocument/2006/relationships',
   'http://purl.oclc.org/ooxml/officeDocument/relationships']
 const attributes = (node) => node.attrs.filter((item) => !/^xmlns(?::|$)/.test(item.name))

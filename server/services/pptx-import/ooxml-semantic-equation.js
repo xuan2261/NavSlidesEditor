@@ -1,8 +1,8 @@
 const { createHash } = require('node:crypto')
 const { parseXml, decodeXml, textContent } = require('./ooxml-text-run-xml')
 const { PptxImportError } = require('./diagnostics')
-const { normalizeOmmlDocument, OMML_LIMITS } = require('../../../shared/src/pptx-omml-document')
-const { token, XML } = require('../../../shared/src/pptx-omml-document-grammar')
+const { normalizeOmmlDocument, OMML_LIMITS } = require('revealjs-shared/src/pptx-omml-document')
+const { token, XML } = require('revealjs-shared/src/pptx-omml-document-grammar')
 
 // Payload reader, not a shape dispatcher or renderer. The caller selects one
 // inventoried oMath/oMathPara subtree and supplies its descendant definitions.

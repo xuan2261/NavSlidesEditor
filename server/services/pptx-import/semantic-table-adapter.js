@@ -1,6 +1,6 @@
 const { P_URIS, A_URIS, decodeXml } = require('./ooxml-text-run-xml')
 const { PptxImportError } = require('./diagnostics')
-const { leafTransform } = require('../../../shared/src/pptx-affine')
+const { leafTransform } = require('revealjs-shared/src/pptx-affine')
 const { readSemanticTable } = require('./ooxml-semantic-table')
 const { tableSource } = require('./ooxml-semantic-table-source')
 const { readTableStyleReference } = require('./ooxml-semantic-table-style')

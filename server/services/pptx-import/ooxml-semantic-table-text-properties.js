@@ -1,4 +1,4 @@
-const { normalizeTextProperties } = require('../../../shared/src/pptx-text-document')
+const { normalizeTextProperties } = require('revealjs-shared/src/pptx-text-document')
 const { readTableColor } = require('./ooxml-semantic-table-properties')
 const { readRunHyperlink } = require('./ooxml-semantic-run-hyperlink')
 

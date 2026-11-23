@@ -1,6 +1,6 @@
 const { textContent } = require('./ooxml-text-run-xml')
 const { readSemanticTextField } = require('./ooxml-semantic-text-field')
-const { normalizeTextDocument } = require('../../../shared/src/pptx-text-document')
+const { normalizeTextDocument } = require('revealjs-shared/src/pptx-text-document')
 const {
   runProperties,
   bodyProperties,

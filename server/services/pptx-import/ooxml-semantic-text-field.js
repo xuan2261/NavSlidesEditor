@@ -1,6 +1,6 @@
 const { A_URIS, decodeXml, textContent } = require('./ooxml-text-run-xml')
 const { runProperties } = require('./ooxml-semantic-table-text-properties')
-const { normalizeTextProperties } = require('../../../shared/src/pptx-text-document')
+const { normalizeTextProperties } = require('revealjs-shared/src/pptx-text-document')
 
 // Source extraction only: no evaluated values, inherited proofing or opaque XML.
 function readSemanticTextField(node, paragraphId, context, fail) {

@@ -2,7 +2,7 @@ const { A_URIS, P_URIS } = require('./ooxml-text-run-xml')
 const { child } = require('./ooxml-native-text-style-source')
 const { tableSource } = require('./ooxml-semantic-table-source')
 const { readTableColor } = require('./ooxml-semantic-table-properties')
-const { SHAPE_3D_GRAMMAR, CHILD_FIELDS } = require('../../../shared/src/pptx-shape-3d-appearance')
+const { SHAPE_3D_GRAMMAR, CHILD_FIELDS } = require('revealjs-shared/src/pptx-shape-3d-appearance')
 
 // Read only declarations owned by this native object's spPr. These values are
 // retained source data, not geometry, a browser effect, or native export support.

@@ -1,7 +1,7 @@
 const { attr, decodeXml } = require('./ooxml-text-run-xml')
 const { resolveTarget } = require('./package-store/raw-zip')
-const { normalizeElementAction } = require('../../../shared/src/element-actions')
-const { canonicalRunAction } = require('../../../shared/src/pptx-text-hyperlinks')
+const { normalizeElementAction } = require('revealjs-shared/src/element-actions')
+const { canonicalRunAction } = require('revealjs-shared/src/pptx-text-hyperlinks')
 const R = new Set(['http://schemas.openxmlformats.org/officeDocument/2006/relationships',
   'http://purl.oclc.org/ooxml/officeDocument/relationships'])
 const value = (node, name) => decodeXml(attr(node, name) ?? '')
@@ -45,7 +45,7 @@ function readRunHyperlink(node, source, runId) {
     ...(Object.keys(attrs).length ? { declarations: attrs } : {}) }
   // The public strict record validation also rejects unrepresented declaration semantics.
   source.checked(node, () => {
-    const { validRunHyperlinks } = require('../../../shared/src/pptx-text-hyperlinks')
+    const { validRunHyperlinks } = require('revealjs-shared/src/pptx-text-hyperlinks')
     if (!validRunHyperlinks({ click: result }, () => true)) throw new TypeError('unsupported hyperlink declaration')
   })
   return result

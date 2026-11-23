@@ -12,7 +12,7 @@ const {
   SMARTART_PROPERTY_TYPES,
   SMARTART_ROLES,
   modelKey,
-} = require('../../../shared/src/pptx-smartart-document')
+} = require('revealjs-shared/src/pptx-smartart-document')
 const D_URIS = new Set([
   'http://schemas.openxmlformats.org/drawingml/2006/diagram',
   'http://purl.oclc.org/ooxml/drawingml/diagram',

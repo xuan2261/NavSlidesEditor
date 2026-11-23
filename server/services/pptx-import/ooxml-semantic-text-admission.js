@@ -6,7 +6,7 @@ const { readSemanticTextListStyle } = require('./ooxml-semantic-text-list-style'
 const { listParagraphProperties } = require('./ooxml-semantic-text-list-style-properties')
 const { runProperties } = require('./ooxml-semantic-table-text-properties')
 const { readSemanticTextField } = require('./ooxml-semantic-text-field')
-const { normalizeTextDocument } = require('../../../shared/src/pptx-text-document')
+const { normalizeTextDocument } = require('revealjs-shared/src/pptx-text-document')
 const { isEquationEntry, validateParagraphChildren, createInlineEquationReader } = require('./ooxml-semantic-text-equation')
 
 // Source declarations only. Host-dependent inheritance stays in occurrence contexts.
