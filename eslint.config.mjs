@@ -33,7 +33,7 @@ export default [
   },
   // Root-level tool configs
   {
-    files: ['*.config.js', 'playwright.config.js'],
+    files: ['*.config.js', '*.config.cjs', 'playwright.config.js'],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -85,7 +85,12 @@ export default [
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
         'warn',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
       ],
       'no-undef': 'warn',
       'no-empty': ['warn', { allowEmptyCatch: true }],
@@ -147,6 +152,7 @@ export default [
     languageOptions: {
       globals: {
         ...globals.browser,
+        ...globals.node,
         ...globals.vitest,
       },
       parserOptions: {
@@ -190,6 +196,17 @@ export default [
       sourceType: 'commonjs',
     },
   },
+  // Server Playwright page.evaluate helpers execute callbacks in browser context.
+  {
+    files: ['server/utils/server-curved-line-capture.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.browser,
+      },
+      sourceType: 'commonjs',
+    },
+  },
   // Server + Shared test files and ESM test helpers
   {
     files: [
@@ -203,6 +220,7 @@ export default [
     languageOptions: {
       globals: {
         ...globals.node,
+        ...globals.browser,
         ...globals.vitest,
       },
       sourceType: 'module',
@@ -218,6 +236,25 @@ export default [
         ...globals.browser,
       },
       sourceType: 'commonjs',
+    },
+  },
+  // Plugins (build scripts + browser entrypoints)
+  {
+    files: ['plugins/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+      sourceType: 'module',
+    },
+  },
+  {
+    files: ['plugins/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
+      sourceType: 'module',
     },
   },
   // Scripts
@@ -267,7 +304,15 @@ export default [
   },
   {
     files: ['tests/e2e/**/*.js'],
+    languageOptions: {
+      globals: {
+        Reveal: 'readonly',
+        NavSlidesEducation: 'readonly',
+        Chart: 'readonly',
+      },
+    },
     rules: {
+      'no-empty-pattern': 'off',
       'no-restricted-syntax': [
         'error',
         stateBasedWait,

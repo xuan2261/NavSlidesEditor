@@ -241,7 +241,7 @@ function createLiveHostTransport(window) {
           notify(key, snapshot)
           if (snapshot.connection === 'connected') drain(key)
         }
-      } catch (error) {
+      } catch {
         if (destroyed || expected !== epoch) return
         if (attempt < 5) retryTimer = window.setTimeout(request, Math.min(500 * attempt, 2500))
         else revoke()

@@ -10,10 +10,9 @@ const portable = require('./portable')
 const originalCommit = require('./original-commit')
 const importCommit = require('./import-commit')
 const { createMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
-const { isCertifiedSemanticDocument } = require('revealjs-shared/src/pptx-semantic-records.js')
 const { isDeepStrictEqual } = require('node:util')
 const { hasExactCompatibilityHead } = require('../compatibility-view')
-const { hashRecord, canonicalJson } = require('./schemas')
+const { hashRecord } = require('./schemas')
 const { canonicalSaveSnapshot } = require('../canonical-snapshot')
 
 const authoritativeSaveCaches = new WeakMap()
@@ -30,8 +29,11 @@ class PackageStore {
     this.metadata.publish = async (...args) => {
       if (this.activePublication) throw new Error('Publication already active')
       this.activePublication = true
-      try { return await publish(...args) }
-      finally { this.activePublication = false }
+      try {
+        return await publish(...args)
+      } finally {
+        this.activePublication = false
+      }
     }
     this.fencingEpoch = 0
     this.mutationTail = Promise.resolve()
@@ -58,10 +60,15 @@ class PackageStore {
     if (!head || !isDeepStrictEqual(head, expectedHead)) {
       throw Object.assign(new Error('Package head changed'), { code: 'STALE_GENERATION' })
     }
-    const authority = [...state.mutationResults].reverse().find((result) =>
-      result.presentationId === presentationId &&
-      result.packageRevisionId === head.packageRevisionId && result.sourceMap && result.projection
-    )
+    const authority = [...state.mutationResults]
+      .reverse()
+      .find(
+        (result) =>
+          result.presentationId === presentationId &&
+          result.packageRevisionId === head.packageRevisionId &&
+          result.sourceMap &&
+          result.projection
+      )
     if (!authority) return null
     // Read callers already resolved the exact current authority in a defensive
     // snapshot. Never substitute a different historical/result projection.
@@ -82,18 +89,25 @@ class PackageStore {
         !Object.prototype.propertyIsEnumerable.call(projection, 'slides') ||
         (projection.pptxSemantic !== undefined &&
           !Object.prototype.propertyIsEnumerable.call(projection, 'pptxSemantic'))
-      const raw = hiddenPublicationFields ? {
-        ...projection,
-        slides: projection.slides,
-        ...(projection.pptxSemantic === undefined ? {} : { pptxSemantic: projection.pptxSemantic }),
-      } : projection
+      const raw = hiddenPublicationFields
+        ? {
+            ...projection,
+            slides: projection.slides,
+            ...(projection.pptxSemantic === undefined
+              ? {}
+              : { pptxSemantic: projection.pptxSemantic }),
+          }
+        : projection
       const { equivalentPublishedSaveSnapshot } = require('../package-authority-snapshot')
-      const snapshot = equivalentPublishedSaveSnapshot(this, raw, limits) ||
-        canonicalSaveSnapshot(raw, limits)
+      const snapshot =
+        equivalentPublishedSaveSnapshot(this, raw, limits) || canonicalSaveSnapshot(raw, limits)
       // raw is owned/read-only; admission still charges all raw metadata and
       // output budgets. Do not clone away its certified semantic identity.
       entry = {
-        authorityState, raw, snapshot, budget,
+        authorityState,
+        raw,
+        snapshot,
+        budget,
       }
       cache.set(presentationId, entry)
     } else if (entry.budget !== budget) {
@@ -119,7 +133,9 @@ class PackageStore {
     // Compare the entire captured write, not its id or a partial projection.
     if (!queued || !isDeepStrictEqual(queued, write)) return false
     const head = heads.find((item) => item.presentationId === write.presentationId)
-    return write.operation === 'remove' ? !head : hasExactCompatibilityHead(write.presentation, head)
+    return write.operation === 'remove'
+      ? !head
+      : hasExactCompatibilityHead(write.presentation, head)
   }
   hasOwner(owner) {
     return this.metadata.state.owners.some(
@@ -127,9 +143,7 @@ class PackageStore {
     )
   }
   hasPresentationHead(presentationId) {
-    return this.metadata.state.heads.some(
-      (head) => head.presentationId === presentationId
-    )
+    return this.metadata.state.heads.some((head) => head.presentationId === presentationId)
   }
   hasCompatibilityPending(presentationId) {
     return this.metadata.state.compatibilityOutbox.some(
@@ -183,7 +197,9 @@ class PackageStore {
     const capturedPins = structuredClone(pins)
     const previous = this.mutationTail
     let release
-    this.mutationTail = new Promise((resolve) => { release = resolve })
+    this.mutationTail = new Promise((resolve) => {
+      release = resolve
+    })
     try {
       await previous
       const assertWriter = async () => {
@@ -231,14 +247,18 @@ class PackageStore {
     if (!captured.size) return 0
     const previous = this.mutationTail
     let release
-    this.mutationTail = new Promise((resolve) => { release = resolve })
+    this.mutationTail = new Promise((resolve) => {
+      release = resolve
+    })
     try {
       await previous
       options.signal?.throwIfAborted()
       await this.assertWriter()
       options.signal?.throwIfAborted()
       const { next, acknowledged } = acknowledgeOwnedOutbox(
-        this.metadata.state, captured, this.fencingEpoch
+        this.metadata.state,
+        captured,
+        this.fencingEpoch
       )
       if (!acknowledged) return 0
       await this.metadata.publish(next, {
@@ -260,23 +280,28 @@ class PackageStore {
     const captured = captureProjectionSave(params)
     const previous = this.mutationTail
     let release
-    this.mutationTail = new Promise((resolve) => { release = resolve })
+    this.mutationTail = new Promise((resolve) => {
+      release = resolve
+    })
     try {
       await previous
       options.signal?.throwIfAborted()
       await this.assertWriter()
       options.signal?.throwIfAborted()
       const { next, idempotent } = commitOwnedProjectionSave(
-        this.metadata.state, captured, this.fencingEpoch
+        this.metadata.state,
+        captured,
+        this.fencingEpoch
       )
-      if (next) await this.metadata.publish(next, {
-        assertWriter: () => this.assertWriter(),
-        signal: options.signal,
-        faultAfterIndex: options.faultAfterIndex,
-        faultAfterPrepare: options.faultAfterPrepare,
-        faultAfterRoot: options.faultAfterRoot,
-        faultAfterCompletion: options.faultAfterCompletion,
-      })
+      if (next)
+        await this.metadata.publish(next, {
+          assertWriter: () => this.assertWriter(),
+          signal: options.signal,
+          faultAfterIndex: options.faultAfterIndex,
+          faultAfterPrepare: options.faultAfterPrepare,
+          faultAfterRoot: options.faultAfterRoot,
+          faultAfterCompletion: options.faultAfterCompletion,
+        })
       return { idempotent }
     } finally {
       release()
@@ -311,12 +336,12 @@ class PackageStore {
       next.generation += 1
       next.fencingEpoch = this.fencingEpoch
       await this.metadata.publish(next, {
-          assertWriter: () => this.assertWriter(),
-          signal: options.signal,
-          faultAfterIndex: options.faultAfterIndex,
-          faultAfterPrepare: options.faultAfterPrepare,
-          faultAfterRoot: options.faultAfterRoot,
-          faultAfterCompletion: options.faultAfterCompletion,
+        assertWriter: () => this.assertWriter(),
+        signal: options.signal,
+        faultAfterIndex: options.faultAfterIndex,
+        faultAfterPrepare: options.faultAfterPrepare,
+        faultAfterRoot: options.faultAfterRoot,
+        faultAfterCompletion: options.faultAfterCompletion,
       })
       return next
     } finally {
@@ -339,15 +364,18 @@ class PackageStore {
     return importCommit.rollbackImport(this, input)
   }
   async advanceMatrixAuthorityEpoch(options = {}) {
-    await this.mutate((next) => {
-      const matrixAuthorityEpoch = next.matrixAuthorityEpoch + 1
-      next.matrixAuthorityEpoch = matrixAuthorityEpoch
-      next.heads = next.heads.map((head) => ({
-        ...head,
-        matrixAuthorityEpoch,
-        matrixAuthoritySubjects: createMatrixAuthoritySubjects(undefined, matrixAuthorityEpoch),
-      }))
-    }, { ...options, readOnlyResults: true })
+    await this.mutate(
+      (next) => {
+        const matrixAuthorityEpoch = next.matrixAuthorityEpoch + 1
+        next.matrixAuthorityEpoch = matrixAuthorityEpoch
+        next.heads = next.heads.map((head) => ({
+          ...head,
+          matrixAuthorityEpoch,
+          matrixAuthoritySubjects: createMatrixAuthoritySubjects(undefined, matrixAuthorityEpoch),
+        }))
+      },
+      { ...options, readOnlyResults: true }
+    )
     return this.metadata.state.matrixAuthorityEpoch
   }
   async addOwner(revisionId, owner, options) {
@@ -355,9 +383,12 @@ class PackageStore {
     if (!this.metadata.state.revisions.some((revision) => revision.id === revisionId)) {
       throw new Error('Unknown package revision')
     }
-    await this.mutate((next) => {
-      next.owners.push({ schemaVersion: RECORD_SCHEMA_VERSION, revisionId, ...owner })
-    }, { ...(options || {}), readOnlyResults: true })
+    await this.mutate(
+      (next) => {
+        next.owners.push({ schemaVersion: RECORD_SCHEMA_VERSION, revisionId, ...owner })
+      },
+      { ...(options || {}), readOnlyResults: true }
+    )
   }
   async releaseOwner(owner) {
     validateOwner(owner)
@@ -365,27 +396,30 @@ class PackageStore {
       (item) => item.ownerType === owner.ownerType && item.ownerId === owner.ownerId
     )
     if (!owned) return false
-    await this.mutate((next) => {
-      next.owners = next.owners.filter(
-        (item) => item.ownerType !== owner.ownerType || item.ownerId !== owner.ownerId
-      )
-      if (owner.ownerType === 'permanent-delete') {
-        const presId = owner.ownerId
-        const stillReferenced =
-          next.heads.some((h) => h.presentationId === presId) ||
-          next.owners.some(
-            (item) =>
-              item.ownerId === presId ||
-              item.retainedHead?.presentationId === presId ||
-              (item.ownerType === 'history' && item.ownerId.startsWith(`${presId}:`))
-          )
-        if (!stillReferenced) {
-          next.mutationResults = next.mutationResults.filter(
-            (result) => result.presentationId !== presId
-          )
+    await this.mutate(
+      (next) => {
+        next.owners = next.owners.filter(
+          (item) => item.ownerType !== owner.ownerType || item.ownerId !== owner.ownerId
+        )
+        if (owner.ownerType === 'permanent-delete') {
+          const presId = owner.ownerId
+          const stillReferenced =
+            next.heads.some((h) => h.presentationId === presId) ||
+            next.owners.some(
+              (item) =>
+                item.ownerId === presId ||
+                item.retainedHead?.presentationId === presId ||
+                (item.ownerType === 'history' && item.ownerId.startsWith(`${presId}:`))
+            )
+          if (!stillReferenced) {
+            next.mutationResults = next.mutationResults.filter(
+              (result) => result.presentationId !== presId
+            )
+          }
         }
-      }
-    }, { readOnlyResults: true })
+      },
+      { readOnlyResults: true }
+    )
     return true
   }
   async duplicatePresentationOwner(sourceId, destinationId, options = {}) {
@@ -421,19 +455,22 @@ class PackageStore {
       updatedAt: new Date().toISOString(),
       ...input,
     })
-    await this.mutate((next) => {
-      next.jobs = next.jobs.filter((item) => item.id !== job.id)
-      next.jobs.push(job)
-      if (job.provisionalOwner) {
-        next.leases = next.leases.filter((lease) => lease.jobId !== job.id)
-        next.leases.push({
-          schemaVersion: RECORD_SCHEMA_VERSION,
-          jobId: job.id,
-          provisional: true,
-          ...job.provisionalOwner,
-        })
-      }
-    }, { readOnlyResults: true })
+    await this.mutate(
+      (next) => {
+        next.jobs = next.jobs.filter((item) => item.id !== job.id)
+        next.jobs.push(job)
+        if (job.provisionalOwner) {
+          next.leases = next.leases.filter((lease) => lease.jobId !== job.id)
+          next.leases.push({
+            schemaVersion: RECORD_SCHEMA_VERSION,
+            jobId: job.id,
+            provisional: true,
+            ...job.provisionalOwner,
+          })
+        }
+      },
+      { readOnlyResults: true }
+    )
     return job
   }
   getJob(id) {

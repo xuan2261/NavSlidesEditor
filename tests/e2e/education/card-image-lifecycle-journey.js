@@ -1,7 +1,17 @@
 import { expect } from '../fixtures/test-fixtures.js'
 import {
-  images, rootFor, cards, command, progress, concealed, decodedImage, observeCardDOM,
-  beginMismatch, settledMismatch, finishMemory, exerciseFlashcards,
+  images,
+  rootFor,
+  cards,
+  command,
+  progress,
+  concealed,
+  decodedImage,
+  observeCardDOM,
+  beginMismatch,
+  settledMismatch,
+  finishMemory,
+  exerciseFlashcards,
 } from './card-image-lifecycle-interactions.js'
 import { pauseMismatch } from './card-image-pause-lifecycle.js'
 export { playCards }
@@ -12,7 +22,12 @@ async function current(page, slide) {
     .toBe(slide)
 }
 async function navigate(page, direction, slide) {
-  await page.locator(`.reveal .controls .navigate-${direction}`).click()
+  const control = page.locator(`.reveal .controls .navigate-${direction}`)
+  await expect(control).toBeVisible()
+  await expect(control).toBeEnabled()
+  // Reveal's highlight tutorial runs a 2s bounce-down keyframe animation on .navigate-down;
+  // skip Playwright's stability wait so the click fires immediately within mismatchDelayMs.
+  await control.click({ force: true })
   await current(page, slide)
 }
 async function configSnapshot(page) {
@@ -86,8 +101,14 @@ async function playCards(page) {
   await command(a, 'Reset')
   await command(b, 'Reset')
 
-  const { hiddenElapsed, prePauseActive, expectedRemaining, resumedElapsed } =
-    await pauseMismatch(page, a, witness, childInherited, parentInherited, navigate)
+  const { hiddenElapsed, prePauseActive, expectedRemaining, resumedElapsed } = await pauseMismatch(
+    page,
+    a,
+    witness,
+    childInherited,
+    parentInherited,
+    navigate
+  )
   await command(a, 'Reset')
   const memoryComplete = await finishMemory(a)
   await progress(b, 0, 0, 0)

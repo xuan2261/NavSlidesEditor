@@ -74,7 +74,6 @@ export function useDashboardData({ onOpen }) {
           )
         }
 
-        // eslint-disable-next-line unused-imports/no-unused-vars
         const { id, thumbnail, description, category, ...data } = presetData
         const pres = await api.createPresentation({
           ...data,

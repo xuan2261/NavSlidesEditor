@@ -18,8 +18,10 @@ const {
 } = require('../services/validated-edited-export')
 const { packageIdentityForFidelity, getLocalBaseUrl } = require('./presentations-helpers')
 const { getServingBaseUrl } = require('../utils/serving-origin')
-const { prepareSemanticOutputResources, assertSemanticOutputArtifact } =
-  require('../services/pptx-import/semantic-output-resources')
+const {
+  prepareSemanticOutputResources,
+  assertSemanticOutputArtifact,
+} = require('../services/pptx-import/semantic-output-resources')
 
 const router = express.Router()
 
@@ -72,12 +74,12 @@ router.post('/raster-elements', async (req, res) => {
 
 // GET /api/presentations/:id/pptx-fidelity — safe capability and export summary.
 router.get('/:id/pptx-fidelity', async (req, res) => {
-  const t0 = Date.now();
-  console.log(`[pptx-fidelity] Start for ${req.params.id} at +${t0}`);
+  const t0 = Date.now()
+  console.log(`[pptx-fidelity] Start for ${req.params.id} at +${t0}`)
   try {
-    const tResolve0 = Date.now();
+    const tResolve0 = Date.now()
     const resolved = await readAuthoritativePresentation(req.params.id)
-    console.log(`[pptx-fidelity] readAuthoritativePresentation took ${Date.now() - tResolve0}ms`);
+    console.log(`[pptx-fidelity] readAuthoritativePresentation took ${Date.now() - tResolve0}ms`)
     if (!resolved) return res.status(404).json({ error: 'Not found' })
     const presentation = resolved.presentation
     const { buildFidelityDto } = require('../services/pptx-import/fidelity-contract')
@@ -101,9 +103,9 @@ router.get('/:id/pptx-fidelity', async (req, res) => {
         verifiedOriginalAvailable = false
       }
     }
-    const tExport0 = Date.now();
+    const tExport0 = Date.now()
     const editedAvailability = await editedExportAvailability(presentation)
-    console.log(`[pptx-fidelity] editedExportAvailability took ${Date.now() - tExport0}ms`);
+    console.log(`[pptx-fidelity] editedExportAvailability took ${Date.now() - tExport0}ms`)
     const aggregateGeneration = resolved.generation
     const fidelity = buildFidelityDto(presentation, {
       aggregateGeneration,
@@ -127,9 +129,8 @@ router.get('/:id/pptx-fidelity', async (req, res) => {
       }),
     }
     res.json(payload)
-    console.log(`[pptx-fidelity] Total time: ${Date.now() - t0}ms`);
-  } catch (err) {
-  }
+    console.log(`[pptx-fidelity] Total time: ${Date.now() - t0}ms`)
+  } catch {}
 })
 
 // GET /api/presentations/:id/pptx-package-snapshot — return one safe package/R0 identity.
@@ -262,7 +263,8 @@ router.get('/:id/export', async (req, res) => {
     const semanticOutputResources = await prepareSemanticOutputResources(resolved.presentation)
     const presentation = normalizePresentationNotes(resolved.presentation)
     const html = generateRevealHTML(presentation, {
-      baseUrl: getServingBaseUrl(req), semanticOutputResources,
+      baseUrl: getServingBaseUrl(req),
+      semanticOutputResources,
     })
     const filename = `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.html`
     res.setHeader('Content-Type', 'text/html')

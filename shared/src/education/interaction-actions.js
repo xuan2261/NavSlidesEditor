@@ -8,16 +8,18 @@ const INTERACTION_ACTION_KINDS = new Set([
 ])
 const VISIBILITY_KINDS = new Set(['show', 'hide', 'toggle'])
 const SCORE_KINDS = new Set(['score-add', 'score-subtract'])
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHAR_RE = /[\u0000-\u001f\u007f]/
 const validId = (value) =>
   typeof value === 'string' &&
   value.length > 0 &&
   value.length <= 160 &&
-  !/[\u0000-\u001f\u007f]/.test(value)
+  !CONTROL_CHAR_RE.test(value)
 const validElementId = (value) =>
   typeof value === 'string' &&
   value.length > 0 &&
   value.length <= 512 &&
-  !/[\u0000-\u001f\u007f]/.test(value)
+  !CONTROL_CHAR_RE.test(value)
 
 function normalizeInteractionAction(value) {
   const fail = (error) => ({ action: null, error })
@@ -44,7 +46,7 @@ function normalizeInteractionAction(value) {
     value.label != null &&
     (typeof value.label !== 'string' ||
       value.label.length > 240 ||
-      /[\u0000-\u001f\u007f]/.test(value.label))
+      CONTROL_CHAR_RE.test(value.label))
   )
     return fail('Action label must be plain text of at most 240 characters.')
   if (value.hotspot != null && typeof value.hotspot !== 'boolean')
@@ -61,7 +63,7 @@ function normalizeInteractionAction(value) {
         typeof value.referenceError !== 'string' ||
         !value.referenceError.trim() ||
         value.referenceError.length > 240 ||
-        /[\u0000-\u001f\u007f]/.test(value.referenceError)
+        CONTROL_CHAR_RE.test(value.referenceError)
       )
         return fail('Target diagnostic must be plain text of at most 240 characters.')
       action.referenceError = value.referenceError.trim()

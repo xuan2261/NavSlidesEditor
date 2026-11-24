@@ -44,11 +44,11 @@ describe('caption track source boundary', () => {
     'data:text/vtt;charset=utf-8;base64,V0VCVlRUCg==',
     'data:text/vtt;base64,',
     'data:text/vtt;base64,V0VCVlRUCg=',
-    'data:text/vtt;base64,V0VCVlRUCg==\" onload=\"alert(1)',
+    'data:text/vtt;base64,V0VCVlRUCg==" onload="alert(1)',
     'data:text/vtt;base64,V0VC\nVlRUCg==',
     'javascript:alert(1)',
     'file:///C:/private/en.vtt',
-    '/uploads/en.vtt\" onload=\"alert(1)',
+    '/uploads/en.vtt" onload="alert(1)',
   ])('drops unsafe or invalid caption source %s without changing general media policy', (src) => {
     expect(normalizeMediaTrack(track(src))).toBeNull()
     expect(normalizeMediaTracks([track(src), track('/uploads/safe.vtt')])).toEqual([

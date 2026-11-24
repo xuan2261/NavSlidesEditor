@@ -45,6 +45,7 @@ function listArchive(tool, archive, limits = LIMITS, format = null) {
     if (
       !path ||
       path !== path.normalize('NFC') ||
+      // eslint-disable-next-line no-control-regex
       /[\x00-\x1f\x7f:*?]/.test(path) ||
       path.startsWith('/') ||
       path

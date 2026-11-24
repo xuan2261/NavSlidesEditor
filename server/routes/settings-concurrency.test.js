@@ -17,17 +17,24 @@ const storage = load('../services/storage.js')
 const app = express()
 app.use(express.json())
 app.use('/api/settings', load('./settings.js'))
-app.use((err, req, res, next) => res.status(err.status || 500).json({ error: 'settings failure' }))
-const put = (body, revision = 0) => request(app).put('/api/settings').set('If-Match', `"${revision}"`).send(body)
+app.use((err, req, res, _next) => res.status(err.status || 500).json({ error: 'settings failure' }))
+const put = (body, revision = 0) =>
+  request(app).put('/api/settings').set('If-Match', `"${revision}"`).send(body)
 
 beforeEach(async () => {
   storage.initDataFiles()
-  await storage.writeSettings({ ai: { apiKey: 'test-secret', model: 'old' }, defaultTheme: 'black' })
+  await storage.writeSettings({
+    ai: { apiKey: 'test-secret', model: 'old' },
+    defaultTheme: 'black',
+  })
 })
 afterEach(() => vi.restoreAllMocks())
 afterAll(async () => {
   await fs.remove(fixture.root)
-  for (const [key, value] of [['SLIDES_DATA_DIR', fixture.previous.data], ['SLIDES_UPLOADS_DIR', fixture.previous.uploads]]) {
+  for (const [key, value] of [
+    ['SLIDES_DATA_DIR', fixture.previous.data],
+    ['SLIDES_UPLOADS_DIR', fixture.previous.uploads],
+  ]) {
     if (value === undefined) delete process.env[key]
     else process.env[key] = value
   }
@@ -38,22 +45,26 @@ describe('Settings revision and atomic HTTP update', () => {
     const initial = await request(app).get('/api/settings')
     expect(initial.body.settingsRevision).toBe(0)
     expect(initial.headers.etag).toBe('"0"')
-    const responses = await Promise.all([put({ defaultTheme: 'white' }), put({ ai: { model: 'new' } })])
-    expect(responses.map(r => r.status).sort()).toEqual([200, 412])
-    const winner = responses.find(r => r.status === 200)
+    const responses = await Promise.all([
+      put({ defaultTheme: 'white' }),
+      put({ ai: { model: 'new' } }),
+    ])
+    expect(responses.map((r) => r.status).sort()).toEqual([200, 412])
+    const winner = responses.find((r) => r.status === 200)
     const persisted = await fs.readJson(storage.SETTINGS_FILE)
     expect(persisted.settingsRevision).toBe(1)
     expect(persisted.defaultTheme).toBe(winner.body.defaultTheme)
     expect(persisted.ai.model).toBe(winner.body.ai.model)
     expect(persisted.ai.apiKey).toBe('test-secret')
-    expect(JSON.stringify(responses.map(r => r.body))).not.toContain('test-secret')
+    expect(JSON.stringify(responses.map((r) => r.body))).not.toContain('test-secret')
     const bytes = await fs.readFile(storage.SETTINGS_FILE, 'utf8')
     expect((await put({ defaultTheme: 'stale' })).status).toBe(412)
     expect(await fs.readFile(storage.SETTINGS_FILE, 'utf8')).toBe(bytes)
   })
 
   it.each([undefined, '*', '0', 'W/"0"', '"-1"', '"1.1"', '"9007199254740992"'])(
-    'rejects absent or malformed precondition %s without changing bytes', async (header) => {
+    'rejects absent or malformed precondition %s without changing bytes',
+    async (header) => {
       const bytes = await fs.readFile(storage.SETTINGS_FILE, 'utf8')
       const req = request(app).put('/api/settings')
       if (header !== undefined) req.set('If-Match', header)
@@ -76,10 +87,16 @@ describe('Settings revision and atomic HTTP update', () => {
     expect(second.status).toBe(200)
     const third = await put({ ai: { apiKey: 'replacement' } }, second.body.settingsRevision)
     expect(third.status).toBe(200)
-    expect(first.body).toMatchObject({ settingsRevision: 1, ai: { model: 'next', apiKey: '***configured***' } })
+    expect(first.body).toMatchObject({
+      settingsRevision: 1,
+      ai: { model: 'next', apiKey: '***configured***' },
+    })
     expect(second.body).toMatchObject({ settingsRevision: 2, ai: { apiKey: '' } })
     expect(third.body).toMatchObject({ settingsRevision: 3, ai: { apiKey: '***configured***' } })
-    expect(await fs.readJson(storage.SETTINGS_FILE)).toMatchObject({ settingsRevision: 3, ai: { apiKey: 'replacement', model: 'next' } })
+    expect(await fs.readJson(storage.SETTINGS_FILE)).toMatchObject({
+      settingsRevision: 3,
+      ai: { apiKey: 'replacement', model: 'next' },
+    })
     expect((await request(app).get('/api/settings')).body.settingsRevision).toBe(3)
   })
 
