@@ -3,7 +3,6 @@
 _Generated: local run_
 
 Verified (PASS only): 129/129 (100%)  |  PASS: 129
-Depth warnings (warn-first): 2
 
 ## action
 
@@ -105,10 +104,10 @@ Depth warnings (warn-first): 2
 | element.qrcode | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/shape-line-misc-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 | element.shape | low | deep | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/indeterminate-multi-select.test.jsx<br>client/src/components/properties/shape-line-misc-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 | element.svg | low | deep | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/missing-controls.test.jsx<br>client/src/components/properties/shape-line-misc-properties-depth.test.jsx<br>client/src/components/ribbon/ribbon-insert-tab-element-galleries-panel.test.jsx<br>client/src/utils/export-pptx-raster.test.js<br>shared/tests/element-renderers.test.js | PASS |
-| element.table | high | deep | unit | trace, behavior<br>Missing: export | client/src/components/canvas/element-renderers/table-element-merge.deep.test.jsx<br>client/src/components/properties/missing-controls.test.jsx | PASS |
+| element.table | high | deep | unit | trace, behavior, export | client/src/components/canvas/element-renderers/table-element-merge.deep.test.jsx<br>client/src/components/properties/missing-controls.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 | element.text | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 | element.timeline | high | deep | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/missing-controls.test.jsx<br>client/src/components/properties/timeline-properties.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
-| element.video | low | smoke | unit | trace, behavior<br>Missing: export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx | PASS |
+| element.video | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 
 ## export
 
