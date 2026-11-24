@@ -1,16 +1,16 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import JSZip from 'jszip'
-import {
-  test,
-  expect,
-  apiCreateShareLink,
-} from '../fixtures/test-fixtures.js'
+import { test, expect, apiCreateShareLink } from '../fixtures/test-fixtures.js'
 import { launchPresentPopup } from './present-offline-helpers.js'
 import { downloadArtifact, freshPortable, findFrame } from './release-surfaces.js'
 import {
-  setupCounter, counterPeer, updateCounter, roundTrip, observeBindings, probeRejected,
+  setupCounter,
+  counterPeer,
+  updateCounter,
+  roundTrip,
+  observeBindings,
+  probeRejected,
 } from './generated-plugin-counter-helpers.js'
-
 
 test('actual generated Present and Share retain Counter document authority across A B A and reject sibling/stale traffic', async ({
   page,
@@ -44,7 +44,7 @@ test('actual generated Present and Share retain Counter document authority acros
         .locator('[data-ns-element-id="counter"] iframe')
         .first()
         .evaluate((frame) => {
-          frame.srcdoc = frame.srcdoc
+          frame.srcdoc = frame.srcdoc // eslint-disable-line no-self-assign
         })
       const freshPeer = await counterPeer(surface, 'Class score', peer)
       await updateCounter(freshPeer, 23)

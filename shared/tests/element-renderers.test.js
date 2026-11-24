@@ -491,7 +491,7 @@ describe('element-renderers safety behavior', () => {
   ])(
     'keeps authored $type attribute values from manufacturing root execution authority',
     (fields) => {
-      const payload = `\"><script data-navslides-runtime="local">window.rootEscaped=1</script><iframe data-ns-generated-frame="true"></iframe><span onerror="window.rootEscaped=1`
+      const payload = `"><script data-navslides-runtime="local">window.rootEscaped=1</script><iframe data-ns-generated-frame="true"></iframe><span onerror="window.rootEscaped=1`
       const element = JSON.parse(
         JSON.stringify({ ...base, ...fields }).replaceAll(
           'FIELD',

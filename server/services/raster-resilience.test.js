@@ -2,11 +2,9 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import renderers from '../utils/server-renderers.js'
-import fallback from '../utils/server-fallback.js'
 import rasterModule from '../utils/server-raster.js'
 
 const { addElementToPptxSlide } = renderers
-const { addFallbackElement } = fallback
 const { getServerRasters } = rasterModule
 
 function makeSlide() {

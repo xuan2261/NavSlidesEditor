@@ -63,7 +63,7 @@ function bindWordGrid({ grid, session, onActivate, onSubmit, onToggle = () => {}
   return { focus, find }
 }
 
-function bindCrosswordInputs({ grid, puzzle, session, activeEntry, find, focus }) {
+function bindCrosswordInputs({ grid, puzzle: _puzzle, session, activeEntry, find, focus }) {
   const composing = new WeakSet()
   const coordinate = (input) => ({
     row: Number(input.dataset.row),

@@ -4,6 +4,7 @@ const isId = (value) =>
   typeof value === 'string' &&
   value.length > 0 &&
   value.length <= 160 &&
+  // eslint-disable-next-line no-control-regex
   !/[\u0000-\u001f\u007f]/.test(value)
 const isNumber = (value) =>
   typeof value === 'number' && Number.isFinite(value) && Math.abs(value) <= LIMIT
@@ -28,6 +29,7 @@ function normalizeInteractionVariables(value) {
       typeof item.name !== 'string' ||
       !item.name.trim() ||
       item.name.length > 80 ||
+      // eslint-disable-next-line no-control-regex
       /[<>\u0000-\u001f\u007f]/.test(item.name)
     )
       return fail('Variable name must be plain text of at most 80 characters.')

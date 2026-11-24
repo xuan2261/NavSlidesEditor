@@ -108,16 +108,6 @@ function sanitizeMediaSrc(value) {
   return isSafeMediaSrc(raw) ? raw : ''
 }
 
-function sanitizeUrlAttributes(html) {
-  return String(html || '')
-    .replace(/\s(href|src|xlink:href)\s*=\s*(['"])(.*?)\2/gi, (_, attr, quote, value) => {
-      return ` ${attr}=${quote}${sanitizeHref(value)}${quote}`
-    })
-    .replace(/\s(href|src|xlink:href)\s*=\s*(?!['"])([^\s>]+)/gi, (_, attr, value) => {
-      return ` ${attr}="${sanitizeHref(value)}"`
-    })
-}
-
 function sanitizeSvgReference(value) {
   const raw = String(value || '').trim()
   if (!raw) return '#'

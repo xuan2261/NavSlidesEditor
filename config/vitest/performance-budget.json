@@ -5,15 +5,9 @@
   "targetMedianImprovement": 0.3,
   "requiredSampleCount": 5,
   "maxWallSeconds": 1350,
-  "sampleDurationsSeconds": [
-    1000.09,
-    1000.01,
-    1007.72,
-    994.4,
-    1016.55
-  ],
+  "sampleDurationsSeconds": [1000.09, 1000.01, 1007.72, 994.4, 1016.55],
   "runnerClass": "linux-x64-4cpu-16gb-ci",
-  "inventoryHash": "a5f95874c296c1a87d37ff6d990625822c1d460345d89ab4411eef7d4ff69da8",
+  "inventoryHash": "3fde19949960f55203c870572125a23a1da088c5aadcf8f686362c46789e0ff1",
   "configHash": "c809b6e009747d9d8492116cd51bef0a2ecb372f253859d91a39ec369132ca1e",
   "measurementCommit": "9d5796bb1d83acc5d09f3ad22207c8d7e306e98d",
   "statistic": "measured-median-with-consolidated-1350-second-ceiling",

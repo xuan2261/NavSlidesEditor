@@ -1,3 +1,4 @@
+/* global state */
 import { expect } from '@playwright/test'
 
 async function restoreRange(frame, id, value) {

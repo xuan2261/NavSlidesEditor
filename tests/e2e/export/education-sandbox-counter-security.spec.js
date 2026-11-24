@@ -103,7 +103,7 @@ test('actual wrapped counter peers update independently and reject sibling/stale
   await expect(b.locator('#value')).toHaveText('10%')
   await page.evaluate(() => {
     const frame = document.querySelector('iframe[data-counter="B"]')
-    frame.srcdoc = frame.srcdoc
+    frame.srcdoc = frame.srcdoc // eslint-disable-line no-self-assign
   })
   await expect
     .poll(() =>

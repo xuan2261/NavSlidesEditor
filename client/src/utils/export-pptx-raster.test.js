@@ -42,18 +42,18 @@ describe('export-pptx-raster', () => {
       const observed = await page.evaluate(async () => {
         const svg =
           '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80" viewBox="0 0 120 80"><rect width="120" height="80"/><script>window.compromised=true</script></svg>'
-        const painted = await PptxCapture.renderElementFallbackDataUri({
+        const painted = await window.PptxCapture.renderElementFallbackDataUri({
           type: 'svg',
           content: svg,
           width: 240,
           height: 160,
           fillOverride: '#2563eb',
         })
-        const poster = await PptxCapture.resolveClientPptxPoster(
+        const poster = await window.PptxCapture.resolveClientPptxPoster(
           'data:image/svg+xml;base64,' + btoa(svg.replace('<rect ', '<rect fill="#2563eb" '))
         )
         window.parentProbe = 'protected'
-        const html = await PptxCapture.renderElementFallbackDataUri({
+        const html = await window.PptxCapture.renderElementFallbackDataUri({
           type: 'html',
           width: 120,
           height: 80,

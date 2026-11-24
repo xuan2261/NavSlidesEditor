@@ -70,25 +70,45 @@ jobs:
     name: E2E PPTX import (workers:1)
     needs: [build]
     uses: ./.github/workflows/reusable-playwright-consumer.yml
-    with: { subject_sha: '${{ inputs.subject_sha || github.sha }}', client_artifact: '${{ needs.build.outputs.artifact_name }}', lane: pptx-import }
+    with:
+      {
+        subject_sha: '${{ inputs.subject_sha || github.sha }}',
+        client_artifact: '${{ needs.build.outputs.artifact_name }}',
+        lane: pptx-import,
+      }
 
   e2e-live:
     name: E2E live (workers:1)
     needs: [build]
     uses: ./.github/workflows/reusable-playwright-consumer.yml
-    with: { subject_sha: '${{ inputs.subject_sha || github.sha }}', client_artifact: '${{ needs.build.outputs.artifact_name }}', lane: live }
+    with:
+      {
+        subject_sha: '${{ inputs.subject_sha || github.sha }}',
+        client_artifact: '${{ needs.build.outputs.artifact_name }}',
+        lane: live,
+      }
 
   e2e-mobile:
     name: E2E mobile-chromium (Phase 7 a11y)
     needs: [build]
     uses: ./.github/workflows/reusable-playwright-consumer.yml
-    with: { subject_sha: '${{ inputs.subject_sha || github.sha }}', client_artifact: '${{ needs.build.outputs.artifact_name }}', lane: mobile }
+    with:
+      {
+        subject_sha: '${{ inputs.subject_sha || github.sha }}',
+        client_artifact: '${{ needs.build.outputs.artifact_name }}',
+        lane: mobile,
+      }
 
   e2e-visual:
     name: E2E visual regression (Linux baseline only)
     needs: [build]
     uses: ./.github/workflows/reusable-playwright-consumer.yml
-    with: { subject_sha: '${{ inputs.subject_sha || github.sha }}', client_artifact: '${{ needs.build.outputs.artifact_name }}', lane: visual }
+    with:
+      {
+        subject_sha: '${{ inputs.subject_sha || github.sha }}',
+        client_artifact: '${{ needs.build.outputs.artifact_name }}',
+        lane: visual,
+      }
 
   pptx-corpus-metrics:
     name: PPTX corpus metrics
@@ -158,11 +178,11 @@ jobs:
       - container-supply-chain
     if: always()
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.subject_sha || github.sha }}
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: '22.23.3' }
       - name: Require every mandatory job to succeed
         env:
@@ -177,26 +197,40 @@ jobs:
     permissions: { contents: read, actions: read }
     env: { GH_TOKEN: '${{ github.token }}' }
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: { ref: '${{ inputs.subject_sha || github.sha }}' }
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: '22.23.3' }
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with: { name: docker-runtime-qualification, path: evidence/docker }
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with: { name: 'container-supply-chain-v1-${{ inputs.subject_sha || github.sha }}', path: evidence/supply-chain }
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          {
+            name: 'container-supply-chain-v1-${{ inputs.subject_sha || github.sha }}',
+            path: evidence/supply-chain,
+          }
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with: { name: '${{ needs.build.outputs.artifact_name }}', path: evidence/client }
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with: { pattern: 'playwright-report-*', path: evidence/reports }
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with: { name: coverage-html, path: evidence/reports/coverage-html }
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with: { name: 'vitest-ci-budget-v1-${{ inputs.subject_sha || github.sha }}', path: 'evidence/reports/vitest-ci-budget-v1-${{ inputs.subject_sha || github.sha }}' }
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          {
+            name: 'vitest-ci-budget-v1-${{ inputs.subject_sha || github.sha }}',
+            path: 'evidence/reports/vitest-ci-budget-v1-${{ inputs.subject_sha || github.sha }}',
+          }
       - name: Capture exact API run attempt jobs shards and artifacts
         run: node scripts/ci/release-receipt-workflow.mjs capture-run evidence "$GITHUB_RUN_ID" linux
       - name: Independently verify downloaded Docker provenance
         run: node scripts/ci/release-receipt-workflow.mjs capture-attestation evidence/docker/navslides-editor-image.tar "${{ inputs.subject_sha || github.sha }}" .github/workflows/reusable-docker-qualification.yml evidence/docker/docker-verified.json
       - run: node scripts/ci/release-receipt-workflow.mjs linux "${{ inputs.subject_sha || github.sha }}" "${{ needs.build.outputs.client_digest }}" release-target-policy-v4 evidence
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with: { name: 'linux-ci-receipt-v1-${{ inputs.subject_sha || github.sha }}', path: linux-ci-receipt.json, if-no-files-found: error, retention-days: 30 }
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          {
+            name: 'linux-ci-receipt-v1-${{ inputs.subject_sha || github.sha }}',
+            path: linux-ci-receipt.json,
+            if-no-files-found: error,
+            retention-days: 30,
+          }

@@ -186,7 +186,7 @@ describe('portable recursive resource closure', () => {
       const doc = new DOMParser().parseFromString(html, 'text/html')
       const closed = doc
         .querySelector('style')
-        .textContent.match(/data:image\/gif;base64,([^"\)]+)/)[1]
+        .textContent.match(/data:image\/gif;base64,([^")]+)/)[1]
       expect(Array.from(atob(closed), (char) => char.charCodeAt(0))).toEqual([251, 255, 254, 0, 1])
       expect(
         receipt.resources.find((resource) => resource.url.startsWith('data:image/gif;'))

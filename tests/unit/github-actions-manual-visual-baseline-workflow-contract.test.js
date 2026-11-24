@@ -101,7 +101,9 @@ describe('manual visual baseline update workflow contract', () => {
       '- name: Upload Linux visual baseline snapshots'
     )
 
-    expect(snapshotArtifactStep).toContain('actions/upload-artifact@v4')
+    expect(snapshotArtifactStep).toContain(
+      'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9'
+    )
     expect(snapshotArtifactStep).toContain('name: linux-playwright-visual-baseline-snapshots')
     expect(getLiteralBlockLines(snapshotArtifactStep, 'path')).toEqual([
       'tests/e2e/visual/**/*-snapshots/*.png',
