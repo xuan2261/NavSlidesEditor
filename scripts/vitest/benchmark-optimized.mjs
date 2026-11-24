@@ -23,7 +23,9 @@ import { runVitestSample } from './benchmark-runner.mjs'
 
 function runnerClass(facts) {
   if (process.env.VITEST_RUNNER_CLASS) return process.env.VITEST_RUNNER_CLASS
-  const memoryGb = Math.round(facts.host.totalMemoryBytes / 1024 ** 3)
+  // Linux MemTotal excludes hypervisor/kernel-reserved pages (~380-700 MiB on 16 GiB CI VMs),
+  // so AWS (15.33 GiB) and Azure (15.62 GiB) ubuntu-latest runners both map to nominal 16gb.
+  const memoryGb = Math.ceil(facts.host.totalMemoryBytes / 1024 ** 3)
   return [
     facts.host.platform,
     facts.host.arch,

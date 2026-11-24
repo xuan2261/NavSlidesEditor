@@ -302,7 +302,7 @@ describe('element-renderers safety behavior', () => {
     expect(html).not.toContain('data-math-latex="\\[')
   })
 
-  it('renders video from videoUrl property', () => {
+  it('[cap:element.video depth:export] renders video from videoUrl property', () => {
     const html = renderElement(
       {
         ...base,
@@ -798,7 +798,7 @@ describe('element-renderers safety behavior', () => {
     ).not.toThrow()
   })
 
-  it('renders table cells with per-side borders', () => {
+  it('[cap:element.table depth:export] renders table cells with per-side borders', () => {
     const html = renderElement(
       {
         ...base,

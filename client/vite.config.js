@@ -12,10 +12,12 @@ const MANUAL_CHUNKS = [
   ['vendor-katex', ['katex']],
   ['vendor-lucide', ['lucide-react']],
   ['vendor-tiptap', ['@tiptap/core', '@tiptap/starter-kit', '@tiptap/extension-text-style']],
+  ['vendor-hljs', ['highlight.js']],
 ]
 
 function manualChunks(id) {
   const normalizedId = id.replace(/\\/g, '/')
+  if (normalizedId.endsWith('/shared/data/icon-paths.json')) return 'vendor-shared-icons'
   const match = MANUAL_CHUNKS.find(([, packages]) =>
     packages.some((packageName) => normalizedId.includes(`/node_modules/${packageName}/`))
   )
