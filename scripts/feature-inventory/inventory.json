@@ -765,6 +765,162 @@
     "coverageMode": "executable"
   },
   {
+    "id": "education.default-answer-redaction",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "education.geometry-lock-hidden-fragments-actions-align-multiselect",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "education.keyboard",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "education.lifecycle-score-reset",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "education.portable-assets",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "education.reduced-motion",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "education.responsive-1280",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "education.responsive-320",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "education.responsive-768",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "education.sandbox-isolation",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "education.touch",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "education.tuple-isolation",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "education.variables-triggers",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
     "id": "electron.data-path",
     "category": "electron",
     "source": "manifest",
@@ -850,6 +1006,18 @@
     "coverageMode": "executable"
   },
   {
+    "id": "element.chart.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
     "id": "element.code",
     "category": "element",
     "source": "ELEMENT_DEFAULTS",
@@ -859,6 +1027,18 @@
     ],
     "scope": "editor-core",
     "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "element.code.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
     "coverageMode": "executable"
   },
   {
@@ -898,6 +1078,18 @@
     "coverageMode": "executable"
   },
   {
+    "id": "element.html.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
     "id": "element.icon",
     "category": "element",
     "source": "ELEMENT_DEFAULTS",
@@ -922,6 +1114,18 @@
     "coverageMode": "executable"
   },
   {
+    "id": "element.image.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
     "id": "element.latex",
     "category": "element",
     "source": "ELEMENT_DEFAULTS",
@@ -931,6 +1135,18 @@
     ],
     "scope": "editor-core",
     "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "element.latex.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
     "coverageMode": "executable"
   },
   {
@@ -955,6 +1171,18 @@
     ],
     "scope": "editor-core",
     "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "element.markdown.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
     "coverageMode": "executable"
   },
   {
@@ -1016,6 +1244,18 @@
     ],
     "scope": "editor-core",
     "targetLayer": "unit",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "element.text.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
     "coverageMode": "executable"
   },
   {
@@ -1192,6 +1432,1458 @@
     "coverageMode": "executable"
   },
   {
+    "id": "game.countdown.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.countdown.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.countdown.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.countdown.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.countdown.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.countdown.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.countdown.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.countdown.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.crossword.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.crossword.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.crossword.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.crossword.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.crossword.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.crossword.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.crossword.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.crossword.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.flashcards.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.flashcards.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.flashcards.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.flashcards.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.flashcards.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.flashcards.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.flashcards.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.flashcards.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.four-corners.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.four-corners.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.four-corners.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.four-corners.live",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.four-corners.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.four-corners.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.four-corners.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.four-corners.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.four-corners.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.hot-potato.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.hot-potato.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.hot-potato.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.hot-potato.live",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.hot-potato.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.hot-potato.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.hot-potato.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.hot-potato.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.hot-potato.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.jeopardy.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.jeopardy.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.jeopardy.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.jeopardy.live",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.jeopardy.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.jeopardy.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.jeopardy.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.jeopardy.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.jeopardy.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.lucky-wheel.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.lucky-wheel.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.lucky-wheel.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.lucky-wheel.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.lucky-wheel.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.lucky-wheel.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.lucky-wheel.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.lucky-wheel.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.matching.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.matching.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.matching.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.matching.live",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.matching.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.matching.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.matching.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.matching.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.matching.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.memory.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.memory.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.memory.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.memory.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.memory.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.memory.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.memory.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.memory.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.name-picker.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.name-picker.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.name-picker.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.name-picker.live",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.name-picker.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.name-picker.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.name-picker.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.name-picker.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.name-picker.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.poll.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.poll.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.poll.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.poll.live",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.poll.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.poll.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.poll.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.poll.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.poll.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.quiz.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.quiz.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.quiz.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.quiz.live",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.quiz.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.quiz.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.quiz.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.quiz.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.quiz.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.relay-race.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.relay-race.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.relay-race.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.relay-race.live",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.relay-race.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.relay-race.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.relay-race.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.relay-race.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.relay-race.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scattergories.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scattergories.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scattergories.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scattergories.live",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scattergories.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scattergories.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scattergories.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scattergories.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scattergories.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
     "id": "game.score",
     "category": "game",
     "source": "manifest",
@@ -1201,6 +2893,510 @@
     ],
     "scope": "game",
     "targetLayer": "e2e",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scoreboard.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scoreboard.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scoreboard.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scoreboard.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scoreboard.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scoreboard.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scoreboard.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.scoreboard.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.sorting.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.sorting.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.sorting.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.sorting.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.sorting.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.sorting.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.sorting.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.sorting.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.trivia-champ.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.trivia-champ.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.trivia-champ.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.trivia-champ.live",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.trivia-champ.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.trivia-champ.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.trivia-champ.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.trivia-champ.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.trivia-champ.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-cloud.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-cloud.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-cloud.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-cloud.live",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-cloud.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-cloud.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-cloud.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-cloud.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-cloud.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-search.desktop",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-search.editor",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-search.file",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-search.pdf",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-search.pptx",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-search.present",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-search.share",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "game.word-search.try",
+    "category": "game",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "game",
+    "targetLayer": "contract",
     "coverageMode": "executable"
   },
   {
@@ -1337,6 +3533,906 @@
     "scope": "plugin",
     "targetLayer": "contract",
     "coverageMode": "inventory-only"
+  },
+  {
+    "id": "preset.education-countdown.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-countdown.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-countdown.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-crossword.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-crossword.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-crossword.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-flashcards.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-flashcards.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-flashcards.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-four-corners.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-four-corners.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-four-corners.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-hot-potato.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-hot-potato.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-hot-potato.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-jeopardy.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-jeopardy.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-jeopardy.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-lucky-wheel.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-lucky-wheel.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-lucky-wheel.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-matching.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-matching.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-matching.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-memory.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-memory.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-memory.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-name-picker.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-name-picker.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-name-picker.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-poll.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-poll.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-poll.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-quiz.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-quiz.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-quiz.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-relay-race.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-relay-race.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-relay-race.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-scattergories.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-scattergories.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-scattergories.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-scoreboard.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-scoreboard.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-scoreboard.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-sorting.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-sorting.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-sorting.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-trivia-champ.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-trivia-champ.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-trivia-champ.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-word-cloud.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-word-cloud.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-word-cloud.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-word-search.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-word-search.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.education-word-search.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-3phase.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-3phase.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-3phase.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-bode-plot.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-bode-plot.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-bode-plot.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-gear-train.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-gear-train.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-gear-train.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-logic-gates.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-logic-gates.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-logic-gates.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-pid-tuning.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-pid-tuning.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-pid-tuning.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-rlc-response.editor",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-rlc-response.file",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
+  },
+  {
+    "id": "preset.sim-rlc-response.present",
+    "category": "education",
+    "source": "manifest",
+    "risk": "low",
+    "tiers": [
+      "smoke"
+    ],
+    "scope": "education",
+    "targetLayer": "contract",
+    "coverageMode": "executable"
   },
   {
     "id": "runtime.reveal6-assets",

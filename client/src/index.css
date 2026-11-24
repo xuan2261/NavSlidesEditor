@@ -3,9 +3,78 @@
 /* Computer Modern fonts (CMU) */
 @import url('https://cdn.jsdelivr.net/gh/dreampulse/computer-modern-web-font@master/fonts.css');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@custom-variant dark (&:where(.dark, .dark *, [data-theme='dark'], [data-theme='dark'] *));
+
+@theme inline {
+  --color-workspace: var(--bg-workspace);
+  --color-panel: var(--bg-panel);
+  --color-canvas-default: var(--bg-canvas-default);
+  --color-card: var(--bg-card);
+  --color-hover: var(--bg-hover);
+  --color-active: var(--bg-active);
+  --color-secondary: var(--bg-secondary);
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-primary-light: var(--color-primary-light);
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-4: var(--surface-4);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-border-light: var(--border-light);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-light: var(--accent-light);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-muted: var(--brand-muted);
+  --color-focus: var(--focus);
+  --color-selection: var(--selection);
+  --color-selection-muted: var(--selection-muted);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-warning: var(--warning);
+}
+
+@theme {
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --animate-fade-in: fadeIn 0.3s ease-out;
+  --animate-zoom-in: zoomIn 0.2s ease-out;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes zoomIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
 
 /* Latin Modern Roman */
 @font-face {
@@ -156,52 +225,63 @@
 /* ════════════════════════════════════════════
    BASE RESET & TYPOGRAPHY
    ════════════════════════════════════════════ */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  border-style: solid;
-  border-width: 0;
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border-style: solid;
+    border-width: 0;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    font-family: var(--font-ui-sans);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  #root :is(h1, h2):not(.slide-canvas *):not(.slide-text-content *):not(.ProseMirror *) {
+    font-family: var(--font-ui-serif);
+    font-weight: 500;
+  }
+  #root h1:not(.slide-canvas *):not(.slide-text-content *):not(.ProseMirror *) {
+    letter-spacing: -0.02em;
+  }
+  #root h2:not(.slide-canvas *):not(.slide-text-content *):not(.ProseMirror *) {
+    letter-spacing: -0.01em;
+  }
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: inherit;
+    font-size: inherit;
+    font-family: inherit;
+  }
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+    font-size: inherit;
+  }
+  svg {
+    flex-shrink: 0;
+  }
 }
-html,
-body,
-#root {
-  height: 100%;
-  overflow: hidden;
-}
-body {
-  font-family: var(--font-ui-sans);
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 14px;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-#root :is(h1, h2):not(.slide-canvas *):not(.slide-text-content *):not(.ProseMirror *) {
-  font-family: var(--font-ui-serif);
-  font-weight: 500;
-}
-#root h1:not(.slide-canvas *):not(.slide-text-content *):not(.ProseMirror *) {
-  letter-spacing: -0.02em;
-}
-#root h2:not(.slide-canvas *):not(.slide-text-content *):not(.ProseMirror *) {
-  letter-spacing: -0.01em;
-}
+
 .label-caps {
   font-size: 11px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-muted);
-}
-
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-  color: inherit;
-  font-size: inherit;
-  font-family: inherit;
 }
 
 .ribbon-tab-strip {
@@ -308,13 +388,6 @@ button {
   }
 }
 
-input,
-textarea,
-select {
-  font-family: inherit;
-  font-size: inherit;
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -346,10 +419,6 @@ select {
 }
 [data-theme='light'] ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.25);
-}
-
-svg {
-  flex-shrink: 0;
 }
 
 .svg-element-content > svg {

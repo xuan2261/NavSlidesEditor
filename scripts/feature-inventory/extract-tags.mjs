@@ -80,6 +80,7 @@ export function extractTagsFromSource(source, filePath) {
     const standaloneDeep = /\[tier:deep\]/.test(title)
     const standaloneDepths = parseStandaloneDepths(title, filePath)
     for (const cap of title.matchAll(CAP_RE)) {
+      if (cap[0].includes('${')) continue
       const id = cap[1]
       const inlineDeep = /\btier:deep\b/.test(cap[2] || '')
       const tier = inlineDeep || standaloneDeep ? 'deep' : 'smoke'

@@ -1,10 +1,9 @@
+import path from 'node:path'
 import { readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { chromium } from 'playwright'
 import { build } from 'esbuild'
-import postcss from 'postcss'
-import tailwindcss from 'tailwindcss'
-import themeConfig from '../../client/tailwind.config.js'
+import { compile } from '@tailwindcss/node'
 import { expect, it } from 'vitest'
 import { doc, run } from './omml-rendering-fixtures.js'
 
@@ -39,10 +38,11 @@ it('renders and edits native runs through the shared physical runtime without ow
     platform: 'browser',
     define: { 'process.env.NODE_ENV': '"production"' },
   })
-  const css = await postcss([tailwindcss({ ...themeConfig, content: [] })]).process(
+  const compiled = await compile(
     bundle.outputFiles.find((file) => file.path.endsWith('.css')).text,
-    { from: undefined }
+    { base: path.resolve('client/src/components/properties'), onDependency: () => {} }
   )
+  const css = compiled.build([])
   const browser = await chromium.launch({ headless: true })
   try {
     const page = await browser.newPage({
@@ -56,7 +56,7 @@ it('renders and edits native runs through the shared physical runtime without ow
       })
     )
     await page.goto('http://127.0.0.1/omml-completion')
-    await page.addStyleTag({ content: css.css })
+    await page.addStyleTag({ content: css })
     await page.addScriptTag({
       content: bundle.outputFiles.find((file) => file.path.endsWith('.js')).text,
     })

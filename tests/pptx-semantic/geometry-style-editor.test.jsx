@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
+import path from 'node:path'
 import React, { useLayoutEffect, useState } from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import postcss from 'postcss'
-import tailwindcss from 'tailwindcss'
-import themeConfig from '../../client/tailwind.config.js'
+import { compile } from '@tailwindcss/node'
 import GeometryProperties from '../../client/src/components/properties/geometry-properties.jsx'
 import {
   applySemanticGeometry,
@@ -255,14 +255,16 @@ describe('inherited geometry editor intent', () => {
       target: { value: '1000000000000001' },
     })
     expect(screen.getByRole('alert')).toBeTruthy()
-    const alertCss = await postcss([
-      tailwindcss({
-        ...themeConfig,
-        content: [{ raw: screen.getByRole('alert').outerHTML, extension: 'html' }],
-      }),
-    ]).process('@tailwind utilities;', { from: undefined })
+    const compiledAlert = await compile(
+      '@reference "../../index.css";\n@import "tailwindcss/utilities.css";',
+      { base: path.resolve('client/src/components/properties'), onDependency: () => {} }
+    )
+    const alertCandidates = (screen.getByRole('alert').getAttribute('class') || '')
+      .split(/\s+/)
+      .filter(Boolean)
+    const alertCss = postcss.parse(compiledAlert.build(alertCandidates))
     const alertBackgrounds = []
-    alertCss.root.walkDecls('background-color', (declaration) =>
+    alertCss.walkDecls('background-color', (declaration) =>
       alertBackgrounds.push(declaration.value)
     )
     expect(alertBackgrounds).toEqual(['var(--bg-secondary)'])

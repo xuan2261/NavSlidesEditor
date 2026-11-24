@@ -22,7 +22,7 @@ export function TemplateGalleryView({ presets, category, onCategoryChange, creat
                   <Button
                     variant="ghost"
                     key={cat}
-                    className={`template-category-btn ${CATEGORY_PILL_CLASS} ${category === cat ? '!bg-accent !border-accent !text-white' : ''}`}
+                    className={`template-category-btn ${CATEGORY_PILL_CLASS} ${category === cat ? 'bg-accent! border-accent! text-white!' : ''}`}
                     onClick={() => onCategoryChange(cat)}
                   >
                     {cat}

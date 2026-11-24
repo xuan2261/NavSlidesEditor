@@ -23,7 +23,7 @@ test.describe('Templates', () => {
     // Click Creative category
     const creativeButton = page.locator('.template-category-btn').filter({ hasText: 'Creative' })
     await creativeButton.click()
-    await expect(creativeButton).toHaveClass(/!bg-accent/)
+    await expect(creativeButton).toHaveClass(/bg-accent!/)
 
     // Should still show cards
     const cards = page.locator('.bg-card.group')
@@ -33,7 +33,7 @@ test.describe('Templates', () => {
     // Click Academic
     const academicButton = page.locator('.template-category-btn').filter({ hasText: 'Academic' })
     await academicButton.click()
-    await expect(academicButton).toHaveClass(/!bg-accent/)
+    await expect(academicButton).toHaveClass(/bg-accent!/)
 
     const academicCount = await cards.count()
     expect(academicCount).toBeGreaterThanOrEqual(1)

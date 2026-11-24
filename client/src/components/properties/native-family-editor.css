@@ -1,3 +1,5 @@
+@reference "../../index.css";
+
 .native-family-editor {
   @apply flex min-w-0 max-w-full flex-col gap-2 text-sm text-text-primary;
   overflow-wrap: anywhere;
