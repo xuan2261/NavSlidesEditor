@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import capabilities from 'revealjs-shared/src/pptx-projection-capabilities.js'
 import { buildSelectionUpdates } from '../../utils/element-update-fanout'
 import { computeMultiZOrderEdge, computeMultiZOrderStep } from '../../utils/z-order-step'
 import {
@@ -7,11 +8,7 @@ import {
 } from '../../utils/active-slide-selection'
 
 export function useEditorSelectionController(c) {
-  const {
-    activeSlideRef,
-    editingElementIdRef,
-    getSelectionSlide: resolveSelectionSlide,
-  } = c
+  const { activeSlideRef, editingElementIdRef, getSelectionSlide: resolveSelectionSlide } = c
   const getSelectionSlide = useCallback(
     () => resolveSelectionSlide?.() || activeSlideRef.current,
     [activeSlideRef, resolveSelectionSlide]
@@ -50,6 +47,28 @@ export function useEditorSelectionController(c) {
         c.notifyBlockedAction('group-locked')
         return
       }
+      if (Object.hasOwn(updates, 'pptxProjectionOperation')) {
+        const target = slide.elements?.find((element) => element.id === ids[0])
+        // Inline owner controls delegate from a source leaf; updateElement rechecks owner scope.
+        if (
+          ids.length !== 1 ||
+          (target?.pptxInstanceId !== updates.pptxProjectionOperation?.instanceId &&
+            !(
+              updates.pptxProjectionOperation?.type === capabilities.GROUP_FILL_EDIT &&
+              (target?.pptxInstanceId || ids[0] === updates.pptxProjectionOperation.instanceId)
+            ))
+        )
+          throw new TypeError('Projection operations require their single selected occurrence')
+        c.updateElement(ids[0], updates)
+        return
+      }
+      if (Object.hasOwn(updates, 'semanticTextDocument')) {
+        const target = slide.elements?.find((element) => element.id === ids[0])
+        if (ids.length !== 1 || !['shape', 'text'].includes(target?.type) || !target.pptxInstanceId)
+          throw new TypeError('Canonical text requires its single selected occurrence')
+        c.updateElement(ids[0], updates)
+        return
+      }
       const batch = buildSelectionUpdates(slide.elements || [], ids, ids.at(-1), updates)
       if (batch.length === 1 && ids.length === 1) {
         const [{ id, ...partial }] = batch
@@ -66,18 +85,19 @@ export function useEditorSelectionController(c) {
         c.clearRichTextContent()
       }
       if (!id) return c.setSelectedElementIds([])
+      const memberIds = getSelectionIdsForActiveSlideElement(
+        getSelectionSlide(),
+        c.presentation?.slides[c.currentSlideIndexRef?.current],
+        id
+      )
       if (multi) {
         c.setSelectedElementIds((ids) =>
-          ids.includes(id) ? ids.filter((selectedId) => selectedId !== id) : [...ids, id]
+          ids.includes(id)
+            ? ids.filter((selectedId) => !memberIds.includes(selectedId))
+            : [...ids.filter((selectedId) => !memberIds.includes(selectedId)), ...memberIds]
         )
       } else {
-        c.setSelectedElementIds(
-          getSelectionIdsForActiveSlideElement(
-            getSelectionSlide(),
-            c.presentation?.slides[c.currentSlideIndexRef.current],
-            id
-          )
-        )
+        c.setSelectedElementIds(memberIds)
       }
     },
     [c, getSelectionSlide, editingElementIdRef]

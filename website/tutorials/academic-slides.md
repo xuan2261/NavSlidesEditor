@@ -100,9 +100,9 @@ result = minimize(neg_log_likelihood, x0=[1, 0], args=(x_data, y_data, sigma_dat
 Before your talk, export the presentation as an offline bundle:
 
 1. Click **File → Export → Offline HTML**.
-2. Wait for the asset inlining to complete (typically 5–15 seconds).
+2. Wait for required local runtime assets to be embedded; missing required assets block export.
 3. Save the `.html` file to a USB drive or your laptop.
-4. Open the file in any browser — no internet required.
+4. Open the file on the presentation machine and check it without a network connection. External embeds or media may still require network access; see [offline limits](/features/export#offline-html).
 
 ::: tip
 Test the offline export before the conference. Open the file on the computer you'll use to present, not just your development machine.

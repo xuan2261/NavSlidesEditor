@@ -1,21 +1,9 @@
-const FIT_INVALIDATING_KEYS = new Set([
-  'content',
-  'text',
-  'textHtml',
-  'fontSize',
-  'fontFamily',
-  'textColor',
-  'lineHeight',
-  'width',
-  'height',
-])
+import { PPTX_FIT_INVALIDATING_KEYS, prunePptxFitMetadata } from 'revealjs-shared'
+
+const FIT_INVALIDATING_KEYS = new Set(PPTX_FIT_INVALIDATING_KEYS)
 
 export function invalidatePptxFitMetaForUpdates(element, updates) {
   if (!element?._pptxImportMeta || !updates || updates._pptxImportMeta) return updates
   if (!Object.keys(updates).some((key) => FIT_INVALIDATING_KEYS.has(key))) return updates
-  const meta = { ...element._pptxImportMeta }
-  delete meta.fitFontSizePx
-  delete meta.sourceFontSizePx
-  delete meta.textLength
-  return { ...updates, _pptxImportMeta: meta }
+  return { ...updates, _pptxImportMeta: prunePptxFitMetadata(element._pptxImportMeta) }
 }

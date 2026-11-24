@@ -56,6 +56,17 @@ describe('EditorCanvasWorkspace upload targeting', () => {
     })
   })
 
+  it('binds native fields to global vertical slide order even with footers disabled', () => {
+    const child = { id: 'child', title: 'Vertical title', elements: [], showPageNumber: false }
+    const context = createContext({ current: child })
+    context.activeSlide = child
+    context.presentation.slides = [{ id: 'parent', elements: [], children: [child] }, { id: 'last', elements: [] }]
+    context.presentation.showPageNumbers = false
+    render(<EditorCanvasWorkspace overlayOpen={false} c={context} />)
+    expect(slideCanvasProps.pptxFieldContext).toMatchObject({ slideNumber: 2, slideTitle: 'Vertical title' })
+    expect(slideCanvasProps.pageNumber).toBeNull()
+  })
+
   it('does not insert a dropped file after navigation changes the active slide', async () => {
     const activeSlideRef = { current: { id: 'slide-a' } }
     let resolveUpload

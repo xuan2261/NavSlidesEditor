@@ -119,6 +119,10 @@ function getFixedCorner(handle, element) {
     ne: { x: -1, y: 1 },
     sw: { x: 1, y: -1 },
     se: { x: -1, y: -1 },
+    n: { x: 0, y: 1 },
+    s: { x: 0, y: -1 },
+    e: { x: -1, y: 0 },
+    w: { x: 1, y: 0 },
   }[handle]
   if (!signs) return null
   const radians = ((element.rotation || 0) * Math.PI) / 180
@@ -166,11 +170,10 @@ export function applyResizeAspectRatio(handle, startEl, updates) {
   // There is no meaningful aspect to preserve, so leave the free-resize result.
   if (!startEl.width || !startEl.height) return
   const ratio = startEl.width / startEl.height
-  if (Math.abs(updates.width - startEl.width) >= Math.abs(updates.height - startEl.height)) {
-    updates.height = Math.max(MIN_SIZE, updates.width / ratio)
-  } else {
-    updates.width = Math.max(MIN_SIZE, updates.height * ratio)
-  }
+  const widthDominates = Math.abs(updates.width - startEl.width) >= Math.abs(updates.height - startEl.height)
+  const height = Math.max(MIN_SIZE, MIN_SIZE / ratio, widthDominates ? updates.width / ratio : updates.height)
+  updates.width = height * ratio
+  updates.height = height
 
   Object.assign(
     updates,
@@ -179,6 +182,7 @@ export function applyResizeAspectRatio(handle, startEl, updates) {
 }
 
 export function clampAspectResizeToSlide(handle, updates, startEl, slideW, slideH) {
+  if (!['nw', 'ne', 'sw', 'se'].includes(handle)) return false
   const anchor = getFixedCorner(handle, startEl)
   if (!anchor) return false
   const fits = (geometry) => {
@@ -238,19 +242,65 @@ export function getRotationAngle(startEl, mouseX, mouseY, snap15deg) {
 /**
  * Clamp element bounds to slide dimensions.
  *
- * For an unrotated element the axis-aligned box is the visual box, so it is
- * clamped (and snapped) directly. For a ROTATED element the axis-aligned box is
- * NOT the visual rectangle: shifting x/y or shrinking w/h here would undo the
- * world-space anchor that `applyResize` just established, making the element
- * jump at slide edges. The dimensions are already floored to MIN_SIZE upstream,
- * so the rotated case skips the axis-aligned clamp and preserves the anchor.
+ * Snap only moving edges and limit resizing along the original fixed anchor.
+ * When omitted, infer the handle from resize geometry; unchanged dimensions
+ * retain general-box clamping.
  * @param {object} updates - { x, y, width, height }
  * @param {object} startEl - original element ({ rotation? })
  * @param {function} snapFn - optional 1D snap function
  * @param {number} slideW - slide width
  * @param {number} slideH - slide height
+ * @param {string} handle - optional resize handle for fixed-anchor clamping
  */
-export function clampToSlide(updates, startEl, snapFn, slideW, slideH) {
+export function clampToSlide(updates, startEl, snapFn, slideW, slideH, handle) {
+  if (!handle) {
+    const radians = ((startEl.rotation || 0) * Math.PI) / 180
+    const dx = updates.x + updates.width / 2 - startEl.x - startEl.width / 2
+    const dy = updates.y + updates.height / 2 - startEl.y - startEl.height / 2
+    const localX = dx * Math.cos(radians) + dy * Math.sin(radians)
+    const localY = -dx * Math.sin(radians) + dy * Math.cos(radians)
+    const horizontal = updates.width !== startEl.width
+      ? (localX * (updates.width - startEl.width) >= 0 ? 'e' : 'w') : ''
+    const vertical = updates.height !== startEl.height
+      ? (localY * (updates.height - startEl.height) >= 0 ? 's' : 'n') : ''
+    handle = vertical + horizontal
+  }
+  const anchor = getFixedCorner(handle, startEl)
+  if (anchor) {
+    const horizontal = handle.includes('e') || handle.includes('w')
+    const vertical = handle.includes('n') || handle.includes('s')
+    let width = horizontal ? updates.width : startEl.width
+    let height = vertical ? updates.height : startEl.height
+    if (snapFn && !startEl.rotation) {
+      if (horizontal) {
+        const edge = anchor.x + (handle.includes('e') ? width : -width)
+        width = Math.max(MIN_SIZE, Math.abs(snapFn(edge) - anchor.x))
+      }
+      if (vertical) {
+        const edge = anchor.y + (handle.includes('s') ? height : -height)
+        height = Math.max(MIN_SIZE, Math.abs(snapFn(edge) - anchor.y))
+      }
+    }
+    const candidate = (fraction) => positionFromFixedCorner(anchor,
+      startEl.width + (width - startEl.width) * fraction,
+      startEl.height + (height - startEl.height) * fraction)
+    const fits = (geometry) => {
+      const box = getRotatedAABB({ ...startEl, ...geometry })
+      return box.left >= 0 && box.top >= 0 && box.right <= slideW && box.bottom <= slideH
+    }
+    let best = candidate(1)
+    if (!fits(best) && fits(candidate(0))) {
+      let low = 0
+      let high = 1
+      best = candidate(0)
+      for (let index = 0; index < 40; index += 1) {
+        const fraction = (low + high) / 2
+        const next = candidate(fraction)
+        if (fits(next)) { best = next; low = fraction } else high = fraction
+      }
+    }
+    if (fits(best)) { Object.assign(updates, best); return }
+  }
   if (startEl.rotation) {
     updates.width = Math.max(MIN_SIZE, updates.width)
     updates.height = Math.max(MIN_SIZE, updates.height)

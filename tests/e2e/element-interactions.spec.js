@@ -91,7 +91,7 @@ test.describe('Element Property Interactions', () => {
     const htmlDialog = page.getByRole('dialog')
     await expect(htmlDialog.getByRole('heading', { name: 'HTML / D3 Embed' })).toBeVisible()
     const trustedSnippet = '<script>window.__e2eTrusted = true;</script><div id="e2e">Trusted HTML</div>'
-    await htmlDialog.locator('textarea').fill(trustedSnippet)
+    await htmlDialog.getByRole('textbox', { name: 'HTML source' }).fill(trustedSnippet)
     await htmlDialog.getByRole('button', { name: 'Apply' }).click()
 
     await expect

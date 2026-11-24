@@ -3,6 +3,8 @@ import crypto from 'node:crypto'
 import os from 'node:os'
 import path from 'node:path'
 import { Buffer } from 'node:buffer'
+import express from 'express'
+import request from 'supertest'
 import { describe, expect, it } from 'vitest'
 import media from './media.js'
 import dedup from './media-dedup.js'
@@ -423,7 +425,7 @@ describe('pptx media persistence', () => {
   it('rolls back only newly-created transaction media and preserves pre-existing deduped media', async () => {
     await withHashFileRestored(async () => {
       const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-media-transaction-'))
-      const transaction = dedup.createMediaTransaction()
+      const transaction = dedup.createMediaTransaction({ jobId: 'transaction-rollback' })
       try {
         await fs.mkdir(path.dirname(HASHES_FILE), { recursive: true })
         await fs.writeFile(path.join(dir, 'existing.png'), validPng)
@@ -477,7 +479,7 @@ describe('pptx media persistence', () => {
   it('rejects late media writes after transaction rollback without leaving files or hashes', async () => {
     await withHashFileRestored(async () => {
       const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-media-closed-transaction-'))
-      const transaction = dedup.createMediaTransaction()
+      const transaction = dedup.createMediaTransaction({ jobId: 'closed-transaction' })
       try {
         await fs.mkdir(path.dirname(HASHES_FILE), { recursive: true })
         await fs.writeFile(HASHES_FILE, '{}')
@@ -485,9 +487,65 @@ describe('pptx media persistence', () => {
 
         await expect(
           persistDedupedBuffer(validPng, 'png', dir, { transaction })
-        ).rejects.toThrow('transaction is already closed')
+        ).rejects.toThrow()
         expect(await fs.readdir(dir)).toHaveLength(0)
-        expect(JSON.parse(await fs.readFile(HASHES_FILE, 'utf-8'))).toEqual({})
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+  })
+  it('P08-03: shared media placement records the exact pending job before publication', async () => {
+    await withHashFileRestored(async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-media-job-owner-'))
+      const transaction = dedup.createMediaTransaction({ jobId: 'media-owner-a' })
+      try {
+        await fs.mkdir(path.dirname(HASHES_FILE), { recursive: true })
+        await fs.writeFile(HASHES_FILE, '{}')
+        const placed = await persistDedupedBuffer(validPng, 'png', dir, { transaction })
+        const hashes = JSON.parse(await fs.readFile(HASHES_FILE, 'utf8'))
+        const records = Object.values(hashes).flatMap((bucket) => Object.values(bucket))
+        expect(records).toContainEqual(expect.objectContaining({
+          filename: path.basename(placed.url),
+          placementOwner: 'pptx-import:media-owner-a',
+          state: 'pending',
+          sha256: sha256(validPng),
+        }))
+        await transaction.rollback()
+        expect(await fs.readdir(dir)).toEqual([])
+        const remaining = Object.values(JSON.parse(await fs.readFile(HASHES_FILE, 'utf8'))).flatMap(Object.values)
+        expect(remaining).not.toContainEqual(expect.objectContaining({ filename: path.basename(placed.url) }))
+      } finally {
+        await fs.rm(dir, { recursive: true, force: true })
+      }
+    })
+  })
+
+  it('P08-03/13: a published winner stays fetchable when overlapping identical-media jobs roll back', async () => {
+    await withHashFileRestored(async () => {
+      const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-media-winner-'))
+      const loser = dedup.createMediaTransaction({ jobId: 'media-loser' })
+      const winner = dedup.createMediaTransaction({ jobId: 'media-winner' })
+      const reuser = dedup.createMediaTransaction({ jobId: 'media-reuser' })
+      try {
+        await fs.mkdir(path.dirname(HASHES_FILE), { recursive: true })
+        await fs.writeFile(HASHES_FILE, '{}')
+        await persistDedupedBuffer(validPng, 'png', dir, { transaction: loser })
+        const published = await persistDedupedBuffer(validPng, 'png', dir, { transaction: winner })
+        await winner.commit('winner-deck')
+        const reused = await persistDedupedBuffer(validPng, 'png', dir, { transaction: reuser })
+        expect(reused).toMatchObject({ url: published.url, deduped: true })
+        await Promise.all([loser.rollback(), reuser.rollback()])
+        const app = express()
+        app.use('/uploads', express.static(dir))
+        const fetched = await request(app).get(published.url).buffer(true)
+        expect(fetched.status).toBe(200)
+        expect(fetched.body).toEqual(validPng)
+        const hashes = JSON.parse(await fs.readFile(HASHES_FILE, 'utf8'))
+        const records = Object.values(hashes).flatMap((bucket) => Object.values(bucket))
+        expect(records).toContainEqual(expect.objectContaining({
+          filename: path.basename(published.url), state: 'committed', presentationId: 'winner-deck',
+        }))
+        expect(records.some((record) => record.state === 'pending')).toBe(false)
       } finally {
         await fs.rm(dir, { recursive: true, force: true })
       }

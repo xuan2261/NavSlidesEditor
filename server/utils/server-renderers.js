@@ -1,3 +1,5 @@
+const { getCurvedLineRasterGeometry } = require('revealjs-shared/src/curved-line-raster.js')
+const { staticRasterTargetId } = require('revealjs-shared/src/education/static-raster-targets.js')
 const {
   addCalloutElement,
   addChartElement,
@@ -18,6 +20,7 @@ const {
   hasPptxImageVisualEffects,
   recordPptxTableRotationWarning,
   scaleElementBounds,
+  normalizeElementAction,
 } = require('revealjs-shared')
 
 const NATIVE_RENDERERS = {
@@ -86,9 +89,25 @@ async function addElementToPptxSlide({
   rasterCache,
   rasterizeElement,
   designTokens,
+  teacherReveal = false,
+  effectiveSlideId,
 }) {
-  const bounds = scaleElementBounds(element, resolution, layout)
-  const rasterData = element && element.id ? rasterOverrides[element.id] : null
+  const bounds = scaleElementBounds(
+    getCurvedLineRasterGeometry(element)?.element || element,
+    resolution,
+    layout
+  )
+  if (element.type === 'game')
+    warnings.push(
+      `Slide ${slideNumber}: game "${element.id}" (${element.gameType}) uses an authored static snapshot; interaction and scoring are browser-only.`
+    )
+  const { action } = normalizeElementAction(element.action)
+  if (action)
+    warnings.push(
+      `Slide ${slideNumber}: ${element.type} "${element.id}" action (${action.kind}) is browser-only and omitted from PPTX.`
+    )
+  const rasterData =
+    element && element.id ? rasterOverrides[staticRasterTargetId(element, effectiveSlideId)] : null
 
   if (rasterData) {
     const imageOptions =
@@ -103,6 +122,12 @@ async function addElementToPptxSlide({
     )
     return
   }
+  const policy = getPptxElementExportStrategy(element)
+  if (element.type === 'line' && policy.failure === 'error') {
+    throw new Error(
+      `Slide ${slideNumber}: curved line "${element.id}" requires a successful server raster capture`
+    )
+  }
 
   const fallbackOptions = {
     strictRaster,
@@ -110,6 +135,8 @@ async function addElementToPptxSlide({
     baseUrl,
     resolution,
     rasterCache,
+    teacherReveal: teacherReveal === true,
+    designTokens,
     ...(rasterizeElement ? { rasterizeElement } : {}),
   }
 
@@ -128,7 +155,6 @@ async function addElementToPptxSlide({
       return
     }
 
-    const policy = getPptxElementExportStrategy(element)
     const nativeRenderer = policy.mode === 'native' ? NATIVE_RENDERERS[element.type] : null
     if (nativeRenderer) {
       nativeRenderer(slide, element, bounds, {
@@ -143,6 +169,7 @@ async function addElementToPptxSlide({
       await addFallbackElement(slide, element, bounds, warnings, slideNumber, fallbackOptions)
     }
   } catch (error) {
+    if (element.type === 'game') throw error
     warnings.push(`Slide ${slideNumber}: ${element.type} export failed (${error.message})`)
     await addFallbackElement(slide, element, bounds, warnings, slideNumber, fallbackOptions)
   }

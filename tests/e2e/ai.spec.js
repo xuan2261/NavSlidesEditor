@@ -14,9 +14,7 @@ test.describe('AI Integrations', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('[cap:ai.rewrite] can use AI Copywriter with mocked API response', async ({ page }) => {

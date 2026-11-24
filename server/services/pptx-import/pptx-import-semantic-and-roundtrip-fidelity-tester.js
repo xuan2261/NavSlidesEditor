@@ -9,6 +9,7 @@ const path = require('path')
 const os = require('os')
 const fs = require('fs-extra')
 const pptxgen = require('pptxgenjs')
+const { tableCellPptxRuns } = require('revealjs-shared')
 const { sanitizeHtml } = require('./mapper')
 const { importPptxFile } = require('./importer')
 const { sanitizeDiagnostic } = require('./diagnostics')
@@ -199,7 +200,7 @@ async function exportPresentationForRoundTrip(presentation, filePath) {
         } else if (element.type === 'table') {
           const rows = (element.data || []).map((row) =>
             (row || []).map((cell) => ({
-              text: String(cell || ''),
+              text: tableCellPptxRuns(cell),
               options: { color: pptColor(element.textColor), fontSize: element.fontSize || 12 },
             }))
           )

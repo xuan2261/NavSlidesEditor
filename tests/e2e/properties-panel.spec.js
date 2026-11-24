@@ -43,9 +43,7 @@ test.describe('Properties Panel', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('selecting an element shows properties panel', async ({ page }) => {

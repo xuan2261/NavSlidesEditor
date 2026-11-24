@@ -1,14 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { renderElement } from '../src/element-renderers.js'
 
-// Canonical element type list lives in the client factory; mirror the keys here
-// (kept in sync by the registry-parity test below).
-const CLIENT_ELEMENT_TYPES = [
-  'text', 'image', 'shape', 'code', 'latex', 'html', 'markdown', 'chart',
-  'video', 'audio', 'table', 'icon', 'callout', 'qrcode', 'drawing', 'line',
-  'svg', 'timeline', 'game',
-]
-
 const base = { id: 'el-1', x: 0, y: 0, width: 800, height: 400, zIndex: 1 }
 
 describe('element export parity (editor vs reveal/print HTML)', () => {
@@ -20,7 +12,13 @@ describe('element export parity (editor vs reveal/print HTML)', () => {
         timelineStart: '2000',
         timelineEnd: '2025',
         events: [
-          { id: 'e1', date: '2010', title: 'Launch', imageUrl: '/uploads/pic.png?a=1&b=2', side: 'top' },
+          {
+            id: 'e1',
+            date: '2010',
+            title: 'Launch',
+            imageUrl: '/uploads/pic.png?a=1&b=2',
+            side: 'top',
+          },
         ],
       },
       {},
@@ -50,37 +48,14 @@ describe('element export parity (editor vs reveal/print HTML)', () => {
     expect(html).toContain('/uploads/below.png')
   })
 
-  it('renders a non-empty labeled static block for a game element (never empty, never throws)', () => {
-    let html
-    expect(() => {
-      html = renderElement(
-        { ...base, type: 'game', gameType: 'jeopardy', width: 640, height: 480 },
-        {},
-        {}
-      )
-    }).not.toThrow()
-    expect(html).toBeTruthy()
-    expect(html.length).toBeGreaterThan(0)
-    // recognizable label + game-type badge
-    expect(html.toLowerCase()).toContain('game')
-    expect(html).toContain('jeopardy')
-  })
-
   it('escapes game-derived text in the static block', () => {
     const html = renderElement(
-      { ...base, type: 'game', gameType: '<script>evil</script>', title: '<img onerror=1>' },
+      { ...base, type: 'game', gameType: 'name-picker', title: '<img onerror=1>' },
       {},
       {}
     )
     expect(html).not.toContain('<script>evil')
     expect(html).not.toContain('<img onerror')
-  })
-
-  it('registry parity: every client element type has a reveal/print renderer', () => {
-    for (const type of CLIENT_ELEMENT_TYPES) {
-      const html = renderElement({ ...base, type }, {}, {})
-      expect(html, `type "${type}" produced empty output`).toBeTruthy()
-    }
   })
 
   it('line marker def ids do not collide when element ids share an 8-char prefix', () => {

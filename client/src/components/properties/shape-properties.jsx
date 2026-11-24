@@ -1,33 +1,97 @@
+import { useId } from 'react'
 import { Input, Select, ColorPicker } from '../../components/ui'
 import { clampNumber } from '../../utils/number-input'
 import { computeMixedValues } from '../../utils/selection-mixed-values'
+import MixedValueNotice from './mixed-value-notice'
+import ShapeKindControl from './shape-kind-control'
+import ShapeRichLabelEditor from './shape-rich-label-editor'
+import FocusedAuthoringTextInput from './focused-authoring-text-input'
+import GeometryProperties from './geometry-properties'
+import geometryRecords from 'revealjs-shared/src/pptx-geometry-style-records.js'
+import { resolveSemanticText } from '../../utils/pptx-semantic-text-bridge'
+import { semanticInstance } from 'revealjs-shared/src/pptx-semantic-records.js'
 /**
  * Shape and Line specific properties.
  */
 
 const CONNECTION_ANCHORS = [
-  ['center', 'Center'], ['n', 'Top'], ['ne', 'Top right'], ['e', 'Right'], ['se', 'Bottom right'],
-  ['s', 'Bottom'], ['sw', 'Bottom left'], ['w', 'Left'], ['nw', 'Top left'],
+  ['center', 'Center'],
+  ['n', 'Top'],
+  ['ne', 'Top right'],
+  ['e', 'Right'],
+  ['se', 'Bottom right'],
+  ['s', 'Bottom'],
+  ['sw', 'Bottom left'],
+  ['w', 'Left'],
+  ['nw', 'Top left'],
 ]
 
 function connectionPatch(connections, endpointName, change) {
   const next = { ...(connections || {}) }
   if (!change) delete next[endpointName]
   else next[endpointName] = change
-  return Object.keys(next).length ? next : undefined
+  return next
 }
 
-export default function ShapeProperties({ element, onUpdate, elements, selectedElementIds }) {
+export default function ShapeProperties({
+  element,
+  onUpdate,
+  elements,
+  selectedElementIds,
+  slideLocked = false,
+  pptxSemantic,
+}) {
   const isLine = element.type === 'line'
+  const canonicalLabel = resolveSemanticText({ pptxSemantic }, element)
+  const mixedId = useId()
+  const selectionIds = selectedElementIds || [element.id]
+  const canonicalGeometrySelected = (elements || [element]).some((candidate) => {
+    const instance = semanticInstance(pptxSemantic, candidate.pptxInstanceId)
+    return (
+      selectionIds.includes(candidate.id) &&
+      instance &&
+      [1, 2].includes(
+        geometryRecords.geometryProvider(pptxSemantic, instance).geometry?.schemaVersion
+      )
+    )
+  })
+  const richLabelSelected = (elements || [element]).some(
+    (candidate) =>
+      selectionIds.includes(candidate.id) && candidate.type === 'shape' && candidate.textHtml
+  )
   const mixed = computeMixedValues(elements || [], selectedElementIds || [], [
     'opacity',
     'fill',
     'stroke',
     'textColor',
   ])
+  const mixedDescription = (key) => (mixed[key]?.isMixed ? `${mixedId}-${key}` : undefined)
+  const mixedNotice = (key, label, value) => (
+    <MixedValueNotice
+      id={`${mixedId}-${key}`}
+      isMixed={mixed[key]?.isMixed}
+      label={label}
+      onApply={() => onUpdate({ [key]: value })}
+    />
+  )
 
   return (
     <>
+      <GeometryProperties
+        element={element}
+        pptxSemantic={pptxSemantic}
+        onUpdate={onUpdate}
+        slideLocked={slideLocked}
+        selectedElementIds={selectedElementIds}
+      />
+      {!canonicalGeometrySelected && (
+        <ShapeKindControl
+          element={element}
+          elements={elements}
+          selectedElementIds={selectedElementIds}
+          onUpdate={onUpdate}
+        />
+      )}
       <div className={`grid ${isLine ? 'grid-cols-1' : 'grid-cols-2'} gap-2 mb-2.5`}>
         {!isLine && (
           <div className="flex flex-col gap-1">
@@ -35,11 +99,13 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
             <ColorPicker
               data-testid="prop-shape-fill"
               aria-label="Shape fill color"
+              aria-describedby={mixedDescription('fill')}
               data-mixed={mixed.fill?.isMixed ? 'true' : undefined}
               className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
               value={element.fill || '#6366f1'}
               onChange={(e) => onUpdate({ fill: e.target.value })}
             />
+            {mixedNotice('fill', 'shape fill color', element.fill || '#6366f1')}
           </div>
         )}
         <div className="flex flex-col gap-1">
@@ -47,11 +113,17 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
           <ColorPicker
             data-testid="prop-shape-stroke"
             aria-label={isLine ? 'Line color' : 'Shape stroke color'}
+            aria-describedby={mixedDescription('stroke')}
             data-mixed={mixed.stroke?.isMixed ? 'true' : undefined}
             className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
             value={element.stroke === 'none' || !element.stroke ? '#ffffff' : element.stroke}
             onChange={(e) => onUpdate({ stroke: e.target.value })}
           />
+          {mixedNotice(
+            'stroke',
+            isLine ? 'line color' : 'shape stroke color',
+            element.stroke || 'none'
+          )}
         </div>
       </div>
 
@@ -128,9 +200,15 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
               (candidate) => candidate.id !== element.id && candidate.type !== 'line'
             )
             const targetIds = new Set(targets.map((candidate) => candidate.id))
-            const controls = [['start', 'Start'], ['end', 'End']]
+            const controls = [
+              ['start', 'Start'],
+              ['end', 'End'],
+            ]
             return (
-              <fieldset className="mb-2.5 rounded border border-border p-2" disabled={element.locked}>
+              <fieldset
+                className="mb-2.5 rounded border border-border p-2"
+                disabled={element.locked}
+              >
                 <legend className="px-1 text-[11px] text-text-muted">Connector attachments</legend>
                 {controls.map(([endpointName, label]) => {
                   const connection = element.connections?.[endpointName]
@@ -148,13 +226,17 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
                               connections: connectionPatch(
                                 element.connections,
                                 endpointName,
-                                targetId ? { targetId, anchor: connection?.anchor || 'center' } : null
+                                targetId
+                                  ? { targetId, anchor: connection?.anchor || 'center' }
+                                  : null
                               ),
                             })
                           }}
                         >
                           <option value="">Free endpoint</option>
-                          {unavailable && <option value={connection.targetId}>Target unavailable</option>}
+                          {unavailable && (
+                            <option value={connection.targetId}>Target unavailable</option>
+                          )}
                           {targets.map((target) => (
                             <option key={target.id} value={target.id}>
                               {target.name || target.title || `${target.type} ${target.id}`}
@@ -168,15 +250,19 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
                           aria-label={`${label} connector anchor`}
                           disabled={!connection}
                           value={connection?.anchor || 'center'}
-                          onChange={(event) => onUpdate({
-                            connections: connectionPatch(element.connections, endpointName, {
-                              targetId: connection.targetId,
-                              anchor: event.target.value,
-                            }),
-                          })}
+                          onChange={(event) =>
+                            onUpdate({
+                              connections: connectionPatch(element.connections, endpointName, {
+                                targetId: connection.targetId,
+                                anchor: event.target.value,
+                              }),
+                            })
+                          }
                         >
                           {CONNECTION_ANCHORS.map(([value, anchorLabel]) => (
-                            <option key={value} value={value}>{anchorLabel}</option>
+                            <option key={value} value={value}>
+                              {anchorLabel}
+                            </option>
                           ))}
                         </Select>
                       </label>
@@ -210,29 +296,40 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
         />
       </div>
 
-      {!isLine && (element.shape === 'rect' || element.shape === 'rounded-rect') && (
-        <div className="mb-2.5">
-          <div className="text-[11px] text-text-muted mb-1">
-            Corner Radius: {element.borderRadius || 0}px
+      {!canonicalGeometrySelected &&
+        !isLine &&
+        (element.shape === 'rect' || element.shape === 'rounded-rect') && (
+          <div className="mb-2.5">
+            <div className="text-[11px] text-text-muted mb-1">
+              Corner Radius: {element.borderRadius || 0}px
+            </div>
+            <input
+              data-testid="prop-shape-border-radius"
+              aria-label="Shape corner radius"
+              type="range"
+              className="w-full accent-accent"
+              min="0"
+              max="100"
+              value={element.borderRadius || 0}
+              onChange={(e) => {
+                const value = clampNumber(e.target.value, 0, 100, null)
+                if (value === null) return
+                onUpdate({ borderRadius: value })
+              }}
+            />
           </div>
-          <input
-            data-testid="prop-shape-border-radius"
-            aria-label="Shape corner radius"
-            type="range"
-            className="w-full accent-accent"
-            min="0"
-            max="100"
-            value={element.borderRadius || 0}
-            onChange={(e) => {
-              const value = clampNumber(e.target.value, 0, 100, null)
-              if (value === null) return
-              onUpdate({ borderRadius: value })
-            }}
-          />
-        </div>
-      )}
+        )}
 
-      {!isLine && (
+      {!isLine && (element.textHtml || canonicalLabel) && (
+        <ShapeRichLabelEditor
+          element={element}
+          selectedElementIds={selectedElementIds}
+          disabled={slideLocked}
+          pptxSemantic={pptxSemantic}
+          onUpdate={onUpdate}
+        />
+      )}
+      {!isLine && !element.textHtml && !canonicalLabel && (
         <div className="flex flex-col gap-1 mb-2.5">
           <div className="text-[11px] text-text-muted">Label Text</div>
           <Input
@@ -241,17 +338,22 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
             className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
             type="text"
             value={element.text || ''}
+            disabled={slideLocked || Boolean(element.locked) || richLabelSelected}
+            title={
+              richLabelSelected ? 'Select one unlocked shape to edit its rich label.' : undefined
+            }
             onChange={(e) => onUpdate({ text: e.target.value })}
             placeholder="Text inside shape"
           />
         </div>
       )}
 
-      {!isLine && element.text && (
+      {!isLine && element.text && !canonicalLabel && (
         <div className="grid grid-cols-2 gap-2 mb-2.5">
           <div className="flex flex-col gap-1">
             <div className="text-[11px] text-text-muted">Text Size</div>
-            <Input
+            <FocusedAuthoringTextInput
+              key={`${element.id}-shape-font`}
               data-testid="prop-shape-text-size"
               aria-label="Shape label text size"
               className="w-full bg-card border border-border text-text-primary px-2.5 py-1.5 rounded-sm text-xs transition-colors focus:outline-none focus:border-accent placeholder:text-text-muted"
@@ -271,11 +373,13 @@ export default function ShapeProperties({ element, onUpdate, elements, selectedE
             <ColorPicker
               data-testid="prop-shape-text-color"
               aria-label="Shape label text color"
+              aria-describedby={mixedDescription('textColor')}
               data-mixed={mixed.textColor?.isMixed ? 'true' : undefined}
               className="w-full h-8 border border-border rounded cursor-pointer shrink-0"
               value={element.textColor || '#ffffff'}
               onChange={(e) => onUpdate({ textColor: e.target.value })}
             />
+            {mixedNotice('textColor', 'shape text color', element.textColor || '#ffffff')}
           </div>
         </div>
       )}

@@ -16,7 +16,7 @@ function hasPresentationOwner(state, presentationId, revisionId) {
 }
 
 async function readRevisionBytes(store, revisionId, errors) {
-  const revision = store.getState().revisions.find((item) => item.id === revisionId)
+  const revision = store.getOwnedAuthorityState().revisions.find((item) => item.id === revisionId)
   if (!revision) throw resolutionError(errors.revision, errors.revisionMessage)
 
   let bytes
@@ -41,7 +41,7 @@ async function getStore(options) {
 
 async function resolvePackageRevisionBytes({ presentationId, revisionId }, options = {}) {
   const store = await getStore(options)
-  const state = store.getState()
+  const state = store.getOwnedAuthorityState()
   const head = state.heads.find((item) => item.presentationId === presentationId)
   if (!head || head.packageRevisionId !== revisionId ||
       !hasPresentationOwner(state, presentationId, revisionId)) {
@@ -59,7 +59,7 @@ async function resolvePackageRevisionBytes({ presentationId, revisionId }, optio
 
 async function resolveImmutableOriginalRevisionBytes({ presentationId }, options = {}) {
   const store = await getStore(options)
-  const state = store.getState()
+  const state = store.getOwnedAuthorityState()
   const head = state.heads.find((item) => item.presentationId === presentationId)
   if (!head || typeof head.originalRevisionId !== 'string' || !head.originalRevisionId ||
       !hasPresentationOwner(state, presentationId, head.originalRevisionId)) {

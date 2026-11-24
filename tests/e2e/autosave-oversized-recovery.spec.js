@@ -36,7 +36,8 @@ test.describe('oversized autosave recovery', () => {
       const key = Object.keys(localStorage).find((item) =>
         item.startsWith('navslides-editor-draft:presentation:')
       )
-      return key ? JSON.parse(localStorage.getItem(key)) : null
+      const parsed = key ? JSON.parse(localStorage.getItem(key)) : null
+      return parsed?.record ?? parsed
     })
     expect(JSON.stringify(pendingDraft?.snapshot || {}).length).toBeGreaterThan(KEEPALIVE_MAX_BYTES)
 
@@ -82,7 +83,8 @@ test.describe('oversized autosave recovery', () => {
       const key = Object.keys(localStorage).find((item) =>
         item.startsWith('navslides-editor-draft:presentation:')
       )
-      return key ? JSON.parse(localStorage.getItem(key)) : null
+      const parsed = key ? JSON.parse(localStorage.getItem(key)) : null
+      return parsed?.record ?? parsed
     })
     expect(JSON.stringify(pendingDraft?.snapshot || {}).length).toBeGreaterThan(KEEPALIVE_MAX_BYTES)
     expect(pendingDraft?.snapshot?.title).toBe('Recovered local draft title')

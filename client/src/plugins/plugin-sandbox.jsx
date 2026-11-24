@@ -1,88 +1,98 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-
-function injectBridge(html) {
-  const bridge = `<script>
-window.navslides = window.navslides || {
-  updateData: function(patch) {
-    window.parent.postMessage({ source: 'navslides-plugin', type: 'update-data', patch: patch || {} }, '*');
-  }
-};
-</script>`
-  if (html.includes('</head>')) return html.replace('</head>', `${bridge}</head>`)
-  return `${bridge}${html}`
-}
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import {
+  buildSandboxFrameDocument,
+  HTML_SANDBOX,
+} from 'revealjs-shared/src/education/html-sandbox-policy.js'
+import { createPluginHostBridge } from 'revealjs-shared/src/education/plugin-message-contract.js'
 
 export default function PluginSandbox({
   sandboxUrl,
   pluginData = {},
-  width,
-  height,
+  width = 360,
+  height = 180,
   interactive = false,
   onDataUpdate,
 }) {
   const iframeRef = useRef(null)
+  const bridgeRef = useRef(null)
+  const latest = useRef({ pluginData, width, height, onDataUpdate })
+  latest.current = { pluginData, width, height, onDataUpdate }
   const [srcDoc, setSrcDoc] = useState('')
   const [error, setError] = useState('')
-  const dataKey = useMemo(() => JSON.stringify(pluginData || {}), [pluginData])
-
   useEffect(() => {
-    let cancelled = false
-    fetch(sandboxUrl)
-      .then((res) => {
-        if (!res.ok) throw new Error('Sandbox missing')
-        return res.text()
-      })
-      .then((html) => {
-        if (!cancelled) setSrcDoc(injectBridge(html))
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message || 'Sandbox unavailable')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [sandboxUrl])
-
-  useEffect(() => {
-    const onMessage = (event) => {
-      if (event.source !== iframeRef.current?.contentWindow) return
-      const message = event.data || {}
-      if (message.source !== 'navslides-plugin') return
-      if (message.type === 'ready') {
-        iframeRef.current?.contentWindow?.postMessage({
-          source: 'navslides-host',
-          type: 'init',
-          pluginData,
-          size: { width, height },
-        }, '*')
+    const controller = new AbortController()
+    setError('')
+    setSrcDoc('')
+    async function load() {
+      try {
+        const response = await fetch(sandboxUrl, { signal: controller.signal })
+        if (!response.ok) throw new Error(`Plugin sandbox unavailable (HTTP ${response.status}).`)
+        const content = await response.text()
+        if (!controller.signal.aborted)
+          setSrcDoc(buildSandboxFrameDocument(content, undefined, { plugin: true }))
+      } catch (failure) {
+        if (!controller.signal.aborted) setError(failure.message || 'Plugin sandbox unavailable.')
       }
-      if (message.type === 'update-data') onDataUpdate?.(message.patch || {})
     }
-    window.addEventListener('message', onMessage)
-    return () => window.removeEventListener('message', onMessage)
-  }, [dataKey, height, onDataUpdate, pluginData, width])
-
+    load()
+    return () => controller.abort()
+  }, [sandboxUrl])
+  useLayoutEffect(() => {
+    if (!iframeRef.current || !srcDoc) return undefined
+    try {
+      const state = latest.current
+      const bridge = createPluginHostBridge({
+        frame: iframeRef.current,
+        pluginData: state.pluginData,
+        size: { width: state.width, height: state.height },
+        onDataUpdate: (patch) => latest.current.onDataUpdate?.(patch),
+      })
+      bridgeRef.current = bridge
+      return () => {
+        bridge.destroy()
+        bridgeRef.current = null
+      }
+    } catch (failure) {
+      setError(failure.message)
+      return undefined
+    }
+  }, [srcDoc, error])
   useEffect(() => {
-    iframeRef.current?.contentWindow?.postMessage({
-      source: 'navslides-host',
-      type: 'data-changed',
-      pluginData,
-      size: { width, height },
-    }, '*')
-  }, [dataKey, height, pluginData, width])
-
-  if (error) {
-    return <div className="flex h-full w-full items-center justify-center text-xs text-text-muted">{error}</div>
+    try {
+      bridgeRef.current?.update(pluginData, { width, height })
+    } catch (failure) {
+      setError(failure.message)
+    }
+  }, [pluginData, width, height])
+  const initialize = () => {
+    try {
+      bridgeRef.current?.load()
+    } catch (failure) {
+      setError(failure.message)
+    }
   }
-  if (!srcDoc) {
-    return <div className="flex h-full w-full items-center justify-center text-xs text-text-muted">Loading plugin...</div>
-  }
+  if (error)
+    return (
+      <div
+        role="alert"
+        className="flex h-full w-full items-center justify-center text-xs text-text-muted"
+      >
+        {error}
+      </div>
+    )
+  if (!srcDoc)
+    return (
+      <div className="flex h-full w-full items-center justify-center text-xs text-text-muted">
+        Loading plugin...
+      </div>
+    )
   return (
     <iframe
       ref={iframeRef}
       title="Plugin sandbox"
-      sandbox="allow-scripts"
+      sandbox={HTML_SANDBOX}
       srcDoc={srcDoc}
+      onLoad={initialize}
       className={`block h-full w-full border-0 ${interactive ? 'pointer-events-auto' : 'pointer-events-none'}`}
     />
   )

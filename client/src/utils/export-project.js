@@ -1,7 +1,11 @@
 import JSZip from 'jszip'
-import { generateRevealHTML } from 'revealjs-shared'
+import { generateRevealHTML, projectExportValue } from 'revealjs-shared'
 import { generateOfflineHTML } from './offlineExport'
 import { buildArchiveMediaManifestEntries } from './project-media-utils'
+import { api } from './api'
+import {
+  assertOutputActive, prepareSemanticOutputResources, validateSemanticOutputHTML,
+} from './generateHTML'
 
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob)
@@ -19,61 +23,15 @@ function slugify(str) {
     .replace(/(^-|-$)/g, '')
 }
 
-async function fetchProjectMediaBlob(url) {
+async function fetchProjectMediaBytes(url) {
   const fullUrl = url.startsWith('/') ? `${window.location.origin}${url}` : url
   const response = await fetch(fullUrl)
-  if (!response.ok) throw new Error(`Failed to fetch ${url}`)
-  return await response.blob()
+  if (!response.ok) throw new Error(`Failed to fetch ${url} (HTTP ${response.status})`)
+  return new Uint8Array(await response.arrayBuffer())
 }
 
-const PROJECT_EXPORT_OMITTED_KEYS = new Set([
-  '_pptxImportReport',
-  '_pptxSource',
-  '_pptxEdited',
-  '_pptxEditedAt',
-  'pptxOriginal',
-  'pptxAggregateHead',
-  'pptxSourceAvailable',
-  'aggregateGeneration',
-  'createdAt',
-  'updatedAt',
-  'deletedAt',
-  'jobId',
-  'controlCapabilityHash',
-  'capabilityHash',
-  'sha256',
-  'byteLength',
-  'revisionId',
-  'packageRevisionId',
-  'sourceMapRevisionId',
-  'projectionRevisionId',
-  'originalRevisionId',
-  'manifestHash',
-  'blobSha256',
-  'fencingEpoch',
-  'predecessorId',
-  'originalPath',
-  'packagePath',
-  'sourceMap',
-  'sourceAuthority',
-  'sourceRef',
-  'relationships',
-  'complexObjects',
-  'unknownParts',
-  'securityFlags',
-])
 
-function projectExportValue(value) {
-  if (Array.isArray(value)) return value.map(projectExportValue)
-  if (!value || typeof value !== 'object') return value
-  return Object.fromEntries(
-    Object.entries(value)
-      .filter(([key]) => !PROJECT_EXPORT_OMITTED_KEYS.has(key))
-      .map(([key, child]) => [key, projectExportValue(child)])
-  )
-}
-
-/** Remove editor/package authority before writing a portable project archive. */
+/** Remove client authority only for the legacy projection-only export format. */
 export function toProjectExportPresentation(presentation) {
   return projectExportValue(presentation)
 }
@@ -87,32 +45,47 @@ async function collectProjectMediaFiles(mediaEntries) {
   const settledResults = await Promise.allSettled(
     mediaEntries.map(async (entry) => ({
       ...entry,
-      blob: await fetchProjectMediaBlob(entry.originalUrl),
+      bytes: await fetchProjectMediaBytes(entry.originalUrl),
     }))
   )
 
-  return settledResults.reduce(
-    (result, settledResult, index) => {
-      if (settledResult.status === 'fulfilled') {
-        result.included.push(settledResult.value)
-      } else {
-        result.skipped.push({
-          ...mediaEntries[index],
-          reason: getExportWarningMessage(settledResult.reason),
-        })
+  const included = []
+  const failures = []
+  settledResults.forEach((result, index) => {
+    if (result.status === 'fulfilled') included.push(result.value)
+    else failures.push({ ...mediaEntries[index], reason: getExportWarningMessage(result.reason) })
+  })
+  if (failures.length) {
+    throw Object.assign(
+      new Error(
+        `Project media attachment failed: ${failures.map((item) => `${item.originalUrl}: ${item.reason}`).join('; ')}`
+      ),
+      {
+        code: 'PROJECT_MEDIA_ATTACHMENT_FAILED',
+        failures,
       }
-      return result
-    },
-    { included: [], skipped: [] }
-  )
+    )
+  }
+  return included
 }
 
 /**
- * Export presentation as .navslides.json (no local media)
- * or .navslides ZIP (has local media, includes offline HTML).
+ * Package-backed decks use the server-owned ZIP v2 archive, with or without media.
+ * Legacy projections use JSON v1.1 or a media ZIP without package fidelity claims.
  * @param {object} presentation
  */
-export async function exportProject(presentation) {
+export async function exportProject(presentation, { signal } = {}) {
+  assertOutputActive(signal)
+  if (presentation?.pptxSourceAvailable === true) {
+    if (!presentation.id || !Number.isSafeInteger(presentation.aggregateGeneration) || presentation.aggregateGeneration < 1) {
+      throw new Error('Project archive requires a saved package generation')
+    }
+    const archive = await api.downloadProjectArchive(presentation.id, presentation.aggregateGeneration)
+    assertOutputActive(signal)
+    const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+    downloadBlob(archive, `${slugify(presentation.title)}-backup-${timestamp}.navslides`)
+    return
+  }
   const exportPresentation = toProjectExportPresentation(presentation)
   const mediaEntries = buildArchiveMediaManifestEntries(exportPresentation)
   const title = slugify(exportPresentation?.title)
@@ -134,16 +107,13 @@ export async function exportProject(presentation) {
   const zip = new JSZip()
   zip.file('presentation.json', JSON.stringify(exportPresentation, null, 2))
 
-  const { included, skipped } = await collectProjectMediaFiles(mediaEntries)
-  included.forEach(({ blob, ...entry }) => {
-    zip.file(entry.archivePath, blob)
+  const included = await collectProjectMediaFiles(mediaEntries)
+  assertOutputActive(signal)
+  included.forEach(({ bytes, ...entry }) => {
+    zip.file(entry.archivePath, bytes)
   })
 
-  if (skipped.length > 0) {
-    console.warn('Project export skipped media files:', skipped)
-  }
-
-  const manifestMedia = included.map(({ blob: _blob, ...entry }) => entry)
+  const manifestMedia = included.map(({ bytes: _bytes, ...entry }) => entry)
   const manifest = {
     version: '1.1',
     title: exportPresentation?.title || 'Presentation',
@@ -151,17 +121,33 @@ export async function exportProject(presentation) {
     hasLocalMedia: manifestMedia.length > 0,
     mediaCount: manifestMedia.length,
     media: manifestMedia,
-    ...(skipped.length > 0 ? { skippedMedia: skipped } : {}),
   }
 
   zip.file('manifest.json', JSON.stringify(manifest, null, 2))
 
   try {
-    const html = generateRevealHTML(exportPresentation)
-    const offline = await generateOfflineHTML(html, { strictRequiredAssets: true })
+    const semanticOutputResources = await prepareSemanticOutputResources(presentation, { signal })
+    assertOutputActive(signal)
+    // Projection stripping must not erase the canonical journal used by this
+    // attachment. The archive JSON remains the existing external projection.
+    const htmlPresentation = presentation.pptxSemantic
+      ? { ...exportPresentation, pptxSemantic: presentation.pptxSemantic } : exportPresentation
+    const html = generateRevealHTML(htmlPresentation, { portable: true, semanticOutputResources })
+    const offline = await generateOfflineHTML(html, {
+      generatedDocument: true,
+      strictRequiredAssets: true,
+    })
+    assertOutputActive(signal)
+    if (presentation.pptxSemantic) await validateSemanticOutputHTML(offline, { signal })
+    assertOutputActive(signal)
     zip.file('presentation.html', offline)
-  } catch {
-    /* skip HTML generation */
+  } catch (cause) {
+    throw Object.assign(
+      new Error(`Project HTML attachment failed: ${getExportWarningMessage(cause)}`, { cause }),
+      {
+        code: 'PROJECT_HTML_ATTACHMENT_FAILED',
+      }
+    )
   }
 
   const zipBlob = await zip.generateAsync({
@@ -169,5 +155,6 @@ export async function exportProject(presentation) {
     compression: 'DEFLATE',
     compressionOptions: { level: 6 },
   })
+  assertOutputActive(signal)
   downloadBlob(zipBlob, `${title}-backup-${timestamp}.navslides`)
 }

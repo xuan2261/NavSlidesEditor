@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react'
 import GitHubPushModal from './GitHubPushModal'
 import SyncModal from './SyncModal'
 import HistoryModal from './HistoryModal'
@@ -15,7 +16,8 @@ import { GameHudOverlay } from './game-hud-overlay'
 import { GameLeaderboardOverlay } from './game-leaderboard-overlay'
 import EditorModalsSecondary from './editor-modals-secondary'
 import { useUIStore } from '../stores/ui-store'
-import { duplicateSlidesAtIndices } from '../hooks/slide-operation-helpers'
+import { applySorterSlideOperation, getSorterCurrentDestination } from '../utils/slide-sorter-operations'
+import projectionOperations from 'revealjs-shared/src/pptx-projection-operation.js'
 
 /**
  * Presentational mount point for the editor's modal/overlay JSX, lifted out of
@@ -37,6 +39,7 @@ export default function EditorModals(props) {
     setCurrentSlideIndex,
     navigateToSlide,
     setPresentation,
+    restorePresentation,
     htmlEditorState,
     setHtmlEditorState,
     commitHtmlEdit,
@@ -73,6 +76,26 @@ export default function EditorModals(props) {
   const setShowShareModal = useUIStore((s) => s.setShowShareModal)
   const showAnalytics = useUIStore((s) => s.showAnalytics)
   const setShowAnalytics = useUIStore((s) => s.setShowAnalytics)
+  const previousSorterState = useRef({ slides: presentation?.slides, index: currentSlideIndex })
+  useLayoutEffect(() => {
+    const previous = previousSorterState.current
+    const slides = presentation?.slides
+    previousSorterState.current = { slides, index: currentSlideIndex }
+    if (viewMode !== 'sorter' || !slides?.length || !previous.slides || previous.slides === slides) return
+    const destination = getSorterCurrentDestination(previous.slides, previous.index, slides, verticalEdit)
+    if (destination.index !== currentSlideIndex || destination.identityChanged) {
+      navigateToSlide(destination.index, destination.child)
+    }
+  }, [presentation?.slides, currentSlideIndex, verticalEdit, viewMode, navigateToSlide])
+
+  const changeSorterSlide = (operation, index, toIndex) => {
+    const slideId = presentation.slides[index]?.id
+    if (!slideId) return
+    setPresentation((prev) => {
+      const next = applySorterSlideOperation(prev, operation, slideId, toIndex)
+      return next === prev ? prev : next
+    })
+  }
 
   return (
     <>
@@ -91,9 +114,7 @@ export default function EditorModals(props) {
       {showHistoryModal && (
         <HistoryModal
           presentationId={presentationId}
-          onRestore={(restored) =>
-            setPresentation({ ...restored, slides: (restored.slides || []).map((s) => s) })
-          }
+          onRestore={restorePresentation}
           onClose={() => setShowHistoryModal(false)}
         />
       )}
@@ -109,24 +130,9 @@ export default function EditorModals(props) {
             navigateToSlide(idx)
             setViewMode('normal')
           }}
-          onMove={(fromIdx, toIdx) => {
-            const newSlides = [...presentation.slides]
-            const [moved] = newSlides.splice(fromIdx, 1)
-            newSlides.splice(toIdx, 0, moved)
-            setPresentation((prev) => ({ ...prev, slides: newSlides }))
-          }}
-          onDelete={(idx) => {
-            if (presentation.slides.length <= 1) return
-            const newSlides = presentation.slides.filter((_, i) => i !== idx)
-            setPresentation((prev) => ({ ...prev, slides: newSlides }))
-            if (currentSlideIndex >= newSlides.length) {
-              setCurrentSlideIndex(Math.max(0, newSlides.length - 1))
-            }
-          }}
-          onDuplicate={(idx) => {
-            const { slides: newSlides } = duplicateSlidesAtIndices(presentation.slides, [idx])
-            setPresentation((prev) => ({ ...prev, slides: newSlides }))
-          }}
+          onMove={(fromIdx, toIdx) => changeSorterSlide('move', fromIdx, toIdx)}
+          onDelete={(idx) => changeSorterSlide('delete', idx)}
+          onDuplicate={(idx) => changeSorterSlide('duplicate', idx)}
           onClose={() => setViewMode('normal')}
         />
       )}
@@ -173,6 +179,13 @@ export default function EditorModals(props) {
       {showTimeline && (
         <AnimationTimeline
           slide={currentSlide}
+          pptxSemantic={presentation?.pptxSemantic}
+          onSourceTimingOperation={(operation) => {
+            if (operation.slideId !== currentSlide?.id) throw new TypeError('Timing edit targets a different active slide')
+            const projected = projectionOperations.applyPresentationProjectionOperation(presentation, operation)
+            setPresentation(previous => previous === presentation
+              ? projected : projectionOperations.applyPresentationProjectionOperation(previous, operation))
+          }}
           onUpdateElement={(id, updates) => updateElement(id, updates)}
           onClose={() => setShowTimeline(false)}
           onPreview={() => setShowAnimationPreview(true)}

@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url'
 
 const IMAGE_DIGEST = /^sha256:[a-f0-9]{64}$/
 const SEVERITIES = ['UNKNOWN', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
-const MAX_ACCEPTED_FINDINGS = 100
+const MAX_ACCEPTED_FINDINGS = 200
 const sha256 = (value) =>
   `sha256:${crypto.createHash('sha256').update(value).digest('hex')}`
 const hashJson = (value) => sha256(JSON.stringify(value))
@@ -47,9 +47,15 @@ function assertPolicy(policy, now) {
     if (
       !isRecord(disposition) ||
       disposition.status !== 'risk-accepted' ||
-      !Number.isSafeInteger(disposition.expectedCount) ||
-      disposition.expectedCount < 1 ||
-      disposition.expectedCount > MAX_ACCEPTED_FINDINGS ||
+      disposition.expectedCount !== undefined ||
+      !Number.isSafeInteger(disposition.maxCount) ||
+      disposition.maxCount < 1 ||
+      disposition.maxCount > MAX_ACCEPTED_FINDINGS ||
+      !Array.isArray(disposition.baselineIds) ||
+      disposition.baselineIds.length < 1 ||
+      disposition.baselineIds.length > disposition.maxCount ||
+      disposition.baselineIds.some((id) => !isNonEmptyString(id)) ||
+      new Set(disposition.baselineIds).size !== disposition.baselineIds.length ||
       !isNonEmptyString(disposition.reason)
     ) {
       throw new Error('container risk-acceptance policy is invalid')
@@ -192,10 +198,15 @@ export function verifyContainerSupplyChain(input, now = Date.now()) {
     const suffix = failures.length > sample.length ? `,+${failures.length - sample.length} more` : ''
     throw new Error(`unapproved vulnerabilities (${failures.length}): ${sample.join(',')}${suffix}`)
   }
-  if (failures.length > 0 && failures.length !== disposition.expectedCount) {
-    throw new Error(
-      `risk acceptance expected exactly ${disposition.expectedCount} unapproved findings; found ${failures.length}`
-    )
+  if (failures.length > 0) {
+    const allowedIds = new Set(disposition.baselineIds)
+    const outsideBaseline = [...new Set(failures.map((entry) => entry.VulnerabilityID).filter((id) => !allowedIds.has(id)))].sort()
+    if (outsideBaseline.length > 0) {
+      throw new Error(`unapproved vulnerabilities outside baselineIds (${outsideBaseline.length}): ${outsideBaseline.join(',')}`)
+    }
+    if (failures.length > disposition.maxCount) {
+      throw new Error(`risk acceptance maxCount exceeded: expected at most ${disposition.maxCount} unapproved findings; found ${failures.length}`)
+    }
   }
 
   const riskAccepted = failures.length > 0

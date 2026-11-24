@@ -6,6 +6,7 @@ import { createRequire } from 'node:module'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import express from 'express'
 import request from 'supertest'
+import JSZip from 'jszip'
 
 const require = createRequire(import.meta.url)
 const originalDataDir = process.env.SLIDES_DATA_DIR
@@ -95,15 +96,18 @@ describe('presentation duplicate compensation', () => {
       { id: 'deck-1', title: 'Original', slides: [{ id: 's1', elements: [] }] },
     ])
     await packageRuntime.initializePackageStore({ rootDir: storage.DATA_DIR })
-    const packageHead = await packageRuntime.withPackageStore((store) =>
-      store.commitOriginal(Buffer.from('original-only-package'), {
-        ownerType: 'presentation',
-        ownerId: 'deck-1',
-      })
-    )
-    await storage.withPresentations((presentations) => {
-      presentations[0].pptxAggregateHead = packageHead
-    })
+    const projection = (await storage.readPresentations())[0]
+    const zip = new JSZip()
+    zip.file('[Content_Types].xml', '<Types/>')
+    zip.file('ppt/presentation.xml', '<p:presentation/>')
+    await packageRuntime.withPackageStore(async (store) => store.commitImport(
+      await zip.generateAsync({ type: 'nodebuffer' }), {
+        jobId: 'fixture-import', presentationId: projection.id, projection,
+        sourceMap: await require('../services/pptx-import/source-map').buildImportSourceMap(projection, null, null),
+        compatibilityPresentation: projection,
+      }
+    ))
+    await packageRuntime.drainPackageCompatibilityOutbox()
   })
 
   afterEach(async () => {

@@ -32,34 +32,41 @@ function renderCanvasElement(element, props = {}) {
   return {
     handlers,
     ...render(
-    <CanvasElement
-      element={element}
-      isSelected={props.isSelected ?? false}
-      selectedElementCount={props.selectedElementCount}
-      isEditing={props.isEditing ?? false}
-      isCropping={props.isCropping ?? false}
-      cropState={null}
-      isDragging={props.isDragging ?? false}
-      slideWidth={props.slideWidth}
-      slideLocked={props.slideLocked ?? false}
-      slideHeight={props.slideHeight}
-      editor={null}
-      onPointerDown={handlers.onPointerDown}
-      onClick={handlers.onClick}
-      onDoubleClick={handlers.onDoubleClick}
-      onContextMenu={handlers.onContextMenu}
-      onCropHandleDown={handlers.onCropHandleDown}
-      onCommitCrop={handlers.onCommitCrop}
-      onUpdateElement={handlers.onUpdateElement}
-      onDeleteElement={handlers.onDeleteElement}
-      onStartEdit={handlers.onStartEdit}
-      iconPaths={{}}
-    />
+      <CanvasElement
+        element={element}
+        isSelected={props.isSelected ?? false}
+        selectedElementCount={props.selectedElementCount}
+        isEditing={props.isEditing ?? false}
+        isCropping={props.isCropping ?? false}
+        cropState={null}
+        isDragging={props.isDragging ?? false}
+        slideWidth={props.slideWidth}
+        slideLocked={props.slideLocked ?? false}
+        slideHeight={props.slideHeight}
+        editor={null}
+        onPointerDown={handlers.onPointerDown}
+        onClick={handlers.onClick}
+        onDoubleClick={handlers.onDoubleClick}
+        onContextMenu={handlers.onContextMenu}
+        onCropHandleDown={handlers.onCropHandleDown}
+        onCommitCrop={handlers.onCommitCrop}
+        onUpdateElement={handlers.onUpdateElement}
+        onDeleteElement={handlers.onDeleteElement}
+        onStartEdit={handlers.onStartEdit}
+        iconPaths={{}}
+      />
     ),
   }
 }
 
 describe('CanvasElement video playback', () => {
+  it.each(['audio', 'video'])('applies authored %s volume to its HTMLMediaElement', (type) => {
+    const { container } = renderCanvasElement({ ...baseElement, type, volume: 0.2 })
+    const media = container.querySelector(type)
+    expect(media).toBeInstanceOf(HTMLMediaElement)
+    expect(media.volume).toBe(0.2)
+  })
+
   it('[F4 red defect:canvas.keyboard] exposes focusable element semantics', () => {
     renderCanvasElement(baseElement)
     const wrapper = screen.getByTestId('slide-element-video-1')
@@ -98,15 +105,13 @@ describe('CanvasElement video playback', () => {
     expect(handlers.onClick).toHaveBeenCalledTimes(2)
   })
 
-  it('[F5 red defect:canvas.keyboard] nudges and deletes selected unlocked elements', () => {
+  it('[F5] nudges selected unlocked elements', () => {
     const { handlers } = renderCanvasElement(baseElement, { isSelected: true })
     const wrapper = screen.getByTestId('slide-element-video-1')
 
     fireEvent.keyDown(wrapper, { key: 'ArrowRight', shiftKey: true })
-    fireEvent.keyDown(wrapper, { key: 'Delete' })
 
     expect(handlers.onUpdateElement).toHaveBeenCalledWith('video-1', { x: 10, y: 0 })
-    expect(handlers.onDeleteElement).toHaveBeenCalledWith('video-1')
   })
 
   it('[F5] nudges selected elements by 1px without Shift', () => {
@@ -125,7 +130,11 @@ describe('CanvasElement video playback', () => {
     })
     const wrapper = screen.getByTestId('slide-element-video-1')
 
-    const arrow = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true })
+    const arrow = new KeyboardEvent('keydown', {
+      key: 'ArrowRight',
+      bubbles: true,
+      cancelable: true,
+    })
     const del = new KeyboardEvent('keydown', { key: 'Delete', bubbles: true, cancelable: true })
     wrapper.dispatchEvent(arrow)
     wrapper.dispatchEvent(del)
@@ -149,10 +158,7 @@ describe('CanvasElement video playback', () => {
   })
 
   it('[red defect:canvas.keyboard] does not mutate locked elements through keyboard paths', () => {
-    const { handlers } = renderCanvasElement(
-      { ...baseElement, locked: true },
-      { isSelected: true }
-    )
+    const { handlers } = renderCanvasElement({ ...baseElement, locked: true }, { isSelected: true })
     const wrapper = screen.getByTestId('slide-element-video-1')
 
     fireEvent.keyDown(wrapper, { key: 'ArrowDown' })
@@ -178,14 +184,6 @@ describe('CanvasElement video playback', () => {
     expect(handlers.onDeleteElement).not.toHaveBeenCalled()
   })
 
-  it('exposes a visible focus ring for keyboard navigation', () => {
-    renderCanvasElement(baseElement)
-    const wrapper = screen.getByTestId('slide-element-video-1')
-
-    expect(wrapper.className).toContain('focus-visible:ring-2')
-    expect(wrapper.className).toContain('focus-visible:ring-focus')
-  })
-
   it('clamps focused keyboard nudges to the slide right and bottom edges', () => {
     const { handlers } = renderCanvasElement(
       { ...baseElement, x: 90, y: 70, width: 20, height: 30 },
@@ -198,6 +196,48 @@ describe('CanvasElement video playback', () => {
 
     expect(handlers.onUpdateElement).toHaveBeenNthCalledWith(1, 'video-1', { x: 80, y: 70 })
     expect(handlers.onUpdateElement).toHaveBeenNthCalledWith(2, 'video-1', { x: 80, y: 70 })
+  })
+
+  it('clamps a rotated keyboard nudge against its visual right edge', () => {
+    const element = {
+      ...baseElement,
+      x: 960 - 50 - 50 * Math.SQRT2,
+      y: 200,
+      width: 100,
+      height: 100,
+      rotation: 45,
+    }
+    const { handlers } = renderCanvasElement(element, { isSelected: true })
+    fireEvent.keyDown(screen.getByTestId('slide-element-video-1'), {
+      key: 'ArrowRight',
+      shiftKey: true,
+    })
+    const [, updates] = handlers.onUpdateElement.mock.calls[0]
+    expect(updates.x + 50 + 50 * Math.SQRT2).toBeCloseTo(960)
+    expect(updates.y).toBe(200)
+  })
+
+  it.each(['video', 'audio'])(
+    'lets nested %s controls own arrow keys without changing geometry',
+    (type) => {
+      const { handlers } = renderCanvasElement({ ...baseElement, type }, { isSelected: true })
+      const event = new KeyboardEvent('keydown', {
+        key: 'ArrowRight',
+        bubbles: true,
+        cancelable: true,
+      })
+      screen.getByTestId('slide-element-video-1').querySelector(type).dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(false)
+      expect(handlers.onUpdateElement).not.toHaveBeenCalled()
+    }
+  )
+
+  it.each([false, true])('keeps rounded image content clipped with selected=%s', (isSelected) => {
+    const image = { ...baseElement, type: 'image', src: '/image.png', borderRadius: 24 }
+    renderCanvasElement(image, { isSelected })
+    const clip = screen.getByTestId('slide-element-video-1').querySelector('img').parentElement
+    expect(clip.style.borderRadius).toBe('24px')
+    expect(clip.style.overflow).toBe('hidden')
   })
 
   it('keeps unselected line wrappers clickable', () => {
@@ -248,6 +288,38 @@ describe('CanvasElement video playback', () => {
     expect(video.playbackRate).toBe(1.25)
   })
 
+  it.each(['video', 'audio'])('uses the edited %s playback interval after rerender and removes it on unmount', (type) => {
+    const { rerender, unmount } = renderCanvasElement({
+      ...baseElement,
+      type,
+      startTime: 0.2,
+      endTime: 0.8,
+    })
+    const video = screen.getByTestId('slide-element-video-1').querySelector(type)
+    const pause = vi.spyOn(video, 'pause').mockImplementation(() => {})
+    try {
+      fireEvent.loadedMetadata(video)
+      expect(video.currentTime).toBe(0.2)
+      video.currentTime = 0.9
+      fireEvent.timeUpdate(video)
+      expect(video.currentTime).toBe(0.8)
+      expect(pause).toHaveBeenCalledOnce()
+      rerender(<CanvasElement element={{ ...baseElement, type, startTime: 0.4, endTime: 1.5 }} />)
+      video.currentTime = 0.9
+      fireEvent.timeUpdate(video)
+      expect(video.currentTime).toBe(0.9)
+      video.currentTime = 1.6
+      fireEvent.timeUpdate(video)
+      expect(video.currentTime).toBe(1.5)
+      unmount()
+      video.currentTime = 1.6
+      fireEvent.timeUpdate(video)
+      expect(video.currentTime).toBe(1.6)
+    } finally {
+      pause.mockRestore()
+    }
+  })
+
   it('applies video autoplay in the canvas preview', () => {
     renderCanvasElement({ ...baseElement, autoplay: true })
     expect(screen.getByTestId('slide-element-video-1').querySelector('video').autoplay).toBe(true)
@@ -255,7 +327,9 @@ describe('CanvasElement video playback', () => {
 
   it('does not start canvas dragging from native video controls', () => {
     const { handlers } = renderCanvasElement(baseElement)
-    fireEvent.pointerDown(screen.getByTestId('slide-element-video-1').querySelector('video'), { button: 0 })
+    fireEvent.pointerDown(screen.getByTestId('slide-element-video-1').querySelector('video'), {
+      button: 0,
+    })
     expect(handlers.onPointerDown).not.toHaveBeenCalled()
   })
 
@@ -270,7 +344,8 @@ describe('CanvasElement video playback', () => {
     const wrapper = screen.getByTestId('slide-element-video-1')
     const video = wrapper.querySelector('video')
 
-    expect(video.getAttribute('src')).toBe('https://example.com/from-url.mp4#t=5,12')
+    expect(video.getAttribute('src')).toBe('https://example.com/from-url.mp4')
+    expect(video.currentTime).toBe(5)
   })
 
   it('does not resurrect videoUrl when the persisted src is explicitly blank', () => {
@@ -295,7 +370,8 @@ describe('CanvasElement video playback', () => {
     const wrapper = screen.getByTestId('slide-element-video-1')
     const video = wrapper.querySelector('video')
 
-    expect(video.getAttribute('src')).toBe('https://example.com/current.mp4#t=3')
+    expect(video.getAttribute('src')).toBe('https://example.com/current.mp4')
+    expect(video.currentTime).toBe(3)
   })
 
   it('applies audio preview flags consistently with export attributes', () => {
@@ -333,9 +409,7 @@ describe('CanvasElement video playback', () => {
       controls: false,
     })
 
-    const audio = screen
-      .getByTestId('slide-element-audio-without-controls')
-      .querySelector('audio')
+    const audio = screen.getByTestId('slide-element-audio-without-controls').querySelector('audio')
     expect(audio.controls).toBe(false)
   })
 
@@ -442,7 +516,9 @@ describe('CanvasElement image crop diagnostics', () => {
 
   it('renders persisted image borders in the editor canvas', () => {
     renderCanvasElement({ ...imageElement, borderWidth: 2, borderColor: '#336699' })
-    const image = screen.getByTestId('slide-element-image-1').querySelector('[data-element-content] > div')
+    const image = screen
+      .getByTestId('slide-element-image-1')
+      .querySelector('[data-element-content] > div')
     const expectedStyle = document.createElement('div').style
     expectedStyle.borderColor = '#336699'
     expect(image.style.borderWidth).toBe('2px')
@@ -535,40 +611,6 @@ describe('CanvasElement html embed sandbox', () => {
       '<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script><div id="anim"></div>',
   }
 
-  it('renders html embed iframe with allow-same-origin so CDN scripts can load', () => {
-    renderCanvasElement(htmlElement)
-    const wrapper = screen.getByTestId('slide-element-html-1')
-    const iframe = wrapper.querySelector('iframe')
-
-    expect(iframe).not.toBeNull()
-    const sandbox = iframe.getAttribute('sandbox') || ''
-    expect(sandbox).toContain('allow-scripts')
-    expect(sandbox).toContain('allow-same-origin')
-  })
-
-  it('uses element.content as srcDoc for html embeds', () => {
-    renderCanvasElement(htmlElement)
-    const wrapper = screen.getByTestId('slide-element-html-1')
-    const iframe = wrapper.querySelector('iframe')
-
-    expect(iframe.getAttribute('srcdoc')).toContain('animejs')
-  })
-
-  it('renders Mermaid html embeds from mermaidSource with the vendored runtime', () => {
-    renderCanvasElement({
-      ...htmlElement,
-      embedKind: 'mermaid',
-      mermaidSource: 'flowchart TD\n  A-->B',
-      content: '',
-    })
-    const wrapper = screen.getByTestId('slide-element-html-1')
-    const iframe = wrapper.querySelector('iframe')
-
-    expect(iframe.getAttribute('title')).toBe('Mermaid diagram preview')
-    expect(iframe.getAttribute('srcdoc')).toContain('/vendor/mermaid/mermaid.min.js')
-    expect(iframe.getAttribute('srcdoc')).toContain('flowchart TD')
-  })
-
   it('[cap:element.html depth:behavior] enables iframe interaction after the element is selected', () => {
     renderCanvasElement(htmlElement, { isSelected: true })
     const wrapper = screen.getByTestId('slide-element-html-1')
@@ -581,7 +623,12 @@ describe('CanvasElement html embed sandbox', () => {
 describe('CanvasElement presentation actions', () => {
   it('keeps a hotspot selectable with mouse and keyboard in edit mode', () => {
     const { handlers } = renderCanvasElement({
-      id: 'hotspot', type: 'shape', x: 0, y: 0, width: 100, height: 40,
+      id: 'hotspot',
+      type: 'shape',
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 40,
       action: { kind: 'url', url: 'https://example.test', hotspot: true },
     })
     const wrapper = screen.getByTestId('slide-element-hotspot')

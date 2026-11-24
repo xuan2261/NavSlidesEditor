@@ -1,0 +1,307 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>RLC Impedance Phasor</title>
+    <style>
+      :root {
+        --bg: #071a12;
+        --primary: #00ff87;
+        --text: #d5ffe8;
+        --glass: rgba(10, 40, 25, 0.6);
+        --border: rgba(0, 255, 135, 0.2);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 12px;
+        overflow: hidden;
+      }
+      h3 {
+        font-size: 1.1rem;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+        text-shadow: 0 0 10px rgba(0, 255, 135, 0.5);
+      }
+      .main {
+        display: flex;
+        gap: 16px;
+        width: 100%;
+        max-width: 920px;
+        height: 380px;
+        background: var(--glass);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        backdrop-filter: blur(10px);
+      }
+      .canvas-wrap {
+        flex: 2;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      canvas {
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.3);
+      }
+      .controls {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 12px;
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .controls h4 {
+        text-align: center;
+        color: var(--primary);
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+      }
+      .slider-group {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .slider-group label {
+        font-size: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .slider-group label span {
+        color: var(--primary);
+        font-weight: bold;
+      }
+      input[type='range'] {
+        width: 100%;
+        accent-color: var(--primary);
+        height: 6px;
+      }
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        background: rgba(0, 0, 0, 0.2);
+      }
+      .info-row .val {
+        font-family: monospace;
+        font-weight: bold;
+        color: var(--primary);
+      }
+      .legend {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 4px;
+      }
+      .legend span {
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+      }
+      .legend span::before {
+        content: '';
+        width: 12px;
+        height: 3px;
+        border-radius: 2px;
+        display: inline-block;
+      }
+      .leg-r::before {
+        background: #ff6b6b;
+      }
+      .leg-l::before {
+        background: #4ecdc4;
+      }
+      .leg-c::before {
+        background: #ffd93d;
+      }
+      .leg-z::before {
+        background: #00ff87;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>RLC Impedance Phasor Diagram</h3>
+    <div class="main">
+      <div class="canvas-wrap"><canvas id="cv" width="480" height="350"></canvas></div>
+      <div class="controls">
+        <h4>Parameters</h4>
+        <div class="slider-group">
+          <label>R <span id="rv">100</span> Ω</label
+          ><input type="range" id="sR" min="10" max="500" value="100" oninput="draw()" />
+        </div>
+        <div class="slider-group">
+          <label>L <span id="lv">50</span> mH</label
+          ><input type="range" id="sL" min="1" max="200" value="50" oninput="draw()" />
+        </div>
+        <div class="slider-group">
+          <label>C <span id="cv2">10</span> μF</label
+          ><input type="range" id="sC" min="1" max="100" value="10" oninput="draw()" />
+        </div>
+        <div class="slider-group">
+          <label>f <span id="fv">50</span> Hz</label
+          ><input type="range" id="sF" min="10" max="500" value="50" oninput="draw()" />
+        </div>
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 4px 0"></div>
+        <div class="info-row"><span>|Z|</span><span class="val" id="zMag">—</span></div>
+        <div class="info-row"><span>φ</span><span class="val" id="zPhase">—</span></div>
+        <div class="info-row">
+          <span>X<sub>L</sub></span
+          ><span class="val" id="xL">—</span>
+        </div>
+        <div class="info-row">
+          <span>X<sub>C</sub></span
+          ><span class="val" id="xC">—</span>
+        </div>
+        <div class="info-row"><span>f₀ (res)</span><span class="val" id="f0">—</span></div>
+        <div class="legend">
+          <span class="leg-r">R</span><span class="leg-l">X<sub>L</sub></span>
+          <span class="leg-c">X<sub>C</sub></span
+          ><span class="leg-z">Z</span>
+        </div>
+      </div>
+    </div>
+    <script>
+      const cv = document.getElementById('cv'),
+        ctx = cv.getContext('2d')
+      function draw() {
+        const R = +document.getElementById('sR').value,
+          L = +document.getElementById('sL').value / 1000,
+          C = +document.getElementById('sC').value / 1e6,
+          f = +document.getElementById('sF').value
+        document.getElementById('rv').textContent = R
+        document.getElementById('lv').textContent = (L * 1000).toFixed(0)
+        document.getElementById('cv2').textContent = (C * 1e6).toFixed(0)
+        document.getElementById('fv').textContent = f
+        const w = 2 * Math.PI * f,
+          XL = w * L,
+          XC = 1 / (w * C),
+          X = XL - XC,
+          Z = Math.sqrt(R * R + X * X),
+          phi = (Math.atan2(X, R) * 180) / Math.PI
+        const f0 = 1 / (2 * Math.PI * Math.sqrt(L * C))
+        document.getElementById('zMag').textContent = Z.toFixed(1) + ' Ω'
+        document.getElementById('zPhase').textContent = phi.toFixed(1) + '°'
+        document.getElementById('xL').textContent = XL.toFixed(1) + ' Ω'
+        document.getElementById('xC').textContent = XC.toFixed(1) + ' Ω'
+        document.getElementById('f0').textContent = f0.toFixed(1) + ' Hz'
+        ctx.clearRect(0, 0, 480, 350)
+        const cx = 130,
+          cy = 175,
+          scale = Math.min(180 / Math.max(R, Math.abs(XL), Math.abs(XC), Z, 1), 1.5)
+        // Grid
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)'
+        ctx.lineWidth = 1
+        for (let i = -200; i <= 200; i += 40) {
+          ctx.beginPath()
+          ctx.moveTo(cx + i, 20)
+          ctx.lineTo(cx + i, 330)
+          ctx.stroke()
+          ctx.beginPath()
+          ctx.moveTo(20, cy + i)
+          ctx.lineTo(460, cy + i)
+          ctx.stroke()
+        }
+        // Axes
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)'
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        ctx.moveTo(20, cy)
+        ctx.lineTo(460, cy)
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.moveTo(cx, 20)
+        ctx.lineTo(cx, 330)
+        ctx.stroke()
+        ctx.fillStyle = 'rgba(255,255,255,0.4)'
+        ctx.font = '11px sans-serif'
+        ctx.fillText('Re (Ω)', 420, cy - 8)
+        ctx.fillText('Im (Ω)', cx + 8, 30)
+        // Draw vectors
+        function arrow(x1, y1, x2, y2, color, w2) {
+          ctx.strokeStyle = color
+          ctx.lineWidth = w2
+          ctx.beginPath()
+          ctx.moveTo(x1, y1)
+          ctx.lineTo(x2, y2)
+          ctx.stroke()
+          const a = Math.atan2(y2 - y1, x2 - x1),
+            hl = 10
+          ctx.fillStyle = color
+          ctx.beginPath()
+          ctx.moveTo(x2, y2)
+          ctx.lineTo(x2 - hl * Math.cos(a - 0.35), y2 - hl * Math.sin(a - 0.35))
+          ctx.lineTo(x2 - hl * Math.cos(a + 0.35), y2 - hl * Math.sin(a + 0.35))
+          ctx.fill()
+        }
+        // R vector (horizontal)
+        arrow(cx, cy, cx + R * scale, cy, '#ff6b6b', 3)
+        // XL vector (up from R end)
+        if (XL > 0.5) arrow(cx + R * scale, cy, cx + R * scale, cy - XL * scale, '#4ecdc4', 3)
+        // XC vector (down from R end)
+        if (XC > 0.5) arrow(cx + R * scale, cy, cx + R * scale, cy + XC * scale, '#ffd93d', 3)
+        // Z vector (resultant)
+        arrow(cx, cy, cx + R * scale, cy - X * scale, '#00ff87', 3.5)
+        // Angle arc
+        if (Math.abs(phi) > 2) {
+          ctx.strokeStyle = 'rgba(0,255,135,0.4)'
+          ctx.lineWidth = 1.5
+          ctx.beginPath()
+          const ar = 30
+          ctx.arc(cx, cy, ar, 0, (-phi * Math.PI) / 180, phi > 0)
+          ctx.stroke()
+          ctx.fillStyle = '#00ff87'
+          ctx.font = 'bold 12px monospace'
+          ctx.fillText(phi.toFixed(1) + '°', cx + 35, cy + (phi > 0 ? -10 : 18))
+        }
+        // Labels
+        ctx.font = 'bold 12px sans-serif'
+        ctx.fillStyle = '#ff6b6b'
+        ctx.fillText('R=' + R + 'Ω', cx + (R * scale) / 2 - 15, cy + 20)
+        ctx.fillStyle = '#4ecdc4'
+        if (XL > 5)
+          ctx.fillText('XL=' + XL.toFixed(0) + 'Ω', cx + R * scale + 8, cy - (XL * scale) / 2)
+        ctx.fillStyle = '#ffd93d'
+        if (XC > 5)
+          ctx.fillText('XC=' + XC.toFixed(0) + 'Ω', cx + R * scale + 8, cy + (XC * scale) / 2 + 5)
+        ctx.fillStyle = '#00ff87'
+        ctx.fillText(
+          '|Z|=' + Z.toFixed(0) + 'Ω',
+          cx + (R * scale) / 2 - 30,
+          cy - (X * scale) / 2 - 10
+        )
+        // Resonance indicator
+        if (Math.abs(f - f0) < f0 * 0.08) {
+          ctx.fillStyle = 'rgba(0,255,135,0.15)'
+          ctx.fillRect(10, 10, 140, 30)
+          ctx.fillStyle = '#00ff87'
+          ctx.font = 'bold 13px sans-serif'
+          ctx.fillText('⚡ RESONANCE!', 20, 30)
+        }
+      }
+      draw()
+    </script>
+  </body>
+</html>

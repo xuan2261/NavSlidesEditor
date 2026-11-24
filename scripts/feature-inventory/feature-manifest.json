@@ -1,155 +1,781 @@
 {
   "canvas": [
-    { "id": "canvas.move",         "risk": "low",  "tiers": ["smoke"] },
-    { "id": "canvas.resize",       "risk": "low",  "tiers": ["smoke"] },
+    { "id": "canvas.move", "risk": "low", "tiers": ["smoke"] },
+    { "id": "canvas.resize", "risk": "low", "tiers": ["smoke"] },
     { "id": "canvas.resize-boundary", "risk": "high", "tiers": ["smoke", "deep"] },
-    { "id": "canvas.resize-aspect","risk": "high", "tiers": ["smoke", "deep"] },
-    { "id": "canvas.rotate-snap",  "risk": "high", "tiers": ["smoke", "deep"] },
-    { "id": "canvas.zorder",       "risk": "high", "tiers": ["smoke", "deep"] },
-    { "id": "canvas.group",        "risk": "high", "tiers": ["smoke", "deep"] },
-    { "id": "canvas.align",        "risk": "high", "tiers": ["smoke", "deep"] },
-    { "id": "canvas.distribute",   "risk": "high", "tiers": ["smoke", "deep"] },
-    { "id": "canvas.lock",         "risk": "low",  "tiers": ["smoke"] },
-    { "id": "canvas.smart-guides", "risk": "low",  "tiers": ["smoke"] }
+    { "id": "canvas.resize-aspect", "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "canvas.rotate-snap", "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "canvas.zorder", "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "canvas.group", "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "canvas.align", "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "canvas.distribute", "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "canvas.lock", "risk": "low", "tiers": ["smoke"] },
+    { "id": "canvas.smart-guides", "risk": "low", "tiers": ["smoke"] }
   ],
   "flow": [
-    { "id": "flow.undo-redo",      "risk": "high", "tiers": ["smoke", "deep"] },
-    { "id": "flow.clipboard",      "risk": "high", "tiers": ["smoke", "deep"] },
-    { "id": "flow.multiselect",    "risk": "high", "tiers": ["smoke", "deep"] },
-    { "id": "flow.autosave",       "risk": "high", "tiers": ["smoke", "deep"] },
-    { "id": "flow.find-replace",   "risk": "low",  "tiers": ["smoke"] }
+    { "id": "flow.undo-redo", "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "flow.clipboard", "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "flow.multiselect", "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "flow.autosave", "risk": "high", "tiers": ["smoke", "deep"] },
+    { "id": "flow.find-replace", "risk": "low", "tiers": ["smoke"] }
   ],
   "control": [
-    { "id": "control.format.bold",        "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.format.italic",      "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.format.underline",   "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.format.fontSize",    "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.format.fontFamily",  "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.format.fontWeight",  "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.format.lineHeight",  "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.format.position",    "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.format.align",       "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.insert.text",        "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.insert.shape",       "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.ribbon.home",        "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.ribbon.insert",      "risk": "high", "tiers": ["smoke"] },
-    { "id": "control.ribbon.design",      "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.bold", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.italic", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.underline", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.fontSize", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.fontFamily", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.fontWeight", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.lineHeight", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.position", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.format.align", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.insert.text", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.insert.shape", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.ribbon.home", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.ribbon.insert", "risk": "high", "tiers": ["smoke"] },
+    { "id": "control.ribbon.design", "risk": "low", "tiers": ["smoke"] },
     { "id": "control.ribbon.transitions", "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.ribbon.animations",  "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.ribbon.view",        "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.ribbon.animations", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.ribbon.view", "risk": "low", "tiers": ["smoke"] },
     { "id": "control.ribbon.contextual-format", "risk": "high", "tiers": ["smoke"] },
-    { "id": "control.status.zoom",        "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.status.view-mode",   "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.properties.panel",   "risk": "high", "tiers": ["smoke"] },
-    { "id": "control.slide-panel",        "risk": "high", "tiers": ["smoke"] },
-    { "id": "control.selection-pane",     "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.status.zoom", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.status.view-mode", "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.properties.panel", "risk": "high", "tiers": ["smoke"] },
+    { "id": "control.slide-panel", "risk": "high", "tiers": ["smoke"] },
+    { "id": "control.selection-pane", "risk": "low", "tiers": ["smoke"] },
     { "id": "control.timeline-animation", "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.view.smartGuides",   "risk": "low", "tiers": ["smoke"] },
+    { "id": "control.view.smartGuides", "risk": "low", "tiers": ["smoke"] },
     { "id": "control.view.selectionPane", "risk": "low", "tiers": ["smoke"] },
-    { "id": "control.file.menu",          "risk": "low",  "tiers": ["smoke"] },
-    { "id": "control.properties.disclosure", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
-    { "id": "control.ribbon.active-reveal", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
-    { "id": "control.ribbon.keyboard", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
-    { "id": "control.ribbon.overflow", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
-    { "id": "control.ribbon.reduced-motion", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
-    { "id": "control.ribbon.responsive", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
-    { "id": "control.ribbon.touch-targets", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
-    { "id": "control.status.touch-targets", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" }
+    { "id": "control.file.menu", "risk": "low", "tiers": ["smoke"] },
+    {
+      "id": "control.properties.disclosure",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "control.ribbon.active-reveal",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "control.ribbon.keyboard",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "control.ribbon.overflow",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "control.ribbon.reduced-motion",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "control.ribbon.responsive",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "control.ribbon.touch-targets",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "control.status.touch-targets",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    }
   ],
   "variant": [
-    { "id": "variant.shape", "risk": "low", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
-    { "id": "variant.chart", "risk": "high", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
-    { "id": "variant.slide-layout", "risk": "high", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
-    { "id": "variant.design-preset", "risk": "low", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
-    { "id": "variant.fx-background", "risk": "low", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
-    { "id": "variant.reveal-theme", "risk": "low", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
-    { "id": "variant.transition", "risk": "low", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
-    { "id": "variant.game-subtype", "risk": "high", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" },
-    { "id": "variant.insert-subaction", "risk": "low", "tiers": ["smoke"], "scope": "variant", "targetLayer": "contract", "coverageMode": "inventory-only" }
+    {
+      "id": "variant.shape",
+      "risk": "low",
+      "tiers": ["smoke"],
+      "scope": "variant",
+      "targetLayer": "contract",
+      "coverageMode": "inventory-only"
+    },
+    {
+      "id": "variant.chart",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "variant",
+      "targetLayer": "contract",
+      "coverageMode": "inventory-only"
+    },
+    {
+      "id": "variant.slide-layout",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "variant",
+      "targetLayer": "contract",
+      "coverageMode": "inventory-only"
+    },
+    {
+      "id": "variant.design-preset",
+      "risk": "low",
+      "tiers": ["smoke"],
+      "scope": "variant",
+      "targetLayer": "contract",
+      "coverageMode": "inventory-only"
+    },
+    {
+      "id": "variant.fx-background",
+      "risk": "low",
+      "tiers": ["smoke"],
+      "scope": "variant",
+      "targetLayer": "contract",
+      "coverageMode": "inventory-only"
+    },
+    {
+      "id": "variant.reveal-theme",
+      "risk": "low",
+      "tiers": ["smoke"],
+      "scope": "variant",
+      "targetLayer": "contract",
+      "coverageMode": "inventory-only"
+    },
+    {
+      "id": "variant.transition",
+      "risk": "low",
+      "tiers": ["smoke"],
+      "scope": "variant",
+      "targetLayer": "contract",
+      "coverageMode": "inventory-only"
+    },
+    {
+      "id": "variant.game-subtype",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "variant",
+      "targetLayer": "contract",
+      "coverageMode": "inventory-only"
+    },
+    {
+      "id": "variant.insert-subaction",
+      "risk": "low",
+      "tiers": ["smoke"],
+      "scope": "variant",
+      "targetLayer": "contract",
+      "coverageMode": "inventory-only"
+    }
   ],
   "command": [
-    { "id": "command.insertSlide",    "risk": "low", "tiers": ["smoke"] },
-    { "id": "command.insertLink",     "risk": "low", "tiers": ["smoke"] },
-    { "id": "command.group",          "risk": "low", "tiers": ["smoke"] },
-    { "id": "command.ungroup",        "risk": "low", "tiers": ["smoke"] },
-    { "id": "command.zoomIn",         "risk": "low", "tiers": ["smoke"] },
-    { "id": "command.zoomOut",        "risk": "low", "tiers": ["smoke"] },
-    { "id": "command.resetZoom",      "risk": "low", "tiers": ["smoke"] },
+    { "id": "command.insertSlide", "risk": "low", "tiers": ["smoke"] },
+    { "id": "command.insertLink", "risk": "low", "tiers": ["smoke"] },
+    { "id": "command.group", "risk": "low", "tiers": ["smoke"] },
+    { "id": "command.ungroup", "risk": "low", "tiers": ["smoke"] },
+    { "id": "command.zoomIn", "risk": "low", "tiers": ["smoke"] },
+    { "id": "command.zoomOut", "risk": "low", "tiers": ["smoke"] },
+    { "id": "command.resetZoom", "risk": "low", "tiers": ["smoke"] },
     { "id": "command.startSlideshow", "risk": "low", "tiers": ["smoke"] },
     { "id": "command.commandPalette", "risk": "low", "tiers": ["smoke"] }
   ],
   "action": [
-    { "id": "action.element-runtime", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" }
+    {
+      "id": "action.element-runtime",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    }
   ],
   "connector": [
-    { "id": "connector.smart-geometry", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" }
+    {
+      "id": "connector.smart-geometry",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    }
   ],
   "layout": [
-    { "id": "layout.master-resolution", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" }
+    {
+      "id": "layout.master-resolution",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    }
   ],
   "media": [
-    { "id": "media.accessibility", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" }
+    {
+      "id": "media.accessibility",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    }
   ],
   "runtime": [
-    { "id": "runtime.reveal6-assets", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" }
+    {
+      "id": "runtime.reveal6-assets",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    }
   ],
   "export": [
-    { "id": "export.html", "risk": "high", "tiers": ["smoke"], "scope": "export", "targetLayer": "e2e", "coverageMode": "executable" },
-    { "id": "export.pptx", "risk": "high", "tiers": ["smoke"], "scope": "export", "targetLayer": "e2e", "coverageMode": "executable" },
-    { "id": "export.action-pptx", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
-    { "id": "export.connector-pptx", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
-    { "id": "export.layout-pptx", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" },
-    { "id": "export.media-pptx", "risk": "high", "tiers": ["smoke"], "scope": "editor-core", "targetLayer": "contract", "coverageMode": "executable" }
+    {
+      "id": "export.html",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "export",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "export.pptx",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "export",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "export.action-pptx",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "export.connector-pptx",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "export.layout-pptx",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "export.media-pptx",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "editor-core",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    }
   ],
   "import": [
-    { "id": "import.markdown", "risk": "low", "tiers": ["smoke"], "scope": "import", "targetLayer": "e2e", "coverageMode": "executable" },
-    { "id": "import.pptx", "risk": "high", "tiers": ["smoke"], "scope": "import", "targetLayer": "e2e", "coverageMode": "executable" },
-    { "id": "import.upload-safety", "risk": "high", "tiers": ["smoke", "deep"], "scope": "import", "targetLayer": "contract", "coverageMode": "executable" }
+    {
+      "id": "import.markdown",
+      "risk": "low",
+      "tiers": ["smoke"],
+      "scope": "import",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "import.pptx",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "import",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "import.upload-safety",
+      "risk": "high",
+      "tiers": ["smoke", "deep"],
+      "scope": "import",
+      "targetLayer": "contract",
+      "coverageMode": "executable"
+    }
   ],
   "live": [
-    { "id": "live.reconnect", "risk": "high", "tiers": ["smoke"], "scope": "live", "targetLayer": "e2e", "coverageMode": "executable" },
-    { "id": "live.presenter-authz", "risk": "high", "tiers": ["smoke", "deep"], "scope": "live", "targetLayer": "e2e", "coverageMode": "executable" }
+    {
+      "id": "live.reconnect",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "live",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "live.presenter-authz",
+      "risk": "high",
+      "tiers": ["smoke", "deep"],
+      "scope": "live",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    }
   ],
   "share": [
-    { "id": "share.password", "risk": "high", "tiers": ["smoke"], "scope": "share", "targetLayer": "e2e", "coverageMode": "executable" },
-    { "id": "share.revoke", "risk": "high", "tiers": ["smoke"], "scope": "share", "targetLayer": "e2e", "coverageMode": "executable" }
+    {
+      "id": "share.password",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "share",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    {
+      "id": "share.revoke",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "share",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    }
   ],
   "ai": [
-    { "id": "ai.generate", "risk": "high", "tiers": ["smoke"], "scope": "ai", "targetLayer": "e2e", "coverageMode": "mocked-e2e" },
-    { "id": "ai.rewrite", "risk": "high", "tiers": ["smoke"], "scope": "ai", "targetLayer": "e2e", "coverageMode": "mocked-e2e" },
-    { "id": "ai.translate", "risk": "high", "tiers": ["smoke"], "scope": "ai", "targetLayer": "e2e", "coverageMode": "mocked-e2e" },
-    { "id": "ai.endpoint-guard", "risk": "high", "tiers": ["smoke", "deep"], "scope": "ai", "targetLayer": "contract", "coverageMode": "contract-only" },
-    { "id": "ai.failure", "risk": "high", "tiers": ["smoke", "deep"], "scope": "ai", "targetLayer": "contract", "coverageMode": "contract-only" }
+    {
+      "id": "ai.generate",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "ai",
+      "targetLayer": "e2e",
+      "coverageMode": "mocked-e2e"
+    },
+    {
+      "id": "ai.rewrite",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "ai",
+      "targetLayer": "e2e",
+      "coverageMode": "mocked-e2e"
+    },
+    {
+      "id": "ai.translate",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "ai",
+      "targetLayer": "e2e",
+      "coverageMode": "mocked-e2e"
+    },
+    {
+      "id": "ai.endpoint-guard",
+      "risk": "high",
+      "tiers": ["smoke", "deep"],
+      "scope": "ai",
+      "targetLayer": "contract",
+      "coverageMode": "contract-only"
+    },
+    {
+      "id": "ai.failure",
+      "risk": "high",
+      "tiers": ["smoke", "deep"],
+      "scope": "ai",
+      "targetLayer": "contract",
+      "coverageMode": "contract-only"
+    }
   ],
   "game": [
-    { "id": "game.score", "risk": "high", "tiers": ["smoke"], "scope": "game", "targetLayer": "e2e", "coverageMode": "executable" }
+    {
+      "id": "game.score",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "game",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    },
+    { "id": "game.name-picker.editor", "scope": "game" },
+    { "id": "game.name-picker.try", "scope": "game" },
+    { "id": "game.name-picker.present", "scope": "game" },
+    { "id": "game.name-picker.share", "scope": "game" },
+    { "id": "game.name-picker.file", "scope": "game" },
+    { "id": "game.name-picker.pdf", "scope": "game" },
+    { "id": "game.name-picker.pptx", "scope": "game" },
+    { "id": "game.name-picker.desktop", "scope": "game" },
+    { "id": "game.name-picker.live", "scope": "game" },
+    { "id": "game.hot-potato.editor", "scope": "game" },
+    { "id": "game.hot-potato.try", "scope": "game" },
+    { "id": "game.hot-potato.present", "scope": "game" },
+    { "id": "game.hot-potato.share", "scope": "game" },
+    { "id": "game.hot-potato.file", "scope": "game" },
+    { "id": "game.hot-potato.pdf", "scope": "game" },
+    { "id": "game.hot-potato.pptx", "scope": "game" },
+    { "id": "game.hot-potato.desktop", "scope": "game" },
+    { "id": "game.hot-potato.live", "scope": "game" },
+    { "id": "game.jeopardy.editor", "scope": "game" },
+    { "id": "game.jeopardy.try", "scope": "game" },
+    { "id": "game.jeopardy.present", "scope": "game" },
+    { "id": "game.jeopardy.share", "scope": "game" },
+    { "id": "game.jeopardy.file", "scope": "game" },
+    { "id": "game.jeopardy.pdf", "scope": "game" },
+    { "id": "game.jeopardy.pptx", "scope": "game" },
+    { "id": "game.jeopardy.desktop", "scope": "game" },
+    { "id": "game.jeopardy.live", "scope": "game" },
+    { "id": "game.four-corners.editor", "scope": "game" },
+    { "id": "game.four-corners.try", "scope": "game" },
+    { "id": "game.four-corners.present", "scope": "game" },
+    { "id": "game.four-corners.share", "scope": "game" },
+    { "id": "game.four-corners.file", "scope": "game" },
+    { "id": "game.four-corners.pdf", "scope": "game" },
+    { "id": "game.four-corners.pptx", "scope": "game" },
+    { "id": "game.four-corners.desktop", "scope": "game" },
+    { "id": "game.four-corners.live", "scope": "game" },
+    { "id": "game.relay-race.editor", "scope": "game" },
+    { "id": "game.relay-race.try", "scope": "game" },
+    { "id": "game.relay-race.present", "scope": "game" },
+    { "id": "game.relay-race.share", "scope": "game" },
+    { "id": "game.relay-race.file", "scope": "game" },
+    { "id": "game.relay-race.pdf", "scope": "game" },
+    { "id": "game.relay-race.pptx", "scope": "game" },
+    { "id": "game.relay-race.desktop", "scope": "game" },
+    { "id": "game.relay-race.live", "scope": "game" },
+    { "id": "game.trivia-champ.editor", "scope": "game" },
+    { "id": "game.trivia-champ.try", "scope": "game" },
+    { "id": "game.trivia-champ.present", "scope": "game" },
+    { "id": "game.trivia-champ.share", "scope": "game" },
+    { "id": "game.trivia-champ.file", "scope": "game" },
+    { "id": "game.trivia-champ.pdf", "scope": "game" },
+    { "id": "game.trivia-champ.pptx", "scope": "game" },
+    { "id": "game.trivia-champ.desktop", "scope": "game" },
+    { "id": "game.trivia-champ.live", "scope": "game" },
+    { "id": "game.scattergories.editor", "scope": "game" },
+    { "id": "game.scattergories.try", "scope": "game" },
+    { "id": "game.scattergories.present", "scope": "game" },
+    { "id": "game.scattergories.share", "scope": "game" },
+    { "id": "game.scattergories.file", "scope": "game" },
+    { "id": "game.scattergories.pdf", "scope": "game" },
+    { "id": "game.scattergories.pptx", "scope": "game" },
+    { "id": "game.scattergories.desktop", "scope": "game" },
+    { "id": "game.scattergories.live", "scope": "game" },
+    { "id": "game.poll.editor", "scope": "game" },
+    { "id": "game.poll.try", "scope": "game" },
+    { "id": "game.poll.present", "scope": "game" },
+    { "id": "game.poll.share", "scope": "game" },
+    { "id": "game.poll.file", "scope": "game" },
+    { "id": "game.poll.pdf", "scope": "game" },
+    { "id": "game.poll.pptx", "scope": "game" },
+    { "id": "game.poll.desktop", "scope": "game" },
+    { "id": "game.poll.live", "scope": "game" },
+    { "id": "game.word-cloud.editor", "scope": "game" },
+    { "id": "game.word-cloud.try", "scope": "game" },
+    { "id": "game.word-cloud.present", "scope": "game" },
+    { "id": "game.word-cloud.share", "scope": "game" },
+    { "id": "game.word-cloud.file", "scope": "game" },
+    { "id": "game.word-cloud.pdf", "scope": "game" },
+    { "id": "game.word-cloud.pptx", "scope": "game" },
+    { "id": "game.word-cloud.desktop", "scope": "game" },
+    { "id": "game.word-cloud.live", "scope": "game" },
+    { "id": "game.matching.editor", "scope": "game" },
+    { "id": "game.matching.try", "scope": "game" },
+    { "id": "game.matching.present", "scope": "game" },
+    { "id": "game.matching.share", "scope": "game" },
+    { "id": "game.matching.file", "scope": "game" },
+    { "id": "game.matching.pdf", "scope": "game" },
+    { "id": "game.matching.pptx", "scope": "game" },
+    { "id": "game.matching.desktop", "scope": "game" },
+    { "id": "game.matching.live", "scope": "game" },
+    { "id": "game.quiz.editor", "scope": "game" },
+    { "id": "game.quiz.try", "scope": "game" },
+    { "id": "game.quiz.present", "scope": "game" },
+    { "id": "game.quiz.share", "scope": "game" },
+    { "id": "game.quiz.file", "scope": "game" },
+    { "id": "game.quiz.pdf", "scope": "game" },
+    { "id": "game.quiz.pptx", "scope": "game" },
+    { "id": "game.quiz.desktop", "scope": "game" },
+    { "id": "game.quiz.live", "scope": "game" },
+    { "id": "game.lucky-wheel.editor", "scope": "game" },
+    { "id": "game.lucky-wheel.try", "scope": "game" },
+    { "id": "game.lucky-wheel.present", "scope": "game" },
+    { "id": "game.lucky-wheel.share", "scope": "game" },
+    { "id": "game.lucky-wheel.file", "scope": "game" },
+    { "id": "game.lucky-wheel.pdf", "scope": "game" },
+    { "id": "game.lucky-wheel.pptx", "scope": "game" },
+    { "id": "game.lucky-wheel.desktop", "scope": "game" },
+    { "id": "game.countdown.editor", "scope": "game" },
+    { "id": "game.countdown.try", "scope": "game" },
+    { "id": "game.countdown.present", "scope": "game" },
+    { "id": "game.countdown.share", "scope": "game" },
+    { "id": "game.countdown.file", "scope": "game" },
+    { "id": "game.countdown.pdf", "scope": "game" },
+    { "id": "game.countdown.pptx", "scope": "game" },
+    { "id": "game.countdown.desktop", "scope": "game" },
+    { "id": "game.scoreboard.editor", "scope": "game" },
+    { "id": "game.scoreboard.try", "scope": "game" },
+    { "id": "game.scoreboard.present", "scope": "game" },
+    { "id": "game.scoreboard.share", "scope": "game" },
+    { "id": "game.scoreboard.file", "scope": "game" },
+    { "id": "game.scoreboard.pdf", "scope": "game" },
+    { "id": "game.scoreboard.pptx", "scope": "game" },
+    { "id": "game.scoreboard.desktop", "scope": "game" },
+    { "id": "game.memory.editor", "scope": "game" },
+    { "id": "game.memory.try", "scope": "game" },
+    { "id": "game.memory.present", "scope": "game" },
+    { "id": "game.memory.share", "scope": "game" },
+    { "id": "game.memory.file", "scope": "game" },
+    { "id": "game.memory.pdf", "scope": "game" },
+    { "id": "game.memory.pptx", "scope": "game" },
+    { "id": "game.memory.desktop", "scope": "game" },
+    { "id": "game.flashcards.editor", "scope": "game" },
+    { "id": "game.flashcards.try", "scope": "game" },
+    { "id": "game.flashcards.present", "scope": "game" },
+    { "id": "game.flashcards.share", "scope": "game" },
+    { "id": "game.flashcards.file", "scope": "game" },
+    { "id": "game.flashcards.pdf", "scope": "game" },
+    { "id": "game.flashcards.pptx", "scope": "game" },
+    { "id": "game.flashcards.desktop", "scope": "game" },
+    { "id": "game.sorting.editor", "scope": "game" },
+    { "id": "game.sorting.try", "scope": "game" },
+    { "id": "game.sorting.present", "scope": "game" },
+    { "id": "game.sorting.share", "scope": "game" },
+    { "id": "game.sorting.file", "scope": "game" },
+    { "id": "game.sorting.pdf", "scope": "game" },
+    { "id": "game.sorting.pptx", "scope": "game" },
+    { "id": "game.sorting.desktop", "scope": "game" },
+    { "id": "game.crossword.editor", "scope": "game" },
+    { "id": "game.crossword.try", "scope": "game" },
+    { "id": "game.crossword.present", "scope": "game" },
+    { "id": "game.crossword.share", "scope": "game" },
+    { "id": "game.crossword.file", "scope": "game" },
+    { "id": "game.crossword.pdf", "scope": "game" },
+    { "id": "game.crossword.pptx", "scope": "game" },
+    { "id": "game.crossword.desktop", "scope": "game" },
+    { "id": "game.word-search.editor", "scope": "game" },
+    { "id": "game.word-search.try", "scope": "game" },
+    { "id": "game.word-search.present", "scope": "game" },
+    { "id": "game.word-search.share", "scope": "game" },
+    { "id": "game.word-search.file", "scope": "game" },
+    { "id": "game.word-search.pdf", "scope": "game" },
+    { "id": "game.word-search.pptx", "scope": "game" },
+    { "id": "game.word-search.desktop", "scope": "game" }
+  ],
+  "education": [
+    {
+      "id": "education.geometry-lock-hidden-fragments-actions-align-multiselect",
+      "scope": "education"
+    },
+    { "id": "education.keyboard", "scope": "education" },
+    { "id": "education.touch", "scope": "education" },
+    { "id": "education.reduced-motion", "scope": "education" },
+    { "id": "education.responsive-320", "scope": "education" },
+    { "id": "education.responsive-768", "scope": "education" },
+    { "id": "education.responsive-1280", "scope": "education" },
+    { "id": "education.tuple-isolation", "scope": "education" },
+    { "id": "education.sandbox-isolation", "scope": "education" },
+    { "id": "education.variables-triggers", "scope": "education" },
+    { "id": "education.portable-assets", "scope": "education" },
+    { "id": "education.lifecycle-score-reset", "scope": "education" },
+    { "id": "education.default-answer-redaction", "scope": "education" },
+    { "id": "preset.education-name-picker.editor", "scope": "education" },
+    { "id": "preset.education-name-picker.present", "scope": "education" },
+    { "id": "preset.education-name-picker.file", "scope": "education" },
+    { "id": "preset.education-hot-potato.editor", "scope": "education" },
+    { "id": "preset.education-hot-potato.present", "scope": "education" },
+    { "id": "preset.education-hot-potato.file", "scope": "education" },
+    { "id": "preset.education-jeopardy.editor", "scope": "education" },
+    { "id": "preset.education-jeopardy.present", "scope": "education" },
+    { "id": "preset.education-jeopardy.file", "scope": "education" },
+    { "id": "preset.education-four-corners.editor", "scope": "education" },
+    { "id": "preset.education-four-corners.present", "scope": "education" },
+    { "id": "preset.education-four-corners.file", "scope": "education" },
+    { "id": "preset.education-relay-race.editor", "scope": "education" },
+    { "id": "preset.education-relay-race.present", "scope": "education" },
+    { "id": "preset.education-relay-race.file", "scope": "education" },
+    { "id": "preset.education-trivia-champ.editor", "scope": "education" },
+    { "id": "preset.education-trivia-champ.present", "scope": "education" },
+    { "id": "preset.education-trivia-champ.file", "scope": "education" },
+    { "id": "preset.education-scattergories.editor", "scope": "education" },
+    { "id": "preset.education-scattergories.present", "scope": "education" },
+    { "id": "preset.education-scattergories.file", "scope": "education" },
+    { "id": "preset.education-poll.editor", "scope": "education" },
+    { "id": "preset.education-poll.present", "scope": "education" },
+    { "id": "preset.education-poll.file", "scope": "education" },
+    { "id": "preset.education-word-cloud.editor", "scope": "education" },
+    { "id": "preset.education-word-cloud.present", "scope": "education" },
+    { "id": "preset.education-word-cloud.file", "scope": "education" },
+    { "id": "preset.education-matching.editor", "scope": "education" },
+    { "id": "preset.education-matching.present", "scope": "education" },
+    { "id": "preset.education-matching.file", "scope": "education" },
+    { "id": "preset.education-quiz.editor", "scope": "education" },
+    { "id": "preset.education-quiz.present", "scope": "education" },
+    { "id": "preset.education-quiz.file", "scope": "education" },
+    { "id": "preset.education-lucky-wheel.editor", "scope": "education" },
+    { "id": "preset.education-lucky-wheel.present", "scope": "education" },
+    { "id": "preset.education-lucky-wheel.file", "scope": "education" },
+    { "id": "preset.education-countdown.editor", "scope": "education" },
+    { "id": "preset.education-countdown.present", "scope": "education" },
+    { "id": "preset.education-countdown.file", "scope": "education" },
+    { "id": "preset.education-scoreboard.editor", "scope": "education" },
+    { "id": "preset.education-scoreboard.present", "scope": "education" },
+    { "id": "preset.education-scoreboard.file", "scope": "education" },
+    { "id": "preset.education-memory.editor", "scope": "education" },
+    { "id": "preset.education-memory.present", "scope": "education" },
+    { "id": "preset.education-memory.file", "scope": "education" },
+    { "id": "preset.education-flashcards.editor", "scope": "education" },
+    { "id": "preset.education-flashcards.present", "scope": "education" },
+    { "id": "preset.education-flashcards.file", "scope": "education" },
+    { "id": "preset.education-sorting.editor", "scope": "education" },
+    { "id": "preset.education-sorting.present", "scope": "education" },
+    { "id": "preset.education-sorting.file", "scope": "education" },
+    { "id": "preset.education-crossword.editor", "scope": "education" },
+    { "id": "preset.education-crossword.present", "scope": "education" },
+    { "id": "preset.education-crossword.file", "scope": "education" },
+    { "id": "preset.education-word-search.editor", "scope": "education" },
+    { "id": "preset.education-word-search.present", "scope": "education" },
+    { "id": "preset.education-word-search.file", "scope": "education" },
+    { "id": "preset.sim-logic-gates.editor", "scope": "education" },
+    { "id": "preset.sim-logic-gates.present", "scope": "education" },
+    { "id": "preset.sim-logic-gates.file", "scope": "education" },
+    { "id": "preset.sim-rlc-response.editor", "scope": "education" },
+    { "id": "preset.sim-rlc-response.present", "scope": "education" },
+    { "id": "preset.sim-rlc-response.file", "scope": "education" },
+    { "id": "preset.sim-pid-tuning.editor", "scope": "education" },
+    { "id": "preset.sim-pid-tuning.present", "scope": "education" },
+    { "id": "preset.sim-pid-tuning.file", "scope": "education" },
+    { "id": "preset.sim-bode-plot.editor", "scope": "education" },
+    { "id": "preset.sim-bode-plot.present", "scope": "education" },
+    { "id": "preset.sim-bode-plot.file", "scope": "education" },
+    { "id": "preset.sim-3phase.editor", "scope": "education" },
+    { "id": "preset.sim-3phase.present", "scope": "education" },
+    { "id": "preset.sim-3phase.file", "scope": "education" },
+    { "id": "preset.sim-gear-train.editor", "scope": "education" },
+    { "id": "preset.sim-gear-train.present", "scope": "education" },
+    { "id": "preset.sim-gear-train.file", "scope": "education" }
   ],
   "teaching": [
-    { "id": "teaching.discovery", "risk": "low", "tiers": ["smoke"], "targetLayer": "unit", "coverageMode": "inventory-only" }
+    {
+      "id": "teaching.discovery",
+      "risk": "low",
+      "tiers": ["smoke"],
+      "targetLayer": "unit",
+      "coverageMode": "inventory-only"
+    }
   ],
   "sync": [
-    { "id": "sync.rclone-status", "risk": "high", "tiers": ["smoke"], "scope": "sync", "targetLayer": "contract", "coverageMode": "contract-only" }
+    {
+      "id": "sync.rclone-status",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "sync",
+      "targetLayer": "contract",
+      "coverageMode": "contract-only"
+    }
   ],
   "history": [
-    { "id": "history.snapshot", "risk": "low", "tiers": ["smoke"], "scope": "history", "targetLayer": "e2e", "coverageMode": "executable" }
+    {
+      "id": "history.snapshot",
+      "risk": "low",
+      "tiers": ["smoke"],
+      "scope": "history",
+      "targetLayer": "e2e",
+      "coverageMode": "executable"
+    }
   ],
   "plugin": [
-    { "id": "plugin.runtime", "risk": "high", "tiers": ["smoke"], "scope": "plugin", "targetLayer": "e2e", "coverageMode": "inventory-only" },
-    { "id": "plugin.sandbox", "risk": "high", "tiers": ["smoke", "deep"], "scope": "plugin", "targetLayer": "contract", "coverageMode": "inventory-only" }
+    {
+      "id": "plugin.runtime",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "plugin",
+      "targetLayer": "e2e",
+      "coverageMode": "inventory-only"
+    },
+    {
+      "id": "plugin.sandbox",
+      "risk": "high",
+      "tiers": ["smoke", "deep"],
+      "scope": "plugin",
+      "targetLayer": "contract",
+      "coverageMode": "inventory-only"
+    }
   ],
   "marketplace": [
-    { "id": "marketplace.browse", "risk": "low", "tiers": ["smoke"], "scope": "marketplace", "targetLayer": "e2e", "coverageMode": "inventory-only" }
+    {
+      "id": "marketplace.browse",
+      "risk": "low",
+      "tiers": ["smoke"],
+      "scope": "marketplace",
+      "targetLayer": "e2e",
+      "coverageMode": "inventory-only"
+    }
   ],
   "explore": [
-    { "id": "explore.browse", "risk": "low", "tiers": ["smoke"], "scope": "explore", "targetLayer": "e2e", "coverageMode": "inventory-only" }
+    {
+      "id": "explore.browse",
+      "risk": "low",
+      "tiers": ["smoke"],
+      "scope": "explore",
+      "targetLayer": "e2e",
+      "coverageMode": "inventory-only"
+    }
   ],
   "analytics": [
-    { "id": "analytics.view-tracking", "risk": "high", "tiers": ["smoke"], "scope": "analytics", "targetLayer": "e2e", "coverageMode": "inventory-only" }
+    {
+      "id": "analytics.view-tracking",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "analytics",
+      "targetLayer": "e2e",
+      "coverageMode": "inventory-only"
+    }
   ],
   "electron": [
-    { "id": "electron.startup", "risk": "high", "tiers": ["smoke"], "scope": "electron", "targetLayer": "contract", "coverageMode": "inventory-only" },
-    { "id": "electron.preload", "risk": "high", "tiers": ["smoke"], "scope": "electron", "targetLayer": "contract", "coverageMode": "inventory-only" },
-    { "id": "electron.package", "risk": "high", "tiers": ["smoke"], "scope": "electron", "targetLayer": "contract", "coverageMode": "inventory-only" },
-    { "id": "electron.data-path", "risk": "high", "tiers": ["smoke"], "scope": "electron", "targetLayer": "contract", "coverageMode": "inventory-only" }
+    {
+      "id": "electron.startup",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "electron",
+      "targetLayer": "contract",
+      "coverageMode": "inventory-only"
+    },
+    {
+      "id": "electron.preload",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "electron",
+      "targetLayer": "contract",
+      "coverageMode": "inventory-only"
+    },
+    {
+      "id": "electron.package",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "electron",
+      "targetLayer": "contract",
+      "coverageMode": "inventory-only"
+    },
+    {
+      "id": "electron.data-path",
+      "risk": "high",
+      "tiers": ["smoke"],
+      "scope": "electron",
+      "targetLayer": "contract",
+      "coverageMode": "inventory-only"
+    }
   ]
 }

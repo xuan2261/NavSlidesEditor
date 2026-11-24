@@ -1,5 +1,5 @@
 import { markdownToHtml } from '../../../utils/markdown-utils'
-import { sanitizeRichTextHtml } from '../../../utils/content-safety'
+import { sanitizeRichTextHtml } from 'revealjs-shared/src/content-safety.js'
 import { resolveColorField } from 'revealjs-shared'
 
 export function MarkdownRenderer({ element }) {
@@ -14,7 +14,5 @@ export function MarkdownRenderer({ element }) {
     fontSize: element.fontSize ? `${element.fontSize}px` : '18px',
     lineHeight: 1.5,
   }
-  return (
-    <div style={markdownStyle} dangerouslySetInnerHTML={{ __html: html }} />
-  )
+  return <div style={markdownStyle} dangerouslySetInnerHTML={{ __html: html }} />
 }

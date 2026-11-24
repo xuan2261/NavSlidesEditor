@@ -9,8 +9,14 @@ const serverPackage = JSON.parse(fs.readFileSync(path.join(root, 'server', 'pack
 const manifest = createIsolatedManifest(serverPackage)
 const lockPath = path.join(root, 'electron', 'server-package-lock.json')
 
+const runtimeVersions = JSON.parse(fs.readFileSync(path.join(root, 'runtime-versions.json'), 'utf8'))
+
 function resolveLock() {
   const temporaryDir = path.join(root, '.electron-lock-tmp')
+  const resolveManifest = structuredClone(manifest)
+  if (resolveManifest.dependencies?.playwright && runtimeVersions.playwright) {
+    resolveManifest.dependencies.playwright = runtimeVersions.playwright
+  }
   const npm =
     process.platform === 'win32'
       ? {
@@ -27,13 +33,16 @@ function resolveLock() {
   try {
     fs.writeFileSync(
       path.join(temporaryDir, 'package.json'),
-      `${JSON.stringify(manifest, null, 2)}\n`
+      `${JSON.stringify(resolveManifest, null, 2)}\n`
     )
     execFileSync(npm.command, npm.args, { cwd: temporaryDir, stdio: 'inherit' })
     const generatedPath = path.join(temporaryDir, 'package-lock.json')
     const lock = JSON.parse(fs.readFileSync(generatedPath, 'utf8'))
+    if (lock.packages?.['']?.dependencies && manifest.dependencies?.playwright) {
+      lock.packages[''].dependencies.playwright = manifest.dependencies.playwright
+    }
     validateIsolatedLock(manifest, lock)
-    fs.copyFileSync(generatedPath, lockPath)
+    fs.writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`)
     console.log(
       `Electron server lock dependency graph regenerated: ${path.relative(root, lockPath)}`
     )

@@ -4,7 +4,11 @@ const fs = require('fs-extra')
 const multer = require('multer')
 const path = require('path')
 const uuidv4 = () => require('node:crypto').randomUUID()
-const { IMPORT_TIMEOUT_MS, MAX_FILE_BYTES, TEMP_UPLOAD_DIR } = require('../services/pptx-import/constants')
+const {
+  IMPORT_TIMEOUT_MS,
+  MAX_FILE_BYTES,
+  TEMP_UPLOAD_DIR,
+} = require('../services/pptx-import/constants')
 const { PptxImportError, sanitizeDiagnostic } = require('../services/pptx-import/diagnostics')
 const { importPptxFile } = require('../services/pptx-import/importer')
 const {
@@ -23,19 +27,23 @@ const {
 const defaultJobManager = require('../services/pptx-import-job-manager')
 const { createMediaTransaction } = require('../services/pptx-import/media-dedup')
 const { sweepStaleTempUploads } = require('../services/pptx-import/temp-upload-sweep')
-const { withPresentations } = require('../services/storage')
+const { readPresentations, withPresentations } = require('../services/storage')
 const { readAuthoritativePresentation } = require('../services/package-backed-presentation-read')
 const { hashCanonical } = require('../services/pptx-import/evidence/canonical-hash')
+const { MUTATION_OPERATIONS } = require('../services/pptx-import/mutation-operation-scope')
 const {
   drainPackageCompatibilityOutbox,
   getPackageStore,
   getReadablePackageStore,
   withPackageStore,
+  withCompatibilityDrain,
 } = require('../services/pptx-import/package-store-runtime')
 
 fs.ensureDirSync(TEMP_UPLOAD_DIR)
 const activeTempUploads = new Set()
-setImmediate(() => sweepStaleTempUploads(TEMP_UPLOAD_DIR, { activePaths: activeTempUploads }).catch(() => {}))
+setImmediate(() =>
+  sweepStaleTempUploads(TEMP_UPLOAD_DIR, { activePaths: activeTempUploads }).catch(() => {})
+)
 const detachedImportCleanups = new Set()
 const activeImportAbortControllers = new Set()
 
@@ -67,13 +75,16 @@ async function drainDetachedImportCleanups({ timeoutMs = 5000 } = {}) {
   const result = await Promise.race([drain().then(() => false), timedOut])
   clearTimeout(timer)
   if (result) {
-    logger.warn(`[pptx-import] cleanup drain deadline exceeded with ${detachedImportCleanups.size} operation(s)`)
+    logger.warn(
+      `[pptx-import] cleanup drain deadline exceeded with ${detachedImportCleanups.size} operation(s)`
+    )
   }
 }
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, TEMP_UPLOAD_DIR),
-  filename: (_req, file, cb) => cb(null, `${uuidv4()}${path.extname(file.originalname).toLowerCase()}`),
+  filename: (_req, file, cb) =>
+    cb(null, `${uuidv4()}${path.extname(file.originalname).toLowerCase()}`),
 })
 
 const upload = multer({
@@ -87,12 +98,10 @@ const upload = multer({
 })
 
 /** Multipart admission bounds (idle between chunks + total wall clock). */
-const UPLOAD_IDLE_MS = Number(process.env.PPTX_UPLOAD_IDLE_MS) > 0
-  ? Number(process.env.PPTX_UPLOAD_IDLE_MS)
-  : 30_000
-const UPLOAD_TOTAL_MS = Number(process.env.PPTX_UPLOAD_TOTAL_MS) > 0
-  ? Number(process.env.PPTX_UPLOAD_TOTAL_MS)
-  : 120_000
+const UPLOAD_IDLE_MS =
+  Number(process.env.PPTX_UPLOAD_IDLE_MS) > 0 ? Number(process.env.PPTX_UPLOAD_IDLE_MS) : 30_000
+const UPLOAD_TOTAL_MS =
+  Number(process.env.PPTX_UPLOAD_TOTAL_MS) > 0 ? Number(process.env.PPTX_UPLOAD_TOTAL_MS) : 120_000
 
 function releaseAdmissionSlot(req) {
   if (req.pptxJobId && req.pptxJobManager) {
@@ -179,11 +188,7 @@ async function getDurableImportJob(jobId) {
   }
 }
 
-const DURABLE_OUTCOME_FIELDS = [
-  'outcomeRevisionId',
-  'outcomeGeneration',
-  'outcomeHeadHash',
-]
+const DURABLE_OUTCOME_FIELDS = ['outcomeRevisionId', 'outcomeGeneration', 'outcomeHeadHash']
 const AUTHORITY_VISIBILITY_ERRORS = new Set([
   'PRESENTATION_PACKAGE_HEAD_MISSING',
   'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE',
@@ -205,7 +210,11 @@ function durableOutcomeExpectation(job) {
  * Contract B visibility: legacy rows may be read through the compatibility
  * store, but package-backed rows require an identity-bound expected outcome.
  */
-async function isPresentationListable(presentationId, expected = null) {
+async function isPresentationListable(
+  presentationId,
+  expected = null,
+  { allowSuccessor = false } = {}
+) {
   if (typeof presentationId !== 'string' || !presentationId) return false
   try {
     const resolved = await readAuthoritativePresentation(presentationId)
@@ -213,9 +222,45 @@ async function isPresentationListable(presentationId, expected = null) {
     if (resolved.generation === null) return expected == null
     if (!expected) return false
     const head = resolved.presentation?.pptxAggregateHead
-    return resolved.generation === expected.generation &&
+    const exact =
+      resolved.generation === expected.generation &&
       head?.packageRevisionId === expected.revisionId &&
       hashCanonical(head) === expected.headHash
+    if (exact || !allowSuccessor) return exact
+    if (
+      resolved.generation <= expected.generation ||
+      head?.originalRevisionId !== expected.revisionId
+    )
+      return false
+    const readableStore = await getReadablePackageStore()
+    const state =
+      typeof readableStore.getOwnedAuthorityState === 'function'
+        ? readableStore.getOwnedAuthorityState()
+        : readableStore.getState()
+    const current = state.heads.find((item) => item.presentationId === presentationId)
+    if (!current || hashCanonical(current) !== hashCanonical(head)) return false
+    const receipt = state.jobs.find(
+      (job) =>
+        job.kind === 'import' &&
+        job.status === 'completed' &&
+        job.presentationId === presentationId &&
+        job.outcomeRevisionId === expected.revisionId &&
+        job.outcomeGeneration === expected.generation &&
+        job.outcomeHeadHash === expected.headHash
+    )
+    return Boolean(
+      receipt &&
+      state.mutationResults.some(
+        (result) =>
+          result.operation === MUTATION_OPERATIONS.PACKAGE_IMPORT &&
+          result.state === 'committed' &&
+          result.presentationId === presentationId &&
+          result.idempotencyKey === receipt.id &&
+          result.packageRevisionId === expected.revisionId &&
+          result.generation === expected.generation &&
+          result.importHeadHash === expected.headHash
+      )
+    )
   } catch (error) {
     if (AUTHORITY_VISIBILITY_ERRORS.has(error?.code)) return false
     throw error
@@ -230,10 +275,7 @@ async function isPresentationListable(presentationId, expected = null) {
  */
 function durableJobMessage(job, status) {
   if (status === 'done') return 'Import complete'
-  if (
-    (status === 'failed' || status === 'cancelled') &&
-    job.transactionState === 'rolled-back'
-  ) {
+  if ((status === 'failed' || status === 'cancelled') && job.transactionState === 'rolled-back') {
     return `Import ${status}; partial import rolled back`
   }
   return `Import ${status}`
@@ -247,9 +289,8 @@ function durableJobMessage(job, status) {
  */
 function serializeDurableImportJob(job, { listable, reportSummary } = {}) {
   if (!job) return null
-  const presentationId = typeof job.presentationId === 'string' && job.presentationId
-    ? job.presentationId
-    : null
+  const presentationId =
+    typeof job.presentationId === 'string' && job.presentationId ? job.presentationId : null
   const completed = job.status === 'completed'
   if (completed && presentationId && listable === false) {
     return {
@@ -265,12 +306,13 @@ function serializeDurableImportJob(job, { listable, reportSummary } = {}) {
   }
   const status = completed ? 'done' : job.status
   const summary = reportSummary || toReportSummary(job.reportSummary) || job.reportSummary || null
-  const result = presentationId && status === 'done'
-    ? {
-      presentationId,
-      ...(summary ? { reportSummary: summary } : {}),
-    }
-    : null
+  const result =
+    presentationId && status === 'done'
+      ? {
+          presentationId,
+          ...(summary ? { reportSummary: summary } : {}),
+        }
+      : null
   return {
     jobId: job.id,
     status,
@@ -298,11 +340,14 @@ function reconciliationReasonCode(error) {
     : 'PACKAGE_IMPORT_RECONCILIATION_FAILED'
 }
 
-async function reconcileDurableImportJob(job, {
-  deletePresentation,
-  packageRollback,
-  drainCompatibility = drainPackageCompatibilityOutbox,
-}) {
+async function reconcileDurableImportJob(
+  job,
+  {
+    deletePresentation,
+    packageRollback,
+    drainCompatibility = drainPackageCompatibilityOutbox,
+  }
+) {
   const presentationId = job?.presentationId
   if (typeof presentationId !== 'string' || !presentationId) {
     return { success: true, jobId: job?.id, status: 'nothing-to-reconcile' }
@@ -404,7 +449,7 @@ async function runImport({
 }) {
   const abortController = new AbortController()
   activeImportAbortControllers.add(abortController)
-  const mediaTransaction = createMediaTransaction()
+  const mediaTransaction = createMediaTransaction({ jobId })
   const stagePromises = []
   const cleanupPromises = []
   const trackStage = (promise) => {
@@ -426,35 +471,157 @@ async function runImport({
     else jobManager.completeCancellation?.(jobId)
   }
   let originalArtifact = null
+  let retainPublishedOutcome = false
+  let publishedPresentationId = null
+  let importSucceeded = false
+  let compensationFinished = false
+  let mediaCommitAttempted = false
+  let failureReason = null
+  const retainForReconciliation = async (error) => {
+    retainPublishedOutcome = true
+    try {
+      await withPackageStore(async (store) => {
+        const job = store.getJob(jobId)
+        if (job?.kind !== 'import' || job.presentationId !== publishedPresentationId) return
+        await store.putJob({
+          ...job,
+          transactionState: 'reconcile-required',
+          reconcileRequired: true,
+          reconcileReasonCode: reconciliationReasonCode(error),
+          updatedAt: new Date().toISOString(),
+        })
+      })
+    } catch (metadataError) {
+      logger.warn(
+        '[pptx-import] reconciliation metadata requires repair:',
+        sanitizeDiagnostic(metadataError)
+      )
+    }
+  }
+  const compensatePackageFailure = () =>
+    withCompatibilityDrain(async () => {
+      try {
+        // An aborted package operation may finish late; absence is authoritative
+        // only after every stage has settled and persisted state has been reloaded.
+        await Promise.allSettled(stagePromises)
+        const before = await getDurableImportJob(jobId)
+        const expected = durableOutcomeExpectation(before)
+        if (expected && (await isPresentationListable(publishedPresentationId, expected))) {
+          if (!mediaCommitAttempted) {
+            mediaCommitAttempted = true
+            await mediaTransaction.commit(publishedPresentationId)
+          }
+          await retainForReconciliation(failureReason)
+          return
+        }
+        // Release the projection lock before exact package rollback. This queue
+        // excludes other captured replays throughout the probe/rollback boundary.
+        const rows = await readPresentations()
+        if (retainPublishedOutcome || rows.some((row) => row.id === publishedPresentationId)) {
+          await retainForReconciliation(failureReason)
+          return
+        }
+        const unpublished = await withPackageStore(async (store) => {
+          await store.reload()
+          const state =
+            typeof store.getOwnedAuthorityState === 'function'
+              ? store.getOwnedAuthorityState()
+              : store.getState()
+          return (
+            !store.getJob(jobId) &&
+            !state.heads.some((head) => head.presentationId === publishedPresentationId) &&
+            !state.compatibilityOutbox.some(
+              (write) => write.presentationId === publishedPresentationId
+            )
+          )
+        })
+        if (unpublished) {
+          // Preparation can fail before it creates a receipt. No package rollback
+          // is then required; release only this job's pending media placements.
+          await mediaTransaction.rollback()
+          return
+        }
+        if (!packageRollback)
+          throw Object.assign(new Error('Package rollback is unavailable'), {
+            code: 'PACKAGE_IMPORT_ROLLBACK_UNPROVEN',
+          })
+        await packageRollback({ jobId, presentationId: publishedPresentationId })
+        const proven = await withPackageStore((store) => {
+          const job = store.getJob(jobId)
+          const hasHead =
+            typeof store.hasPresentationHead === 'function'
+              ? store.hasPresentationHead(publishedPresentationId)
+              : store.getState().heads.some((head) => head.presentationId === publishedPresentationId)
+          return (
+            job?.kind === 'import' &&
+            job.presentationId === publishedPresentationId &&
+            job.status === 'failed' &&
+            job.transactionState === 'rolled-back' &&
+            job.cancellationPoint === 'rolled-back' &&
+            DURABLE_OUTCOME_FIELDS.every(
+              (field) => before?.[field] !== undefined && job[field] === before[field]
+            ) &&
+            !hasHead
+          )
+        })
+        if (!proven)
+          throw Object.assign(new Error('Package rollback outcome is unproven'), {
+            code: 'PACKAGE_IMPORT_ROLLBACK_UNPROVEN',
+          })
+        await mediaTransaction.rollback()
+      } catch (cleanupError) {
+        await retainForReconciliation(cleanupError)
+      }
+    })
   try {
-    jobManager.emitProgress(jobId, { stage: 'parsing', percent: 1, message: 'Starting PPTX import' })
-    const result = await withAbort(trackStage(importer(filePath, {
-      originalName,
-      onProgress: (progress) => jobManager.emitProgress(jobId, progress),
-      signal: abortController.signal,
-      mediaTransaction,
-    })), abortController.signal)
+    jobManager.emitProgress(jobId, {
+      stage: 'parsing',
+      percent: 1,
+      message: 'Starting PPTX import',
+    })
+    const result = await withAbort(
+      trackStage(
+        importer(filePath, {
+          originalName,
+          semanticImport: true,
+          geometryInheritance: true,
+          allowMappedFallbackOnSemanticUnimplemented:
+            Boolean(packageCommit) && process.env.PPTX_EMF_CONVERT !== '0',
+          onProgress: (progress) => jobManager.emitProgress(jobId, progress),
+          signal: abortController.signal,
+          mediaTransaction,
+        })
+      ),
+      abortController.signal
+    )
     if (abortController.signal.aborted) {
-      finishAbortedJob()
-      await mediaTransaction.rollback()
+      if (deadlineExceeded) finishAbortedJob()
       return
     }
 
-    jobManager.emitProgress(jobId, { stage: 'creating-presentation', percent: 96, message: 'Creating presentation' })
+    jobManager.emitProgress(jobId, {
+      stage: 'creating-presentation',
+      percent: 96,
+      message: 'Creating presentation',
+    })
     const reportCreatedAt = new Date().toISOString()
     const importReport = buildBoundedImportReport(result.warnings, result.stats, {
       jobId,
       createdAt: reportCreatedAt,
-      accumulateOmittedCount:
-        result.accumulateOmittedCount ?? result.warnings?.omittedCount ?? 0,
+      accumulateOmittedCount: result.accumulateOmittedCount ?? result.warnings?.omittedCount ?? 0,
     })
     const reportSummary = toReportSummary(importReport)
     let presentation
     if (packageCommit) {
       // Package path: outbox is the sole presentations.json writer (no direct push).
       const presentationId = uuidv4()
+      publishedPresentationId = presentationId
       try {
-        jobManager.emitProgress(jobId, { stage: 'committing-package', percent: 96, message: 'Publishing package authority' })
+        jobManager.emitProgress(jobId, {
+          stage: 'committing-package',
+          percent: 96,
+          message: 'Publishing package authority',
+        })
         const compatibilityUpdatedAt = reportCreatedAt
         const stamped = stampImportedPresentationFields(result.presentation, {
           id: presentationId,
@@ -463,23 +630,27 @@ async function runImport({
           updatedAt: compatibilityUpdatedAt,
           importReport,
         })
-        const packageResult = await withAbort(trackStage(packageCommit(filePath, {
-          jobId,
-          presentationId,
-          projection: stamped,
-          sourceMap: result.sourceMap,
-          compatibilityPresentation: stamped,
-          compatibilityUpdatedAt,
-          controlCapabilityHash: jobManager.getControlCapabilityHash?.(jobId) || undefined,
-        })), abortController.signal, () => packageRollback?.({ jobId, presentationId }),
-        (cleanup) => cleanupPromises.push(cleanup))
+        const packageResult = await withAbort(
+          trackStage(
+            packageCommit(filePath, {
+              jobId,
+              presentationId,
+              projection: stamped,
+              sourceMap: result.sourceMap,
+              compatibilityPresentation: stamped,
+              compatibilityUpdatedAt,
+              controlCapabilityHash: jobManager.getControlCapabilityHash?.(jobId) || undefined,
+            })
+          ),
+          abortController.signal
+        )
         if (typeof afterPackagePublish === 'function') {
           await afterPackagePublish({ jobId, presentationId, packageResult })
         }
         if (abortController.signal.aborted) {
-          finishAbortedJob()
-          if (packageRollback) await packageRollback({ jobId, presentationId }).catch(() => {})
-          await mediaTransaction.rollback()
+          if (deadlineExceeded) finishAbortedJob()
+          await compensatePackageFailure()
+          compensationFinished = true
           return
         }
         presentation = {
@@ -492,28 +663,42 @@ async function runImport({
           message: 'Applying compatibility projection',
         })
         if (typeof drainCompatibility === 'function') {
-          await withAbort(
-            trackStage(drainCompatibility()),
-            abortController.signal,
-            () => packageRollback?.({ jobId, presentationId }),
-            (cleanup) => cleanupPromises.push(cleanup)
+          await withAbort(trackStage(drainCompatibility()), abortController.signal)
+        }
+        // A resolved drain may have dead-lettered every projection write.
+        // Preserve the committed receipt/bytes until exact visibility is proven.
+        retainPublishedOutcome = true
+        const head = packageResult?.head
+        const expected = head
+          ? {
+              revisionId: head.packageRevisionId,
+              generation: head.generation,
+              headHash: hashCanonical(head),
+            }
+          : null
+        if (!(await isPresentationListable(presentationId, expected))) {
+          throw Object.assign(
+            new Error('Import published; compatibility visibility requires reconciliation'),
+            {
+              code: 'PACKAGE_IMPORT_PENDING_VISIBILITY',
+              stage: 'pending-visibility',
+            }
           )
         }
         if (typeof afterPackageVisibility === 'function') {
           await afterPackageVisibility({ jobId, presentationId })
         }
-        // Post-visibility (listable after successful drain): cancel is a no-op for
-        // delete. Fall through to completeJob; client must not onOpen on leave.
-        // Pre-drain cancel is handled by the abort check after packageCommit and by
-        // withAbort cleanup/rollback on the drain call itself.
+        // Once exact visibility is proven, cancellation cannot remove this outcome.
       } catch (packageErr) {
-        if (!abortController.signal.aborted) {
-          if (packageRollback) await packageRollback({ jobId, presentationId }).catch(() => {})
-        }
+        failureReason = packageErr
         throw packageErr
       }
     } else {
-      jobManager.emitProgress(jobId, { stage: 'persisting-original', percent: 92, message: 'Saving original package' })
+      jobManager.emitProgress(jobId, {
+        stage: 'persisting-original',
+        percent: 92,
+        message: 'Saving original package',
+      })
       const originalOptions = originalBaseDir ? { baseDir: originalBaseDir } : {}
       originalArtifact = await withAbort(
         trackStage(persistOriginal(filePath, originalOptions)),
@@ -524,25 +709,32 @@ async function runImport({
 
       if (abortController.signal.aborted) {
         finishAbortedJob()
-        await deleteOriginal(originalArtifact.id, originalBaseDir ? { baseDir: originalBaseDir } : {}).catch(() => {})
+        await deleteOriginal(
+          originalArtifact.id,
+          originalBaseDir ? { baseDir: originalBaseDir } : {}
+        ).catch(() => {})
         originalArtifact = null
-        await mediaTransaction.rollback()
         return
       }
 
       try {
         presentation = await withAbort(
-          trackStage(createPresentation(result.presentation, originalArtifact, {
-            originalName,
-            importReport,
-          })),
+          trackStage(
+            createPresentation(result.presentation, originalArtifact, {
+              originalName,
+              importReport,
+            })
+          ),
           abortController.signal,
           (created) => deletePresentation(created?.id),
           (cleanup) => cleanupPromises.push(cleanup)
         )
       } catch (createErr) {
         if (!abortController.signal.aborted) {
-          await deleteOriginal(originalArtifact.id, originalBaseDir ? { baseDir: originalBaseDir } : {}).catch(() => {})
+          await deleteOriginal(
+            originalArtifact.id,
+            originalBaseDir ? { baseDir: originalBaseDir } : {}
+          ).catch(() => {})
           originalArtifact = null
         }
         throw createErr
@@ -550,25 +742,31 @@ async function runImport({
     }
 
     // If cancel races after create, still complete as done — presentation+original already committed.
-    await mediaTransaction.commit()
+    mediaCommitAttempted = true
+    await mediaTransaction.commit(presentation.id)
     // Prefer bounded reportSummary for both in-memory and durable recovery shapes.
     jobManager.completeJob(jobId, {
       presentationId: presentation.id,
       stats: result.stats,
       reportSummary,
     })
+    importSucceeded = true
   } catch (err) {
+    failureReason = err
     const aborted = abortController.signal.aborted
     if (originalArtifact?.id) {
-      const cleanup = Promise.resolve(deleteOriginal(
-        originalArtifact.id,
-        originalBaseDir ? { baseDir: originalBaseDir } : {}
-      )).catch(() => {})
+      const cleanup = Promise.resolve(
+        deleteOriginal(originalArtifact.id, originalBaseDir ? { baseDir: originalBaseDir } : {})
+      ).catch(() => {})
       cleanupPromises.push(cleanup)
     }
-    await mediaTransaction.rollback().catch(() => {})
-    if (aborted) finishAbortedJob()
-    else {
+    if (publishedPresentationId && !aborted) {
+      await compensatePackageFailure()
+      compensationFinished = true
+    }
+    if (aborted) {
+      if (deadlineExceeded) finishAbortedJob()
+    } else {
       jobManager.failJob(jobId, {
         message: sanitizeDiagnostic(err),
         type: err?.type || (err instanceof PptxImportError ? err.type : undefined),
@@ -581,10 +779,27 @@ async function runImport({
     const cleanup = Promise.allSettled(stagePromises)
       .then(() => Promise.allSettled(cleanupPromises))
       .then(async () => {
+        if (!importSucceeded && !compensationFinished) {
+          if (publishedPresentationId) await compensatePackageFailure()
+          else {
+            try {
+              await mediaTransaction.rollback()
+            } catch (cleanupError) {
+              await retainForReconciliation(cleanupError)
+              logger.warn(
+                '[pptx-import] unpublished media requires reconciliation:',
+                sanitizeDiagnostic(cleanupError)
+              )
+            }
+          }
+        }
         activeImportAbortControllers.delete(abortController)
         activeTempUploads.delete(filePath)
         await fs.unlink(filePath).catch(() => {})
+        // Cancellation is terminal only after ownership and temporary-file cleanup settle.
         jobManager.settleOperation?.(jobId)
+        if (abortController.signal.aborted && !deadlineExceeded && !importSucceeded)
+          finishAbortedJob()
       })
     trackDetachedImportCleanup(cleanup)
   }
@@ -610,7 +825,8 @@ function createPptxImportRouter({
   packageRollback = rollbackImportedPackage,
   drainCompatibility = drainPackageCompatibilityOutbox,
   readDurableJob = getDurableImportJob,
-  checkPresentationListable = isPresentationListable,
+  checkPresentationListable = (id, expected) =>
+    isPresentationListable(id, expected, { allowSuccessor: true }),
   loadReportSummary = loadPresentationReportSummary,
   originalBaseDir,
   importTimeoutMs = IMPORT_TIMEOUT_MS,
@@ -652,16 +868,16 @@ function createPptxImportRouter({
 
   function assertJobCapability(req, res, next) {
     const jobId = req.params.jobId
-    const isStream = String(req.path || '').endsWith('/stream') || req.route?.path === '/jobs/:jobId/stream'
+    const isStream =
+      String(req.path || '').endsWith('/stream') || req.route?.path === '/jobs/:jobId/stream'
     const provided = readProvidedCapability(req, { allowQuery: isStream })
+    req.pptxJobCapability = provided
     const live = jobManager.getJob?.(jobId)
     if (live) {
       const verify = jobManager.verifyControlCapability || defaultJobManager.verifyControlCapability
       if (!verify(live, provided)) return denyCapability(res)
       return next()
     }
-    // Durable path: load is async — attach provided for handlers and re-check there.
-    req.pptxJobCapability = provided
     return next()
   }
 
@@ -705,33 +921,37 @@ function createPptxImportRouter({
     try {
       const jobId = req.pptxJobId
       const capability =
-        jobManager.takeJobCapability?.(jobId) || defaultJobManager.takeJobCapability?.(jobId) || null
+        jobManager.takeJobCapability?.(jobId) ||
+        defaultJobManager.takeJobCapability?.(jobId) ||
+        null
       // Track the detached operation so shutdown and tests can wait for both
       // its terminal state and any late stage cleanup it registers.
-      trackDetachedImportCleanup(runImport({
-        jobId,
-        filePath: req.file.path,
-        originalName: req.file.originalname,
-        importer,
-        jobManager,
-        persistOriginal,
-        createPresentation,
-        deletePresentation,
-        deleteOriginal,
-        packageCommit,
-        packageRollback,
-        drainCompatibility,
-        originalBaseDir,
-        timeoutMs: importTimeoutMs,
-      }).catch((err) => {
-        jobManager.failJob(jobId, {
-          message: sanitizeDiagnostic(err),
-          type: err?.type,
-          code: typeof err?.code === 'string' ? err.code : undefined,
-          stage: 'failed',
+      trackDetachedImportCleanup(
+        runImport({
+          jobId,
+          filePath: req.file.path,
+          originalName: req.file.originalname,
+          importer,
+          jobManager,
+          persistOriginal,
+          createPresentation,
+          deletePresentation,
+          deleteOriginal,
+          packageCommit,
+          packageRollback,
+          drainCompatibility,
+          originalBaseDir,
+          timeoutMs: importTimeoutMs,
+        }).catch((err) => {
+          jobManager.failJob(jobId, {
+            message: sanitizeDiagnostic(err),
+            type: err?.type,
+            code: typeof err?.code === 'string' ? err.code : undefined,
+            stage: 'failed',
+          })
+          return fs.unlink(req.file.path).catch(() => {})
         })
-        return fs.unlink(req.file.path).catch(() => {})
-      }))
+      )
       res.status(202).json({
         jobId,
         ...(capability ? { capability } : {}),
@@ -745,12 +965,23 @@ function createPptxImportRouter({
     }
   })
 
+  async function pendingLiveVisibility(job) {
+    if (job.status !== 'done' && job.failureCode !== 'PACKAGE_IMPORT_PENDING_VISIBILITY')
+      return null
+    const durable = await readDurableJob(job.jobId)
+    if (durable?.status !== 'completed') return null
+    const expected = durableOutcomeExpectation(durable)
+    const visible = expected && (await checkPresentationListable(durable.presentationId, expected))
+    return visible ? null : serializeDurableImportJob(durable, { listable: false })
+  }
+
   router.get('/jobs/:jobId', assertJobCapability, async (req, res) => {
     const job = jobManager.getJob(req.params.jobId)
-    // Map `done` is only set after package drain or legacy create (already listable).
-    // Contract B re-check applies to durable fallback below (restart / Map miss).
-    if (job) return res.json(jobManager.serializeJob(job))
     try {
+      if (job) {
+        const pending = await pendingLiveVisibility(job)
+        return res.json(pending || jobManager.serializeJob(job))
+      }
       const durableJob = await readDurableJob(req.params.jobId)
       if (!durableJob) return res.status(404).json({ error: 'job-not-found' })
       if (!(await assertDurableCapability(durableJob, req.pptxJobCapability, res))) return
@@ -776,18 +1007,27 @@ function createPptxImportRouter({
     }
   })
 
-  router.get('/jobs/:jobId/stream', assertJobCapability, (req, res) => {
+  router.get('/jobs/:jobId/stream', assertJobCapability, async (req, res) => {
     const job = jobManager.getJob(req.params.jobId)
     if (!job) return res.status(404).json({ error: 'job-not-found' })
-    res.set({
-      'Cache-Control': 'no-cache, no-transform',
-      Connection: 'keep-alive',
-      'Content-Type': 'text/event-stream',
-      'X-Accel-Buffering': 'no',
-    })
-    res.flushHeaders?.()
-    jobManager.attachSseClient(req.params.jobId, res)
-    req.on('close', () => jobManager.detachSseClient(req.params.jobId, res))
+    try {
+      const pending = await pendingLiveVisibility(job)
+      res.set({
+        'Cache-Control': 'no-cache, no-transform',
+        Connection: 'keep-alive',
+        'Content-Type': 'text/event-stream',
+        'X-Accel-Buffering': 'no',
+      })
+      res.flushHeaders?.()
+      if (pending) {
+        res.write(`event: progress\ndata: ${JSON.stringify(pending)}\n\n`)
+        return res.end()
+      }
+      jobManager.attachSseClient(req.params.jobId, res)
+      req.on('close', () => jobManager.detachSseClient(req.params.jobId, res))
+    } catch (error) {
+      return res.status(503).json({ error: 'durable-job-authority-unavailable', code: error.code })
+    }
   })
 
   router.delete('/jobs/:jobId', assertJobCapability, async (req, res) => {
@@ -821,7 +1061,9 @@ function createPptxImportRouter({
           })
         }
       } catch (error) {
-        return res.status(503).json({ error: 'durable-job-authority-unavailable', code: error.code })
+        return res
+          .status(503)
+          .json({ error: 'durable-job-authority-unavailable', code: error.code })
       }
       return res.status(404).json({ error: 'job-not-found' })
     }
@@ -866,10 +1108,13 @@ function createPptxImportRouter({
     if (durableJob && ['queued', 'running'].includes(durableJob.status)) {
       return res.status(409).json({ error: 'job-not-terminal', code: 'JOB_NOT_TERMINAL' })
     }
-    if (durableJob && !(await assertDurableCapability(durableJob, req.pptxJobCapability, res))) return
-    const job = durableJob || (current?.status === 'done'
-      ? { id: jobId, status: 'completed', presentationId: current.result?.presentationId }
-      : null)
+    if (durableJob && !(await assertDurableCapability(durableJob, req.pptxJobCapability, res)))
+      return
+    const job =
+      durableJob ||
+      (current?.status === 'done'
+        ? { id: jobId, status: 'completed', presentationId: current.result?.presentationId }
+        : null)
     if (!job) return res.status(404).json({ error: 'job-not-found' })
     const result = await reconcileDurableImportJob(job, {
       deletePresentation,

@@ -4,6 +4,11 @@ import reactPlugin from 'eslint-plugin-react'
 import reactHooksPlugin from 'eslint-plugin-react-hooks'
 import unusedImports from 'eslint-plugin-unused-imports'
 
+const stateBasedWait = {
+  selector: 'CallExpression[callee.property.name="waitForTimeout"]',
+  message: 'Use state-based waits instead of page.waitForTimeout in E2E tests.',
+}
+
 export default [
   js.configs.recommended,
   {
@@ -12,6 +17,7 @@ export default [
       'dist-electron/**',
       'dist-electron*/**',
       '.tmp/**',
+      '.playwright/**',
       'server/node_modules/**',
       'server/vendor/**',
       'plans/**',
@@ -20,6 +26,8 @@ export default [
       'test-results/**',
       'coverage/**',
       '.claude/**',
+      '.omo/**',
+      '**/.omo/**',
       'website/.vitepress/dist/**',
     ],
   },
@@ -34,7 +42,12 @@ export default [
     },
   },
   {
-    files: ['*.config.mjs', 'client/vite.config.js', 'website/.vitepress/config.mjs'],
+    files: [
+      '*.config.mjs',
+      'config/**/*.mjs',
+      'client/vite.config.js',
+      'website/.vitepress/config.mjs',
+    ],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -126,7 +139,7 @@ export default [
   },
   // Client unit tests
   {
-    files: ['client/**/*.test.{js,jsx}'],
+    files: ['client/**/*.test.{js,jsx}', 'tests/pptx-semantic/**/*.test.jsx'],
     plugins: {
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
@@ -165,7 +178,11 @@ export default [
   // Server
   {
     files: ['server/**/*.{js,cjs}'],
-    ignores: ['server/**/*.test.js'],
+    ignores: [
+      'server/**/*.test.js',
+      'server/services/game-authority-test-fixture.js',
+      'server/services/game-live-wire-fixture.js',
+    ],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -173,9 +190,16 @@ export default [
       sourceType: 'commonjs',
     },
   },
-  // Server + Shared test files (use ES modules)
+  // Server + Shared test files and ESM test helpers
   {
-    files: ['server/**/*.test.js', 'shared/tests/**/*.js'],
+    files: [
+      'server/**/*.test.js',
+      'shared/tests/**/*.js',
+      'server/services/game-authority-test-fixture.js',
+      'server/services/game-live-wire-fixture.js',
+      'server/recovery-test-driver.js',
+      'server/routes/portable-package-project-fixture.js',
+    ],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -208,6 +232,15 @@ export default [
       sourceType: 'module',
     },
   },
+  {
+    files: ['scripts/**/*.cjs'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+      sourceType: 'commonjs',
+    },
+  },
   // Electron
   {
     files: ['electron/**/*.js'],
@@ -220,7 +253,7 @@ export default [
   },
   // E2E + Unit tests
   {
-    files: ['tests/**/*.js', 'tests/**/*.spec.js'],
+    files: ['tests/**/*.{js,cjs}', 'tests/**/*.spec.js'],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -237,11 +270,30 @@ export default [
     rules: {
       'no-restricted-syntax': [
         'error',
+        stateBasedWait,
         {
-          selector: 'CallExpression[callee.property.name="waitForTimeout"]',
-          message: 'Use state-based waits instead of page.waitForTimeout in E2E tests.',
+          selector:
+            ':matches(NewExpression[callee.name="Promise"]:not(:has(CallExpression[callee.property.name=/^(once|on|addEventListener)$/])) > :matches(ArrowFunctionExpression, FunctionExpression) > CallExpression[callee.name="setTimeout"], NewExpression[callee.name="Promise"]:not(:has(CallExpression[callee.property.name=/^(once|on|addEventListener)$/])) > :matches(ArrowFunctionExpression, FunctionExpression) > BlockStatement > ExpressionStatement > CallExpression[callee.name="setTimeout"])',
+          message: 'Wait for observable state instead of a timer-backed Promise in E2E tests.',
         },
       ],
     },
+  },
+  {
+    files: ['tests/e2e/**/*.spec.js'],
+    ignores: ['tests/e2e/pptx-import-real-browser-audit.spec.js'],
+    rules: { 'max-lines': ['error', { max: 200, skipBlankLines: false, skipComments: false }] },
+  },
+  // Existing bounded status-polling owners retain their timer intervals.
+  {
+    files: [
+      'tests/e2e/global-setup.js',
+      'tests/e2e/pptx-import-fidelity.spec.js',
+      'tests/e2e/pptx-import-editor-visual-regression.spec.js',
+      'tests/e2e/export/pptx-import-endpoint-roundtrip-across-multiple-fixtures.spec.js',
+      'tests/e2e/fixtures/test-fixtures.js',
+      'tests/e2e/helpers/pptx-import-api-helper.js',
+    ],
+    rules: { 'no-restricted-syntax': ['error', stateBasedWait] },
   },
 ]

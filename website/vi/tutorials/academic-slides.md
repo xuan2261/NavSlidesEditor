@@ -100,9 +100,9 @@ result = minimize(neg_log_likelihood, x0=[1, 0], args=(x_data, y_data, sigma_dat
 Trước bài thuyết trình của bạn, hãy xuất bài trình chiếu dưới dạng một gói ngoại tuyến:
 
 1. Nhấn **File → Export → Offline HTML**.
-2. Chờ quá trình nhúng tài nguyên hoàn tất (thường 5–15 giây).
+2. Chờ nhúng các tài nguyên runtime cục bộ bắt buộc; thiếu tài nguyên bắt buộc sẽ chặn xuất.
 3. Lưu tệp `.html` vào ổ USB hoặc máy tính xách tay của bạn.
-4. Mở tệp trong bất kỳ trình duyệt nào — không cần internet.
+4. Mở tệp trên máy trình chiếu và kiểm tra khi ngắt mạng. Nội dung nhúng hoặc media bên ngoài vẫn có thể cần truy cập mạng; xem [giới hạn ngoại tuyến](/vi/features/export).
 
 ::: tip
 Hãy kiểm tra bản xuất ngoại tuyến trước hội nghị. Mở tệp trên chính máy tính bạn sẽ dùng để trình chiếu, không chỉ trên máy phát triển của bạn.

@@ -1,40 +1,28 @@
-const crypto = require('node:crypto')
 const fs = require('node:fs/promises')
 const path = require('node:path')
-const { replaceDurable, writeDurable } = require('./durable-fs')
+const crypto = require('node:crypto')
+const { replaceDurable, writeDurable, writeHashedCandidate, validateExistingCandidate, syncDirectory } = require('./durable-fs')
 const {
-  STATE_ROOT_SCHEMA_VERSION,
   createEmptyState,
-  hashRecord,
   validateState,
-  validateStateRoot,
 } = require('./schemas')
-const { loadPackageStoreState, validatePackageStoreRoot } = require('./state-migrations')
+const { loadStateIndex } = require('./state-index-loader')
+const { StateRecordStore } = require('./state-record-store')
+const { encodeStateManifest } = require('./state-manifest')
 const { createMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
+const { refreshCompatibilityHeads } = require('./authority-publication')
 
-/**
- * Each root embeds its predecessor, so an unbounded chain makes state-root.json
- * grow by one full root per publish and rewrites the whole thing every time.
- * Keeping a few generations is what recovery can actually use; older roots only
- * reference index files that retention is free to collect.
- */
-const MAX_PREDECESSOR_DEPTH = 3
-
-function boundPredecessors(root, depth = MAX_PREDECESSOR_DEPTH) {
-  if (!root || depth <= 0) return null
-  return { ...root, predecessor: boundPredecessors(root.predecessor, depth - 1) }
-}
+const { prepareStreamingPublication, attachStorageManifest } = require('./prepared-publication')
 
 class StateStore {
   constructor(rootDir) {
     this.rootDir = rootDir
+    this.recordStore = new StateRecordStore(rootDir)
     this.indexDir = path.join(rootDir, 'indexes')
     this.walDir = path.join(rootDir, 'wal')
     this.quarantineDir = path.join(rootDir, 'quarantine')
     this.rootPath = path.join(rootDir, 'state-root.json')
-    this.matrixAuthorityHighWaterPath = path.join(
-      rootDir, 'matrix-authority-epoch-high-water.json'
-    )
+    this.matrixAuthorityHighWaterPath = path.join(rootDir, 'matrix-authority-epoch-high-water.json')
     this.state = createEmptyState()
     this.root = null
     this.pendingMigration = null
@@ -65,12 +53,8 @@ class StateStore {
   }
 
   async readValidatedRoot(root) {
-    validatePackageStoreRoot(root)
-    if (!root?.stateFile) throw new Error('Invalid state root file')
-    const state = JSON.parse(await fs.readFile(path.join(this.rootDir, root.stateFile), 'utf8'))
-    if (hashRecord(state) !== root.stateHash) throw new Error('State index hash mismatch')
     const highWater = await this.readMatrixAuthorityHighWater()
-    return loadPackageStoreState(root, state, { highWater })
+    return loadStateIndex(this.rootDir, root, { recordStore: this.recordStore, highWater })
   }
 
   /**
@@ -132,9 +116,11 @@ class StateStore {
   async readMatrixAuthorityHighWater() {
     try {
       const record = JSON.parse(await fs.readFile(this.matrixAuthorityHighWaterPath, 'utf8'))
-      if (record?.schemaVersion !== 1 ||
+      if (
+        record?.schemaVersion !== 1 ||
         !Number.isSafeInteger(record.matrixAuthorityEpoch) ||
-        record.matrixAuthorityEpoch < 1) {
+        record.matrixAuthorityEpoch < 1
+      ) {
         throw new TypeError('Invalid matrix authority high-water record')
       }
       return record.matrixAuthorityEpoch
@@ -144,16 +130,23 @@ class StateStore {
     }
   }
 
-  async persistMatrixAuthorityHighWater(matrixAuthorityEpoch) {
+  async persistMatrixAuthorityHighWater(matrixAuthorityEpoch, { signal } = {}) {
+    signal?.throwIfAborted()
     const current = await this.readMatrixAuthorityHighWater()
+    signal?.throwIfAborted()
     if (current !== null && current > matrixAuthorityEpoch) {
       throw new TypeError('Matrix authority epoch regression')
     }
     if (current === matrixAuthorityEpoch) return
-    await writeDurable(this.matrixAuthorityHighWaterPath, JSON.stringify({
-      schemaVersion: 1,
-      matrixAuthorityEpoch,
-    }))
+    await writeDurable(
+      this.matrixAuthorityHighWaterPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        matrixAuthorityEpoch,
+      }),
+      undefined,
+      { signal }
+    )
   }
 
   async recoverMatrixAuthorityHighWater() {
@@ -169,6 +162,7 @@ class StateStore {
       matrixAuthorityEpoch: highWater,
       matrixAuthoritySubjects: createMatrixAuthoritySubjects(undefined, highWater),
     }))
+    refreshCompatibilityHeads(this.state)
     validateState(this.state)
     this.pendingRootRecovery = true
     this.recoveryActions.push('advanced-matrix-authority-high-water')
@@ -183,7 +177,10 @@ class StateStore {
     for (const recovery of this.pendingWalRecovery) {
       await assertWriter()
       if (recovery.published) {
-        await writeDurable(path.join(this.walDir, `${recovery.transactionId}.completed`), 'completed')
+        await writeDurable(
+          path.join(this.walDir, `${recovery.transactionId}.completed`),
+          'completed'
+        )
         this.recoveryActions.push('completed-published-wal')
         continue
       }
@@ -200,52 +197,109 @@ class StateStore {
     this.pendingWalRecovery = []
   }
 
-  async publish(nextState, {
-    assertWriter,
-    faultAfterIndex = false,
-    faultAfterPrepare = false,
-    faultAfterRoot = false,
-    faultAfterCompletion = false,
-  } = {}) {
+  async publish(
+    nextState,
+    {
+      assertWriter,
+      signal,
+      faultAfterIndex = false,
+      faultAfterPrepare = false,
+      faultAfterRoot = false,
+      faultAfterCompletion = false,
+    } = {}
+  ) {
+    signal?.throwIfAborted()
     await assertWriter()
-    validateState(nextState)
-    await this.persistMatrixAuthorityHighWater(nextState.matrixAuthorityEpoch)
-    const transactionId = crypto.randomUUID()
-    const stateHash = hashRecord(nextState)
-    const relativeStateFile = path.join('indexes', `${stateHash}.json`)
-    const statePath = path.join(this.rootDir, relativeStateFile)
-    try {
-      await fs.access(statePath)
-    } catch (error) {
-      if (error.code !== 'ENOENT') throw error
-      await writeDurable(statePath, JSON.stringify(nextState))
+    signal?.throwIfAborted()
+    let publication = prepareStreamingPublication(nextState, this.root)
+    const { state } = publication
+    const { manifest } = await encodeStateManifest(state, this.recordStore, { signal, assertWriter })
+    publication = attachStorageManifest(publication, manifest)
+    await assertWriter()
+    signal?.throwIfAborted()
+    await this.persistMatrixAuthorityHighWater(state.matrixAuthorityEpoch, { signal })
+    signal?.throwIfAborted()
+    await assertWriter()
+    signal?.throwIfAborted()
+    const streaming = Boolean(publication.chunks)
+    if (streaming) {
+      // A crash can strand only an unreferenced .tmp candidate, never a root or
+      // WAL reference to a partial index. No recovery scan treats .tmp as JSON.
+      const candidate = path.join(this.indexDir, `.candidate-${crypto.randomUUID()}.tmp`)
+      let ownsCandidate = false
+      try {
+        const digest = await writeHashedCandidate(candidate, publication.chunks, {
+          signal, onOwned: () => { ownsCandidate = true },
+        })
+        publication = publication.complete(digest)
+        await assertWriter()
+        signal?.throwIfAborted()
+        const target = path.join(this.rootDir, publication.root.stateFile)
+        if (await validateExistingCandidate(target, candidate, digest, { signal })) {
+          // A previous rename may have succeeded but failed its directory sync.
+          // Reuse must establish durability anew before the prepared WAL exists.
+          await syncDirectory(this.indexDir)
+        } else {
+          await replaceDurable(candidate, target, { signal })
+        }
+      } finally {
+        if (ownsCandidate) await fs.rm(candidate, { force: true })
+      }
     }
-    if (faultAfterIndex) throw new Error('Injected fault after index')
-    const nextRoot = {
-      schemaVersion: STATE_ROOT_SCHEMA_VERSION,
-      transactionId,
-      stateHash,
-      stateFile: relativeStateFile,
-      storeGeneration: nextState.generation,
-      fencingEpoch: nextState.fencingEpoch,
-      predecessor: boundPredecessors(this.root),
-    }
-    validateStateRoot(nextRoot)
+    const { root: nextRoot, stateBytes, rootBytes } = publication
+    const { transactionId } = nextRoot
+    const statePath = path.join(this.rootDir, nextRoot.stateFile)
     const prepared = path.join(this.walDir, `${transactionId}.prepared.json`)
-    await writeDurable(prepared, JSON.stringify(nextRoot))
-    if (faultAfterPrepare) throw new Error('Injected fault after prepare')
-    await assertWriter()
     const tempRoot = `${this.rootPath}.${transactionId}.tmp`
-    await writeDurable(tempRoot, JSON.stringify(nextRoot))
-    await replaceDurable(tempRoot, this.rootPath)
-    this.root = nextRoot
-    this.state = nextState
-    this.pendingMigration = null
-    this.pendingRootRecovery = false
-    this.pendingHighWaterPersist = false
-    if (faultAfterRoot) throw new Error('Injected fault after root')
-    await writeDurable(path.join(this.walDir, `${transactionId}.completed`), 'completed')
-    if (faultAfterCompletion) throw new Error('Injected fault after completion')
+    let published = false
+    try {
+      if (!streaming) {
+        try {
+          await fs.access(statePath)
+        } catch (error) {
+          if (error.code !== 'ENOENT') throw error
+          signal?.throwIfAborted()
+          await assertWriter()
+          signal?.throwIfAborted()
+          await writeDurable(statePath, stateBytes, undefined, { signal })
+        }
+      }
+      signal?.throwIfAborted()
+      if (faultAfterIndex) throw new Error('Injected fault after index')
+      await assertWriter()
+      signal?.throwIfAborted()
+      await writeDurable(prepared, rootBytes, undefined, { signal })
+      signal?.throwIfAborted()
+      if (faultAfterPrepare) throw new Error('Injected fault after prepare')
+      await assertWriter()
+      signal?.throwIfAborted()
+      await writeDurable(tempRoot, rootBytes, undefined, { signal })
+      await assertWriter()
+      signal?.throwIfAborted()
+      await replaceDurable(tempRoot, this.rootPath, {
+        signal,
+        onReplaced: () => {
+          // Native rename success is authoritative, even if cancellation or sync fails later.
+          published = true
+          this.root = nextRoot
+          this.state = state
+          this.pendingMigration = null
+          this.pendingRootRecovery = false
+          this.pendingHighWaterPersist = false
+        },
+      })
+      if (faultAfterRoot) throw new Error('Injected fault after root')
+      await writeDurable(path.join(this.walDir, `${transactionId}.completed`), 'completed')
+      if (faultAfterCompletion) throw new Error('Injected fault after completion')
+    } catch (error) {
+      if (!published) {
+        // Unpublished root candidates are never recovery evidence. Retain the
+        // prepared WAL and index for recovery/audit on ordinary failures.
+        await fs.rm(tempRoot, { force: true })
+        if (signal?.aborted) await fs.rm(prepared, { force: true })
+      }
+      throw error
+    }
   }
 }
 

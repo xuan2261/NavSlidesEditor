@@ -26,56 +26,6 @@ function renderCanvas(props = {}) {
 }
 
 describe('SlideCanvas media drop', () => {
-  it('passes the active slide background to chart rendering', () => {
-    renderCanvas({
-      slide: {
-        id: 's1',
-        background: { type: 'color', color: '#1e1e2e' },
-        elements: [
-          {
-            id: 'chart-1',
-            type: 'chart',
-            x: 0,
-            y: 0,
-            width: 400,
-            height: 240,
-            chartType: 'bar',
-            chartData: { labels: ['A'], datasets: [{ label: 'Series', data: [1] }] },
-          },
-        ],
-      },
-    })
-
-    const srcDoc = screen.getByTitle('Chart').getAttribute('srcdoc')
-    expect(srcDoc).toContain("ticks:{color:'#f8fafc'}")
-    expect(srcDoc).toContain("grid:{color:'rgba(248,250,252,0.28)'}")
-  })
-
-  it('uses merged token background when a slide has no explicit background', () => {
-    renderCanvas({
-      designTokens: { colors: { bg: '#f8fafc' } },
-      slide: {
-        id: 's1',
-        background: { type: 'none' },
-        elements: [
-          {
-            id: 'chart-1',
-            type: 'chart',
-            x: 0,
-            y: 0,
-            width: 400,
-            height: 240,
-            chartData: { labels: ['A'], datasets: [{ label: 'Series', data: [1] }] },
-          },
-        ],
-      },
-    })
-
-    const srcDoc = screen.getByTitle('Chart').getAttribute('srcdoc')
-    expect(srcDoc).toContain("ticks:{color:'#141413'}")
-    expect(srcDoc).toContain("grid:{color:'rgba(20,20,19,0.16)'}")
-  })
-
   it('routes image, video, and audio drops through the media handler with slide coordinates', async () => {
     const onAddMedia = vi.fn(() => Promise.resolve())
     useUIStore.setState({ zoom: 1 })
@@ -204,60 +154,53 @@ describe('SlideCanvas media drop', () => {
     expect(onRemoveGuide).toHaveBeenCalledWith(0)
   })
 
-  it.each(
-    ['Delete', 'Backspace'].flatMap((key) => [
-      [key, 'select', () => document.createElement('select')],
-      [key, 'button', () => document.createElement('button')],
-      [
-        key,
-        'contenteditable',
-        () => {
-          const target = document.createElement('div')
-          target.contentEditable = 'true'
-          return target
-        },
-      ],
-      [key, 'media control', () => document.createElement('video')],
-    ])
-  )('does not delete selected elements when %s is owned by %s', (key, _name, createTarget) => {
-    const onDeleteSelectedElements = vi.fn()
-    renderCanvas({ selectedElementIds: ['shape-1'], onDeleteSelectedElements })
-    const target = createTarget()
-    target.tabIndex = 0
-    document.body.appendChild(target)
-    target.focus()
-
-    fireEvent.keyDown(target, { key })
-
-    expect(onDeleteSelectedElements).not.toHaveBeenCalled()
-    target.remove()
-  })
-
-  it.each(['Delete', 'Backspace'])('deletes once when the canvas owns %s', (key) => {
-    const onDeleteSelectedElements = vi.fn()
-    renderCanvas({ selectedElementIds: ['shape-1'], onDeleteSelectedElements })
-    const canvas = screen.getByTestId('canvas-area')
-    canvas.tabIndex = 0
-    canvas.focus()
-
-    fireEvent.keyDown(canvas, { key })
-
-    expect(onDeleteSelectedElements).toHaveBeenCalledTimes(1)
-  })
-
-  it.each(['Delete', 'Backspace'])('does not delete from a locked slide with %s', (key) => {
-    const onDeleteSelectedElements = vi.fn()
-    renderCanvas({
-      slide: { id: 's1', locked: true, elements: [] },
-      selectedElementIds: ['shape-1'],
-      onDeleteSelectedElements,
+  it('keeps native-aspect ruler guide drops inside the actual logical canvas', () => {
+    const onAddGuide = vi.fn()
+    const { zoom, userZoomMode } = useUIStore.getState()
+    useUIStore.setState({ zoom: 0.5, userZoomMode: true })
+    const view = renderCanvas({
+      resolution: { width: 720, height: 540 },
+      showRulers: true,
+      onAddGuide,
     })
-    const canvas = screen.getByTestId('canvas-area')
-    canvas.tabIndex = 0
-    canvas.focus()
+    try {
+      const canvas = screen.getByTestId('canvas-area')
+      vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+        left: 50, top: 30, width: 360, height: 270,
+      })
+      expect(canvas.style.width).toBe('720px')
+      expect(canvas.style.height).toBe('540px')
+      const ruler = screen.getByTestId('top-ruler')
+      fireEvent.pointerDown(ruler, { button: 0, pointerId: 3 })
+      fireEvent.pointerUp(document, { pointerId: 3, clientX: 410, clientY: 30 })
+      fireEvent.pointerDown(ruler, { button: 0, pointerId: 4 })
+      fireEvent.pointerUp(document, { pointerId: 4, clientX: 430, clientY: 30 })
 
-    fireEvent.keyDown(canvas, { key })
+      expect(onAddGuide.mock.calls).toEqual([[{ axis: 'x', position: 720 }]])
+    } finally {
+      view.unmount()
+      useUIStore.setState({ zoom, userZoomMode })
+    }
+  })
 
-    expect(onDeleteSelectedElements).not.toHaveBeenCalled()
+  it('transfers focus to the named canvas when the focused element is removed', () => {
+    const shape = { id: 'a', type: 'shape', shape: 'rect', x: 40, y: 40, width: 120, height: 80 }
+    const view = renderCanvas({ slide: { id: 's1', elements: [shape] }, selectedElementIds: ['a'] })
+    screen.getByTestId('slide-element-a').focus()
+    view.rerender(
+      <SlideCanvas
+        editor={null}
+        slide={{ id: 's1', elements: [] }}
+        selectedElementIds={[]}
+        editingElementId={null}
+        showGrid={false}
+        onToggleSelectElement={vi.fn()}
+        onStartEdit={vi.fn()}
+        onStopEdit={vi.fn()}
+        onUpdateElement={vi.fn()}
+        onUpdateElements={vi.fn()}
+      />
+    )
+    expect(document.activeElement).toBe(screen.getByLabelText('Slide canvas'))
   })
 })

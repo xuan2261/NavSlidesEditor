@@ -5,9 +5,12 @@ function originError() {
   })
 }
 
-function assertPrivateEditorOrigin(req) {
+function assertPrivateEditorOrigin(req, { allowReadNavigation = false } = {}) {
   const host = req.get('host')
-  const origin = req.get('origin')
+  let origin = req.get('origin')
+  if (!origin && allowReadNavigation && req.method === 'GET' && req.get('sec-fetch-site') === 'same-origin') {
+    try { origin = new URL(req.get('referer')).origin } catch { throw originError() }
+  }
   if (!host || !origin) throw originError()
   let parsed
   try {
@@ -36,9 +39,10 @@ function assertPrivateEditorOrigin(req) {
   }
 }
 
-function privateEditorOnly(req, res, next) {
+// The default preserves function.length === 3, required for normal Express middleware.
+function privateEditorOnly(req, res, next, options = undefined) {
   try {
-    assertPrivateEditorOrigin(req)
+    assertPrivateEditorOrigin(req, options)
     next()
   } catch (error) {
     res.status(error.status).json({ error: error.message, code: error.code })

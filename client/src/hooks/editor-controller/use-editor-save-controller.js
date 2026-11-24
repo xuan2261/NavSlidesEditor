@@ -2,18 +2,23 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { flushPendingSave } from '../use-editor-save-queue'
 import { usePresentationStore } from '../../stores/presentation-store'
 import { normalizePresentationNotes } from '../../utils/slide-notes'
+import { normalizePresentationGames } from 'revealjs-shared'
 import {
   clearEditorDraft,
   createEditorDraft,
   writeEditorDraft,
 } from '../../utils/editor-draft-store'
-import { persistEditorSave } from './editor-save-attempt'
+import {
+  adoptEditorSaveGeneration,
+  persistEditorSave,
+  rebaseEditorSaveEntry,
+} from './editor-save-attempt'
 
 export function useEditorSaveController({ isTemplate }) {
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState('')
   const [lastSaveError, setLastSaveError] = useState('')
-  const [, setLastSavedAt] = useState(null)
+  const [lastSavedAt, setLastSavedAt] = useState(null)
   const timerRef = useRef(null)
   const resetTimerRef = useRef(null)
   const attemptRef = useRef(0)
@@ -21,6 +26,7 @@ export function useEditorSaveController({ isTemplate }) {
   const inFlightRef = useRef(false)
   const inFlightEntryRef = useRef(null)
   const flushTransportRef = useRef(null)
+  const restoreInFlightRef = useRef(null)
   const queueRef = useRef(null)
   const failedEntryRef = useRef(null)
   const acceptedGenerationRef = useRef(null)
@@ -30,7 +36,7 @@ export function useEditorSaveController({ isTemplate }) {
   const mountedRef = useRef(true)
   const draftSessionIdRef = useRef(
     globalThis.crypto?.randomUUID?.() ||
-    `draft-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      `draft-${Date.now()}-${Math.random().toString(36).slice(2)}`
   )
 
   const clearResetTimer = useCallback(() => {
@@ -43,20 +49,21 @@ export function useEditorSaveController({ isTemplate }) {
   }, [])
 
   const persist = useCallback(
-    (entry) => persistEditorSave({
-      acceptedGenerationRef,
-      attemptRef,
-      clearResetTimer,
-      entry,
-      isTemplate,
-      mountedRef,
-      queueRef,
-      scheduleStatusReset,
-      setLastSaveError,
-      setLastSavedAt,
-      setSaveStatus,
-      setSaving,
-    }),
+    (entry) =>
+      persistEditorSave({
+        acceptedGenerationRef,
+        attemptRef,
+        clearResetTimer,
+        entry,
+        isTemplate,
+        mountedRef,
+        queueRef,
+        scheduleStatusReset,
+        setLastSaveError,
+        setLastSavedAt,
+        setSaveStatus,
+        setSaving,
+      }),
     [clearResetTimer, isTemplate, scheduleStatusReset]
   )
 
@@ -77,8 +84,13 @@ export function useEditorSaveController({ isTemplate }) {
   }, [])
 
   const waitForIdle = useCallback(() => {
-    if (!inFlightEntryRef.current && !flushTransportRef.current &&
-        !queueRef.current && !failedEntryRef.current) return Promise.resolve(true)
+    if (
+      !inFlightEntryRef.current &&
+      !flushTransportRef.current &&
+      !queueRef.current &&
+      !failedEntryRef.current
+    )
+      return Promise.resolve(true)
     return new Promise((resolve) => idleWaitersRef.current.push(resolve))
   }, [])
 
@@ -86,8 +98,13 @@ export function useEditorSaveController({ isTemplate }) {
     if (
       inFlightEntryRef.current ||
       flushTransportRef.current ||
-      exportInFlightRef.current
-    ) return
+      exportInFlightRef.current ||
+      restoreInFlightRef.current
+    )
+      return
+    if (failedEntryRef.current?.localValidationRejected && queueRef.current) {
+      failedEntryRef.current = null
+    }
     if (!failedEntryRef.current && !queueRef.current) {
       notifyIdle()
       return
@@ -99,7 +116,8 @@ export function useEditorSaveController({ isTemplate }) {
     inFlightRef.current = true
     let ok = false
     try {
-      ok = await persist(entry)
+      entry.transportPromise = persist(entry)
+      ok = await entry.transportPromise
     } finally {
       if (inFlightEntryRef.current === entry) {
         inFlightEntryRef.current = null
@@ -111,7 +129,7 @@ export function useEditorSaveController({ isTemplate }) {
     const successor = queueRef.current
     const routeChanged = entry.routeEpoch !== routeEpochRef.current
     if (
-      (ok || routeChanged) &&
+      (ok || entry.localValidationRejected || routeChanged) &&
       successor?.routeEpoch === routeEpochRef.current &&
       !usePresentationStore.getState().saveConflict
     ) {
@@ -122,13 +140,16 @@ export function useEditorSaveController({ isTemplate }) {
 
   const scheduleSave = useCallback(
     (snapshot, delayMs = 1500, { preserveIdempotencyKey = false } = {}) => {
-      if (!snapshot) return
+      if (!snapshot || restoreInFlightRef.current?.installing) return
       if (timerRef.current) clearTimeout(timerRef.current)
       timerRef.current = null
       clearResetTimer()
       const attemptId = ++attemptRef.current
       const draftId = `${draftSessionIdRef.current}:${attemptId}`
-      const generation = acceptedGenerationRef.current ?? snapshot.aggregateGeneration
+      const generation =
+        preserveIdempotencyKey && snapshot.idempotencyKey
+          ? snapshot.aggregateGeneration
+          : (acceptedGenerationRef.current ?? snapshot.aggregateGeneration)
       const body =
         !isTemplate && Number.isSafeInteger(generation)
           ? {
@@ -142,13 +163,13 @@ export function useEditorSaveController({ isTemplate }) {
             }
           : snapshot
       const draft = createEditorDraft({ snapshot: body, isTemplate, attemptId, draftId })
-      const draftWritePromise = writeEditorDraft(draft)
-      // Keep failedEntryRef: processQueue intentionally retries the uncertain
-      // write (same idempotency key) before the queued successor. Callers that
-      // must drop the failed body use discardPendingSave / clearFailedSave.
+      const draftWritePromise = writeEditorDraft(draft, { acknowledgeLocalPublication: true })
+      // Uncertain remote writes retry with their original key before successors;
+      // deterministic local rejections are superseded by the corrected queue.
       queueRef.current = {
         snapshot: body,
         attemptId,
+        preserveIdempotencyKey: preserveIdempotencyKey && Boolean(snapshot.idempotencyKey),
         draftId,
         draftUpdatedAt: draft.updatedAt,
         draftWritePromise,
@@ -157,138 +178,197 @@ export function useEditorSaveController({ isTemplate }) {
       setSaving(true)
       setSaveStatus('saving')
       setLastSaveError('')
-      if (exportInFlightRef.current) return
+      if (exportInFlightRef.current || restoreInFlightRef.current) return
       if (delayMs <= 0) void processQueue()
       else timerRef.current = setTimeout(() => void processQueue(), delayMs)
     },
     [clearResetTimer, isTemplate, processQueue]
   )
 
-  const flush = useCallback(({ allowSynchronous = false } = {}) => {
-    if (inFlightEntryRef.current || flushTransportRef.current || exportInFlightRef.current) return
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = null
-    const entry = queueRef.current || failedEntryRef.current
-    if (!entry?.snapshot) return
-    const snapshot = normalizePresentationNotes(entry.snapshot)
-    const clearCommittedDraft = () => {
-      const identity = {
-        idempotencyKey: entry.snapshot.idempotencyKey,
-        attemptId: entry.attemptId,
-      }
-      if (entry.draftUpdatedAt) identity.updatedAt = entry.draftUpdatedAt
-      if (entry.draftId) identity.draftId = entry.draftId
-      return clearEditorDraft(entry.snapshot.id, isTemplate, identity)
-    }
-    const finishTransport = ({ processSuccessor = true } = {}) => {
-      if (flushTransportRef.current !== entry) return
-      flushTransportRef.current = null
+  const flush = useCallback(
+    ({ allowSynchronous = false } = {}) => {
       if (
-        processSuccessor &&
-        queueRef.current?.routeEpoch === routeEpochRef.current &&
-        !usePresentationStore.getState().saveConflict
-      ) {
-        void processQueue()
+        inFlightEntryRef.current ||
+        flushTransportRef.current ||
+        exportInFlightRef.current ||
+        restoreInFlightRef.current
+      )
+        return
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = null
+      if (failedEntryRef.current?.localValidationRejected && queueRef.current)
+        failedEntryRef.current = null
+      const entry = failedEntryRef.current || queueRef.current
+      if (!entry?.snapshot) return
+      let snapshot
+      try {
+        snapshot = normalizePresentationGames(normalizePresentationNotes(entry.snapshot))
+      } catch (error) {
+        entry.localValidationRejected = true
+        if (queueRef.current === entry) queueRef.current = null
+        failedEntryRef.current = entry
+        clearResetTimer()
+        setSaving(false)
+        setSaveStatus('error')
+        setLastSaveError(error?.message?.trim?.() || 'Save failed')
+        notifyIdle(false)
+        return
       }
-      notifyIdle()
-    }
-    flushTransportRef.current = entry
-    const dispatched = flushPendingSave(snapshot, {
-      isTemplate,
-      sendKeepalive: (url, body) => {
-        void fetch(url, {
-          method: 'PUT',
-          keepalive: true,
-          headers: { 'Content-Type': 'application/json' },
-          body,
+      const acceptCommittedSave = (saved) =>
+        adoptEditorSaveGeneration({
+          saved,
+          entry,
+          isTemplate,
+          acceptedGenerationRef,
+          attemptRef,
+          queueRef,
         })
-          .then((response) => {
-            if (response.ok) return clearCommittedDraft()
-            return undefined
+      const clearCommittedDraft = () => {
+        const identity = {
+          idempotencyKey: entry.snapshot.idempotencyKey,
+          attemptId: entry.attemptId,
+        }
+        if (entry.draftUpdatedAt) identity.updatedAt = entry.draftUpdatedAt
+        if (entry.draftId) identity.draftId = entry.draftId
+        return clearEditorDraft(entry.snapshot.id, isTemplate, identity)
+      }
+      const finishTransport = ({ processSuccessor = true, acknowledged = true } = {}) => {
+        if (flushTransportRef.current !== entry) return
+        flushTransportRef.current = null
+        if (!acknowledged && entry.routeEpoch === routeEpochRef.current)
+          failedEntryRef.current = entry
+        if (
+          (processSuccessor ||
+            (acknowledged && mountedRef.current && idleWaitersRef.current.length > 0)) &&
+          queueRef.current?.routeEpoch === routeEpochRef.current &&
+          !usePresentationStore.getState().saveConflict
+        ) {
+          void processQueue()
+        }
+        notifyIdle()
+      }
+      flushTransportRef.current = entry
+      const wasFailed = failedEntryRef.current === entry
+      if (wasFailed) failedEntryRef.current = null
+      else queueRef.current = null
+      const dispatched = flushPendingSave(snapshot, {
+        isTemplate,
+        sendKeepalive: (url, body) => {
+          let acknowledged = false
+          entry.transportPromise = fetch(url, {
+            method: 'PUT',
+            keepalive: true,
+            headers: { 'Content-Type': 'application/json' },
+            body,
           })
-          .catch(() => {})
-          .finally(finishTransport)
-      },
-      sendSync: allowSynchronous
-        ? (url, body) => {
-            try {
-              const xhr = new XMLHttpRequest()
-              xhr.open('PUT', url, false)
-              xhr.setRequestHeader('Content-Type', 'application/json')
-              xhr.send(body)
-              if (xhr.status >= 200 && xhr.status < 300) {
-                void Promise.resolve(clearCommittedDraft()).finally(() => finishTransport({ processSuccessor: false }))
-              } else {
-                finishTransport({ processSuccessor: false })
+            .then(async (response) => {
+              if (!response.ok) return
+              acceptCommittedSave(await response.json())
+              await clearCommittedDraft()
+              acknowledged = true
+            })
+            .catch(() => {})
+            .finally(() => finishTransport({ processSuccessor: acknowledged, acknowledged }))
+        },
+        sendSync: allowSynchronous
+          ? (url, body) => {
+              try {
+                const xhr = new XMLHttpRequest()
+                xhr.open('PUT', url, false)
+                xhr.setRequestHeader('Content-Type', 'application/json')
+                xhr.send(body)
+                if (xhr.status >= 200 && xhr.status < 300) {
+                  acceptCommittedSave(JSON.parse(xhr.responseText))
+                  void Promise.resolve(clearCommittedDraft()).finally(() =>
+                    finishTransport({ processSuccessor: false })
+                  )
+                } else {
+                  finishTransport({ processSuccessor: false, acknowledged: false })
+                }
+              } catch {
+                finishTransport({ processSuccessor: false, acknowledged: false })
+                // Browser teardown offers no further recovery path.
               }
-            } catch {
-              finishTransport({ processSuccessor: false })
-              // Browser teardown offers no further recovery path.
             }
-          }
-        : undefined,
-    })
-    if (!dispatched) {
-      flushTransportRef.current = null
-      notifyIdle()
-      return
-    }
-    if (queueRef.current === entry) queueRef.current = null
-    if (failedEntryRef.current === entry) failedEntryRef.current = null
-  }, [isTemplate, notifyIdle, processQueue])
+          : undefined,
+      })
+      if (!dispatched) {
+        flushTransportRef.current = null
+        if (wasFailed) failedEntryRef.current = entry
+        else queueRef.current = entry
+        notifyIdle()
+        return
+      }
+    },
+    [clearResetTimer, isTemplate, notifyIdle, processQueue]
+  )
 
   const flushAndWait = useCallback(async () => {
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = null
-    if (!inFlightEntryRef.current && !flushTransportRef.current &&
-        (queueRef.current || failedEntryRef.current)) {
+    if (
+      !inFlightEntryRef.current &&
+      !flushTransportRef.current &&
+      (queueRef.current || failedEntryRef.current)
+    ) {
       void processQueue()
     }
     return waitForIdle()
   }, [processQueue, waitForIdle])
 
+  const beginRestore = useCallback(() => {
+    if (restoreInFlightRef.current || exportInFlightRef.current) {
+      throw new Error('Wait for the current restore or export before restoring a snapshot.')
+    }
+    clearTimeout(timerRef.current)
+    timerRef.current = null
+    // Hold queued drafts until restore succeeds; a failed restore must retain recoverable edits.
+    const entries = [inFlightEntryRef.current, flushTransportRef.current].filter(Boolean)
+    const token = { entries, settled: Promise.all(entries.map((entry) => entry.transportPromise)) }
+    restoreInFlightRef.current = token
+    return token
+  }, [])
+
+  const endRestore = useCallback(
+    (token) => {
+      if (restoreInFlightRef.current !== token) return
+      restoreInFlightRef.current = null
+      if (
+        queueRef.current &&
+        !failedEntryRef.current &&
+        !usePresentationStore.getState().saveConflict
+      ) {
+        void processQueue()
+      }
+      notifyIdle()
+    },
+    [notifyIdle, processQueue]
+  )
+
   const beginExport = useCallback(() => {
-    if (exportInFlightRef.current) return null
+    if (exportInFlightRef.current || restoreInFlightRef.current) return null
     const token = ++exportTokenRef.current
     exportInFlightRef.current = token
     return token
   }, [])
 
-  const endExport = useCallback((token) => {
-    if (exportInFlightRef.current !== token) return
-    exportInFlightRef.current = null
-    if (!failedEntryRef.current && queueRef.current?.routeEpoch === routeEpochRef.current) {
-      const entry = queueRef.current
-      const generation = acceptedGenerationRef.current
-      if (!isTemplate && Number.isSafeInteger(generation) && generation > 0) {
-        const queuedGeneration = entry.snapshot.aggregateGeneration
-        const nextGeneration = Number.isSafeInteger(queuedGeneration)
-          ? Math.max(queuedGeneration, generation)
-          : generation
-        if (nextGeneration !== queuedGeneration) {
-          const snapshot = {
-            ...entry.snapshot,
-            aggregateGeneration: nextGeneration,
-          }
-          entry.snapshot = snapshot
-          const draft = createEditorDraft({
-            snapshot,
-            isTemplate,
-            attemptId: entry.attemptId,
-            draftId: entry.draftId,
-          })
-          entry.draftUpdatedAt = draft.updatedAt
-          entry.draftWritePromise = writeEditorDraft(draft)
-        }
+  const endExport = useCallback(
+    (token) => {
+      if (exportInFlightRef.current !== token) return
+      exportInFlightRef.current = null
+      if (!failedEntryRef.current && queueRef.current?.routeEpoch === routeEpochRef.current) {
+        rebaseEditorSaveEntry(queueRef.current, acceptedGenerationRef.current, isTemplate)
+        void processQueue()
       }
-      void processQueue()
-    }
-    notifyIdle()
-  }, [isTemplate, notifyIdle, processQueue])
+      notifyIdle()
+    },
+    [isTemplate, notifyIdle, processQueue]
+  )
 
   const resetForRoute = useCallback(() => {
     flush({ allowSynchronous: false })
     exportInFlightRef.current = null
+    restoreInFlightRef.current = null
     queueRef.current = null
     failedEntryRef.current = null
     cancelIdleWaiters()
@@ -312,7 +392,8 @@ export function useEditorSaveController({ isTemplate }) {
     if (
       usePresentationStore.getState().saveConflict ||
       (!failedEntryRef.current?.snapshot && !queueRef.current?.snapshot)
-    ) return
+    )
+      return
     clearResetTimer()
     setSaving(true)
     setSaveStatus('saving')
@@ -325,7 +406,15 @@ export function useEditorSaveController({ isTemplate }) {
   }, [])
 
   const discardPendingSave = useCallback(() => {
-    const pendingEntries = [queueRef.current, failedEntryRef.current].filter(Boolean)
+    const pendingEntries = [
+      ...new Set([
+        queueRef.current,
+        failedEntryRef.current,
+        inFlightEntryRef.current,
+        flushTransportRef.current,
+        ...(restoreInFlightRef.current?.entries || []),
+      ]),
+    ].filter((entry) => entry?.routeEpoch === routeEpochRef.current)
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = null
     queueRef.current = null
@@ -341,6 +430,7 @@ export function useEditorSaveController({ isTemplate }) {
       return clearEditorDraft(entry.snapshot.id, isTemplate, identity)
     })
     attemptRef.current += 1
+    routeEpochRef.current += 1
     clearResetTimer()
     setSaving(false)
     setSaveStatus('')
@@ -359,13 +449,16 @@ export function useEditorSaveController({ isTemplate }) {
   return {
     adoptGeneration,
     beginExport,
+    beginRestore,
     clearFailedSave,
     clearResetTimer,
     discardPendingSave,
     endExport,
+    endRestore,
     flush,
     flushAndWait,
     lastSaveError,
+    lastSavedAt,
     resetForRoute,
     retrySave,
     saveStatus,

@@ -4,15 +4,20 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../../utils/api'
 import { usePresentationStore } from '../../stores/presentation-store'
 import { useEditorPersistenceController } from './use-editor-persistence-controller'
+import { geometryProjectionFixture } from '../../../../tests/pptx-semantic/geometry-projection-fixture'
 import {
   clearEditorDraft,
+  createEditorDraft,
   readEditorDraft,
+  prepareEditorDraftBaseline,
+  writeEditorDraft,
 } from '../../utils/editor-draft-store'
 
 vi.mock('../../utils/api', () => ({
   api: {
     getPresentation: vi.fn(),
     getTemplate: vi.fn(),
+    restoreSnapshot: vi.fn(),
     updatePresentation: vi.fn(),
     updateTemplate: vi.fn(),
   },
@@ -28,6 +33,7 @@ vi.mock('../../utils/editor-draft-store', () => ({
     idempotencyKey: snapshot.idempotencyKey || null,
     attemptId,
   })),
+  prepareEditorDraftBaseline: vi.fn().mockResolvedValue(false),
   readEditorDraft: vi.fn().mockResolvedValue(null),
   writeEditorDraft: vi.fn().mockResolvedValue(true),
 }))
@@ -81,9 +87,117 @@ describe('useEditorPersistenceController conflict recovery', () => {
     api.updatePresentation.mockReset()
     api.updateTemplate.mockReset()
     readEditorDraft.mockReset().mockResolvedValue(null)
+    prepareEditorDraftBaseline.mockReset().mockResolvedValue(false)
     clearEditorDraft.mockReset().mockResolvedValue(true)
     usePresentationStore.setState({ saveConflict: null, presentation: null, loading: true })
     api.getPresentation.mockResolvedValue(snapshot('Remote', 1))
+    api.restoreSnapshot.mockReset().mockResolvedValue(snapshot('Restored', 3))
+  })
+
+  it('keeps native import geometry through save, reopen, and snapshot restoration', async () => {
+    const imported = {
+      ...snapshot('Native import'),
+      resolution: { width: 720, height: 540 },
+      _pptxMeta: {
+        originalSize: { width: 9144000, height: 6858000 },
+        geometryPolicy: 'native-aspect-v1',
+      },
+      slides: [{ id: 'slide-1', elements: [{
+        id: 'edge', type: 'shape', shape: 'rect', x: 640, y: 490, width: 80, height: 50,
+      }] }],
+    }
+    const seedHistory = vi.fn()
+    api.getPresentation.mockResolvedValue(imported)
+    api.updatePresentation.mockImplementation(async (_id, body) => ({
+      ...body, aggregateGeneration: 2,
+    }))
+    const first = renderHook(() => useHarness('deck-1', seedHistory))
+    await flushMicrotasks()
+    expect(first.result.current.presentation.resolution).toEqual(imported.resolution)
+    expect(first.result.current.presentation.slides[0].elements).toEqual(imported.slides[0].elements)
+    act(() => first.result.current.setPresentation({
+      ...first.result.current.presentation, title: 'Saved native import',
+    }))
+    act(() => first.result.current.controller.handleManualSave())
+    await flushMicrotasks()
+    const saved = api.updatePresentation.mock.calls[0][1]
+    expect(saved.resolution).toEqual(imported.resolution)
+    expect(saved._pptxMeta).toEqual(imported._pptxMeta)
+    expect(saved.slides[0].elements).toEqual(imported.slides[0].elements)
+    first.unmount()
+
+    api.getPresentation.mockResolvedValue({ ...saved, aggregateGeneration: 2 })
+    const reopened = renderHook(() => useHarness('deck-1', seedHistory))
+    await flushMicrotasks()
+    expect(reopened.result.current.presentation.resolution).toEqual(imported.resolution)
+    expect(reopened.result.current.presentation._pptxMeta).toEqual(imported._pptxMeta)
+    api.restoreSnapshot.mockResolvedValue({ ...imported, aggregateGeneration: 3 })
+    await act(async () => reopened.result.current.controller.restorePresentation('native-snapshot'))
+    expect(reopened.result.current.presentation.resolution).toEqual(imported.resolution)
+    expect(reopened.result.current.presentation._pptxMeta).toEqual(imported._pptxMeta)
+    expect(reopened.result.current.presentation.slides[0].elements).toEqual(imported.slides[0].elements)
+    expect(seedHistory).toHaveBeenLastCalledWith(expect.objectContaining({
+      resolution: imported.resolution, _pptxMeta: imported._pptxMeta,
+    }))
+    reopened.unmount()
+  })
+
+  it('decides recovery and exposes the editor before invoking slow optional preparation', async () => {
+    let finishRead
+    let finishPreparation
+    const draft = { snapshot: snapshot('Interrupted local edit') }
+    api.getPresentation.mockResolvedValue({
+      ...geometryProjectionFixture(), id: 'deck-1', title: 'Source-backed remote', aggregateGeneration: 1,
+    })
+    readEditorDraft.mockImplementationOnce(() => new Promise(resolve => { finishRead = resolve }))
+    const { result, unmount } = renderHook(() => useHarness())
+    prepareEditorDraftBaseline.mockImplementation(() => {
+      // Assert at invocation, not only after its async tail: capture/normalize
+      // in the real function happens synchronously before the first await.
+      expect(result.current.controller.loading).toBe(false)
+      expect(result.current.controller.saveRecovery).toBe(draft)
+      return new Promise(resolve => { finishPreparation = resolve })
+    })
+    await flushMicrotasks()
+    expect(readEditorDraft).toHaveBeenCalledWith('deck-1', false)
+    expect(result.current.controller.loading).toBe(true)
+    expect(prepareEditorDraftBaseline).not.toHaveBeenCalled()
+    await act(async () => finishRead(draft))
+    expect(result.current.controller.loading).toBe(false)
+    expect(result.current.controller.saveRecovery).toBe(draft)
+    expect(prepareEditorDraftBaseline).not.toHaveBeenCalled()
+    await act(async () => vi.advanceTimersByTimeAsync(0))
+    expect(prepareEditorDraftBaseline).toHaveBeenCalledOnce()
+    expect(result.current.controller.loading).toBe(false)
+    expect(result.current.presentation.title).toBe('Source-backed remote')
+    const isCurrent = prepareEditorDraftBaseline.mock.calls[0][2]
+    expect(isCurrent()).toBe(true)
+    act(() => result.current.setPresentation({ ...result.current.presentation, aggregateGeneration: 2 }))
+    expect(isCurrent()).toBe(false)
+    await act(async () => finishPreparation(false))
+    unmount()
+  })
+
+  it.each(['source', 'generation', 'route', 'unmount'])('fences deferred preparation after %s changes', async (change) => {
+    api.getPresentation.mockResolvedValue({
+      ...geometryProjectionFixture(), id: 'deck-1', title: 'Source-backed remote', aggregateGeneration: 1,
+    })
+    const { result, rerender, unmount } = renderHook(({ id }) => useHarness(id), {
+      initialProps: { id: 'deck-1' },
+    })
+    await flushMicrotasks()
+    expect(result.current.controller.loading).toBe(false)
+    if (change === 'unmount') unmount()
+    else if (change === 'route') {
+      api.getPresentation.mockReturnValueOnce(new Promise(() => {}))
+      rerender({ id: 'deck-2' })
+    } else act(() => result.current.setPresentation({
+      ...result.current.presentation,
+      ...(change === 'source' ? { pptxSemantic: {} } : { aggregateGeneration: 2 }),
+    }))
+    await act(async () => vi.advanceTimersByTimeAsync(0))
+    expect(prepareEditorDraftBaseline).not.toHaveBeenCalled()
+    if (change !== 'unmount') unmount()
   })
 
   it('exposes an interrupted draft without replacing the loaded remote state', async () => {
@@ -104,6 +218,146 @@ describe('useEditorPersistenceController conflict recovery', () => {
     expect(result.current.presentation.title).toBe('Remote')
     expect(result.current.controller.saveRecovery).toBe(draft)
     expect(api.updatePresentation).not.toHaveBeenCalled()
+  })
+
+  it.each(['conflict', 'network'])('settles a pre-restore %s failure before restoration and fences it from the next edit', async (failure) => {
+    let rejectOldSave
+    const stale = Object.assign(new Error('stale generation'), {
+      status: 409, reason: 'STALE_GENERATION', currentGeneration: 3,
+    })
+    api.updatePresentation
+      .mockImplementationOnce(() => new Promise((resolve, reject) => { rejectOldSave = reject }))
+      .mockImplementation(async (id, body) => {
+        if (body.aggregateGeneration !== 3) throw stale
+        return { aggregateGeneration: 4 }
+      })
+    const { result } = renderHook(() => useHarness())
+    await flushMicrotasks()
+    act(() => result.current.setPresentation(snapshot('Pre-restore in flight', 1)))
+    await act(async () => vi.advanceTimersByTimeAsync(1500))
+    let pendingRestore
+    await act(async () => { pendingRestore = result.current.controller.restorePresentation('snapshot-1') })
+    expect(api.restoreSnapshot).not.toHaveBeenCalled()
+    await act(async () => {
+      rejectOldSave(failure === 'conflict' ? stale : new Error('old save failed'))
+      await pendingRestore
+    })
+    expect(api.restoreSnapshot).toHaveBeenCalledWith('deck-1', 'snapshot-1')
+    act(() => result.current.setPresentation({ ...result.current.presentation, title: 'After restore' }))
+    await act(async () => vi.advanceTimersByTimeAsync(1500))
+    await flushMicrotasks()
+    expect(usePresentationStore.getState().saveConflict).toBeNull()
+    expect(api.updatePresentation).toHaveBeenLastCalledWith(
+      'deck-1', expect.objectContaining({ title: 'After restore', aggregateGeneration: 3 })
+    )
+    expect(result.current.controller.saveStatus).toBe('saved')
+  })
+
+  it('does not let an unmounted editor restore dismiss the active editor conflict', async () => {
+    const { result, unmount } = renderHook(() => useHarness())
+    await flushMicrotasks()
+    const oldRestore = result.current.controller.restorePresentation
+    unmount()
+    usePresentationStore.getState().setSaveConflict(snapshot('Active editor B', 2, 'deck-2'), 3)
+    const activeConflict = usePresentationStore.getState().saveConflict
+    await act(async () => oldRestore('snapshot-1'))
+    expect(usePresentationStore.getState().saveConflict).toBe(activeConflict)
+    expect(api.restoreSnapshot).not.toHaveBeenCalled()
+  })
+
+  it('discards pre-restore queued edits and saves the next edit against the restored generation', async () => {
+    api.updatePresentation.mockResolvedValue({ aggregateGeneration: 4 })
+    const { result } = renderHook(() => useHarness())
+    await flushMicrotasks()
+    act(() => result.current.setPresentation(snapshot('Obsolete queued edit', 1)))
+
+    await act(async () => result.current.controller.restorePresentation('snapshot-1'))
+    await act(async () => vi.advanceTimersByTimeAsync(1500))
+    expect(result.current.presentation.title).toBe('Restored')
+    expect(api.updatePresentation).not.toHaveBeenCalled()
+
+    act(() => result.current.setPresentation({ ...result.current.presentation, title: 'After restore' }))
+    await act(async () => vi.advanceTimersByTimeAsync(1500))
+    expect(api.updatePresentation).toHaveBeenCalledWith(
+      'deck-1', expect.objectContaining({ title: 'After restore', aggregateGeneration: 3 })
+    )
+  })
+
+  it('ignores a late restore from the prior editor route', async () => {
+    api.getPresentation
+      .mockResolvedValueOnce(snapshot('Remote A', 1, 'deck-1'))
+      .mockResolvedValueOnce(snapshot('Remote B', 2, 'deck-2'))
+    api.updatePresentation.mockResolvedValue({ aggregateGeneration: 3 })
+    const { result, rerender } = renderHook(({ id }) => useHarness(id), {
+      initialProps: { id: 'deck-1' },
+    })
+    await flushMicrotasks()
+    const staleRestore = result.current.controller.restorePresentation
+    rerender({ id: 'deck-2' })
+    await flushMicrotasks()
+    await act(async () => staleRestore('snapshot-1'))
+    expect(result.current.presentation.title).toBe('Remote B')
+    expect(api.restoreSnapshot).not.toHaveBeenCalled()
+    act(() => result.current.setPresentation(snapshot('Edited B', 2, 'deck-2')))
+    await act(async () => vi.advanceTimersByTimeAsync(1500))
+    expect(api.updatePresentation).toHaveBeenCalledWith(
+      'deck-2', expect.objectContaining({ title: 'Edited B', aggregateGeneration: 2 })
+    )
+  })
+
+  it.each(['save settlement', 'restore response', 'restore failure'])('fences an active restore across a route change during %s', async (phase) => {
+    let releasePending, rejectPending
+    const pending = new Promise((resolve, reject) => { releasePending = resolve; rejectPending = reject })
+    api.getPresentation
+      .mockResolvedValueOnce(snapshot('Remote A', 1, 'deck-1'))
+      .mockResolvedValueOnce(snapshot('Remote B', 2, 'deck-2'))
+    if (phase === 'save settlement') api.updatePresentation.mockReturnValueOnce(pending)
+    else api.restoreSnapshot.mockReturnValueOnce(pending)
+    const { result, rerender } = renderHook(({ id }) => useHarness(id), { initialProps: { id: 'deck-1' } })
+    await flushMicrotasks()
+    if (phase === 'save settlement') {
+      act(() => result.current.setPresentation(snapshot('Outstanding A', 1)))
+      await act(async () => vi.advanceTimersByTimeAsync(1500))
+    }
+    let restoring
+    await act(async () => { restoring = result.current.controller.restorePresentation('snapshot-1') })
+    rerender({ id: 'deck-2' })
+    await flushMicrotasks()
+    act(() => usePresentationStore.getState().setSaveConflict(snapshot('Active B', 2, 'deck-2'), 3))
+    const activeConflict = usePresentationStore.getState().saveConflict
+    await act(async () => {
+      if (phase === 'restore failure') rejectPending(new Error('old restore failed'))
+      else releasePending(phase === 'save settlement' ? { aggregateGeneration: 2 } : snapshot('Restored A', 3))
+      expect(await restoring).toBe(false)
+    })
+    expect(result.current.presentation.title).toBe('Remote B')
+    expect(result.current.controller.lastSaveError).toBe('')
+    expect(usePresentationStore.getState().saveConflict).toBe(activeConflict)
+    if (phase === 'save settlement') expect(api.restoreSnapshot).not.toHaveBeenCalled()
+  })
+
+  it('retains the actual recovery draft and local state when restoration fails', async () => {
+    const drafts = await vi.importActual('../../utils/editor-draft-store')
+    createEditorDraft.mockImplementationOnce(drafts.createEditorDraft)
+    writeEditorDraft.mockImplementationOnce(drafts.writeEditorDraft)
+    const restoreError = new Error('restore rejected')
+    const saveError = Object.assign(new Error('save conflict'), {
+      status: 409, reason: 'STALE_GENERATION', currentGeneration: 2,
+    })
+    api.restoreSnapshot.mockRejectedValueOnce(restoreError)
+    api.updatePresentation.mockRejectedValueOnce(saveError)
+    const { result } = renderHook(() => useHarness())
+    await flushMicrotasks()
+    act(() => result.current.setPresentation(snapshot('Recoverable local draft', 1)))
+    await act(async () => {
+      await expect(result.current.controller.restorePresentation('snapshot-1')).rejects.toBe(restoreError)
+    })
+    await flushMicrotasks()
+    expect(result.current.presentation.title).toBe('Recoverable local draft')
+    expect((await drafts.readEditorDraft('deck-1')).snapshot.title).toBe('Recoverable local draft')
+    expect(usePresentationStore.getState().saveConflict.local.title).toBe('Recoverable local draft')
+    expect(clearEditorDraft).not.toHaveBeenCalled()
+    await drafts.clearEditorDraft('deck-1')
   })
 
   it('adopts a validated-export successor generation for the next save', async () => {

@@ -176,6 +176,14 @@ export const api = {
       return r.blob()
     })
   },
+  /** Download the full server-owned project archive, fenced to its saved generation. */
+  downloadProjectArchive: (id, expectedGeneration) =>
+    fetch(`${BASE}/presentations/${id}/project-archive`, {
+      headers: { 'If-Pptx-Generation': String(expectedGeneration) },
+    }).then(async (response) => {
+      if (!response.ok) await handleResponse(response)
+      return response.blob()
+    }),
   getPptxFidelity: (id) =>
     fetch(`${BASE}/presentations/${id}/pptx-fidelity`).then(handleResponse),
   downloadValidatedEditedPptx: (id, generation, idempotencyKey) =>
@@ -211,10 +219,12 @@ export const api = {
       return blob
     }),
 
-  uploadFile: (file) => {
+  uploadFile: (file, { presentationId, purpose, signal } = {}) => {
     const fd = new FormData()
+    if (presentationId) fd.append('presentationId', presentationId)
+    if (purpose) fd.append('purpose', purpose)
     fd.append('file', file)
-    return fetch('/api/upload', { method: 'POST', body: fd }).then(handleResponse)
+    return fetch('/api/upload', { method: 'POST', body: fd, ...(signal ? { signal } : {}) }).then(handleResponse)
   },
   preflightProjectImport: (file, opts = {}) => {
     const fd = new FormData()

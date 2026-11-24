@@ -1,0 +1,245 @@
+import { useRef, useState } from 'react'
+import { act, renderHook } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { useEditorHistoryController } from './use-editor-history-controller'
+import { useKeyboard } from '../use-keyboard'
+import { geometryProjectionFixture } from '../../../../tests/pptx-semantic/geometry-projection-fixture.js'
+import semantic from 'revealjs-shared/src/pptx-semantic-presentation.js'
+import { replaceSemanticRecords } from 'revealjs-shared/src/pptx-semantic-records.js'
+
+function useHistoryHarness() {
+  const [presentation, setPresentation] = useState(null)
+  const history = useEditorHistoryController({
+    presentation,
+    setPresentation,
+    setCurrentSlideIndex: () => {},
+    setVerticalEdit: () => {},
+    resolveHistorySlide: (state) => state.slides[0],
+    selectedElementIdsRef: useRef([]),
+    editingElementIdRef: useRef(null),
+    setSelectedElementIds: () => {},
+    setEditingElementId: () => {},
+    resetContent: () => {},
+  })
+  return { presentation, setPresentation, ...history }
+}
+const deck = (elements) => ({ id: 'deck', slides: [{ id: 'slide', elements }] })
+const focusRoots = []
+function useKeyboardHistoryHarness() {
+  const history = useHistoryHarness()
+  useKeyboard({ onUndo: history.handleUndo, onRedo: history.handleRedo })
+  return history
+}
+function insertedBundles() {
+  const { result } = renderHook(useKeyboardHistoryHarness)
+  const first = [{ id: 'game-a' }, { id: 'trigger-a' }]
+  const second = [...first, { id: 'game-b' }, { id: 'trigger-b' }]
+  act(() => {
+    result.current.seedHistory(deck([]))
+    result.current.setPresentation(deck([]))
+  })
+  act(() => result.current.setPresentation(deck(first)))
+  act(() => {
+    result.current.commitHistoryTransaction()
+    result.current.setPresentation(deck(second))
+  })
+  return { result, first, second }
+}
+function commandTarget(markup) {
+  const root = document.createElement('div')
+  root.innerHTML = markup
+  document.body.append(root)
+  focusRoots.push(root)
+  const target = root.querySelector('button, input, [contenteditable]')
+  target.focus()
+  return target
+}
+function historyChord(target, key) {
+  const event = new KeyboardEvent('keydown', {
+    key,
+    ctrlKey: true,
+    bubbles: true,
+    cancelable: true,
+  })
+  act(() => target.dispatchEvent(event))
+  return event
+}
+afterEach(() => {
+  for (const root of focusRoots.splice(0)) root.remove()
+})
+afterEach(() => vi.useRealTimers())
+
+describe('explicit authoring history boundaries', () => {
+  it('isolates mutable public undo/redo shells from retained snapshots', () => {
+    vi.useFakeTimers()
+    const { result } = renderHook(useHistoryHarness)
+    const original = { ...deck([{ id: 'text', style: { color: 'red' } }]), settings: { values: [1] } }
+    act(() => {
+      result.current.seedHistory(original)
+      result.current.setPresentation(original)
+    })
+    original.settings.values.push(2)
+    act(() => result.current.setPresentation({ ...deck([{ id: 'next' }]), settings: { values: [3] } }))
+    act(() => vi.advanceTimersByTime(500))
+    act(() => result.current.handleUndo())
+    expect(result.current.presentation.settings.values).toEqual([1])
+    result.current.presentation.settings.values.push(99)
+    result.current.presentation.slides[0].elements[0].style.color = 'blue'
+    act(() => result.current.handleRedo())
+    result.current.presentation.settings.values.push(99)
+    act(() => result.current.handleUndo())
+    expect(result.current.presentation.settings.values).toEqual([1])
+    expect(result.current.presentation.slides[0].elements[0].style.color).toBe('red')
+    act(() => result.current.handleRedo())
+    expect(result.current.presentation.settings.values).toEqual([3])
+  })
+
+  it('still rejects a certified but invalid semantic root at restoration', () => {
+    vi.useFakeTimers()
+    const original = semantic.normalizeSemanticPresentation({ ...geometryProjectionFixture(), id: 'certified-history' })
+    const invalid = { ...original, pptxSemantic: replaceSemanticRecords(original.pptxSemantic, {
+      instances: { i1: { ...original.pptxSemantic.instances.i1, slideId: 'unknown' } },
+    }) }
+    const { result } = renderHook(useHistoryHarness)
+    act(() => {
+      result.current.seedHistory(invalid)
+      result.current.setPresentation(invalid)
+    })
+    act(() => result.current.setPresentation(original))
+    expect(() => act(() => result.current.handleUndo())).toThrow()
+    expect(result.current.presentation).toBe(original)
+    expect(result.current.canUndo).toBe(true)
+    expect(result.current.canRedo).toBe(false)
+  })
+  it.each(['undo', 'redo'])('keeps restored native source declarations immutable after %s', (transition) => {
+    vi.useFakeTimers()
+    const original = semantic.normalizeSemanticPresentation({ ...geometryProjectionFixture(), id: 'source-history' })
+    const before = structuredClone(original.pptxSemantic)
+    const { result } = renderHook(useHistoryHarness)
+    act(() => {
+      result.current.seedHistory(original)
+      result.current.setPresentation(original)
+    })
+    act(() => result.current.setPresentation({ ...original, title: 'Authored title' }))
+    act(() => result.current.handleUndo())
+    if (transition === 'redo') act(() => result.current.handleRedo())
+    const restored = result.current.presentation
+    expect(restored.title).toBe(transition === 'undo' ? original.title : 'Authored title')
+    expect(() => { restored.pptxSemantic.definitions.definition.source.nativeId = 'forged' }).toThrow(TypeError)
+    expect(restored.pptxSemantic).toEqual(before)
+    expect(original.pptxSemantic).toEqual(before)
+  })
+  it.each(['undo', 'redo'])('keeps the document and subsequent snapshot capture intact after rejected %s', (transition) => {
+    vi.useFakeTimers()
+    const original = semantic.normalizeSemanticPresentation({ ...geometryProjectionFixture(), id: 'atomic-history' })
+    const invalid = JSON.parse(JSON.stringify(original))
+    invalid.pptxSemantic.schemaVersion = 99
+    const { result } = renderHook(useHistoryHarness)
+    act(() => {
+      result.current.seedHistory(transition === 'undo' ? invalid : original)
+      result.current.setPresentation(transition === 'undo' ? invalid : original)
+    })
+    act(() => result.current.setPresentation(transition === 'undo' ? original : invalid))
+    if (transition === 'redo') act(() => result.current.handleUndo())
+    const before = result.current.presentation
+    expect(() => act(() => result.current[transition === 'undo' ? 'handleUndo' : 'handleRedo']()))
+      .toThrow(/Unsupported semantic schema/)
+    expect(result.current.presentation).toBe(before)
+    expect(result.current.canUndo).toBe(transition === 'undo')
+    expect(result.current.canRedo).toBe(transition === 'redo')
+    act(() => result.current.setPresentation({ ...before, title: 'Edit after rejection' }))
+    expect(result.current.canUndo).toBe(true)
+    expect(result.current.canRedo).toBe(false)
+    act(() => result.current.handleUndo())
+    expect(result.current.presentation).toEqual(before)
+    act(() => result.current.handleRedo())
+    expect(result.current.presentation.title).toBe('Edit after rejection')
+  })
+  it('keeps two rapid multi-element bundle inserts independently undoable and redoable', () => {
+    vi.useFakeTimers()
+    const { result } = renderHook(useHistoryHarness)
+    act(() => {
+      result.current.seedHistory(deck([]))
+      result.current.setPresentation(deck([]))
+    })
+    const first = [{ id: 'game-a' }, { id: 'trigger-a' }]
+    const second = [...first, { id: 'game-b' }, { id: 'trigger-b' }]
+    act(() => result.current.setPresentation(deck(first)))
+    act(() => {
+      result.current.commitHistoryTransaction()
+      result.current.setPresentation(deck(second))
+    })
+    act(() => result.current.handleUndo())
+    expect(result.current.presentation.slides[0].elements).toEqual(first)
+    act(() => result.current.handleUndo())
+    expect(result.current.presentation.slides[0].elements).toEqual([])
+    act(() => result.current.handleRedo())
+    expect(result.current.presentation.slides[0].elements).toEqual(first)
+    act(() => result.current.handleRedo())
+    expect(result.current.presentation.slides[0].elements).toEqual(second)
+  })
+
+  it('does not insert an extra undo stop when a boundary has no pending change', () => {
+    vi.useFakeTimers()
+    const { result } = renderHook(useHistoryHarness)
+    act(() => {
+      result.current.seedHistory(deck([]))
+      result.current.setPresentation(deck([]))
+    })
+    act(() => {
+      result.current.commitHistoryTransaction()
+      result.current.commitHistoryTransaction()
+    })
+    act(() => result.current.setPresentation(deck([{ id: 'bundle' }])))
+    act(() => result.current.handleUndo())
+    expect(result.current.presentation.slides[0].elements).toEqual([])
+    expect(result.current.canUndo).toBe(false)
+    expect(result.current.canRedo).toBe(true)
+  })
+
+  it.each([
+    ['ribbon', '<div data-ribbon-section><button>Insert block</button></div>'],
+    ['quick actions', '<div role="toolbar" aria-label="Quick actions"><button>Save</button></div>'],
+  ])(
+    'undoes and redoes exact independent bundles while a %s command retains focus',
+    (_chrome, markup) => {
+      vi.useFakeTimers()
+      const { result, first, second } = insertedBundles()
+      const target = commandTarget(markup)
+      expect(historyChord(target, 'z').defaultPrevented).toBe(true)
+      expect(result.current.presentation.slides[0].elements).toEqual(first)
+      expect(result.current.canUndo).toBe(true)
+      expect(result.current.canRedo).toBe(true)
+      expect(document.activeElement).toBe(target)
+      expect(historyChord(target, 'y').defaultPrevented).toBe(true)
+      expect(result.current.presentation.slides[0].elements).toEqual(second)
+      expect(result.current.canUndo).toBe(true)
+      expect(result.current.canRedo).toBe(false)
+    }
+  )
+
+  it.each([
+    ['unscoped button', '<button>Activity control</button>'],
+    ['input', '<div data-ribbon-section><input value="Draft"></div>'],
+    [
+      'editable ancestor',
+      '<div data-ribbon-section><div contenteditable="true" tabindex="0">Draft</div></div>',
+    ],
+    ['dialog', '<div data-ribbon-section><dialog open><button>Confirm</button></dialog></div>'],
+    ['form', '<div data-ribbon-section><form><button>Submit</button></form></div>'],
+    ['popover', '<div data-ribbon-section><div popover><button>Choose</button></div></div>'],
+    [
+      'composite widget',
+      '<div data-ribbon-section><div role="menu"><button>Choose</button></div></div>',
+    ],
+  ])('does not change document history or claim native chords inside %s', (_owner, markup) => {
+    vi.useFakeTimers()
+    const { result, second } = insertedBundles()
+    const target = commandTarget(markup)
+    for (const key of ['z', 'y']) {
+      expect(historyChord(target, key).defaultPrevented).toBe(false)
+      expect(result.current.presentation.slides[0].elements).toEqual(second)
+      expect(result.current.canRedo).toBe(false)
+    }
+  })
+})

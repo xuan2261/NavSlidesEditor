@@ -37,4 +37,16 @@ describe('smartGuides', () => {
 
     expect(result).toEqual({ guides: [], snappedX: 250, snappedY: 250 })
   })
+
+  it.each([0.1, 1, 4])('uses a constant screen-space attraction distance at %sx zoom', (scale) => {
+    const target = { id: 'target', x: 10000, y: 20000, width: 1000, height: 1000 }
+    const dragged = { id: 'drag', x: target.x - 5 / scale, y: 12000, width: 1000, height: 1000 }
+    const near = calculateGuides(dragged, [target], 100000, 100000, scale)
+    expect(near.snappedX).toBe(target.x)
+    expect(near.guides).toEqual([{ axis: 'x', position: target.x }])
+    const farX = target.x - 8 / scale
+    const far = calculateGuides({ ...dragged, x: farX }, [target], 100000, 100000, scale)
+    expect(far.snappedX).toBe(farX)
+    expect(far.guides).toEqual([])
+  })
 })

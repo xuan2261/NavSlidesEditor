@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      body {
+        font-family: system-ui;
+        color: white;
+        margin: 0;
+        padding: 20px;
+        background: transparent;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      select {
+        padding: 10px;
+        font-size: 18px;
+        margin-bottom: 30px;
+        background: #2d2d4e;
+        color: white;
+        border: 1px solid #6366f1;
+        border-radius: 4px;
+      }
+      .gate-container {
+        display: flex;
+        align-items: center;
+        gap: 40px;
+      }
+      .inputs {
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+      }
+      .node {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 3px solid #4b5563;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+        user-select: none;
+        transition: 0.2s;
+        background: #1e1e2e;
+      }
+      .node.on {
+        background: #10b981;
+        border-color: #059669;
+        box-shadow: 0 0 15px #10b981;
+      }
+      .node.off {
+        background: #ef4444;
+        border-color: #b91c1c;
+      }
+      .gate {
+        width: 120px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: bold;
+        border: 2px solid white;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        position: relative;
+      }
+      .wire-in-1 {
+        position: absolute;
+        left: -40px;
+        top: 25px;
+        width: 40px;
+        height: 2px;
+        background: #888;
+      }
+      .wire-in-2 {
+        position: absolute;
+        left: -40px;
+        top: 75px;
+        width: 40px;
+        height: 2px;
+        background: #888;
+      }
+      .wire-out {
+        position: absolute;
+        right: -40px;
+        top: 50px;
+        width: 40px;
+        height: 2px;
+        background: #888;
+      }
+      .truth-table {
+        margin-top: 40px;
+        border-collapse: collapse;
+      }
+      .truth-table th,
+      .truth-table td {
+        border: 1px solid #4b5563;
+        padding: 8px 16px;
+        text-align: center;
+      }
+      .truth-table th {
+        background: rgba(255, 255, 255, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <select id="gate-type">
+      <option value="AND">AND Gate</option>
+      <option value="OR">OR Gate</option>
+      <option value="XOR">XOR Gate</option>
+      <option value="NAND">NAND Gate</option>
+      <option value="NOR">NOR Gate</option>
+    </select>
+
+    <div class="gate-container">
+      <div class="inputs">
+        <div class="node off" id="inA" onclick="toggle('inA')">0</div>
+        <div class="node off" id="inB" onclick="toggle('inB')">0</div>
+      </div>
+      <div class="gate">
+        <div class="wire-in-1"></div>
+        <div class="wire-in-2"></div>
+        <span id="gate-label">AND</span>
+        <div class="wire-out"></div>
+      </div>
+      <div class="node off" id="outQ" style="cursor: default">0</div>
+    </div>
+
+    <table class="truth-table">
+      <thead>
+        <tr>
+          <th>A</th>
+          <th>B</th>
+          <th>Q</th>
+        </tr>
+      </thead>
+      <tbody id="tt-body"></tbody>
+    </table>
+
+    <script>
+      let a = 0,
+        b = 0
+      const inA = document.getElementById('inA')
+      const inB = document.getElementById('inB')
+      const outQ = document.getElementById('outQ')
+      const typeSel = document.getElementById('gate-type')
+      const label = document.getElementById('gate-label')
+      const ttBody = document.getElementById('tt-body')
+
+      function toggle(id) {
+        if (id === 'inA') a = 1 - a
+        if (id === 'inB') b = 1 - b
+        update()
+      }
+
+      function calc(a, b, type) {
+        switch (type) {
+          case 'AND':
+            return a & b
+          case 'OR':
+            return a | b
+          case 'XOR':
+            return a ^ b
+          case 'NAND':
+            return 1 - (a & b)
+          case 'NOR':
+            return 1 - (a | b)
+          default:
+            return 0
+        }
+      }
+
+      function update() {
+        const type = typeSel.value
+        label.textContent = type
+        const q = calc(a, b, type)
+
+        inA.className = 'node ' + (a ? 'on' : 'off')
+        inA.textContent = a
+        inB.className = 'node ' + (b ? 'on' : 'off')
+        inB.textContent = b
+        outQ.className = 'node ' + (q ? 'on' : 'off')
+        outQ.textContent = q
+
+        ttBody.innerHTML = ''
+        for (let i = 0; i <= 1; i++) {
+          for (let j = 0; j <= 1; j++) {
+            const res = calc(i, j, type)
+            const tr = document.createElement('tr')
+            if (i === a && j === b) tr.style.background = 'rgba(99,102,241,0.3)'
+            tr.innerHTML = `<td>${i}</td><td>${j}</td><td>${res}</td>`
+            ttBody.appendChild(tr)
+          }
+        }
+      }
+
+      typeSel.addEventListener('change', update)
+      update()
+    </script>
+  </body>
+</html>

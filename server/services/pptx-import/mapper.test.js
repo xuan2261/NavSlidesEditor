@@ -1113,10 +1113,10 @@ describe('pptx mapper', () => {
     ['doughnutChart', 'doughnut'],
     ['radarChart', 'radar'],
     ['scatterChart', 'line'],
-    ['bubbleChart', 'bar'],
+    ['bubbleChart', 'bubble'],
     ['areaChart', 'line'],
-    ['stockChart', 'line'],
-    ['surfaceChart', 'bar'],
+    ['stockChart', 'stock'],
+    ['surfaceChart', 'surface'],
     ['polarAreaChart', 'polarArea'],
   ].forEach(([pptxType, expected]) => {
     it(`chart type mapping: ${pptxType} → ${expected}`, async () => {

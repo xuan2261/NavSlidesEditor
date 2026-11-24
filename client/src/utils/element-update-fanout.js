@@ -35,6 +35,8 @@ const COMMON_KEYS = new Set([
   'fragment',
   'fragmentIndex',
   'fragmentAnimation',
+  'action',
+  'initialVisibility',
 ])
 
 const SHADOW_KEYS = new Set(['shadowX', 'shadowY', 'shadowBlur', 'shadowColor'])
@@ -139,6 +141,21 @@ export function buildConnectorUpdateBatch(elements, updates, { deletedTargetIds 
     if (!update?.id) continue
     const { id, ...partial } = update
     requested.set(id, { ...(requested.get(id) || {}), ...partial })
+  }
+  for (const element of elements || []) {
+    const partial = requested.get(element.id)
+    if (!partial || element.type !== 'line') continue
+    for (const [dimension, points] of [
+      ['width', ['x1', 'x2', 'cx']],
+      ['height', ['y1', 'y2', 'cy']],
+    ]) {
+      if (!Number.isFinite(partial[dimension]) || !(element[dimension] > 0)) continue
+      const ratio = partial[dimension] / element[dimension]
+      for (const point of points) {
+        if (partial[point] === undefined && Number.isFinite(element[point]))
+          partial[point] = element[point] * ratio
+      }
+    }
   }
   const postMutation = (elements || []).map((element) =>
     requested.has(element.id) ? { ...element, ...requested.get(element.id) } : element

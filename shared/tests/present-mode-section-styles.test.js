@@ -11,9 +11,7 @@ describe('Present mode section styles', () => {
     slides: [
       {
         id: 'slide-1',
-        elements: [
-          { ...base, type: 'text', content: '<p>Hello</p>' },
-        ],
+        elements: [{ ...base, type: 'text', content: '<p>Hello</p>' }],
         background: { type: 'color', color: '#000' },
       },
     ],
@@ -55,33 +53,8 @@ describe('Present mode section styles', () => {
     expect(matches.length).toBe(1)
   })
 
-  it('renders HTML embeds with data URL iframe in present mode', () => {
-    const html = renderElement(
-      { ...base, type: 'html', content: '<div>embed</div>' },
-      {},
-      {}
-    )
-    expect(html).toContain('<iframe')
-    expect(html).toContain('src="data:text/html;charset=utf-8,')
-    expect(html).not.toContain('srcdoc=')
-  })
-
-  it('renders HTML embeds with data-pdf-iframe in print mode', () => {
-    const html = renderElement(
-      { ...base, type: 'html', content: '<div>embed</div>' },
-      {},
-      { forPrint: true }
-    )
-    expect(html).toContain('data-pdf-iframe=')
-    expect(html).not.toContain('srcdoc=')
-  })
-
   it('renders LaTeX directly with KaTeX hook in present mode', () => {
-    const html = renderElement(
-      { ...base, type: 'latex', content: 'E=mc^2' },
-      {},
-      {}
-    )
+    const html = renderElement({ ...base, type: 'latex', content: 'E=mc^2' }, {}, {})
     expect(html).toContain('data-math-latex=')
     expect(html).toContain('data-math-display="true"')
     expect(html).not.toContain('<iframe')

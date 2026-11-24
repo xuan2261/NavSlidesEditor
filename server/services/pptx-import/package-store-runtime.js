@@ -24,7 +24,8 @@ async function initializePackageStore({ rootDir }) {
   if (shuttingDown) throw new Error('Package store is shutting down')
   const resolvedRoot = path.resolve(rootDir)
   if (activeStore) {
-    if (activeRoot !== resolvedRoot) throw new Error('Package store is already initialized elsewhere')
+    if (activeRoot !== resolvedRoot)
+      throw new Error('Package store is already initialized elsewhere')
     return activeStore
   }
   if (initialization) {
@@ -39,14 +40,7 @@ async function initializePackageStore({ rootDir }) {
     .then(async (store) => {
       await store.acquireWriter()
       activeStore = store
-      try {
-        await drainPackageCompatibilityOutbox()
-        return store
-      } catch (error) {
-        activeStore = null
-        await store.releaseWriter().catch(() => {})
-        throw error
-      }
+      return store
     })
     .catch((error) => {
       activeRoot = null
@@ -104,29 +98,65 @@ async function withPackageStore(action) {
   }
 }
 
-/**
- * Drain outbox with per-record isolation: a poisoned write is dead-lettered and
- * does not prevent acknowledging healthy writes or taking the store offline.
- */
-async function drainPackageCompatibilityOutbox() {
+function isCapturedWriteCurrent(store, write) {
+  return store.isCompatibilityWriteCurrent(write)
+}
+
+async function withCompatibilityDrain(action) {
+  if (typeof action !== 'function') throw new TypeError('Compatibility drain action is required')
   const previous = compatibilityDrainTail
   let release
-  compatibilityDrainTail = new Promise((resolve) => { release = resolve })
+  compatibilityDrainTail = new Promise((resolve) => {
+    release = resolve
+  })
   await previous
   try {
-    const writes = await withPackageStore((store) => snapshotCompatibilityOutbox(store))
+    return await action()
+  } finally {
+    release()
+  }
+}
+
+/** Isolate poisoned writes without acquiring package serialization under JSON locks. */
+async function drainPackageCompatibilityOutbox({ signal } = {}) {
+  return withCompatibilityDrain(async () => {
+    signal?.throwIfAborted()
+    const writes = await withPackageStore((store) => {
+      signal?.throwIfAborted()
+      return snapshotCompatibilityOutbox(store)
+    })
     if (!writes.length) return 0
 
+    const readableStore = await getReadablePackageStore()
     const applied = []
+    const obsolete = []
     const poisoned = []
+    const candidateWrites = []
     for (const write of writes) {
+      if (isCapturedWriteCurrent(readableStore, write)) {
+        candidateWrites.push(write)
+      } else {
+        obsolete.push(write)
+      }
+    }
+    if (candidateWrites.length === 1) {
+      const write = candidateWrites[0]
+      signal?.throwIfAborted()
       try {
-        await withPresentations((presentations) => {
-          applyCompatibilityWrites(presentations, [write])
-        })
-        applied.push(write)
+        const currentStore = await getReadablePackageStore()
+        const didApply = await withPresentations(
+          (presentations) => {
+            signal?.throwIfAborted()
+            if (!isCapturedWriteCurrent(currentStore, write)) return false
+            applyCompatibilityWrites(presentations, [write])
+            return true
+          },
+          { signal }
+        )
+        if (didApply) applied.push(write)
+        else obsolete.push(write)
       } catch (error) {
-        // Preserve full write for repair/replay; only attach bounded error metadata.
+        if (signal?.aborted) throw error
         poisoned.push({
           write: structuredClone(write),
           id: write?.id,
@@ -136,31 +166,83 @@ async function drainPackageCompatibilityOutbox() {
           deadLetteredAt: new Date().toISOString(),
         })
       }
+    } else if (candidateWrites.length > 1) {
+      signal?.throwIfAborted()
+      try {
+        const currentStore = await getReadablePackageStore()
+        await withPresentations(
+          (presentations) => {
+            signal?.throwIfAborted()
+            const stillCurrent = candidateWrites.filter((w) =>
+              isCapturedWriteCurrent(currentStore, w)
+            )
+            applyCompatibilityWrites(presentations, stillCurrent)
+            return true
+          },
+          { signal }
+        )
+        const postStore = await getReadablePackageStore()
+        for (const write of candidateWrites) {
+          if (isCapturedWriteCurrent(postStore, write)) applied.push(write)
+          else obsolete.push(write)
+        }
+      } catch (error) {
+        if (signal?.aborted) throw error
+        for (const write of candidateWrites) {
+          try {
+            const currentStore = await getReadablePackageStore()
+            const didApply = await withPresentations(
+              (presentations) => {
+                if (!isCapturedWriteCurrent(currentStore, write)) return false
+                applyCompatibilityWrites(presentations, [write])
+                return true
+              },
+              { signal }
+            )
+            if (didApply) applied.push(write)
+            else obsolete.push(write)
+          } catch (innerError) {
+            poisoned.push({
+              write: structuredClone(write),
+              id: write?.id,
+              presentationId: write?.presentationId,
+              code: innerError?.code || 'COMPATIBILITY_APPLY_FAILED',
+              message: String(innerError?.message || innerError).slice(0, 240),
+              deadLetteredAt: new Date().toISOString(),
+            })
+          }
+        }
+      }
     }
 
-    if (applied.length) {
-      await withPackageStore((store) => acknowledgeCompatibilityOutbox(store, applied))
+    if (applied.length || obsolete.length) {
+      await withPackageStore((store) => {
+        signal?.throwIfAborted()
+        return acknowledgeCompatibilityOutbox(store, [...applied, ...obsolete], { signal })
+      })
     }
     if (poisoned.length) {
       await withPackageStore(async (store) => {
-        await store.mutate((next) => {
-          if (!Array.isArray(next.compatibilityDeadLetter)) next.compatibilityDeadLetter = []
-          for (const item of poisoned) {
-            if (next.compatibilityDeadLetter.some((entry) => entry.id === item.id)) continue
-            next.compatibilityDeadLetter.push(item)
-          }
-          // Remove poisoned writes from active outbox so startup is not permanently blocked.
-          const poisonedIds = new Set(poisoned.map((item) => item.id).filter(Boolean))
-          next.compatibilityOutbox = (next.compatibilityOutbox || []).filter(
-            (record) => !poisonedIds.has(record.id)
-          )
-        })
+        signal?.throwIfAborted()
+        await store.mutate(
+          (next) => {
+            if (!Array.isArray(next.compatibilityDeadLetter)) next.compatibilityDeadLetter = []
+            for (const item of poisoned) {
+              if (next.compatibilityDeadLetter.some((entry) => entry.id === item.id)) continue
+              next.compatibilityDeadLetter.push(item)
+            }
+            // Remove poisoned writes from active outbox so startup is not permanently blocked.
+            const poisonedIds = new Set(poisoned.map((item) => item.id).filter(Boolean))
+            next.compatibilityOutbox = (next.compatibilityOutbox || []).filter(
+              (record) => !poisonedIds.has(record.id)
+            )
+          },
+          { signal }
+        )
       })
     }
     return applied.length
-  } finally {
-    release()
-  }
+  })
 }
 
 async function shutdownPackageStore() {
@@ -191,4 +273,5 @@ module.exports = {
   initializePackageStore,
   shutdownPackageStore,
   withPackageStore,
+  withCompatibilityDrain,
 }

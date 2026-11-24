@@ -3,6 +3,7 @@ import CanvasGridOverlay from './canvas/canvas-grid-overlay'
 import CanvasRulers from './canvas/canvas-rulers'
 import CanvasFooterOverlay from './canvas/canvas-footer-overlay-with-section-and-page-number'
 import { useUIStore } from '../stores/ui-store'
+import { useOutputPixelScale } from '../hooks/use-output-pixel-scale'
 import CanvasContextMenu from './canvas/canvas-right-click-context-menu-for-slide-elements'
 import {
   snapWithRef,
@@ -18,8 +19,10 @@ import {
 import useCanvasPointerInteraction from './canvas/use-canvas-pointer-interaction'
 import useCanvasRubberBandSelection from './canvas/use-canvas-rubber-band-drag-selection'
 import CanvasElement from './canvas/canvas-element-wrapper'
+import CanvasSemanticInstanceTree from './canvas/canvas-semantic-instance-tree'
+import { semanticElement } from '../utils/pptx-semantic-geometry-bridge'
+import { semanticInstance } from 'revealjs-shared/src/pptx-semantic-records.js'
 import { cn } from '../lib/utils'
-import { isInteractiveKeyboardTarget } from '../utils/interactive-keyboard-target'
 import {
   DEFAULT_TOKENS,
   mergeTokens,
@@ -35,6 +38,19 @@ import {
 } from '../utils/active-slide-selection'
 import { computeCropCommitGeometry } from './canvas/image-crop-geometry'
 import { usePinchZoom } from '../hooks/use-pinch-zoom'
+import { PptxSourceFontProvider } from '../contexts/pptx-source-font-context'
+
+function semanticTarget(document, element, selectedIds, childTarget) {
+  if (!document || !element.pptxInstanceId || childTarget || selectedIds.includes(element.id))
+    return element
+  let instance = semanticInstance(document, element.pptxInstanceId)
+  let target = instance
+  while (instance && instance.parentInstanceId !== null && instance.parentInstanceId !== undefined) {
+    instance = semanticInstance(document, instance.parentInstanceId)
+    if (instance && !instance.lineage?.paintOnly) target = instance
+  }
+  return target.id === element.pptxInstanceId ? element : semanticElement(document, target.id)
+}
 
 function getActiveSlideNavigationIdentity(slide) {
   return JSON.stringify([
@@ -69,6 +85,10 @@ let _iconPathsCache = null
 export default function SlideCanvas({
   editor,
   slide,
+  pptxSemantic,
+  pptxFieldContext,
+  presentationId,
+  fontRevision,
   designTokens,
   selectedElementIds,
   editingElementId,
@@ -99,7 +119,7 @@ export default function SlideCanvas({
   onUpdateElement,
   onUpdateElements,
   onDeleteElement,
-  onDeleteSelectedElements,
+  onDeleteSelectedElements: _onDeleteSelectedElements,
   onAddImage,
   onAddMedia,
   onOpenHtmlEditor,
@@ -110,6 +130,8 @@ export default function SlideCanvas({
   onCut,
   onPaste,
   onDuplicate,
+  onGroup,
+  onUngroup,
   onBlockedAction,
   masterEdit = false,
   safeArea,
@@ -120,6 +142,7 @@ export default function SlideCanvas({
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
   const scale = useUIStore((s) => s.zoom)
+  const outputPixelScale = useOutputPixelScale(scale)
   const setScale = useUIStore((s) => s.setAutoFitZoom)
   const setManualScale = useUIStore((s) => s.setZoom)
   const userZoomMode = useUIStore((s) => s.userZoomMode)
@@ -200,6 +223,7 @@ export default function SlideCanvas({
       gridSizeRef,
       smartGuidesRef,
       slideRef,
+      pptxSemantic,
       selectedElementIdsRef,
       draggingRef,
       pendingDragRef,
@@ -272,7 +296,6 @@ export default function SlideCanvas({
         }
         return
       }
-      const shortcutTargetOwnsKeyboard = isInteractiveKeyboardTarget(document.activeElement)
       if (editingElementId) {
         if (e.key === 'Escape') {
           onStopEdit()
@@ -289,68 +312,15 @@ export default function SlideCanvas({
         return // Block other keys when editing
       }
       if (selectedElementIds.length > 0) {
-        if (
-          (e.key === 'Delete' || e.key === 'Backspace') &&
-          !shortcutTargetOwnsKeyboard &&
-          !slideRef.current?.locked
-        ) {
-          onDeleteSelectedElements()
-          e.preventDefault()
-        }
         if (e.key === 'Escape') {
           onToggleSelectElement(null, false)
           e.preventDefault()
         }
-        // ── Clipboard shortcuts — delegated to command callbacks ────────────
-        // Focused controls, contenteditable regions, dialogs/popovers, and
-        // media controls own clipboard keystrokes.
-        if ((e.ctrlKey || e.metaKey) && !shortcutTargetOwnsKeyboard) {
-          if (e.key === 'c' || e.key === 'C') {
-            onCopy?.()
-            e.preventDefault()
-          }
-          if (e.key === 'x' || e.key === 'X') {
-            onCut?.()
-            e.preventDefault()
-          }
-          if (e.key === 'v' || e.key === 'V') {
-            onPaste?.()
-            e.preventDefault()
-          }
-          if (e.key === 'd' || e.key === 'D') {
-            onDuplicate?.()
-            e.preventDefault()
-          }
-        }
-      }
-
-      // Allow paste even when no element is selected (e.g. after slide change).
-      // Locked slide blocks paste-on-empty.
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        (e.key === 'v' || e.key === 'V') &&
-        selectedElementIds.length === 0 &&
-        !shortcutTargetOwnsKeyboard &&
-        !slideRef.current?.locked
-      ) {
-        onPaste?.()
-        e.preventDefault()
       }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [
-    selectedElementIds,
-    editingElementId,
-    cropMode,
-    onStopEdit,
-    onToggleSelectElement,
-    onDeleteSelectedElements,
-    onCopy,
-    onCut,
-    onPaste,
-    onDuplicate,
-  ])
+  }, [selectedElementIds, editingElementId, cropMode, onStopEdit, onToggleSelectElement])
 
   // Close context menu on outside click
   useEffect(() => {
@@ -444,14 +414,15 @@ export default function SlideCanvas({
   const chartFallbackColor =
     slide?.background?.type === 'fx' ? '#0d0221' : resolvedTokens.colors?.bg
   const chartBackground = resolveChartBackground(slide?.background, chartFallbackColor)
+  const sourceElements = slide?.elements
   const renderElements = useMemo(() => {
-    const previewed = (slide?.elements || []).map((element) => ({
+    const previewed = (sourceElements || []).map((element) => ({
       ...element,
       ...(elementPreview[element.id] || {}),
     }))
     const { effectiveLines } = resolveConnectorGeometry(previewed)
     return previewed.map((element) => effectiveLines.get(element.id) || element)
-  }, [elementPreview, slide?.elements])
+  }, [elementPreview, sourceElements])
 
   const canvasStyle = {
     width: SLIDE_W,
@@ -460,6 +431,7 @@ export default function SlideCanvas({
     transformOrigin: 'center center',
     flexShrink: 0,
     position: 'relative',
+    overflow: pptxSemantic ? 'hidden' : undefined,
     fontSize: '16px',
     outline: dragOver ? '3px dashed #6366f1' : 'none',
     ...tokensToStyleObject(resolvedTokens),
@@ -467,6 +439,8 @@ export default function SlideCanvas({
   }
 
   return (
+    <PptxSourceFontProvider presentationId={presentationId} pptxSemantic={pptxSemantic}
+      fontRevision={fontRevision}>
     <div
       ref={containerRef}
       data-zoom={scale}
@@ -482,11 +456,20 @@ export default function SlideCanvas({
       {...pinchProps}
     >
       {/* Rulers */}
-      {showRulers && <CanvasRulers scale={scale} onAddGuide={onAddGuide} />}
+      {showRulers && (
+        <CanvasRulers
+          scale={scale}
+          slideWidth={SLIDE_W}
+          slideHeight={SLIDE_H}
+          onAddGuide={onAddGuide}
+        />
+      )}
       <div
         ref={canvasRef}
         data-testid="canvas-area"
         className={cn('slide-canvas shadow-lg')}
+        tabIndex={-1}
+        aria-label="Slide canvas"
         style={canvasStyle}
         onClick={(e) => {
           if (cropMode) return
@@ -535,8 +518,23 @@ export default function SlideCanvas({
 
         {/* Grid overlay */}
         <CanvasGridOverlay showGrid={showGrid} gridSize={gridSize} />
-        {masterEdit && safeArea && <div aria-label="Master safe area guide" className="absolute pointer-events-none border border-dashed border-amber-400" style={{ left: safeArea.x, top: safeArea.y, width: safeArea.width, height: safeArea.height, zIndex: 996 }}><span className="absolute -top-5 left-0 whitespace-nowrap text-xs text-amber-300">Safe area guide — content outside may be cropped</span></div>}
-
+        {masterEdit && safeArea && (
+          <div
+            aria-label="Master safe area guide"
+            className="absolute pointer-events-none border border-dashed border-amber-400"
+            style={{
+              left: safeArea.x,
+              top: safeArea.y,
+              width: safeArea.width,
+              height: safeArea.height,
+              zIndex: 996,
+            }}
+          >
+            <span className="absolute -top-5 left-0 whitespace-nowrap text-xs text-amber-300">
+              Safe area guide — content outside may be cropped
+            </span>
+          </div>
+        )}
 
         {/* Persistent guide lines */}
         {persistentGuides.map((guide, i) => (
@@ -586,17 +584,20 @@ export default function SlideCanvas({
           />
         )}
 
-        {renderElements
-          .filter((el) => !(el.hidden || false)) // hide elements with hidden:true
-          .slice()
-          .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
-          .map((element) => {
-            const fixedMasterElement = !masterEdit && String(element.id || '').startsWith('layout-fixed:')
+        <CanvasSemanticInstanceTree
+          document={pptxSemantic}
+          slide={{ ...slide, elements: renderElements }}
+          preview={elementPreview}
+          fieldContext={pptxFieldContext}
+          renderElement={(element) => {
+            const fixedMasterElement =
+              !masterEdit && String(element.id || '').startsWith('layout-fixed:')
             const previewedElement = masterEdit ? { ...element, locked: false } : element
             return (
               <CanvasElement
                 key={element.id}
                 element={previewedElement}
+                outputPixelScale={outputPixelScale}
                 isSelected={selectedElementIds.includes(element.id)}
                 selectedElementCount={selectedElementIds.length}
                 isEditing={editingElementId === element.id}
@@ -614,17 +615,41 @@ export default function SlideCanvas({
                   if (cropMode || editingElementId === element.id || pinchActiveRef.current) return
                   if (element.locked && !masterEdit && type === 'move') return
                   e.stopPropagation()
-                  const dragIds = resolvePointerDownSelection({
-                    activeSlide: slide,
-                    elementId: element.id,
-                    currentSelectionIds: selectedElementIdsRef.current,
-                    shiftKey: e.shiftKey,
-                    type,
-                  })
-                  if (!startElementDrag(e, element.id, type, handle, slide, scale, dragIds)) return
+                  const dragElement = semanticTarget(
+                    pptxSemantic,
+                    element,
+                    selectedElementIdsRef.current,
+                    e.altKey
+                  )
+                  const extraTargets = pptxSemantic
+                    ? [dragElement.id, ...selectedElementIdsRef.current]
+                        .filter(
+                          (id, i, ids) =>
+                            ids.indexOf(id) === i &&
+                            !slide.elements.some((el) => el.id === id) &&
+                            semanticInstance(pptxSemantic, id)?.slideId === slide.id
+                        )
+                        .map((id) => semanticElement(pptxSemantic, id))
+                    : []
+                  const dragSlide = pptxSemantic
+                    ? { ...slide, elements: [...slide.elements, ...extraTargets] }
+                    : slide
+                  const dragIds = pptxSemantic
+                    ? selectedElementIdsRef.current.includes(dragElement.id) || e.shiftKey
+                      ? selectedElementIdsRef.current
+                      : [dragElement.id]
+                    : resolvePointerDownSelection({
+                        activeSlide: slide,
+                        elementId: element.id,
+                        currentSelectionIds: selectedElementIdsRef.current,
+                        shiftKey: e.shiftKey,
+                        type,
+                      })
+                  if (!startElementDrag(e, dragElement.id, type, handle, dragSlide, scale, dragIds))
+                    return
                   if (dragIds !== selectedElementIdsRef.current) {
                     selectedElementIdsRef.current = dragIds
-                    onToggleSelectElement(element.id, false)
+                    onToggleSelectElement(dragElement.id, false)
                   }
                 }}
                 onClick={(e) => {
@@ -642,7 +667,10 @@ export default function SlideCanvas({
                     ) {
                       onStartEdit(element.id)
                     } else {
-                      onToggleSelectElement(element.id, e.shiftKey)
+                      onToggleSelectElement(
+                        element.id,
+                        e.shiftKey
+                      )
                     }
                   }
                 }}
@@ -662,16 +690,22 @@ export default function SlideCanvas({
                   if (fixedMasterElement) return
                   e.preventDefault()
                   e.stopPropagation()
-                  const contextSelectionIds = selectedElementIdsRef.current.includes(element.id)
+                  const target = semanticTarget(
+                    pptxSemantic,
+                    element,
+                    selectedElementIdsRef.current,
+                    e.altKey
+                  )
+                  const contextSelectionIds = selectedElementIdsRef.current.includes(target.id)
                     ? selectedElementIdsRef.current
-                    : expandSelectionIdsForGroups(slide, [element.id])
-                  if (!selectedElementIdsRef.current.includes(element.id)) {
+                    : expandSelectionIdsForGroups(slide, [target.id])
+                  if (!selectedElementIdsRef.current.includes(target.id)) {
                     selectedElementIdsRef.current = contextSelectionIds
-                    onToggleSelectElement(element.id, false)
+                    onToggleSelectElement(target.id, false)
                   }
                   setContextMenu({
-                    elementId: element.id,
-                    elementType: element.type,
+                    elementId: target.id,
+                    elementType: target.type,
                     contextSelectionIds,
                     x: e.clientX,
                     y: e.clientY,
@@ -700,7 +734,8 @@ export default function SlideCanvas({
                 onStartEdit={onStartEdit}
               />
             )
-          })}
+          }}
+        />
 
         {/* Footer overlay */}
         <CanvasFooterOverlay
@@ -745,15 +780,19 @@ export default function SlideCanvas({
       <CanvasContextMenu
         contextMenu={contextMenu}
         slide={slide}
+        pptxSemantic={pptxSemantic}
         onCopy={onCopy}
         onCut={onCut}
         onPaste={onPaste}
         onDuplicate={onDuplicate}
+        onGroup={pptxSemantic ? onGroup : undefined}
+        onUngroup={pptxSemantic ? onUngroup : undefined}
         onDeleteElement={onDeleteElement}
         onUpdateElement={onUpdateElement}
         onStartCrop={startCrop}
         onClose={() => setContextMenu(null)}
       />
     </div>
+    </PptxSourceFontProvider>
   )
 }

@@ -1,12 +1,14 @@
-import { useCallback, useRef } from 'react'
-import { exportPDF, downloadHTML, generateRevealHTML } from '../utils/generateHTML'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  exportPDF,
+  generateRevealHTML,
+  prepareSemanticOutputResources,
+  reserveOutputWindow,
+  validateSemanticOutputHTML,
+} from '../utils/generateHTML'
 import { generateOfflineHTML } from '../utils/offlineExport'
 import { exportProject } from '../utils/export-project'
-import {
-  parseProjectFile,
-  rehydrateImportedPresentation,
-  validateProjectFile,
-} from '../utils/import-project'
+import { useProjectImport } from './use-project-import'
 import { api } from '../utils/api'
 import { usePresentationStore } from '../stores/presentation-store'
 import { showError, showNotice } from '../utils/app-feedback'
@@ -51,30 +53,100 @@ function downloadBlob(blob, filename) {
  * same alert/console error UX as the inline closures.
  *
  * @param {Object} presentation current presentation snapshot
- * @returns {{onExportPDF, onExportPPTX, onExportHTML, onExportOffline,
- *   onExportProject, onOpenProject}}
+ * @returns {{onExportPDF, onExportPPTX, onExportHTML, onExportProject, onOpenProject}}
  */
 export function useExportActions(
   presentation,
   { beginExport, endExport, flushPendingSave, onAggregateGeneration } = {}
 ) {
-  const pptxCleanStateRef = useRef({ presentationId: null, fingerprint: '', locallyEdited: false })
-  const cleanState = pptxCleanStateRef.current
-  if (cleanState.presentationId !== presentation?.id) {
-    cleanState.presentationId = presentation?.id || null
-    cleanState.fingerprint =
-      presentation?.pptxOriginal || presentation?.pptxSourceAvailable
-        ? pptxContentFingerprint(presentation)
-        : ''
-    cleanState.locallyEdited = false
-  } else if (
-    cleanState.fingerprint &&
-    cleanState.fingerprint !== pptxContentFingerprint(presentation)
+  const [staticExportTeacherReveal, onStaticExportTeacherRevealChange] = useState(false)
+  const outputControllerRef = useRef(null)
+  useEffect(() => () => outputControllerRef.current?.abort(), [presentation?.id])
+  const startOutput = useCallback(() => {
+    outputControllerRef.current?.abort()
+    const controller = new AbortController()
+    outputControllerRef.current = controller
+    return controller.signal
+  }, [])
+  const savedOutputSnapshot = useCallback(
+    async (signal) => {
+      if (usePresentationStore.getState().saveConflict)
+        throw new Error('Resolve the save conflict before exporting')
+      if (typeof flushPendingSave === 'function' && !(await flushPendingSave()))
+        throw new Error('Unable to save current edits before export')
+      if (signal.aborted) throw new DOMException('Output cancelled', 'AbortError')
+      if (usePresentationStore.getState().saveConflict)
+        throw new Error('Resolve the save conflict before exporting')
+      if (!presentation?.pptxSemantic) return presentation
+      if (!presentation.id) throw new Error('Semantic output requires a saved presentation')
+      const snapshot = await api.getPresentation(presentation.id)
+      if (signal.aborted) throw new DOMException('Output cancelled', 'AbortError')
+      if (usePresentationStore.getState().saveConflict)
+        throw new Error('Resolve the save conflict before exporting')
+      if (snapshot?.id !== presentation.id || !snapshot.pptxSemantic)
+        throw new Error('Saved semantic snapshot is unavailable')
+      return snapshot
+    },
+    [flushPendingSave, presentation]
+  )
+  const pptxCleanStateRef = useRef(null)
+  if (
+    !pptxCleanStateRef.current ||
+    pptxCleanStateRef.current.presentationId !== presentation?.id ||
+    pptxCleanStateRef.current.generation !== presentation?.aggregateGeneration
   ) {
-    cleanState.locallyEdited = true
+    // Capture content, not a mutable deck reference. Ordinary renders must not
+    // serialize the deck; exact comparison belongs at the export boundary.
+    // Replace the baseline so older callbacks retain their own generation.
+    pptxCleanStateRef.current = {
+      presentationId: presentation?.id,
+      generation: presentation?.aggregateGeneration,
+      fingerprint:
+        presentation?.pptxOriginal || presentation?.pptxSourceAvailable
+          ? pptxContentFingerprint(presentation)
+          : '',
+      locallyEdited: false,
+    }
   }
+  const cleanState = pptxCleanStateRef.current
 
-  const onExportPDF = useCallback(() => exportPDF(presentation), [presentation])
+  const onExportPDF = useCallback(async () => {
+    // Preserve the synchronous legacy caller and reserve semantic popups in the
+    // click gesture, before the save ACK or font request can yield.
+    if (!presentation?.pptxSemantic)
+      return exportPDF(presentation, { teacherReveal: staticExportTeacherReveal === true })
+    const signal = startOutput()
+    let popup,
+      exportToken = null
+    const cancelReservedWindow = () => popup?.close()
+    try {
+      popup = reserveOutputWindow()
+      signal.addEventListener('abort', cancelReservedWindow, { once: true })
+      const snapshot = await savedOutputSnapshot(signal)
+      if (typeof beginExport === 'function') {
+        exportToken = beginExport()
+        if (exportToken === null) throw new Error('An export is already in progress')
+      }
+      return await exportPDF(snapshot, {
+        popup,
+        signal,
+        teacherReveal: staticExportTeacherReveal === true,
+      })
+    } catch (error) {
+      popup?.close()
+      if (!signal.aborted) showError('PDF export failed: ' + error.message)
+    } finally {
+      signal.removeEventListener('abort', cancelReservedWindow)
+      if (exportToken !== null && typeof endExport === 'function') endExport(exportToken)
+    }
+  }, [
+    presentation,
+    staticExportTeacherReveal,
+    startOutput,
+    savedOutputSnapshot,
+    beginExport,
+    endExport,
+  ])
 
   const onExportPPTX = useCallback(async () => {
     try {
@@ -83,6 +155,13 @@ export function useExportActions(
         Number.isSafeInteger(presentation.aggregateGeneration)
           ? presentation.aggregateGeneration
           : undefined
+      if (
+        !cleanState.locallyEdited &&
+        cleanState.fingerprint &&
+        cleanState.fingerprint !== pptxContentFingerprint(presentation)
+      ) {
+        cleanState.locallyEdited = true
+      }
       const canDownloadOriginal = Boolean(
         presentation?.id &&
         (presentation?.pptxSourceAvailable ||
@@ -111,7 +190,9 @@ export function useExportActions(
         }
       }
       const { exportToPptx } = await import('../utils/exportPptx')
-      const warnings = await exportToPptx(presentation)
+      const warnings = await exportToPptx(presentation, {
+        teacherReveal: staticExportTeacherReveal === true,
+      })
       globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__ = warnings.exportReport || null
       if (warnings.length)
         showNotice(`PPTX export completed with warnings:\n\n${warnings.join('\n')}`)
@@ -119,7 +200,7 @@ export function useExportActions(
       console.error('PPTX export failed:', err)
       showError('PPTX export failed: ' + err.message)
     }
-  }, [presentation, cleanState])
+  }, [presentation, cleanState, staticExportTeacherReveal])
 
   const onDownloadPptxOriginal = useCallback(async () => {
     try {
@@ -135,7 +216,9 @@ export function useExportActions(
   const onGenerateReconstructedPPTX = useCallback(async () => {
     try {
       const { exportToPptx } = await import('../utils/exportPptx')
-      const warnings = await exportToPptx(presentation)
+      const warnings = await exportToPptx(presentation, {
+        teacherReveal: staticExportTeacherReveal === true,
+      })
       globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__ = warnings.exportReport || null
       if (warnings.length)
         showNotice(`PPTX export completed with warnings:\n\n${warnings.join('\n')}`)
@@ -143,7 +226,7 @@ export function useExportActions(
       console.error('Reconstructed PPTX export failed:', err)
       showError('Reconstructed PPTX export failed: ' + err.message)
     }
-  }, [presentation])
+  }, [presentation, staticExportTeacherReveal])
 
   const onExportValidatedEditedRevision = useCallback(async () => {
     let exportToken = null
@@ -190,71 +273,103 @@ export function useExportActions(
   }, [beginExport, endExport, flushPendingSave, onAggregateGeneration, presentation])
 
   const onExportHTML = useCallback(async () => {
+    const signal = startOutput()
+    let exportToken = null
     try {
-      downloadHTML(presentation)
-    } catch (err) {
-      console.error('HTML export failed:', err)
-      showError('HTML export failed: ' + err.message)
-    }
-  }, [presentation])
-
-  const onExportOffline = useCallback(async () => {
-    try {
-      const html = generateRevealHTML(presentation)
-      const offline = await generateOfflineHTML(html, { strictRequiredAssets: true })
-      const blob = new Blob([offline], { type: 'text/html' })
+      const snapshot = presentation?.pptxSemantic ? await savedOutputSnapshot(signal) : presentation
+      if (presentation?.pptxSemantic && typeof beginExport === 'function') {
+        exportToken = beginExport()
+        if (exportToken === null) throw new Error('An export is already in progress')
+      }
+      const semanticOutputResources = snapshot?.pptxSemantic
+        ? await prepareSemanticOutputResources(snapshot, { signal })
+        : null
+      if (signal.aborted) return
+      const html = generateRevealHTML(snapshot, {
+        portable: true,
+        ...(semanticOutputResources ? { semanticOutputResources } : {}),
+      })
+      const offline = await generateOfflineHTML(html, {
+        generatedDocument: true,
+        strictRequiredAssets: true,
+        baseUrl: window.location.href,
+      })
+      if (signal.aborted) return
+      if (snapshot?.pptxSemantic) await validateSemanticOutputHTML(offline, { signal })
+      if (signal.aborted) return
       downloadBlob(
-        blob,
-        `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}_offline.html`
+        new Blob([offline], { type: 'text/html' }),
+        `${(snapshot.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.html`
       )
     } catch (err) {
-      console.error('Offline export failed:', err)
-      showError('Offline export failed: ' + err.message)
+      if (!signal.aborted) {
+        console.error('HTML export failed:', err)
+        showError('HTML export failed: ' + err.message)
+      }
+    } finally {
+      if (exportToken !== null && typeof endExport === 'function') endExport(exportToken)
     }
-  }, [presentation])
+  }, [presentation, startOutput, savedOutputSnapshot, beginExport, endExport])
 
   const onExportProject = useCallback(async () => {
+    const signal = startOutput()
+    let exportToken = null
     try {
-      await exportProject(presentation)
+      if (usePresentationStore.getState().saveConflict) {
+        throw new Error('Resolve the save conflict before exporting the project')
+      }
+      if (typeof flushPendingSave === 'function' && !(await flushPendingSave())) {
+        throw new Error('Unable to save current edits before project export')
+      }
+      if (typeof beginExport === 'function') {
+        exportToken = beginExport()
+        if (exportToken === null) throw new Error('An export is already in progress')
+      }
+      if (usePresentationStore.getState().saveConflict) {
+        throw new Error('Resolve the save conflict before exporting the project')
+      }
+      let snapshot = presentation
+      if (presentation?.pptxSourceAvailable === true || presentation?.pptxSemantic) {
+        // The prop can predate the completed save, and the store can contain edits
+        // queued during this barrier. Only the saved server snapshot is exported.
+        snapshot = await api.getPresentation(presentation.id)
+        if (
+          snapshot?.id !== presentation.id ||
+          (presentation.pptxSourceAvailable === true && snapshot.pptxSourceAvailable !== true)
+        ) {
+          throw new Error('Saved package snapshot is unavailable')
+        }
+      }
+      if (signal.aborted) return
+      await exportProject(snapshot, { signal })
     } catch (err) {
-      console.error('Project export failed:', err)
-      showError('Project export failed: ' + err.message)
+      if (!signal.aborted) {
+        console.error('Project export failed:', err)
+        showError('Project export failed: ' + err.message)
+      }
+    } finally {
+      if (exportToken !== null && typeof endExport === 'function') endExport(exportToken)
     }
-  }, [presentation])
+  }, [beginExport, endExport, flushPendingSave, presentation, startOutput])
+
+  const openImportedProject = useCallback((id) => {
+    window.location.href = `/editor/${id}`
+  }, [])
+  const showImportWarnings = useCallback((summary) => {
+    if (summary) showNotice(summary)
+  }, [])
+  const handleImportProject = useProjectImport({
+    onOpen: openImportedProject,
+    onWarnings: showImportWarnings,
+  })
 
   const onOpenProject = useCallback(() => {
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = '.navslides,.json'
-    input.onchange = async (e) => {
-      const file = e.target.files[0]
-      if (!file) return
-      try {
-        const parsed = await parseProjectFile(file)
-        const { valid, errors, warnings } = validateProjectFile(parsed)
-        if (!valid) {
-          showError('Invalid project file: ' + errors.join(', '))
-          return
-        }
-        if (warnings.length) console.warn('Import warnings:', warnings)
-        const rehydrated = await rehydrateImportedPresentation(api, parsed)
-        if (rehydrated.warnings.length) {
-          console.warn('Import warnings:', rehydrated.warnings)
-        }
-        let finalPres = rehydrated.presentation
-        finalPres.title = (finalPres.title || 'Imported') + ' (Imported)'
-        const newPres = await api.createPresentation({
-          ...finalPres,
-          slides: finalPres.slides,
-        })
-        window.location.href = `/editor/${newPres.id}`
-      } catch (err) {
-        console.error('Import failed:', err)
-        showError('Import failed: ' + err.message)
-      }
-    }
+    input.onchange = (event) => handleImportProject(event.target.files?.[0])
     input.click()
-  }, [])
+  }, [handleImportProject])
 
   return {
     onExportPDF,
@@ -263,7 +378,8 @@ export function useExportActions(
     onExportValidatedEditedRevision,
     onGenerateReconstructedPPTX,
     onExportHTML,
-    onExportOffline,
+    staticExportTeacherReveal,
+    onStaticExportTeacherRevealChange,
     onExportProject,
     onOpenProject,
   }

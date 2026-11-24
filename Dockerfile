@@ -10,6 +10,7 @@ COPY vendor-overrides/ ./vendor-overrides/
 RUN npm ci --ignore-scripts
 
 FROM dependencies AS vendor-builder
+COPY plugins/ ./plugins/
 COPY server/ ./server/
 COPY shared/ ./shared/
 COPY scripts/ ./scripts/
@@ -85,6 +86,8 @@ COPY vendor-overrides/ ./vendor-overrides/
 COPY server/package.json ./server/package.json
 COPY shared/ ./shared/
 COPY electron/server-package-lock.json ./electron/server-package-lock.json
+COPY scripts/ci/artifact-manifest-runtime.cjs ./scripts/ci/artifact-manifest-runtime.cjs
+COPY scripts/electron-local-image-size.js ./scripts/electron-local-image-size.js
 COPY scripts/electron-server-dependencies.js ./scripts/electron-server-dependencies.js
 COPY scripts/prepare-electron.js ./scripts/prepare-electron.js
 RUN node scripts/prepare-electron.js
@@ -101,10 +104,10 @@ RUN set -x; \
   && node -e "require('playwright').chromium.launch().then((browser) => browser.close()).catch((error) => { console.error(error); process.exitCode = 1 })"
 WORKDIR /app
 
+COPY --from=vendor-builder /app/plugins ./plugins
 COPY server/ ./server/
 COPY --from=vendor-builder /app/server/vendor ./server/vendor
 COPY scripts/verify-runtime-closure.js ./scripts/verify-runtime-closure.js
-COPY scripts/ci/artifact-manifest-runtime.cjs ./scripts/ci/artifact-manifest-runtime.cjs
 
 RUN groupadd --gid 10001 navslides \
   && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin navslides \

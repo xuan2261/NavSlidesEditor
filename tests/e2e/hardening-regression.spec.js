@@ -30,7 +30,8 @@ async function waitForTrustedIframe(iframeLocator) {
   await expect
     .poll(
       async () => {
-        return frame.evaluate(
+        const target = frame.childFrames()[0] || frame
+        return target.evaluate(
           () => document.getElementById('trusted-html-status')?.textContent || null
         )
       },
@@ -83,9 +84,7 @@ test.describe('Hardening regressions', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('analytics stays on the operator boundary and redacts share capabilities', async ({

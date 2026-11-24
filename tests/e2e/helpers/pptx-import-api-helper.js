@@ -76,7 +76,10 @@ export async function waitForPptxImport(request, jobId, options = {}) {
     .poll(
       async () => {
         const response = await request.get(`/api/pptx/jobs/${jobId}`, {
-          headers: { 'X-Pptx-Job-Capability': capability },
+          headers: {
+            'X-Pptx-Job-Capability': capability,
+            connection: 'close',
+          },
         })
         if (!response.ok()) {
           throw new Error(

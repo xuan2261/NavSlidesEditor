@@ -5,6 +5,9 @@ const { readGithubConfig, writeGithubConfig } = require('../services/storage')
 const { readAuthoritativePresentation } = require('../services/package-backed-presentation-read')
 const { toExternalPresentationDto } = require('../services/pptx-import/package-store/dto')
 const { validate } = require('../middleware/validate')
+const { getServingBaseUrl } = require('../utils/serving-origin')
+const { prepareSemanticOutputResources, assertSemanticOutputArtifact } =
+  require('../services/pptx-import/semantic-output-resources')
 
 const router = express.Router()
 
@@ -68,6 +71,7 @@ router.post('/push/:presId', validate(githubPushSchema), async (req, res) => {
     const resolved = await readAuthoritativePresentation(req.params.presId)
     if (!resolved) return res.status(404).json({ error: 'Presentation not found' })
     const presentation = resolved.presentation
+    const semanticOutputResources = await prepareSemanticOutputResources(presentation)
 
     const { token, owner, repo } = config
     // owner/repo come from user-supplied config and are interpolated into
@@ -93,7 +97,9 @@ router.post('/push/:presId', validate(githubPushSchema), async (req, res) => {
     const folderName = (presentation.title || 'untitled')
       .replace(/[^a-z0-9_-]/gi, '_')
       .toLowerCase()
-    const htmlContent = generateRevealHTML(presentation)
+    const htmlContent = assertSemanticOutputArtifact(generateRevealHTML(presentation, {
+      baseUrl: getServingBaseUrl(req), semanticOutputResources,
+    }), semanticOutputResources)
     const jsonContent = JSON.stringify(toExternalPresentationDto(presentation), null, 2)
 
     // Get default branch

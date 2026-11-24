@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1",
-  "policyVersion": "release-target-policy-v3",
+  "policyVersion": "release-target-policy-v4",
   "receiptSchemaVersion": "release-receipt-v1",
   "targets": {
     "linux-ci": {
@@ -11,13 +11,23 @@
         "playwright",
         "load",
         "docker",
+        "supply-chain",
         "attestation"
       ]
     },
     "windows": {
       "selected": true,
-      "publicArtifacts": [],
-      "requiredGates": ["electron-runtime-closure", "officecli-physical"]
+      "publicArtifacts": ["nsis-exe", "portable-exe"],
+      "requiredGates": [
+        "electron-runtime-closure",
+        "officecli-physical",
+        "fidelity-powerpoint",
+        "attestation"
+      ],
+      "signingGates": {
+        "signed": ["authenticode", "post-download-authenticode"],
+        "unsigned": ["authenticode-unsigned"]
+      }
     },
     "linux-desktop": {
       "selected": false,
@@ -29,6 +39,21 @@
       "unselectedReceiptStatus": "not-selected",
       "requiredGates": []
     }
+  },
+  "authenticode": {
+    "mode": "optional",
+    "signingEnvVars": [
+      "WINDOWS_SIGNING_SCRIPT",
+      "WINDOWS_SIGNING_SUBJECT",
+      "WINDOWS_SIGNING_THUMBPRINT",
+      "RFC3161_TIMESTAMP_URL"
+    ],
+    "unsignedMode": "authenticode-unsigned",
+    "publisherSubjectSource": "protected-environment:WINDOWS_SIGNING_SUBJECT",
+    "publisherThumbprintSource": "protected-environment:WINDOWS_SIGNING_THUMBPRINT",
+    "requireRfc3161Timestamp": true,
+    "requirePostDownloadVerification": true,
+    "unsignedReleaseDisclosure": "**Unsigned Windows build (`authenticode-unsigned`):** Windows NSIS installer and portable executables in this release are NOT Authenticode-signed because `WINDOWS_SIGNING_*` credentials were not configured. Windows SmartScreen and Defender will show an unknown-publisher warning; verify SHA-256 checksums and GitHub Actions SLSA provenance (`gh attestation verify`) before running."
   },
   "containerSecurityAdvisory": {
     "mode": "user-risk-accepted",
@@ -44,6 +69,6 @@
   "attestations": {
     "issuer": "https://token.actions.githubusercontent.com",
     "requireWorkflowIdentity": true,
-    "requiredArtifacts": ["client-dist", "docker-image"]
+    "requiredArtifacts": ["client-dist", "docker-image", "electron-windows"]
   }
 }

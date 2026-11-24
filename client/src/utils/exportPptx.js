@@ -1,3 +1,7 @@
+import {
+  prepareStaticRasterPresentation,
+  resolveStaticRasterSlides,
+} from 'revealjs-shared/src/education/static-raster-targets.js'
 import pptxgen from 'pptxgenjs'
 import { applySlideBackground } from './export-pptx-background'
 import {
@@ -58,10 +62,6 @@ function hasServerRasterElements(slides) {
   })
 }
 
-function hasServerOnlyElements(presentation) {
-  return hasServerRasterElements(flattenPptxSlides(presentation?.slides))
-}
-
 function validateServerRasterElementIds(slides) {
   const seen = new Map()
 
@@ -95,34 +95,31 @@ function getServerOnlyElementIds(slides) {
   )
 }
 
-function withoutHiddenElements(presentation) {
-  return {
-    ...presentation,
-    slides: flattenPptxSlides(presentation?.slides).map(({ children: _children, ...slide }) => ({
-      ...slide,
-      elements: (slide.elements || []).filter((element) => !(element.hidden || false)),
-    })),
-  }
-}
-
 function canUseServerRaster() {
   return (
     typeof window !== 'undefined' && typeof document !== 'undefined' && typeof fetch === 'function'
   )
 }
 
-async function fetchComplexElementRasters(presentation) {
-  if (!hasServerOnlyElements(presentation)) return {}
-  const flattenedSlides = flattenPptxSlides(presentation?.slides)
+async function fetchComplexElementRasters(presentation, options) {
+  validateServerRasterElementIds(flattenPptxSlides(presentation?.slides))
+  const rasterPresentation = prepareStaticRasterPresentation(presentation)
+  const flattenedSlides = rasterPresentation.slides
+  if (!hasServerRasterElements(flattenedSlides)) return {}
   validateServerRasterElementIds(flattenedSlides)
   if (!canUseServerRaster()) {
-    throw new Error('PPTX export with HTML or LaTeX requires the NavSlides server renderer')
+    throw new Error(
+      'PPTX export requires the NavSlides server renderer to capture authored raster elements'
+    )
   }
 
   const response = await fetch('/api/presentations/raster-elements', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ presentation: withoutHiddenElements(presentation) }),
+    body: JSON.stringify({
+      presentation: rasterPresentation,
+      options: { teacherReveal: options.teacherReveal === true },
+    }),
   })
 
   if (!response.ok) {
@@ -143,7 +140,7 @@ async function fetchComplexElementRasters(presentation) {
   return rasters
 }
 
-async function exportToPptxClient(presentation, rasterOverrides = {}) {
+async function exportToPptxClient(presentation, rasterOverrides = {}, options = {}) {
   const pptx = new pptxgen()
   const resolution = getPresentationResolution(presentation)
   const layout = getPptxLayout(getPptxExportLayout(presentation))
@@ -154,7 +151,9 @@ async function exportToPptxClient(presentation, rasterOverrides = {}) {
   pptx.layout = 'NAVSLIDES_CUSTOM'
   pptx.title = presentation?.title || 'Presentation'
 
-  for (const [slideIndex, sourceSlide] of flattenPptxSlides(presentation?.slides).entries()) {
+  for (const [slideIndex, { source: sourceSlide, effectiveSlideId }] of resolveStaticRasterSlides(
+    presentation
+  ).entries()) {
     const slideNumber = slideIndex + 1
     const source = resolvePptxSlide(sourceSlide, presentation?.layoutMasters, warnings, slideNumber)
     const slide = pptx.addSlide()
@@ -196,6 +195,8 @@ async function exportToPptxClient(presentation, rasterOverrides = {}) {
         slideNumber,
         rasterOverrides,
         designTokens: slideTokens,
+        options,
+        effectiveSlideId,
       })
     }
 
@@ -207,10 +208,10 @@ async function exportToPptxClient(presentation, rasterOverrides = {}) {
   return warnings
 }
 
-export async function exportToPptx(presentation) {
+export async function exportToPptx(presentation, options = { teacherReveal: false }) {
   try {
-    const rasterOverrides = await fetchComplexElementRasters(presentation)
-    return await exportToPptxClient(presentation, rasterOverrides)
+    const rasterOverrides = await fetchComplexElementRasters(presentation, options)
+    return await exportToPptxClient(presentation, rasterOverrides, options)
   } finally {
     clearPptxRasterAssetCaches()
   }

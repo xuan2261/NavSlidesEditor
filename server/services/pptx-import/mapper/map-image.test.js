@@ -59,25 +59,51 @@ describe('pptx mapImageFilters', () => {
 })
 
 describe('pptx mapImage', () => {
+  it.each([0.5, 1, 10])('uses parser percentage units for a %s percent crop', async (crop) => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-map-image-percent-'))
+    try {
+      const [image] = await mapImage(
+        {
+          type: 'image',
+          left: 0,
+          top: 0,
+          width: 144,
+          height: 100,
+          base64: `data:image/png;base64,${PNG.toString('base64')}`,
+          rect: { l: crop, r: 0, t: 0, b: 0 },
+        },
+        context(dir)
+      )
+      expect(image._pptxImportMeta.cropData.left).toBe(crop / 100)
+      expect(image.imageW).toBe(Math.round(144 / (1 - crop / 100)))
+      expect(image.imageOffsetX).toBe(-Math.round((image.imageW * crop) / 100))
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true })
+    }
+  })
+
   it('maps inline image payload with filters, crop, flip, border, and alt text', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-map-image-'))
     try {
       const ctx = { ...context(dir), scale: { x: 4 / 3, y: 1 } }
-      const result = await mapImage({
-        type: 'image',
-        left: 10,
-        top: 20,
-        width: 100,
-        height: 50,
-        base64: `data:image/png;base64,${PNG.toString('base64')}`,
-        fill: 'cover',
-        alt: '<p>Alt <strong>text</strong></p>',
-        isFlipH: true,
-        borderColor: '#123456',
-        borderWidth: 2,
-        filters: { brightness: 0.2, contrast: -0.2, saturation: 0, sharpen: 5 },
-        rect: { l: 10, r: 10, t: 0, b: 0 },
-      }, ctx)
+      const result = await mapImage(
+        {
+          type: 'image',
+          left: 10,
+          top: 20,
+          width: 100,
+          height: 50,
+          base64: `data:image/png;base64,${PNG.toString('base64')}`,
+          fill: 'cover',
+          alt: '<p>Alt <strong>text</strong></p>',
+          isFlipH: true,
+          borderColor: '#123456',
+          borderWidth: 2,
+          filters: { brightness: 0.2, contrast: -0.2, saturation: 0, sharpen: 5 },
+          rect: { l: 10, r: 10, t: 0, b: 0 },
+        },
+        ctx
+      )
 
       expect(ctx.stats.imageCount).toBe(1)
       expect(result[0]).toMatchObject({
@@ -107,14 +133,17 @@ describe('pptx mapImage', () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-map-image-plain-'))
     try {
       const ctx = context(dir)
-      const result = await mapImage({
-        type: 'image',
-        left: 10,
-        top: 20,
-        width: 100,
-        height: 50,
-        base64: `data:image/png;base64,${PNG.toString('base64')}`,
-      }, ctx)
+      const result = await mapImage(
+        {
+          type: 'image',
+          left: 10,
+          top: 20,
+          width: 100,
+          height: 50,
+          base64: `data:image/png;base64,${PNG.toString('base64')}`,
+        },
+        ctx
+      )
 
       expect(result[0].objectFit).toBe('fill')
       expect(result[0].imageW).toBeUndefined()
@@ -131,15 +160,18 @@ describe('pptx mapImage', () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-map-image-bounds-'))
     try {
       const ctx = context(dir)
-      const result = await mapImage({
-        type: 'image',
-        left: 930,
-        top: 500,
-        width: 180,
-        height: 160,
-        base64: `data:image/png;base64,${PNG.toString('base64')}`,
-        rect: { l: 10, r: 10, t: 0, b: 0 },
-      }, ctx)
+      const result = await mapImage(
+        {
+          type: 'image',
+          left: 930,
+          top: 500,
+          width: 180,
+          height: 160,
+          base64: `data:image/png;base64,${PNG.toString('base64')}`,
+          rect: { l: 10, r: 10, t: 0, b: 0 },
+        },
+        ctx
+      )
 
       const image = result[0]
       expect(image.x + image.width).toBeLessThanOrEqual(1136)
@@ -155,12 +187,17 @@ describe('pptx mapImage', () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-map-image-missing-'))
     try {
       const ctx = context(dir)
-      const result = await mapImage({ type: 'image', blob: 'data:image/png;base64,bm90LWltYWdl' }, ctx)
+      const result = await mapImage(
+        { type: 'image', blob: 'data:image/png;base64,bm90LWltYWdl' },
+        ctx
+      )
       expect(result[0].importPlaceholderType).toBe('media-missing')
-      expect(ctx.warnings).toEqual(expect.arrayContaining([
-        expect.objectContaining({ type: 'image-detect-failed' }),
-        expect.objectContaining({ type: 'media-missing' }),
-      ]))
+      expect(ctx.warnings).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: 'image-detect-failed' }),
+          expect.objectContaining({ type: 'media-missing' }),
+        ])
+      )
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
     }
@@ -170,23 +207,26 @@ describe('pptx mapImage', () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-map-image-emf-'))
     try {
       const ctx = context(dir)
-      const result = await mapImage({
-        type: 'image',
-        left: 10,
-        top: 20,
-        width: 100,
-        height: 50,
-        base64: `data:image/x-emf;base64,${EMF.toString('base64')}`,
-      }, ctx)
+      const result = await mapImage(
+        {
+          type: 'image',
+          left: 10,
+          top: 20,
+          width: 100,
+          height: 50,
+          base64: `data:image/x-emf;base64,${EMF.toString('base64')}`,
+        },
+        ctx
+      )
 
       const el = result[0]
       expect(el.importPlaceholderType).toBe('unsupported-image')
       expect(el.text).toMatch(/EMF\/WMF/i)
       // Original box geometry is preserved so layout stays intact.
       expect(el).toMatchObject({ x: 10, y: 20, width: 100, height: 50 })
-      expect(ctx.warnings).toEqual(expect.arrayContaining([
-        expect.objectContaining({ type: 'unsupported-image' }),
-      ]))
+      expect(ctx.warnings).toEqual(
+        expect.arrayContaining([expect.objectContaining({ type: 'unsupported-image' })])
+      )
       // It must NOT be persisted as a live <img>.
       expect(el.type).toBe('shape')
       expect(el.src).toBeUndefined()
@@ -216,14 +256,17 @@ describe('pptx mapImage', () => {
           return { ok: true, outPath: out }
         },
       }
-      const result = await mapImage({
-        type: 'image',
-        left: 10,
-        top: 20,
-        width: 100,
-        height: 50,
-        base64: `data:image/x-emf;base64,${EMF.toString('base64')}`,
-      }, ctx)
+      const result = await mapImage(
+        {
+          type: 'image',
+          left: 10,
+          top: 20,
+          width: 100,
+          height: 50,
+          base64: `data:image/x-emf;base64,${EMF.toString('base64')}`,
+        },
+        ctx
+      )
       expect(result[0].type).toBe('image')
       expect(result[0].src).toMatch(/^\/uploads\/.+\.png$/)
       expect(result[0].importPlaceholderType).toBeUndefined()
@@ -237,10 +280,13 @@ describe('pptx mapImage', () => {
     try {
       const ctx = { ...context(dir), strict: true }
       await expect(
-        mapImage({
-          type: 'image',
-          base64: `data:image/x-emf;base64,${EMF.toString('base64')}`,
-        }, ctx)
+        mapImage(
+          {
+            type: 'image',
+            base64: `data:image/x-emf;base64,${EMF.toString('base64')}`,
+          },
+          ctx
+        )
       ).rejects.toMatchObject({ code: 'emf-convert-failed' })
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
@@ -251,14 +297,17 @@ describe('pptx mapImage', () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'pptx-map-image-png-ok-'))
     try {
       const ctx = context(dir)
-      const result = await mapImage({
-        type: 'image',
-        left: 10,
-        top: 20,
-        width: 100,
-        height: 50,
-        base64: `data:image/png;base64,${PNG.toString('base64')}`,
-      }, ctx)
+      const result = await mapImage(
+        {
+          type: 'image',
+          left: 10,
+          top: 20,
+          width: 100,
+          height: 50,
+          base64: `data:image/png;base64,${PNG.toString('base64')}`,
+        },
+        ctx
+      )
 
       expect(result[0].type).toBe('image')
       expect(result[0].src).toMatch(/^\/uploads\/.+\.png$/)

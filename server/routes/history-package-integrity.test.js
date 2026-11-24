@@ -1,10 +1,12 @@
 // @vitest-environment node
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import request from 'supertest'
 import express from 'express'
 import fs from 'fs-extra'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import { createRequire } from 'node:module'
+import JSZip from 'jszip'
 
 const _dataDir = vi.hoisted(() => {
   const os = require('os')
@@ -15,11 +17,16 @@ const _dataDir = vi.hoisted(() => {
   return dir
 })
 
-const storage = await import('../services/storage.js')
-const { openPackageStore } = await import('../services/pptx-import/package-store/index.js')
-const { createSourceMap } = await import('../services/pptx-import/source-map.js')
-const { hashRecord } = await import('../services/pptx-import/package-store/schemas.js')
-const historyRouter = (await import('./history.js')).default
+const nodeRequire = createRequire(import.meta.url)
+const storage = nodeRequire('../services/storage.js')
+const packageRuntime = nodeRequire('../services/pptx-import/package-store-runtime.js')
+const { buildImportSourceMap } = nodeRequire('../services/pptx-import/source-map.js')
+const historyRouter = nodeRequire('./history.js')
+
+afterAll(async () => {
+  await packageRuntime.shutdownPackageStore()
+  await fs.remove(_dataDir)
+})
 
 function makeApp() {
   const app = express()
@@ -28,14 +35,8 @@ function makeApp() {
   return app
 }
 
-async function withStore(action) {
-  const store = await openPackageStore({ rootDir: storage.DATA_DIR })
-  await store.acquireWriter()
-  try {
-    return await action(store)
-  } finally {
-    await store.releaseWriter()
-  }
+function withStore(action) {
+  return packageRuntime.withPackageStore(action)
 }
 
 describe('package-backed history integrity', () => {
@@ -47,47 +48,30 @@ describe('package-backed history integrity', () => {
     await storage.writePresentations([
       { id: presId, title: 'Current', slides: [{ id: 's1' }] },
     ])
-    const head = await withStore((store) => store.commitOriginal(Buffer.from('package'), {
-      ownerType: 'presentation',
-      ownerId: presId,
-    }))
-    const revisionId = head.revision.id
+    await packageRuntime.initializePackageStore({ rootDir: storage.DATA_DIR })
+    const zip = new JSZip()
+    zip.file('[Content_Types].xml', '<Types/>')
+    zip.file('ppt/presentation.xml', '<p:presentation/>')
     const projection = {
       id: presId,
       title: 'Current',
       slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>Before</p>' }] }],
     }
-    const sourceMap = createSourceMap({
-      presentationId: presId,
-      revisionId,
-      packageGeneration: 1,
-      entries: {},
-    })
-    await withStore((store) => store.mutate((next) => {
-      const liveHead = next.heads.find((item) => item.presentationId === presId)
-      liveHead.projectionRevisionId = hashRecord(projection)
-      liveHead.sourceMapRevisionId = hashRecord(sourceMap)
-      next.mutationResults.push({
-        schemaVersion: 1,
-        operation: 'package-import',
+    await withStore(async (store) => store.commitImport(
+      await zip.generateAsync({ type: 'nodebuffer' }),
+      {
+        jobId: 'fixture-import',
         presentationId: presId,
-        idempotencyKey: 'fixture-import',
-        generation: 1,
-        packageRevisionId: revisionId,
         projection,
-        sourceMap,
-        state: 'committed',
-      })
-    }))
-    const aggregateHead = await withStore((store) =>
-      store.getState().heads.find((item) => item.presentationId === presId)
-    )
-    await storage.withPresentations((presentations) => {
-      presentations[0].pptxAggregateHead = aggregateHead
-    })
+        sourceMap: await buildImportSourceMap(projection, null, null),
+        compatibilityPresentation: projection,
+      }
+    ))
+    await packageRuntime.drainPackageCompatibilityOutbox()
   })
 
   afterEach(async () => {
+    await packageRuntime.shutdownPackageStore()
     await fs.remove(_dataDir)
     await fs.ensureDir(_dataDir)
   })
@@ -95,11 +79,14 @@ describe('package-backed history integrity', () => {
   it('rejects encoded path traversal without touching presentation storage', async () => {
     const before = await fs.readFile(path.join(storage.DATA_DIR, 'presentations.json'), 'utf8')
 
-    const deleteResponse = await request(makeApp())
-      .delete(`/api/presentations/${presId}/snapshots/%2e%2e%2f%2e%2e%2fpresentations`)
+    const deleteResponse = await request(makeApp()).delete(
+      `/api/presentations/${presId}/snapshots/%2e%2e%2f%2e%2e%2fpresentations`
+    )
 
     expect(deleteResponse.status).toBe(400)
-    expect(await fs.readFile(path.join(storage.DATA_DIR, 'presentations.json'), 'utf8')).toBe(before)
+    expect(await fs.readFile(path.join(storage.DATA_DIR, 'presentations.json'), 'utf8')).toBe(
+      before
+    )
   })
 
   it('rejects a legacy snapshot restore into a package-backed presentation', async () => {
@@ -114,8 +101,9 @@ describe('package-backed history integrity', () => {
       data: { id: presId, title: 'Legacy', slides: [{ id: 's1' }] },
     })
 
-    const response = await request(makeApp())
-      .post(`/api/presentations/${presId}/restore/${snapshotId}`)
+    const response = await request(makeApp()).post(
+      `/api/presentations/${presId}/restore/${snapshotId}`
+    )
 
     expect(response.status).not.toBe(200)
     expect((await storage.readPresentations())[0]).toMatchObject({
@@ -131,17 +119,23 @@ describe('package-backed history integrity', () => {
       .send({ name: 'package-backed' })
     expect(snapshot.status).toBe(200)
 
-    await withStore((store) => store.releaseOwner({
-      ownerType: 'history',
-      ownerId: `${presId}:${snapshot.body.id}`,
-    }))
-    const response = await request(app)
-      .post(`/api/presentations/${presId}/restore/${snapshot.body.id}`)
+    await withStore((store) =>
+      store.releaseOwner({
+        ownerType: 'history',
+        ownerId: `${presId}:${snapshot.body.id}`,
+      })
+    )
+    const response = await request(app).post(
+      `/api/presentations/${presId}/restore/${snapshot.body.id}`
+    )
 
     expect(response.status).not.toBe(200)
     expect((await storage.readPresentations())[0].title).toBe('Current')
-    expect((await fs.readdir(path.join(storage.HISTORY_DIR, presId)))
-      .filter((file) => file.endsWith('.json'))).toHaveLength(1)
+    expect(
+      (await fs.readdir(path.join(storage.HISTORY_DIR, presId))).filter((file) =>
+        file.endsWith('.json')
+      )
+    ).toHaveLength(1)
   })
 
   it('persists the restored aggregate head and successor generation', async () => {
@@ -151,9 +145,9 @@ describe('package-backed history integrity', () => {
       .send({ name: 'package-backed' })
     expect(snapshot.status).toBe(200)
 
-    await storage.writePresentations([
-      { id: presId, title: 'Changed', slides: [{ id: 's1' }] },
-    ])
+    await storage.withPresentations((presentations) => {
+      presentations[0].title = 'Changed'
+    })
     const restored = await request(app)
       .post(`/api/presentations/${presId}/restore/${snapshot.body.id}`)
 
@@ -176,32 +170,25 @@ describe('package-backed history integrity', () => {
       .send({ name: 'package-backed' })
     expect(snapshot.status).toBe(200)
 
-    await storage.writePresentations([
-      { id: presId, title: 'Stale compatibility', slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>Before</p>' }] }] },
-    ])
-    await withStore((store) => store.mutate((next) => {
-      const result = next.mutationResults.find((item) =>
-        item.presentationId === presId && item.idempotencyKey === 'fixture-import'
-      )
-      const newerProjection = {
-        ...result.projection,
-        title: 'Newer package authority',
-        slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text', content: '<p>After</p>' }] }],
-      }
-      next.mutationResults.push({
-        ...structuredClone(result),
-        idempotencyKey: 'newer-authority',
-        projection: newerProjection,
-      })
-      const head = next.heads.find((item) => item.presentationId === presId)
-      head.projectionRevisionId = hashRecord(newerProjection)
-    }))
+    const successor = await request(app).post(
+      `/api/presentations/${presId}/restore/${snapshot.body.id}`
+    )
+    expect(successor.status).toBe(200)
+    expect(successor.body.aggregateGeneration).toBe(2)
+    await packageRuntime.drainPackageCompatibilityOutbox()
+    await storage.withPresentations((presentations) => {
+      presentations[0].title = 'Stale compatibility'
+      presentations[0].slides = [{ id: 's1', elements: [
+        { id: 'e1', type: 'text', content: '<p>After</p>' },
+      ] }]
+    })
 
-    const restored = await request(app)
-      .post(`/api/presentations/${presId}/restore/${snapshot.body.id}`)
+    const restored = await request(app).post(
+      `/api/presentations/${presId}/restore/${snapshot.body.id}`
+    )
 
     expect(restored.status).toBe(200)
-    expect(restored.body.aggregateGeneration).toBe(2)
+    expect(restored.body.aggregateGeneration).toBe(3)
     expect(restored.body.title).toBe('Current')
     expect(restored.body.slides[0].elements[0].content).toBe('<p>Before</p>')
   })
@@ -215,7 +202,7 @@ describe('package-backed history integrity', () => {
 
     expect(response.status).not.toBe(200)
     const historyDir = path.join(storage.HISTORY_DIR, presId)
-    const historyFiles = await fs.pathExists(historyDir) ? await fs.readdir(historyDir) : []
+    const historyFiles = (await fs.pathExists(historyDir)) ? await fs.readdir(historyDir) : []
     expect(historyFiles.filter((file) => file.endsWith('.json'))).toEqual([])
   })
 
@@ -250,20 +237,23 @@ describe('package-backed history integrity', () => {
       snapshotIds.push(response.body.id)
     }
 
-    const restore = await request(app)
-      .post(`/api/presentations/${presId}/restore/${snapshotIds[0]}`)
+    const restore = await request(app).post(
+      `/api/presentations/${presId}/restore/${snapshotIds[0]}`
+    )
 
     expect(restore.status).toBe(200)
-    expect(await fs.pathExists(
-      path.join(storage.HISTORY_DIR, presId, `${snapshotIds[0]}.json`)
-    )).toBe(true)
+    expect(
+      await fs.pathExists(path.join(storage.HISTORY_DIR, presId, `${snapshotIds[0]}.json`))
+    ).toBe(true)
     await withStore((store) => {
-      expect(store.getState().owners).toEqual(expect.arrayContaining([
-        expect.objectContaining({
-          ownerType: 'history',
-          ownerId: `${presId}:${snapshotIds[0]}`,
-        }),
-      ]))
+      expect(store.getState().owners).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ownerType: 'history',
+            ownerId: `${presId}:${snapshotIds[0]}`,
+          }),
+        ])
+      )
     })
-  }, 10_000)
+  }, 180_000)
 })

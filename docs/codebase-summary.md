@@ -43,8 +43,7 @@ navslides-editor/
 - `EditorPage.jsx` composes the editor shell, overlays, menus, toolbars, and
   modal surfaces. Shared dialogs now flow through `ModalShell`; dense panel
   sections use disclosure semantics in `CollapsibleSection`. After the
-  `260529-2256` hardening refactor it is a thinner orchestrator (~1356 LOC, down
-  from 2071): boolean modal-visibility flags live in `ui-store` (not local
+  `260529-2256` hardening refactor it is a thinner orchestrator: boolean modal-visibility flags live in `ui-store` (not local
   `useState`), the modal-mount JSX is lifted into `EditorModals.jsx` +
   `editor-modals-secondary.jsx`, and element-creation / export / AI handlers are
   extracted into `use-element-creation`, `use-export-actions`, and
@@ -107,6 +106,7 @@ navslides-editor/
 | Live rooms  | `server/services/live-rooms.js`                                                                    | In-memory room state, presenter tokens, annotations, and timer state                                                              |
 | Game engine | `server/services/game-room-manager-singleton-service.js`, `server/services/game-socket-handler.js` | Game room lifecycle, scoring, timers, leaderboard, player join flow                                                               |
 | PPTX import | `server/routes/pptx-import.js`, `server/services/pptx-import/*`                                    | `.pptx` upload route, parser isolation, geometry normalization, fidelity harness                                                  |
+| Project import | `server/routes/project-import.js`, `server/services/project-import-*.js`, `shared/src/project-import-content-validation.js` | Atomic `.navslides`/JSON import: preflight, media staging, publish or rollback |
 | REST routes | `server/routes/*.js`                                                                               | Presentations, templates, share, history, upload, GitHub, sync, settings, media, live, games, explore, analytics, marketplace, AI |
 
 ### Live Model

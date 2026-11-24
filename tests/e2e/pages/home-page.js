@@ -45,7 +45,7 @@ export class HomePage {
   }
 
   async switchSidebarView(viewLabel) {
-    const button = this.page.locator('button').filter({ hasText: viewLabel })
+    const button = this.page.getByRole('navigation').getByRole('button').filter({ hasText: viewLabel })
     await button.click()
     await expect(button).toBeVisible()
   }
@@ -69,11 +69,14 @@ export class HomePage {
   }
 
   async deletePresentation(index = 0) {
-    this.page.on('dialog', (dialog) => dialog.accept())
     const prevCount = await this.getPresentationCount()
     const card = this.presentationCards.nth(index)
     await card.hover()
     await card.locator('button[title="Delete"]').click()
+    const confirmation = this.page.getByRole('dialog').filter({
+      has: this.page.getByRole('heading', { name: 'Move to Trash', exact: true }),
+    })
+    await confirmation.getByRole('button', { name: 'Confirm', exact: true }).click()
     await expect(this.presentationCards).toHaveCount(prevCount - 1, { timeout: 10000 })
   }
 
@@ -120,10 +123,13 @@ export class HomePage {
   }
 
   async permanentDeleteFromTrash(index = 0) {
-    this.page.on('dialog', (dialog) => dialog.accept())
     const prevCount = await this.getPresentationCount()
     const card = this.presentationCards.nth(index)
     await card.locator('button[title="Delete permanently"]').click()
+    const confirmation = this.page.getByRole('dialog').filter({
+      has: this.page.getByRole('heading', { name: 'Delete Permanently', exact: true }),
+    })
+    await confirmation.getByRole('button', { name: 'Delete', exact: true }).click()
     await expect(this.presentationCards).toHaveCount(prevCount - 1, { timeout: 10000 })
   }
 }

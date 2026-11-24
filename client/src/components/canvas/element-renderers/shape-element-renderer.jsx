@@ -1,5 +1,14 @@
-import { buildSvgGradientData, gradientFallbackColor, resolveColorField, isTokenVar } from 'revealjs-shared'
-import { sanitizeRichTextHtml } from '../../../utils/content-safety'
+import { useState } from 'react'
+import {
+  buildSvgGradientData,
+  gradientFallbackColor,
+  resolveColorField,
+  isTokenVar,
+} from 'revealjs-shared'
+import { sanitizeRichTextHtml } from 'revealjs-shared/src/content-safety.js'
+import geometrySvg from 'revealjs-shared/src/pptx-geometry-svg.js'
+import shapeLabel from 'revealjs-shared/src/pptx-shape-label.js'
+import GeometryPointHandles from './geometry-point-handles'
 
 function safeCssColor(value, fallback) {
   const color = typeof value === 'string' ? value.trim() : ''
@@ -18,7 +27,10 @@ function importedTextInsetStyles(element) {
   const side = (value, maxDimension) => {
     const raw = Number(value)
     if (!Number.isFinite(raw)) return null
-    const max = Math.min(Number.isFinite(maxDimension) && maxDimension >= 0 ? maxDimension / 2 : 96, 96)
+    const max = Math.min(
+      Number.isFinite(maxDimension) && maxDimension >= 0 ? maxDimension / 2 : 96,
+      96
+    )
     return `${Math.min(Math.round(Math.max(0, raw) * unitScale * 10) / 10, max)}px`
   }
   return {
@@ -44,7 +56,23 @@ function innerDimension(value, strokeWidth) {
   return Math.max(0, value - strokeWidth)
 }
 
-export function ShapeRenderer({ element }) {
+export function ShapeRenderer({
+  element,
+  isSelected,
+  onUpdateElement,
+  geometryPointEditing = false,
+  outputPixelScale = 1,
+  fontRuntime,
+}) {
+  const [previewGeometry, setPreviewGeometry] = useState(null)
+  const [sourceSvg, setSourceSvg] = useState(null)
+  const geometry =
+    previewGeometry && previewGeometry.source === element.pptxGeometry
+      ? previewGeometry.geometry
+      : element.pptxGeometry
+  const zeroGeometry = Boolean(geometry) && (element.width === 0 || element.height === 0)
+  const viewportWidth = zeroGeometry ? Math.max(1, element.width) : element.width
+  const viewportHeight = zeroGeometry ? Math.max(1, element.height) : element.height
   const w = element.width,
     h = element.height
   const gradientData = buildSvgGradientData(element)
@@ -72,6 +100,26 @@ export function ShapeRenderer({ element }) {
   }
 
   const renderShape = () => {
+    if (geometry)
+      return (
+        <g
+          dangerouslySetInnerHTML={{
+            __html: geometrySvg.geometrySvgPathsString(geometry, {
+              width: w,
+              height: h,
+              fill,
+              stroke,
+              strokeWidth: sw,
+              occurrenceMatrix: element.pptxOccurrenceMatrix,
+              blipAsset: element.pptxBlipAsset,
+              blipDerivedAssets: element.pptxBlipDerivedAssets,
+              fillFrame: element.pptxFillFrame,
+              effectFillAssets: element.pptxEffectFillAssets,
+              outputPixelScale,
+            }),
+          }}
+        />
+      )
     if (shape === 'line') {
       const lw = element.strokeWidth || 3
       return (
@@ -103,7 +151,13 @@ export function ShapeRenderer({ element }) {
       case 'rounded-rect':
         return (
           <g {...gProps}>
-            <rect x={sw / 2} y={sw / 2} width={innerDimension(w, sw)} height={innerDimension(h, sw)} rx={Math.min(w, h) * 0.15} />
+            <rect
+              x={sw / 2}
+              y={sw / 2}
+              width={innerDimension(w, sw)}
+              height={innerDimension(h, sw)}
+              rx={Math.min(w, h) * 0.15}
+            />
           </g>
         )
       case 'circle':
@@ -191,13 +245,17 @@ export function ShapeRenderer({ element }) {
       case 'parallelogram':
         return (
           <g {...gProps}>
-            <polygon points={`${w * 0.2},${sw} ${w - sw},${sw} ${w * 0.8},${h - sw} ${sw},${h - sw}`} />
+            <polygon
+              points={`${w * 0.2},${sw} ${w - sw},${sw} ${w * 0.8},${h - sw} ${sw},${h - sw}`}
+            />
           </g>
         )
       case 'trapezoid':
         return (
           <g {...gProps}>
-            <polygon points={`${w * 0.2},${sw} ${w * 0.8},${sw} ${w - sw},${h - sw} ${sw},${h - sw}`} />
+            <polygon
+              points={`${w * 0.2},${sw} ${w * 0.8},${sw} ${w - sw},${h - sw} ${sw},${h - sw}`}
+            />
           </g>
         )
       case 'bracket': {
@@ -217,7 +275,12 @@ export function ShapeRenderer({ element }) {
       default:
         return (
           <g {...gProps}>
-            <rect x={sw / 2} y={sw / 2} width={innerDimension(w, sw)} height={innerDimension(h, sw)} />
+            <rect
+              x={sw / 2}
+              y={sw / 2}
+              width={innerDimension(w, sw)}
+              height={innerDimension(h, sw)}
+            />
           </g>
         )
     }
@@ -226,9 +289,10 @@ export function ShapeRenderer({ element }) {
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
       <svg
-        width="100%"
-        height="100%"
-        viewBox={`0 0 ${w} ${h}`}
+        ref={setSourceSvg}
+        width={zeroGeometry ? viewportWidth : '100%'}
+        height={zeroGeometry ? viewportHeight : '100%'}
+        viewBox={`0 0 ${viewportWidth} ${viewportHeight}`}
         preserveAspectRatio="none"
         style={{ position: 'absolute', inset: 0, overflow: 'visible' }}
       >
@@ -242,13 +306,41 @@ export function ShapeRenderer({ element }) {
               y2={gradientData.y2}
             >
               {gradientData.stops.map((stop, i) => (
-                <stop key={i} offset={stop.offset} stopColor={safeCssColor(stop.color, '#000000')} />
+                <stop
+                  key={i}
+                  offset={stop.offset}
+                  stopColor={safeCssColor(stop.color, '#000000')}
+                />
               ))}
             </linearGradient>
           </defs>
         )}
         {renderShape()}
-        {element.textHtml ? (
+        {element.pptxTextDocument ? (() => {
+          try {
+            return (
+              <g
+                dangerouslySetInnerHTML={{
+                  __html: shapeLabel.shapeLabelSvgString({ ...element, pptxGeometry: geometry }, { fontRuntime, theme: element.pptxTextTheme }),
+                }}
+              />
+            )
+          } catch (error) {
+            return (
+              <foreignObject x={0} y={0} width={viewportWidth} height={viewportHeight}>
+                <div
+                  xmlns="http://www.w3.org/1999/xhtml"
+                  role="alert"
+                  data-component-id={error.componentId || element.pptxTextDocument.componentId}
+                  data-render-error={error.code}
+                  style={{ width: '100%', height: '100%', overflow: 'hidden', fontSize: 12, lineHeight: 1.3 }}
+                >
+                  {error.message}
+                </div>
+              </foreignObject>
+            )
+          }
+        })() : element.textHtml ? (
           <foreignObject x={0} y={0} width={w} height={h}>
             <div
               xmlns="http://www.w3.org/1999/xhtml"
@@ -257,30 +349,67 @@ export function ShapeRenderer({ element }) {
                 height: '100%',
                 boxSizing: 'border-box',
                 display: 'flex',
-                alignItems: 'center',
+                alignItems:
+                  element.textVerticalAlign === 'top'
+                    ? 'flex-start'
+                    : element.textVerticalAlign === 'bottom'
+                      ? 'flex-end'
+                      : 'center',
                 justifyContent: 'center',
-                textAlign: 'center',
-                color: safeCssColor(resolveColorField(element.textColor, 'shape', 'textColor'), '#ffffff'),
+                textAlign: ['left', 'center', 'right', 'justify'].includes(element.textAlign)
+                  ? element.textAlign
+                  : 'center',
+                color: safeCssColor(
+                  resolveColorField(element.textColor, 'shape', 'textColor'),
+                  '#ffffff'
+                ),
                 fontSize: importedFontSize(element),
+                fontFamily: element.fontFamily || 'inherit',
                 overflow: 'hidden',
                 ...importedTextWrapStyles(element),
                 ...importedTextInsetStyles(element),
               }}
-              dangerouslySetInnerHTML={{ __html: sanitizeRichTextHtml(element.textHtml) }}
-            />
+            >
+              <div
+                style={{ width: '100%', minWidth: 0 }}
+                dangerouslySetInnerHTML={{ __html: sanitizeRichTextHtml(element.textHtml) }}
+              />
+            </div>
           </foreignObject>
-        ) : element.text && (
-          <text
-            x={w / 2}
-            y={h / 2}
-            dominantBaseline="middle"
-            textAnchor="middle"
-            fontSize={element.fontSize || 16}
-            style={{ fill: safeCssColor(resolveColorField(element.textColor, 'shape', 'textColor'), '#ffffff') }}
-          >
-            {element.text}
-          </text>
+        ) : (
+          element.text && (
+            <text
+              x={w / 2}
+              y={h / 2}
+              dominantBaseline="middle"
+              textAnchor="middle"
+              fontSize={element.fontSize || 16}
+              style={{
+                fill: safeCssColor(
+                  resolveColorField(element.textColor, 'shape', 'textColor'),
+                  '#ffffff'
+                ),
+              }}
+            >
+              {element.text}
+            </text>
+          )
         )}
+        {(geometry?.kind === 'custom' || geometry?.connector !== undefined) &&
+          geometryPointEditing &&
+          isSelected &&
+          !element.locked &&
+          onUpdateElement && (
+            <GeometryPointHandles
+              element={element}
+              geometry={geometry}
+              sourceSvg={sourceSvg}
+              onUpdateElement={onUpdateElement}
+              onPreview={(value) =>
+                setPreviewGeometry(value ? { source: element.pptxGeometry, geometry: value } : null)
+              }
+            />
+          )}
       </svg>
     </div>
   )

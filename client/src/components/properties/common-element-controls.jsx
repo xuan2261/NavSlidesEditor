@@ -4,6 +4,8 @@ import { normalizeRotation } from '../../utils/element-update-fanout'
 import { computeMixedValues } from '../../utils/selection-mixed-values'
 import { ArrowDown, ArrowUp, Lock, Unlock } from 'lucide-react'
 import { FRAGMENT_ANIMATION_TYPES } from '../../constants/fragment-animation-types'
+import geometryRecords from 'revealjs-shared/src/pptx-geometry-style-records.js'
+import { semanticInstance, semanticDefinition } from 'revealjs-shared/src/pptx-semantic-records.js'
 
 /**
  * Common element controls shared across all element types:
@@ -18,7 +20,26 @@ export default function CommonElementControls({
   onDelete,
   elements,
   selectedElementIds,
+  pptxSemantic,
 }) {
+  const canonicalPictureSelected = [element,
+    ...(elements || []).filter((candidate) => selectedElementIds?.includes(candidate.id)),
+  ].some((candidate) => {
+    const instance = semanticInstance(pptxSemantic, candidate.pptxInstanceId)
+    return Boolean(semanticDefinition(pptxSemantic, instance?.definitionId)?.content?.pictureDocument)
+  })
+  const canonicalGeometrySelected = [
+    element,
+    ...(elements || []).filter((candidate) => selectedElementIds?.includes(candidate.id)),
+  ].some((candidate) => {
+    const instance = semanticInstance(pptxSemantic, candidate.pptxInstanceId)
+    return (
+      instance &&
+      [1, 2].includes(
+        geometryRecords.geometryProvider(pptxSemantic, instance).geometry?.schemaVersion
+      )
+    )
+  })
   const updateFinite = (key, value, min = null, max = null) => {
     const next = clampNumber(value, min, max, null)
     if (next === null) return
@@ -32,13 +53,12 @@ export default function CommonElementControls({
     'height',
     'rotation',
     'opacity',
+    'locked',
   ])
   // Blank a numeric field + show "—" when the selection diverges on that key;
   // editing still writes (the apply path fans the value to all selected).
   const numProps = (key, fallback) =>
-    mixed[key]?.isMixed
-      ? { value: '', placeholder: '—' }
-      : { value: fallback }
+    mixed[key]?.isMixed ? { value: '', placeholder: '—' } : { value: fallback }
 
   return (
     <>
@@ -108,7 +128,7 @@ export default function CommonElementControls({
       </div>
 
       {/* Opacity (generic) — shape/line already expose it in ShapeProperties */}
-      {element.type !== 'shape' && element.type !== 'line' && (
+      {element.type !== 'shape' && element.type !== 'line' && !canonicalPictureSelected && (
         <div className="mb-2.5">
           <div className="text-[11px] text-text-muted mb-1">
             Opacity:{' '}
@@ -141,6 +161,10 @@ export default function CommonElementControls({
         <input
           data-testid="prop-lock-toggle"
           type="checkbox"
+          aria-checked={mixed.locked?.isMixed ? 'mixed' : Boolean(element.locked)}
+          ref={(node) => {
+            if (node) node.indeterminate = Boolean(mixed.locked?.isMixed)
+          }}
           checked={element.locked || false}
           onChange={(e) => onUpdate({ locked: e.target.checked })}
           className="accent-accent"
@@ -197,7 +221,9 @@ export default function CommonElementControls({
                 onChange={(e) => onUpdate({ fragmentAnimation: e.target.value })}
               >
                 {FRAGMENT_ANIMATION_TYPES.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
                 ))}
               </Select>
             </div>
@@ -206,7 +232,7 @@ export default function CommonElementControls({
       </div>
 
       {/* Drop Shadow */}
-      {element.type !== 'html' && element.type !== 'code' && (
+      {!canonicalGeometrySelected && element.type !== 'html' && element.type !== 'code' && (
         <div className="mb-2.5">
           <div className="text-[11px] text-text-muted mb-1">Drop Shadow</div>
           <div className="grid grid-cols-2 gap-x-2 gap-y-2 items-start mt-2">

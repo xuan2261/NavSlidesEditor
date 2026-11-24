@@ -3,10 +3,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 const h = vi.hoisted(() => ({
   exportPDF: vi.fn(),
-  downloadHTML: vi.fn(),
   generateRevealHTML: vi.fn(() => '<html></html>'),
   generateOfflineHTML: vi.fn(() => Promise.resolve('<html>offline</html>')),
-  exportProject: vi.fn(() => Promise.resolve()),
   exportToPptx: vi.fn(() => Promise.resolve([])),
   downloadPptxOriginal: vi.fn(),
   getPptxFidelity: vi.fn(),
@@ -21,18 +19,18 @@ const h = vi.hoisted(() => ({
 
 vi.mock('../utils/generateHTML', () => ({
   exportPDF: h.exportPDF,
-  downloadHTML: h.downloadHTML,
   generateRevealHTML: h.generateRevealHTML,
   presentInWindow: vi.fn(),
 }))
 vi.mock('../utils/offlineExport', () => ({ generateOfflineHTML: h.generateOfflineHTML }))
-vi.mock('../utils/export-project', () => ({ exportProject: h.exportProject }))
 vi.mock('../utils/exportPptx', () => ({ exportToPptx: h.exportToPptx }))
-vi.mock('../utils/api', () => ({ api: {
-  downloadPptxOriginal: h.downloadPptxOriginal,
-  getPptxFidelity: h.getPptxFidelity,
-  downloadValidatedEditedPptx: h.downloadValidatedEditedPptx,
-} }))
+vi.mock('../utils/api', () => ({
+  api: {
+    downloadPptxOriginal: h.downloadPptxOriginal,
+    getPptxFidelity: h.getPptxFidelity,
+    downloadValidatedEditedPptx: h.downloadValidatedEditedPptx,
+  },
+}))
 vi.mock('../stores/presentation-store', () => ({
   usePresentationStore: {
     getState: () => ({ adoptAggregateGeneration: h.adoptAggregateGeneration }),
@@ -55,7 +53,8 @@ beforeEach(() => {
     })
   )
   h.getPptxFidelity.mockResolvedValue({
-    aggregateGeneration: 2, exports: { validatedEdited: { available: true } },
+    aggregateGeneration: 2,
+    exports: { validatedEdited: { available: true } },
   })
   h.flushPendingSave.mockResolvedValue(true)
   h.beginExport.mockReturnValue(1)
@@ -72,20 +71,6 @@ afterEach(() => {
 })
 
 describe('useExportActions', () => {
-  it('onExportPDF delegates to exportPDF(presentation)', () => {
-    const { result } = renderHook(() => useExportActions(presentation))
-    act(() => result.current.onExportPDF())
-    expect(h.exportPDF).toHaveBeenCalledWith(presentation)
-  })
-
-  it('onExportHTML delegates to downloadHTML(presentation)', async () => {
-    const { result } = renderHook(() => useExportActions(presentation))
-    await act(async () => {
-      await result.current.onExportHTML()
-    })
-    expect(h.downloadHTML).toHaveBeenCalledWith(presentation)
-  })
-
   it('onExportPPTX dynamic-imports exportToPptx and surfaces warnings via themed notice', async () => {
     const warnings = ['Unsupported element X']
     Object.defineProperty(warnings, 'exportReport', {
@@ -97,7 +82,6 @@ describe('useExportActions', () => {
     await act(async () => {
       await result.current.onExportPPTX()
     })
-    expect(h.exportToPptx).toHaveBeenCalledWith(presentation)
     expect(h.showNotice).toHaveBeenCalledWith(expect.stringContaining('Unsupported element X'))
     expect(globalThis.__NAVSLIDES_LAST_PPTX_EXPORT_REPORT__).toEqual(
       expect.objectContaining({ surface: 'pptx-export', warningCount: 1 })
@@ -167,7 +151,10 @@ describe('useExportActions', () => {
       aggregateGeneration: 1,
     }
     h.downloadPptxOriginal.mockRejectedValueOnce(
-      Object.assign(new Error('Package generation is stale'), { status: 409, code: 'STALE_GENERATION' })
+      Object.assign(new Error('Package generation is stale'), {
+        status: 409,
+        code: 'STALE_GENERATION',
+      })
     )
     const { result } = renderHook(() => useExportActions(packageBacked))
 
@@ -189,7 +176,6 @@ describe('useExportActions', () => {
     await act(async () => result.current.onExportPPTX())
 
     expect(h.downloadPptxOriginal).not.toHaveBeenCalled()
-    expect(h.exportToPptx).toHaveBeenCalledWith(packageBacked)
   })
 
   it('falls back to reconstructed export when original bytes return 404', async () => {
@@ -197,12 +183,13 @@ describe('useExportActions', () => {
       ...presentation,
       pptxOriginal: { id: 'original-1', sha256: 'a'.repeat(64) },
     }
-    h.downloadPptxOriginal.mockRejectedValueOnce(Object.assign(new Error('hybrid-export'), { status: 404 }))
+    h.downloadPptxOriginal.mockRejectedValueOnce(
+      Object.assign(new Error('hybrid-export'), { status: 404 })
+    )
     const { result } = renderHook(() => useExportActions(imported))
 
     await act(async () => result.current.onExportPPTX())
 
-    expect(h.exportToPptx).toHaveBeenCalledWith(imported)
     expect(h.showError).not.toHaveBeenCalled()
   })
 
@@ -211,16 +198,71 @@ describe('useExportActions', () => {
       ...presentation,
       pptxOriginal: { id: 'original-1', sha256: 'a'.repeat(64) },
     }
-    const { result, rerender } = renderHook(
-      ({ deck }) => useExportActions(deck),
-      { initialProps: { deck: imported } }
-    )
+    const { result, rerender } = renderHook(({ deck }) => useExportActions(deck), {
+      initialProps: { deck: imported },
+    })
     const edited = { ...imported, slides: [{ id: 's1', elements: [{ id: 'e1', type: 'text' }] }] }
     rerender({ deck: edited })
     await act(async () => result.current.onExportPPTX())
 
     expect(h.downloadPptxOriginal).not.toHaveBeenCalled()
-    expect(h.exportToPptx).toHaveBeenCalledWith(edited)
+  })
+
+  it('captures exact content only at baseline changes and the export boundary', async () => {
+    const serialize = vi.fn(() => ({ text: 'source' }))
+    const imported = {
+      ...presentation,
+      pptxSourceAvailable: true,
+      aggregateGeneration: 1,
+      slides: [{ id: 's1', elements: [{ toJSON: serialize }] }],
+    }
+    const { result, rerender } = renderHook(({ deck }) => useExportActions(deck), {
+      initialProps: { deck: imported },
+    })
+    expect(serialize).toHaveBeenCalledTimes(1)
+    rerender({ deck: imported })
+    rerender({ deck: { ...imported, updatedAt: 'later' } })
+    expect(serialize).toHaveBeenCalledTimes(1)
+    h.downloadPptxOriginal.mockRejectedValueOnce(Object.assign(new Error('missing'), { status: 404 }))
+    await act(async () => result.current.onExportPPTX())
+    expect(serialize).toHaveBeenCalledTimes(2)
+    expect(h.downloadPptxOriginal).toHaveBeenCalledWith('p1', 1)
+    rerender({ deck: { ...imported, aggregateGeneration: 2 } })
+    expect(serialize).toHaveBeenCalledTimes(3)
+    rerender({ deck: { ...imported, id: 'p2', aggregateGeneration: 2 } })
+    expect(serialize).toHaveBeenCalledTimes(4)
+  })
+
+  it('keeps an older export callback bound to its captured baseline after an id change', async () => {
+    const imported = {
+      ...presentation,
+      pptxSourceAvailable: true,
+      aggregateGeneration: 1,
+      slides: [{ id: 's1', elements: [{ content: 'source' }] }],
+    }
+    const { result, rerender } = renderHook(({ deck }) => useExportActions(deck), {
+      initialProps: { deck: imported },
+    })
+    const olderExport = result.current.onExportPPTX
+    imported.slides[0].elements[0].content = 'edited'
+    rerender({ deck: { ...imported, id: 'p2' } })
+    await act(async () => olderExport())
+    expect(h.downloadPptxOriginal).not.toHaveBeenCalled()
+    expect(h.exportToPptx).toHaveBeenCalledWith(imported, { teacherReveal: false })
+  })
+
+  it.each([false, true])('detects in-place edits without a dirty flag (rerender: %s)', async (renderAgain) => {
+    const imported = {
+      ...presentation,
+      pptxOriginal: { id: 'original-1', sha256: 'a'.repeat(64) },
+      slides: [{ id: 's1', elements: [{ id: 'e1', content: 'source' }] }],
+    }
+    const { result, rerender } = renderHook(() => useExportActions(imported))
+    imported.slides[0].elements[0].content = 'in-place edit'
+    if (renderAgain) rerender()
+    await act(async () => result.current.onExportPPTX())
+    expect(h.downloadPptxOriginal).not.toHaveBeenCalled()
+    expect(h.exportToPptx).toHaveBeenCalledWith(imported, { teacherReveal: false })
   })
 
   it('never downloads original bytes when the server marks the presentation dirty', async () => {
@@ -234,7 +276,6 @@ describe('useExportActions', () => {
     await act(async () => result.current.onExportPPTX())
 
     expect(h.downloadPptxOriginal).not.toHaveBeenCalled()
-    expect(h.exportToPptx).toHaveBeenCalledWith(serverDirty)
   })
 
   it('onExportPPTX does NOT show a notice when there are no warnings', async () => {
@@ -254,7 +295,6 @@ describe('useExportActions', () => {
     const { result } = renderHook(() => useExportActions(imported))
     await act(async () => result.current.onGenerateReconstructedPPTX())
     expect(h.downloadPptxOriginal).not.toHaveBeenCalled()
-    expect(h.exportToPptx).toHaveBeenCalledWith(imported)
   })
 
   it('exports a validated edited revision only after current capability validation', async () => {
@@ -268,10 +308,12 @@ describe('useExportActions', () => {
       return element
     })
     const onAggregateGeneration = vi.fn()
-    const { result } = renderHook(() => useExportActions(presentation, {
-      flushPendingSave: h.flushPendingSave,
-      onAggregateGeneration,
-    }))
+    const { result } = renderHook(() =>
+      useExportActions(presentation, {
+        flushPendingSave: h.flushPendingSave,
+        onAggregateGeneration,
+      })
+    )
     await act(async () => result.current.onExportValidatedEditedRevision())
     expect(h.flushPendingSave).toHaveBeenCalledTimes(1)
     expect(h.getPptxFidelity).toHaveBeenCalledWith('p1')
@@ -296,9 +338,11 @@ describe('useExportActions', () => {
       return element
     })
 
-    const { result } = renderHook(() => useExportActions(presentation, {
-      flushPendingSave: h.flushPendingSave,
-    }))
+    const { result } = renderHook(() =>
+      useExportActions(presentation, {
+        flushPendingSave: h.flushPendingSave,
+      })
+    )
     await act(async () => result.current.onExportValidatedEditedRevision())
 
     expect(h.downloadValidatedEditedPptx).toHaveBeenCalledWith('p1', 2, expect.any(String))
@@ -334,11 +378,13 @@ describe('useExportActions', () => {
       return element
     })
 
-    const { result } = renderHook(() => useExportActions(presentation, {
-      beginExport: h.beginExport,
-      endExport: h.endExport,
-      flushPendingSave: h.flushPendingSave,
-    }))
+    const { result } = renderHook(() =>
+      useExportActions(presentation, {
+        beginExport: h.beginExport,
+        endExport: h.endExport,
+        flushPendingSave: h.flushPendingSave,
+      })
+    )
     await act(async () => result.current.onExportValidatedEditedRevision())
 
     expect(events).toEqual(['flush', 'begin', 'fidelity', 'download', 'end:7'])
@@ -348,11 +394,13 @@ describe('useExportActions', () => {
   it('releases the validated export token when capability validation fails', async () => {
     h.getPptxFidelity.mockRejectedValueOnce(new Error('validator unavailable'))
     h.beginExport.mockReturnValueOnce(8)
-    const { result } = renderHook(() => useExportActions(presentation, {
-      beginExport: h.beginExport,
-      endExport: h.endExport,
-      flushPendingSave: h.flushPendingSave,
-    }))
+    const { result } = renderHook(() =>
+      useExportActions(presentation, {
+        beginExport: h.beginExport,
+        endExport: h.endExport,
+        flushPendingSave: h.flushPendingSave,
+      })
+    )
 
     await act(async () => result.current.onExportValidatedEditedRevision())
 
@@ -364,12 +412,13 @@ describe('useExportActions', () => {
 
   it('does not start a second validated export while the first is slow', async () => {
     let resolveFidelity
-    h.beginExport
-      .mockReturnValueOnce(1)
-      .mockReturnValueOnce(null)
-    h.getPptxFidelity.mockImplementationOnce(() => new Promise((resolve) => {
-      resolveFidelity = resolve
-    }))
+    h.beginExport.mockReturnValueOnce(1).mockReturnValueOnce(null)
+    h.getPptxFidelity.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveFidelity = resolve
+        })
+    )
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:edited')
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
     const original = document.createElement.bind(document)
@@ -379,11 +428,13 @@ describe('useExportActions', () => {
       return element
     })
 
-    const { result } = renderHook(() => useExportActions(presentation, {
-      beginExport: h.beginExport,
-      endExport: h.endExport,
-      flushPendingSave: h.flushPendingSave,
-    }))
+    const { result } = renderHook(() =>
+      useExportActions(presentation, {
+        beginExport: h.beginExport,
+        endExport: h.endExport,
+        flushPendingSave: h.flushPendingSave,
+      })
+    )
     let firstExport
     await act(async () => {
       firstExport = result.current.onExportValidatedEditedRevision()
@@ -403,40 +454,62 @@ describe('useExportActions', () => {
     expect(h.endExport).toHaveBeenCalledWith(1)
   })
 
-  it('onExportOffline builds offline HTML and triggers a download', async () => {
-    const origCreate = URL.createObjectURL
-    const origRevoke = URL.revokeObjectURL
-    URL.createObjectURL = vi.fn(() => 'blob:x')
-    URL.revokeObjectURL = vi.fn()
-    const clickSpy = vi.fn()
-    const origCreateEl = document.createElement.bind(document)
+  it('downloads only the successfully closed portable document, never the hosted source', async () => {
+    let finishClosure
+    h.generateOfflineHTML.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishClosure = resolve
+        })
+    )
+    const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:portable')
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const anchors = []
+    const original = document.createElement.bind(document)
     vi.spyOn(document, 'createElement').mockImplementation((tag) => {
-      const el = origCreateEl(tag)
-      if (tag === 'a') el.click = clickSpy
-      return el
+      const element = original(tag)
+      if (tag === 'a') {
+        element.click = vi.fn()
+        anchors.push(element)
+      }
+      return element
     })
-
     const { result } = renderHook(() => useExportActions(presentation))
+    let pending
     await act(async () => {
-      await result.current.onExportOffline()
+      pending = result.current.onExportHTML()
     })
-
-    expect(h.generateRevealHTML).toHaveBeenCalledWith(presentation)
-    expect(h.generateOfflineHTML).toHaveBeenCalled()
-    expect(clickSpy).toHaveBeenCalled()
-
-    document.createElement.mockRestore()
-    URL.createObjectURL = origCreate
-    URL.revokeObjectURL = origRevoke
+    expect(create).not.toHaveBeenCalled()
+    expect(anchors).toEqual([])
+    finishClosure('<html><button>Local lesson</button></html>')
+    await act(async () => pending)
+    const downloaded = create.mock.calls[0][0]
+    const text = await new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = () => reject(reader.error)
+      reader.readAsText(downloaded)
+    })
+    expect(text).toBe('<html><button>Local lesson</button></html>')
+    expect(anchors[0].download).toBe('My_Deck.html')
+    expect(anchors[0].click).toHaveBeenCalledTimes(1)
+    expect(h.showError).not.toHaveBeenCalled()
   })
 
-  it('onExportProject delegates to exportProject(presentation)', async () => {
+  it('blocks download and reports the unresolved resource when closure fails', async () => {
+    h.generateOfflineHTML.mockRejectedValueOnce(
+      new Error('Missing https://lesson.example/image.png; upload the asset')
+    )
+    const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:blocked')
+    vi.spyOn(console, 'error').mockImplementation(() => {})
     const { result } = renderHook(() => useExportActions(presentation))
-    await act(async () => {
-      await result.current.onExportProject()
-    })
-    expect(h.exportProject).toHaveBeenCalledWith(presentation)
+    await act(async () => result.current.onExportHTML())
+    expect(create).not.toHaveBeenCalled()
+    expect(h.showError).toHaveBeenCalledWith(
+      'HTML export failed: Missing https://lesson.example/image.png; upload the asset'
+    )
   })
+
 
   it('exposes onOpenProject as a function', () => {
     const { result } = renderHook(() => useExportActions(presentation))

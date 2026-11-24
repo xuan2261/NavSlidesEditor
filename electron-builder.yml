@@ -3,7 +3,7 @@ productName: NavSlides Editor
 directories:
   output: dist-electron
 
-electronVersion: '42.9.3'
+electronVersion: '44.5.1'
 beforePack: scripts/verify-runtime-closure.js
 
 icon: build/icon.png
@@ -35,6 +35,11 @@ extraResources:
     to: client/dist/
   - from: client-dist-manifest.json
     to: client-dist-manifest.json
+  - from: plugins/
+    to: plugins/
+    filter:
+      - '*/parallax-plugin.json'
+      - '*/dist/**'
 
 mac:
   category: public.app-category.productivity

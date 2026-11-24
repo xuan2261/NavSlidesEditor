@@ -31,3 +31,14 @@ describe('Phase 4: SVG override hardening (red-team m6)', () => {
     expect(container.innerHTML).toContain('<circle')
   })
 })
+
+describe('SVG override quote parity', () => {
+  it.each(["'", '"'])('overrides fill and stroke using %s quotes', (quote) => {
+    const { container } = render(<SvgElementRenderer element={{
+      content: `<svg><rect fill=${quote}#000000${quote} stroke = ${quote}#ffffff${quote}/></svg>`,
+      fillOverride: '#ff0000', strokeOverride: '#0000ff',
+    }} />)
+    expect(container.querySelector('rect').getAttribute('fill')).toBe('#ff0000')
+    expect(container.querySelector('rect').getAttribute('stroke')).toBe('#0000ff')
+  })
+})

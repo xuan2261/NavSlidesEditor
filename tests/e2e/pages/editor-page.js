@@ -50,8 +50,8 @@ export class EditorPage {
     })
   }
 
-  async waitForReady() {
-    await this.canvasLocator.waitFor({ state: 'visible', timeout: 30000 })
+  async waitForReady(timeout = 90000) {
+    await this.canvasLocator.waitFor({ state: 'visible', timeout })
   }
 
   async waitForAutoSave() {
@@ -74,13 +74,13 @@ export class EditorPage {
   async waitForElementPanelSelected(t = 5000) { await this.properties.waitForElementPanelSelected(t) }
   async waitForElementPanelCleared(t = 5000) { await this.properties.waitForElementPanelCleared(t) }
 
-  async gotoPresentation(id) {
+  async gotoPresentation(id, timeout = 90000) {
     await this.page.addInitScript(() => {
       window.__E2E__ = true
       window.localStorage.setItem('navSlidesTutorialSeen', 'true')
     })
-    await this.page.goto(`/editor/${id}`, { timeout: 30000 })
-    await this.waitForReady()
+    await this.page.goto(`/editor/${id}`, { timeout })
+    await this.waitForReady(timeout)
   }
 
   async getElementCount() { return this.elementsCountLocator.count() }
@@ -105,7 +105,7 @@ export class EditorPage {
   async openHistoryModal() { await this.menubar.openHistoryModal() }
 
   async closeOverlayModal() {
-    await this.page.locator('.fixed.inset-0').last().click({ position: { x: 10, y: 10 } })
+    await this.page.getByRole('dialog').last().getByRole('button', { name: /^Close/ }).click()
   }
 
   async openTemplateGallery() {

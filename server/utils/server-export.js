@@ -1,5 +1,9 @@
+const {
+  resolveStaticRasterSlides,
+} = require('revealjs-shared/src/education/static-raster-targets.js')
 const pptxgen = require('pptxgenjs')
 const {
+  getPptxExportLayout,
   getPptxLayout,
   getPresentationResolution,
   getSlideNotes,
@@ -7,21 +11,15 @@ const {
   mergeTokens,
   normalizePresentationNotes,
 } = require('revealjs-shared')
-const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
+const {
+  normalizePptxImportedPresentationForRead,
+} = require('../services/presentation-normalization')
 const { applySlideBackground } = require('./server-background')
 const { addElementToPptxSlide } = require('./server-renderers')
 const { getServerRasters } = require('./server-raster')
 
 function getSafeTitle(title) {
   return String(title || 'Presentation').trim() || 'Presentation'
-}
-
-function getPptxExportLayout(presentation) {
-  const originalSize = presentation && presentation._pptxMeta && presentation._pptxMeta.originalSize
-  const width = Number(originalSize && originalSize.width)
-  const height = Number(originalSize && originalSize.height)
-  if (width > 0 && height > 0) return { width, height }
-  return getPresentationResolution(presentation)
 }
 
 async function exportToFile(sourcePresentation, filePath, options = {}) {
@@ -45,9 +43,15 @@ async function exportToFile(sourcePresentation, filePath, options = {}) {
   // Per-export raster cache: isolates this invocation so concurrent exports
   // can't wipe or share each other's memoized rasters.
   const rasterCache = new Map()
-  const rasterOverrides = await getServerRasters(presentation, { baseUrl, cache: rasterCache })
+  const rasterOverrides = await getServerRasters(presentation, {
+    baseUrl,
+    cache: rasterCache,
+    teacherReveal: options.teacherReveal === true,
+  })
 
-  for (const [index, sourceSlide] of (presentation.slides || []).entries()) {
+  for (const [index, { slide: sourceSlide, effectiveSlideId }] of resolveStaticRasterSlides(
+    presentation
+  ).entries()) {
     const slideNumber = index + 1
     const slide = pptx.addSlide()
     const slideTokens = mergeTokens(
@@ -82,6 +86,8 @@ async function exportToFile(sourcePresentation, filePath, options = {}) {
         baseUrl,
         rasterCache,
         designTokens: slideTokens,
+        teacherReveal: options.teacherReveal === true,
+        effectiveSlideId,
       })
     }
 

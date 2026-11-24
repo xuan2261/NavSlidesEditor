@@ -18,6 +18,8 @@ const { errorHandler } = require('./middleware/error-handler')
 const { createLocalMutationIngressPolicy } = require('./middleware/local-mutation-ingress')
 const { generateRevealHTML } = require('revealjs-shared')
 const { readAuthoritativePresentation } = require('./services/package-backed-presentation-read')
+const { prepareSemanticOutputResources, assertSemanticOutputArtifact } =
+  require('./services/pptx-import/semantic-output-resources')
 const { recordView } = require('./routes/analytics')
 const { setupSocketHandlers } = require('./services/socket-handler')
 const { setupGameSocketHandlers } = require('./services/game-socket-handler')
@@ -27,11 +29,15 @@ const {
   shutdownPackageStore,
 } = require('./services/pptx-import/package-store-runtime')
 const { stripControlChars } = require('./utils/strip-control-chars')
+const { getServingBaseUrl } = require('./utils/serving-origin')
 const { resolveListenHost, getExposureWarning } = require('./services/listen-host-policy')
 const { sanitizeSvgBuffer } = require('./services/svg-upload-sanitizer')
 const { createHealthState, READY_REASON_CODES } = require('./services/health-state')
 const { assertSingleProcessTopology } = require('./services/health-state-topology')
-const { assertWritableRoot, durableRecoveryReason } = require('./services/health-state-readiness')
+const {
+  assertWritableRoot,
+  recoverStartupState,
+} = require('./services/health-state-readiness')
 
 /**
  * A store that fails to release is exactly what leaves the writer lock held and
@@ -109,6 +115,7 @@ function drainServerTransports(server, timeoutMs) {
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 const presentationsRouter = require('./routes/presentations')
+const { createSemanticFontRouter } = require('./routes/pptx-semantic-fonts')
 const templatesRouter = require('./routes/templates')
 const shareRouter = require('./routes/share')
 const uploadRouter = require('./routes/upload')
@@ -119,6 +126,8 @@ const settingsRouter = require('./routes/settings')
 const mediaRouter = require('./routes/media')
 const liveRouter = require('./routes/live')
 const pptxImportRouter = require('./routes/pptx-import')
+const projectImportRouter = require('./routes/project-import')
+const projectExportRouter = require('./routes/project-export')
 const gamesRouter = require('./routes/games-rest-api-handler')
 const pluginsRouter = require('./routes/plugins')
 
@@ -168,6 +177,16 @@ app.use(cors(corsOptions))
 // Local deployment and CSRF boundary, not multi-user authentication. This runs
 // before body parsing, upload handling, rate-limit accounting, and every route.
 app.use(createLocalMutationIngressPolicy())
+app.use((req, res, next) => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next()
+  const ready = healthState.ready()
+  if (ready.status === 'ready') return next()
+  res.set('Cache-Control', 'no-store').status(503).json({
+    error: 'Server recovery must complete before mutations are admitted',
+    code: ready.reasons[0],
+    reasons: ready.reasons,
+  })
+})
 app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ extended: false }))
 
@@ -236,13 +255,15 @@ app.use('/uploads', express.static(UPLOADS_DIR))
 if (fs.existsSync(socketIoClientDist)) {
   app.use('/vendor/socket.io', express.static(socketIoClientDist))
 }
-// LaTeX previews run in sandboxed srcdoc frames with opaque origins. Public
-// KaTeX font files must allow cross-origin font loads even on our own host.
+// Public KaTeX fonts and TikZ compiler assets serve opaque srcdoc frames without opening arbitrary assets or APIs.
 app.use(
   '/vendor',
   express.static(path.join(__dirname, 'vendor'), {
     setHeaders(res, filePath) {
-      if (/[/\\]katex[/\\]dist[/\\]fonts[/\\][^/\\]+\.(?:woff2?|ttf)$/i.test(filePath)) {
+      if (
+        /[/\\]katex[/\\]dist[/\\]fonts[/\\][^/\\]+\.(?:woff2?|ttf)$/i.test(filePath) ||
+        /[/\\]tikzjax[/\\]/i.test(filePath)
+      ) {
         res.setHeader('Access-Control-Allow-Origin', '*')
       }
     },
@@ -253,11 +274,14 @@ app.use(
 // Core CRUD — order matters: more specific paths before generic ones
 app.use('/api/presentations', shareRouter) // /:id/share
 app.use('/api/presentations', historyRouter) // /:id/snapshot(s), /:id/restore
+app.use('/api/presentations', projectExportRouter) // /:id/project-archive
 app.use('/api/presentations', presentationsRouter) // CRUD + export + present + duplicate + save-as-template
+app.use('/api/presentations', createSemanticFontRouter())
 app.use('/api/templates', templatesRouter)
 app.use('/api/upload', uploadRouter)
 app.post('/api/pptx/import', uploadLimiter)
 app.use('/api/pptx', pptxImportRouter)
+app.use('/api/project-imports', projectImportRouter)
 app.use('/api/github', githubRouter)
 app.use('/api/rclone', syncRouter)
 app.use('/api/settings', settingsRouter)
@@ -296,11 +320,12 @@ app.post('/api/presentations/:id/github/push', (req, res, next) => {
 // bcrypt moved to top-level imports
 
 // Helper for presentation viewer HTML payload (with server-side XSS sanitization)
-async function renderShareView(presentationId, res) {
+async function renderShareView(presentationId, req, res) {
   // Serve-guard (C2): a soft-deleted deck must not render even via a live share
   // token. The authoritative reader returns null for missing or trashed decks.
   const resolved = await readAuthoritativePresentation(presentationId)
   if (!resolved) return res.status(404).send('Presentation not found')
+  const semanticOutputResources = await prepareSemanticOutputResources(resolved.presentation)
 
   // Keep html embeds trusted and programmable in share mode too.
   // We only normalize customCSS risky URL/expression patterns.
@@ -313,10 +338,12 @@ async function renderShareView(presentationId, res) {
       .replace(/url\s*\(\s*['"]?\s*javascript/gi, 'url(/* blocked */')
   }
 
-  const html = generateRevealHTML(sanitized)
+  const html = generateRevealHTML(sanitized, {
+    baseUrl: getServingBaseUrl(req), semanticOutputResources,
+  })
   res.setHeader('Content-Type', 'text/html')
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
-  res.send(html)
+  res.send(assertSemanticOutputArtifact(html, semanticOutputResources))
 }
 
 // Analytics and Expiry handler
@@ -403,7 +430,7 @@ app.get('/share/:token', async (req, res) => {
       await recordView(updatedTokenData.presentationId, req.params.token, req.get('referer') || '')
     } catch {}
 
-    await renderShareView(updatedTokenData.presentationId, res)
+    await renderShareView(updatedTokenData.presentationId, req, res)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -438,7 +465,7 @@ app.post('/share/:token', async (req, res) => {
       await recordView(updatedTokenData.presentationId, req.params.token, req.get('referer') || '')
     } catch {}
 
-    await renderShareView(updatedTokenData.presentationId, res)
+    await renderShareView(updatedTokenData.presentationId, req, res)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -509,7 +536,7 @@ async function startServer(port, options = {}) {
       throw error
     }
   }
-  const recoveryReason = durableRecoveryReason(store.getState())
+  const recoveryReason = await recoverStartupState(store)
   if (recoveryReason) healthState.markDegraded(recoveryReason)
   else healthState.markReady()
   return new Promise((resolve, reject) => {

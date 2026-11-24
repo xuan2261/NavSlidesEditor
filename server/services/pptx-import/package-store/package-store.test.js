@@ -4,7 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { createRequire } from 'node:module'
 import JSZip from 'jszip'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import storeModule from './index.js'
 import resolverModule from '../package-revision-resolver.js'
 import canonicalHashModule from '../evidence/canonical-hash.js'
@@ -16,11 +16,7 @@ const { openPackageStore } = storeModule
 const { resolvePackageRevisionBytes } = resolverModule
 const { hashCanonical } = canonicalHashModule
 const { savePackageProjection } = generationSafeSave
-const {
-  initializePackageStore,
-  shutdownPackageStore,
-  withPackageStore,
-} = runtimeModule
+const { initializePackageStore, shutdownPackageStore, withPackageStore } = runtimeModule
 const dirs = []
 
 async function tempStore() {
@@ -59,13 +55,98 @@ afterEach(async () => {
 })
 
 describe('package store lifecycle MVP', () => {
+  it('persists the canonical state bytes used for the root hash and recovers them', async () => {
+    const { rootDir, store } = await tempStore()
+    await store.acquireWriter()
+    let expected
+    try {
+      await store.commitOriginal(Buffer.from('canonical-state-bytes'), {
+        ownerType: 'presentation',
+        ownerId: 'canonical-state-deck',
+      })
+      expected = store.getState()
+      const root = JSON.parse(await fs.readFile(path.join(rootDir, 'state-root.json'), 'utf8'))
+      const bytes = await fs.readFile(path.join(rootDir, root.stateFile))
+      expect(crypto.createHash('sha256').update(bytes).digest('hex')).toBe(root.stateHash)
+      expect(JSON.parse(bytes).type).toBe('navslides.package-state-manifest')
+      const { loadStateIndex } = require('./state-index-loader')
+      expect((await loadStateIndex(rootDir, root)).state).toEqual(expected)
+    } finally {
+      await store.releaseWriter()
+    }
+    const reopened = await openPackageStore({ rootDir })
+    expect(reopened.getState()).toEqual(expected)
+  })
+
+  it('keeps projection edits isolated until a mutation publishes successfully', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    try {
+      await store.commitImport(await minimalPptx(), {
+        jobId: 'isolated-projection-job', presentationId: 'isolated-projection',
+        projection: { id: 'isolated-projection', title: 'Committed', slides: [] },
+        sourceMap: { entries: {} },
+      })
+      const snapshot = store.getState()
+      snapshot.mutationResults[0].projection.title = 'Reader edit'
+      expect(store.getState().mutationResults[0].projection.title).toBe('Committed')
+      await expect(store.mutate((next) => {
+        next.mutationResults[0].projection.title = 'Aborted edit'
+        throw new Error('Abort before publish')
+      })).rejects.toThrow('Abort before publish')
+      expect(store.getState().mutationResults[0].projection.title).toBe('Committed')
+    } finally {
+      await store.releaseWriter()
+    }
+  })
+
+  it('returns defensive head and compatibility snapshots without copying unrelated history', async () => {
+    const { store } = await tempStore()
+    await store.acquireWriter()
+    try {
+      const committed = await store.commitOriginal(Buffer.from('targeted-reader'), {
+        ownerType: 'presentation',
+        ownerId: 'targeted-deck',
+      })
+      const before = store.getState()
+      const fullSnapshot = vi.spyOn(store, 'getState').mockImplementation(() => {
+        throw Error('Unrelated full-state snapshot')
+      })
+      try {
+        expect(store.getPresentationHead('missing')).toBeNull()
+        const head = store.getPresentationHead('targeted-deck')
+        const publication = store.getCompatibilityState()
+        expect(head.originalRevisionId).toBe(committed.revision.id)
+        expect(Object.keys(publication).sort()).toEqual(['compatibilityOutbox', 'heads'])
+        expect(publication.heads).toEqual(before.heads)
+        expect(publication.compatibilityOutbox).toEqual(before.compatibilityOutbox)
+        head.generation = 999
+        publication.heads[0].generation = 888
+        publication.compatibilityOutbox.push({ id: 'not-durable' })
+        expect(store.getPresentationHead('targeted-deck').generation).toBe(1)
+        expect(store.getCompatibilityState().compatibilityOutbox).toEqual(
+          before.compatibilityOutbox
+        )
+      } finally {
+        fullSnapshot.mockRestore()
+      }
+      expect(store.getState()).toEqual(before)
+    } finally {
+      await store.releaseWriter()
+    }
+  })
+
   it('serializes direct metadata mutations under one owned writer', async () => {
     const { store } = await tempStore()
     await store.acquireWriter()
     try {
       await Promise.all([
-        store.mutate((next) => { next.matrixAuthorityEpoch += 1 }),
-        store.mutate((next) => { next.matrixAuthorityEpoch += 1 }),
+        store.mutate((next) => {
+          next.matrixAuthorityEpoch += 1
+        }),
+        store.mutate((next) => {
+          next.matrixAuthorityEpoch += 1
+        }),
       ])
       expect(store.getState()).toMatchObject({ generation: 2, matrixAuthorityEpoch: 3 })
     } finally {
@@ -82,19 +163,27 @@ describe('package store lifecycle MVP', () => {
     await expect(second.acquireWriter()).rejects.toThrow(/writer lock/i)
 
     const results = await Promise.all([
-      withPackageStore((activeStore) => activeStore.commitOriginal(Buffer.from('one'), {
-        ownerType: 'presentation',
-        ownerId: 'deck-a',
-      })),
-      withPackageStore((activeStore) => activeStore.commitOriginal(Buffer.from('two'), {
-        ownerType: 'presentation',
-        ownerId: 'deck-b',
-      })),
+      withPackageStore((activeStore) =>
+        activeStore.commitOriginal(Buffer.from('one'), {
+          ownerType: 'presentation',
+          ownerId: 'deck-a',
+        })
+      ),
+      withPackageStore((activeStore) =>
+        activeStore.commitOriginal(Buffer.from('two'), {
+          ownerType: 'presentation',
+          ownerId: 'deck-b',
+        })
+      ),
     ])
 
     expect(results).toHaveLength(2)
-    expect(store.getState().owners.map(({ ownerId }) => ownerId).sort())
-      .toEqual(['deck-a', 'deck-b'])
+    expect(
+      store
+        .getState()
+        .owners.map(({ ownerId }) => ownerId)
+        .sort()
+    ).toEqual(['deck-a', 'deck-b'])
     await shutdownPackageStore()
   })
 
@@ -175,21 +264,34 @@ describe('package store lifecycle MVP', () => {
       ownerId: 'deck-a',
     })
     await store.releaseWriter()
-    const resolved = await resolvePackageRevisionBytes({
-      presentationId: 'deck-a',
-      revisionId: committed.revision.id,
-    }, { store })
+    const resolved = await resolvePackageRevisionBytes(
+      {
+        presentationId: 'deck-a',
+        revisionId: committed.revision.id,
+      },
+      { store }
+    )
     expect(resolved.bytes).toEqual(Buffer.from('authoritative'))
 
     await fs.writeFile(store.blobs.blobPath(committed.blob.sha256), Buffer.from('corrupt'))
-    await expect(resolvePackageRevisionBytes({
-      presentationId: 'deck-a',
-      revisionId: committed.revision.id,
-    }, { store })).rejects.toMatchObject({ code: 'PACKAGE_BLOB_CORRUPT', status: 422 })
-    await expect(resolvePackageRevisionBytes({
-      presentationId: 'deck-a',
-      revisionId: 'forged',
-    }, { store })).rejects.toMatchObject({ code: 'PACKAGE_HEAD_UNAVAILABLE', status: 422 })
+    await expect(
+      resolvePackageRevisionBytes(
+        {
+          presentationId: 'deck-a',
+          revisionId: committed.revision.id,
+        },
+        { store }
+      )
+    ).rejects.toMatchObject({ code: 'PACKAGE_BLOB_CORRUPT', status: 422 })
+    await expect(
+      resolvePackageRevisionBytes(
+        {
+          presentationId: 'deck-a',
+          revisionId: 'forged',
+        },
+        { store }
+      )
+    ).rejects.toMatchObject({ code: 'PACKAGE_HEAD_UNAVAILABLE', status: 422 })
   })
 
   it('recovers predecessor state from an unreferenced prepared WAL', async () => {
@@ -200,10 +302,14 @@ describe('package store lifecycle MVP', () => {
       ownerId: 'deck-a',
     })
     await expect(
-      store.addOwner(store.getState().revisions[0].id, {
-        ownerType: 'presentation',
-        ownerId: 'deck-b',
-      }, { faultAfterPrepare: true })
+      store.addOwner(
+        store.getState().revisions[0].id,
+        {
+          ownerType: 'presentation',
+          ownerId: 'deck-b',
+        },
+        { faultAfterPrepare: true }
+      )
     ).rejects.toThrow(/fault after prepare/i)
     await store.releaseWriter()
 
@@ -213,7 +319,6 @@ describe('package store lifecycle MVP', () => {
     await reopened.acquireWriter()
     expect(reopened.recoveryActions).toContain('quarantined-unpublished-prepared-wal')
     await reopened.releaseWriter()
-
   })
 
   it('recovers matrix authority from independently durable high-water state', async () => {
@@ -225,15 +330,20 @@ describe('package store lifecycle MVP', () => {
     })
     await store.advanceMatrixAuthorityEpoch()
     await store.releaseWriter()
-    await fs.writeFile(path.join(rootDir, 'matrix-authority-epoch-high-water.json'),
-      JSON.stringify({ schemaVersion: 1, matrixAuthorityEpoch: 9 }))
+    await fs.writeFile(
+      path.join(rootDir, 'matrix-authority-epoch-high-water.json'),
+      JSON.stringify({ schemaVersion: 1, matrixAuthorityEpoch: 9 })
+    )
 
     const reopened = await openPackageStore({ rootDir })
 
     expect(reopened.getState().matrixAuthorityEpoch).toBe(9)
     expect(reopened.getState().heads[0].matrixAuthorityEpoch).toBe(9)
-    expect(Object.values(reopened.getState().heads[0].matrixAuthoritySubjects)
-      .every((subject) => subject.evolutionEpoch === 9)).toBe(true)
+    expect(
+      Object.values(reopened.getState().heads[0].matrixAuthoritySubjects).every(
+        (subject) => subject.evolutionEpoch === 9
+      )
+    ).toBe(true)
     expect(reopened.recoveryActions).toContain('advanced-matrix-authority-high-water')
   })
 
@@ -242,7 +352,8 @@ describe('package store lifecycle MVP', () => {
     ['prepare', { faultAfterPrepare: true }, ['deck-a'], 'quarantined-unpublished-prepared-wal'],
     ['root', { faultAfterRoot: true }, ['deck-a', 'deck-b'], 'completed-published-wal'],
     ['completion', { faultAfterCompletion: true }, ['deck-a', 'deck-b'], null],
-  ])('exposes only a predecessor or complete successor after a %s boundary fault',
+  ])(
+    'exposes only a predecessor or complete successor after a %s boundary fault',
     async (_boundary, fault, expectedOwners, recoveryAction) => {
       const { rootDir, store } = await tempStore()
       await store.acquireWriter()
@@ -251,21 +362,32 @@ describe('package store lifecycle MVP', () => {
         ownerId: 'deck-a',
       })
 
-      await expect(store.addOwner(first.revision.id, {
-        ownerType: 'presentation',
-        ownerId: 'deck-b',
-      }, fault)).rejects.toThrow(/injected fault/i)
+      await expect(
+        store.addOwner(
+          first.revision.id,
+          {
+            ownerType: 'presentation',
+            ownerId: 'deck-b',
+          },
+          fault
+        )
+      ).rejects.toThrow(/injected fault/i)
       await store.releaseWriter()
 
       const reopened = await openPackageStore({ rootDir })
-      expect(reopened.getState().owners.map(({ ownerId }) => ownerId).sort())
-        .toEqual(expectedOwners)
+      expect(
+        reopened
+          .getState()
+          .owners.map(({ ownerId }) => ownerId)
+          .sort()
+      ).toEqual(expectedOwners)
       expect(reopened.getState().generation).toBe(expectedOwners.length)
       if (recoveryAction) expect(reopened.recoveryActions).not.toContain(recoveryAction)
       await reopened.acquireWriter()
       if (recoveryAction) expect(reopened.recoveryActions).toContain(recoveryAction)
       await reopened.releaseWriter()
-    })
+    }
+  )
 
   it('rejects an active second writer and stale fencing epochs', async () => {
     const { rootDir, store } = await tempStore()
@@ -300,8 +422,12 @@ describe('package store lifecycle MVP', () => {
       ownerId: 'deck-b',
     })
 
-    expect(second.getState().owners.map((owner) => owner.ownerId).sort())
-      .toEqual(['deck-a', 'deck-b'])
+    expect(
+      second
+        .getState()
+        .owners.map((owner) => owner.ownerId)
+        .sort()
+    ).toEqual(['deck-a', 'deck-b'])
     expect(second.getState().generation).toBe(2)
   })
 
@@ -364,8 +490,10 @@ describe('package store lifecycle MVP', () => {
     })
     const state = store.getState()
     const head = state.heads.find((item) => item.presentationId === projection.id)
-    const authority = state.mutationResults.find((item) =>
-      item.presentationId === projection.id && item.packageRevisionId === committed.revision.id)
+    const authority = state.mutationResults.find(
+      (item) =>
+        item.presentationId === projection.id && item.packageRevisionId === committed.revision.id
+    )
 
     expect(committed.revision).toMatchObject({
       id: `r0-${crypto.createHash('sha256').update(bytes).digest('hex')}`,
@@ -390,16 +518,24 @@ describe('package store lifecycle MVP', () => {
         ]),
       },
     })
-    expect(state.owners).toContainEqual(expect.objectContaining({
-      revisionId: committed.revision.id, ownerType: 'presentation', ownerId: projection.id,
-    }))
-    expect(state.jobs).toContainEqual(expect.objectContaining({
-      id: 'job-import-1', kind: 'import', status: 'completed',
-      presentationId: projection.id,
-      outcomeRevisionId: committed.revision.id,
-      outcomeGeneration: head.generation,
-      outcomeHeadHash: hashCanonical(head),
-    }))
+    expect(state.owners).toContainEqual(
+      expect.objectContaining({
+        revisionId: committed.revision.id,
+        ownerType: 'presentation',
+        ownerId: projection.id,
+      })
+    )
+    expect(state.jobs).toContainEqual(
+      expect.objectContaining({
+        id: 'job-import-1',
+        kind: 'import',
+        status: 'completed',
+        presentationId: projection.id,
+        outcomeRevisionId: committed.revision.id,
+        outcomeGeneration: head.generation,
+        outcomeHeadHash: hashCanonical(head),
+      })
+    )
   })
 
   it('queues compatibility recovery alongside package publication', async () => {
@@ -438,25 +574,29 @@ describe('package store lifecycle MVP', () => {
   it.each([
     ['missing', undefined],
     ['malformed', { entries: [] }],
-  ])('rejects a %s package source map without publishing visible import state',
+  ])(
+    'rejects a %s package source map without publishing visible import state',
     async (_caseName, sourceMap) => {
       const { store } = await tempStore()
       await store.acquireWriter()
       const projection = { id: 'deck-invalid-map', title: 'Invalid map', slides: [] }
 
-      await expect(store.commitImport(await minimalPptx(), {
-        jobId: 'job-invalid-map',
-        presentationId: projection.id,
-        projection,
-        sourceMap,
-      })).rejects.toThrow(/source map/i)
+      await expect(
+        store.commitImport(await minimalPptx(), {
+          jobId: 'job-invalid-map',
+          presentationId: projection.id,
+          projection,
+          sourceMap,
+        })
+      ).rejects.toThrow(/source map/i)
 
       const state = store.getState()
       expect(state.heads).toHaveLength(0)
       expect(state.owners).toHaveLength(0)
       expect(state.mutationResults).toHaveLength(0)
       expect(state.jobs).toHaveLength(0)
-    })
+    }
+  )
 
   it('rejects source entries that do not correspond to a projection element', async () => {
     const { store } = await tempStore()
@@ -466,12 +606,14 @@ describe('package store lifecycle MVP', () => {
       slides: [{ id: 's1', elements: [{ id: 'e1', type: 'shape' }] }],
     }
 
-    await expect(store.commitImport(await minimalPptx(), {
-      jobId: 'job-unmapped-source',
-      presentationId: projection.id,
-      projection,
-      sourceMap: { entries: { 's1:missing': sourceRef() } },
-    })).rejects.toThrow(/projection element/i)
+    await expect(
+      store.commitImport(await minimalPptx(), {
+        jobId: 'job-unmapped-source',
+        presentationId: projection.id,
+        projection,
+        sourceMap: { entries: { 's1:missing': sourceRef() } },
+      })
+    ).rejects.toThrow(/projection element/i)
 
     const state = store.getState()
     expect(state.heads).toHaveLength(0)
@@ -487,19 +629,20 @@ describe('package store lifecycle MVP', () => {
       slides: [{ id: 's1', elements: [{ id: 'e1', type: 'shape' }] }],
     }
 
-    await expect(store.commitImport(await minimalPptx(), {
-      jobId: 'job-missing-source',
-      presentationId: projection.id,
-      projection,
-      sourceMap: { entries: {} },
-    })).rejects.toThrow(/source map.*projection element/i)
+    await expect(
+      store.commitImport(await minimalPptx(), {
+        jobId: 'job-missing-source',
+        presentationId: projection.id,
+        projection,
+        sourceMap: { entries: {} },
+      })
+    ).rejects.toThrow(/source map.*projection element/i)
 
     const state = store.getState()
     expect(state.heads).toHaveLength(0)
     expect(state.owners).toHaveLength(0)
     expect(state.mutationResults).toHaveLength(0)
   })
-
 
   it('rebinds a package source map and its entries to committed R0 generation one', async () => {
     const { store } = await tempStore()
@@ -519,8 +662,9 @@ describe('package store lifecycle MVP', () => {
         entries: { 's1:e1': sourceRef() },
       },
     })
-    const authority = store.getState().mutationResults.find((item) =>
-      item.presentationId === projection.id)
+    const authority = store
+      .getState()
+      .mutationResults.find((item) => item.presentationId === projection.id)
 
     expect(authority.sourceMap).toMatchObject({
       presentationId: projection.id,
@@ -560,11 +704,18 @@ describe('package store lifecycle MVP', () => {
     expect(state.heads).toHaveLength(0)
     expect(state.owners).toHaveLength(0)
     expect(state.mutationResults).toEqual([
-      expect.objectContaining({ operation: 'projection-save', idempotencyKey: 'job-import-rollback' }),
+      expect.objectContaining({
+        operation: 'projection-save',
+        idempotencyKey: 'job-import-rollback',
+      }),
     ])
-    expect(state.jobs).toContainEqual(expect.objectContaining({
-      id: 'job-import-rollback', status: 'failed', transactionState: 'rolled-back',
-    }))
+    expect(state.jobs).toContainEqual(
+      expect.objectContaining({
+        id: 'job-import-rollback',
+        status: 'failed',
+        transactionState: 'rolled-back',
+      })
+    )
   })
 
   it('keeps repeated rollback of a completed cleanup as a durable no-op', async () => {
@@ -604,10 +755,12 @@ describe('package store lifecycle MVP', () => {
     const rolledBackState = store.getState()
     const rolledBackRoot = structuredClone(store.metadata.root)
 
-    await expect(store.rollbackImport({
-      jobId: 'job-rollback-bound',
-      presentationId: 'unrelated-presentation',
-    })).rejects.toMatchObject({ code: 'PACKAGE_IMPORT_COMMIT_FAILED' })
+    await expect(
+      store.rollbackImport({
+        jobId: 'job-rollback-bound',
+        presentationId: 'unrelated-presentation',
+      })
+    ).rejects.toMatchObject({ code: 'PACKAGE_IMPORT_COMMIT_FAILED' })
 
     expect(store.getState()).toEqual(rolledBackState)
     expect(store.metadata.root).toEqual(rolledBackRoot)
@@ -628,18 +781,22 @@ describe('package store lifecycle MVP', () => {
     const rolledBackState = store.getState()
     const rolledBackRoot = structuredClone(store.metadata.root)
 
-    await expect(store.rollbackImport({
-      jobId: 'unrelated-job-id',
-      presentationId: projection.id,
-    })).rejects.toMatchObject({ code: 'PACKAGE_IMPORT_COMMIT_FAILED' })
+    await expect(
+      store.rollbackImport({
+        jobId: 'unrelated-job-id',
+        presentationId: projection.id,
+      })
+    ).rejects.toMatchObject({ code: 'PACKAGE_IMPORT_COMMIT_FAILED' })
 
     expect(store.getState()).toEqual(rolledBackState)
     expect(store.metadata.root).toEqual(rolledBackRoot)
-    expect(store.getState().jobs).toContainEqual(expect.objectContaining({
-      id: 'job-rollback-job-bound',
-      presentationId: projection.id,
-      transactionState: 'rolled-back',
-    }))
+    expect(store.getState().jobs).toContainEqual(
+      expect.objectContaining({
+        id: 'job-rollback-job-bound',
+        presentationId: projection.id,
+        transactionState: 'rolled-back',
+      })
+    )
   })
 
   it('fails closed for a legacy durable receipt on a repeated rollback', async () => {
@@ -660,10 +817,12 @@ describe('package store lifecycle MVP', () => {
       delete job.outcomeHeadHash
     })
 
-    await expect(store.rollbackImport({
-      jobId: 'job-rollback-legacy',
-      presentationId: projection.id,
-    })).rejects.toMatchObject({ code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
+    await expect(
+      store.rollbackImport({
+        jobId: 'job-rollback-legacy',
+        presentationId: projection.id,
+      })
+    ).rejects.toMatchObject({ code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
   })
 
   it('retains a legacy receipt after restart without immutable outcome authority', async () => {
@@ -687,14 +846,20 @@ describe('package store lifecycle MVP', () => {
     const restarted = await openPackageStore({ rootDir })
     await restarted.acquireWriter()
     try {
-      await expect(restarted.rollbackImport({
-        jobId: 'job-legacy-receipt', presentationId: projection.id,
-      })).rejects.toMatchObject({ code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
-      expect(restarted.getState().heads).toContainEqual(expect.objectContaining({
-        presentationId: projection.id,
-      }))
+      await expect(
+        restarted.rollbackImport({
+          jobId: 'job-legacy-receipt',
+          presentationId: projection.id,
+        })
+      ).rejects.toMatchObject({ code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
+      expect(restarted.getState().heads).toContainEqual(
+        expect.objectContaining({
+          presentationId: projection.id,
+        })
+      )
       expect(restarted.getJob('job-legacy-receipt')).toMatchObject({
-        status: 'completed', transactionState: 'committed',
+        status: 'completed',
+        transactionState: 'committed',
       })
     } finally {
       await restarted.releaseWriter()
@@ -719,13 +884,18 @@ describe('package store lifecycle MVP', () => {
     })
     await store.advanceMatrixAuthorityEpoch()
 
-    await expect(store.rollbackImport({
-      jobId: 'job-legacy-matrix', presentationId: projection.id,
-    })).rejects.toMatchObject({ code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
-    expect(store.getState().heads).toContainEqual(expect.objectContaining({
-      presentationId: projection.id,
-      matrixAuthorityEpoch: 2,
-    }))
+    await expect(
+      store.rollbackImport({
+        jobId: 'job-legacy-matrix',
+        presentationId: projection.id,
+      })
+    ).rejects.toMatchObject({ code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
+    expect(store.getState().heads).toContainEqual(
+      expect.objectContaining({
+        presentationId: projection.id,
+        matrixAuthorityEpoch: 2,
+      })
+    )
   })
 
   it('blocks a legacy receipt after the package head advances', async () => {
@@ -746,12 +916,18 @@ describe('package store lifecycle MVP', () => {
       next.heads.find((head) => head.presentationId === projection.id).generation = 2
     })
 
-    await expect(store.rollbackImport({
-      jobId: 'job-legacy-successor', presentationId: projection.id,
-    })).rejects.toMatchObject({ code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
-    expect(store.getState().heads).toContainEqual(expect.objectContaining({
-      presentationId: projection.id, generation: 2,
-    }))
+    await expect(
+      store.rollbackImport({
+        jobId: 'job-legacy-successor',
+        presentationId: projection.id,
+      })
+    ).rejects.toMatchObject({ code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
+    expect(store.getState().heads).toContainEqual(
+      expect.objectContaining({
+        presentationId: projection.id,
+        generation: 2,
+      })
+    )
   })
 
   it('refuses a late reconciliation that names a presentation with a newer package head', async () => {
@@ -775,22 +951,31 @@ describe('package store lifecycle MVP', () => {
         ownerId: projection.id,
         revisionId: successor.id,
       })
-      next.heads.find((head) => head.presentationId === projection.id).packageRevisionId = successor.id
+      next.heads.find((head) => head.presentationId === projection.id).packageRevisionId =
+        successor.id
     })
 
-    await expect(store.rollbackImport({
-      jobId: 'job-mixed-authority',
-      presentationId: projection.id,
-    })).rejects.toThrow('Import rollback authority no longer matches the recorded job')
+    await expect(
+      store.rollbackImport({
+        jobId: 'job-mixed-authority',
+        presentationId: projection.id,
+      })
+    ).rejects.toThrow('Import rollback authority no longer matches the recorded job')
 
     const state = store.getState()
-    expect(state.heads).toContainEqual(expect.objectContaining({
-      presentationId: projection.id,
-      packageRevisionId: 'r1-successor',
-    }))
-    expect(state.jobs).toContainEqual(expect.objectContaining({
-      id: 'job-mixed-authority', status: 'completed', transactionState: 'committed',
-    }))
+    expect(state.heads).toContainEqual(
+      expect.objectContaining({
+        presentationId: projection.id,
+        packageRevisionId: 'r1-successor',
+      })
+    )
+    expect(state.jobs).toContainEqual(
+      expect.objectContaining({
+        id: 'job-mixed-authority',
+        status: 'completed',
+        transactionState: 'committed',
+      })
+    )
   })
 
   it('refuses rollback after a normal same-R0 projection successor', async () => {
@@ -826,13 +1011,19 @@ describe('package store lifecycle MVP', () => {
         outcomeHeadHash: hashCanonical(initialHead),
       })
 
-      await expect(activeStore.rollbackImport({
-        jobId: 'job-same-r0', presentationId: projection.id,
-      })).rejects.toThrow('Import rollback authority no longer matches the recorded job')
-      const current = activeStore.getState().heads.find(
-        (head) => head.presentationId === projection.id
-      )
-      expect(current).toMatchObject({ generation: 2, packageRevisionId: initialHead.packageRevisionId })
+      await expect(
+        activeStore.rollbackImport({
+          jobId: 'job-same-r0',
+          presentationId: projection.id,
+        })
+      ).rejects.toThrow('Import rollback authority no longer matches the recorded job')
+      const current = activeStore
+        .getState()
+        .heads.find((head) => head.presentationId === projection.id)
+      expect(current).toMatchObject({
+        generation: 2,
+        packageRevisionId: initialHead.packageRevisionId,
+      })
     } finally {
       await shutdownPackageStore()
     }
@@ -852,11 +1043,15 @@ describe('package store lifecycle MVP', () => {
       next.jobs.find((job) => job.id === 'job-receipt-fence').outcomeHeadHash = 'f'.repeat(64)
     })
 
-    await expect(store.rollbackImport({
-      jobId: 'job-receipt-fence',
-      presentationId: projection.id,
-    })).rejects.toThrow('Import rollback authority no longer matches the recorded job')
-    expect(store.getState().heads).toContainEqual(expect.objectContaining({ presentationId: projection.id }))
+    await expect(
+      store.rollbackImport({
+        jobId: 'job-receipt-fence',
+        presentationId: projection.id,
+      })
+    ).rejects.toThrow('Import rollback authority no longer matches the recorded job')
+    expect(store.getState().heads).toContainEqual(
+      expect.objectContaining({ presentationId: projection.id })
+    )
   })
 
   it('blocks a legacy receipt when an import-head field changes without generation advance', async () => {
@@ -879,13 +1074,18 @@ describe('package store lifecycle MVP', () => {
       }
     })
 
-    await expect(store.rollbackImport({
-      jobId: 'job-legacy-drift', presentationId: projection.id,
-    })).rejects.toMatchObject({ code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
-    expect(store.getState().heads).toContainEqual(expect.objectContaining({
-      presentationId: projection.id,
-      evidenceByClaim: { edited: { status: 'recorded' } },
-    }))
+    await expect(
+      store.rollbackImport({
+        jobId: 'job-legacy-drift',
+        presentationId: projection.id,
+      })
+    ).rejects.toMatchObject({ code: 'LEGACY_IMPORT_RECEIPT_UNSUPPORTED' })
+    expect(store.getState().heads).toContainEqual(
+      expect.objectContaining({
+        presentationId: projection.id,
+        evidenceByClaim: { edited: { status: 'recorded' } },
+      })
+    )
   })
 
   it('rejects partial import outcome identity fields while retaining legacy receipts', async () => {
@@ -898,8 +1098,9 @@ describe('package store lifecycle MVP', () => {
       capabilityHash: 'a'.repeat(64),
       presentationId: 'deck-partial-outcome',
     }
-    await expect(store.putJob({ ...base, outcomeRevisionId: 'r0-partial' }))
-      .rejects.toThrow('Import outcome identity must be complete')
+    await expect(store.putJob({ ...base, outcomeRevisionId: 'r0-partial' })).rejects.toThrow(
+      'Import outcome identity must be complete'
+    )
     await expect(store.putJob(base)).resolves.toMatchObject({ id: base.id })
   })
 })

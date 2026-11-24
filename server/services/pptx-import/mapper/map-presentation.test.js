@@ -119,34 +119,23 @@ describe('pptx presentation mapper', () => {
     }
   })
 
-  it('maps non-default slide sizes into the canonical canvas resolution', async () => {
+  it('keeps a 4:3 slide and its square shape unstretched, fitting text to native canvas bounds', async () => {
     const result = await mapPptxOutput({
       output: {
         size: { width: 720, height: 540 },
-        slides: [{
-          elements: [{
-            type: 'text',
-            left: 360,
-            top: 270,
-            width: 100,
-            height: 50,
-            content: '<p>Mid</p>',
-          }],
-        }],
+        slides: [{ elements: [
+          { type: 'shape', shapType: 'rect', left: 360, top: 270, width: 100, height: 100 },
+          { type: 'text', left: 700, top: 500, width: 100, height: 50, content: '<p>Edge</p>' },
+        ] }],
       },
-      zip: { files: {} },
-      originalName: '4x3.pptx',
-      uploadsDir: '/tmp',
+      zip: { files: {} }, originalName: '4x3.pptx', uploadsDir: '/tmp',
     })
-
-    expect(result.presentation.resolution).toEqual({ width: 960, height: 540 })
-    expect(result.presentation._pptxMeta.originalSize).toEqual({ width: 720, height: 540 })
-    expect(result.presentation.slides[0].elements[0]).toMatchObject({
-      x: 480,
-      y: 270,
-      width: 133,
-      height: 50,
+    expect(result.presentation.resolution).toEqual({ width: 720, height: 540 })
+    expect(result.presentation._pptxMeta).toMatchObject({
+      originalSize: { width: 720, height: 540 }, geometryPolicy: 'native-aspect-v1',
     })
+    expect(result.presentation.slides[0].elements[0]).toMatchObject({ x: 360, y: 270, width: 100, height: 100 })
+    expect(result.presentation.slides[0].elements[1]).toMatchObject({ x: 620, y: 490, width: 100, height: 50 })
   })
 
   it('stores text import insets as canvas px metadata', async () => {

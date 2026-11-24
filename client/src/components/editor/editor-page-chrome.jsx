@@ -38,7 +38,8 @@ export function EditorPageHeader({ c }) {
             onExportPDF={c.onExportPDF}
             onExportPPTX={c.onExportPPTX}
             onExportHTML={c.onExportHTML}
-            onExportOffline={c.onExportOffline}
+            staticExportTeacherReveal={c.staticExportTeacherReveal}
+            onStaticExportTeacherRevealChange={c.onStaticExportTeacherRevealChange}
             onExportProject={c.onExportProject}
             onOpenProject={c.onOpenProject}
             onGithub={() => c.setShowGithubModal(true)}
@@ -91,6 +92,7 @@ export function EditorPageOverlays({ c }) {
         setCurrentSlideIndex={c.setCurrentSlideIndex}
         navigateToSlide={c.navigateToSlide}
         setPresentation={c.setPresentation}
+        restorePresentation={c.restorePresentation}
         htmlEditorState={c.htmlEditorState}
         setHtmlEditorState={c.setHtmlEditorState}
         commitHtmlEdit={c.commitHtmlEdit}

@@ -1,19 +1,23 @@
-
 export const JEOPARDY_POINTS = [100, 200, 300, 400, 500]
 
-// Build flat question lookup: { "catIdx-pointValue": questionObj }
+// Canonical question identity is also the board-cell identity.
 export function buildQuestionLookup(element) {
   const lookup = {}
-  const cats = element.categories || []
-  cats.forEach((cat, catIdx) => {
-    const qs = cat.questions || []
-    JEOPARDY_POINTS.forEach(pts => {
-      const key = `${catIdx}-${pts}`
-      const found = qs.find(q => q.points === pts)
-      lookup[key] = found || null
-    })
-  })
+  for (const category of element.categories || []) {
+    for (const question of category.questions || []) lookup[question.id] = question
+  }
   return lookup
+}
+
+export function getBoardPoints(element) {
+  const values = [
+    ...new Set(
+      (element.categories || []).flatMap((category) =>
+        category.questions.map((question) => question.points)
+      )
+    ),
+  ]
+  return values.length ? values.sort((a, b) => a - b) : JEOPARDY_POINTS
 }
 
 // Which cells are Daily Double (by key string)

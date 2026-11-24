@@ -2,9 +2,10 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { usePresentationStore } from '../../stores/presentation-store'
 import { migratePresentation } from '../../utils/editor-presentation-migration'
 import { api } from '../../utils/api'
-import { readEditorDraft } from '../../utils/editor-draft-store'
+import { prepareEditorDraftBaseline, readEditorDraft } from '../../utils/editor-draft-store'
 import { useEditorRecoveryController } from './use-editor-recovery-controller'
 import { useEditorSaveController } from './use-editor-save-controller'
+import { useEditorServerStateController } from './use-editor-server-state-controller'
 
 export function useEditorPersistenceController({
   presentation,
@@ -21,7 +22,6 @@ export function useEditorPersistenceController({
   // Suppress only the object installed by the loader, not an edit during a route transition.
   const skipAutosaveRef = useRef(null)
   const loadEpochRef = useRef(0)
-  const conflictResolutionRef = useRef(null)
   const routeKey = `${isTemplate ? 'template' : 'presentation'}:${presentationId || ''}`
   const routeKeyRef = useRef(routeKey)
   const loadedRouteKeyRef = useRef(null)
@@ -40,20 +40,19 @@ export function useEditorPersistenceController({
   }, [presentation])
   const saveConflict = usePresentationStore((state) => state.saveConflict)
   const clearSaveConflict = usePresentationStore((state) => state.clearSaveConflict)
-  const clearConflict = useCallback(() => {
-    conflictResolutionRef.current = null
-    clearSaveConflict()
-  }, [clearSaveConflict])
   const {
     adoptGeneration: adoptGenerationInternal,
     beginExport,
+    beginRestore,
     clearFailedSave,
     clearResetTimer,
     discardPendingSave,
     endExport,
+    endRestore,
     flush,
     flushAndWait,
     lastSaveError,
+    lastSavedAt,
     resetForRoute,
     retrySave,
     saveStatus,
@@ -80,15 +79,41 @@ export function useEditorPersistenceController({
     setPresentation,
   })
 
-  const adoptGeneration = useCallback((generation, sourcePresentationId = presentationId,
-    sourceRouteKey = routeKey) => {
-    if (sourcePresentationId !== presentationId || sourceRouteKey !== routeKeyRef.current) return
-    adoptGenerationInternal(generation)
-  }, [adoptGenerationInternal, presentationId, routeKey])
+  const {
+    adoptGeneration,
+    clearConflict,
+    keepLocalSaveConflict,
+    restorePresentation,
+    useRemoteSaveConflict,
+  } = useEditorServerStateController({
+    presentationId,
+    routeKey,
+    routeKeyRef,
+    loadEpochRef,
+    loadedRouteKeyRef,
+    presentationRef,
+    saveConflict,
+    clearSaveConflict,
+    adoptGenerationInternal,
+    beginRestore,
+    endRestore,
+    clearFailedSave,
+    discardPendingSave,
+    scheduleSave,
+    setLastSaveError,
+    setSaveStatus,
+    skipAutosaveRef,
+    resetEditorInteraction,
+    seedHistory,
+    setPresentation,
+    setGridSize,
+    setSaveRecovery,
+  })
 
   useEffect(() => {
     if (!presentationId) return
     const epoch = ++loadEpochRef.current
+    let preparationTimer
     resetEditorInteraction()
     // Hide stale or failed-route state before every replacement request.
     setLoading(true)
@@ -112,6 +137,7 @@ export function useEditorPersistenceController({
         skipAutosaveRef.current = migrated
         seedHistory(migrated)
         setPresentation(migrated)
+        presentationRef.current = migrated
         if (migrated.gridSize) setGridSize(migrated.gridSize)
         firstLoadRef.current = true
         return readEditorDraft(presentationId, isTemplate)
@@ -120,6 +146,21 @@ export function useEditorPersistenceController({
             if (epoch !== loadEpochRef.current || routeKeyRef.current !== routeKey) return
             setSaveRecovery(draft)
             setLoading(false)
+            if (migrated.pptxSemantic) {
+              const semantic = migrated.pptxSemantic
+              const generation = migrated.aggregateGeneration
+              const isCurrent = () =>
+                epoch === loadEpochRef.current && routeKeyRef.current === routeKey &&
+                loadedRouteKeyRef.current === routeKey &&
+                presentationRef.current?.id === presentationId && migrated.id === presentationId &&
+                presentationRef.current.aggregateGeneration === generation &&
+                presentationRef.current.pptxSemantic === semantic && migrated.pptxSemantic === semantic
+              // A separate task keeps even preparation's synchronous capture and
+              // IDB checkpoint off the mandatory recovery/readiness path.
+              preparationTimer = setTimeout(() => {
+                if (isCurrent()) void prepareEditorDraftBaseline(migrated, isTemplate, isCurrent)
+              }, 0)
+            }
           })
       })
       .catch((error) => {
@@ -133,6 +174,10 @@ export function useEditorPersistenceController({
         skipAutosaveRef.current = null
         setLoading(false)
       })
+    return () => {
+      clearTimeout(preparationTimer)
+      if (loadEpochRef.current === epoch) loadEpochRef.current += 1
+    }
   }, [
     clearSaveConflict,
     isTemplate,
@@ -172,112 +217,6 @@ export function useEditorPersistenceController({
     scheduleSave(presentation, 0)
   }, [loading, presentation, routeLoading, scheduleSave])
 
-  const useRemoteSaveConflict = useCallback(async () => {
-    const conflict = saveConflict
-    if (!conflict?.local?.id) return
-    const conflictEpoch = loadEpochRef.current
-    if (conflictResolutionRef.current === conflict) return
-    conflictResolutionRef.current = conflict
-    try {
-      const remote = migratePresentation(await api.getPresentation(conflict.local.id))
-      if (
-        conflictEpoch !== loadEpochRef.current ||
-        routeKeyRef.current !== routeKey ||
-        usePresentationStore.getState().saveConflict !== conflict
-      ) return
-      adoptGeneration(remote.aggregateGeneration)
-      await discardPendingSave()
-      if (
-        conflictEpoch !== loadEpochRef.current ||
-        routeKeyRef.current !== routeKey ||
-        usePresentationStore.getState().saveConflict !== conflict
-      ) return
-      skipAutosaveRef.current = remote
-      resetEditorInteraction()
-      seedHistory(remote)
-      setPresentation(remote)
-      if (remote.gridSize) setGridSize(remote.gridSize)
-      clearConflict()
-      setSaveStatus('')
-      setLastSaveError('')
-    } catch {
-      if (
-        conflictEpoch !== loadEpochRef.current ||
-        routeKeyRef.current !== routeKey ||
-        usePresentationStore.getState().saveConflict !== conflict
-      ) return
-      setLastSaveError('Unable to load the latest remote presentation')
-    } finally {
-      if (conflictResolutionRef.current === conflict) {
-        conflictResolutionRef.current = null
-      }
-    }
-  }, [
-    discardPendingSave,
-    clearConflict,
-    adoptGeneration,
-    setLastSaveError,
-    setSaveStatus,
-    saveConflict,
-    routeKey,
-    resetEditorInteraction,
-    seedHistory,
-    setGridSize,
-    setPresentation,
-  ])
-
-  const keepLocalSaveConflict = useCallback(async () => {
-    const conflict = saveConflict
-    if (!conflict?.local?.id) return
-    const conflictEpoch = loadEpochRef.current
-    if (conflictResolutionRef.current === conflict) return
-    conflictResolutionRef.current = conflict
-    try {
-      const remote = await api.getPresentation(conflict.local.id)
-      if (
-        conflictEpoch !== loadEpochRef.current ||
-        routeKeyRef.current !== routeKey ||
-        usePresentationStore.getState().saveConflict !== conflict
-      ) return
-      const generation = Number.isSafeInteger(remote?.aggregateGeneration)
-        ? remote.aggregateGeneration
-        : null
-      adoptGeneration(generation)
-      clearFailedSave()
-      clearConflict()
-      const currentPresentation = presentationRef.current
-      const local = currentPresentation?.id === conflict.local.id
-        ? currentPresentation
-        : conflict.local
-      scheduleSave(
-        {
-          ...local,
-          aggregateGeneration: generation,
-        },
-        0
-      )
-    } catch {
-      if (
-        conflictEpoch !== loadEpochRef.current ||
-        routeKeyRef.current !== routeKey ||
-        usePresentationStore.getState().saveConflict !== conflict
-      ) return
-      setLastSaveError('Unable to confirm the latest remote version')
-    } finally {
-      if (conflictResolutionRef.current === conflict) {
-        conflictResolutionRef.current = null
-      }
-    }
-  }, [
-    clearFailedSave,
-    clearConflict,
-    adoptGeneration,
-    scheduleSave,
-    setLastSaveError,
-    routeKey,
-    saveConflict,
-  ])
-
   return {
     adoptGeneration,
     beginExport,
@@ -291,7 +230,9 @@ export function useEditorPersistenceController({
     keepLocalSaveConflict,
     recoverLocalDraft,
     lastSaveError,
+    lastSavedAt,
     loading: loading || routeLoading,
+    restorePresentation,
     retryPendingSave: retrySave,
     saveConflict,
     saveRecovery,

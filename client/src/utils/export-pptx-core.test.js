@@ -8,6 +8,7 @@ import {
   mapArrowType,
   normalizeCssColor,
   normalizeImageSource,
+  scaleElementBounds,
 } from './export-pptx-core'
 import { addImageElement, addShapeElement, addTableElement, addTextElement } from './export-pptx-basic-renderers'
 
@@ -28,6 +29,27 @@ describe('export-pptx-core', () => {
     expect(getPresentationResolution(presentation)).toEqual({ width: 960, height: 540 })
     expect(getPptxExportLayout(presentation)).toEqual({ width: 720, height: 540 })
     expect(getPptxLayout(getPptxExportLayout(presentation))).toEqual({ width: 10, height: 7.5 })
+  })
+
+  it.each([
+    [{ width: 720, height: 540 }, { width: 10, height: 7.5 }],
+    [{ width: 960, height: 540 }, { width: 10, height: 5.625 }],
+  ])('preserves uniform marked geometry after logical resolution changes: %j', (resolution, expectedLayout) => {
+    const presentation = {
+      resolution,
+      _pptxMeta: { originalSize: { width: 960, height: 720 }, geometryPolicy: 'native-aspect-v1' },
+    }
+    const layout = getPptxLayout(getPptxExportLayout(presentation))
+    expect(layout).toEqual(expectedLayout)
+    const bounds = scaleElementBounds({ x: 0, y: 0, width: 72, height: 72 }, getPresentationResolution(presentation), layout)
+    expect(bounds.w).toBe(bounds.h)
+  })
+
+  it('does not apply native layout precedence to unknown geometry policies', () => {
+    expect(getPptxExportLayout({
+      resolution: { width: 960, height: 540 },
+      _pptxMeta: { originalSize: { width: 720, height: 540 }, geometryPolicy: 'native-aspect-v2' },
+    })).toEqual({ width: 720, height: 540 })
   })
 
   it('normalizes hex and rgba colors to PPT format', () => {

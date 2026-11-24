@@ -168,7 +168,7 @@ describe('mapChart', () => {
 
   it.each(['areaChart', 'bubbleChart', 'comboChart', 'scatterChart'])('uses a valid Chart.js display type for preserve-only %s charts', (chartType) => {
     const result = mapChart(makeChart({ chartType }))
-    expect(['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea']).toContain(result.chartType)
+    expect(['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea', 'bubble']).toContain(result.chartType)
     expect(result._pptxChartMeta).toMatchObject({
       originalType: chartType,
       preservationTier: 'preserve-only',
@@ -249,5 +249,24 @@ describe('mapScatterChart', () => {
     const result = mapChart(chart)
     expect(result.chartData.labels).toEqual([])
     expect(result.chartData.datasets).toEqual([])
+  })
+})
+
+describe('XY chart cache alignment', () => {
+  it('preserves zero coordinates, null holes and raw bubble magnitudes in parallel arrays', () => {
+    const result = mapChart(makeChart({ chartType: 'bubbleChart', legendPos: 'r', data: [[0, null, 10], [0, null, 20], [1, null, 4]] }))
+    expect(result.chartType).toBe('bubble')
+    expect(result.legend).toBe('r')
+    expect(result.chartData.datasets[0]).toMatchObject({ data: [0, null, 20], xValues: [0, null, 10], bubbleSizes: [1, null, 4] })
+    expect(result._pptxChartMeta.originalType).toBe('bubbleChart')
+  })
+
+  it('retains each series own X domain and declared trailing blank slots', () => {
+    const result = mapChart(makeChart({ chartType: 'scatterChart', data: [
+      { key: 'First', pointCount: 4, values: [{ index: 0, x: 0, y: 0 }, { index: 2, x: 8, y: 10 }] },
+      { key: 'Second', pointCount: 3, values: [{ index: 0, x: 3, y: 5 }, { index: 2, x: 7, y: 9 }] },
+    ] }))
+    expect(result.chartData.datasets[0]).toMatchObject({ label: 'First', data: [0, null, 10, null], xValues: [0, null, 8, null] })
+    expect(result.chartData.datasets[1]).toMatchObject({ label: 'Second', data: [5, null, 9], xValues: [3, null, 7] })
   })
 })

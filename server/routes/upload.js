@@ -5,6 +5,7 @@ const fs = require('fs').promises
 const crypto = require('crypto')
 const uuidv4 = () => require('node:crypto').randomUUID()
 const { UPLOADS_DIR, withUploadHashes } = require('../services/storage')
+const { inspectPictureUpload } = require('../services/pptx-import/picture-replacement-validation')
 
 async function computeFileHash(filePath) {
   const buffer = await fs.readFile(filePath)
@@ -32,6 +33,7 @@ const ALLOWED_UPLOAD_EXTENSIONS = new Set([
   '.aac',
   '.m4a',
   '.pdf',
+  '.vtt',
 ])
 
 // Allowed MIME prefixes for magic-byte validation
@@ -63,11 +65,42 @@ const router = express.Router()
 router.post('/', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
 
+  const isPictureReplacement = req.body.purpose === 'picture-replacement'
+  let pictureReceipt
+  if (isPictureReplacement) {
+    try {
+      pictureReceipt = await inspectPictureUpload(req.file.path, req.body.presentationId, req.file.filename)
+    } catch {
+      await fs.unlink(req.file.path).catch(() => {})
+      return res.status(400).json({ error: 'Invalid picture replacement upload', code: 'invalid-picture-upload' })
+    }
+  }
+  const isCaption = path.extname(req.file.path).toLowerCase() === '.vtt'
+  if (isCaption) {
+    try {
+      if (!['text/vtt', 'text/plain'].includes(req.file.mimetype)) {
+        throw new Error('Caption MIME type must be text/vtt or text/plain')
+      }
+      const bytes = await fs.readFile(req.file.path)
+      const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+      if (text.includes('\0') || !/^WEBVTT(?:[ \t][^\r\n]*)?(?:\r\n|\n|\r|$)/.test(text)) {
+        throw new Error('Caption content must be UTF-8 WebVTT')
+      }
+    } catch (error) {
+      await fs.unlink(req.file.path).catch(() => {})
+      return res.status(400).json({ error: error.message, code: 'invalid-vtt' })
+    }
+  }
+
   // Verify actual file content matches claimed type via magic bytes
   try {
     const { fileTypeFromFile } = await import('file-type')
     const detected = await fileTypeFromFile(req.file.path)
-    if (detected && !ALLOWED_MIME_PREFIXES.some((p) => detected.mime.startsWith(p))) {
+    if (
+      detected &&
+      !(isCaption && detected.mime === 'text/vtt') &&
+      !ALLOWED_MIME_PREFIXES.some((p) => detected.mime.startsWith(p))
+    ) {
       // Delete the uploaded file — MIME doesn't match allowed types
       await fs.unlink(req.file.path).catch(() => {})
       return res.status(400).json({ error: `File type ${detected.mime} not allowed` })
@@ -86,9 +119,7 @@ router.post('/', upload.single('file'), async (req, res) => {
       const code = ['invalid-svg', 'unsafe-svg', 'svg-too-large'].includes(error?.code)
         ? error.code
         : 'invalid-svg'
-      const message = code === error?.code
-        ? error.message
-        : 'File content is not valid SVG'
+      const message = code === error?.code ? error.message : 'File content is not valid SVG'
       return res.status(400).json({ error: message, code })
     }
   }
@@ -96,33 +127,52 @@ router.post('/', upload.single('file'), async (req, res) => {
   // SHA-256 deduplication
   const presentationId = req.body.presentationId || 'global'
   const fileHash = await computeFileHash(req.file.path)
-  const result = await withUploadHashes(async (hashes) => {
-    const presHashes = hashes[presentationId] || {}
+  let result
+  try {
+    result = await withUploadHashes(async (hashes) => {
+      const presHashes = hashes[presentationId] || {}
 
-    if (presHashes[fileHash]) {
-      const existingFilename = presHashes[fileHash].filename
-      const existingPath = path.join(UPLOADS_DIR, existingFilename)
-      try {
-        await fs.access(existingPath)
-        await fs.unlink(req.file.path).catch(() => {})
-        return { url: `/uploads/${existingFilename}`, deduped: true }
-      } catch {
-        // Existing file was deleted — fall through to store new file
-        delete presHashes[fileHash]
+      if (presHashes[fileHash]) {
+        const existingFilename = presHashes[fileHash].filename
+        const existingPath = path.join(UPLOADS_DIR, existingFilename)
+        try {
+          await fs.access(existingPath)
+          if (isPictureReplacement) {
+            const existing = await inspectPictureUpload(existingPath, presentationId, existingFilename)
+            if (existing.sha256 !== fileHash) throw new Error('Picture upload bytes changed')
+            pictureReceipt = existing
+          }
+          await fs.unlink(req.file.path).catch(() => {})
+          return {
+            url: `/uploads/${existingFilename}`, deduped: true,
+            ...(isPictureReplacement ? { pictureReplacement: pictureReceipt } : {}),
+          }
+        } catch (error) {
+          if (isPictureReplacement && error.code !== 'ENOENT') throw error
+          // Existing file was deleted — fall through to store new file
+          delete presHashes[fileHash]
+        }
       }
-    }
 
-    const stats = await fs.stat(req.file.path)
-    presHashes[fileHash] = {
-      filename: req.file.filename,
-      originalName: req.file.originalname,
-      size: stats.size,
-      mimeType: req.file.mimetype,
-      uploadedAt: new Date().toISOString(),
-    }
-    hashes[presentationId] = presHashes
-    return { url: `/uploads/${req.file.filename}`, deduped: false }
-  })
+      const stats = await fs.stat(req.file.path)
+      presHashes[fileHash] = {
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        size: stats.size,
+        mimeType: req.file.mimetype,
+        uploadedAt: new Date().toISOString(),
+      }
+      hashes[presentationId] = presHashes
+      return {
+        url: `/uploads/${req.file.filename}`, deduped: false,
+        ...(isPictureReplacement ? { pictureReplacement: pictureReceipt } : {}),
+      }
+    })
+  } catch (error) {
+    await fs.unlink(req.file.path).catch(() => {})
+    if (!isPictureReplacement) throw error
+    return res.status(400).json({ error: 'Invalid picture replacement upload', code: 'invalid-picture-upload' })
+  }
 
   res.json(result)
 })

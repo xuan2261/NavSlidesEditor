@@ -1,45 +1,38 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useLayoutEffect } from 'react'
 import { EditorContent } from '@tiptap/react'
 import hljs from 'highlight.js'
 import katex from 'katex'
-import { normalizeImageAccessibility, normalizeMediaAccessibility, resolveColorField } from 'revealjs-shared'
-import { sanitizeRichTextHtml } from '../../utils/content-safety'
+import {
+  normalizeImageAccessibility,
+  normalizeMediaAccessibility,
+  resolveColorField,
+  MEDIA_CAPTION_STYLE,
+  MEDIA_CAPTION_TEXT_STYLE,
+} from 'revealjs-shared'
+import { buildSandboxFrameDocument } from 'revealjs-shared/src/education/html-sandbox-policy.js'
+import { attachMediaPlayback } from 'revealjs-shared/src/media-playback.js'
+import { sanitizeRichTextHtml } from 'revealjs-shared/src/content-safety.js'
+import { attachNativeTabLayout } from 'revealjs-shared/src/native-tab-layout.js'
+import { EMU_TO_CSS } from '../../utils/pptx-semantic-geometry-bridge'
 import { sanitizeMediaSrc } from '../../utils/url-safety'
 import { resolveVideoSrc } from '../../utils/migrate-video-src'
 import { getElementRenderer, CropOverlay } from './element-renderers/registry'
+import ImageCitation from './element-renderers/image-citation'
 import { HANDLE_STYLES } from './use-canvas-resize-rotate'
 import PluginSandbox from '../../plugins/plugin-sandbox'
 import { isPluginElementType } from '../../plugins'
 import { buildMermaidEmbedContent } from '../../hooks/use-element-creation'
 import { getKeyboardNudgeStep } from '../../utils/keyboard-nudge'
-
-function getMediaFragmentSrc(src, startTime, endTime) {
-  if (!src) return src
-  const start = Number(startTime)
-  const end = Number(endTime)
-  const hasStart = Number.isFinite(start) && start > 0
-  const hasEnd = Number.isFinite(end) && end > 0
-  if (!hasStart && !hasEnd) return src
-  const rangeStart = hasStart ? start : 0
-  const rangeEnd = hasEnd && end > rangeStart ? `,${end}` : ''
-  return `${String(src).split('#')[0]}#t=${rangeStart}${rangeEnd}`
-}
-
-function getPlaybackRate(value) {
-  const rate = Number(value)
-  return Number.isFinite(rate) && rate > 0 ? rate : null
-}
+import { isInteractiveKeyboardTarget } from '../../utils/interactive-keyboard-target'
+import { applyMove } from './use-canvas-pointer-interaction'
+import { useEditorStore } from '../../stores/editor-store'
+import pictureRenderer from 'revealjs-shared/src/pptx-picture-svg.js'
+import { usePptxSourceFonts } from '../../hooks/use-pptx-source-fonts'
+import { textBoxSvgString } from 'revealjs-shared/src/pptx-textbox-svg.js'
 
 function isLinePathEvent(element, event) {
   if (element.type !== 'line') return true
   return event.target?.tagName?.toLowerCase() === 'path'
-}
-
-function isEditableEventTarget(target) {
-  if (!target) return false
-  return Boolean(
-    target.closest?.('input, textarea, select, [contenteditable="true"], .ProseMirror')
-  )
 }
 
 function getElementAccessibleName(element) {
@@ -57,9 +50,10 @@ function getElementAccessibleName(element) {
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 60)
-  const connectionState = element.type === 'line' && element.connections
-    ? `connected ${[element.connections.start && 'start', element.connections.end && 'end'].filter(Boolean).join(' and ')}`
-    : ''
+  const connectionState =
+    element.type === 'line' && element.connections
+      ? `connected ${[element.connections.start && 'start', element.connections.end && 'end'].filter(Boolean).join(' and ')}`
+      : ''
   return [typeLabel, content && `"${content}"`, connectionState, element.locked && 'locked']
     .filter(Boolean)
     .join(', ')
@@ -154,6 +148,7 @@ function renderHighlightedCodeLines(element) {
 
 export default function CanvasElement({
   element,
+  outputPixelScale = 1,
   isSelected,
   selectedElementCount = isSelected ? 1 : 0,
   isEditing,
@@ -169,15 +164,38 @@ export default function CanvasElement({
   onCropHandleDown,
   onCommitCrop,
   onUpdateElement,
-  onDeleteElement,
+  onDeleteElement: _onDeleteElement,
   onStartEdit,
   iconPaths,
   slideBackground,
   slideWidth = 960,
   slideHeight = 540,
 }) {
+  const { fontRuntime } = usePptxSourceFonts()
+  const pointEditing =
+    useEditorStore((state) => state.geometryPointEditingElementId === element.id) &&
+    isSelected &&
+    selectedElementCount === 1 &&
+    (element.pptxGeometry?.kind === 'custom' || element.pptxGeometry?.connector !== undefined) &&
+    !element.locked &&
+    !slideLocked
   const contentRef = useRef(null)
-  const videoRef = useRef(null)
+  const wrapperRef = useRef(null)
+  useLayoutEffect(
+    () => () => {
+      const wrapper = wrapperRef.current
+      if (wrapper && document.activeElement === wrapper) {
+        wrapper.closest('.slide-canvas')?.focus()
+      }
+    },
+    []
+  )
+  const mediaRef = useRef(null)
+  useLayoutEffect(() => {
+    if (!wrapperRef.current || !['text', 'shape'].includes(element.type)) return
+    if (!String(element.content || element.textHtml || '').includes('--pptx-tab-stops')) return
+    return attachNativeTabLayout(wrapperRef.current)
+  }, [element.content, element.textHtml, element.type, isEditing])
 
   // Render KaTeX math in preview
   useEffect(() => {
@@ -196,10 +214,24 @@ export default function CanvasElement({
   }, [element.content, isEditing])
 
   useEffect(() => {
-    if (element.type !== 'video' || !videoRef.current) return
-    const playbackRate = getPlaybackRate(element.playbackRate)
-    videoRef.current.playbackRate = playbackRate || 1
-  }, [element.playbackRate, element.type])
+    if (!['video', 'audio'].includes(element.type) || !mediaRef.current) return
+    return attachMediaPlayback(mediaRef.current, {
+      startTime: element.startTime,
+      endTime: element.endTime,
+      loop: element.loop,
+      playbackRate: element.playbackRate,
+      volume: element.volume,
+    })
+  }, [
+    element.src,
+    element.videoUrl,
+    element.startTime,
+    element.endTime,
+    element.loop,
+    element.playbackRate,
+    element.volume,
+    element.type,
+  ])
 
   const importedTextCanOverflow =
     element.type === 'text' && element?._pptxImportMeta?.textFit === 'wrap'
@@ -210,7 +242,7 @@ export default function CanvasElement({
     width: element.width,
     height: element.height,
     zIndex: element.zIndex || 1,
-    pointerEvents: 'auto',
+    pointerEvents: element.type === 'semantic-group' ? 'none' : 'auto',
     touchAction: 'none',
     outline: element.locked
       ? '2px solid var(--warning, #f59e0b)'
@@ -230,7 +262,16 @@ export default function CanvasElement({
             : 'grab',
     userSelect: isEditing ? 'text' : 'none',
     overflow:
-      isSelected || isEditing || isCropping || element.type === 'line' || importedTextCanOverflow
+      element._semanticLocal ||
+      isSelected ||
+      isEditing ||
+      isCropping ||
+      element.type === 'line' ||
+      element.type === 'timeline' ||
+      importedTextCanOverflow ||
+      (element.type === 'image' && Boolean(element.citationText || element.citationLink)) ||
+      ((element.type === 'video' || element.type === 'audio') &&
+        Boolean(element.transcript || element.audioDescription))
         ? 'visible'
         : 'hidden',
     boxSizing: 'border-box',
@@ -277,6 +318,7 @@ export default function CanvasElement({
     width: '100%',
     height: '100%',
     overflow: isCropping ? 'visible' : 'hidden',
+    borderRadius: isCropping ? undefined : element.borderRadius || undefined,
     border:
       Number.isFinite(imageBorderWidth) && imageBorderWidth > 0
         ? `${imageBorderWidth}px solid ${element.borderColor || '#000000'}`
@@ -288,7 +330,7 @@ export default function CanvasElement({
       ? element._pptxImportMeta.cropData
       : null
   const handleKeyboardAction = (event) => {
-    if (isEditableEventTarget(event.target) || isCropping) return
+    if (isInteractiveKeyboardTarget(event.target) || isCropping) return
     const key = event.key
     if (
       ![
@@ -324,18 +366,6 @@ export default function CanvasElement({
       return
     }
 
-    if (
-      (key === 'Delete' || key === 'Backspace') &&
-      isSelected &&
-      !element.locked &&
-      !slideLocked
-    ) {
-      if (selectedElementCount > 1) return
-      event.preventDefault()
-      onDeleteElement?.(element.id)
-      return
-    }
-
     const nudges = {
       ArrowUp: { x: 0, y: -1 },
       ArrowDown: { x: 0, y: 1 },
@@ -347,14 +377,27 @@ export default function CanvasElement({
       if (selectedElementCount > 1) return
       event.preventDefault()
       const step = getKeyboardNudgeStep(event.shiftKey)
-      const width = Math.max(0, Number(element.width) || 0)
-      const height = Math.max(0, Number(element.height) || 0)
-      const maxX = Math.max(0, Number(slideWidth) - width)
-      const maxY = Math.max(0, Number(slideHeight) - height)
-      onUpdateElement?.(element.id, {
-        x: Math.min(maxX, Math.max(0, (Number(element.x) || 0) + nudge.x * step)),
-        y: Math.min(maxY, Math.max(0, (Number(element.y) || 0) + nudge.y * step)),
-      })
+      onUpdateElement?.(
+        element.id,
+        element._semanticLocal
+          ? {
+              semanticWorldOperation: [
+                1,
+                0,
+                0,
+                1,
+                (nudge.x * step) / EMU_TO_CSS,
+                (nudge.y * step) / EMU_TO_CSS,
+              ],
+            }
+          : applyMove(
+              element,
+              nudge.x * step,
+              nudge.y * step,
+              Number(slideWidth),
+              Number(slideHeight)
+            )
+      )
     }
   }
   const cropDiagnostics = sourceCropData
@@ -385,7 +428,7 @@ export default function CanvasElement({
   // Opacity is applied to the element-CONTENT layer only, so selection chrome
   // (outline, resize/rotation handles, badges) stays fully opaque.
   const contentOpacity =
-    element.opacity !== undefined && element.opacity !== 1 ? element.opacity : undefined
+    !element.pptxPicture && element.opacity !== undefined && element.opacity !== 1 ? element.opacity : undefined
   const contentLayerStyle = {
     position: 'absolute',
     inset: 0,
@@ -449,9 +492,18 @@ export default function CanvasElement({
     userSelect: 'none',
   }
   const hotspotBadgeStyle = {
-    position: 'absolute', bottom: -20, left: 0, zIndex: 101, pointerEvents: 'none',
-    background: 'var(--accent)', color: 'white', fontSize: '9px', fontFamily: 'sans-serif',
-    padding: '1px 5px', borderRadius: 3, userSelect: 'none',
+    position: 'absolute',
+    bottom: -20,
+    left: 0,
+    zIndex: 101,
+    pointerEvents: 'none',
+    background: 'var(--accent)',
+    color: 'white',
+    fontSize: '9px',
+    fontFamily: 'sans-serif',
+    padding: '1px 5px',
+    borderRadius: 3,
+    userSelect: 'none',
   }
   const getResizeHandleStyle = (handleStyle) => ({
     position: 'absolute',
@@ -462,6 +514,7 @@ export default function CanvasElement({
     borderRadius: 2,
     zIndex: 100,
     touchAction: 'none',
+    pointerEvents: 'auto',
     ...handleStyle,
   })
   const rotationGuideStyle = {
@@ -487,10 +540,12 @@ export default function CanvasElement({
     border: '2px solid white',
     zIndex: 100,
     cursor: 'grab',
+    pointerEvents: 'auto',
   }
 
   return (
     <div
+      ref={wrapperRef}
       className="element-wrapper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-workspace"
       data-testid={`slide-element-${element.id}`}
       data-element-id={element.id}
@@ -504,7 +559,11 @@ export default function CanvasElement({
       onKeyDown={handleKeyboardAction}
       onPointerDown={(e) => {
         if (e.button !== 0 || !isLinePathEvent(element, e)) return
-        if ((element.type === 'audio' || element.type === 'video') && e.target?.closest?.('audio,video')) return
+        if (
+          (element.type === 'audio' || element.type === 'video') &&
+          e.target?.closest?.('audio,video,.ns-media-transcript summary')
+        )
+          return
         if (isEditing) {
           e.stopPropagation()
           return
@@ -525,7 +584,23 @@ export default function CanvasElement({
       }}
     >
       <div data-element-content style={contentLayerStyle}>
-        {element.type === 'text' && !isEditing && (
+        {element.type === 'text' && !isEditing && element.pptxTextDocument && (() => {
+          try {
+            return (
+              <div className="slide-text-content" style={{ width: '100%', height: '100%', overflow: 'visible' }}
+                dangerouslySetInnerHTML={{ __html: textBoxSvgString(element, { fontRuntime, theme: element.pptxTextTheme }) }} />
+            )
+          } catch (error) {
+            return (
+              <div role="alert" data-component-id={error.componentId || element.pptxTextDocument.componentId}
+                data-render-error={error.code}
+                style={{ width: '100%', height: '100%', overflow: 'hidden', fontSize: 12, lineHeight: 1.3 }}>
+                {error.message}
+              </div>
+            )
+          }
+        })()}
+        {element.type === 'text' && !isEditing && !element.pptxTextDocument && (
           <div
             ref={contentRef}
             className="slide-text-content ProseMirror-preview"
@@ -539,7 +614,15 @@ export default function CanvasElement({
         {element.type === 'image' &&
           (() => {
             const image = normalizeImageAccessibility(element)
-            const descriptionId = image.longDescription ? `image-description-${image.id}` : undefined
+            if (element.pptxPicture)
+              return <>
+                <div style={{ width: '100%', height: '100%', overflow: 'visible' }}
+                  dangerouslySetInnerHTML={{ __html: pictureRenderer.pictureSvg(image) }} />
+                <ImageCitation element={image} />
+              </>
+            const descriptionId = image.longDescription
+              ? `image-description-${image.id}`
+              : undefined
             const imgFilter =
               [
                 element.filterBrightness != null && element.filterBrightness !== 100
@@ -552,51 +635,74 @@ export default function CanvasElement({
                 element.filterSaturate != null && element.filterSaturate !== 100
                   ? `saturate(${element.filterSaturate}%)`
                   : '',
+                element.filterSepia ? `sepia(${element.filterSepia}%)` : '',
+                element.filterBlur ? `blur(${element.filterBlur}px)` : '',
               ]
                 .filter(Boolean)
                 .join(' ') || undefined
             return (
-              <div style={imageWrapperStyle}>
-                <img
-                  src={sanitizeMediaSrc(image.src)}
-                  alt={image.decorative ? '' : image.alt}
-                  aria-describedby={descriptionId}
-                  style={
-                    element.imageW != null
-                      ? {
-                          position: 'absolute',
-                          left: element.imageOffsetX ?? 0,
-                          top: element.imageOffsetY ?? 0,
-                          width: element.imageW,
-                          height: element.imageH,
-                          objectFit: element.objectFit || 'contain',
-                          pointerEvents: 'none',
-                          filter: imgFilter,
-                          transform: imageFlipTransform,
-                        }
-                      : {
-                          width: '100%',
-                          height: '100%',
-                          objectFit: element.objectFit || 'contain',
-                          display: 'block',
-                          pointerEvents: 'none',
-                          filter: imgFilter,
-                          transform: imageFlipTransform,
-                        }
-                  }
-                  draggable={false}
-                />
-                {descriptionId && <span id={descriptionId} className="ns-image-long-description">{image.longDescription}</span>}
-                {isCropping && cropState && (
-                  <CropOverlay
-                    crop={cropState}
-                    elW={element.width}
-                    elH={element.height}
-                    onHandleDown={onCropHandleDown}
-                    onCommit={onCommitCrop}
+              <>
+                <div style={imageWrapperStyle}>
+                  <img
+                    src={sanitizeMediaSrc(image.src)}
+                    alt={image.decorative ? '' : image.alt}
+                    aria-describedby={descriptionId}
+                    style={
+                      element.imageW != null
+                        ? {
+                            position: 'absolute',
+                            left: element.imageOffsetX ?? 0,
+                            top: element.imageOffsetY ?? 0,
+                            width: element.imageW,
+                            height: element.imageH,
+                            objectFit: element.objectFit || 'contain',
+                            pointerEvents: 'none',
+                            filter: imgFilter,
+                            transform: imageFlipTransform,
+                          }
+                        : {
+                            width: '100%',
+                            height: '100%',
+                            objectFit: element.objectFit || 'contain',
+                            display: 'block',
+                            pointerEvents: 'none',
+                            filter: imgFilter,
+                            transform: imageFlipTransform,
+                          }
+                    }
+                    draggable={false}
                   />
-                )}
-              </div>
+                  {descriptionId && (
+                    <span
+                      id={descriptionId}
+                      className="ns-image-long-description"
+                      style={{
+                        position: 'absolute',
+                        width: 1,
+                        height: 1,
+                        padding: 0,
+                        border: 0,
+                        overflow: 'hidden',
+                        clip: 'rect(0,0,0,0)',
+                        clipPath: 'inset(50%)',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {image.longDescription}
+                    </span>
+                  )}
+                  {isCropping && cropState && (
+                    <CropOverlay
+                      crop={cropState}
+                      elW={element.width}
+                      elH={element.height}
+                      onHandleDown={onCropHandleDown}
+                      onCommit={onCommitCrop}
+                    />
+                  )}
+                </div>
+                <ImageCitation element={image} />
+              </>
             )
           })()}
         {element.type !== 'text' &&
@@ -632,15 +738,30 @@ export default function CanvasElement({
               )
             }
             if (element.type === 'html') {
-              const srcDoc =
-                element.embedKind === 'mermaid'
-                  ? buildMermaidEmbedContent(element.mermaidSource || element.content || '')
-                  : element.content || ''
+              const baseUrl = window.location.href
+              const isMermaid = element.embedKind === 'mermaid'
+              const dependencies = isMermaid
+                ? {
+                    network: true,
+                    offlineCapable: true,
+                    resources: [
+                      {
+                        url: new URL('/vendor/mermaid/mermaid.min.js', baseUrl).href,
+                        kind: 'script',
+                      },
+                    ],
+                    dynamicResources: [],
+                  }
+                : element.htmlDependencies
+              const content = isMermaid
+                ? buildMermaidEmbedContent(element.mermaidSource || element.content || '')
+                : element.content || ''
+              const srcDoc = buildSandboxFrameDocument(content, dependencies, { baseUrl })
               return (
                 <iframe
                   srcDoc={srcDoc}
                   style={htmlFrameStyle}
-                  sandbox="allow-scripts allow-same-origin"
+                  sandbox="allow-scripts"
                   title={element.embedKind === 'mermaid' ? 'Mermaid diagram preview' : 'HTML embed'}
                 />
               )
@@ -653,31 +774,96 @@ export default function CanvasElement({
               )
             if (element.type === 'video') {
               const media = normalizeMediaAccessibility(element)
-              const playbackRate = getPlaybackRate(media.playbackRate)
               const videoSrc = sanitizeMediaSrc(resolveVideoSrc(media))
               return (
                 <>
-                  <video ref={videoRef} src={getMediaFragmentSrc(videoSrc, media.startTime, media.endTime)} controls={media.controls !== false} autoPlay={media.autoplay || false} muted={media.muted || false} loop={media.loop || false} poster={sanitizeMediaSrc(media.poster) || undefined} style={videoStyle} onLoadedMetadata={(event) => { if (playbackRate && playbackRate !== 1) event.currentTarget.playbackRate = playbackRate }}>
-                    {media.tracks.map((track, index) => <track key={`${track.src}-${index}`} src={sanitizeMediaSrc(track.src)} kind={track.kind} srcLang={track.srcLang || undefined} label={track.label || undefined} default={track.default} />)}
+                  <video
+                    ref={mediaRef}
+                    src={videoSrc}
+                    controls={media.controls !== false}
+                    autoPlay={media.autoplay || false}
+                    muted={media.muted || false}
+                    loop={media.loop || false}
+                    poster={sanitizeMediaSrc(media.poster) || undefined}
+                    style={videoStyle}
+                  >
+                    {media.tracks.map((track, index) => (
+                      <track
+                        key={`${track.src}-${index}`}
+                        src={track.src}
+                        kind={track.kind}
+                        srcLang={track.srcLang || undefined}
+                        label={track.label || undefined}
+                        default={track.default}
+                      />
+                    ))}
                   </video>
-                  {media.audioDescription && <p className="ns-media-audio-description">{media.audioDescription}</p>}
-                  {media.transcript && <details className="ns-media-transcript"><summary>Transcript</summary><p>{media.transcript}</p></details>}
+                  {media.audioDescription && (
+                    <p className="ns-media-audio-description" style={MEDIA_CAPTION_STYLE}>
+                      {media.audioDescription}
+                    </p>
+                  )}
+                  {media.transcript && (
+                    <details className="ns-media-transcript" style={MEDIA_CAPTION_STYLE}>
+                      <summary style={MEDIA_CAPTION_TEXT_STYLE}>Transcript</summary>
+                      <p style={MEDIA_CAPTION_TEXT_STYLE}>{media.transcript}</p>
+                    </details>
+                  )}
                 </>
               )
             }
             if (element.type === 'audio') {
               const media = normalizeMediaAccessibility(element)
               return (
-                <div style={audioWrapperStyle}>
-                  <audio src={sanitizeMediaSrc(media.src)} controls={media.controls !== false} autoPlay={media.autoplay || false} loop={media.loop || false} muted={media.muted || false} style={audioControlStyle}>
-                    {media.tracks.map((track, index) => <track key={`${track.src}-${index}`} src={sanitizeMediaSrc(track.src)} kind={track.kind} srcLang={track.srcLang || undefined} label={track.label || undefined} default={track.default} />)}
-                  </audio>
-                  {media.audioDescription && <p className="ns-media-audio-description">{media.audioDescription}</p>}
-                  {media.transcript && <details className="ns-media-transcript"><summary>Transcript</summary><p>{media.transcript}</p></details>}
-                </div>
+                <>
+                  <div style={audioWrapperStyle}>
+                    <audio
+                      ref={mediaRef}
+                      src={sanitizeMediaSrc(media.src)}
+                      controls={media.controls !== false}
+                      autoPlay={media.autoplay || false}
+                      loop={media.loop || false}
+                      muted={media.muted || false}
+                      style={audioControlStyle}
+                    >
+                      {media.tracks.map((track, index) => (
+                        <track
+                          key={`${track.src}-${index}`}
+                          src={track.src}
+                          kind={track.kind}
+                          srcLang={track.srcLang || undefined}
+                          label={track.label || undefined}
+                          default={track.default}
+                        />
+                      ))}
+                    </audio>
+                  </div>
+                  {media.audioDescription && (
+                    <p className="ns-media-audio-description" style={MEDIA_CAPTION_STYLE}>
+                      {media.audioDescription}
+                    </p>
+                  )}
+                  {media.transcript && (
+                    <details className="ns-media-transcript" style={MEDIA_CAPTION_STYLE}>
+                      <summary style={MEDIA_CAPTION_TEXT_STYLE}>Transcript</summary>
+                      <p style={MEDIA_CAPTION_TEXT_STYLE}>{media.transcript}</p>
+                    </details>
+                  )}
+                </>
               )
             }
             if (Renderer) {
+              if (element.type === 'shape')
+                return (
+                  <Renderer
+                    element={element}
+                    isSelected={isSelected}
+                    onUpdateElement={onUpdateElement}
+                    geometryPointEditing={pointEditing}
+                    fontRuntime={fontRuntime}
+                    outputPixelScale={outputPixelScale}
+                  />
+                )
               if (element.type === 'table')
                 return (
                   <Renderer
@@ -696,7 +882,9 @@ export default function CanvasElement({
                   />
                 )
               if (element.type === 'latex')
-                return <Renderer element={element} isSelected={isSelected} isDragging={isDragging} />
+                return (
+                  <Renderer element={element} isSelected={isSelected} isDragging={isDragging} />
+                )
               if (element.type === 'icon')
                 return <Renderer element={element} iconPaths={iconPaths} />
               return <Renderer element={element} />
@@ -704,10 +892,19 @@ export default function CanvasElement({
             return null
           })()}
       </div>
+      {/* These generated previews belong to the canvas gesture owner, not the iframe. */}
+      {['chart', 'latex'].includes(element.type) && (
+        <div
+          aria-hidden="true"
+          data-canvas-preview-hit-area
+          style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+        />
+      )}
       {element.fragment && <div style={fragmentBadgeStyle}>▶ {element.fragmentIndex ?? 1}</div>}
       {element.action?.hotspot && <div style={hotspotBadgeStyle}>Hotspot</div>}
       {element.groupId && isSelected && <div style={groupBadgeStyle}>Group</div>}
       {isSelected &&
+        !pointEditing &&
         !isEditing &&
         !isCropping &&
         !element.locked &&
@@ -726,22 +923,27 @@ export default function CanvasElement({
             onDoubleClick={(e) => e.stopPropagation()}
           />
         ))}
-      {isSelected && !isEditing && !isCropping && !element.locked && !slideLocked && (
-        <>
-          <div style={rotationGuideStyle} />
-          <div
-            style={rotationHandleStyle}
-            data-testid="rotation-handle"
-            onPointerDown={(e) => {
-              if (e.button !== 0) return
-              e.stopPropagation()
-              onPointerDown(e, 'rotate', null)
-            }}
-            onClick={(e) => e.stopPropagation()}
-            onDoubleClick={(e) => e.stopPropagation()}
-          />
-        </>
-      )}
+      {isSelected &&
+        !pointEditing &&
+        !isEditing &&
+        !isCropping &&
+        !element.locked &&
+        !slideLocked && (
+          <>
+            <div style={rotationGuideStyle} />
+            <div
+              style={rotationHandleStyle}
+              data-testid="rotation-handle"
+              onPointerDown={(e) => {
+                if (e.button !== 0) return
+                e.stopPropagation()
+                onPointerDown(e, 'rotate', null)
+              }}
+              onClick={(e) => e.stopPropagation()}
+              onDoubleClick={(e) => e.stopPropagation()}
+            />
+          </>
+        )}
     </div>
   )
 }

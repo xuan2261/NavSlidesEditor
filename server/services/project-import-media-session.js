@@ -1,6 +1,7 @@
 const crypto = require('node:crypto')
 const fs = require('fs-extra')
 const ownership = require('./media-placement-ownership')
+const { assertStagingOwned, bindProjectImportStaging } = require('./project-import-staging-ownership')
 const { readSession, updateSession } = require('./project-import-media-session-store')
 const {
   expirePendingProjectImports,
@@ -9,6 +10,7 @@ const {
   recoverProjectImports,
 } = require('./project-import-media-session-recovery')
 const { withProjectImportSessionLock } = require('./project-import-media-session-lock')
+const { cancelProjectImportUnlocked, isCancellationIntent } = require('./project-import-media-session-cancellation')
 const {
   CAPABILITY_SCOPE,
   hashCapability,
@@ -44,7 +46,9 @@ async function createProjectImportSession(validated) {
     expiresAt: new Date(now + SESSION_TTL_MS).toISOString(),
     revokedAt: null,
   }
-  await updateSession(sessionId, () => ({ record }))
+  await updateSession(sessionId, async () => ({
+    record: { ...record, ...await bindProjectImportStaging(sessionId, validated) },
+  }))
   return {
     sessionId,
     capability,
@@ -64,6 +68,7 @@ async function stageProjectImportMediaUnlocked({ sessionId, capability }) {
     if (record.state === 'committed') return { placed: record.placements.length }
     throw sessionError('PROJECT_IMPORT_NOT_PENDING', 'Import is no longer pending', 409)
   }
+  await assertStagingOwned(record)
   const known = new Set(record.placements.map((item) => item.archivePath))
   for (const media of record.media) {
     if (known.has(media.archivePath)) continue
@@ -117,41 +122,27 @@ async function beginProjectImportCommitUnlocked({
 }
 
 async function publishProjectImport(input) {
-  return withProjectImportSessionLock(input.sessionId, async () => {
-    const record = await beginProjectImportCommitUnlocked(input)
-    return record.state === 'committed'
-      ? {
-          status: 'committed',
-          sessionId: record.sessionId,
-          presentationId: record.intendedPresentationId,
-          warnings: record.warnings || [],
-        }
-      : recoverProjectImport(record)
-  })
+  // Each transition takes the same session mutex. Recovery rereads its exact
+  // intent under that mutex; retaining it here would recursively deadlock.
+  const record = await beginProjectImportCommit(input)
+  return record.state === 'committed'
+    ? {
+        status: 'committed',
+        sessionId: record.sessionId,
+        presentationId: record.intendedPresentationId,
+        warnings: record.warnings || [],
+      }
+    : recoverProjectImport(record)
 }
 
 async function rollbackProjectImportUnlocked({ sessionId, capability }) {
   const record = await readSession(sessionId)
   verifyCapability(record, capability)
   if (record.state === 'rolled-back') return { status: 'rolled-back' }
-  if (record.state !== 'pending') {
+  if (record.state !== 'pending' && !isCancellationIntent(record)) {
     throw sessionError('PROJECT_IMPORT_NOT_ROLLBACKABLE', 'Import can no longer be rolled back', 409)
   }
-  await ownership.rollbackOwner(sessionId)
-  await Promise.all((record.media || []).map((item) => fs.remove(item.stagingPath).catch(() => {})))
-  return updateSession(sessionId, (current) => ({
-    record: {
-      ...current,
-      state: 'rolled-back',
-      rolledBackAt: new Date().toISOString(),
-      replayHash: current.capabilityHash,
-      capabilityHash: undefined,
-      revokedAt: new Date().toISOString(),
-      presentation: undefined,
-      media: undefined,
-    },
-    value: { status: 'rolled-back' },
-  }))
+  return cancelProjectImportUnlocked(record)
 }
 
 function stageProjectImportMedia(input) {

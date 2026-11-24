@@ -5,16 +5,13 @@ import { buildMatrix } from './build-matrix.mjs'
 import { renderMatrixMarkdown } from './matrix-format.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const REPORTS_DIR = resolve(
-  HERE,
-  '../../plans/260531-0511-full-feature-verification-gap-closure-tdd/reports'
-)
+export const REPORTS_DIR = resolve(HERE, 'reports')
 
 function readJson(path, fallback) {
   return existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : fallback
 }
 
-export function buildExtendedDomainReport({ inventory, tags, runIndex }) {
+export function buildExtendedDomainReport({ inventory, tags, runIndex, educationGate = null }) {
   const extended = inventory.filter((cap) => cap.scope !== 'editor-core')
   const result = buildMatrix({
     inventory: extended,
@@ -29,7 +26,27 @@ export function buildExtendedDomainReport({ inventory, tags, runIndex }) {
     targetLayer: cap.targetLayer,
     coverageMode: cap.coverageMode,
   }))
-  return { ...result, policy }
+  for (const row of result.rows) {
+    if (!['game', 'education'].includes(extended.find((cap) => cap.id === row.id)?.scope)) continue
+    row.status =
+      educationGate?.ok === true && educationGate.subjectVerified === true ? 'PASS' : 'GAP'
+  }
+  result.summary = {
+    total: result.rows.length,
+    verified: result.rows.filter((row) => row.status === 'PASS').length,
+  }
+  for (const row of result.rows) result.summary[row.status] = (result.summary[row.status] || 0) + 1
+  result.summary['DEPTH-WARN'] = result.rows.filter(
+    (row) => row.depthStatus === 'DEPTH-WARN'
+  ).length
+  return {
+    ...result,
+    policy,
+    educationGate: educationGate || {
+      ok: false,
+      reason: 'No current conjunctive education qualification.',
+    },
+  }
 }
 
 export function trustedExtendedRunIndex(runIndex, stale) {
@@ -46,28 +63,49 @@ if (invokedDirectly) {
   const inventory = readJson(resolve(HERE, 'inventory.json'), [])
   const tags = extractAllTags()
   const taggedFiles = [
-    ...new Set(Object.values(tags).flat().map((occurrence) => resolve(HERE, '../..', occurrence.file))),
+    ...new Set(
+      Object.values(tags)
+        .flat()
+        .map((occurrence) => resolve(HERE, '../..', occurrence.file))
+    ),
   ]
-  const mtimesFor = (predicate) => taggedFiles.filter(predicate).map((file) => {
-    try {
-      return statSync(file).mtimeMs
-    } catch {
-      return 0
-    }
-  })
+  const mtimesFor = (predicate) =>
+    taggedFiles.filter(predicate).map((file) => {
+      try {
+        return statSync(file).mtimeMs
+      } catch {
+        return 0
+      }
+    })
   const testFileMtimes = {
     vitest: mtimesFor((file) => !file.replace(/\\/g, '/').includes('/tests/e2e/')),
     playwright: mtimesFor((file) => file.replace(/\\/g, '/').includes('/tests/e2e/')),
   }
   const playwrightRunPath = resolve(HERE, 'run-results-playwright.json')
-  const { index: runIndex, stale, staleSources } = loadRunResults({
+  const {
+    index: runIndex,
+    stale,
+    staleSources,
+  } = loadRunResults({
     vitestPath: resolve(HERE, 'run-results-vitest.json'),
     playwrightPath: existsSync(playwrightRunPath) ? playwrightRunPath : null,
     testFileMtimes,
   })
 
   const trustedRunIndex = trustedExtendedRunIndex(runIndex, stale)
-  const report = buildExtendedDomainReport({ inventory, tags, runIndex: trustedRunIndex })
+  let educationGate
+  try {
+    const { runEducationGate } = await import('./education-release-gate.mjs')
+    educationGate = { ...(await runEducationGate([])), subjectVerified: true }
+  } catch (error) {
+    educationGate = { ok: false, subjectVerified: false, reason: error.message }
+  }
+  const report = buildExtendedDomainReport({
+    inventory,
+    tags,
+    runIndex: trustedRunIndex,
+    educationGate,
+  })
   const meta = {
     generated: process.env.MATRIX_DATE || 'local run',
     stale,
@@ -87,4 +125,5 @@ if (invokedDirectly) {
   console.log(
     `[extended-domain-report] ${s.verified}/${s.total} verified | GAP:${s.GAP || 0} TAGGED:${s.TAGGED || 0} | orphans:${report.orphans.length}`
   )
+  if (!educationGate.ok) process.exitCode = 1
 }

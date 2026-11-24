@@ -2,7 +2,11 @@
 
 A self-hostable WYSIWYG presentation editor được xây dựng dựa trên [reveal.js](https://revealjs.com/). Build và trình chiếu slide trực tiếp trên trình duyệt — không cần tài khoản, không cần đám mây, không bị theo dõi. Đồng thời cung cấp dưới dạng ứng dụng desktop độc lập thông qua Electron.
 
-Bản phát hành hiện tại: **v1.16.2**. **v1.17.0** chỉ là ứng viên chưa gắn thẻ/chưa phát hành; không được xem việc vượt qua CI hoặc kiểm chứng PowerPoint là đã hoàn tất.
+Phiên bản package trong mã nguồn là **1.17.0**, do [package.json](package.json)
+quản lý. [runtime-versions.json](runtime-versions.json) quản lý riêng các phiên
+bản runtime và toolchain được khóa. Phiên bản package không chứng minh đã đạt
+qualification hoặc đã phát hành; xem artifact đã công bố tại
+[Releases](https://github.com/xuan2261/NavSlidesEditor/releases).
 
 ## Features
 
@@ -40,6 +44,7 @@ NavSlides Editor có **19 loại phần tử chuẩn**. Dải lệnh Insert hi�
 - **Charts** — biểu đồ cột, đường, tròn, doughnut, radar, và vùng cực qua Chart.js với dữ liệu có thể chỉnh sửa
 - **Video / audio** — nhúng các tệp phương tiện qua URL hoặc tải lên với các phím điều khiển, tùy chọn tự động phát, lặp lại, và tắt tiếng
 - **Tables** — đối tượng bảng có thể kéo/thay đổi kích thước với hàng tiêu đề, khả năng chỉnh sửa trực tiếp trên ô (inline cell editing), và tùy chỉnh phong cách
+  Ô bảng hỗ trợ định dạng rich text hỗn hợp cùng ô văn bản thuần giữ nguyên ký tự; xem [ranh giới fidelity của bảng và đoạn văn](docs/pptx-import-fidelity-report.md#table-and-paragraph-repair-boundary-2026-10-12-working-tree).
 - **Icons** — thư viện có thể tìm kiếm với hơn 60 biểu tượng SVG dạng Lucide có thể tùy chỉnh màu sắc và đường viền
 - **Callout bubbles** — các vòng tròn chú thích có đánh số với khả năng tùy chỉnh màu sắc và kích thước
 - **Game** — 10 loại game tương tác: name picker, hot potato, Jeopardy, four corners, relay race, trivia champ, scattergories, live poll, word cloud và matching
@@ -75,7 +80,7 @@ Các công cụ dạy học có thể khám phá từ tab **Insert**: Mermaid di
 - **Present mode** — trình chiếu toàn màn hình với reveal.js kèm theo ghi chú diễn giả (nhấn phím `S`)
 - **Advanced Markdown Import** — tạo toàn bộ bài thuyết trình từ Markdown với sự hỗ trợ cho các attributes nâng cao của slide
 - **Export HTML** — tải xuống dưới dạng tệp HTML độc lập
-- **Export offline HTML** — tích hợp sẵn tất cả tài nguyên CDN (Reveal.js, KaTeX, highlight.js) vào file và phân giải chính xác các iframe/plugin cục bộ để tệp hoạt động hoàn toàn offline
+- **Export offline HTML** — nhúng runtime cục bộ đã được kiểm tra và tài nguyên được hỗ trợ; thiếu tài nguyên bắt buộc sẽ làm export thất bại. Nội dung nhúng hoặc dịch vụ bên ngoài không mặc nhiên hoạt động offline. Xem [giới hạn export](docs/export-fidelity-and-limits.md#revealjs-runtime-contract).
 - **Export PDF** — bố cục in sẵn sàng với một trang trên mỗi slide, các trạng thái fragment được mở rộng, kèm tính năng khởi tạo iframe cải tiến cho nội dung nhúng
 - **Export PPTX** — tạo tệp PowerPoint để chia sẻ với người dùng không chuyên kỹ thuật
 - **Shareable links** — tạo các URL công khai để xem bản trình bày mà không cần vào trình chỉnh sửa; bật/tắt tính năng này tùy từng file
@@ -214,7 +219,7 @@ ports:
 
 ### Option C — Node.js / npm from source
 
-Yêu cầu **Node.js 20+** và npm 8+.
+Yêu cầu **Node.js >=22.22.2, >=24.15.0 hoặc >=26** và npm. CI và image container Debian Trixie Slim khóa Node.js 22.23.3.
 
 #### 1. Clone repository
 
@@ -265,26 +270,9 @@ PORT=8080 npm start
 
 ## Data & Persistence
 
-| Path                             | Contents                              |
-| -------------------------------- | ------------------------------------- |
-| `server/data/presentations.json` | Toàn bộ dữ liệu của bài thuyết trình  |
-| `server/data/templates.json`     | Custom templates                      |
-| `server/data/share-tokens.json`  | Shareable link tokens                 |
-| `server/data/github-config.json` | Thông tin xác thực GitHub integration |
-| `server/data/history/`           | Lịch sử lưu các bản nháp (snapshots)  |
-| `server/uploads/`                | Hình ảnh, audio, video được upload    |
+Dữ liệu và package authority nằm trong `server/data/`; tài nguyên đã tải lên nằm trong `server/uploads/`. Docker lưu hai thư mục trong các named volumes được khai báo ở `docker-compose.yml`.
 
-Mọi file cấu hình và thư mục sẽ được tự động tạo vào lần chạy đầu tiên. Bạn nên thực hiện backup để tránh mất dữ liệu.
-
-**Docker:** Dữ liệu nằm trong 2 named volumes (`revealjs-data`, `revealjs-uploads`). Để backup:
-
-```bash
-# Lệnh copy file JSON dữ liệu ra khỏi volume
-docker run --rm \
-  -v revealjs-data:/data \
-  -v $(pwd):/backup \
-  alpine cp /data/presentations.json /backup/presentations.json
-```
+Sao lưu cả hai volume tại cùng một điểm nhất quán khi dịch vụ đã dừng bằng `npm run backup:docker`. Chỉ khôi phục vào các volume rỗng bằng `npm run restore:docker -- -BackupDirectory <path>`; manifest kiểm tra cả hai archive trước khi giải nén. Sao chép riêng `presentations.json` không giữ đủ package, media và lịch sử. Xem [hướng dẫn backup/restore](docs/deployment-guide.md#backup-and-restore-docker).
 
 ---
 
@@ -398,12 +386,31 @@ slides.example.com {
 
 ## Requirements
 
-| Method       | Requirement                                        |
-| ------------ | -------------------------------------------------- |
-| Desktop app  | Node.js 20+ (chỉ dành cho quá trình build)         |
-| Docker       | Docker 20.10+ và Docker Compose v2+                |
-| Node.js      | Node.js 20+ và npm 8+                              |
-| Load Testing | [k6](https://k6.io/docs/get-started/installation/) |
+Các giá trị trong mã nguồn bên dưới theo [package.json](package.json),
+[runtime-versions.json](runtime-versions.json), manifest của
+[server](server/package.json) và [client](client/package.json), cùng
+[`ELEMENT_DEFAULTS`](client/src/data/element-defaults.js). Đây là phiên bản và
+số lượng được khai báo, không phải bằng chứng cài đặt, qualification runtime
+hay phát hành. Package desktop Electron được đóng gói riêng, không thuộc npm
+workspaces; `website` là workspace thứ tư.
+
+<!-- navslides-facts:start -->
+| Fact | Value |
+| --- | --- |
+| version | 1.17.0 |
+| workspaces | server,client,shared,website |
+| node.minimum | 22.22.2 |
+| reveal | 6.0.2 |
+| tiptap | 3.31.4 |
+| elements | 19 |
+<!-- navslides-facts:end -->
+
+| Method       | Requirement                                                       |
+| ------------ | ----------------------------------------------------------------- |
+| Desktop app  | Node.js >=22.22.2, >=24.15.0 hoặc >=26 (chỉ dành cho build)       |
+| Docker       | Docker 20.10+ và Docker Compose v2+                               |
+| Node.js      | Node.js >=22.22.2, >=24.15.0 hoặc >=26 và npm                     |
+| Load Testing | [k6](https://k6.io/docs/get-started/installation/)                |
 
 ---
 
@@ -442,9 +449,9 @@ Cài `k6` theo hướng dẫn chính thức nếu muốn chạy load suite local
 
 | Layer                | Technology                                                |
 | -------------------- | --------------------------------------------------------- |
-| Frontend             | React 18, Vite 5                                          |
-| Rich text editor     | TipTap 2                                                  |
-| Presentation engine  | reveal.js 5                                               |
+| Frontend             | React 18, Vite 8                                          |
+| Rich text editor     | TipTap (phiên bản khóa ở [Requirements](#requirements))    |
+| Presentation engine  | reveal.js (phiên bản khóa ở [Requirements](#requirements)) |
 | Math rendering       | KaTeX                                                     |
 | Diagrams             | TikZJax                                                   |
 | Charts               | Chart.js 4                                                |

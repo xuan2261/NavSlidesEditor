@@ -4,6 +4,10 @@ const { createMatrixAuthoritySubjects } = require('../canonical-feature-matrix')
 const { canonicalEditableSnapshot } = require('../canonical-snapshot')
 const { rebindSourceMap } = require('../source-map')
 const { MUTATION_OPERATIONS } = require('../mutation-operation-scope')
+const { getTrustedImportMetadata } = require('../trusted-import-metadata')
+const { refreshCompatibilityHeads } = require('./authority-publication')
+const { assertDestinationAbsent, createDestinationHead } = require('./destination-creation')
+const { assertSemanticHistoryAuthority, rebindSemanticHistoryAuthority } = require('./portable')
 
 const clone = (value) => structuredClone(value)
 const revisionIdsFor = (head) => new Set([
@@ -21,6 +25,7 @@ function committedAuthority(state, head) {
     result.state === 'committed' && result.projection && result.sourceMap &&
     (head.projectionRevisionId === hashRecord(result.projection) &&
       head.sourceMapRevisionId === hashRecord(result.sourceMap)) &&
+    (result.journal?.journalHash ?? null) === (head.journalRevisionId ?? null) &&
     (result.operation === undefined ||
       result.operation === MUTATION_OPERATIONS.PACKAGE_IMPORT ||
       result.operation === MUTATION_OPERATIONS.VALIDATED_EDITED_EXPORT)
@@ -113,10 +118,10 @@ async function duplicatePresentationOwner(store, sourceId, destinationId, option
     )
   }
   const authority = committedAuthority(store.metadata.state, source)
+  assertDestinationAbsent(store.metadata.state, destinationId)
   await admit(store, options)
-  await store.mutate((next) => {
+  return createDestinationHead(store, destinationId, (next) => {
     assertHeadUnchanged(next, expectedSourceHead, sourceId)
-    for (const revisionId of revisionIdsFor(source)) addOwner(next, revisionId, owner)
     const destination = {
       ...clone(source),
       presentationId: destinationId,
@@ -142,9 +147,9 @@ async function duplicatePresentationOwner(store, sourceId, destinationId, option
       }
       next.mutationResults.push(rebound)
     }
+    for (const revisionId of revisionIdsFor(destination)) addOwner(next, revisionId, owner)
     next.heads.push(destination)
   }, options)
-  return store.metadata.state.heads.find((head) => head.presentationId === destinationId)
 }
 
 async function quarantinePresentation(store, presentationId, options = {}) {
@@ -172,7 +177,7 @@ async function quarantinePresentation(store, presentationId, options = {}) {
         generation: expectedHead.generation,
       })
     }
-  }, options)
+  }, { ...options, readOnlyResults: true })
   return clone(expectedHead)
 }
 
@@ -223,7 +228,7 @@ async function restoreQuarantinedHead(
         },
       })
     }
-  }, options)
+  }, { ...options, readOnlyResults: true })
   return store.metadata.state.heads.find((item) => item.presentationId === presentationId)
 }
 
@@ -251,7 +256,7 @@ async function retainHead(store, owner, presentationId, options = {}) {
     for (const revisionId of revisionIdsFor(expectedHead)) {
       addOwner(next, revisionId, owner, expectedHead)
     }
-  }, options)
+  }, { ...options, readOnlyResults: true })
   return clone(expectedHead)
 }
 
@@ -316,7 +321,7 @@ async function instantiateRetainedHead(store, retainedOwner, destinationId, opti
   const owner = validateOwner({ ownerType: 'presentation', ownerId: destinationId })
   const retained = retainedHeadForOwner(store.metadata.state, retainedOwner)
   if (!retained) return null
-  const { retainedHead, retainedRevisionIds } = retained
+  const { retainedHead } = retained
   if (retainedHead.pendingJournalHash !== undefined) {
     throw lifecycleError(
       'PACKAGE_PENDING_PROJECTION',
@@ -347,18 +352,13 @@ async function instantiateRetainedHead(store, retainedOwner, destinationId, opti
       )
     }
   }
-  if (store.metadata.state.heads.some((head) => head.presentationId === destinationId)) {
-    throw lifecycleError('STALE_GENERATION', 'Package lifecycle destination already exists')
-  }
+  assertDestinationAbsent(store.metadata.state, destinationId)
 
   await admit(store, options)
-  await store.mutate((next) => {
+  return createDestinationHead(store, destinationId, (next) => {
     const liveRetained = retainedHeadForOwner(next, retainedOwner)
     if (!liveRetained || hashRecord(liveRetained.retainedHead) !== hashRecord(retainedHead)) {
       throw lifecycleError('STALE_GENERATION', 'Package lifecycle retained head changed')
-    }
-    if (next.heads.some((head) => head.presentationId === destinationId)) {
-      throw lifecycleError('STALE_GENERATION', 'Package lifecycle destination already exists')
     }
     const destination = {
       ...clone(retainedHead),
@@ -387,7 +387,7 @@ async function instantiateRetainedHead(store, retainedOwner, destinationId, opti
       next.mutationResults.push(rebound)
     }
     next.heads.push(destination)
-    for (const revisionId of retainedRevisionIds) addOwner(next, revisionId, owner)
+    for (const revisionId of revisionIdsFor(destination)) addOwner(next, revisionId, owner)
     if (options.compatibilityPresentation) {
       queueCompatibilityUpsert(next, {
         presentationId: destinationId,
@@ -402,7 +402,6 @@ async function instantiateRetainedHead(store, retainedOwner, destinationId, opti
       })
     }
   }, options)
-  return store.metadata.state.heads.find((head) => head.presentationId === destinationId)
 }
 
 function getRestorableHead(store, presentationId, retainedOwner) {
@@ -448,14 +447,13 @@ async function restoreForward(store, presentationId, retainedOwner, options = {}
       hashRecord(current) !== hashRecord(options.expectedCurrentHead)) {
     throw lifecycleError('STALE_GENERATION', 'Package lifecycle current head changed')
   }
-  if (retainedHead.pendingJournalHash !== undefined || current.pendingJournalHash !== undefined) {
-    throw lifecycleError(
-      'PACKAGE_PENDING_PROJECTION',
-      'Cannot restore a presentation while a pending package projection exists'
-    )
+  if (current.pendingJournalHash !== undefined) {
+    assertSemanticHistoryAuthority(store.metadata.state, current)
   }
+  const pendingHistory = retainedHead.pendingJournalHash !== undefined
+  if (pendingHistory) assertSemanticHistoryAuthority(store.metadata.state, retainedHead)
   const authority = committedAuthority(store.metadata.state, retainedHead)
-  if (!authority && (retainedHead.projectionRevisionId || retainedHead.sourceMapRevisionId)) {
+  if (!pendingHistory && !authority && (retainedHead.projectionRevisionId || retainedHead.sourceMapRevisionId)) {
     throw lifecycleError(
       'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE',
       'Package lifecycle retained authority is unavailable'
@@ -480,9 +478,16 @@ async function restoreForward(store, presentationId, retainedOwner, options = {}
       matrixAuthorityEpoch,
       matrixAuthoritySubjects: createMatrixAuthoritySubjects(undefined, matrixAuthorityEpoch),
     }
-    delete restoredHead.pendingJournalHash
     let rebound = null
-    if (authority) {
+    if (pendingHistory) {
+      const imported = rebindSemanticHistoryAuthority(next, retainedHead, current, matrixAuthorityEpoch)
+      Object.assign(restoredHead, imported.head, { fencingEpoch: store.fencingEpoch })
+      next.mutationResults.push(...imported.results)
+      rebound = { projection: imported.projection }
+    } else {
+      delete restoredHead.pendingJournalHash
+    }
+    if (!pendingHistory && authority) {
       rebound = rebindAuthority(
         authority,
         presentationId,
@@ -504,6 +509,10 @@ async function restoreForward(store, presentationId, retainedOwner, options = {}
         matrixAuthorityEpoch,
         matrixAuthoritySubjects: createMatrixAuthoritySubjects(undefined, matrixAuthorityEpoch),
       })
+    // Reissue exact fences without admitting unpublished canonical heads.
+    refreshCompatibilityHeads(next, {
+      skipPresentationId: options.compatibilityPresentation ? presentationId : undefined,
+    })
     next.owners = next.owners.filter((item) =>
       item.ownerType !== 'presentation' || item.ownerId !== presentationId
     )
@@ -518,6 +527,7 @@ async function restoreForward(store, presentationId, retainedOwner, options = {}
         presentationId,
         generation: restoredHead.generation,
         updatedAt: options.updatedAt || options.compatibilityPresentation.updatedAt || new Date().toISOString(),
+        trustedImportMetadata: getTrustedImportMetadata(next, restoredHead),
         presentation: {
           ...options.compatibilityPresentation,
           ...(rebound?.projection ? clone(rebound.projection) : {}),

@@ -4,28 +4,28 @@ NavSlides Editor uses three testing layers: Vitest (unit/integration JS), Playwr
 
 ## Quick reference
 
-| Command                                             | Purpose                                                                                                                                       |
-| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm test`                                          | Vitest unit/integration suite                                                                                                                 |
-| `npm run test:coverage`                             | Vitest with v8 coverage → `coverage/`                                                                                                         |
-| `npm run test:coverage:summary`                     | Markdown summary into `plans/.../reports/coverage-baseline-{date}.md`                                                                         |
-| `npm run test:e2e`                                  | Playwright e2e (auto-starts dev server)                                                                                                       |
-| `npm run test:e2e:report`                           | Open last Playwright HTML report                                                                                                              |
-| `npm run test:e2e:shard 1/4`                        | Run shard 1 of 4                                                                                                                              |
-| `npm run test:audit`                                | Targeted ribbon audit suite                                                                                                                   |
-| `npm run test:load:api`                             | k6 REST load test (smoke profile by default)                                                                                                  |
-| `npm run test:load:api:smoke` / `:load` / `:stress` | k6 REST with explicit profile                                                                                                                 |
-| `npm run test:load:ws`                              | k6 Socket.IO load test (smoke profile by default)                                                                                             |
-| `npm run test:load:ws:smoke` / `:load` / `:stress`  | k6 Socket.IO with explicit profile                                                                                                            |
-| `npm run test:pptx:corpus-metrics`                  | Parser-relative PPTX semantic/round-trip metrics (`test:corpus` is the compatibility alias)                                                   |
-| `npm run test:pptx:importer-qualification`          | Manifest-bound two-pass importer-native strict gate                                                                                           |
-| `npm run test:pptx:browser-audit:full`              | Full real-browser PPTX layout audit                                                                                                           |
-| `npm run test:pptx:oracle:integrity` / `:qualify`   | PowerPoint evidence-integrity and fixed-policy visual gates                                                                                   |
-| `npm run test:deep`                                 | Run only the `tier:deep` behavior tests (`*.deep.test.*`)                                                                                     |
-| `npm run inventory`                                 | Regenerate the capability inventory (`scripts/feature-inventory/inventory.json`)                                                              |
-| `npm run matrix`                                    | Regenerate the feature-coverage matrix → `docs/feature-coverage-matrix.md` + `scripts/feature-inventory/reports/feature-coverage-matrix.json` |
-| `npm run matrix:baseline-report`                    | Regenerate matrix and Phase 1 baseline gap reports                                                                                            |
-| `npm run matrix:gate`                               | Regenerate matrix, then run the coverage gate + manifest-completeness drift guard                                                             |
+| Command | Purpose |
+|---|---|
+| `npm test` | Vitest unit/integration suite |
+| `npm run test:coverage` | Vitest with v8 coverage → `coverage/` |
+| `npm run test:coverage:summary` | Markdown summary into `plans/.../reports/coverage-baseline-{date}.md` |
+| `npm run test:e2e` | Playwright e2e (auto-starts production server; dev servers require `PLAYWRIGHT_USE_DEV_SERVERS=1`) |
+| `npm run test:e2e:report` | Open last Playwright HTML report |
+| `npm run test:e2e:shard 1/4` | Run shard 1 of 4 |
+| `npm run test:audit` | Targeted ribbon audit suite |
+| `npm run test:load:api` | k6 REST load test (smoke profile by default) |
+| `npm run test:load:api:smoke` / `:load` / `:stress` | k6 REST with explicit profile |
+| `npm run test:load:ws` | k6 Socket.IO load test (smoke profile by default) |
+| `npm run test:load:ws:smoke` / `:load` / `:stress` | k6 Socket.IO with explicit profile |
+| `npm run test:pptx:corpus-metrics` | Parser-relative PPTX semantic/round-trip metrics (`test:corpus` is the compatibility alias) |
+| `npm run test:pptx:importer-qualification` | Manifest-bound two-pass importer-native strict gate |
+| `npm run test:pptx:browser-audit:full` | Full real-browser PPTX layout audit |
+| `npm run test:pptx:oracle:integrity` / `:qualify` | PowerPoint evidence-integrity and fixed-policy visual gates |
+| `npm run test:deep` | Run only the `tier:deep` behavior tests (`*.deep.test.*`) |
+| `npm run inventory` | Regenerate the capability inventory (`scripts/feature-inventory/inventory.json`) |
+| `npm run matrix` | Regenerate the feature-coverage matrix → `docs/feature-coverage-matrix.md` + `scripts/feature-inventory/reports/feature-coverage-matrix.json` |
+| `npm run matrix:baseline-report` | Regenerate matrix and Phase 1 baseline gap reports |
+| `npm run matrix:gate` | Regenerate matrix, then run the coverage gate + manifest-completeness drift guard |
 
 ## Feature coverage matrix (capability traceability)
 
@@ -103,24 +103,24 @@ If parallelism causes flakes on shared state in the future, upgrade `tests/e2e/g
 
 `tests/e2e/fixtures/test-fixtures.js` validates `PLAYWRIGHT_TEST_BASE_URL` matches `^https?://(127\.0\.0\.1|localhost)(:\d+)?(/|$)` before any destructive API call (`apiCreatePresentation`, `apiUpdatePresentation`, `apiDeletePresentation`, `apiCreateShareLink`, `apiCreateSnapshot`). This blocks accidental writes against shared/prod servers when env is misconfigured.
 
-Unit-tested in `tests/unit/test-fixtures-loopback-baseurl-guard.test.js` (5 cases: 127.0.0.1 ok, localhost ok, https prod blocked, 10.x private blocked, multi-method blocked).
+Unit-tested in `tests/unit/test-fixtures-loopback.test.js` (loopback allowed; production and private-network URLs rejected across create/get/update/share/snapshot/delete).
 
 ## Page Object Model
 
 E2E specs use POM helpers under `tests/e2e/pages/`:
 
-| Helper                                               | Responsibility                                             |
-| ---------------------------------------------------- | ---------------------------------------------------------- |
-| `EditorPage.js`                                      | Top-level page wrapper; delegates to specialised helpers   |
-| `canvas-helper.js`                                   | Slide canvas DOM (drag, zoom, element queries)             |
-| `ribbon-insert-helper.js`                            | Insert tab (text/shape/image/table/chart)                  |
-| `properties-panel-helper.js`                         | Right-side properties panel                                |
-| `slide-panel-helper.js`                              | Left slide thumbnails + reorder                            |
-| `ribbon-tab-toolbar-helper.js`                       | Tab switching, main toolbar buttons, overflow metrics      |
-| `menu-bar-dropdown-helper.js`                        | File / AI / Share menu dropdowns (Radix `[role=menuitem]`) |
-| `text-editor-prosemirror-and-find-replace-helper.js` | TipTap editing + find/replace bar                          |
+| Helper | Responsibility |
+|---|---|
+| `editor-page.js` | Top-level page wrapper (`EditorPage` class); delegates to specialised helpers |
+| `canvas-helper.js` | Slide canvas DOM (drag, zoom, element queries) |
+| `ribbon-insert-helper.js` | Insert tab (text/shape/image/table/chart) |
+| `properties-panel-helper.js` | Right-side properties panel |
+| `slide-panel-helper.js` | Left slide thumbnails + reorder |
+| `ribbon-tab-toolbar-helper.js` | Tab switching, main toolbar buttons, overflow metrics |
+| `menu-bar-dropdown-helper.js` | File / AI / Share menu dropdowns (Radix `[role=menuitem]`) |
+| `text-editor-prosemirror-and-find-replace-helper.js` | TipTap editing + find/replace bar |
 
-Helpers are kebab-case (file-naming hook); `EditorPage.js` is preserved in PascalCase because 30+ specs already import it.
+Helper files are kebab-case (file-naming hook); the exported page-object classes stay PascalCase (`EditorPage`, `HomePage`).
 
 ## Common selectors
 
@@ -207,7 +207,7 @@ Phase 9 wires `grafana/setup-k6-action@v1` into `.github/workflows/github-action
 
 ## CI integration (Phase 9)
 
-The pipeline lives in `.github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml` and runs on PRs + pushes to `master`/`main`. A nightly soft-warning workflow `nightly-ribbon-layout-768px-soft-warning-no-pr-gate.yml` runs the 768px ribbon overflow specs without gating PRs.
+The pipeline lives in `.github/workflows/github-actions-ci-pipeline-lint-unit-coverage-e2e-load-smoke.yml` and runs on PRs + pushes to `master`/`main` (including the 768px ribbon responsive specs inside `e2e-chromium` shards).
 
 | Job                        | Tool                                                       | Wall budget  | Gate?                            |
 | -------------------------- | ---------------------------------------------------------- | ------------ | -------------------------------- |
@@ -222,7 +222,7 @@ The pipeline lives in `.github/workflows/github-actions-ci-pipeline-lint-unit-co
 | `load-smoke`               | `grafana/setup-k6-action@v1`                               | 15 min       | yes                              |
 | `required-checks`          | summary                                                    | < 1 min      | yes — fan-in gate                |
 
-`required-checks` fans in on the currently blocking jobs and exits non-zero if any reports `failure`/`cancelled`/`timed_out`. Wire branch protection to require `required-checks` instead of every individual job — keeps the rule list small and stable when shards are renamed.
+The fail-closed fan-in contract belongs to [`scripts/ci/required-checks.mjs`](../scripts/ci/required-checks.mjs). Prefer requiring `Required checks summary` instead of every shard context so branch protection does not drift when shards are renamed.
 
 ### Release-confidence lanes
 
@@ -273,17 +273,28 @@ Manual release smoke lives in `docs/manual-smoke-checklist.md`. Keep it under 45
 
 Release-Blocking MVP coverage is the automated merge full lane plus the manual smoke checklist. Contract-Only Coverage remains explicit for external AI/sync/GitHub/rclone/provider behavior where real credentials are not allowed in CI. A full Playwright suite pass is required for release confidence, but feature-matrix PASS counts only prove capability-tagged behavior, not every user workflow.
 
-### Coverage thresholds (Phase 9 anti-regression gate)
+History restore must remain authorable without reloading: a fresh GET can mask stale in-memory generation state. The restore lifecycle owner is [use-editor-server-state-controller.js](../client/src/hooks/editor-controller/use-editor-server-state-controller.js); native restore→edit→save and subsequent reload evidence are separate from backend restore success. Pending package-projection refusals must remain visible, not be bypassed to qualify edited export.
 
-`vitest.config.mjs` enforces baseline-derived thresholds (lines: 33, branches: 28, functions: 26, statements: 33) — set ~3 points below the 2026-05-19 measured baseline (lines: 37.7%, branches: 31.6%, functions: 30.3%, statements: 36.2%) to absorb noise from unrelated PRs that remove/add tests, while still preventing real regression. Bump these numbers via dedicated PRs as coverage rises toward the 80% aspirational target.
+### Coverage gate
 
-### Visual baselines: Linux-only via Docker (Patch-02)
+The enforced coverage floors belong to [`vitest.config.mjs`](../vitest.config.mjs). A failed gate is not repaired by lowering them; threshold changes require a dedicated review rather than a verification workaround.
 
-All Playwright jobs run inside `mcr.microsoft.com/playwright:v1.59.1-jammy` so visual snapshots produced locally on Windows / macOS will drift. Always regenerate baselines via:
+E2E file-size and observable-wait policies are enforced by [`eslint.config.mjs`](../eslint.config.mjs), including the existing bounded status-polling exceptions.
+
+### Node runtime options
+
+The engine contract is owned by [`package.json`](../package.json). Its supported Node defaults permit synchronous ESM loading, required by the shared Markdown renderer. An inherited `NODE_OPTIONS=--no-experimental-require-module` disables that capability; an `ERR_REQUIRE_ESM` under that explicit opt-out is not evidence that the default runtime is incompatible.
+
+Inspect `node -e "console.log(process.version, process.features.require_module, process.env.NODE_OPTIONS)"` before changing parser dependencies or synchronous export APIs. Isolate inherited options in the test process; do not silently rewrite user or machine environment settings.
+
+
+### Visual baselines: Linux-only via Docker
+
+The Playwright container pin in [`runtime-versions.json`](../runtime-versions.json) selects the Linux snapshot environment; Windows / macOS snapshots are not substitutes. Regenerate baselines with that pin:
 
 ```bash
 docker run --rm -v "${PWD}:/work" -w /work \
-  mcr.microsoft.com/playwright:v1.59.1-jammy \
+  "$(node -p "require('./runtime-versions.json').playwrightImage")" \
   bash -lc "npm ci && npx playwright test tests/e2e/visual/ tests/e2e/visual-regression.spec.js --update-snapshots"
 ```
 

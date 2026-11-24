@@ -56,8 +56,7 @@ export default function HistoryModal({ presentationId, onRestore, onClose }) {
         setPendingAction(`restore:${snapshotId}`)
         setError('')
         try {
-          const restored = await api.restoreSnapshot(presentationId, snapshotId)
-          onRestore(restored)
+          if (await onRestore(snapshotId) === false) return
           handleClose()
         } catch (err) {
           setError(err.message || 'Failed to restore snapshot.')

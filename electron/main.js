@@ -3,6 +3,7 @@ const path = require('path')
 const { isTrustedAppUrl, isTrustedPopupUrl, isExternalHttpUrl } = require('./navigation-policy')
 const { acquireSingleInstance, focusExistingWindow } = require('./single-instance')
 const { withDesktopCsp } = require('./content-security-policy')
+const { resolveQualificationProfile } = require('./qualification-profile')
 
 const PORT = 3002
 const APP_ORIGIN = `http://127.0.0.1:${PORT}`
@@ -84,6 +85,12 @@ function createWindow() {
   })
 }
 
+const qualificationProfile = resolveQualificationProfile(
+  process.env.NAVSLIDES_EDUCATION_USER_DATA_DIR,
+  app.getPath('userData')
+)
+if (qualificationProfile) app.setPath('userData', qualificationProfile)
+
 const hasSingleInstanceLock = acquireSingleInstance({
   app,
   onSecondInstance: () => focusExistingWindow(mainWindow),
@@ -123,6 +130,8 @@ if (!hasSingleInstanceLock) {
     if (quitting || !stopBackend) return
     quitting = true
     event.preventDefault()
-    stopBackend().catch(() => {}).then(() => app.quit())
+    stopBackend()
+      .catch(() => {})
+      .then(() => app.quit())
   })
 }

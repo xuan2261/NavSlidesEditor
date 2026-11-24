@@ -1,3 +1,11 @@
+import {
+  collectGameMediaReferences,
+  geometryBlipMediaReferences,
+  rewriteGameMediaUrls,
+  rewriteGeometryBlipMedia,
+} from 'revealjs-shared'
+import { semanticDefinitions, replaceSemanticRecords } from 'revealjs-shared/src/pptx-semantic-records.js'
+
 const LOCAL_UPLOAD_PATTERNS = [/^\/uploads\//i, /^https?:\/\/[^/]+\/uploads\//i]
 
 function sanitizeFilename(name) {
@@ -34,73 +42,97 @@ export function getMediaFilename(url) {
   }
 }
 
-function addMediaEntry(target, seen, url, meta, localOnly) {
-  if (!url) return
-  if (localOnly && !isLocalProjectMediaUrl(url)) return
-  if (seen.has(url)) return
-  seen.add(url)
-  target.push({ originalUrl: url, ...meta })
-}
-
-function eachSlide(presentation, visit) {
-  for (const [slideIndex, slide] of (presentation?.slides || []).entries()) {
-    visit(slide, slideIndex, null)
-    for (const [childIndex, child] of (slide?.children || []).entries()) visit(child, slideIndex, childIndex)
-  }
-}
-
 export function collectProjectMediaEntries(presentation, { localOnly = false } = {}) {
-  const entries = []
-  const seen = new Set()
-
-  eachSlide(presentation, (slide, slideIndex, childIndex) => {
-    const location = childIndex === null ? { slideIndex } : { slideIndex, childIndex }
-    addMediaEntry(entries, seen, getBackgroundImageUrl(slide), { kind: 'background', ...location }, localOnly)
-    for (const element of slide?.elements || []) {
-      const meta = { ...location, elementId: element?.id || null }
-      addMediaEntry(entries, seen, element?.src, { kind: 'src', ...meta }, localOnly)
-      addMediaEntry(entries, seen, element?.poster, { kind: 'poster', ...meta }, localOnly)
-      for (const track of element?.tracks || []) {
-        addMediaEntry(entries, seen, track?.src, { kind: 'track', ...meta }, localOnly)
+  const entries = new Map()
+  const references = collectGameMediaReferences(presentation)
+  references.push(...geometryBlipMediaReferences(presentation))
+  if (presentation?.pptxSemantic) {
+    for (const [id, definition] of semanticDefinitions(presentation.pptxSemantic)) {
+      for (const key of ['src', 'videoUrl', 'poster']) {
+        const url = definition.content?.media?.[key]
+        if (typeof url === 'string' && url)
+          references.push({
+            url,
+            path: ['pptxSemantic', 'definitions', id, 'content', 'media', key],
+            kind: 'media',
+          })
       }
     }
-  })
-
-  return entries
+  }
+  for (const { url, path, kind } of references) {
+    if (localOnly && !isLocalProjectMediaUrl(url)) continue
+    if (!entries.has(url)) {
+      const location =
+        path[0] === 'slides'
+          ? { slideIndex: path[1], ...(path[2] === 'children' ? { childIndex: path[3] } : {}) }
+          : path[0] === 'layoutMasters'
+            ? { layoutMasterIndex: path[1] }
+            : {}
+      const elementAt = path.lastIndexOf('elements')
+      const element =
+        elementAt < 0
+          ? null
+          : path.slice(0, elementAt + 2).reduce((at, key) => at?.[key], presentation)
+      entries.set(url, {
+        originalUrl: url,
+        kind,
+        ...location,
+        elementId: element?.id || null,
+        references: [],
+      })
+    }
+    entries.get(url).references.push({ path, kind })
+  }
+  return [...entries.values()]
 }
 
 export function buildArchiveMediaManifestEntries(presentation) {
+  const paths = new Set()
   return collectProjectMediaEntries(presentation, { localOnly: true }).map((entry) => {
     const filename = getMediaFilename(entry.originalUrl)
-    return {
-      originalUrl: entry.originalUrl,
-      archivePath: `media/${hashString(entry.originalUrl)}-${filename}`,
-      filename,
-    }
+    const prefix = hashString(entry.originalUrl)
+    let archivePath = `media/${prefix}-${filename}`
+    let collision = 1
+    while (paths.has(archivePath.toLowerCase()))
+      archivePath = `media/${prefix}-${++collision}-${filename}`
+    paths.add(archivePath.toLowerCase())
+    return { originalUrl: entry.originalUrl, archivePath, filename, references: entry.references }
   })
 }
 
 export function rewriteProjectMediaUrls(presentation, urlMap) {
-  const clone = JSON.parse(JSON.stringify(presentation))
-  eachSlide(clone, (slide) => {
-    for (const element of slide?.elements || []) {
-      if (element.src && urlMap[element.src]) element.src = urlMap[element.src]
-      if (element.poster && urlMap[element.poster]) element.poster = urlMap[element.poster]
-      if (Array.isArray(element.tracks)) {
-        element.tracks.forEach((track) => {
-          if (track?.src && urlMap[track.src]) track.src = urlMap[track.src]
-        })
+  let clone = rewriteGameMediaUrls(presentation, urlMap)
+  if (clone?.pptxSemantic) {
+    const patchDefinitions = {}
+    for (const [id, definition] of semanticDefinitions(clone.pptxSemantic)) {
+      const media = definition.content?.media
+      if (!media) continue
+      let modified = false
+      const nextMedia = { ...media }
+      for (const key of ['src', 'videoUrl', 'poster']) {
+        if (typeof nextMedia[key] === 'string' && Object.hasOwn(urlMap, nextMedia[key])) {
+          nextMedia[key] = urlMap[nextMedia[key]]
+          modified = true
+        }
+      }
+      if (modified) {
+        patchDefinitions[id] = {
+          ...definition,
+          content: {
+            ...definition.content,
+            media: nextMedia,
+          },
+        }
       }
     }
-    if (slide?.background?.type === 'image') {
-      const current = getBackgroundImageUrl(slide)
-      if (current && urlMap[current]) {
-        slide.background.image = urlMap[current]
-        delete slide.background.src
+    if (Object.keys(patchDefinitions).length) {
+      clone = {
+        ...clone,
+        pptxSemantic: replaceSemanticRecords(clone.pptxSemantic, { definitions: patchDefinitions }),
       }
     }
-  })
-  return clone
+  }
+  return rewriteGeometryBlipMedia(clone, url => Object.hasOwn(urlMap, url) ? urlMap[url] : url)
 }
 
 export function buildLegacyArchiveEntries(presentation, archiveFiles) {

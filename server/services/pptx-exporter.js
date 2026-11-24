@@ -11,8 +11,11 @@
 //   - per-call cache (no cross-export race)
 const { getServerRasters } = require('../utils/server-raster')
 
-async function rasterizeComplexElements(sourcePresentation, { baseUrl = '' } = {}) {
-  return getServerRasters(sourcePresentation, { baseUrl })
+async function rasterizeComplexElements(
+  sourcePresentation,
+  { baseUrl = '', teacherReveal = false } = {}
+) {
+  return getServerRasters(sourcePresentation, { baseUrl, teacherReveal: teacherReveal === true })
 }
 
 module.exports = {

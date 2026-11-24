@@ -9,8 +9,10 @@ NavSlidesEditor/
 ├── client/    # React SPA (Vite) → client/dist/ in production
 ├── server/    # Express REST API + Socket.IO
 ├── shared/    # Pure Node.js utilities (client + server)
-└── electron/  # Desktop shell embedding the server
+└── website/   # VitePress documentation site
 ```
+
+The workspace list is owned by [`package.json`](https://github.com/xuan2261/NavSlidesEditor/blob/master/package.json). Electron desktop packaging is separate; `electron/` is not an npm workspace.
 
 ## Where things live
 

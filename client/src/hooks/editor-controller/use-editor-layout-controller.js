@@ -1,13 +1,32 @@
 import { useCallback, useMemo, useState } from 'react'
 import { applyLayout, changeLayout, detachLayout } from 'revealjs-shared'
 import { getSystemLayoutMasters } from '../../data/slide-template-layout-adapter'
+import { buildConnectorUpdateBatch } from '../../utils/element-update-fanout'
+import { showNotice } from '../../utils/app-feedback'
 
 function mergeLayouts(stored = []) {
   const storedIds = new Set(stored.map((layout) => layout.id))
-  return [
-    ...getSystemLayoutMasters().filter((layout) => !storedIds.has(layout.id)),
-    ...stored,
-  ]
+  return [...getSystemLayoutMasters().filter((layout) => !storedIds.has(layout.id)), ...stored]
+}
+
+function restoreMasterLocks(originals, transformed, lockIntents) {
+  const originalsById = new Map(originals.map((element) => [element.id, element]))
+  const explicitLocks = new Map()
+  for (const update of lockIntents || []) {
+    if (Object.hasOwn(update, 'locked')) explicitLocks.set(update.id, update.locked)
+  }
+  return transformed.map((element) => {
+    const original = originalsById.get(element.id)
+    if (!original) return element
+    if (explicitLocks.has(element.id)) return { ...element, locked: explicitLocks.get(element.id) }
+    if (Object.hasOwn(original, 'locked')) {
+      return element.locked === original.locked ? element : { ...element, locked: original.locked }
+    }
+    if (!Object.hasOwn(element, 'locked')) return element
+    const restored = { ...element }
+    delete restored.locked
+    return restored
+  })
 }
 
 export function useEditorLayoutController({
@@ -18,10 +37,11 @@ export function useEditorLayoutController({
 }) {
   const [showLayoutManager, setShowLayoutManager] = useState(false)
   const [masterTarget, setMasterTarget] = useState(null)
-  const masterEditId = masterTarget?.presentationId === presentation?.id &&
+  const masterEditId =
+    masterTarget?.presentationId === presentation?.id &&
     presentation?.layoutMasters?.some((layout) => layout.id === masterTarget?.layoutId)
-    ? masterTarget.layoutId
-    : null
+      ? masterTarget.layoutId
+      : null
   const availableLayouts = useMemo(
     () => mergeLayouts(presentation?.layoutMasters),
     [presentation?.layoutMasters]
@@ -37,8 +57,9 @@ export function useEditorLayoutController({
             ? { ...previous, layoutMasters: [...(previous.layoutMasters || []), layout] }
             : previous
         const command = mode === 'apply' ? applyLayout : changeLayout
-        return mapActive(withMaster, (slide) =>
-          command(slide, withMaster.layoutMasters, layoutId).slide
+        return mapActive(
+          withMaster,
+          (slide) => command(slide, withMaster.layoutMasters, layoutId).slide
         )
       })
     },
@@ -46,12 +67,20 @@ export function useEditorLayoutController({
   )
 
   const detachActiveLayout = useCallback(() => {
-    setPresentation((previous) =>
-      mapActive(previous, (slide) =>
-        detachLayout(slide, mergeLayouts(previous.layoutMasters)).slide
-      )
-    )
-  }, [mapActive, setPresentation])
+    if (!presentation) return
+    const warnings = []
+    const next = mapActive(presentation, (slide) => {
+      const result = detachLayout(slide, mergeLayouts(presentation.layoutMasters))
+      warnings.push(...result.warnings)
+      return result.slide
+    })
+    setPresentation(next)
+    if (warnings.length)
+      showNotice(warnings.join('\n'), {
+        title: 'Repair interaction targets',
+        testId: 'interaction-reference-notice',
+      })
+  }, [mapActive, presentation, setPresentation])
 
   const masterEdit = useMemo(() => {
     if (!masterEditId) return null
@@ -69,16 +98,21 @@ export function useEditorLayoutController({
     (id, updates) => {
       setPresentation((previous) => ({
         ...previous,
-        layoutMasters: (previous.layoutMasters || []).map((layout) =>
-          layout.id === masterEditId
-            ? {
-                ...layout,
-                fixedElements: layout.fixedElements.map((element) =>
-                  element.id === id ? { ...element, ...updates } : element
-                ),
-              }
-            : layout
-        ),
+        layoutMasters: (previous.layoutMasters || []).map((layout) => {
+          if (
+            layout.id !== masterEditId ||
+            !layout.fixedElements.some((element) => element.id === id)
+          )
+            return layout
+          const batch = buildConnectorUpdateBatch(layout.fixedElements, [{ id, ...updates }])
+          const byId = new Map(batch.map(({ id, ...partial }) => [id, partial]))
+          return {
+            ...layout,
+            fixedElements: layout.fixedElements.map((element) =>
+              byId.has(element.id) ? { ...element, ...byId.get(element.id) } : element
+            ),
+          }
+        }),
       }))
     },
     [masterEditId, setPresentation]
@@ -103,7 +137,7 @@ export function useEditorLayoutController({
   )
 
   const mapAuthoringTarget = useCallback(
-    (previous, transform) => {
+    (previous, transform, lockIntents) => {
       if (!masterEditId) return mapActive(previous, transform)
       return {
         ...previous,
@@ -111,12 +145,15 @@ export function useEditorLayoutController({
           layout.id === masterEditId
             ? {
                 ...layout,
-                fixedElements: transform({
-                  elements: layout.fixedElements.map((element) => ({
-                    ...element,
-                    locked: false,
-                  })),
-                }).elements,
+                fixedElements: restoreMasterLocks(
+                  layout.fixedElements,
+                  transform({
+                    elements: layout.fixedElements.map((element) =>
+                      element.locked ? { ...element, locked: false } : element
+                    ),
+                  }).elements,
+                  lockIntents
+                ),
               }
             : layout
         ),

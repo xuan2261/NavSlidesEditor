@@ -10,13 +10,13 @@ export class RibbonInsertHelper {
 
   static GAME_LABELS = {
     'Name Picker': 'Name Picker',
-    'Hot Potato Quiz': 'Hot Potato',
-    'Hot Potato': 'Hot Potato',
+    'Hot Potato Quiz': 'Hot Potato Quiz',
+    'Hot Potato': 'Hot Potato Quiz',
     Jeopardy: 'Jeopardy',
     'Four Corners': 'Four Corners',
     'Relay Race': 'Relay Race',
-    'Trivia Championship': 'Trivia',
-    Trivia: 'Trivia',
+    'Trivia Championship': 'Trivia Championship',
+    Trivia: 'Trivia Championship',
     Scattergories: 'Scattergories',
   }
 
@@ -52,9 +52,9 @@ export class RibbonInsertHelper {
       'Math Grid': 'Add math grid',
       'Anime.js': 'Add Anime.js',
       'Three.js': 'Add Three.js',
-      Trivia: 'Trivia',
-      'Trivia Championship': 'Trivia',
-      'Hot Potato Quiz': 'Hot Potato',
+      Trivia: 'Trivia Championship',
+      'Trivia Championship': 'Trivia Championship',
+      'Hot Potato Quiz': 'Hot Potato Quiz',
     }
     const label = aliases[itemName] || itemName
 

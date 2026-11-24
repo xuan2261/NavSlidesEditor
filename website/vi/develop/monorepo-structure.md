@@ -9,8 +9,10 @@ NavSlidesEditor/
 ├── client/    # React SPA (Vite) → client/dist/ in production
 ├── server/    # Express REST API + Socket.IO
 ├── shared/    # Pure Node.js utilities (client + server)
-└── electron/  # Desktop shell embedding the server
+└── website/   # Trang tài liệu VitePress
 ```
+
+Danh sách workspace do [`package.json`](https://github.com/xuan2261/NavSlidesEditor/blob/master/package.json) quản lý. Package desktop Electron được đóng gói riêng; `electron/` không phải npm workspace.
 
 ## Mọi thứ nằm ở đâu
 

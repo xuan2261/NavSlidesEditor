@@ -23,8 +23,20 @@ async function withTempDir(prefix, run) {
 describe('pptx geometry drift coverage', () => {
   it('emits per-shape drift details for diagnostics', () => {
     const detail = computeDetailedFidelityMetrics(
-      { slides: [{ elements: [{ type: 'shape', shapType: 'rect', left: 10, top: 20, width: 100, height: 50 }] }] },
-      { slides: [{ elements: [{ type: 'shape', shape: 'rect', x: 15, y: 25, width: 100, height: 50 }] }] }
+      {
+        slides: [
+          {
+            elements: [
+              { type: 'shape', shapType: 'rect', left: 10, top: 20, width: 100, height: 50 },
+            ],
+          },
+        ],
+      },
+      {
+        slides: [
+          { elements: [{ type: 'shape', shape: 'rect', x: 15, y: 25, width: 100, height: 50 }] },
+        ],
+      }
     )
 
     expect(detail.shapeDriftDetails).toEqual([
@@ -42,18 +54,28 @@ describe('pptx geometry drift coverage', () => {
   it('compares grouped source shapes after applying group offsets', () => {
     const detail = computeDetailedFidelityMetrics(
       {
-        slides: [{
-          elements: [{
-            type: 'group',
-            left: 100,
-            top: 200,
-            width: 300,
-            height: 100,
-            elements: [{ type: 'shape', shapType: 'rect', left: 10, top: 20, width: 50, height: 30 }],
-          }],
-        }],
+        slides: [
+          {
+            elements: [
+              {
+                type: 'group',
+                left: 100,
+                top: 200,
+                width: 300,
+                height: 100,
+                elements: [
+                  { type: 'shape', shapType: 'rect', left: 10, top: 20, width: 50, height: 30 },
+                ],
+              },
+            ],
+          },
+        ],
       },
-      { slides: [{ elements: [{ type: 'shape', shape: 'rect', x: 110, y: 220, width: 50, height: 30 }] }] }
+      {
+        slides: [
+          { elements: [{ type: 'shape', shape: 'rect', x: 110, y: 220, width: 50, height: 30 }] },
+        ],
+      }
     )
 
     expect(detail.geometryDrift.byType.shape.medianPx).toBe(0)
@@ -63,19 +85,23 @@ describe('pptx geometry drift coverage', () => {
   it('writes drift rows with deck names for the CLI drift-out contract', async () => {
     await withTempDir('pptx-drift-out-', async (dir) => {
       const outputPath = path.join(dir, 'drift.json')
-      await writeDriftRows(outputPath, [{
-        file: 'fixture.pptx',
-        shapeDriftDetails: [{
-          slideIdx: 0,
-          sourceIdx: 1,
-          flattenedIdx: 2,
-          sourcePath: '1.0',
-          kind: 'rect',
-          origin: { x: 10, y: 20, width: 30, height: 40 },
-          mapped: { x: 11, y: 20, width: 30, height: 40 },
-          deltaPx: { x: 1, y: 0, width: 0, height: 0, max: 1 },
-        }],
-      }])
+      await writeDriftRows(outputPath, [
+        {
+          file: 'fixture.pptx',
+          shapeDriftDetails: [
+            {
+              slideIdx: 0,
+              sourceIdx: 1,
+              flattenedIdx: 2,
+              sourcePath: '1.0',
+              kind: 'rect',
+              origin: { x: 10, y: 20, width: 30, height: 40 },
+              mapped: { x: 11, y: 20, width: 30, height: 40 },
+              deltaPx: { x: 1, y: 0, width: 0, height: 0, max: 1 },
+            },
+          ],
+        },
+      ])
 
       const rows = JSON.parse(await fs.readFile(outputPath, 'utf8'))
       expect(rows).toEqual([
@@ -95,26 +121,38 @@ describe('pptx geometry drift coverage', () => {
   it('compares nested rotated group children in absolute coordinates', () => {
     const detail = computeDetailedFidelityMetrics(
       {
-        slides: [{
-          elements: [{
-            type: 'group',
-            left: 100,
-            top: 100,
-            width: 100,
-            height: 100,
-            rotate: 180,
-            elements: [{
-              type: 'group',
-              left: 0,
-              top: 0,
-              width: 100,
-              height: 100,
-              elements: [{ type: 'shape', shapType: 'rect', left: 10, top: 20, width: 30, height: 40 }],
-            }],
-          }],
-        }],
+        slides: [
+          {
+            elements: [
+              {
+                type: 'group',
+                left: 100,
+                top: 100,
+                width: 100,
+                height: 100,
+                rotate: 180,
+                elements: [
+                  {
+                    type: 'group',
+                    left: 0,
+                    top: 0,
+                    width: 100,
+                    height: 100,
+                    elements: [
+                      { type: 'shape', shapType: 'rect', left: 10, top: 20, width: 30, height: 40 },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       },
-      { slides: [{ elements: [{ type: 'shape', shape: 'rect', x: 160, y: 140, width: 30, height: 40 }] }] }
+      {
+        slides: [
+          { elements: [{ type: 'shape', shape: 'rect', x: 160, y: 140, width: 30, height: 40 }] },
+        ],
+      }
     )
 
     expect(detail.geometryDrift.byType.shape.maxPx).toBe(0)
@@ -280,7 +318,7 @@ describe('pptx geometry drift coverage', () => {
                   width: 200,
                   height: 100,
                   base64: PNG_DATA_URL,
-                  rect: { l: 100, r: 200, t: 50, b: 150 },
+                  rect: { l: 10, r: 20, t: 5, b: 15 },
                 },
               ],
             },

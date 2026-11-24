@@ -27,7 +27,9 @@ export default function LatexEditorModal({ state, onChange, onApply, onCancel })
   }
 
   useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') handleClose() }
+    const handler = (e) => {
+      if (e.key === 'Escape') handleClose()
+    }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -42,15 +44,15 @@ export default function LatexEditorModal({ state, onChange, onApply, onCancel })
   const previewContent = hasTikz ? content : normalizeLatexForRender(content)
   const parseError = getLatexError(content, hasTikz)
   const tikzScript = hasTikz
-    ? `<link rel="stylesheet" type="text/css" href="https://tikzjax.com/v1/fonts.css"><script src="https://tikzjax.com/v1/tikzjax.js"></script>`
+    ? `<link rel="stylesheet" type="text/css" href="/vendor/tikzjax/fonts.css"><script src="/vendor/tikzjax/tikzjax.js"></script>`
     : ''
   let bodyContent
   if (hasTikz) {
-    bodyContent = `<script type="text/tikz">${content}</script>`
+    bodyContent = `<script type="text/tikz" data-disable-cache="true">${content.replace(/<\//gi, '\\u003c/')}</script>`
   } else {
-    bodyContent = `<div id="math"></div><script>try{katex.render(${JSON.stringify(previewContent)},document.getElementById('math'),{displayMode:true,throwOnError:false})}catch(e){document.getElementById('math').textContent=e.message}</script>`
+    bodyContent = `<div id="math"></div><script>try{katex.render(${JSON.stringify(previewContent).replace(/</g, '\\u003c')},document.getElementById('math'),{displayMode:true,throwOnError:false})}catch(e){document.getElementById('math').textContent=e.message}</script>`
   }
-  const previewSrcDoc = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>${tikzScript}<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:${textColor};font-size:${fontSize}px}.katex{font-size:1.6em;color:inherit}svg{max-width:100%;max-height:100%}</style></head><body>${bodyContent}</body></html>`
+  const previewSrcDoc = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/vendor/katex/dist/katex.min.css"><script src="/vendor/katex/dist/katex.min.js"></script>${tikzScript}<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:${textColor};font-size:${fontSize}px}.katex{font-size:1.6em;color:inherit}svg{max-width:100%;max-height:100%}</style></head><body>${bodyContent}</body></html>`
 
   const insertLatex = (value) => {
     const textarea = textareaRef.current
@@ -83,9 +85,12 @@ export default function LatexEditorModal({ state, onChange, onApply, onCancel })
         onClick={(event) => event.stopPropagation()}
       >
         <div className="px-4 py-3 border-b border-border flex justify-between items-center shrink-0 gap-3">
-          <h2 id="latex-editor-modal-title" className="font-semibold text-sm">LaTeX / TikZ</h2>
+          <h2 id="latex-editor-modal-title" className="font-semibold text-sm">
+            LaTeX / TikZ
+          </h2>
           <span id="latex-editor-helper" className="text-xs text-text-muted">
-            Supports KaTeX math and TikZ diagrams. TikZ diagrams use TikZJax and may require network access in exported HTML.
+            Supports KaTeX math and TikZ diagrams. TikZ diagrams use TikZJax and may require network
+            access in exported HTML.
           </span>
           <div className="flex gap-2 ml-auto">
             <Button variant="secondary" className="text-xs" onClick={onCancel}>

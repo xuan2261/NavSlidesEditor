@@ -6,16 +6,60 @@ const { shapeSvgString } = require('./shapeUtils.js')
 const {
   sanitizeRichTextHtml,
   sanitizeSvgHtml,
+  sanitizeMarkdownHtml,
   sanitizeHref,
   sanitizeMediaSrc,
 } = require('./content-safety.js')
 const { resolveColorField, svgPaint, isTokenVar } = require('./design-tokens.js')
 const { resolveMergedCells } = require('./table-merge-resolver.js')
+const { resolveTableDimensions } = require('./table-layout.js')
+const { tableCellHtml } = require('./table-cell-utils.js')
 const { normalizeLatexForRender } = require('./latex-utils.js')
 const { resolveChartPalette } = require('./chart-colors.js')
 const { normalizeElementAction, serializeElementAction } = require('./element-actions.js')
-const { normalizeImageAccessibility, normalizeMediaAccessibility } = require('./media-accessibility.js')
+const {
+  normalizeImageAccessibility,
+  normalizeMediaAccessibility,
+  MEDIA_CAPTION_CSS,
+  MEDIA_CAPTION_TEXT_CSS,
+} = require('./media-accessibility.js')
 const { resolveConnectorGeometry } = require('./connector-geometry.js')
+const { buildTicks, parseDatePos } = require('./timeline-utils.js')
+const { applySvgPaintOverrides } = require('./svg-paint-overrides.js')
+const { resolveChartAuthoringOptions } = require('./chart-authoring-options.js')
+let markedModule
+try {
+  markedModule = require('marked')
+} catch {
+  try {
+    const fs = typeof require === 'function' ? require('fs') : null
+    const path = typeof require === 'function' ? require('path') : null
+    if (fs && path) {
+      const umdPath = path.join(path.dirname(require.resolve('marked')), 'marked.umd.js')
+      const umdCode = fs.readFileSync(umdPath, 'utf8')
+      const mod = { exports: {} }
+      const fn = new Function('module', 'exports', umdCode)
+      fn(mod, mod.exports)
+      markedModule = mod.exports
+    } else {
+      markedModule = { marked: { parse: (text) => text } }
+    }
+  } catch {
+    markedModule = { marked: { parse: (text) => text } }
+  }
+}
+const { marked } = markedModule
+const { staticGameContent } = require('./education/static-game-content.js')
+const { renderStaticGameSnapshot } = require('./education/static-snapshot.js')
+const { GAME_CATALOG } = require('./education/game-registry.js')
+const { normalizeGameConfig } = require('./education/normalize-game-config.js')
+const { projectPublicGameConfig } = require('./education/game-public-projection.js')
+const { serializeEducationConfig } = require('./education/config-serialization.js')
+const {
+  buildSandboxFrameDocument,
+  HTML_SANDBOX,
+  validateHtmlDependencies,
+} = require('./education/html-sandbox-policy.js')
 
 /**
  * Inline SVG paint that preserves the exact `name="value"` token shape for
@@ -24,7 +68,9 @@ const { resolveConnectorGeometry } = require('./connector-geometry.js')
  * CSS custom properties.
  */
 function inlineSvgPaint(name, value) {
-  return isTokenVar(value) ? `style="${name}:${value}"` : `${name}="${value}"`
+  return isTokenVar(value)
+    ? `style="${escapeHtml(`${name}:${value}`)}"`
+    : `${name}="${escapeHtml(value)}"`
 }
 const iconPathsData = require('../data/icon-paths.json')
 const ICON_PATHS = iconPathsData
@@ -38,16 +84,18 @@ function absoluteSrc(src) {
   return src
 }
 
-function getMediaFragmentSrc(src, startTime, endTime) {
-  if (!src) return src
-  const start = Number(startTime)
-  const end = Number(endTime)
-  const hasStart = Number.isFinite(start) && start > 0
-  const hasEnd = Number.isFinite(end) && end > 0
-  if (!hasStart && !hasEnd) return src
-  const rangeStart = hasStart ? start : 0
-  const rangeEnd = hasEnd && end > rangeStart ? `,${end}` : ''
-  return `${String(src).split('#')[0]}#t=${rangeStart}${rangeEnd}`
+function mediaPlaybackAttribute(media) {
+  return ` data-ns-media-playback="${escapeHtml(
+    JSON.stringify({
+      startTime: Number(media.startTime) || 0,
+      endTime: Number(media.endTime) || 0,
+      loop: media.loop === true,
+      playbackRate: getPlaybackRate(media.playbackRate) || 1,
+      volume: media.volume === undefined ? undefined :
+        typeof media.volume === 'number' && Number.isFinite(media.volume) &&
+        media.volume >= 0 && media.volume <= 1 ? media.volume : 1,
+    })
+  )}"`
 }
 
 function getPlaybackRate(value) {
@@ -123,52 +171,8 @@ function escapeSrcdoc(html) {
     .replace(/>/g, '&gt;')
 }
 
-
-function renderMarkdownInline(value) {
-  const text = String(value || '')
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<[^>]+>/g, '')
-  return escapeHtml(text)
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, href) => {
-      return `<a href="${escapeHtml(sanitizeHref(href))}" target="_blank" rel="noopener">${label}</a>`
-    })
-}
-
-function renderSafeMarkdownHtml(content) {
-  const lines = String(content || '').replace(/\r\n?/g, '\n').split('\n')
-  const html = []
-  let listItems = []
-  const flushList = () => {
-    if (!listItems.length) return
-    html.push(`<ul>${listItems.map((item) => `<li>${renderMarkdownInline(item)}</li>`).join('')}</ul>`)
-    listItems = []
-  }
-
-  for (const line of lines) {
-    const heading = line.match(/^(#{1,6})\s+(.+)$/)
-    const list = line.match(/^\s*[-*]\s+(.+)$/)
-    if (list) {
-      listItems.push(list[1])
-      continue
-    }
-    flushList()
-    if (heading) {
-      html.push(`<h${heading[1].length}>${renderMarkdownInline(heading[2])}</h${heading[1].length}>`)
-    } else if (line.trim()) {
-      html.push(`<p>${renderMarkdownInline(line)}</p>`)
-    }
-  }
-  flushList()
-  return html.join('')
-}
-
 function escapeScriptElementContent(value) {
   return String(value || '').replace(/<\//gi, '\\u003c/')
-}
-
-function toHtmlDataUrl(html) {
-  return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`
 }
 
 const MERMAID_SOURCE_LIMIT = 12000
@@ -178,8 +182,23 @@ function getMermaidSource(el) {
   return source
 }
 
-function buildMermaidDocument(source) {
-  return `<!doctype html><html><head><meta charset="utf-8"><script src="/vendor/mermaid/mermaid.min.js"></script><style>*{box-sizing:border-box}html,body{margin:0;padding:0;width:100%;height:100%;overflow:auto;background:transparent;color:#f8fafc;font-family:system-ui,sans-serif}.mermaid{width:100%;min-height:100%;display:flex;align-items:center;justify-content:center;padding:12px}.mermaid svg{max-width:100%;height:auto}.mermaid-error{margin:12px;padding:10px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.12);color:#fde68a;font:13px/1.4 ui-monospace,monospace;white-space:pre-wrap}</style></head><body><pre class="mermaid">${escapeHtml(source)}</pre><script>function showMermaidError(error){document.body.innerHTML='<div class="mermaid-error">Mermaid render error: '+String(error&&error.message||error).replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c]})+'</div>'}Promise.resolve().then(function(){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:'dark'});return mermaid.run()}).catch(showMermaidError)</script></body></html>`
+function buildMermaidDocument(source, runtimeUrl) {
+  return `<!doctype html><html><head><meta charset="utf-8"><script src="${escapeHtml(runtimeUrl)}"></script><style>*{box-sizing:border-box}html,body{margin:0;padding:0;width:100%;height:100%;overflow:auto;background:transparent;color:#f8fafc;font-family:system-ui,sans-serif}.mermaid{width:100%;min-height:100%;display:flex;align-items:center;justify-content:center;padding:12px}.mermaid svg{max-width:100%;height:auto}.mermaid-error{margin:12px;padding:10px;border:1px solid #f59e0b;border-radius:8px;background:rgba(245,158,11,.12);color:#fde68a;font:13px/1.4 ui-monospace,monospace;white-space:pre-wrap}</style></head><body><pre class="mermaid">${escapeHtml(source)}</pre><script>
+function showMermaidError(error){document.body.innerHTML='<div class="mermaid-error">Mermaid render error: '+String(error&&error.message||error).replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c]})+'</div>'}
+  mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'dark'});
+Promise.resolve(document.fonts.ready).then(function(){
+  var ns='http://www.w3.org/2000/svg',probe=document.createElementNS(ns,'svg'),text=document.createElementNS(ns,'text');
+  probe.setAttribute('width','1');probe.setAttribute('height','1');probe.style.cssText='position:absolute;opacity:0;pointer-events:none';
+  text.textContent='M';probe.appendChild(text);document.body.appendChild(probe);
+  var pending;
+  function renderWhenVisible(){
+    if(text.getBBox().width>0){probe.remove();mermaid.run().catch(showMermaidError)}
+    else pending=requestAnimationFrame(renderWhenVisible);
+  }
+  window.addEventListener('pagehide',function(){cancelAnimationFrame(pending)},{once:true});
+  renderWhenVisible();
+}).catch(showMermaidError)
+</script></body></html>`
 }
 
 /** Build the shared base positioning style for an element */
@@ -200,21 +219,30 @@ function buildBaseStyle(el, opts = {}) {
 
 /** Build wrapper attributes for reveal.js (fragment + data-id) */
 function buildWrapperAttrs(el, slide) {
-  const dataIdAttr = slide && slide.autoAnimate ? ` data-id="${el.id}"` : ''
-  const fragClass = el.fragment ? ` class="fragment ${el.fragmentAnimation || 'fade-in'}"` : ''
+  const dataIdAttr = slide && slide.autoAnimate ? ` data-id="${escapeHtml(el.id)}"` : ''
+  const fragClass = el.fragment
+    ? ` class="fragment ${escapeHtml(el.fragmentAnimation || 'fade-in')}"`
+    : ''
   const fragIdx =
-    el.fragment && el.fragmentIndex != null ? ` data-fragment-index="${el.fragmentIndex}"` : ''
+    el.fragment && el.fragmentIndex != null
+      ? ` data-fragment-index="${escapeHtml(el.fragmentIndex)}"`
+      : ''
   return { dataIdAttr, fragClass, fragIdx }
 }
 
 function renderActionSurface(el, style, opts) {
-  if (opts.forPrint) return ''
+  if (opts.forPrint || el.type === 'game') return ''
   const { action } = normalizeElementAction(el.action)
   if (!action) return ''
-  const label = action.label || (action.kind === 'slide' ? 'Go to slide' : action.kind === 'url' ? 'Open link' : action.kind)
+  const label =
+    action.label ||
+    (action.kind === 'slide' ? 'Go to slide' : action.kind === 'url' ? 'Open link' : action.kind)
   const actionData = serializeElementAction(action)
   const surfaceStyle = `${style}border:0;padding:0;background:transparent;color:transparent;cursor:pointer;`
-  return `<button type="button" class="ns-element-action${action.hotspot ? ' ns-element-hotspot' : ''}" data-ns-action="${escapeHtml(actionData)}" aria-label="${escapeHtml(label)}" style="${surfaceStyle}"></button>`
+  const identity = el.id
+    ? ` data-ns-element-for="${escapeHtml(el.id)}" data-ns-initial-visibility="${el.initialVisibility === 'hidden' ? 'hidden' : 'visible'}"${el.initialVisibility === 'hidden' ? ' hidden' : ''}`
+    : ''
+  return `<button type="button" class="ns-element-action${action.hotspot ? ' ns-element-hotspot' : ''}"${identity} data-ns-action="${escapeHtml(actionData)}" aria-label="${escapeHtml(label)}" style="${escapeHtml(surfaceStyle)}"></button>`
 }
 
 // ─── Per-type renderers ──────────────────────────────────────────────────────
@@ -226,78 +254,115 @@ function importedTextInsetStyle(el) {
   const side = (value, maxDimension) => {
     const raw = Number(value)
     if (!Number.isFinite(raw)) return 0
-    const max = Math.min(Number.isFinite(maxDimension) && maxDimension >= 0 ? maxDimension / 2 : 96, 96)
+    const max = Math.min(
+      Number.isFinite(maxDimension) && maxDimension >= 0 ? maxDimension / 2 : 96,
+      96
+    )
     return Math.min(Math.round(Math.max(0, raw) * unitScale * 10) / 10, max)
   }
   return `padding:${side(insets.top, el.height)}px ${side(insets.right, el.width)}px ${side(insets.bottom, el.height)}px ${side(insets.left, el.width)}px;`
 }
 
-function renderText(el, style, wrap, vis) {
-  const resolvedTextColor = resolveColorField(el.textColor, 'text', 'textColor')
+function renderText(el, style, wrap, vis, opts) {
+  if (el.pptxTextDocument) {
+    const { textBoxSvgString } = require('./pptx-textbox-svg.js')
+    return `<div${wrap} style="${escapeHtml(`${style}${vis}overflow:visible;`)}">${textBoxSvgString(el, opts)}</div>`
+  }
+  const resolvedTextColor = safeCssColor(resolveColorField(el.textColor, 'text', 'textColor'), null)
   const tc = resolvedTextColor ? `;color:${resolvedTextColor}` : ''
-  const ff = el.fontFamily ? `;font-family:${el.fontFamily}` : ''
+  const fontFamily = safeCssFontFamily(el.fontFamily)
+  const ff = fontFamily ? `;font-family:${fontFamily}` : ''
   const importedFit = Number(el._pptxImportMeta?.fitFontSizePx)
   const fontSize = Number.isFinite(importedFit) && importedFit > 0 ? importedFit : el.fontSize
   const fs = fontSize ? `;font-size:calc(${fontSize}px * var(--font-zoom, 1))` : ''
-  const textStyle = el?._pptxImportMeta?.textFit === 'wrap'
-    ? style.replace('overflow:hidden;', 'overflow:visible;')
-    : style
+  const textStyle =
+    el?._pptxImportMeta?.textFit === 'wrap'
+      ? style.replace('overflow:hidden;', 'overflow:visible;')
+      : style
   const fit = el._pptxImportMeta
     ? ';overflow-wrap:anywhere;word-break:normal;white-space:pre-wrap'
     : ''
   const padding = el._pptxImportMeta ? importedTextInsetStyle(el) : 'padding:8px 12px;'
-  return `<div${wrap} style="${textStyle}${vis}${padding}color:white${tc}${ff}${fs}${fit}">${sanitizeRichTextHtml(el.content || '')}</div>`
+  return `<div${wrap} style="${escapeHtml(`${textStyle}${vis}${padding}color:white${tc}${ff}${fs}${fit}`)}">${sanitizeRichTextHtml(el.content || '')}</div>`
 }
 
 function buildCitationHtml(el) {
   const text = el.citationText || el.citationLink
   if (!text) return ''
-  const color = el.citationColor || 'rgba(255,255,255,0.5)'
-  const align = el.citationAlign || 'left'
-  const citeStyle = `position:absolute;left:0;right:0;top:100%;font-size:10px;color:${color};line-height:1.3;padding:3px 2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;text-align:${align};`
+  const color = safeCssColor(el.citationColor, 'rgba(255,255,255,0.5)')
+  const align = ['left', 'center', 'right'].includes(el.citationAlign) ? el.citationAlign : 'left'
+  const citeStyle = `position:absolute;left:0;right:0;top:100%;font-size:10px;color:${color};line-height:1.3;padding:3px 2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:${align};`
   if (el.citationLink) {
     const href = sanitizeHref(el.citationLink)
     const display = escapeHtml(text)
-    return `<a href="${href}" target="_blank" rel="noopener" style="${citeStyle}text-decoration:none;cursor:pointer;">${display}</a>`
+    return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener" style="${escapeHtml(`${citeStyle}pointer-events:auto;text-decoration:none;cursor:pointer;`)}">${display}</a>`
   }
-  return `<div style="${citeStyle}">${escapeHtml(text)}</div>`
+  return `<div style="${escapeHtml(`${citeStyle}pointer-events:none;`)}">${escapeHtml(text)}</div>`
 }
 
 function renderImage(el, style, wrap, vis, opts) {
   const image = normalizeImageAccessibility(el)
+  if (image.pptxPicture) {
+    const { pictureSvg } = require('./pptx-picture-svg')
+    return `<div${wrap} style="${escapeHtml(`${style}${vis}overflow:visible;`)}">${pictureSvg(image, absoluteSrc)}${buildCitationHtml(image)}</div>`
+  }
   const src = absoluteSrc(sanitizeMediaSrc(image.src))
   const imgFilterParts = [
-    image.filterBrightness != null && image.filterBrightness !== 100 ? `brightness(${image.filterBrightness}%)` : '',
-    image.filterContrast != null && image.filterContrast !== 100 ? `contrast(${image.filterContrast}%)` : '',
+    image.filterBrightness != null && image.filterBrightness !== 100
+      ? `brightness(${image.filterBrightness}%)`
+      : '',
+    image.filterContrast != null && image.filterContrast !== 100
+      ? `contrast(${image.filterContrast}%)`
+      : '',
     image.filterGrayscale ? `grayscale(${image.filterGrayscale}%)` : '',
-    image.filterSaturate != null && image.filterSaturate !== 100 ? `saturate(${image.filterSaturate}%)` : '',
-  ].filter(Boolean).join(' ')
+    image.filterSaturate != null && image.filterSaturate !== 100
+      ? `saturate(${image.filterSaturate}%)`
+      : '',
+    image.filterSepia ? `sepia(${image.filterSepia}%)` : '',
+    image.filterBlur ? `blur(${image.filterBlur}px)` : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
   const filterStyle = imgFilterParts ? `filter:${imgFilterParts};` : ''
-  const flipParts = [image.flipH ? 'scaleX(-1)' : '', image.flipV ? 'scaleY(-1)' : ''].filter(Boolean).join(' ')
+  const flipParts = [image.flipH ? 'scaleX(-1)' : '', image.flipV ? 'scaleY(-1)' : '']
+    .filter(Boolean)
+    .join(' ')
   const flipStyle = flipParts ? `transform:${flipParts};` : ''
   const borderW = Number(image.borderWidth)
   const borderColor = image.borderColor ? safeCssColor(image.borderColor, null) : null
-  const borderStyle = Number.isFinite(borderW) && borderW > 0 && borderColor ? `border:${borderW}px solid ${borderColor};` : ''
+  const borderStyle =
+    Number.isFinite(borderW) && borderW > 0 && borderColor
+      ? `border:${borderW}px solid ${borderColor};`
+      : ''
   const imgReset = opts.forPrint ? 'max-width:none;max-height:none;' : ''
   const citationHtml = buildCitationHtml(image)
   const sourceCrop = image._pptxImportMeta?.sourceCrop && image._pptxImportMeta?.cropData
-  const cropAttrs = sourceCrop ? ` data-pptx-crop-intent="source-crop" data-pptx-crop-data="${escapeHtml(JSON.stringify(image._pptxImportMeta.cropData))}"` : ''
+  const cropAttrs = sourceCrop
+    ? ` data-pptx-crop-intent="source-crop" data-pptx-crop-data="${escapeHtml(JSON.stringify(image._pptxImportMeta.cropData))}"`
+    : ''
   const descriptionId = image.longDescription ? `image-description-${hashId(image.id)}` : ''
-  const description = descriptionId ? `<span id="${descriptionId}" class="ns-image-long-description">${escapeHtml(image.longDescription)}</span>` : ''
+  const description = descriptionId
+    ? `<span id="${descriptionId}" class="ns-image-long-description" style="position:absolute;width:1px;height:1px;padding:0;border:0;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap;">${escapeHtml(image.longDescription)}</span>`
+    : ''
   const describedBy = descriptionId ? ` aria-describedby="${descriptionId}"` : ''
   const alt = escapeHtml(image.decorative ? '' : image.alt)
+  const clipStyle =
+    'position:relative;width:100%;height:100%;overflow:hidden;border-radius:inherit;'
   if (image.imageW != null) {
     const offX = image.imageOffsetX ?? 0
     const offY = image.imageOffsetY ?? 0
     const imgStyle = `position:absolute;left:${offX}px;top:${offY}px;width:${image.imageW}px;height:${image.imageH}px;object-fit:${image.objectFit || 'contain'};${filterStyle}${flipStyle}${imgReset}`
-    return `<div${wrap}${cropAttrs} style="${style}${borderStyle}${vis}overflow:hidden;"><img src="${src}" alt="${alt}"${describedBy} style="${imgStyle}" />${description}${citationHtml}</div>`
+    return `<div${wrap}${cropAttrs} style="${escapeHtml(`${style}${borderStyle}${vis}overflow:visible;`)}"><div style="${escapeHtml(clipStyle)}"><img src="${src}" alt="${alt}"${describedBy} style="${escapeHtml(imgStyle)}" /></div>${description}${citationHtml}</div>`
   }
-  return `<div${wrap} style="${style}${borderStyle}${vis}overflow:visible;"><img src="${src}" alt="${alt}"${describedBy} style="display:block;width:100%;height:100%;object-fit:${image.objectFit || 'contain'};${filterStyle}${flipStyle}${imgReset}" />${description}${citationHtml}</div>`
+  return `<div${wrap} style="${escapeHtml(`${style}${borderStyle}${vis}overflow:visible;`)}"><div style="${escapeHtml(clipStyle)}"><img src="${src}" alt="${alt}"${describedBy} style="${escapeHtml(`display:block;width:100%;height:100%;object-fit:${image.objectFit || 'contain'};${filterStyle}${flipStyle}${imgReset}`)}" /></div>${description}${citationHtml}</div>`
 }
 
-function renderShape(el, style, wrap, vis) {
+function renderShape(el, style, wrap, vis, opts) {
   // opacity is emitted once by buildBaseStyle for all types; no per-shape re-apply
-  return `<div${wrap} style="${style}${vis}">${shapeSvgString(el)}</div>`
+  const shapeStyle = el.pptxGeometry
+    ? style.replace('overflow:hidden;', 'overflow:visible;')
+    : style
+  return `<div${wrap} style="${escapeHtml(`${shapeStyle}${vis}`)}">${shapeSvgString(el, opts)}</div>`
 }
 
 function getCodeWalkthroughStep(el) {
@@ -325,7 +390,7 @@ function renderCodeLines(el) {
       const activeStyle = active
         ? 'background:rgba(250,204,21,.18);box-shadow:inset 3px 0 0 #facc15;'
         : ''
-      return `<span data-code-line="${lineNumber}"${activeAttr} style="display:block;margin:0 -14px;padding:0 14px;${activeStyle}">${escapeHtml(line || ' ')}</span>`
+      return `<span data-code-line="${lineNumber}"${activeAttr} style="${escapeHtml(`display:block;margin:0 -14px;padding:0 14px;${activeStyle}`)}">${escapeHtml(line || ' ')}</span>`
     })
     .join('')
 }
@@ -337,14 +402,32 @@ function renderCode(el, style, wrap, vis) {
   const walkthroughAttr = hasWalkthrough
     ? ` data-code-walkthrough="${escapeHtml(JSON.stringify({ defaultStepIndex: el.defaultStepIndex || 0, steps: el.walkthroughSteps }))}"`
     : ''
-  const codeClass = `language-${escapeHtml(lang)}${hasWalkthrough ? ' nohighlight' : ''}`
-  const trimAttr = hasWalkthrough ? '' : ' data-trim'
-  return `<div${wrap} style="${style}${vis}"><pre${cls}${walkthroughAttr} style="margin:0;padding:10px 14px;width:100%;height:100%;overflow:hidden;box-sizing:border-box;font-family:'Fira Code','JetBrains Mono','Courier New',monospace;font-size:calc(${el.fontSize || 14}px * var(--font-zoom, 1));line-height:1.5;"><code class="${codeClass}"${trimAttr}>${renderCodeLines(el)}</code></pre></div>`
+  const codeClass = hasWalkthrough ? 'nohighlight' : `language-${escapeHtml(lang)}`
+  const escapeAttr = hasWalkthrough ? ' data-noescape' : ''
+  const content = hasWalkthrough ? renderCodeLines(el) : escapeHtml(String(el.content || ''))
+  return `<div${wrap} style="${escapeHtml(`${style}${vis}`)}"><pre${cls}${walkthroughAttr} style="${escapeHtml(`margin:0;padding:10px 14px;width:100%;height:100%;overflow:hidden;box-sizing:border-box;font-family:'Fira Code','JetBrains Mono','Courier New',monospace;font-size:calc(${el.fontSize || 14}px * var(--font-zoom, 1));line-height:1.5;`)}"><code class="${codeClass}"${escapeAttr}>${content}</code></pre></div>`
 }
 
 function renderHtml(el, style, wrap, vis, opts) {
   const isMermaid = el.embedKind === 'mermaid'
-  const content = isMermaid ? buildMermaidDocument(getMermaidSource(el)) : el.content || ''
+  const baseUrl = opts.baseUrl || getAssetOrigin()
+  const dependencies = isMermaid
+    ? {
+        network: true,
+        offlineCapable: true,
+        resources: [
+          { url: new URL('/vendor/mermaid/mermaid.min.js', baseUrl).href, kind: 'script' },
+        ],
+        dynamicResources: [],
+      }
+    : el.htmlDependencies
+  const content = isMermaid
+    ? buildMermaidDocument(getMermaidSource(el), dependencies.resources[0].url)
+    : `<style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}</style>${el.content || ''}`
+  const wrappedContent = buildSandboxFrameDocument(content, dependencies, { baseUrl })
+  const declaration = dependencies
+    ? ` data-html-dependencies="${escapeHtml(JSON.stringify(dependencies))}"`
+    : ''
 
   // PDF mode: use data-pdf-iframe with blob URL initialization.
   // Iframes with srcdoc break Chrome's CSS paged media engine layout, causing
@@ -352,36 +435,23 @@ function renderHtml(el, style, wrap, vis, opts) {
   // and inject a script at the end of the print HTML to convert data-pdf-iframe
   // into a Blob URL at runtime, avoiding the layout breakage while keeping interactivity.
   if (opts.forPrint) {
-    const wrappedContent = isMermaid
-      ? content
-      : `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}</style></head><body>${content}</body></html>`
-    return `<iframe${wrap} data-pdf-iframe="${encodeURIComponent(wrappedContent)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
+    return `<iframe${wrap} sandbox="${HTML_SANDBOX}" referrerpolicy="no-referrer"${declaration} data-pdf-iframe="${encodeURIComponent(wrappedContent)}" style="${escapeHtml(`${style}border:none;background:transparent;`)}" scrolling="no"></iframe>`
   }
 
-  // srcdoc retains the parent origin, so Mermaid's /vendor script resolves
-  // correctly; a data: iframe has an opaque origin and cannot load that path.
-  if (isMermaid) {
-    return `<div${wrap} style="${style}${vis}"><iframe srcdoc="${escapeSrcdoc(content)}" style="width:100%;height:100%;border:none;background:transparent;" scrolling="no"></iframe></div>`
-  }
-
-  // Other HTML embeds remain data URLs to isolate their CSS and scripts.
-  const _origin = getAssetOrigin()
-  const base = _origin ? `<base href="${_origin}/">` : ''
-  const wrappedContent = `<!doctype html><html><head><meta charset="utf-8">${base}<style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}</style></head><body>${content}</body></html>`
-  return `<div${wrap} style="${style}${vis}"><iframe src="${toHtmlDataUrl(wrappedContent)}" style="width:100%;height:100%;border:none;background:transparent;" scrolling="no"></iframe></div>`
+  return `<div${wrap} style="${escapeHtml(`${style}${vis}`)}"><iframe sandbox="${HTML_SANDBOX}" referrerpolicy="no-referrer"${declaration} srcdoc="${escapeSrcdoc(wrappedContent)}" style="width:100%;height:100%;border:none;background:transparent;" scrolling="no"></iframe></div>`
 }
 
 function renderMarkdown(el, style, wrap, vis, opts) {
   const mdColor = safeCssColor(resolveColorField(el.textColor, 'markdown', 'textColor'), '#141413')
   const mdFont = Number(el.fontSize) > 0 ? Number(el.fontSize) : null
+  const html = sanitizeMarkdownHtml(marked.parse(el.content || ''))
   if (opts.forPrint) {
     const fs = mdFont || 16
-    return `<div style="${style}${vis}padding:8px 12px;color:${mdColor};overflow:auto;font-size:calc(${fs}px * var(--font-zoom, 1));line-height:1.5;">${renderSafeMarkdownHtml(el.content || '')}</div>`
+    return `<div data-ns-markdown style="${escapeHtml(`${style}${vis}padding:8px 12px;color:${mdColor};overflow:auto;font-size:calc(${fs}px * var(--font-zoom, 1));line-height:1.5;`)}">${html}</div>`
   }
-  const _origin = getAssetOrigin()
   const bodyFs = mdFont || 18
-  const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/marked/marked.min.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{background:transparent;color:${mdColor};font-family:-apple-system,sans-serif;font-size:calc(${bodyFs}px * var(--font-zoom, 1));line-height:1.6;padding:8px 12px;overflow:auto}h1,h2,h3,h4{margin:0 0 .4em}p{margin:0 0 .4em}ul,ol{padding-left:1.5em;margin:0 0 .4em}a{color:#60a5fa}pre{background:rgba(0,0,0,0.3);padding:10px 14px;border-radius:6px;overflow:auto;font-size:13px}code{font-family:'Fira Code',monospace}</style></head><body><div id="out"></div><script>function __safeHref(v){v=String(v||'').trim();if(!v)return '#';if(v[0]==='#'||v[0]==='/'||v.startsWith('./')||v.startsWith('../'))return v;if(/^(https?:|mailto:)/i.test(v))return v;return '#'}function __sanitize(html){return String(html||'').replace(/<script[\\s\\S]*?<\\/script>/gi,'').replace(/\\son[a-z-]+\\s*=\\s*(['"]).*?\\1/gi,'').replace(/\\s(href|src)\\s*=\\s*(['"])(.*?)\\2/gi,function(_,a,q,v){return ' '+a+'='+q+__safeHref(v)+q})}document.getElementById('out').innerHTML=__sanitize(marked.parse(${JSON.stringify(el.content || '')}));</script></body></html>`
-  return `<iframe${wrap} srcdoc="${escapeSrcdoc(srcdoc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
+  const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><style>*{margin:0;padding:0;box-sizing:border-box}html,body{background:transparent;color:${mdColor};font-family:-apple-system,sans-serif;font-size:calc(${bodyFs}px * var(--font-zoom, 1));line-height:1.6;padding:8px 12px;overflow:auto}h1,h2,h3,h4{margin:0 0 .4em}p{margin:0 0 .4em}ul,ol{padding-left:1.5em;margin:0 0 .4em}a{color:#60a5fa}pre{background:rgba(0,0,0,0.3);padding:10px 14px;border-radius:6px;overflow:auto;font-size:13px}code{font-family:'Fira Code',monospace}</style></head><body><div id="out">${html}</div></body></html>`
+  return `<iframe${wrap} data-ns-generated-frame="true" srcdoc="${escapeSrcdoc(srcdoc)}" style="${escapeHtml(`${style}border:none;background:transparent;`)}" scrolling="no"></iframe>`
 }
 
 function suggestedImportedAxisMax(datasets, targetTicks, valueAt) {
@@ -408,11 +478,8 @@ function renderChart(el, style, wrap, vis, opts) {
   const isScatter = el._pptxChartMeta?.originalType === 'scatterChart'
   const runtimeChartType = isScatter ? 'scatter' : chartType
   const lineLike = chartType === 'line' || isScatter
-  const chartTitle = String(el.chartTitle || '')
-  const titleText = JSON.stringify(chartTitle).replace(/</g, '\\u003c')
-  const legendPosition = ['top', 'right', 'bottom', 'left'].includes(el.legendPosition)
-    ? el.legendPosition
-    : 'top'
+  const authoredOptions = resolveChartAuthoringOptions(el)
+  const chartTitle = authoredOptions.title.text
   const legendFontSize = chartTitle ? 9 : 12
   const importedLine = chartType === 'line' && Boolean(el._pptxChartMeta)
   const areaFill = chartType === 'line' && el.areaFill === true
@@ -435,6 +502,10 @@ function renderChart(el, style, wrap, vis, opts) {
     boxHeight: 8,
     ...(lineLike ? { usePointStyle: true, pointStyleWidth: 12 } : {}),
   }
+  const pluginsConfig = {
+    title: { ...authoredOptions.title, color: axisTextColor },
+    legend: { ...authoredOptions.legend, labels: legendLabels },
+  }
   const datasetsArr = (chartData.datasets || []).map((ds) => ({
     label: ds.label || '',
     data: isScatter
@@ -446,9 +517,9 @@ function renderChart(el, style, wrap, vis, opts) {
     ...(isScatter ? { showLine: true } : {}),
     fill: lineLike ? areaFill : undefined,
   }))
-  const stackedAxis = stacked ? 'stacked:true,' : ''
   const radialScales = {
     r: {
+      ...authoredOptions.valueAxis,
       angleLines: { color: gridColor },
       ticks: { color: axisTextColor, backdropColor: 'transparent' },
       grid: { color: gridColor },
@@ -457,6 +528,7 @@ function renderChart(el, style, wrap, vis, opts) {
   }
   const cartesianScales = {
     x: {
+      ...authoredOptions.categoryAxis,
       ...(isScatter ? { type: 'linear', beginAtZero: true } : {}),
       ...(suggestedXMax ? { suggestedMax: suggestedXMax } : {}),
       ...(stacked ? { stacked: true } : {}),
@@ -464,6 +536,7 @@ function renderChart(el, style, wrap, vis, opts) {
       grid: { color: gridColor },
     },
     y: {
+      ...authoredOptions.valueAxis,
       ...(stacked ? { stacked: true } : {}),
       ...(isScatter || importedLine ? { beginAtZero: true } : {}),
       ...(suggestedYMax ? { suggestedMax: suggestedYMax } : {}),
@@ -471,12 +544,6 @@ function renderChart(el, style, wrap, vis, opts) {
       grid: { color: gridColor },
     },
   }
-  const scalesOpt =
-    chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea'
-      ? '{}'
-      : chartType === 'radar'
-        ? `{r:{angleLines:{color:'${gridColor}'},ticks:{color:'${axisTextColor}',backdropColor:'transparent'},grid:{color:'${gridColor}'},pointLabels:{color:'${axisTextColor}'}}}`
-        : `{x:{${isScatter ? `type:'linear',beginAtZero:true,${suggestedXMax ? `suggestedMax:${suggestedXMax},` : ''}` : ''}${stackedAxis}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}},y:{${isScatter || importedLine ? 'beginAtZero:true,' : ''}${suggestedYMax ? `suggestedMax:${suggestedYMax},` : ''}${stackedAxis}ticks:{color:'${axisTextColor}'},grid:{color:'${gridColor}'}}}`
   const scalesConfig =
     chartType === 'pie' || chartType === 'doughnut' || chartType === 'polarArea'
       ? {}
@@ -493,29 +560,27 @@ function renderChart(el, style, wrap, vis, opts) {
         responsive: true,
         maintainAspectRatio: false,
         animation: false,
-        plugins: {
-          title: { display: Boolean(chartTitle), text: chartTitle, color: axisTextColor, font: { size: 16, weight: 'normal' } },
-          legend: { position: legendPosition, labels: legendLabels },
-        },
+        plugins: pluginsConfig,
         scales: scalesConfig,
       },
     }).replace(/</g, '\\u003c')
-    return `<div style="${style}${vis}"><canvas id="${canvasId}" data-chart-config='${chartConfig}' style="width:100%;height:100%;"></canvas></div>`
+    return `<div style="${escapeHtml(`${style}${vis}`)}"><canvas id="${escapeHtml(canvasId)}" data-chart-config='${escapeHtml(chartConfig)}' style="width:100%;height:100%;"></canvas></div>`
   }
 
   const labels = JSON.stringify(chartData.labels || []).replace(/</g, '\\u003c')
   const datasets = JSON.stringify(datasetsArr).replace(/</g, '\\u003c')
   const _origin = getAssetOrigin()
-  const legendLabelsOpt = JSON.stringify(legendLabels).replace(/</g, '\\u003c')
-  const chartSrc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/chart.js/dist/chart.umd.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:transparent;overflow:hidden}</style></head><body><canvas id="c" style="width:100%;height:100%"></canvas><script>new Chart(document.getElementById('c'),{type:'${runtimeChartType}',data:{labels:${labels},datasets:${datasets}},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{title:{display:${Boolean(chartTitle)},text:${titleText},color:'${axisTextColor}',font:{size:16,weight:'normal'}},legend:{position:'${legendPosition}',labels:${legendLabelsOpt}}},scales:${scalesOpt}}})</script></body></html>`
-  return `<iframe${wrap} srcdoc="${escapeSrcdoc(chartSrc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
+  const plugins = JSON.stringify(pluginsConfig).replace(/</g, '\\u003c')
+  const scales = JSON.stringify(scalesConfig).replace(/</g, '\\u003c')
+  const chartSrc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/chart.js/dist/chart.umd.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:transparent;overflow:hidden}</style></head><body><canvas id="c" style="width:100%;height:100%"></canvas><script>new Chart(document.getElementById('c'),{type:'${runtimeChartType}',data:{labels:${labels},datasets:${datasets}},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:${plugins},scales:${scales}}})</script></body></html>`
+  return `<iframe${wrap} data-ns-generated-frame="true" srcdoc="${escapeSrcdoc(chartSrc)}" style="${escapeHtml(`${style}border:none;background:transparent;`)}" scrolling="no"></iframe>`
 }
 
 function renderCallout(el, style, wrap, vis) {
   const bg = el.calloutColor || '#ef4444'
   const tc = resolveColorField(el.calloutTextColor, 'callout', 'calloutTextColor') || '#ffffff'
   const fs = el.fontSize || 16
-  return `<div${wrap} style="${style}${vis}border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;color:${tc};font-size:calc(${fs}px * var(--font-zoom, 1));font-weight:700;font-family:-apple-system,sans-serif;">${el.calloutNumber || 1}</div>`
+  return `<div${wrap} style="${escapeHtml(`${style}${vis}border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;color:${tc};font-size:calc(${fs}px * var(--font-zoom, 1));font-weight:700;font-family:-apple-system,sans-serif;`)}">${escapeHtml(el.calloutNumber || 1)}</div>`
 }
 
 function renderIcon(el, style, wrap, vis) {
@@ -528,20 +593,19 @@ function renderIcon(el, style, wrap, vis) {
     rawName.endsWith('Icon') && rawName !== 'ImageIcon' ? rawName.replace(/Icon$/, '') : rawName
   const path = ICON_PATHS[iconKey] || ICON_PATHS['Star'] || ''
   const ip = svgPaint('stroke', color)
-  const ipStyle = ip.style ? ` style="${ip.style}"` : ''
-  return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="none"${ip.attr} stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"${ipStyle}>${path}</svg></div>`
+  const ipStyle = ip.style ? ` style="${escapeHtml(ip.style)}"` : ''
+  return `<div${wrap} style="${escapeHtml(`${style}${vis}display:flex;align-items:center;justify-content:center;`)}"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="none"${ip.attr} stroke-width="${escapeHtml(sw)}" stroke-linecap="round" stroke-linejoin="round"${ipStyle}>${path}</svg></div>`
 }
 
 function renderLatex(el, style, wrap, vis, opts) {
   const content = el.content || ''
   const hasTikz = /\\begin\{tikzpicture\}/.test(content)
   const renderContent = hasTikz ? content : normalizeLatexForRender(content)
-  const fontSize = el.latexFontSize || el.fontSize || 16
-  const textColor =
-    el.latexColor ||
-    resolveColorField(el.textColor, 'latex', 'textColor') ||
-    el.fontColor ||
+  const fontSize = safeCssFontSize(el.latexFontSize || el.fontSize) || 16
+  const textColor = safeCssColor(
+    el.latexColor || resolveColorField(el.textColor, 'latex', 'textColor') || el.fontColor,
     '#ffffff'
+  )
 
   // [FIX #13] If _fallbackSrc is available and content doesn't look like valid LaTeX, use image fallback.
   // This handles malformed LaTeX strings imported from PPTX that KaTeX cannot render.
@@ -550,20 +614,20 @@ function renderLatex(el, style, wrap, vis, opts) {
   const looksLikeLatex = /\\[a-zA-Z]+|[\^$_]|\\frac|\\sqrt|\\begin|\\left|\\right/.test(content)
   if (hasFallbackImg && !looksLikeLatex) {
     const fallbackSrc = absoluteSrc(el._fallbackSrc)
-    return `<div${wrap} style="${style}${vis}"><img src="${fallbackSrc}" alt="Math equation" style="display:block;width:100%;height:100%;object-fit:contain;" /></div>`
+    return `<div${wrap} style="${escapeHtml(`${style}${vis}`)}"><img src="${fallbackSrc}" alt="Math equation" style="display:block;width:100%;height:100%;object-fit:contain;" /></div>`
   }
 
   if (opts.forPrint) {
     if (hasTikz) {
       const _origin = getAssetOrigin()
-      const wrappedContent = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" type="text/css" href="${_origin}/vendor/tikzjax/fonts.css"><script src="${_origin}/vendor/tikzjax/tikzjax.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1))}svg{max-width:100%;max-height:100%}</style></head><body><script type="text/tikz">${escapeScriptElementContent(content)}</script></body></html>`
-      return `<iframe${wrap} data-pdf-iframe="${encodeURIComponent(wrappedContent)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
+      const wrappedContent = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" type="text/css" href="${_origin}/vendor/tikzjax/fonts.css"><script src="${_origin}/vendor/tikzjax/tikzjax.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1))}svg{max-width:100%;max-height:100%}</style></head><body><script type="text/tikz" data-disable-cache="true">${escapeScriptElementContent(content)}</script></body></html>`
+      return `<iframe${wrap} data-pdf-iframe="${encodeURIComponent(wrappedContent)}" style="${escapeHtml(`${style}border:none;background:transparent;`)}" scrolling="no"></iframe>`
     }
-    return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));"><span data-math-latex="${escapeHtml(renderContent)}" data-math-display="true"></span></div>`
+    return `<div${wrap} style="${escapeHtml(`${style}${vis}display:flex;align-items:center;justify-content:center;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));`)}"><span data-math-latex="${escapeHtml(renderContent)}" data-math-display="true"></span></div>`
   }
 
   if (!hasTikz) {
-    return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));"><span data-math-latex="${escapeHtml(renderContent)}" data-math-display="true"></span></div>`
+    return `<div${wrap} style="${escapeHtml(`${style}${vis}display:flex;align-items:center;justify-content:center;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1));`)}"><span data-math-latex="${escapeHtml(renderContent)}" data-math-display="true"></span></div>`
   }
 
   const _origin = getAssetOrigin()
@@ -572,67 +636,76 @@ function renderLatex(el, style, wrap, vis, opts) {
     : ''
   let bodyContent
   if (hasTikz) {
-    bodyContent = `<script type="text/tikz">${escapeScriptElementContent(content)}</script>`
+    bodyContent = `<script type="text/tikz" data-disable-cache="true">${escapeScriptElementContent(content)}</script>`
   } else {
     bodyContent = `<div id="m"></div><script>katex.render(${JSON.stringify(renderContent)},document.getElementById('m'),{displayMode:true,throwOnError:false})</script>`
   }
   const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="${_origin}/vendor/katex/dist/katex.min.css"><script src="${_origin}/vendor/katex/dist/katex.min.js"></script>${tikzScript}<style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:transparent;overflow:hidden;color:${textColor};font-size:calc(${fontSize}px * var(--font-zoom, 1))}.katex{font-size:1.4em;color:inherit}svg{max-width:100%;max-height:100%}</style></head><body>${bodyContent}</body></html>`
-  return `<iframe${wrap} srcdoc="${escapeSrcdoc(srcdoc)}" style="${style}border:none;background:transparent;" scrolling="no"></iframe>`
+  return `<iframe${wrap} data-ns-generated-frame="true" srcdoc="${escapeSrcdoc(srcdoc)}" style="${escapeHtml(`${style}border:none;background:transparent;`)}" scrolling="no"></iframe>`
 }
 
 function renderMediaAccessibility(el) {
   const normalized = normalizeMediaAccessibility(el)
-  const tracks = normalized.tracks.map((track) => {
-    const attrs = [
-      `src="${escapeHtml(absoluteSrc(track.src))}"`,
-      `kind="${track.kind}"`,
-      track.srcLang ? `srclang="${escapeHtml(track.srcLang)}"` : '',
-      track.label ? `label="${escapeHtml(track.label)}"` : '',
-      track.default ? 'default' : '',
-    ].filter(Boolean).join(' ')
-    return `<track ${attrs}>`
-  }).join('')
+  const tracks = normalized.tracks
+    .map((track) => {
+      const attrs = [
+        `src="${escapeHtml(absoluteSrc(track.src))}"`,
+        `kind="${track.kind}"`,
+        track.srcLang ? `srclang="${escapeHtml(track.srcLang)}"` : '',
+        track.label ? `label="${escapeHtml(track.label)}"` : '',
+        track.default ? 'default' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+      return `<track ${attrs}>`
+    })
+    .join('')
   const descriptions = [
-    normalized.audioDescription ? `<p class="ns-media-audio-description">${escapeHtml(normalized.audioDescription)}</p>` : '',
-    normalized.transcript ? `<details class="ns-media-transcript"><summary>Transcript</summary><p>${escapeHtml(normalized.transcript)}</p></details>` : '',
+    normalized.audioDescription
+      ? `<p class="ns-media-audio-description" style="${escapeHtml(MEDIA_CAPTION_CSS)}">${escapeHtml(normalized.audioDescription)}</p>`
+      : '',
+    normalized.transcript
+      ? `<details class="ns-media-transcript" style="${escapeHtml(MEDIA_CAPTION_CSS)}"><summary style="${escapeHtml(MEDIA_CAPTION_TEXT_CSS)}">Transcript</summary><p style="${escapeHtml(MEDIA_CAPTION_TEXT_CSS)}">${escapeHtml(normalized.transcript)}</p></details>`
+      : '',
   ].join('')
   return { normalized, tracks, descriptions }
 }
 
 function renderVideo(el, style, wrap, vis, opts) {
   if (opts.forPrint) {
-    return `<div style="${style}${vis}display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.4);font-family:sans-serif;font-size:calc(16px * var(--font-zoom, 1));">&#9654; Video</div>`
+    return `<div style="${escapeHtml(`${style}${vis}display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.4);font-family:sans-serif;font-size:calc(16px * var(--font-zoom, 1));`)}">&#9654; Video</div>`
   }
   const { normalized, tracks, descriptions } = renderMediaAccessibility(el)
-  const videoSrc = sanitizeMediaSrc(Object.prototype.hasOwnProperty.call(normalized, 'src') ? normalized.src : normalized.videoUrl)
-  const src = getMediaFragmentSrc(absoluteSrc(videoSrc), normalized.startTime, normalized.endTime)
+  const videoSrc = sanitizeMediaSrc(
+    Object.prototype.hasOwnProperty.call(normalized, 'src') ? normalized.src : normalized.videoUrl
+  )
+  const src = absoluteSrc(videoSrc)
   const attrs = []
   if (normalized.controls !== false) attrs.push('controls')
   if (normalized.autoplay) attrs.push('autoplay')
-  if (normalized.loop) attrs.push('loop')
   if (normalized.muted) attrs.push('muted')
-  const playbackRate = getPlaybackRate(normalized.playbackRate)
-  const playbackAttr = playbackRate && playbackRate !== 1 ? ` onloadedmetadata="this.playbackRate=${playbackRate}"` : ''
   const poster = sanitizeMediaSrc(normalized.poster)
-  const posterAttr = poster ? ` poster="${absoluteSrc(poster)}"` : ''
-  return `<div${wrap} style="${style}"><video src="${src}" ${attrs.join(' ')}${posterAttr}${playbackAttr} style="width:100%;height:100%;object-fit:${normalized.objectFit || 'contain'};display:block;">${tracks}</video>${descriptions}</div>`
+  const posterAttr = poster ? ` poster="${escapeHtml(absoluteSrc(poster))}"` : ''
+  const mediaStyle = descriptions ? style.replace('overflow:hidden;', 'overflow:visible;') : style
+  return `<div${wrap} style="${escapeHtml(mediaStyle)}"><video src="${escapeHtml(src)}" ${attrs.join(' ')}${posterAttr}${mediaPlaybackAttribute(normalized)} style="${escapeHtml(`width:100%;height:100%;object-fit:${normalized.objectFit || 'contain'};display:block;`)}">${tracks}</video>${descriptions}</div>`
 }
 
 function renderAudio(el, style, wrap, vis, opts) {
   if (opts.forPrint) {
-    return `<div style="${style}${vis}display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.4);font-family:sans-serif;font-size:calc(16px * var(--font-zoom, 1));">&#9835; Audio</div>`
+    return `<div style="${escapeHtml(`${style}${vis}display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);color:rgba(255,255,255,0.4);font-family:sans-serif;font-size:calc(16px * var(--font-zoom, 1));`)}">&#9835; Audio</div>`
   }
   const { normalized, tracks, descriptions } = renderMediaAccessibility(el)
   const src = absoluteSrc(sanitizeMediaSrc(normalized.src))
   const attrs = []
   if (normalized.controls !== false) attrs.push('controls')
   if (normalized.autoplay) attrs.push('autoplay')
-  if (normalized.loop) attrs.push('loop')
   if (normalized.muted) attrs.push('muted')
-  return `<div${wrap} style="${style}display:flex;align-items:center;justify-content:center;"><audio src="${src}" ${attrs.join(' ')} style="width:90%;">${tracks}</audio>${descriptions}</div>`
+  const mediaStyle = descriptions ? style.replace('overflow:hidden;', 'overflow:visible;') : style
+  return `<div${wrap} style="${escapeHtml(mediaStyle)}"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><audio src="${escapeHtml(src)}" ${attrs.join(' ')}${mediaPlaybackAttribute(normalized)} style="width:90%;">${tracks}</audio></div>${descriptions}</div>`
 }
 
 function renderTable(el, style, wrap, vis) {
+  const { resolveTableContentExtent, resolveTableInsets } = require('./table-layout.js')
   const data = Array.isArray(el.data) && el.data.length ? el.data : [['']]
   const headerBg =
     resolveColorField(el.headerBgColor, 'table', 'headerBgColor') || 'rgba(99,102,241,0.3)'
@@ -645,19 +718,14 @@ function renderTable(el, style, wrap, vis) {
     resolveColorField(el.headerTextColor, 'table', 'headerTextColor') || textColor
   const tableBorderStyle = safeBorderStyle(el.borderStyle)
   const fontSize = el.fontSize || 14
-  const cellPadding = el.cellPadding || 8
+  const cellPadding = el.cellPadding ?? 8
   const cellStyles = el.cellStyles || {}
-  const colgroup =
-    Array.isArray(el.colWidths) && el.colWidths.length
-      ? `<colgroup>${el.colWidths
-          .map((width) => {
-            const safeWidth = Number(width)
-            return Number.isFinite(safeWidth) && safeWidth > 0
-              ? `<col style="width:${Math.round(safeWidth)}px" />`
-              : '<col />'
-          })
-          .join('')}</colgroup>`
-      : ''
+  const contentExtent = resolveTableContentExtent(el)
+  const columnWidths = resolveTableDimensions(el.colWidths, contentExtent.width)
+  const rowHeights = resolveTableDimensions(el.rowHeights, contentExtent.height)
+  const colgroup = columnWidths
+    ? `<colgroup>${columnWidths.map((width) => `<col style="${escapeHtml(`width:${width}px`)}" />`).join('')}</colgroup>`
+    : ''
   const borderCss = (ri, ci) => {
     const borders = cellStyles.borders?.[ri]?.[ci]
     if (!borders) return `border:${borderWidth}px ${tableBorderStyle} ${borderColor};`
@@ -673,7 +741,10 @@ function renderTable(el, style, wrap, vis) {
       })
       .join('')
   }
-  const { spans, covered } = resolveMergedCells(el.mergedCells)
+  const { spans, covered } = resolveMergedCells(el.mergedCells, {
+    rowCount: data.length,
+    colCount: Math.max(1, ...data.map((row) => (Array.isArray(row) ? row.length : 0))),
+  })
   const rows = data
     .map((row, ri) => {
       const cells = (Array.isArray(row) ? row : [])
@@ -702,19 +773,21 @@ function renderTable(el, style, wrap, vis) {
           const cellFontFamily = safeCssFontFamily(cellStyles.fontFamilies?.[ri]?.[ci])
           const familyCss = cellFontFamily ? `font-family:${cellFontFamily};` : ''
           const weightCss =
-            bold != null ? `font-weight:${bold ? 600 : 400};` : isHeader ? 'font-weight:600;' : ''
-          return `<td${spanAttrs} style="padding:${cellPadding}px;${borderCss(ri, ci)}background:${bg};color:${color};font-size:calc(${cellFontSize}px * var(--font-zoom, 1));${familyCss}${weightCss}text-align:${align};vertical-align:${verticalAlign};">${escapeHtml(cell || '')}</td>`
+            bold != null
+              ? `font-weight:${bold ? 600 : 400};`
+              : isHeader
+                ? `font-weight:${el.headerIsBold === false ? 400 : 600};`
+                : ''
+          const insets = resolveTableInsets(cellStyles.insets?.[ri]?.[ci], cellPadding)
+          return `<td${spanAttrs} style="${escapeHtml(`padding:${insets.top}px ${insets.right}px ${insets.bottom}px ${insets.left}px;box-sizing:border-box;${borderCss(ri, ci)}background:${bg};color:${color};font-size:calc(${cellFontSize}px * var(--font-zoom, 1));${familyCss}${weightCss}text-align:${align};vertical-align:${verticalAlign};white-space:pre-wrap;`)}">${tableCellHtml(cell)}</td>`
         })
         .join('')
-      const rowHeight = Array.isArray(el.rowHeights) ? Number(el.rowHeights[ri]) : 0
-      const rowStyle =
-        Number.isFinite(rowHeight) && rowHeight > 0
-          ? ` style="height:${Math.round(rowHeight)}px"`
-          : ''
+      const rowHeight = rowHeights?.[ri]
+      const rowStyle = rowHeight ? ` style="${escapeHtml(`height:${rowHeight}px`)}"` : ''
       return `<tr${rowStyle}>${cells}</tr>`
     })
     .join('')
-  return `<div${wrap} style="${style}${vis}overflow:auto;"><table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed;">${colgroup}${rows}</table></div>`
+  return `<div${wrap} style="${escapeHtml(`${style}${vis}overflow:auto;`)}"><table style="width:100%;height:100%;box-sizing:border-box;border-collapse:collapse;table-layout:fixed;">${colgroup}${rows}</table></div>`
 }
 
 function renderDrawing(el, style, wrap, vis) {
@@ -722,20 +795,20 @@ function renderDrawing(el, style, wrap, vis) {
   const paths = (el.paths || [])
     .map((p) => {
       const stroke = p.stroke || resolvedStroke || '#ffffff'
-      const sw = p.strokeWidth || el.strokeWidth || 3
-      return `<path d="${escapeHtml(p.d || '')}" ${inlineSvgPaint('stroke', stroke)} stroke-width="${sw}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${p.opacity ?? 1}"/>`
+      const sw = p.strokeWidth ?? el.strokeWidth ?? 3
+      return `<path d="${escapeHtml(p.d || '')}" ${inlineSvgPaint('stroke', stroke)} stroke-width="${escapeHtml(sw)}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${escapeHtml(p.opacity ?? 1)}"/>`
     })
     .join('')
-  return `<div${wrap} style="${style}${vis}"><svg width="100%" height="100%" viewBox="0 0 ${el.width} ${el.height}" preserveAspectRatio="none" style="position:absolute;inset:0;">${paths}</svg></div>`
+  return `<div${wrap} style="${escapeHtml(`${style}${vis}`)}"><svg width="100%" height="100%" viewBox="${escapeHtml(`0 0 ${el.width} ${el.height}`)}" preserveAspectRatio="none" style="position:absolute;inset:0;">${paths}</svg></div>`
 }
 
 function renderLine(el, style, wrap, vis) {
   const lineStyle = style.replace('overflow:hidden;', 'overflow:visible;')
   const color = resolveColorField(el.stroke, 'line', 'stroke') || '#ffffff'
   const lp = svgPaint('fill', color) // marker paint: var via style, hex via attr
-  const markerPaint = `${lp.attr}${lp.style ? ` style="${lp.style}"` : ''}`
+  const markerPaint = `${lp.attr}${lp.style ? ` style="${escapeHtml(lp.style)}"` : ''}`
   const strokePaint = svgPaint('stroke', color)
-  const pathStyle = strokePaint.style ? ` style="${strokePaint.style}"` : ''
+  const pathStyle = strokePaint.style ? ` style="${escapeHtml(strokePaint.style)}"` : ''
   const sw = el.strokeWidth || 2
   const dash = el.dashArray ? ` stroke-dasharray="${escapeHtml(el.dashArray)}"` : ''
   const x1 = el.x1 ?? 0,
@@ -774,53 +847,37 @@ function renderLine(el, style, wrap, vis) {
   const pad = Math.max(12, Math.ceil(sw * 6))
   const svgW = Number(el.width || 0) + pad * 2
   const svgH = Number(el.height || 0) + pad * 2
-  return `<div${wrap} style="${lineStyle}${vis}"><svg width="${svgW}" height="${svgH}" viewBox="${-pad} ${-pad} ${svgW} ${svgH}" preserveAspectRatio="none" style="position:absolute;left:${-pad}px;top:${-pad}px;overflow:visible;"><defs>${defs}</defs><path d="${pathD}"${strokePaint.attr} stroke-width="${sw}" fill="none" stroke-linecap="round"${dash}${ms}${me}${pathStyle}/></svg></div>`
+  return `<div${wrap} style="${escapeHtml(`${lineStyle}${vis}`)}"><svg width="${svgW}" height="${svgH}" viewBox="${-pad} ${-pad} ${svgW} ${svgH}" preserveAspectRatio="none" style="${escapeHtml(`position:absolute;left:${-pad}px;top:${-pad}px;overflow:visible;`)}"><defs>${defs}</defs><path d="${escapeHtml(pathD)}"${strokePaint.attr} stroke-width="${escapeHtml(sw)}" fill="none" stroke-linecap="round"${dash}${ms}${me}${pathStyle}/></svg></div>`
 }
 
 function renderSvg(el, style, wrap, vis) {
-  let svgContent = el.content || ''
-  // Recolor shape paint while leaving the gradient/pattern definitions intact:
-  // (1) skip anything inside a <defs>...</defs> block (gradient <stop> colors),
-  // (2) never clobber a `url(#id)` paint reference (that points at a gradient),
-  // (3) also rewrite inline `style="...fill:..."`, not just the presentation attr.
-  const applyPaint = (content, name, value) => {
-    if (!value) return content
-    // Split out <defs> blocks so their contents pass through untouched.
-    const segments = content.split(/(<defs\b[\s\S]*?<\/defs>)/i)
-    const attrRe = new RegExp(`${name}\\s*=\\s*"(?!url\\()[^"]*"`, 'gi')
-    const styleRe = new RegExp(`(style\\s*=\\s*"[^"]*?)${name}\\s*:\\s*(?!url\\()[^;"']*`, 'gi')
-    return segments
-      .map((seg, i) => {
-        if (i % 2 === 1) return seg // odd segments are <defs>...</defs> blocks
-        return seg.replace(attrRe, `${name}="${value}"`).replace(styleRe, `$1${name}:${value}`)
-      })
-      .join('')
-  }
-  if (el.fillOverride) svgContent = applyPaint(svgContent, 'fill', el.fillOverride)
-  if (el.strokeOverride) svgContent = applyPaint(svgContent, 'stroke', el.strokeOverride)
-  return `<div${wrap} style="${style}${vis}display:flex;align-items:center;justify-content:center;">${sanitizeSvgHtml(svgContent)}</div>`
+  const svgContent = applySvgPaintOverrides(el.content || '', {
+    fillOverride: el.fillOverride,
+    strokeOverride: el.strokeOverride,
+  })
+  return `<div${wrap} style="${escapeHtml(`${style}${vis}display:flex;align-items:center;justify-content:center;`)}">${sanitizeSvgHtml(svgContent)}</div>`
 }
 
 function renderQrcode(el, style, wrap, vis, opts) {
   const data = el.qrData || 'https://example.com'
-  const fg = el.qrColor || '#000000'
-  const bgColor = el.qrBgColor || '#ffffff'
-  const err = el.qrErrorLevel || 'M'
+  const fg = safeCssColor(el.qrColor, '#000000')
+  const bgColor = safeCssColor(el.qrBgColor, '#ffffff')
+  const err = ['L', 'M', 'Q', 'H'].includes(el.qrErrorLevel) ? el.qrErrorLevel : 'M'
 
   if (opts.forPrint) {
     const canvasId = `qr-${el.id || Math.random().toString(36).slice(2, 8)}`
     const qrConfig = JSON.stringify({ data, fg, bg: bgColor, err }).replace(/</g, '\\u003c')
-    return `<div style="${style}${vis}display:flex;align-items:center;justify-content:center;background:${bgColor};border-radius:${el.borderRadius || 0}px;overflow:hidden;"><canvas id="${canvasId}" data-qr-config='${qrConfig}' style="width:90%;height:90%;object-fit:contain;"></canvas></div>`
+    return `<div style="${escapeHtml(`${style}${vis}display:flex;align-items:center;justify-content:center;background:${bgColor};border-radius:${el.borderRadius || 0}px;overflow:hidden;`)}"><canvas id="${escapeHtml(canvasId)}" data-qr-config='${escapeHtml(qrConfig)}' style="width:90%!important;height:90%!important;object-fit:contain;"></canvas></div>`
   }
 
   const _origin = getAssetOrigin()
-  const qrSrc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/qrcode/qrcode.min.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:${bgColor};overflow:hidden;display:flex;align-items:center;justify-content:center}</style></head><body><canvas id="c" style="width:100%;height:100%;object-fit:contain"></canvas><script>QRCode.toCanvas(document.getElementById('c'), ${JSON.stringify(data)}, { color: { dark: '${fg}', light: '${bgColor}' }, errorCorrectionLevel: '${err}', margin: 1, width: 500 });</script></body></html>`
-  return `<iframe${wrap} srcdoc="${escapeSrcdoc(qrSrc)}" style="${style}border:none;background:transparent;border-radius:${el.borderRadius || 0}px;overflow:hidden;" scrolling="no"></iframe>`
+  const qrSrc = `<!doctype html><html><head><meta charset="utf-8"><script src="${_origin}/vendor/qrcode/qrcode.min.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:${bgColor};overflow:hidden;display:flex;align-items:center;justify-content:center}canvas{width:100%!important;height:100%!important;object-fit:contain}</style></head><body><canvas id="c"></canvas><script>QRCode.toCanvas(document.getElementById('c'), ${serializeEducationConfig(data)}, { color: { dark: ${serializeEducationConfig(fg)}, light: ${serializeEducationConfig(bgColor)} }, errorCorrectionLevel: '${err}', margin: 1, width: 500 });</script></body></html>`
+  return `<iframe${wrap} data-ns-generated-frame="true" srcdoc="${escapeSrcdoc(qrSrc)}" style="${escapeHtml(`${style}border:none;background:transparent;border-radius:${el.borderRadius || 0}px;overflow:hidden;`)}" scrolling="no"></iframe>`
 }
 
 function renderTimeline(el, style, wrap, vis, _opts) {
-  const w = el.width || 800
-  const h = el.height || 400
+  const w = Number(el.width) || 800
+  const h = Number(el.height) || 400
   const lineY = h * 0.5
   const pad = 30
   const lineColor = resolveColorField(el.lineColor, 'timeline', 'lineColor') || '#6366f1'
@@ -829,7 +886,7 @@ function renderTimeline(el, style, wrap, vis, _opts) {
   const lineStroke = inlineSvgPaint('stroke', lineColor)
   const dotFill = inlineSvgPaint('fill', dotColor)
   const textFill = inlineSvgPaint('fill', textColor)
-  const fs = el.fontSize || 11
+  const fs = Number(el.fontSize) || 11
   const startDate = el.timelineStart ?? el.startDate ?? '2000'
   const endDate = el.timelineEnd ?? el.endDate ?? '2025'
   const items = (el.events || el.items || []).map((item) => ({
@@ -843,37 +900,8 @@ function renderTimeline(el, style, wrap, vis, _opts) {
     ['year', '10year', '100year', '1000year'].includes(spacing) ||
     (spacing === 'auto' && /^-?\d+$/.test(String(startDate)))
 
-  function datePos(d) {
-    if (yearMode) {
-      const y0 = parseInt(startDate) || 0
-      const y1 = parseInt(endDate) || 0
-      const yr = y1 - y0 || 1
-      return pad + (((parseInt(d) || 0) - y0) / yr) * (w - pad * 2)
-    }
-    const t0 = new Date(startDate).getTime()
-    const t1 = new Date(endDate).getTime()
-    const range = t1 - t0 || 1
-    return pad + ((new Date(d).getTime() - t0) / range) * (w - pad * 2)
-  }
-
-  const ticks = []
-  if (yearMode) {
-    const y0 = parseInt(startDate) || 0
-    const y1 = parseInt(endDate) || 0
-    const step =
-      spacing === '1000year'
-        ? 1000
-        : spacing === '100year'
-          ? 100
-          : spacing === '10year'
-            ? 10
-            : Math.abs(y1 - y0) > 8
-              ? 2
-              : 1
-    const sY = y0 < y1 ? Math.ceil(y0 / step) * step : Math.floor(y0 / step) * step
-    for (let y = sY; y0 < y1 ? y <= y1 : y >= y1; y += y0 < y1 ? step : -step)
-      ticks.push({ date: String(y), label: String(y) })
-  }
+  const datePos = (date) => parseDatePos(date, startDate, endDate, w, pad, yearMode)
+  const ticks = buildTicks(startDate, endDate, spacing, yearMode, w - pad * 2, fs - 1)
 
   let svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;overflow:visible">`
   svg += `<line x1="${pad}" y1="${lineY}" x2="${w - pad}" y2="${lineY}" ${lineStroke} stroke-width="2"/>`
@@ -885,7 +913,7 @@ function renderTimeline(el, style, wrap, vis, _opts) {
   items.forEach((item) => {
     const x = datePos(item.date)
     const isTop = item.side !== 'bottom'
-    const cl = item.connectorLength ?? 0
+    const cl = Number(item.connectorLength) || 0
     const cardY = isTop ? 8 - cl : lineY + 28 + cl
     const cardH = isTop ? lineY - 36 : h - lineY - 36
     const connY1 = isTop ? cardY + cardH : lineY
@@ -921,7 +949,7 @@ function renderTimeline(el, style, wrap, vis, _opts) {
   })
   svg += '</svg>'
 
-  return `<div${wrap} style="${style}${vis}">${svg}</div>`
+  return `<div${wrap} style="${escapeHtml(`${style}${vis}overflow:visible;`)}">${svg}</div>`
 }
 
 function isPluginType(type) {
@@ -949,7 +977,7 @@ function getPluginFallbackText(el) {
 function renderPluginFallback(el, style, wrap, vis) {
   const label = escapeHtml(el.pluginRuntime?.label || 'Plugin')
   const text = escapeHtml(getPluginFallbackText(el))
-  return `<div${wrap} data-plugin-fallback="true" style="${style}${vis}display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(15,23,42,0.72);border:1px solid rgba(148,163,184,0.35);border-radius:6px;color:white;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><strong style="font-size:calc(18px * var(--font-zoom, 1));">${text}</strong><span style="font-size:calc(12px * var(--font-zoom, 1));opacity:.72;">${label}</span></div>`
+  return `<div${wrap} data-plugin-fallback="true" style="${escapeHtml(`${style}${vis}display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(15,23,42,0.72);border:1px solid rgba(148,163,184,0.35);border-radius:6px;color:white;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;`)}"><strong style="font-size:calc(18px * var(--font-zoom, 1));">${text}</strong><span style="font-size:calc(12px * var(--font-zoom, 1));opacity:.72;">${label}</span></div>`
 }
 
 function renderPlugin(el, style, wrap, vis, opts) {
@@ -962,62 +990,45 @@ function renderPlugin(el, style, wrap, vis, opts) {
   const src = `/api/plugins/${slug}/assets/${sandbox}`
   const title = escapeHtml(el.pluginRuntime?.label || 'Plugin')
   const dataJson = escapeHtml(JSON.stringify(el.pluginData || {}))
-  return `<div${wrap} data-plugin-runtime="true" data-plugin-data="${dataJson}" style="${style}${vis}"><iframe title="${title}" src="${src}" sandbox="allow-scripts" style="width:100%;height:100%;border:none;background:transparent;" scrolling="no"></iframe></div>`
+  const dependencies = validateHtmlDependencies(el.pluginRuntime?.htmlDependencies)
+  const declaration = dependencies
+    ? ` data-html-dependencies="${escapeHtml(JSON.stringify(dependencies))}"`
+    : ''
+  return `<div${wrap} data-plugin-runtime="true" style="${escapeHtml(`${style}${vis}`)}"><iframe title="${title}" data-plugin-src="${src}"${declaration} data-plugin-data="${dataJson}" data-plugin-width="${escapeHtml(el.width)}" data-plugin-height="${escapeHtml(el.height)}" sandbox="${HTML_SANDBOX}" referrerpolicy="no-referrer" style="width:100%;height:100%;border:none;background:transparent;" scrolling="no"></iframe></div>`
 }
 
-// Static export renderer for `game` elements. Games hold heterogeneous,
-// type-specific sub-configs (name-picker/jeopardy/...) with no uniform
-// question schema, and they are interactive at runtime — so on export we emit a
-// labeled static placeholder (title + game-type badge), never interactive UI.
-// Mirrors renderPluginFallback's contract: never returns '' and never throws.
-function renderGame(el, style, wrap, vis) {
-  const gameType = el.gameType || 'game'
-  const nestedConfig = el[gameType] && typeof el[gameType] === 'object' ? el[gameType] : {}
-  const gameConfig = { ...el }
-  Object.entries(nestedConfig).forEach(([key, value]) => {
-    if (value !== undefined) gameConfig[key] = value
-  })
-  const title =
-    gameConfig.title ||
-    el.title ||
-    (gameType === 'poll'
-      ? 'Live Poll'
-      : gameType === 'word-cloud'
-        ? 'Word Cloud'
-        : gameType === 'matching'
-          ? 'Matching'
-          : 'Game')
+// Print is an inert authored snapshot; non-print roots mount the shared DOM runtime.
+function renderGame(el, style, wrap, vis, opts = {}) {
+  const gameType = el.gameType || 'name-picker'
+  const privateConfig = opts.gameConfigs?.get(el.id) || normalizeGameConfig(el, gameType)
+  if (opts.forPrint)
+    return `<div${wrap} style="${escapeHtml(`${style}${vis}`)}">${renderStaticGameSnapshot({ ...el, gameType, [gameType]: privateConfig }, { teacherReveal: opts.teacherReveal === true, designTokens: opts.designTokens })}</div>`
+  const educationView = opts.educationView || 'local'
+  const gameConfig =
+    educationView === 'audience' ? projectPublicGameConfig(gameType, privateConfig) : privateConfig
+  const title = gameConfig.title || el.title || GAME_CATALOG[gameType]?.label || 'Game'
   const label = escapeHtml(title)
   const badge = escapeHtml(gameType)
-  const pollPublicContent =
-    gameType === 'poll'
-      ? `<div style="font-size:calc(13px * var(--font-zoom, 1));opacity:.86;text-align:center;max-width:80%;">${escapeHtml(gameConfig.prompt || el.prompt || 'Live Poll')}</div><ul style="margin:0;padding-left:20px;font-size:calc(11px * var(--font-zoom, 1));opacity:.72;">${(
-          gameConfig.options ||
-          el.options ||
-          []
-        )
-          .slice(0, 6)
-          .map((option) => `<li>${escapeHtml(option.text || option.label || option)}</li>`)
-          .join('')}</ul>`
-      : ''
-  const wordCloudPublicContent =
-    gameType === 'word-cloud'
-      ? `<div style="font-size:calc(13px * var(--font-zoom, 1));opacity:.86;text-align:center;max-width:80%;">${escapeHtml(gameConfig.prompt || el.prompt || 'Word Cloud')}</div>`
-      : ''
-  const matchingPublicContent =
-    gameType === 'matching'
-      ? `<div style="font-size:calc(13px * var(--font-zoom, 1));opacity:.86;text-align:center;max-width:80%;">${escapeHtml(gameConfig.prompt || el.prompt || 'Matching')}</div><ul style="margin:0;padding-left:20px;font-size:calc(11px * var(--font-zoom, 1));opacity:.72;">${(
-          gameConfig.pairs ||
-          el.pairs ||
-          []
-        )
-          .slice(0, 8)
-          .map(
-            (pair) => `<li>${escapeHtml(pair.prompt || '')} → ${escapeHtml(pair.target || '')}</li>`
-          )
-          .join('')}</ul>`
-      : ''
-  return `<div${wrap} data-game-fallback="true" data-game-type="${badge}" style="${style}${vis}display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:${safeCssColor(el.backgroundColor, '#1a1a2e')};border:1px solid rgba(148,163,184,0.35);border-radius:8px;color:white;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><strong style="font-size:calc(20px * var(--font-zoom, 1));">${label}</strong><span style="font-size:calc(12px * var(--font-zoom, 1));text-transform:uppercase;letter-spacing:0.05em;padding:2px 10px;border-radius:999px;background:${safeCssColor(el.accentColor, '#6366f1')};opacity:.92;">${badge}</span>${pollPublicContent}${wordCloudPublicContent}${matchingPublicContent}<span style="font-size:calc(11px * var(--font-zoom, 1));opacity:.6;">Interactive game</span></div>`
+  const publicContent = staticGameContent(gameType, gameConfig)
+    .filter((row) => typeof row.text === 'string' && row.text)
+    .map((row) => {
+      const src = sanitizeMediaSrc(row.media?.src)
+      const image = src
+        ? `<img src="${escapeHtml(absoluteSrc(src))}" alt="${escapeHtml(row.media?.alt || '')}" style="max-width:100%;max-height:120px;object-fit:contain;" />`
+        : ''
+      return `<li>${escapeHtml(row.text)}${image}</li>`
+    })
+    .join('')
+  const snapshot = publicContent
+    ? `<ul style="max-width:90%;max-height:65%;overflow:auto;margin:0;padding-left:20px;font-size:calc(13px * var(--font-zoom, 1));">${publicContent}</ul>`
+    : ''
+  const contents = `<strong>${label}</strong><span>${badge}</span>${snapshot}`
+  const baseStyle = `${style}${vis}background:${safeCssColor(el.backgroundColor, '#1a1a2e')};border:1px solid rgba(148,163,184,0.35);border-radius:8px;color:white;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;`
+  const action = serializeElementAction(el.action)
+  const actionAttrs = action
+    ? ` data-ns-action="${escapeHtml(action)}" role="button" tabindex="0"`
+    : ''
+  return `<div${wrap}${actionAttrs} data-ns-game="true" data-ns-game-type="${badge}" data-ns-education-view="${educationView}" style="${escapeHtml(baseStyle)}"><script type="application/json" data-ns-game-config>${serializeEducationConfig(gameConfig)}</script><div data-ns-game-static style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">${contents}</div><div data-ns-game-ui></div></div>`
 }
 
 // ─── Dispatcher ──────────────────────────────────────────────────────────────
@@ -1051,6 +1062,10 @@ const RENDERERS = {
  * @param {Object} opts - { forPrint: boolean, isHidden: boolean }
  */
 function renderElement(el, slide, opts = {}) {
+  if (opts.semanticFamily?.extent) {
+    el = { ...el, width: opts.semanticFamily.extent.cx / 9525,
+      height: opts.semanticFamily.extent.cy / 9525 }
+  }
   const renderOpts =
     opts.slideBackground === undefined ? { ...opts, slideBackground: slide?.background } : opts
   const style = buildBaseStyle(el, renderOpts)
@@ -1059,28 +1074,91 @@ function renderElement(el, slide, opts = {}) {
     : buildWrapperAttrs(el, slide)
   const exportIdAttr =
     renderOpts.exportElementIds && el.id ? ` data-export-element-id="${escapeHtml(el.id)}"` : ''
-  const wrap = `${exportIdAttr}${dataIdAttr}${fragClass}${fragIdx}`
+  const identity =
+    !renderOpts.forPrint && el.id
+      ? ` data-ns-element-id="${escapeHtml(el.id)}" data-ns-initial-visibility="${el.initialVisibility === 'hidden' ? 'hidden' : 'visible'}"${el.initialVisibility === 'hidden' ? ' hidden' : ''}`
+      : ''
+  const wrap = `${exportIdAttr}${identity}${dataIdAttr}${fragClass}${fragIdx}`
   const vis = renderOpts.isHidden ? 'visibility:hidden;' : ''
 
+  if (renderOpts.semanticFamily) {
+    renderOpts.semanticOutputMounts?.push({ instanceId: el.pptxInstanceId, slideId: slide.id })
+    const exactStyle = `${style}${vis}overflow:visible;font-synthesis:none;`
+    return `<div${wrap} data-pptx-semantic-mount="${escapeHtml(el.pptxInstanceId)}" data-pptx-semantic-slide="${escapeHtml(slide.id)}" style="${escapeHtml(exactStyle)}"></div>${renderActionSurface(el, style, renderOpts)}`
+  }
   const renderer = isPluginType(el.type) ? renderPlugin : RENDERERS[el.type]
   if (!renderer) return ''
-  return `${renderer(el, style, wrap, vis, renderOpts)}${renderActionSurface(el, style, renderOpts)}`
+  let elementOptions = renderOpts
+  if (renderOpts.pptxSemantic && renderOpts.semanticOutputMounts && el.pptxTextDocument &&
+      el.pptxInstanceId && ['text', 'shape'].includes(el.type)) {
+    const { createTextOutputMount } = require('./pptx-text-output.js')
+    const mount = createTextOutputMount(el, slide, renderOpts.pptxFieldContext)
+    renderOpts.semanticOutputMounts.push(mount)
+    elementOptions = { ...renderOpts, textOutputMount: mount }
+  }
+  return `${renderer(el, style, wrap, vis, elementOptions)}${renderActionSurface(el, style, renderOpts)}`
 }
 
 /**
  * Render all elements of a slide, sorted by zIndex.
  */
 function renderSlideElements(slide, opts = {}) {
+  if (opts.pptxSemantic) {
+    const { semanticRenderTree, semanticLocalElement } = require('./pptx-semantic-render-tree.js')
+    const timingPlan = !opts.forPrint && (slide.hasSourceTiming || slide.sourceTiming)
+      ? require('./pptx-timing-playback').sourceTimingPlayback(opts.pptxSemantic, slide) : null
+    const initialTiming = new Map((timingPlan?.initial || []).map(state => [state.targetInstanceId, state]))
+    const timingMarkup = timingPlan?.steps.length
+      ? `<span style="display:none" data-ns-source-timing="${escapeHtml(JSON.stringify(timingPlan))}">${timingPlan.steps
+          .filter(step => step.index !== null)
+          .map(step => `<span class="fragment" data-fragment-index="${step.index}" data-ns-source-step="${step.index}"></span>`).join('')}</span>` : ''
+    function renderNode(node) {
+      if (node.instanceId ? node.hidden : node.element?.hidden) return ''
+      if (!node.instanceId) return renderElement(node.element, slide, opts)
+      const content =
+        node.kind === 'group'
+          ? node.children.map(renderNode).join('\n')
+          : renderElement(semanticLocalElement(node.element), slide, {
+              ...opts,
+              semanticFamily: node.family,
+              isHidden:
+                opts.forPrint &&
+                node.element.fragment &&
+                (node.element.fragmentIndex || 1) > (opts.maxFragIdx ?? Infinity),
+            })
+      const style = `position:absolute;left:0;top:0;width:0;height:0;overflow:visible;transform-origin:0 0;transform:${node.transform};z-index:${node.paintIndex};${node.kind === 'group' ? `opacity:${node.opacity};` : ''}`
+      const state = initialTiming.get(node.instanceId)
+      const timingStyle = state ? `visibility:${state.visible ? 'visible' : 'hidden'};opacity:${state.opacity};` : ''
+      return `<div data-pptx-instance-id="${escapeHtml(node.instanceId)}" style="${style}${timingStyle}">${content}</div>`
+    }
+    const fieldContext = opts.pptxFieldContext ??
+      (opts.slideNumber || opts.fieldDate
+        ? {
+            slideNumber: opts.slideNumber,
+            slideTitle: slide.title,
+            date: opts.fieldDate,
+            locale: opts.locale,
+            timeZone: opts.timeZone,
+          }
+        : undefined)
+    return semanticRenderTree(opts.pptxSemantic, slide, fieldContext)
+      .map(renderNode)
+      .filter(Boolean)
+      .join('\n') + timingMarkup
+  }
   const { effectiveLines } = resolveConnectorGeometry(slide?.elements || [])
   return (slide.elements || [])
     .filter((el) => !(el.hidden || false))
     .slice()
     .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
     .map((sourceElement) => {
-      const el = sourceElement.id ? effectiveLines.get(sourceElement.id) || sourceElement : sourceElement
+      const el = sourceElement.id
+        ? effectiveLines.get(sourceElement.id) || sourceElement
+        : sourceElement
       const elementOpts = {
         ...opts,
-        slideBackground: opts.slideBackground === undefined ? slide.background : opts.slideBackground,
+        slideBackground:
+          opts.slideBackground === undefined ? slide.background : opts.slideBackground,
       }
       if (opts.forPrint && el.fragment) {
         elementOpts.isHidden = (el.fragmentIndex || 1) > (opts.maxFragIdx ?? Infinity)
@@ -1097,8 +1175,6 @@ module.exports = {
   escapeHtml,
   escapeSrcdoc,
   absoluteSrc,
-  getMediaFragmentSrc,
   getPlaybackRate,
   getAssetOrigin,
-  getBackgroundAttrs: null, // will be set from htmlGenerator
 }

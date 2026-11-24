@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import * as Tabs from '@radix-ui/react-tabs'
 import { resolveRibbonActiveTab, useUIStore } from '../../stores/ui-store'
 import HomeTabContent from './home-tab-content'
@@ -24,29 +25,43 @@ export default function RibbonPanel(props) {
   const setActiveTab = useUIStore((s) => s.setActiveTab)
   const formatContext = useUIStore((s) => s.formatContext)
   const lastNonContextualTab = useUIStore((s) => s.lastNonContextualTab)
+  const [libraryOpen, setLibraryOpen] = useState(false)
+  const handleLibraryVisibilityChange = (open) => {
+    if (!open) setActiveTab('insert')
+    setLibraryOpen(open)
+  }
 
-  const effectiveTab = resolveRibbonActiveTab(
-    activeTab,
-    formatContext,
-    lastNonContextualTab
-  )
+  const effectiveTab = resolveRibbonActiveTab(activeTab, formatContext, lastNonContextualTab)
 
   return (
     <Tabs.Root value={effectiveTab} onValueChange={setActiveTab} className="min-w-0 max-w-full">
       <RibbonDensityProvider
-          data-testid="ribbon-panel-container"
-          className="tour-step-ribbon relative h-[80px] min-w-0 max-w-full overflow-hidden bg-panel border-b border-border"
+        data-testid="ribbon-panel-container"
+        className="tour-step-ribbon relative h-[80px] min-w-0 max-w-full overflow-hidden bg-panel border-b border-border"
       >
         {Object.entries(TAB_PANELS).map(([id, Content]) => (
           <Tabs.Content
             key={id}
             value={id}
+            forceMount={id === 'insert' && libraryOpen ? true : undefined}
             id={`ribbon-panel-${id}`}
             data-testid={`ribbon-tab-${id}-content`}
             aria-labelledby={`ribbon-tab-${id}`}
             className="absolute inset-0 hidden h-full w-full min-w-0 items-center overflow-hidden outline-none data-[state=active]:flex"
           >
-            {props.isMaster && id === 'transitions' ? <p className="px-4 text-xs text-text-secondary">Exit master editing to change slide transitions.</p> : <Content {...props} slideElements={props.slide?.elements || []} />}
+            {props.isMaster && id === 'transitions' ? (
+              <p className="px-4 text-xs text-text-secondary">
+                Exit master editing to change slide transitions.
+              </p>
+            ) : (
+              <Content
+                {...props}
+                slideElements={props.slide?.elements || []}
+                {...(id === 'insert'
+                  ? { onLibraryVisibilityChange: handleLibraryVisibilityChange }
+                  : {})}
+              />
+            )}
           </Tabs.Content>
         ))}
       </RibbonDensityProvider>

@@ -4,10 +4,10 @@ import os from 'node:os'
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { afterEach, describe, expect, it } from 'vitest'
-import { identityFor } from './create-client-dist-manifest.mjs'
+import { createManifest, identityFor } from './create-client-dist-manifest.mjs'
+import { createSubject } from '../feature-inventory/education-qualification-stage.mjs'
 
 const repo = path.resolve(__dirname, '..', '..')
-const createScript = path.join(repo, 'scripts', 'ci', 'create-client-dist-manifest.mjs')
 const verifyScript = path.join(repo, 'scripts', 'ci', 'verify-client-dist-manifest.mjs')
 const roots = []
 const subject = 'a'.repeat(40)
@@ -37,26 +37,17 @@ function run(script, args, cwd) {
 }
 
 function create(paths) {
-  run(
-    createScript,
-    [
-      '--root',
-      paths.dist,
-      '--out',
-      paths.manifest,
-      '--subject',
-      subject,
-      '--dirty',
-      'false',
-      '--build-command',
-      'npm run build',
-      '--vite-version',
-      '8.2.2',
-      '--lock',
-      `workspace=${paths.lock}`,
-    ],
-    paths.root
-  )
+  const manifest = createManifest({
+    baseDir: paths.root,
+    root: paths.dist,
+    subject,
+    dirty: false,
+    buildCommand: 'npm run build',
+    viteVersion: '8.2.2',
+    locks: [`workspace=${paths.lock}`],
+    inputHash: createSubject(paths.root).subjectHash,
+  })
+  fs.writeFileSync(paths.manifest, JSON.stringify(manifest, null, 2) + '\n')
 }
 
 function verify(paths, extra = []) {
@@ -82,7 +73,13 @@ function verify(paths, extra = []) {
 }
 
 function expectFailure(callback, message) {
-  expect(callback).toThrow(expect.objectContaining({ stderr: expect.stringContaining(message) }))
+  try {
+    callback()
+  } catch (error) {
+    expect(String(error.stderr || error.message)).toContain(message)
+    return
+  }
+  expect.fail(`Expected rejection containing ${message}`)
 }
 
 afterEach(() => {
@@ -168,11 +165,6 @@ describe('client artifact manifest', () => {
     expectFailure(() => verify(paths), 'Duplicate lock name')
   })
 
-  it('includes untracked source in automatic dirty detection', () => {
-    const source = fs.readFileSync(createScript, 'utf8')
-    expect(source).not.toContain('--untracked-files=no')
-  })
-
   it('fails closed on subject, dirty marker, lock, and manifest identity drift', () => {
     const paths = fixture()
     create(paths)
@@ -186,4 +178,5 @@ describe('client artifact manifest', () => {
     fs.writeFileSync(paths.manifest, JSON.stringify(manifest))
     expectFailure(() => verify(paths), 'Artifact identity mismatch')
   })
+
 })

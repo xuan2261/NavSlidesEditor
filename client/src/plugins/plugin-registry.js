@@ -1,3 +1,5 @@
+import { validateHtmlDependencies } from 'revealjs-shared/src/education/html-sandbox-policy.js'
+
 export const PLUGIN_TYPE_PREFIX = 'plugin:'
 
 export class PluginRegistry {
@@ -26,6 +28,7 @@ export class PluginRegistry {
         defaultSize: element.defaultSize || { width: 360, height: 180 },
         defaultData: element.defaultData || {},
         sandbox: element.sandbox || null,
+        htmlDependencies: validateHtmlDependencies(element.htmlDependencies),
       }
       this.types.set(fullType, normalized)
       registered.push(normalized)

@@ -1,0 +1,149 @@
+const { normalizeQuizConfig } = require('./quiz-config.js')
+const { evaluateAnswer } = require('./answer-evaluator.js')
+const { cloneValue, isId } = require('./question-shape.js')
+
+function createQuizSession(config, { now = 0, generation = 0, random = Math.random } = {}) {
+  if (!Number.isFinite(now)) throw new TypeError('Quiz clock must be finite.')
+  if (!Number.isSafeInteger(generation) || generation < 0)
+    throw new TypeError('Quiz generation must be a nonnegative integer.')
+  const normalized = normalizeQuizConfig(config)
+  const questionIds = normalized.questions.map((question) => question.id)
+  if (normalized.shuffleQuestions) {
+    for (let i = questionIds.length - 1; i > 0; i--) {
+      const value = random()
+      if (!Number.isFinite(value) || value < 0 || value >= 1)
+        throw new TypeError('Random value must be in [0, 1).')
+      const j = Math.floor(value * (i + 1))
+      ;[questionIds[i], questionIds[j]] = [questionIds[j], questionIds[i]]
+    }
+  }
+  return activate(
+    {
+      config: normalized,
+      generation,
+      questionIds,
+      questionIndex: 0,
+      attempts: [],
+      score: 0,
+      lastResult: null,
+    },
+    now
+  )
+}
+
+function activate(state, now) {
+  const questionId = state.questionIds[state.questionIndex] ?? null
+  const question = state.config.questions.find((item) => item.id === questionId)
+  return {
+    ...state,
+    questionId,
+    status: question ? 'active' : 'complete',
+    deadline: question && question.timeLimit !== null ? now + question.timeLimit * 1000 : null,
+    lastResult: null,
+  }
+}
+
+// Key order does not change the identity of an already accepted structured answer.
+function answerIdentity(value) {
+  if (Array.isArray(value)) return `[${value.map(answerIdentity).join(',')}]`
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${answerIdentity(value[key])}`)
+      .join(',')}}`
+  }
+  return JSON.stringify(value)
+}
+
+function rejected(state, error) {
+  return { ...state, lastResult: { accepted: false, valid: false, correct: false, error } }
+}
+
+function expire(state) {
+  return {
+    ...state,
+    status: 'terminal',
+    lastResult: {
+      accepted: false,
+      valid: false,
+      correct: false,
+      error: 'deadline',
+      terminal: true,
+    },
+  }
+}
+
+function reduceQuizSession(state, command) {
+  if (!command || command.generation !== state.generation) return state
+  const now = command.now
+  if (!Number.isFinite(now)) return rejected(state, 'invalid-clock')
+  if (command.type === 'reset')
+    return createQuizSession(state.config, {
+      now,
+      generation: state.generation + 1,
+      random: command.random,
+    })
+  if (command.type === 'next') {
+    if (state.status !== 'terminal') return state
+    return activate({ ...state, questionIndex: state.questionIndex + 1 }, now)
+  }
+  if (command.type === 'extend-time') {
+    if (
+      state.status !== 'active' ||
+      state.deadline === null ||
+      command.questionId !== state.questionId
+    )
+      return state
+    if (now >= state.deadline) return expire(state)
+    return { ...state, deadline: state.deadline + 30000 }
+  }
+  if (command.type === 'expire') {
+    if (state.status !== 'active' || state.deadline === null || now < state.deadline) return state
+    if (command.questionId !== state.questionId) return state
+    return expire(state)
+  }
+  if (command.type !== 'submit') return state
+  if (!isId(command.attemptId)) return rejected(state, 'invalid-attempt-id')
+  const previous = state.attempts.find((attempt) => attempt.attemptId === command.attemptId)
+  if (previous) {
+    if (
+      previous.questionId !== command.questionId ||
+      previous.identity !== answerIdentity(command.answer)
+    )
+      return rejected(state, 'attempt-id-conflict')
+    return { ...state, lastResult: previous.result }
+  }
+  if (command.questionId !== state.questionId) return rejected(state, 'inactive-question')
+  if (state.status !== 'active') return rejected(state, 'question-ended')
+  if (state.deadline !== null && now >= state.deadline) return expire(state)
+  const question = state.config.questions.find((item) => item.id === state.questionId)
+  const evaluated = evaluateAnswer(question, command.answer)
+  if (!evaluated.valid) return rejected(state, evaluated.error)
+  const used = state.attempts.filter((attempt) => attempt.questionId === question.id).length + 1
+  const terminal = evaluated.correct || used >= state.config.attemptLimit
+  const outcome = {
+    ...evaluated,
+    accepted: true,
+    attemptId: command.attemptId,
+    questionId: question.id,
+    attemptsUsed: used,
+    pointsAwarded: evaluated.correct ? question.points : 0,
+    terminal,
+  }
+  const attempt = {
+    attemptId: command.attemptId,
+    questionId: question.id,
+    identity: answerIdentity(command.answer),
+    answer: cloneValue(command.answer),
+    result: outcome,
+  }
+  return {
+    ...state,
+    attempts: [...state.attempts, attempt],
+    score: state.score + outcome.pointsAwarded,
+    status: terminal ? 'terminal' : 'active',
+    lastResult: outcome,
+  }
+}
+
+module.exports = { createQuizSession, reduceQuizSession }

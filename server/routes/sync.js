@@ -5,7 +5,9 @@ const fs = require('fs-extra')
 const path = require('path')
 const { execFile } = require('child_process')
 const { generateRevealHTML } = require('revealjs-shared')
-const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
+const {
+  normalizePptxImportedPresentationForRead,
+} = require('../services/presentation-normalization')
 
 let execFileImpl = execFile
 const {
@@ -18,6 +20,9 @@ const { readAuthoritativePresentations } = require('../services/package-backed-p
 const { withPackageStore } = require('../services/pptx-import/package-store-runtime')
 const { toExternalPresentationDto } = require('../services/pptx-import/package-store/dto')
 const { hashRecord } = require('../services/pptx-import/package-store/schemas')
+const { getServingBaseUrl } = require('../utils/serving-origin')
+const { prepareSemanticOutputResources, assertSemanticOutputArtifact } =
+  require('../services/pptx-import/semantic-output-resources')
 
 const router = express.Router()
 const syncRemoteTails = new Map()
@@ -42,7 +47,8 @@ async function replaceRcloneConfig(candidatePath) {
     await fs.rename(candidatePath, RCLONE_CONFIG_FILE)
     return
   } catch (error) {
-    if (!['EEXIST', 'EPERM'].includes(error?.code) || !fs.existsSync(RCLONE_CONFIG_FILE)) throw error
+    if (!['EEXIST', 'EPERM'].includes(error?.code) || !fs.existsSync(RCLONE_CONFIG_FILE))
+      throw error
   }
 
   const backupPath = `${RCLONE_CONFIG_FILE}.${crypto.randomUUID()}.backup`
@@ -63,7 +69,9 @@ async function withSyncDestinationLock(destination, action) {
   const remoteName = destination.slice(0, destination.indexOf(':')) || destination
   const previous = syncRemoteTails.get(remoteName) || Promise.resolve()
   let release
-  const current = new Promise((resolve) => { release = resolve })
+  const current = new Promise((resolve) => {
+    release = resolve
+  })
   syncRemoteTails.set(remoteName, current)
   await previous
   try {
@@ -123,13 +131,15 @@ function sanitizeFolderSegment(value, fallback) {
 }
 
 function presentationFolderName(presentation, occupiedNames = new Set()) {
-  const rawId = presentation?.id === undefined || presentation?.id === null
-    ? ''
-    : String(presentation.id)
+  const rawId =
+    presentation?.id === undefined || presentation?.id === null ? '' : String(presentation.id)
   const identity = rawId ? `id:${rawId}` : 'missing-presentation-id'
-  const visibleId = sanitizeFolderSegment(rawId, 'presentation')
-    .slice(0, MAX_VISIBLE_PRESENTATION_ID_LENGTH)
-  const fingerprint = crypto.createHash('sha256')
+  const visibleId = sanitizeFolderSegment(rawId, 'presentation').slice(
+    0,
+    MAX_VISIBLE_PRESENTATION_ID_LENGTH
+  )
+  const fingerprint = crypto
+    .createHash('sha256')
     .update(identity, 'utf8')
     .digest('hex')
     .slice(0, PRESENTATION_ID_FINGERPRINT_LENGTH)
@@ -192,10 +202,7 @@ function copyUploadRefs(refs, destination) {
 async function exportPackageBundle(store, resolved) {
   if (resolved.generation === null) return null
   const expectedHead = resolved.presentation.pptxAggregateHead
-  const bundle = await store.exportPresentationPackage(
-    resolved.presentation.id,
-    { expectedHead }
-  )
+  const bundle = await store.exportPresentationPackage(resolved.presentation.id, { expectedHead })
   if (!bundle) {
     throw Object.assign(new Error('Package export is unavailable'), {
       code: 'PACKAGE_EXPORT_UNAVAILABLE',
@@ -230,7 +237,7 @@ function addUploadRefs(target, presentation) {
   for (const filename of collectUploadRefs([presentation])) target.add(filename)
 }
 
-async function prepareBulkWorkspace(workspace) {
+async function prepareBulkWorkspace(workspace, baseUrl) {
   const prepared = await withPackageStore(async (store) => {
     const presentations = await readPresentations()
     // Bulk sync policy: skip quarantined/missing-head rows; sync healthy only.
@@ -242,6 +249,7 @@ async function prepareBulkWorkspace(workspace) {
     const uploadRefs = new Set()
 
     for (const resolved of authoritativePresentations) {
+      const semanticOutputResources = await prepareSemanticOutputResources(resolved.presentation)
       const presentation = toExternalPresentationDto(
         normalizePptxImportedPresentationForRead(resolved.presentation)
       )
@@ -249,8 +257,16 @@ async function prepareBulkWorkspace(workspace) {
       const bundle = await exportPackageBundle(store, resolved)
 
       fs.ensureDirSync(folder)
-      fs.writeFileSync(path.join(folder, 'presentation.html'), generateRevealHTML(presentation))
-      fs.writeFileSync(path.join(folder, 'presentation.json'), JSON.stringify(presentation, null, 2))
+      fs.writeFileSync(
+        path.join(folder, 'presentation.html'),
+        assertSemanticOutputArtifact(generateRevealHTML(presentation, {
+          baseUrl, semanticOutputResources,
+        }), semanticOutputResources)
+      )
+      fs.writeFileSync(
+        path.join(folder, 'presentation.json'),
+        JSON.stringify(presentation, null, 2)
+      )
       if (bundle) writePackageBundle(folder, bundle)
       addUploadRefs(uploadRefs, presentation)
     }
@@ -268,10 +284,12 @@ async function prepareBulkWorkspace(workspace) {
   return prepared.synced
 }
 
-async function prepareSingleWorkspace(workspace, presentationId) {
+async function prepareSingleWorkspace(workspace, presentationId, baseUrl) {
   const prepared = await withPackageStore(async (store) => {
     const presentations = await readPresentations()
-    const storedPresentation = presentations.find((presentation) => presentation.id === presentationId)
+    const storedPresentation = presentations.find(
+      (presentation) => presentation.id === presentationId
+    )
     if (!storedPresentation) throw presentationNotFoundError()
 
     // Single sync stays fail-closed on package-authority quarantine.
@@ -289,6 +307,7 @@ async function prepareSingleWorkspace(workspace, presentationId) {
       throw presentationNotFoundError()
     }
 
+    const semanticOutputResources = await prepareSemanticOutputResources(resolved.presentation)
     const presentation = toExternalPresentationDto(
       normalizePptxImportedPresentationForRead(resolved.presentation)
     )
@@ -297,7 +316,12 @@ async function prepareSingleWorkspace(workspace, presentationId) {
     const bundle = await exportPackageBundle(store, resolved)
 
     fs.ensureDirSync(folder)
-    fs.writeFileSync(path.join(folder, 'presentation.html'), generateRevealHTML(presentation))
+    fs.writeFileSync(
+      path.join(folder, 'presentation.html'),
+      assertSemanticOutputArtifact(generateRevealHTML(presentation, {
+        baseUrl, semanticOutputResources,
+      }), semanticOutputResources)
+    )
     fs.writeFileSync(path.join(folder, 'presentation.json'), JSON.stringify(presentation, null, 2))
     if (bundle) writePackageBundle(folder, bundle)
 
@@ -376,7 +400,10 @@ router.post('/config', async (req, res) => {
       try {
         obscuredPassword = await runRclone(['obscure', safePassword])
       } catch {
-        return { status: 500, body: { error: 'Failed to obscure password. rclone must be installed and functional.' } }
+        return {
+          status: 500,
+          body: { error: 'Failed to obscure password. rclone must be installed and functional.' },
+        }
       }
 
       await fs.ensureDir(path.dirname(RCLONE_CONFIG_FILE))
@@ -414,11 +441,13 @@ router.post('/sync', async (req, res) => {
     const result = await withSyncDestinationLock(remoteDest, async () => {
       const workspace = createSyncWorkspace()
       try {
-        const synced = await prepareBulkWorkspace(workspace)
+        const synced = await prepareBulkWorkspace(workspace, getServingBaseUrl(req))
         await runRclone(['sync', workspace, remoteDest, '--progress'])
         return { synced }
       } finally {
-        try { fs.removeSync(workspace) } catch {}
+        try {
+          fs.removeSync(workspace)
+        } catch {}
       }
     })
     res.json({ success: true, synced: result.synced, destination: remoteDest })
@@ -442,14 +471,20 @@ router.post('/sync-single', async (req, res) => {
     const remoteDest = await withSyncDestinationLock(remoteBase, async () => {
       const workspace = createSyncWorkspace()
       try {
-        const folderName = await prepareSingleWorkspace(workspace, presentationId)
+        const folderName = await prepareSingleWorkspace(
+          workspace,
+          presentationId,
+          getServingBaseUrl(req)
+        )
         const destination = remoteBase.endsWith('/')
           ? `${remoteBase}${folderName}`
           : `${remoteBase}/${folderName}`
         await runRclone(['sync', path.join(workspace, folderName), destination])
         return destination
       } finally {
-        try { fs.removeSync(workspace) } catch {}
+        try {
+          fs.removeSync(workspace)
+        } catch {}
       }
     })
     res.json({ success: true, destination: remoteDest })

@@ -26,6 +26,7 @@ async function expectAnimatedCounterValue(page, expectedText) {
   const pluginFrame = page
     .frameLocator('iframe[title="Plugin sandbox"], iframe[title="Animated Counter"]')
     .first()
+    .frameLocator('#ns-sandbox-child')
   await expect(pluginFrame.locator('#value')).toHaveText(expectedText, { timeout: 20000 })
 }
 
@@ -80,7 +81,7 @@ test.describe('Plugin runtime insert, render, and persistence', () => {
     const presentHtml = await presentRes.text()
     expect(presentHtml).toContain('/api/plugins/animated-counter/assets/sandbox.html')
     expect(presentHtml).toContain('Animated Counter')
-    expect(presentHtml).toContain("type: 'init'")
+    expect(presentHtml).toContain('/vendor/navslides-education/runtime.js')
 
     await page.goto(`/api/presentations/${testPresentation.id}/present`, { timeout: 15000 })
     await expect(page.locator('iframe[title="Animated Counter"]')).toBeVisible({ timeout: 20000 })

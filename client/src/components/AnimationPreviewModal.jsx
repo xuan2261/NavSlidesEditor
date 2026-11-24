@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Pause, Play, RotateCcw, SkipBack, SkipForward, X } from 'lucide-react'
 import { Button } from '../components/ui'
 import { useRevealPreviewFrame } from '../hooks/use-reveal-preview-frame'
-import { generateRevealHTML } from '../utils/generateHTML'
+import { generateRevealHTML, prepareSemanticOutputResources } from '../utils/generateHTML'
 import {
   advanceAnimationPreviewStep,
   buildAnimationPreviewPresentation,
@@ -17,18 +17,53 @@ const DIALOG_DESCRIPTION_ID = 'animation-preview-description'
 const FOCUSABLE_SELECTOR =
   'button:not([disabled]), iframe, [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
-export default function AnimationPreviewModal({ presentation, slideIndex, slideLabel = slideIndex + 1, onClose }) {
-  const previewPresentation = buildAnimationPreviewPresentation(presentation, slideIndex)
+export default function AnimationPreviewModal({
+  presentation,
+  slideIndex,
+  slideLabel = slideIndex + 1,
+  onClose,
+}) {
+  const previewPresentation = useMemo(
+    () => buildAnimationPreviewPresentation(presentation, slideIndex), [presentation, slideIndex]
+  )
   const previewSlide = previewPresentation.slides[0]
-  const previewSteps = getAnimationPreviewSteps(previewSlide)
+  const previewSteps = getAnimationPreviewSteps(previewSlide, previewPresentation.layoutMasters, previewPresentation.pptxSemantic)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const closeButtonRef = useRef(null)
   const dialogRef = useRef(null)
   const previousFocusRef = useRef(null)
+  const [prepared, setPrepared] = useState(null)
+  const matching = prepared?.presentation === previewPresentation
+  const htmlContent = !previewPresentation.pptxSemantic
+    ? (previewSlide ? generateRevealHTML(previewPresentation) : '') : (matching ? prepared.html : '')
+  const preparationError = matching ? prepared.error : null
+  const previewState = getAnimationPreviewState(previewSteps, currentStepIndex)
+  const { iframeRef, status, error } = useRevealPreviewFrame(htmlContent, previewState)
 
   useEffect(() => {
-    if (!isPlaying) return undefined
+    if (!previewPresentation.pptxSemantic) return undefined
+    const controller = new AbortController()
+    if (previewPresentation.slides.length) {
+      prepareSemanticOutputResources(previewPresentation, { signal: controller.signal })
+        .then((semanticOutputResources) => {
+          if (controller.signal.aborted) return
+          setPrepared({
+            presentation: previewPresentation,
+            html: generateRevealHTML(previewPresentation, { semanticOutputResources }), error: null,
+          })
+        })
+        .catch((cause) => {
+          if (!controller.signal.aborted) setPrepared({
+            presentation: previewPresentation, html: '', error: cause.message,
+          })
+        })
+    }
+    return () => controller.abort()
+  }, [previewPresentation])
+
+  useEffect(() => {
+    if (!isPlaying || status !== 'ready') return undefined
     if (currentStepIndex >= previewSteps.length - 1) return undefined
 
     const timer = window.setTimeout(() => {
@@ -40,7 +75,7 @@ export default function AnimationPreviewModal({ presentation, slideIndex, slideL
     }, AUTO_PLAY_DELAY_MS)
 
     return () => window.clearTimeout(timer)
-  }, [currentStepIndex, isPlaying, previewSteps])
+  }, [currentStepIndex, isPlaying, previewSteps, status])
 
   useEffect(() => {
     if (typeof document === 'undefined' || typeof window === 'undefined') return undefined
@@ -98,10 +133,6 @@ export default function AnimationPreviewModal({ presentation, slideIndex, slideL
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  const htmlContent = previewSlide ? generateRevealHTML(previewPresentation) : ''
-  const previewState = getAnimationPreviewState(previewSteps, currentStepIndex)
-  const { iframeRef } = useRevealPreviewFrame(htmlContent, previewState)
-
   if (!previewSlide) return null
 
   const currentFragmentIndex = previewSteps[currentStepIndex] ?? 0
@@ -129,7 +160,9 @@ export default function AnimationPreviewModal({ presentation, slideIndex, slideL
             </h2>
             <p id={DIALOG_DESCRIPTION_ID} className="text-xs text-text-muted">
               Slide {slideLabel} · Step {currentStepIndex} / {totalFragmentSteps}
-              {currentFragmentIndex > 0 ? ` · Fragment ${currentFragmentIndex}` : ' · Initial state'}
+              {currentFragmentIndex > 0
+                ? ` · Fragment ${currentFragmentIndex}`
+                : ' · Initial state'}
             </p>
           </div>
           <Button
@@ -142,6 +175,7 @@ export default function AnimationPreviewModal({ presentation, slideIndex, slideL
             <X size={16} />
           </Button>
         </div>
+        {(preparationError || error) && <p role="alert">{preparationError || error}</p>}
 
         <div className="min-h-0 overflow-auto bg-black/30 p-3 sm:p-4">
           <div className="h-[60vh] min-h-[260px] max-h-[70vh] w-full overflow-hidden rounded-lg border border-border bg-black sm:h-[70vh]">

@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { LiveSocketContext } from '../../contexts/live-socket-context-provider.jsx'
 import { useEditorStore } from '../../stores/editor-store'
 import { useUIStore } from '../../stores/ui-store'
+import { geometryGroupFillFixture } from '../../../../tests/pptx-semantic/geometry-group-fill-fixture.js'
 
 function makeSeed() {
   return {
@@ -18,8 +19,26 @@ function makeSeed() {
         id: 's1',
         background: '#101010',
         elements: [
-          { id: 'el-a', type: 'text', x: 80, y: 100, width: 600, height: 180, zIndex: 1, content: '<p>Alpha</p>' },
-          { id: 'el-b', type: 'shape', shape: 'rect', x: 300, y: 320, width: 200, height: 150, zIndex: 2 },
+          {
+            id: 'el-a',
+            type: 'text',
+            x: 80,
+            y: 100,
+            width: 600,
+            height: 180,
+            zIndex: 1,
+            content: '<p>Alpha</p>',
+          },
+          {
+            id: 'el-b',
+            type: 'shape',
+            shape: 'rect',
+            x: 300,
+            y: 320,
+            width: 200,
+            height: 150,
+            zIndex: 2,
+          },
         ],
       },
       { id: 's2', background: '#202020', elements: [] },
@@ -87,18 +106,47 @@ afterEach(() => {
 })
 
 describe('EditorPage element-ops characterization', () => {
+  it('duplicates a source group through the real command layer and saves canonical instances with linked leaves', async () => {
+    h.seed = {
+      ...geometryGroupFillFixture(),
+      id: 'char-deck',
+      title: 'Semantic group clipboard',
+      theme: 'black',
+      width: 960,
+      height: 540,
+    }
+    await act(async () => {
+      renderPage()
+    })
+    expect(screen.getByTestId('slide-element-g1')).toBeTruthy()
+    await selectElements(['g1'])
+    await pressKey({ key: 'd', code: 'KeyD', ctrlKey: true })
+    const nextSave = new Promise((resolve) => {
+      h.updatePresentation.mockImplementationOnce((_id, body) => {
+        resolve(body)
+        return Promise.resolve(body)
+      })
+    })
+    await pressKey({ key: 's', code: 'KeyS', ctrlKey: true })
+    const saved = await nextSave
+    expect(Object.keys(saved.pptxSemantic.instances)).toHaveLength(6)
+    const selected = useEditorStore.getState().selectedElementIds[0]
+    expect(saved.pptxSemantic.instances[selected].definitionId).toBe('group')
+    expect(saved.slides[0].elements).toHaveLength(2)
+    expect(saved.slides[0].elements.some((element) => element.pptxInstanceId === selected)).toBe(
+      false
+    )
+    expect(saved.pptxSemantic.definitions).toEqual(h.seed.pptxSemantic.definitions)
+    expect(saved.pptxSemantic.styles).toEqual(h.seed.pptxSemantic.styles)
+  })
   it('resolves editable text elements from the active vertical child slide', () => {
     const activeChild = {
       id: 'child-1',
-      elements: [
-        { id: 'child-text', type: 'text', content: '<p>Child</p>' },
-      ],
+      elements: [{ id: 'child-text', type: 'text', content: '<p>Child</p>' }],
     }
     const parent = {
       id: 'parent-1',
-      elements: [
-        { id: 'parent-text', type: 'text', content: '<p>Parent</p>' },
-      ],
+      elements: [{ id: 'parent-text', type: 'text', content: '<p>Parent</p>' }],
     }
 
     expect(getElementForActiveSlideEdit(activeChild, parent, 'child-text')).toEqual(
@@ -139,13 +187,16 @@ describe('EditorPage element-ops characterization', () => {
     await selectElements(['el-a'])
     await pressKey({ key: 'Delete' })
 
-    await waitFor(() => {
-      const snap = lastSaved()
-      expect(snap).toBeTruthy()
-      const ids = snap.slides[0].elements.map((e) => e.id)
-      expect(ids).not.toContain('el-a')
-      expect(ids).toContain('el-b')
-    }, { timeout: 2500 })
+    await waitFor(
+      () => {
+        const snap = lastSaved()
+        expect(snap).toBeTruthy()
+        const ids = snap.slides[0].elements.map((e) => e.id)
+        expect(ids).not.toContain('el-a')
+        expect(ids).toContain('el-b')
+      },
+      { timeout: 2500 }
+    )
   })
 
   it('does NOT delete a locked element', async () => {
@@ -193,22 +244,37 @@ describe('EditorPage element-ops characterization', () => {
     await selectElements(['el-a', 'el-b'])
     await pressKey({ key: 'd', ctrlKey: true })
 
-    await waitFor(() => {
-      const elements = lastSaved()?.slides?.[0]?.elements
-      expect(elements).toHaveLength(3)
-      expect(elements.filter((element) => element.locked)).toHaveLength(1)
-    }, { timeout: 2500 })
+    await waitFor(
+      () => {
+        const elements = lastSaved()?.slides?.[0]?.elements
+        expect(elements).toHaveLength(3)
+        expect(elements.filter((element) => element.locked)).toHaveLength(1)
+      },
+      { timeout: 2500 }
+    )
   })
 
   it('routes duplicate, copy, paste, and cut through the active master authoring surface', async () => {
-    h.seed.layoutMasters = [{
-      id: 'layout-1',
-      name: 'Test Master',
-      fixedElements: [
-        { id: 'master-a', type: 'shape', shape: 'rect', x: 100, y: 100, width: 200, height: 120, zIndex: 1, locked: true },
-      ],
-      placeholders: [],
-    }]
+    h.seed.layoutMasters = [
+      {
+        id: 'layout-1',
+        name: 'Test Master',
+        fixedElements: [
+          {
+            id: 'master-a',
+            type: 'shape',
+            shape: 'rect',
+            x: 100,
+            y: 100,
+            width: 200,
+            height: 120,
+            zIndex: 1,
+            locked: true,
+          },
+        ],
+        placeholders: [],
+      },
+    ]
     renderPage()
     await screen.findByDisplayValue('Char Deck')
 
@@ -231,11 +297,14 @@ describe('EditorPage element-ops characterization', () => {
     })
 
     fireEvent.mouseDown(await screen.findByRole('button', { name: 'Cut' }))
-    await waitFor(() => {
-      const saved = lastSaved()
-      expect(saved.layoutMasters[0].fixedElements).toHaveLength(2)
-      expect(saved.slides[0].elements).toHaveLength(2)
-    }, { timeout: 2500 })
+    await waitFor(
+      () => {
+        const saved = lastSaved()
+        expect(saved.layoutMasters[0].fixedElements).toHaveLength(2)
+        expect(saved.slides[0].elements).toHaveLength(2)
+      },
+      { timeout: 2500 }
+    )
   }, 10000)
 
   it('uses a 1px default document-level keyboard nudge', async () => {
@@ -245,11 +314,14 @@ describe('EditorPage element-ops characterization', () => {
     await selectElements(['el-a'])
     await pressKey({ key: 'ArrowRight' })
 
-    await waitFor(() => {
-      expect(lastSaved()?.slides?.[0]?.elements?.find((element) => element.id === 'el-a')?.x).toBe(
-        81
-      )
-    }, { timeout: 2500 })
+    await waitFor(
+      () => {
+        expect(
+          lastSaved()?.slides?.[0]?.elements?.find((element) => element.id === 'el-a')?.x
+        ).toBe(81)
+      },
+      { timeout: 2500 }
+    )
   })
 
   it('steps an unlocked element across a locked neighbor without duplicate z-indexes', async () => {
@@ -260,14 +332,17 @@ describe('EditorPage element-ops characterization', () => {
     await selectElements(['el-a'])
     await pressKey({ key: ']', ctrlKey: true })
 
-    await waitFor(() => {
-      const elements = lastSaved()?.slides?.[0]?.elements
-      const zIndexes = elements?.map((element) => element.zIndex)
-      expect(new Set(zIndexes).size).toBe(elements?.length)
-      expect(elements?.find((element) => element.id === 'el-a')?.zIndex).toBeGreaterThan(
-        elements?.find((element) => element.id === 'el-b')?.zIndex
-      )
-    }, { timeout: 2500 })
+    await waitFor(
+      () => {
+        const elements = lastSaved()?.slides?.[0]?.elements
+        const zIndexes = elements?.map((element) => element.zIndex)
+        expect(new Set(zIndexes).size).toBe(elements?.length)
+        expect(elements?.find((element) => element.id === 'el-a')?.zIndex).toBeGreaterThan(
+          elements?.find((element) => element.id === 'el-b')?.zIndex
+        )
+      },
+      { timeout: 2500 }
+    )
   })
 
   it('does NOT toggle element visibility from the selection pane when the slide is locked', async () => {
@@ -313,13 +388,16 @@ describe('EditorPage element-ops characterization', () => {
     await selectElements(['el-a', 'el-b'])
     await pressKey({ key: 'g', ctrlKey: true })
 
-    await waitFor(() => {
-      const snap = lastSaved()
-      expect(snap).toBeTruthy()
-      const [a, b] = snap.slides[0].elements
-      expect(a.groupId).toBeTruthy()
-      expect(a.groupId).toBe(b.groupId)
-    }, { timeout: 2500 })
+    await waitFor(
+      () => {
+        const snap = lastSaved()
+        expect(snap).toBeTruthy()
+        const [a, b] = snap.slides[0].elements
+        expect(a.groupId).toBeTruthy()
+        expect(a.groupId).toBe(b.groupId)
+      },
+      { timeout: 2500 }
+    )
   })
 
   it('[cap:shortcut.ungroup] ungroups grouped elements with Ctrl+Shift+G', async () => {
@@ -331,13 +409,16 @@ describe('EditorPage element-ops characterization', () => {
     await selectElements(['el-a', 'el-b'])
     await pressKey({ key: 'g', ctrlKey: true, shiftKey: true })
 
-    await waitFor(() => {
-      const snap = lastSaved()
-      expect(snap).toBeTruthy()
-      const [a, b] = snap.slides[0].elements
-      expect(a.groupId).toBeUndefined()
-      expect(b.groupId).toBeUndefined()
-    }, { timeout: 2500 })
+    await waitFor(
+      () => {
+        const snap = lastSaved()
+        expect(snap).toBeTruthy()
+        const [a, b] = snap.slides[0].elements
+        expect(a.groupId).toBeUndefined()
+        expect(b.groupId).toBeUndefined()
+      },
+      { timeout: 2500 }
+    )
   })
 
   it('[cap:canvas.zorder tier:deep] [cap:shortcut.bringForward] bring-forward increments the selected element zIndex (Ctrl+])', async () => {
@@ -347,12 +428,15 @@ describe('EditorPage element-ops characterization', () => {
     await selectElements(['el-a']) // zIndex 1
     await pressKey({ key: ']', ctrlKey: true })
 
-    await waitFor(() => {
-      const snap = lastSaved()
-      expect(snap).toBeTruthy()
-      const a = snap.slides[0].elements.find((e) => e.id === 'el-a')
-      expect(a.zIndex).toBe(2)
-    }, { timeout: 2500 })
+    await waitFor(
+      () => {
+        const snap = lastSaved()
+        expect(snap).toBeTruthy()
+        const a = snap.slides[0].elements.find((e) => e.id === 'el-a')
+        expect(a.zIndex).toBe(2)
+      },
+      { timeout: 2500 }
+    )
   })
 
   it('[cap:canvas.zorder tier:deep] [cap:shortcut.sendBackward] send-backward decrements the selected element zIndex (Ctrl+[)', async () => {
@@ -362,12 +446,15 @@ describe('EditorPage element-ops characterization', () => {
     await selectElements(['el-b']) // zIndex 2
     await pressKey({ key: '[', ctrlKey: true })
 
-    await waitFor(() => {
-      const snap = lastSaved()
-      expect(snap).toBeTruthy()
-      const b = snap.slides[0].elements.find((e) => e.id === 'el-b')
-      expect(b.zIndex).toBe(1)
-    }, { timeout: 2500 })
+    await waitFor(
+      () => {
+        const snap = lastSaved()
+        expect(snap).toBeTruthy()
+        const b = snap.slides[0].elements.find((e) => e.id === 'el-b')
+        expect(b.zIndex).toBe(1)
+      },
+      { timeout: 2500 }
+    )
   })
 
   it('Ctrl+D leaves the copy clipboard intact so the next paste still pastes the copied element', async () => {
@@ -399,15 +486,18 @@ describe('EditorPage element-ops characterization', () => {
       fireEvent.click(addTextBtn)
     })
 
-    await waitFor(() => {
-      const snap = lastSaved()
-      expect(snap).toBeTruthy()
-      const els = snap.slides[0].elements
-      expect(els).toHaveLength(3)
-      const added = els[els.length - 1]
-      expect(added.type).toBe('text')
-      expect(added.width).toBe(600)
-      expect(added.height).toBe(180)
-    }, { timeout: 2500 })
+    await waitFor(
+      () => {
+        const snap = lastSaved()
+        expect(snap).toBeTruthy()
+        const els = snap.slides[0].elements
+        expect(els).toHaveLength(3)
+        const added = els[els.length - 1]
+        expect(added.type).toBe('text')
+        expect(added.width).toBe(600)
+        expect(added.height).toBe(180)
+      },
+      { timeout: 2500 }
+    )
   })
 })

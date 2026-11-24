@@ -264,5 +264,5 @@ describe('editor undo history cap', () => {
       expect(window.__NAVSLIDES_E2E_HISTORY_LENGTH).toBeLessThanOrEqual(50)
     }
     expect(window.__NAVSLIDES_E2E_HISTORY_LENGTH).toBe(50)
-  })
+  }, 20_000)
 })

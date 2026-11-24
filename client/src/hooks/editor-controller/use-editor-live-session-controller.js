@@ -6,6 +6,7 @@ export function useEditorLiveSessionController({
   presentationId,
   setShowLiveModal,
   activeGameElement,
+  effectiveSlideId,
   currentGameType,
 }) {
   const presentationIdRef = useRef(presentationId)
@@ -60,10 +61,9 @@ export function useEditorLiveSessionController({
   const handleStartLive = useCallback(async () => {
     const requestPresentationId = presentationIdRef.current
     const requestRouteGeneration = routeGenerationRef.current
-    const isCurrentRequest = () => (
+    const isCurrentRequest = () =>
       requestPresentationId === presentationIdRef.current &&
       requestRouteGeneration === routeGenerationRef.current
-    )
 
     try {
       const response = await fetch('/api/live/room', { method: 'POST' })
@@ -106,8 +106,14 @@ export function useEditorLiveSessionController({
   )
   const emitGameShortcutAction = useCallback(
     (action, payload = {}) => {
-      if (!activeGameElement || typeof window === 'undefined') return
-      const detail = { action, elementId: activeGameElement.id, gameType: currentGameType, ...payload }
+      if (!activeGameElement || !effectiveSlideId || typeof window === 'undefined') return
+      const detail = {
+        ...payload,
+        action,
+        elementId: activeGameElement.id,
+        gameType: currentGameType,
+        effectiveSlideId,
+      }
       window.dispatchEvent(new CustomEvent('navslides:game-shortcut', { detail }))
       getPresenterPopupBridge()?.post({
         type: 'navslides:game-shortcut',
@@ -115,7 +121,7 @@ export function useEditorLiveSessionController({
         detail,
       })
     },
-    [activeGameElement, currentGameType, getPresenterPopupBridge, presentationId]
+    [activeGameElement, effectiveSlideId, currentGameType, getPresenterPopupBridge, presentationId]
   )
 
   return {

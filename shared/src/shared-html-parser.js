@@ -44,7 +44,7 @@ function normalizeWhitespace(text, preserve = false) {
 }
 
 function parseStyleAttribute(styleText) {
-  return String(styleText || '')
+  return decodeHtmlEntities(styleText)
     .split(';')
     .map((part) => part.trim())
     .filter(Boolean)
@@ -67,7 +67,7 @@ function parseTag(rawTag) {
 
   while ((match = attrRegex.exec(attrText)) !== null) {
     const [, key, quoted, single, bare] = match
-    attrs[key.toLowerCase()] = quoted ?? single ?? bare ?? ''
+    attrs[key.toLowerCase()] = decodeHtmlEntities(quoted ?? single ?? bare ?? '')
   }
 
   return { tag: tagName.toLowerCase(), attrs, selfClosing }
@@ -158,7 +158,10 @@ function mergeInlineStyle(base, node) {
   if (tag === 'sup' || String(style['vertical-align'] || '').includes('super')) merged.superscript = true
   if (tag === 'code') merged.fontFace = 'Courier New'
   if (style.color) merged.color = style.color
-  if (style['font-family']) merged.fontFace = style['font-family'].split(',')[0].replace(/["']/g, '')
+  if (style['font-family']) {
+    const face = style['font-family'].split(',')[0].replace(/["']/g, '').trim()
+    if (face) merged.fontFace = face
+  }
 
   if (style['font-size']) {
     const size = parseCssLengthToPx(style['font-size'])

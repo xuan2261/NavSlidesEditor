@@ -1,3 +1,4 @@
+import { semanticInstance, semanticDefinition, semanticInstances } from 'revealjs-shared/src/pptx-semantic-records.js'
 // Selection resolution for clicks/pointer-downs on canvas elements.
 //
 // Grabbing a grouped element selects the WHOLE group so a drag moves the group
@@ -53,6 +54,40 @@ export function hasBlockedGroupMutation(slide, ids) {
     )
     if (!hasSelectedVisibleMember) continue
     if (members.some((member) => member.locked || member.hidden)) return true
+  }
+  return false
+}
+
+export function semanticClipboardMutationBlocked(document, slide, ids) {
+  if (!document || !slide) return false
+  const roots = new Set(
+    ids
+      .map((id) => slide.elements?.find((element) => element.id === id)?.pptxInstanceId || id)
+      .filter((id) => semanticInstance(document, id)?.slideId === slide.id)
+  )
+  const protectedInstance = (instance) => {
+    const definition = semanticDefinition(document, instance.definitionId)
+    return (
+      instance.overrides.locked ||
+      (instance.overrides.hidden ?? instance.hidden ?? definition?.content?.hidden ?? false)
+    )
+  }
+  for (const id of roots) {
+    const root = semanticInstance(document, id)
+    if (!root || root.lineage?.tombstone || root.lineage?.paintOnly) return true
+    let current = root
+    while (current) {
+      if (current.lineage?.tombstone || protectedInstance(current)) return true
+      current = semanticInstance(document, current.parentInstanceId)
+    }
+  }
+  for (const [, instance] of semanticInstances(document)) {
+    if (instance.slideId !== slide.id || instance.lineage?.tombstone) continue
+    let parent = instance.parentInstanceId
+    while (parent !== null && parent !== undefined) {
+      if (roots.has(parent) && protectedInstance(instance)) return true
+      parent = semanticInstance(document, parent)?.parentInstanceId
+    }
   }
   return false
 }

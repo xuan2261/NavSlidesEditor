@@ -50,6 +50,8 @@ export default function EditorInspector({
         <PropertiesPanel
           slide={c.masterEdit ? { id: `master:${c.masterEdit.id}`, elements: c.masterEdit.fixedElements } : c.activeSlide}
           focusRequest={c.inspectorFocus}
+          editor={c.editor}
+          editingElementId={c.editingElementId}
           isMaster={Boolean(c.masterEdit)}
           selectedElement={c.selectedElement}
           onUpdateSlide={c.updateCurrentSlide}

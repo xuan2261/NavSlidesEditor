@@ -29,7 +29,17 @@ const APPROXIMATED_TYPES = new Set([
   'line-endpoint-normalized',
   'group-transform-normalized',
   'diagram-truncated',
+  'emf-converted-to-png',
 ])
+
+export const WARNING_CATEGORY_EXPLANATIONS = Object.freeze({
+  'emf-converted-to-png':
+    'Vector original retained as raster PNG preview; whole-picture edits supported, source vector primitives are not editable.',
+})
+
+export function getWarningCategoryExplanation(type) {
+  return WARNING_CATEGORY_EXPLANATIONS[type] || ''
+}
 
 function formatStatSummary(stats) {
   if (!stats || typeof stats !== 'object') return ''
@@ -45,6 +55,15 @@ function formatByType(byType) {
     .map(([type, count]) => `${type} (${count})`)
     .join(', ')
 }
+function formatCategoryNotes(byType) {
+  if (!byType || typeof byType !== 'object') return ''
+  const entries = byType instanceof Map ? [...byType.keys()] : Object.keys(byType)
+  const notes = entries
+    .map((type) => WARNING_CATEGORY_EXPLANATIONS[type])
+    .filter(Boolean)
+  return notes.length ? `Conversion notes: ${notes.join(' ')}` : ''
+}
+
 
 function summarizeFromReportShape(reportLike) {
   const summary = reportLike?.summary && typeof reportLike.summary === 'object'
@@ -68,13 +87,14 @@ function summarizeFromReportShape(reportLike) {
   const warningLabel = Number.isFinite(warningCount) ? `warnings ${warningCount}` : ''
   const omittedLabel = Number.isFinite(omittedCount) ? `omitted ${omittedCount}` : ''
   const capBits = [warningLabel, omittedLabel].filter(Boolean).join(', ')
+  const categoryNotes = formatCategoryNotes(byType)
 
   return [
     statSummary ? `Import stats: ${statSummary}.` : '',
     capBits ? `Import report: ${capBits}.` : '',
     typeSummary ? `Warning types: ${typeSummary}.` : '',
+    categoryNotes,
   ]
-    .filter(Boolean)
     .join(' ')
 }
 
@@ -109,11 +129,13 @@ export function summarizePptxImportWarnings(result) {
   const typeSummary = [...byType.entries()]
     .map(([type, count]) => `${type} (${count})`)
     .join(', ')
+  const categoryNotes = formatCategoryNotes(byType)
 
   return [
     statSummary ? `Import stats: ${statSummary}.` : '',
     `Warning groups: approximated ${groups.approximated}, placeholder ${groups.placeholder}, failed ${groups.failed}, other ${groups.other}.`,
     typeSummary ? `Warning types: ${typeSummary}.` : '',
+    categoryNotes,
   ]
     .filter(Boolean)
     .join(' ')

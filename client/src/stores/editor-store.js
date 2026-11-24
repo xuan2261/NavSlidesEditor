@@ -4,17 +4,31 @@ export const useEditorStore = create((set, get) => ({
   // ─── Selection & Editing ────────────────────────────────────────────────────
   selectedElementIds: [],
   editingElementId: null,
+  geometryPointEditingElementId: null,
+  setGeometryPointEditingElementId: (id) => set({ geometryPointEditingElementId: id }),
 
-  setSelectedElementIds: (ids) =>
-    set({ selectedElementIds: typeof ids === 'function' ? ids(get().selectedElementIds) : ids }),
-  selectElement: (id) => set({ selectedElementIds: [id] }),
+  setSelectedElementIds: (ids) => {
+    const next = typeof ids === 'function' ? ids(get().selectedElementIds) : ids
+    set({
+      selectedElementIds: next,
+      geometryPointEditingElementId:
+        next.length === 1 && next[0] === get().geometryPointEditingElementId ? next[0] : null,
+    })
+  },
+  selectElement: (id) =>
+    set({
+      selectedElementIds: [id],
+      geometryPointEditingElementId: get().geometryPointEditingElementId === id ? id : null,
+    }),
   addToSelection: (id) =>
     set((s) => ({
+      geometryPointEditingElementId: null,
       selectedElementIds: s.selectedElementIds.includes(id)
         ? s.selectedElementIds
         : [...s.selectedElementIds, id],
     })),
-  clearSelection: () => set({ selectedElementIds: [], editingElementId: null }),
+  clearSelection: () =>
+    set({ selectedElementIds: [], editingElementId: null, geometryPointEditingElementId: null }),
   setEditingElementId: (id) => set({ editingElementId: id }),
   startEditing: (id) => set({ editingElementId: id }),
   stopEditing: () => set({ editingElementId: null }),
@@ -23,18 +37,6 @@ export const useEditorStore = create((set, get) => ({
   clipboard: null,
   setClipboard: (data) =>
     set({ clipboard: typeof data === 'function' ? data(get().clipboard) : data }),
-  copySelected: (elements, selectedIds) => {
-    const clones = elements
-      .filter((el) => selectedIds.includes(el.id))
-      .map((el) => ({ ...el, id: undefined }))
-    set({ clipboard: clones })
-  },
-  cutSelected: (elements, selectedIds) => {
-    const clones = elements
-      .filter((el) => selectedIds.includes(el.id))
-      .map((el) => ({ ...el, id: undefined }))
-    set({ clipboard: clones })
-  },
 
   // Cascade counter so repeated pastes of one clipboard fan out instead of
   // overlapping. Bumped after each paste, zeroed when a fresh copy/cut starts.
@@ -74,5 +76,4 @@ export const useEditorStore = create((set, get) => ({
   setShowFindReplace: (v) =>
     set({ showFindReplace: typeof v === 'function' ? v(get().showFindReplace) : v }),
   setViewMode: (v) => set({ viewMode: typeof v === 'function' ? v(get().viewMode) : v }),
-
 }))

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import useCanvasRubberBandSelection from './use-canvas-rubber-band-drag-selection'
+import { useEditorSelectionController } from '../../hooks/editor-controller/use-editor-selection-controller'
 
 // Unit coverage for the marquee selection invariant that the Playwright spec
 // cannot drive reliably (synthetic pointer drag is flaky in headless Chromium,
@@ -65,13 +66,23 @@ describe('rubber-band marquee selection', () => {
     expect(hits).toEqual([])
   })
 
-  it('applyRubberBandSelection clears then adds each hit (additive after reset)', () => {
-    const api = setup([visA, visB])
-    api.applyRubberBandSelection(['vis-a', 'vis-b'])
-    // first call clears (null,false), then each id added (id,true)
-    expect(api.onToggleSelectElement.mock.calls[0]).toEqual([null, false])
-    expect(api.onToggleSelectElement.mock.calls).toContainEqual(['vis-a', true])
-    expect(api.onToggleSelectElement.mock.calls).toContainEqual(['vis-b', true])
+  it('applies each hit group once through the real additive selection controller', () => {
+    const slide = { elements: [
+      { ...visA, groupId: 'g' }, { ...visB, groupId: 'g' },
+      { id: 'free', x: 500, y: 100, width: 100, height: 80 },
+    ] }
+    let ids = ['outside']
+    const controller = {
+      activeSlideRef: { current: slide },
+      setSelectedElementIds: (update) => { ids = typeof update === 'function' ? update(ids) : update },
+    }
+    const { result } = renderHook(() => {
+      const selection = useEditorSelectionController(controller)
+      return useCanvasRubberBandSelection({ slide, onToggleSelectElement: selection.toggleElementSelection })
+    })
+    const hits = dragOver(result.current, 20, 30, 640, 380)
+    result.current.applyRubberBandSelection(hits)
+    expect(ids).toEqual(['vis-a', 'vis-b', 'free'])
   })
 
   it('applyRubberBandSelection is a no-op when nothing was hit', () => {

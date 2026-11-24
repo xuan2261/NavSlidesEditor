@@ -9,7 +9,7 @@ Nhúng nội dung tương tác tùy chỉnh trực tiếp lên slide của bạn
 3. Viết bất kỳ HTML hợp lệ nào — nội dung hiển thị bên trong một iframe được cách ly (sandbox).
 4. Nhấn **Apply** để chèn. Phần tử xem trước trực tiếp trên slide.
 
-HTML được nhúng hoàn toàn độc lập. Nó hoạt động trong chế độ trình chiếu, các tệp đã xuất, và liên kết chia sẻ. Các script bên ngoài (D3, Three.js, v.v.) có thể được tải qua CDN.
+HTML nhúng có thể dùng trong chế độ trình chiếu, tệp xuất và liên kết chia sẻ, nhưng script bên ngoài (D3, Three.js, v.v.) và tài nguyên iframe vẫn phụ thuộc vào mạng riêng của chúng. Xuất ngoại tuyến không tự nhúng mọi tài nguyên bên ngoài tùy ý; xem [giới hạn ngoại tuyến](/vi/features/export).
 
 ### Kết quả mẫu
 

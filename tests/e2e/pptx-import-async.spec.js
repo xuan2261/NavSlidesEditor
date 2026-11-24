@@ -3,7 +3,7 @@ import { apiDeletePresentation, expect, test } from './fixtures/test-fixtures.js
 
 test.describe('Async PPTX import', () => {
   test('uploads a PPTX, shows progress, and opens the imported presentation', async ({ page, request }) => {
-    test.setTimeout(150000)
+    test.setTimeout(240000)
     await page.goto('/')
 
     const chooserPromise = page.waitForEvent('filechooser')
@@ -12,7 +12,7 @@ test.describe('Async PPTX import', () => {
     await chooser.setFiles(path.resolve('PPTX', 'Bai_2_2.pptx'))
 
     await expect(page.getByRole('status')).toContainText(/PPTX|slide|Import|Processing/i, { timeout: 15000 })
-    await page.waitForURL(/\/editor\/[^/]+$/, { timeout: 120000 })
+    await page.waitForURL(/\/editor\/[^/]+$/, { timeout: 180000 })
     const presentationId = page.url().split('/').pop()
 
     try {

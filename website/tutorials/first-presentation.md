@@ -81,10 +81,10 @@ To change the font size:
 
 1. Click **File → Export → HTML**.
 2. Save the `.html` file to your computer.
-3. Open the file in any browser — your presentation is self-contained and shareable.
+3. Open the file in a browser with its referenced local runtime and media assets reachable.
 
 ::: tip
-If you plan to present without an internet connection (e.g., at a conference), choose **File → Export → Offline HTML** instead to inline all assets.
+For offline presenting, choose **File → Export → Offline HTML** to embed required local runtime assets. Arbitrary external content is not guaranteed offline; see [Export & Sharing](/features/export#offline-html) and test on the presentation machine.
 :::
 
 Congratulations — you've built and exported your first presentation!

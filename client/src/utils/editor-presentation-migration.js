@@ -1,14 +1,14 @@
-import { sanitizeRichTextHtml } from './content-safety'
-import { resolveGameConfig } from '../constants/game-element-types-constants'
+import { sanitizeRichTextHtml } from 'revealjs-shared/src/content-safety.js'
+import { normalizeSemanticPresentation } from 'revealjs-shared/src/pptx-semantic-presentation.js'
 import { migrateVideoSrc } from './migrate-video-src'
 import { normalizePresentationNotes } from './slide-notes'
 import {
   normalizeElementAction,
   normalizeImageAccessibility,
-  normalizeLayoutMasters,
-  normalizeLayoutOverrides,
   normalizeMediaAccessibility,
   normalizeSlideConnectorConnections,
+  normalizeGameElement,
+  normalizePresentationEducation,
 } from 'revealjs-shared'
 
 const legacyTextElement = (content) => ({
@@ -22,67 +22,79 @@ const legacyTextElement = (content) => ({
   content,
 })
 
-function migrateElement(element) {
+function migrateElement(element, gameOptions, canonical = true) {
   const withId =
     element && (typeof element.id !== 'string' || !element.id.trim())
       ? { ...element, id: crypto.randomUUID() }
       : element
   const migrated = migrateVideoSrc(withId)
   const withGameConfig =
-    migrated?.type !== 'game' || typeof migrated.gameType !== 'string'
+    !canonical || migrated?.type !== 'game' || typeof migrated.gameType !== 'string'
       ? migrated
-      : {
-          ...migrated,
-          [migrated.gameType]: resolveGameConfig(migrated, migrated.gameType),
-        }
-  const { action } = normalizeElementAction(withGameConfig?.action)
+      : normalizeGameElement(migrated, gameOptions)
+  const { action } = canonical ? normalizeElementAction(withGameConfig?.action) : {}
   const withAction = action ? { ...withGameConfig, action } : withGameConfig
   return normalizeMediaAccessibility(normalizeImageAccessibility(withAction))
 }
 
-function migrateElements(elements) {
-  return normalizeSlideConnectorConnections(elements.map(migrateElement))
+function migrateElements(elements, gameOptions, canonical) {
+  return normalizeSlideConnectorConnections(
+    elements.map((element) => migrateElement(element, gameOptions, canonical))
+  )
 }
 
-function migrateLayoutMetadata(slide) {
-  const layoutOverrides = normalizeLayoutOverrides(slide.layoutOverrides)
-  const children = Array.isArray(slide.children)
-    ? slide.children.map(migrateLayoutMetadata)
-    : slide.children
-  if (!layoutOverrides && children === slide.children) return slide
-  return {
-    ...slide,
-    ...(children !== slide.children ? { children } : {}),
-    ...(layoutOverrides ? { layoutOverrides } : {}),
-  }
-}
-
-export function migrateChild(child) {
+function translateChild(child, gameOptions, canonical) {
   const elements = Array.isArray(child.elements)
-    ? migrateElements(child.elements)
+    ? migrateElements(child.elements, gameOptions, canonical)
     : child.html
-      ? migrateElements([legacyTextElement(sanitizeRichTextHtml(child.html))])
+      ? migrateElements(
+          [legacyTextElement(sanitizeRichTextHtml(child.html))],
+          gameOptions,
+          canonical
+        )
       : []
   return { ...child, elements }
 }
 
-export function migrateSlide(slide) {
+function translateSlide(slide, gameOptions, canonical) {
   const withChildren =
-    slide.children?.length > 0 ? { ...slide, children: slide.children.map(migrateChild) } : slide
+    slide.children?.length > 0
+      ? {
+          ...slide,
+          children: slide.children.map((child) => translateChild(child, gameOptions, canonical)),
+        }
+      : slide
 
   const elements = Array.isArray(withChildren.elements)
-    ? migrateElements(withChildren.elements)
+    ? migrateElements(withChildren.elements, gameOptions, canonical)
     : withChildren.html
-      ? migrateElements([legacyTextElement(withChildren.html)])
+      ? migrateElements([legacyTextElement(withChildren.html)], gameOptions, canonical)
       : []
   return { ...withChildren, elements }
 }
 
-export function migratePresentation(presentation) {
-  const layoutMasters = normalizeLayoutMasters(presentation.layoutMasters)
-  return normalizePresentationNotes({
-    ...presentation,
-    slides: (presentation.slides || []).map(migrateSlide).map(migrateLayoutMetadata),
-    ...(layoutMasters ? { layoutMasters } : {}),
-  })
+// Standalone callers retain game/action normalization and their validation options.
+export function migrateChild(child, gameOptions) {
+  return translateChild(child, gameOptions, true)
+}
+
+export function migrateSlide(slide, gameOptions) {
+  return translateSlide(slide, gameOptions, true)
+}
+
+export function migratePresentation(presentation, { draft = false } = {}) {
+  presentation = normalizeSemanticPresentation(presentation)
+  // Only local drafts bypass admission validation; canonical migration still throws.
+  const gameOptions = { validate: !draft }
+  return normalizePresentationNotes(
+    normalizePresentationEducation(
+      {
+        ...presentation,
+        slides: (presentation.slides || []).map((slide) =>
+          translateSlide(slide, gameOptions, false)
+        ),
+      },
+      gameOptions
+    )
+  )
 }

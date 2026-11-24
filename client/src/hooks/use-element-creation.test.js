@@ -86,66 +86,6 @@ describe('useElementCreation', () => {
     expect(callout.calloutNumber).toBe(2)
   })
 
-  it('addHtmlElement appends an html element and opens the html editor', () => {
-    const setHtmlEditorState = vi.fn()
-    const { deps } = makeDeps({ setHtmlEditorState })
-    const { result } = renderHook(() => useElementCreation(deps))
-    act(() => {
-      result.current.addHtmlElement()
-    })
-    expect(setHtmlEditorState).toHaveBeenCalledWith(
-      expect.objectContaining({ elementId: expect.any(String), content: expect.any(String) })
-    )
-  })
-
-  it('addMermaidElement appends a canonical html element with mermaid metadata', () => {
-    const setHtmlEditorState = vi.fn()
-    const { getPresentation, deps } = makeDeps({ setHtmlEditorState })
-    const { result } = renderHook(() => useElementCreation(deps))
-    act(() => {
-      result.current.addMermaidElement()
-    })
-    const slide = getPresentation().slides[0]
-    const added = slide.elements[slide.elements.length - 1]
-
-    expect(added.type).toBe('html')
-    expect(added.embedKind).toBe('mermaid')
-    expect(added.mermaidSource).toContain('flowchart TD')
-    expect(added.content).toContain('/vendor/mermaid/mermaid.min.js')
-    expect(setHtmlEditorState).toHaveBeenCalledWith(
-      expect.objectContaining({
-        elementId: added.id,
-        embedKind: 'mermaid',
-        mermaidSource: expect.stringContaining('flowchart TD'),
-      })
-    )
-  })
-
-  it('commitHtmlEdit stores Mermaid source and regenerated iframe content', () => {
-    const updateElement = vi.fn()
-    const { deps } = makeDeps({
-      updateElement,
-      htmlEditorState: {
-        elementId: 'html-1',
-        embedKind: 'mermaid',
-        mermaidSource: 'sequenceDiagram\n  Alice->>Bob: Hi',
-      },
-    })
-    const { result } = renderHook(() => useElementCreation(deps))
-    act(() => {
-      result.current.commitHtmlEdit()
-    })
-
-    expect(updateElement).toHaveBeenCalledWith(
-      'html-1',
-      expect.objectContaining({
-        embedKind: 'mermaid',
-        mermaidSource: 'sequenceDiagram\n  Alice->>Bob: Hi',
-        content: expect.stringContaining('/vendor/mermaid/mermaid.min.js'),
-      })
-    )
-  })
-
   it('addStemSimulationElement appends a canonical html simulation embed', () => {
     const { getPresentation, deps } = makeDeps()
     const { result } = renderHook(() => useElementCreation(deps))

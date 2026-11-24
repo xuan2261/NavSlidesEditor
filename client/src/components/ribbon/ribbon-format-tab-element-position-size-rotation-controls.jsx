@@ -1,22 +1,40 @@
-import {
-  Lock, Unlock, RotateCw, AlignStartVertical, AlignHorizontalJustifyCenter, AlignEndVertical,
-} from 'lucide-react'
+import { Lock, Unlock, RotateCw } from 'lucide-react'
 import RibbonSection from './ribbon-section'
 import RibbonTabContentRow from './ribbon-tab-content-row'
 import { Button } from '../ui'
-import { CANVAS_WIDTH } from '../../data/slide-constants'
 import { normalizeTableShape } from '../properties/table-properties-utils'
 import { normalizeRotation } from '../../utils/element-update-fanout'
-import { computeMixedValues } from '../../utils/selection-mixed-values'
+import { computeMixedSource, computeMixedValues } from '../../utils/selection-mixed-values'
 import { handleRibbonKeyboardActivation } from './ribbon-keyboard-activation'
 import ActionControls from '../properties/action-controls'
+import HorizontalAlignmentControls from './ribbon-horizontal-alignment-controls'
+import { resolveVideoSrc } from '../../utils/migrate-video-src'
+import { semanticInstance, semanticDefinition } from 'revealjs-shared/src/pptx-semantic-records.js'
 
 const OBJECT_FIT_OPTIONS = ['cover', 'contain', 'fill', 'none']
 const CHART_TYPES = ['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea']
 const CODE_LANGUAGES = [
-  'javascript', 'typescript', 'python', 'java', 'c', 'cpp', 'csharp',
-  'go', 'rust', 'ruby', 'php', 'swift', 'kotlin', 'html', 'css',
-  'sql', 'bash', 'json', 'yaml', 'xml', 'markdown',
+  'javascript',
+  'typescript',
+  'python',
+  'java',
+  'c',
+  'cpp',
+  'csharp',
+  'go',
+  'rust',
+  'ruby',
+  'php',
+  'swift',
+  'kotlin',
+  'html',
+  'css',
+  'sql',
+  'bash',
+  'json',
+  'yaml',
+  'xml',
+  'markdown',
 ]
 
 function ShapeControls({ element, onUpdateElement }) {
@@ -48,7 +66,9 @@ function ShapeControls({ element, onUpdateElement }) {
             type="number"
             className="w-10 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
             value={element.strokeWidth ?? 0}
-            onChange={(e) => onUpdateElement?.({ strokeWidth: Math.max(0, parseInt(e.target.value) || 0) })}
+            onChange={(e) =>
+              onUpdateElement?.({ strokeWidth: Math.max(0, parseInt(e.target.value) || 0) })
+            }
             min={0}
             aria-label="Stroke width"
           />
@@ -58,21 +78,25 @@ function ShapeControls({ element, onUpdateElement }) {
   )
 }
 
-function ImageControls({ element, onUpdateElement }) {
+function ImageControls({ element, onUpdateElement, canonicalPictureSelected }) {
   return (
     <>
-      <RibbonSection label="Fit" className="border-r border-border">
-        <select
-          className="h-7 bg-card border border-border text-text-primary px-1.5 rounded text-xs cursor-pointer"
-          value={element.objectFit || 'cover'}
-          onChange={(e) => onUpdateElement?.({ objectFit: e.target.value })}
-          aria-label="Object fit"
-        >
-          {OBJECT_FIT_OPTIONS.map((opt) => (
-            <option key={opt} value={opt}>{opt}</option>
-          ))}
-        </select>
-      </RibbonSection>
+      {!canonicalPictureSelected && (
+        <RibbonSection label="Fit" className="border-r border-border">
+          <select
+            className="h-7 bg-card border border-border text-text-primary px-1.5 rounded text-xs cursor-pointer"
+            value={element.objectFit || 'cover'}
+            onChange={(e) => onUpdateElement?.({ objectFit: e.target.value })}
+            aria-label="Object fit"
+          >
+            {OBJECT_FIT_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        </RibbonSection>
+      )}
       <RibbonSection label="Alt Text" className="border-r border-border">
         <input
           type="text"
@@ -93,11 +117,14 @@ function ChartControls({ element, onUpdateElement }) {
       <select
         className="h-7 bg-card border border-border text-text-primary px-1.5 rounded text-xs cursor-pointer"
         value={element.chartType || 'bar'}
+        disabled={Boolean(element.pptxInstanceId)}
         onChange={(e) => onUpdateElement?.({ chartType: e.target.value })}
         aria-label="Chart type"
       >
         {CHART_TYPES.map((t) => (
-          <option key={t} value={t}>{t}</option>
+          <option key={t} value={t}>
+            {t}
+          </option>
         ))}
       </select>
     </RibbonSection>
@@ -154,15 +181,18 @@ function TableControls({ element, onUpdateElement }) {
   )
 }
 
-function VideoControls({ element, onUpdateElement }) {
+function VideoControls({ element, onUpdateElement, sourceMixed }) {
   return (
     <RibbonSection label="Source" className="border-r border-border">
       <input
         type="text"
         className="w-32 h-7 rounded border border-border bg-secondary px-1.5 text-[11px] text-text-primary focus:border-accent focus:outline-none"
-        value={element.src || ''}
+        value={
+          sourceMixed ? '' : element.type === 'video' ? resolveVideoSrc(element) : element.src || ''
+        }
+        data-mixed={sourceMixed ? 'true' : undefined}
         onChange={(e) => onUpdateElement?.({ src: e.target.value })}
-        placeholder="Video URL"
+        placeholder={sourceMixed ? '—' : 'Media URL'}
         aria-label="Source URL"
       />
     </RibbonSection>
@@ -179,14 +209,21 @@ function CodeControls({ element, onUpdateElement }) {
         aria-label="Language"
       >
         {CODE_LANGUAGES.map((lang) => (
-          <option key={lang} value={lang}>{lang}</option>
+          <option key={lang} value={lang}>
+            {lang}
+          </option>
         ))}
       </select>
     </RibbonSection>
   )
 }
 
-function ContextualControls({ selectedElement, onUpdateElement }) {
+function ContextualControls({
+  selectedElement,
+  onUpdateElement,
+  sourceMixed,
+  canonicalPictureSelected,
+}) {
   if (!selectedElement) return null
 
   switch (selectedElement.type) {
@@ -194,14 +231,26 @@ function ContextualControls({ selectedElement, onUpdateElement }) {
     case 'line':
       return <ShapeControls element={selectedElement} onUpdateElement={onUpdateElement} />
     case 'image':
-      return <ImageControls element={selectedElement} onUpdateElement={onUpdateElement} />
+      return (
+        <ImageControls
+          element={selectedElement}
+          onUpdateElement={onUpdateElement}
+          canonicalPictureSelected={canonicalPictureSelected}
+        />
+      )
     case 'chart':
       return <ChartControls element={selectedElement} onUpdateElement={onUpdateElement} />
     case 'table':
       return <TableControls element={selectedElement} onUpdateElement={onUpdateElement} />
     case 'video':
     case 'audio':
-      return <VideoControls element={selectedElement} onUpdateElement={onUpdateElement} />
+      return (
+        <VideoControls
+          element={selectedElement}
+          onUpdateElement={onUpdateElement}
+          sourceMixed={sourceMixed}
+        />
+      )
     case 'code':
       return <CodeControls element={selectedElement} onUpdateElement={onUpdateElement} />
     default:
@@ -209,7 +258,18 @@ function ContextualControls({ selectedElement, onUpdateElement }) {
   }
 }
 
-export default function FormatTabContent({ selectedElement, onUpdateElement, elements, selectedElementIds, slideWidth, presentation, availability = {} }) {
+export default function FormatTabContent({
+  selectedElement,
+  onUpdateElement,
+  onUpdateElements,
+  onAlignElements,
+  elements,
+  slide,
+  selectedElementIds,
+  slideWidth,
+  presentation,
+  availability = {},
+}) {
   if (!selectedElement) {
     return (
       <RibbonTabContentRow>
@@ -243,155 +303,198 @@ export default function FormatTabContent({ selectedElement, onUpdateElement, ele
     'height',
     'rotation',
     'opacity',
+    'locked',
   ])
   const opacityMixed = mixed.opacity?.isMixed
-  const requestedSlideWidth = slideWidth ?? presentation?.resolution?.width
-  const alignWidth = Number.isFinite(Number(requestedSlideWidth)) && Number(requestedSlideWidth) > 0 ? Number(requestedSlideWidth) : CANVAS_WIDTH
+  const canonicalPictureSelected = [
+    selectedElement,
+    ...(elements || []).filter((element) => selectedElementIds?.includes(element.id)),
+  ].some((element) => {
+    const semantic = presentation?.pptxSemantic
+    const instance = semanticInstance(semantic, element.pptxInstanceId)
+    return Boolean(semanticDefinition(semantic, instance?.definitionId)?.content?.pictureDocument)
+  })
+  const sourceMixed =
+    (selectedElement.type === 'audio' || selectedElement.type === 'video') &&
+    computeMixedSource(elements || [selectedElement], selectedElementIds || [selectedElement.id])
+      .isMixed
   // Blank a geometry field + show its placeholder when the selection diverges on
   // that key (parity with the Properties panel). Editing still writes — the apply
   // path fans the value to every selected element.
   const numProps = (key, fallback) =>
     mixed[key]?.isMixed ? { value: '', placeholder: '—' } : { value: fallback }
+  const rotateSelection = () => {
+    const ids = selectedElementIds?.length ? selectedElementIds : [selectedElement.id]
+    const selected = (elements || [selectedElement]).filter((element) => ids.includes(element.id))
+    onUpdateElements?.(
+      selected.map((element) => ({
+        id: element.id,
+        rotation: normalizeRotation((element.rotation || 0) + 90),
+      }))
+    )
+  }
 
   return (
     <RibbonTabContentRow>
-      <fieldset className="contents" disabled={Boolean(availability.arrange)} title={availability.arrange || undefined}>
-      <ContextualControls selectedElement={selectedElement} onUpdateElement={onUpdateElement} />
-      <RibbonSection label="Action" className="border-r border-border">
-        <ActionControls element={selectedElement} onUpdate={onUpdateElement} presentation={presentation} compact />
-      </RibbonSection>
-
-      <RibbonSection label="Position" className="border-r border-border">
-        <div className="flex items-center gap-1 h-7">
-          <label className="flex items-center gap-0.5">
-            <span className="text-[10px] text-text-muted w-3">X</span>
-            <input type="number"
-              className="w-12 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
-              {...numProps('x', Math.round(selectedElement.x || 0))}
-              onChange={(e) => updateNum('x', e.target.value)}
-              aria-label="X position" />
-          </label>
-          <label className="flex items-center gap-0.5">
-            <span className="text-[10px] text-text-muted w-3">Y</span>
-            <input type="number"
-              className="w-12 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
-              {...numProps('y', Math.round(selectedElement.y || 0))}
-              onChange={(e) => updateNum('y', e.target.value)}
-              aria-label="Y position" />
-          </label>
-        </div>
-      </RibbonSection>
-
-      <RibbonSection label="Size" className="border-r border-border">
-        <div className="flex items-center gap-1 h-7">
-          <label className="flex items-center gap-0.5">
-            <span className="text-[10px] text-text-muted w-3">W</span>
-            <input type="number"
-              className="w-12 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
-              {...numProps('width', Math.round(selectedElement.width || 0))}
-              onChange={(e) => updateNum('width', e.target.value, 1)}
-              aria-label="Width" />
-          </label>
-          <label className="flex items-center gap-0.5">
-            <span className="text-[10px] text-text-muted w-3">H</span>
-            <input type="number"
-              className="w-12 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
-              {...numProps('height', Math.round(selectedElement.height || 0))}
-              onChange={(e) => updateNum('height', e.target.value, 1)}
-              aria-label="Height" />
-          </label>
-        </div>
-      </RibbonSection>
-
-      <RibbonSection label="Rotate" className="border-r border-border">
-        <div className="flex items-center gap-0.5 h-7">
-          <input type="number"
-            className="w-12 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
-            {...numProps('rotation', Math.round(selectedElement.rotation || 0))}
-            onChange={(e) => updateNum('rotation', e.target.value)}
-            aria-label="Rotation degrees" />
-          <Button variant="icon" className="h-7 w-7"
-            title="Rotate 90°" aria-label="Rotate 90 degrees"
-            onMouseDown={(e) => {
-              e.preventDefault()
-              onUpdateElement?.({ rotation: ((selectedElement.rotation || 0) + 90) % 360 })
-            }}
-            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
-              onUpdateElement?.({ rotation: ((selectedElement.rotation || 0) + 90) % 360 })
-            )}>
-            <RotateCw size={14} />
-          </Button>
-        </div>
-      </RibbonSection>
-
-      <RibbonSection label="Opacity" className="border-r border-border">
-        <div className="flex items-center gap-1 h-7">
-          <input
-            type="range"
-            data-mixed={opacityMixed ? 'true' : undefined}
-            className="w-16 accent-accent cursor-pointer"
-            min={0}
-            max={1}
-            step={0.05}
-            value={selectedElement.opacity ?? 1}
-            onChange={(e) => onUpdateElement?.({ opacity: parseFloat(e.target.value) })}
-            aria-label="Opacity"
+      <fieldset
+        className="contents"
+        disabled={Boolean(availability.arrange)}
+        title={availability.arrange || undefined}
+      >
+        <ContextualControls
+          selectedElement={selectedElement}
+          onUpdateElement={onUpdateElement}
+          sourceMixed={sourceMixed}
+          canonicalPictureSelected={canonicalPictureSelected}
+        />
+        <RibbonSection label="Action" className="border-r border-border">
+          <ActionControls
+            element={selectedElement}
+            onUpdate={onUpdateElement}
+            presentation={presentation}
+            slide={slide || { elements: elements || [selectedElement] }}
+            compact
           />
-          <span className="text-[10px] text-text-muted w-6 text-right">
-            {opacityMixed ? '—' : `${Math.round((selectedElement.opacity ?? 1) * 100)}%`}
-          </span>
-        </div>
-      </RibbonSection>
+        </RibbonSection>
 
-      <RibbonSection label="Align" className="border-r border-border">
-        <div className="flex items-center gap-0.5">
-          <Button variant="icon" className="h-7 w-7"
-            title="Align left" aria-label="Align left"
-            onMouseDown={(e) => { e.preventDefault(); onUpdateElement?.({ x: 0 }) }}
-            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => onUpdateElement?.({ x: 0 }))}>
-            <AlignStartVertical size={14} />
-          </Button>
-          <Button variant="icon" className="h-7 w-7"
-            title="Align center" aria-label="Align center horizontal"
-            onMouseDown={(e) => {
-              e.preventDefault()
-              onUpdateElement?.({ x: Math.round((alignWidth - (selectedElement.width || 0)) / 2) })
-            }}
-            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
-              onUpdateElement?.({ x: Math.round((alignWidth - (selectedElement.width || 0)) / 2) })
-            )}>
-            <AlignHorizontalJustifyCenter size={14} />
-          </Button>
-          <Button variant="icon" className="h-7 w-7"
-            title="Align right" aria-label="Align right"
-            onMouseDown={(e) => {
-              e.preventDefault()
-              onUpdateElement?.({ x: Math.round(alignWidth - (selectedElement.width || 0)) })
-            }}
-            onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
-              onUpdateElement?.({ x: Math.round(alignWidth - (selectedElement.width || 0)) })
-            )}>
-            <AlignEndVertical size={14} />
-          </Button>
-        </div>
-      </RibbonSection>
+        <RibbonSection label="Position" className="border-r border-border">
+          <div className="flex items-center gap-1 h-7">
+            <label className="flex items-center gap-0.5">
+              <span className="text-[10px] text-text-muted w-3">X</span>
+              <input
+                type="number"
+                className="w-12 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
+                {...numProps('x', Math.round(selectedElement.x || 0))}
+                onChange={(e) => updateNum('x', e.target.value)}
+                aria-label="X position"
+              />
+            </label>
+            <label className="flex items-center gap-0.5">
+              <span className="text-[10px] text-text-muted w-3">Y</span>
+              <input
+                type="number"
+                className="w-12 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
+                {...numProps('y', Math.round(selectedElement.y || 0))}
+                onChange={(e) => updateNum('y', e.target.value)}
+                aria-label="Y position"
+              />
+            </label>
+          </div>
+        </RibbonSection>
+
+        <RibbonSection label="Size" className="border-r border-border">
+          <div className="flex items-center gap-1 h-7">
+            <label className="flex items-center gap-0.5">
+              <span className="text-[10px] text-text-muted w-3">W</span>
+              <input
+                type="number"
+                className="w-12 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
+                {...numProps('width', Math.round(selectedElement.width || 0))}
+                onChange={(e) => updateNum('width', e.target.value, 1)}
+                aria-label="Width"
+              />
+            </label>
+            <label className="flex items-center gap-0.5">
+              <span className="text-[10px] text-text-muted w-3">H</span>
+              <input
+                type="number"
+                className="w-12 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
+                {...numProps('height', Math.round(selectedElement.height || 0))}
+                onChange={(e) => updateNum('height', e.target.value, 1)}
+                aria-label="Height"
+              />
+            </label>
+          </div>
+        </RibbonSection>
+
+        <RibbonSection label="Rotate" className="border-r border-border">
+          <div className="flex items-center gap-0.5 h-7">
+            <input
+              type="number"
+              className="w-12 h-7 rounded border border-border bg-secondary px-1 text-[11px] text-text-primary text-center focus:border-accent focus:outline-none"
+              {...numProps('rotation', Math.round(selectedElement.rotation || 0))}
+              onChange={(e) => updateNum('rotation', e.target.value)}
+              aria-label="Rotation degrees"
+            />
+            <Button
+              variant="icon"
+              className="h-7 w-7"
+              title="Rotate 90°"
+              aria-label="Rotate 90 degrees"
+              onMouseDown={(e) => {
+                e.preventDefault()
+                rotateSelection()
+              }}
+              onKeyDown={(e) => handleRibbonKeyboardActivation(e, rotateSelection)}
+            >
+              <RotateCw size={14} />
+            </Button>
+          </div>
+        </RibbonSection>
+
+        {!canonicalPictureSelected && (
+          <RibbonSection label="Opacity" className="border-r border-border">
+            <div className="flex items-center gap-1 h-7">
+              <input
+                type="range"
+                data-mixed={opacityMixed ? 'true' : undefined}
+                className="w-16 accent-accent cursor-pointer"
+                min={0}
+                max={1}
+                step={0.05}
+                value={selectedElement.opacity ?? 1}
+                onChange={(e) => onUpdateElement?.({ opacity: parseFloat(e.target.value) })}
+                aria-label="Opacity"
+              />
+              <span className="text-[10px] text-text-muted w-6 text-right">
+                {opacityMixed ? '—' : `${Math.round((selectedElement.opacity ?? 1) * 100)}%`}
+              </span>
+            </div>
+          </RibbonSection>
+        )}
+
+        <HorizontalAlignmentControls
+          element={selectedElement}
+          selectedElementIds={selectedElementIds}
+          slideWidth={slideWidth ?? presentation?.resolution?.width}
+          onUpdateElement={onUpdateElement}
+          onAlignElements={onAlignElements}
+        />
       </fieldset>
 
       <RibbonSection label="Properties">
-        <Button variant="ribbon"
+        <Button
+          variant="ribbon"
           className={selectedElement.locked ? 'bg-primary-light text-accent' : ''}
-          title={selectedElement.locked ? 'Unlock element' : 'Lock element'}
+          title={
+            mixed.locked?.isMixed
+              ? 'Mixed lock state'
+              : selectedElement.locked
+                ? 'Unlock element'
+                : 'Lock element'
+          }
           aria-label="Toggle lock"
-          aria-pressed={!!selectedElement.locked}
+          aria-pressed={mixed.locked?.isMixed ? 'mixed' : Boolean(selectedElement.locked)}
           onMouseDown={(e) => {
             e.preventDefault()
             onUpdateElement?.({ locked: !selectedElement.locked })
           }}
-          onKeyDown={(e) => handleRibbonKeyboardActivation(e, () =>
-            onUpdateElement?.({ locked: !selectedElement.locked })
-          )}>
-          {selectedElement.locked ? <Lock size={14} /> : <Unlock size={14} />}
-          <span className="hidden lg:inline">{selectedElement.locked ? 'Locked' : 'Lock'}</span>
+          onKeyDown={(e) =>
+            handleRibbonKeyboardActivation(e, () =>
+              onUpdateElement?.({ locked: !selectedElement.locked })
+            )
+          }
+        >
+          {mixed.locked?.isMixed ? (
+            <span aria-hidden="true">—</span>
+          ) : selectedElement.locked ? (
+            <Lock size={14} />
+          ) : (
+            <Unlock size={14} />
+          )}
+          <span className="hidden lg:inline">
+            {mixed.locked?.isMixed ? 'Mixed' : selectedElement.locked ? 'Locked' : 'Lock'}
+          </span>
         </Button>
       </RibbonSection>
     </RibbonTabContentRow>

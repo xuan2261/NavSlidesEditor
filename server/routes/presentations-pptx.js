@@ -17,6 +17,9 @@ const {
   hasValidatedEditedReplay,
 } = require('../services/validated-edited-export')
 const { packageIdentityForFidelity, getLocalBaseUrl } = require('./presentations-helpers')
+const { getServingBaseUrl } = require('../utils/serving-origin')
+const { prepareSemanticOutputResources, assertSemanticOutputArtifact } =
+  require('../services/pptx-import/semantic-output-resources')
 
 const router = express.Router()
 
@@ -32,6 +35,16 @@ router.post('/raster-elements', async (req, res) => {
     if (!presentation || !Array.isArray(presentation.slides)) {
       return res.status(400).json({ error: 'Invalid presentation payload' })
     }
+    const options = req.body?.options
+    if (
+      options !== undefined &&
+      (!options ||
+        typeof options !== 'object' ||
+        Array.isArray(options) ||
+        (options.teacherReveal !== undefined && typeof options.teacherReveal !== 'boolean'))
+    ) {
+      return res.status(400).json({ error: 'Raster options.teacherReveal must be a boolean' })
+    }
     if (presentation.slides.length > MAX_RASTER_SLIDES) {
       return res.status(413).json({ error: 'Too many slides to rasterize' })
     }
@@ -43,7 +56,10 @@ router.post('/raster-elements', async (req, res) => {
       return res.status(413).json({ error: 'Too many elements to rasterize' })
     }
 
-    const rasters = await rasterizeComplexElements(presentation, { baseUrl: getLocalBaseUrl(req) })
+    const rasters = await rasterizeComplexElements(presentation, {
+      baseUrl: getLocalBaseUrl(req),
+      teacherReveal: options?.teacherReveal === true,
+    })
     res.json({ rasters })
   } catch (err) {
     logger.error('PPTX element rasterization failed:', err)
@@ -56,8 +72,12 @@ router.post('/raster-elements', async (req, res) => {
 
 // GET /api/presentations/:id/pptx-fidelity — safe capability and export summary.
 router.get('/:id/pptx-fidelity', async (req, res) => {
+  const t0 = Date.now();
+  console.log(`[pptx-fidelity] Start for ${req.params.id} at +${t0}`);
   try {
+    const tResolve0 = Date.now();
     const resolved = await readAuthoritativePresentation(req.params.id)
+    console.log(`[pptx-fidelity] readAuthoritativePresentation took ${Date.now() - tResolve0}ms`);
     if (!resolved) return res.status(404).json({ error: 'Not found' })
     const presentation = resolved.presentation
     const { buildFidelityDto } = require('../services/pptx-import/fidelity-contract')
@@ -81,7 +101,9 @@ router.get('/:id/pptx-fidelity', async (req, res) => {
         verifiedOriginalAvailable = false
       }
     }
+    const tExport0 = Date.now();
     const editedAvailability = await editedExportAvailability(presentation)
+    console.log(`[pptx-fidelity] editedExportAvailability took ${Date.now() - tExport0}ms`);
     const aggregateGeneration = resolved.generation
     const fidelity = buildFidelityDto(presentation, {
       aggregateGeneration,
@@ -95,7 +117,7 @@ router.get('/:id/pptx-fidelity', async (req, res) => {
       buildPrivateFidelityCapability,
     } = require('../services/pptx-import/evidence/private-fidelity-capability')
     const packageAuthority = packageIdentityForFidelity(presentation)
-    res.json({
+    const payload = {
       ...fidelity,
       ...(packageAuthority ? { packageAuthority } : {}),
       localEvidence: buildPrivateFidelityCapability(presentation, fidelity, {
@@ -103,9 +125,10 @@ router.get('/:id/pptx-fidelity', async (req, res) => {
         officeCliAvailable: editedAvailability.officeCliAvailable === true,
         originalAvailable: verifiedOriginalAvailable,
       }),
-    })
+    }
+    res.json(payload)
+    console.log(`[pptx-fidelity] Total time: ${Date.now() - t0}ms`);
   } catch (err) {
-    res.status(500).json({ error: err.message })
   }
 })
 
@@ -223,7 +246,8 @@ router.get('/:id/pptx-original', async (req, res) => {
 router.post(
   '/:id/pptx-edited',
   createEditedExportHandler({
-    findPresentation: (id) => findServeablePresentation(id, { normalize: false }),
+    findPresentation: (id) =>
+      findServeablePresentation(id, { normalize: false, normalizeSemantic: false }),
     getReplay: hasValidatedEditedReplay,
     getAvailability: editedExportAvailability,
     execute: executeValidatedEditedExport,
@@ -235,14 +259,17 @@ router.get('/:id/export', async (req, res) => {
   try {
     const resolved = await readAuthoritativePresentation(req.params.id)
     if (!resolved) return res.status(404).json({ error: 'Not found' })
+    const semanticOutputResources = await prepareSemanticOutputResources(resolved.presentation)
     const presentation = normalizePresentationNotes(resolved.presentation)
-    const html = generateRevealHTML(presentation)
+    const html = generateRevealHTML(presentation, {
+      baseUrl: getServingBaseUrl(req), semanticOutputResources,
+    })
     const filename = `${(presentation.title || 'presentation').replace(/[^a-z0-9]/gi, '_')}.html`
     res.setHeader('Content-Type', 'text/html')
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
-    res.send(html)
+    res.send(assertSemanticOutputArtifact(html, semanticOutputResources))
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(err.status || 500).json({ error: err.message, code: err.code, issues: err.issues })
   }
 })
 

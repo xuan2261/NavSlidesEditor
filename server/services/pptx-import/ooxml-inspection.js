@@ -1,3 +1,5 @@
+const { readSlideOrder, relationshipPart } = require('./slide-order')
+
 function listZipEntries(zip) {
   return Object.keys(zip?.files || {})
     .map((entry) => entry.replace(/\\/g, '/'))
@@ -7,7 +9,9 @@ function listZipEntries(zip) {
 
 function normalizeZipPath(value) {
   const parts = []
-  for (const part of String(value || '').replace(/\\/g, '/').split('/')) {
+  for (const part of String(value || '')
+    .replace(/\\/g, '/')
+    .split('/')) {
     if (!part || part === '.') continue
     if (part === '..') parts.pop()
     else parts.push(part)
@@ -20,11 +24,6 @@ function resolveRelationshipTarget(relPath, target) {
   if (!match || !target || /^[a-z]+:/i.test(target)) return ''
   const sourceDir = match[1]
   return normalizeZipPath(target.startsWith('/') ? target.slice(1) : `${sourceDir}/${target}`)
-}
-
-function slideIndexFromRelPath(relPath) {
-  const match = String(relPath || '').match(/^ppt\/slides\/_rels\/slide(\d+)\.xml\.rels$/i)
-  return match ? Number(match[1]) - 1 : null
 }
 
 function parseRelationshipTargets(relXml, relPath) {
@@ -53,16 +52,18 @@ async function readZipText(zip, entry) {
 async function inspectOoxmlCoverage(zip) {
   const entries = listZipEntries(zip)
   const packageChartEntries = entries.filter((entry) => /^ppt\/charts\/chart\d+\.xml$/i.test(entry))
-  const packageSmartArtEntries = entries.filter((entry) => /^ppt\/diagrams\/data\d+\.xml$/i.test(entry))
+  const packageSmartArtEntries = entries.filter((entry) =>
+    /^ppt\/diagrams\/data\d+\.xml$/i.test(entry)
+  )
   const smartArtSupportEntries = entries.filter((entry) =>
     /^ppt\/diagrams\/(?:drawing|layout|colors|quickStyle)\d+\.xml$/i.test(entry)
   )
   const slideEvidence = []
-  const slideRelEntries = entries.filter((entry) => /^ppt\/slides\/_rels\/slide\d+\.xml\.rels$/i.test(entry))
+  const slidePaths = await readSlideOrder(zip)
+  const slideRelEntries = slidePaths.map(relationshipPart)
 
   for (const relEntry of slideRelEntries) {
-    const slideIndex = slideIndexFromRelPath(relEntry)
-    if (slideIndex == null) continue
+    const slideIndex = slideRelEntries.indexOf(relEntry)
 
     const chartEntries = new Set()
     const smartArtEntries = new Set()

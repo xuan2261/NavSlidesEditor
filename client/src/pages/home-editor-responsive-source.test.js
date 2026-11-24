@@ -14,7 +14,6 @@ const homeSource = () =>
   ]
     .map((f) => readFileSync(path.resolve(HERE, f), 'utf8'))
     .join('\n')
-const editorSource = () => readFileSync(path.resolve(HERE, 'EditorPage.jsx'), 'utf8')
 const statusBarSource = () =>
   readFileSync(path.resolve(HERE, '../components/layout/StatusBar.jsx'), 'utf8')
 
@@ -37,13 +36,6 @@ describe('responsive source contracts', () => {
     expect(src).toContain('min-h-10 px-3 sm:min-h-8')
     expect(src).toContain('aria-label="New presentation"')
     expect(src).toContain('min-[360px]:inline')
-  })
-
-  it('Editor shows a deliberate small-screen guard instead of hiding the canvas', () => {
-    const src = editorSource()
-
-    expect(src).toContain('editor-small-screen-guard')
-    expect(src).toContain('Tablet or desktop required')
   })
 
   it('Status bar wraps or hides long attribution text on narrow screens', () => {

@@ -121,7 +121,7 @@ describe('validated edited export validators', () => {
     ])
 
     await expect(editedExportAvailability({ id: presentationId }, {
-      store: { getState: () => state },
+      store: { getOwnedAuthorityState: () => state, getState: () => { throw new Error('Public clone must not be read') } },
     })).resolves.toMatchObject({
       available: true,
       noOp: true,
@@ -148,7 +148,7 @@ describe('validated edited export validators', () => {
       generation: 1,
       projectionRevisionId: hashRecord(projection),
       sourceMapRevisionId: hashRecord(sourceMap),
-      journalRevisionId: null,
+      journalRevisionId: hashRecord({ baseRevisionId: revisionId, operations: [] }),
       fencingEpoch: 1,
       matrixAuthorityEpoch: 1,
       matrixAuthoritySubjects: createMatrixAuthoritySubjects(),
@@ -169,7 +169,7 @@ describe('validated edited export validators', () => {
       },
     }])
     const available = await editedExportAvailability({ id: presentationId }, {
-      store: { getState: () => state },
+      store: { getOwnedAuthorityState: () => state, getState: () => { throw new Error('Public clone must not be read') } },
       nativeReimport: async () => true,
       officeCliGatewayFactory: () => ({
         probeCapability: async () => ({ available: true, validation: true }),
@@ -178,7 +178,7 @@ describe('validated edited export validators', () => {
     expect(available).toMatchObject({ available: true, officeCliAvailable: true })
 
     const unavailable = await editedExportAvailability({ id: 'deck' }, {
-      store: { getState: () => { throw new Error('store unavailable') } },
+      store: { getOwnedAuthorityState: () => { throw new Error('store unavailable') } },
     })
     expect(unavailable).toMatchObject({
       available: false, officeCliAvailable: false,

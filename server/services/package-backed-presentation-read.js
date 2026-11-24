@@ -1,9 +1,18 @@
 const { findServeablePresentation } = require('./presentation-finder')
 const { normalizePptxImportedPresentationForRead } = require('./presentation-normalization')
 const { getReadablePackageStore } = require('./pptx-import/package-store-runtime')
-const { resolveEditedExportContext } = require('./pptx-import/validated-edited-export-context')
-const { mergeCompatibilityPresentation } = require('./pptx-import/compatibility-view')
-const { hashRecord } = require('./pptx-import/package-store/schemas')
+const {
+  resolveEditorProjectionContext,
+  createEditorPackageRead,
+} = require('./pptx-import/package-authority-snapshot')
+const {
+  hasExactCompatibilityHead,
+  mergeCompatibilityPresentation,
+} = require('./pptx-import/compatibility-view')
+const {
+  getTrustedImportMetadata,
+  decorateTrustedImportMetadata,
+} = require('./pptx-import/trusted-import-metadata')
 
 function authorityError(reasonCode) {
   return Object.assign(new Error(reasonCode), {
@@ -17,43 +26,39 @@ function hasPresentationOwnedRevision(state, presentationId, revisionId) {
   return Boolean(
     revision &&
     state.blobs?.some((blob) => blob.sha256 === revision.blobSha256) &&
-    state.owners?.some((owner) =>
-      owner.ownerType === 'presentation' &&
-      owner.ownerId === presentationId &&
-      owner.revisionId === revisionId
+    state.owners?.some(
+      (owner) =>
+        owner.ownerType === 'presentation' &&
+        owner.ownerId === presentationId &&
+        owner.revisionId === revisionId
     )
   )
 }
 
 function isOriginalOnlyHead(state, head) {
-  const hasProjectedResult = state.mutationResults?.some((result) =>
-    result.presentationId === head.presentationId &&
-    result.packageRevisionId === head.packageRevisionId &&
-    result.projection && result.sourceMap
+  const hasProjectedResult = state.mutationResults?.some(
+    (result) =>
+      result.presentationId === head.presentationId &&
+      result.packageRevisionId === head.packageRevisionId &&
+      result.projection &&
+      result.sourceMap
   )
-  return !hasProjectedResult &&
+  return (
+    !hasProjectedResult &&
     head.pendingJournalHash === undefined &&
     head.journalRevisionId == null &&
     head.packageRevisionId === head.originalRevisionId &&
     head.projectionRevisionId === null &&
     head.sourceMapRevisionId === null &&
     hasPresentationOwnedRevision(state, head.presentationId, head.originalRevisionId)
-}
-
-function hasConsistentAuthorityPointers(head, context) {
-  return context.sourceMap &&
-    head.projectionRevisionId === hashRecord(context.after) &&
-    head.sourceMapRevisionId === hashRecord(context.sourceMap) &&
-    (context.pendingJournalHash === undefined
-      ? head.journalRevisionId == null
-      : head.journalRevisionId === context.pendingJournalHash)
+  )
 }
 
 function resolvePackageBackedReadFromState(
   state,
   presentationId,
   compatibilityPresentation,
-  { allowIncompleteAuthority = false } = {}
+  { allowIncompleteAuthority = false, getAdmittedSnapshot } = {}
 ) {
   const head = state.heads.find((item) => item.presentationId === presentationId)
   if (!head) {
@@ -64,6 +69,26 @@ function resolvePackageBackedReadFromState(
       presentation: structuredClone(compatibilityPresentation),
       generation: null,
     }
+  }
+
+  // Only a durable successor publication can authorize reading past a stale view.
+  const publicationPending =
+    compatibilityPresentation?.pptxAggregateHead?.generation < head.generation &&
+    [
+      ...(state.compatibilityOutbox || []),
+      ...(state.compatibilityDeadLetter || []).map((entry) => entry.write),
+    ].some(
+      (write) =>
+        write?.operation === 'upsert' &&
+        write.presentationId === presentationId &&
+        hasExactCompatibilityHead(write.presentation, head)
+    )
+  if (
+    !hasExactCompatibilityHead(compatibilityPresentation, head) &&
+    !publicationPending &&
+    (compatibilityPresentation?.pptxAggregateHead || !isOriginalOnlyHead(state, head))
+  ) {
+    throw authorityError('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
   }
 
   const originalAvailable = hasPresentationOwnedRevision(
@@ -86,7 +111,7 @@ function resolvePackageBackedReadFromState(
     return { presentation, generation: head.generation }
   }
 
-  const context = resolveEditedExportContext(state, presentationId)
+  const context = resolveEditorProjectionContext(state, presentationId)
   if (!context.ok) {
     if (!allowIncompleteAuthority && !isOriginalOnlyHead(state, head)) {
       throw authorityError(context.reasonCode)
@@ -96,47 +121,66 @@ function resolvePackageBackedReadFromState(
     presentation.pptxAggregateHead = structuredClone(head)
     return { presentation, generation: head.generation }
   }
-  if (!hasConsistentAuthorityPointers(head, context)) {
-    throw authorityError('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
+  // Authority checks above always run against this read's defensive state.
+  // Reuse only the store-owned, content/head-bound admitted snapshot, never a
+  // cached publication. Detach editable fields; only certified semantics share.
+  const admitted = getAdmittedSnapshot?.(presentationId, head, undefined, context.after)
+  let after = context.after
+  if (admitted) {
+    const { pptxSemantic: rawSemantic, ...editable } = context.after
+    // Admission sanitizes save envelopes; read publication must retain the exact
+    // committed fields (including legacy geometry and trusted nested metadata).
+    after = {
+      ...structuredClone(editable),
+      ...(rawSemantic === undefined ? {} : { pptxSemantic: admitted.pptxSemantic }),
+    }
+  } else if (after?.pptxSemantic) {
+    const { normalizePptxSemanticDocument } = require('revealjs-shared/src/pptx-semantic-document.js')
+    after = { ...after, pptxSemantic: normalizePptxSemanticDocument(after.pptxSemantic) }
   }
 
-  const presentation = mergeCompatibilityPresentation(
-    compatibilityPresentation,
-    context.after
+  const presentation = decorateTrustedImportMetadata(
+    mergeCompatibilityPresentation(compatibilityPresentation, after),
+    getTrustedImportMetadata(state, head)
   )
   presentation.id = presentationId
   presentation.pptxAggregateHead = structuredClone(head)
   return { presentation, generation: head.generation }
 }
 
-async function resolvePackageBackedRead(
-  presentationId,
-  compatibilityPresentation,
-  options = {}
-) {
+async function resolvePackageBackedRead(presentationId, compatibilityPresentation, options = {}) {
   const store = await getReadablePackageStore()
-  return resolvePackageBackedReadFromState(
-    store.getState(),
+  const read = createEditorPackageRead(store)
+  const resolved = resolvePackageBackedReadFromState(
+    read.state,
     presentationId,
     compatibilityPresentation,
-    options
+    { ...options, getAdmittedSnapshot: store.getAuthoritativeSaveSnapshot?.bind(store) }
   )
+  if (resolved.generation !== null) await read.verifyBytes(resolved.presentation.pptxAggregateHead)
+  if (options.normalize !== false) {
+    resolved.presentation = normalizePptxImportedPresentationForRead(resolved.presentation)
+  }
+  if (resolved.presentation && resolved.presentation.pptxSemantic) {
+    const { normalizePptxSemanticDocument } = require('revealjs-shared/src/pptx-semantic-document.js')
+    resolved.presentation.pptxSemantic = normalizePptxSemanticDocument(resolved.presentation.pptxSemantic)
+  }
+  return resolved
 }
 
 async function readAuthoritativePresentation(
   presentationId,
   { normalize = true, allowIncompleteAuthority = false } = {}
 ) {
-  const storedPresentation = await findServeablePresentation(presentationId, { normalize: false })
+  const storedPresentation = await findServeablePresentation(presentationId, {
+    normalize: false,
+    normalizeSemantic: false,
+  })
   if (!storedPresentation) return null
-  const compatibilityPresentation = normalize
-    ? normalizePptxImportedPresentationForRead(storedPresentation)
-    : storedPresentation
-  return resolvePackageBackedRead(
-    presentationId,
-    compatibilityPresentation,
-    { allowIncompleteAuthority }
-  )
+  return resolvePackageBackedRead(presentationId, storedPresentation, {
+    normalize,
+    allowIncompleteAuthority,
+  })
 }
 
 const BULK_QUARANTINE_CODES = new Set([
@@ -155,25 +199,31 @@ async function readAuthoritativePresentations(
   storedPresentations,
   { normalize = true, collectQuarantine = null } = {}
 ) {
-  const serveable = (storedPresentations || []).filter((presentation) =>
-    presentation && !presentation.deletedAt
+  const serveable = (storedPresentations || []).filter(
+    (presentation) => presentation && !presentation.deletedAt
   )
   if (!serveable.length) return []
   const store = await getReadablePackageStore()
-  const state = store.getState()
+  const read = createEditorPackageRead(store)
+  const state = read.state
   const results = []
   for (const storedPresentation of serveable) {
-    const compatibilityPresentation = normalize
-      ? normalizePptxImportedPresentationForRead(storedPresentation)
-      : storedPresentation
     try {
-      results.push(
-        resolvePackageBackedReadFromState(
-          state,
-          storedPresentation.id,
-          compatibilityPresentation
-        )
+      const resolved = resolvePackageBackedReadFromState(
+        state,
+        storedPresentation.id,
+        storedPresentation,
+        { getAdmittedSnapshot: store.getAuthoritativeSaveSnapshot?.bind(store) }
       )
+      if (resolved.generation !== null)
+        await read.verifyBytes(resolved.presentation.pptxAggregateHead)
+      if (normalize)
+        resolved.presentation = normalizePptxImportedPresentationForRead(resolved.presentation)
+      if (resolved.presentation?.pptxSemantic) {
+        const { normalizePptxSemanticDocument } = require('revealjs-shared/src/pptx-semantic-document.js')
+        resolved.presentation.pptxSemantic = normalizePptxSemanticDocument(resolved.presentation.pptxSemantic)
+      }
+      results.push(resolved)
     } catch (err) {
       if (BULK_QUARANTINE_CODES.has(err?.code)) {
         if (Array.isArray(collectQuarantine)) {
@@ -196,4 +246,5 @@ module.exports = {
   readAuthoritativePresentation,
   readAuthoritativePresentations,
   resolvePackageBackedRead,
+  resolvePackageBackedReadFromState,
 }

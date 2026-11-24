@@ -93,13 +93,13 @@ async function launchBrowser(chromium, signal, teardownTimeoutMs) {
   }
 }
 
-async function generatePresentHtml(presentation) {
+async function generatePresentHtml(presentation, options = {}) {
   const { generateRevealHTML } = require('revealjs-shared')
-  return generateRevealHTML(presentation)
+  return generateRevealHTML(presentation, { baseUrl: options.baseUrl || options.assetBaseUrl })
 }
 
-async function writePresentHtml(presentation, outFile) {
-  await fs.writeFile(outFile, await generatePresentHtml(presentation), 'utf8')
+async function writePresentHtml(presentation, outFile, options = {}) {
+  await fs.writeFile(outFile, await generatePresentHtml(presentation, options), 'utf8')
   return outFile
 }
 
@@ -141,7 +141,7 @@ async function readRevealPlan(page) {
 
 async function captureRevealSlides(
   page,
-  { deckDir, expectedSlideCount, signal = null, teardownTimeoutMs = 10_000 }
+  { deckDir, expectedSlideCount, signal = null, teardownTimeoutMs = 10_000, viewport = null }
 ) {
   const plan = await abortable(signal, () => readRevealPlan(page))
   if (plan.length !== expectedSlideCount) throw new Error('reveal-slide-count-mismatch')
@@ -182,7 +182,9 @@ async function captureRevealSlides(
     const targetPath = path.join(deckDir, `slide-${target.ordinal}.png`)
     let captureError = null
     try {
-      await abortable(signal, () => currentSlide.screenshot({ path: targetPath }))
+      await abortable(signal, () => viewport
+        ? page.screenshot({ path: targetPath, clip: { x: 0, y: 0, ...viewport } })
+        : currentSlide.screenshot({ path: targetPath }))
       files.push(targetPath)
     } catch (error) {
       captureError = error
@@ -233,7 +235,7 @@ async function capturePresentSlides(presentation, options = {}) {
     page = await abortable(options.signal, () =>
       browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: 1 })
     )
-    const html = await abortable(options.signal, () => generatePresentHtml(presentation))
+    const html = await abortable(options.signal, () => generatePresentHtml(presentation, options))
     const assetBaseUrl = new URL(options.assetBaseUrl).origin
     await abortable(options.signal, () => page.goto(`${assetBaseUrl}/`, { waitUntil: 'load' }))
     await abortable(options.signal, () =>
@@ -244,13 +246,17 @@ async function capturePresentSlides(presentation, options = {}) {
     )
     await abortable(options.signal, () =>
       page.evaluate(
-        ({ revealConfig, viewport }) => {
+        ({ revealConfig }) => {
           window.Reveal.configure(revealConfig)
           const root = globalThis.document.documentElement
           root.style.setProperty('--slide-scale', '1')
           root.style.setProperty('--font-zoom', '1')
-          root.style.setProperty('--slide-aspect', String(viewport.width / viewport.height))
+          const config = window.Reveal.getConfig()
+          root.style.setProperty('--slide-aspect', String(config.width / config.height))
           globalThis.document.body.style.margin = '0'
+          globalThis.document.querySelectorAll('body > .presenter-toolbar').forEach((toolbar) => {
+            toolbar.style.setProperty('display', 'none', 'important')
+          })
         },
         {
           revealConfig: {
@@ -261,7 +267,6 @@ async function capturePresentSlides(presentation, options = {}) {
             history: false,
             hash: false,
           },
-          viewport: VIEWPORT,
         }
       )
     )
@@ -269,6 +274,7 @@ async function capturePresentSlides(presentation, options = {}) {
       deckDir: path.join(outDir, deckStem),
       expectedSlideCount,
       signal: options.signal,
+      viewport: VIEWPORT,
       teardownTimeoutMs,
     })
     result = { ok: true, files: capture.files, viewport: VIEWPORT, slidePlan: capture.plan }

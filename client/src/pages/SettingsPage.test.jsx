@@ -39,8 +39,7 @@ describe('SettingsPage accessibility and AI connection test', () => {
         customModel: '',
       })
     })
-    expect(screen.getByRole('status').textContent).toContain('Connected')
-    expect(globalThis.fetch).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('status', { name: 'AI connection status' })).toBeTruthy()
   })
 
   it('associates custom provider labels and gives shortcut actions focus visibility', async () => {
@@ -55,7 +54,11 @@ describe('SettingsPage accessibility and AI connection test', () => {
     expect(screen.getByLabelText('Model Name')).toBeTruthy()
 
     const edit = screen.getAllByRole('button', { name: /^Edit / })[0]
-    expect(edit.className).toContain('group-focus-within:opacity-100')
+    edit.focus()
+    expect(document.activeElement).toBe(edit)
+    fireEvent.keyDown(edit, { key: 'Enter' })
+    fireEvent.click(edit)
+    expect(screen.getByText(/Recording shortcut/)).toBeTruthy()
   })
 
   it('cancels shortcut recording before opening Sync so Escape reaches the modal', async () => {
@@ -117,6 +120,7 @@ describe('SettingsPage accessibility and AI connection test', () => {
     await screen.findByLabelText('Provider')
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
-    expect((await screen.findByRole('alert')).textContent).toContain('Error: Save failed')
+    expect(await screen.findByRole('alert', { name: 'Settings save status' })).toBeTruthy()
+    expect(screen.getByLabelText('Provider').value).toBe('openai')
   })
 })

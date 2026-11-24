@@ -2,9 +2,7 @@ const { isNativeChartType, normalizeCssColor } = require('revealjs-shared')
 const { rasterizeStaticVisualElement } = require('./server-background-raster')
 const { resolveServerPptxPoster } = require('./server-pptx-media')
 
-// timeline and game are static-renderable via the Phase-4 shared HTML renderers
-// (timeline → SVG with event images; game → labeled placeholder badge), so they
-// route through the rasterizer instead of crashing the strict export.
+// Timeline and game export authored static content through the shared print renderer.
 const STATIC_VISUAL_TYPES = new Set([
   'html',
   'latex',
@@ -52,6 +50,8 @@ async function addFallbackElement(slide, element, bounds, warnings, slideNumber,
     baseUrl = '',
     resolution,
     rasterCache,
+    teacherReveal = false,
+    designTokens,
     // injectable so unit tests can exercise routing/isolation without a browser
     rasterizeElement = rasterizeStaticVisualElement,
   } = options
@@ -68,9 +68,18 @@ async function addFallbackElement(slide, element, bounds, warnings, slideNumber,
   if (isRasterizable(element)) {
     let rasterData = null
     try {
-      rasterData = await rasterizeElement(element, { baseUrl, resolution, cache: rasterCache })
+      rasterData = await rasterizeElement(element, {
+        baseUrl,
+        resolution,
+        cache: rasterCache,
+        teacherReveal: teacherReveal === true,
+        designTokens,
+      })
     } catch (error) {
-      warnings.push(`Slide ${slideNumber}: rasterization error for ${element.type} (${error.message})`)
+      if (element.type === 'game') throw error
+      warnings.push(
+        `Slide ${slideNumber}: rasterization error for ${element.type} (${error.message})`
+      )
     }
 
     if (rasterData) {
@@ -78,9 +87,9 @@ async function addFallbackElement(slide, element, bounds, warnings, slideNumber,
       warnings.push(`Slide ${slideNumber}: rasterized ${element.type} fallback`)
       return
     }
-    // Per-element isolation (strict or not): a single element that cannot be
-    // rasterized degrades to a gray placeholder so the deck still exports —
-    // it must never throw and abort the whole presentation.
+    // Keep unrelated visual fallback resilience; games must never claim a
+    // successful native snapshot when their authored capture failed.
+    if (element.type === 'game') throw new Error(`Failed to capture authored game "${element.id}"`)
   }
 
   addPlaceholder(slide, bounds, element)

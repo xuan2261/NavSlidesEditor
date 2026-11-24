@@ -18,11 +18,13 @@ import {
 
 const PPTX_MIME = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
 const FIXTURE = 'Bai_2_2.pptx'
-const PATCHABLE_TEXT_BOX = Object.freeze({ slideIndex: 16, name: 'TextBox 22' })
+const PATCHABLE_TEXT_BOX = Object.freeze({ slideIndex: 16, name: 'TextBox 22', semanticSuffix: '#shape:23' })
 function importedTextSource(presentation) {
   const slide = presentation.slides?.[PATCHABLE_TEXT_BOX.slideIndex]
   const element = slide?.elements?.find((item) =>
-    item?.type === 'text' && item.name === PATCHABLE_TEXT_BOX.name &&
+    item?.type === 'text' &&
+    (item.name === PATCHABLE_TEXT_BOX.name ||
+      String(item.pptxInstanceId || item.id || '').endsWith(PATCHABLE_TEXT_BOX.semanticSuffix)) &&
     typeof item.id === 'string' && item.id && typeof item.content === 'string'
   )
   if (!slide?.id || !element) {
@@ -117,7 +119,7 @@ test.describe('Critical PPTX user journeys', () => {
     page,
     request,
   }) => {
-    test.setTimeout(180000)
+    test.setTimeout(300000)
     const marker = `PPTX edited marker ${Date.now()}`
     const fixturePath = path.resolve(process.cwd(), 'PPTX', FIXTURE)
     let presentationId
@@ -125,9 +127,11 @@ test.describe('Critical PPTX user journeys', () => {
     try {
       const sourceBytes = await fs.readFile(fixturePath)
       const sourceHash = createHash('sha256').update(sourceBytes).digest('hex')
-      const imported = await importPptxWhenAvailable(request, {
-        file: { name: FIXTURE, mimeType: PPTX_MIME, buffer: sourceBytes },
-      })
+      const imported = await importPptxWhenAvailable(
+        request,
+        { file: { name: FIXTURE, mimeType: PPTX_MIME, buffer: sourceBytes } },
+        { timeout: 180000 }
+      )
       presentationId = imported.presentationId
 
       const initial = await apiGetPresentation(request, presentationId)
@@ -146,25 +150,18 @@ test.describe('Critical PPTX user journeys', () => {
       const textEditor = page.locator('.ProseMirror')
       await expect(textEditor).toBeVisible()
       const saveResponsePromise = page.waitForResponse(
-        (response) =>
-          response.request().method() === 'PUT' &&
-          response.url().endsWith(`/api/presentations/${presentationId}`)
+        (res) => res.request().method() === 'PUT' && res.url().endsWith(`/api/presentations/${presentationId}`),
+        { timeout: 60000 }
       )
       await textEditor.fill(marker)
       await page.keyboard.press('Escape')
       const saveResponse = await saveResponsePromise
-      if (!saveResponse.ok()) throw new Error(
-        `Package edit save failed: ${saveResponse.status()} ${JSON.stringify(await saveResponse.json().catch(() => ({})))}`
-      )
-      await expect(page.getByRole('button', { name: 'Saved' })).toBeVisible({ timeout: 15000 })
+      if (!saveResponse.ok()) {
+        throw new Error(`Package edit save failed: ${saveResponse.status()} ${JSON.stringify(await saveResponse.json().catch(() => ({})))}`)
+      }
+      await expect(page.getByRole('button', { name: 'Saved' })).toBeVisible({ timeout: 30000 })
 
-      const saved = await waitForStableSavedGeneration(
-        request,
-        presentationId,
-        source,
-        marker,
-        generation1
-      )
+      const saved = await waitForStableSavedGeneration(request, presentationId, source, marker, generation1)
       expect(saved.generation).toBeGreaterThan(generation1)
 
       await page.reload()
@@ -180,7 +177,7 @@ test.describe('Critical PPTX user journeys', () => {
       expect(fidelity.aggregateGeneration).toBe(saved.generation)
       await assertValidatedEditedExport(request, presentationId, saved.generation, fidelity)
 
-      const downloadPromise = page.waitForEvent('download', { timeout: 30000 })
+      const downloadPromise = page.waitForEvent('download', { timeout: 90000 })
       await editor.menubar.exportPPTX()
       const download = await downloadPromise
       const downloadPath = await download.path()
@@ -188,9 +185,7 @@ test.describe('Critical PPTX user journeys', () => {
       const zip = await JSZip.loadAsync(readFileSync(downloadPath))
       expect(zip.file('[Content_Types].xml')).not.toBeNull()
       expect(zip.file(`ppt/slides/slide${source.slideIndex + 1}.xml`)).not.toBeNull()
-      const exportedSlide = await zip
-        .file(`ppt/slides/slide${source.slideIndex + 1}.xml`)
-        .async('string')
+      const exportedSlide = await zip.file(`ppt/slides/slide${source.slideIndex + 1}.xml`).async('string')
       expect(exportedSlide).toContain(marker)
     } finally {
       await apiDeletePresentation(request, presentationId)

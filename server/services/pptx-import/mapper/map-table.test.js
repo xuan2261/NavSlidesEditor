@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import tableMapper from './map-table.js'
+import { tableCellText } from 'revealjs-shared'
 
 const { mapTable, normalizeBorderSet, sanitizeCssColor } = tableMapper
 
@@ -70,13 +71,14 @@ describe('pptx mapTable', () => {
       type: 'table',
       rows: 2,
       cols: 2,
-      data: [['A', 'B'], ['', 'C']],
+      data: [[expect.any(Object), 'B'], ['', 'C']],
       headerBgColor: '#eeeeee',
       mergedCells: [
         { row: 0, col: 0, rowSpan: 2, colSpan: 1 },
         { row: 1, col: 1, rowSpan: 1, colSpan: 2 },
       ],
     })
+    expect(result.data.map((row) => row.map(tableCellText))).toEqual([['A', 'B'], ['', 'C']])
     expect(result.cellStyles.textColors[0][0]).toBe('#111111')
     expect(result.cellStyles.isBold[0][0]).toBe(true)
     expect(result.cellStyles.aligns[0][0]).toBe('center')
@@ -117,6 +119,24 @@ describe('pptx mapTable', () => {
       data: [[{ text: 'A', fontSize: 18 }]],
     }, context())[0]
     expect(result.cellStyles.fontSizes[0][0]).toBe(18)
+  })
+
+  it('extracts parser HTML typography while preserving explicit false/zero and asymmetric cell insets', () => {
+    const html = '<p style="text-align:right"><span style="font-size:11pt;color:#000000;font-family:Aptos;font-weight:bold">Header</span></p>'
+    const result = mapTable({ type: 'table', width: 240, height: 90, headerRow: false, headerIsBold: false, cellPadding: 0, borderWidth: 0,
+      colWidths: [60, 180], rowHeights: [30, 60], data: [
+        [{ text: html, vAlign: 'up', insets: { top: 0, right: 2, bottom: 3, left: 4 }, rowSpan: 2 }, { text: html, fontBold: false }],
+        [{ vMerge: 0 }, { text: '<b>short</b> ordinary text' }],
+      ],
+    }, context())[0]
+    expect(result).toMatchObject({ headerRow: false, headerIsBold: false, cellPadding: 0, borderWidth: 0, colWidths: [60, 180], rowHeights: [30, 60], mergedCells: [{ row: 0, col: 0, rowSpan: 2, colSpan: 1 }] })
+    expect(result.cellStyles.fontSizes[0]).toEqual([11, 11])
+    expect(result.cellStyles.textColors[0]).toEqual(['#000000', '#000000'])
+    expect(result.cellStyles.fontFamilies[0]).toEqual(['Aptos', 'Aptos'])
+    expect(result.cellStyles.isBold).toEqual([[true, false], [false, false]])
+    expect(result.cellStyles.aligns[0]).toEqual(['right', 'right'])
+    expect(result.cellStyles.vAligns[0][0]).toBe('top')
+    expect(result.cellStyles.insets).toEqual([[{ top: 0, right: 2, bottom: 3, left: 4 }, null], [null, null]])
   })
 
   it('returns placeholder for unusable table structure', () => {

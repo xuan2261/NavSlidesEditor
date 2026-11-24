@@ -4,42 +4,102 @@ const path = require('path')
 const {
   getDesignTokensForRevealTheme,
   normalizePresentationNotes,
+  normalizePresentationGames,
 } = require('revealjs-shared')
 const {
   readPresentations,
-  readTemplates,
   withPresentations,
   withShareTokens,
   HISTORY_DIR,
 } = require('../services/storage')
 const { validate } = require('../middleware/validate')
 const {
-  createPresentationSchema,
-  updatePresentationSchema,
+  createPresentationSchema, updatePresentationSchemaWithCandidate,
+  admittedCreatePresentationBody, admittedUpdatePresentationBody,
 } = require('../middleware/schemas')
-const { normalizePptxImportedPresentationForRead } = require('../services/presentation-normalization')
+const {
+  normalizePptxImportedPresentationForRead,
+} = require('../services/presentation-normalization')
 const { normalizeBuiltInTemplates } = require('../services/template-normalization')
-const { stripClientPptxOriginalPaths } = require('../services/pptx-import/create-imported-presentation')
+const {
+  stripClientPptxOriginalPaths,
+} = require('../services/pptx-import/create-imported-presentation')
 const { sanitizeClientEditableData } = require('../services/pptx-import/authority-sanitizer')
+const { assertSemanticBaseline } = require('../services/pptx-import/semantic-baseline')
+const {
+  validatePictureReplacements,
+  rebindPictureReplacementOwnership,
+  rollbackPictureReplacementOwnership,
+} = require('../services/pptx-import/picture-replacement-validation')
+const {
+  normalizeSemanticPresentation,
+} = require('revealjs-shared/src/pptx-semantic-presentation.js')
 const { toPresentationEditorDto } = require('../services/pptx-import/package-store/dto')
 const { hashRecord } = require('../services/pptx-import/package-store/schemas')
 // Namespace import: tests monkey-patch members of this module then re-require
 // the router, so call sites must resolve through the module object.
 const packageLifecycle = require('../services/package-lifecycle-integration')
+const { getPackageGeneration, savePackageProjection } = require('../services/generation-safe-save')
 const {
-  getPackageGeneration,
-  savePackageProjection,
-} = require('../services/generation-safe-save')
-const { drainPackageCompatibilityOutbox } = require('../services/pptx-import/package-store-runtime')
+  drainPackageCompatibilityOutbox,
+  getReadablePackageStore,
+  getPackageStore,
+} = require('../services/pptx-import/package-store-runtime')
 const {
   readAuthoritativePresentation,
   readAuthoritativePresentations,
   resolvePackageBackedRead,
+  resolvePackageBackedReadFromState,
 } = require('../services/package-backed-presentation-read')
 const { withHistoryLock } = require('../services/history-lock')
 const { uuidv4, isSafePresentationId } = require('./presentations-helpers')
 
 const router = express.Router()
+
+// Hints, never authority: the pure admission API proves exact wire equality.
+// Weak roots and a bounded per-store LRU do not retain semantic history.
+const MAX_SEMANTIC_PREDECESSORS = 64
+const semanticPredecessors = new WeakMap()
+function activePackageStore() {
+  try { return getPackageStore() } catch { return null }
+}
+function semanticCandidate(store, id) {
+  const entries = store && semanticPredecessors.get(store)
+  const reference = entries?.get(id)
+  const document = reference?.deref()
+  if (reference) {
+    entries.delete(id)
+    if (document) entries.set(id, reference)
+  }
+  return document
+}
+function rememberSemanticCandidate(store, id, document) {
+  if (!store || store !== activePackageStore() || !document || !Object.isFrozen(document)) return
+  const { normalizePptxSemanticDocument } = require('revealjs-shared/src/pptx-semantic-document.js')
+  if (normalizePptxSemanticDocument(document) !== document) return
+  let entries = semanticPredecessors.get(store)
+  if (!entries) semanticPredecessors.set(store, entries = new Map())
+  entries.delete(id)
+  entries.set(id, new WeakRef(document))
+  while (entries.size > MAX_SEMANTIC_PREDECESSORS) entries.delete(entries.keys().next().value)
+}
+function validateUpdateWithCandidate(req, res, next) {
+  const store = activePackageStore()
+  const schema = updatePresentationSchemaWithCandidate(semanticCandidate(store, req.params.id))
+  return validate(schema)(req, res, (error) => {
+    if (!error) rememberSemanticCandidate(store, req.params.id, req.body.pptxSemantic)
+    next(error)
+  })
+}
+
+function assertNewPresentationId(presentations, id) {
+  if (presentations.some((presentation) => presentation.id === id)) {
+    throw Object.assign(new Error('Presentation destination already exists'), {
+      code: 'STALE_GENERATION',
+      status: 409,
+    })
+  }
+}
 
 // GET /api/presentations - list summaries (excludes trashed)
 // Known package-authority failures are quarantined; healthy rows remain a bare array.
@@ -48,9 +108,11 @@ router.get('/', async (req, res) => {
   try {
     const presentations = await readPresentations()
     const quarantine = []
-    const authoritative = (await readAuthoritativePresentations(presentations, {
-      collectQuarantine: quarantine,
-    })).map((resolved) => resolved.presentation)
+    const authoritative = (
+      await readAuthoritativePresentations(presentations, {
+        collectQuarantine: quarantine,
+      })
+    ).map((resolved) => resolved.presentation)
     const summaries = authoritative.map((p) => ({
       id: p.id,
       title: p.title,
@@ -75,12 +137,12 @@ router.get('/', async (req, res) => {
 // POST /api/presentations - create new (optionally from template)
 router.post('/', validate(createPresentationSchema), async (req, res) => {
   let templatePackageOwner
-  let templatePackageAttempted = false
+  let templatePackageHead
   let presentationId
   let presentationPublished = false
   try {
     // RT-04: never accept client-supplied pptxOriginal path bindings
-    const safeBody = sanitizeClientEditableData(stripClientPptxOriginalPaths(req.body) || {})
+    const safeBody = sanitizeClientEditableData(stripClientPptxOriginalPaths(admittedCreatePresentationBody(req.body)) || {})
     const {
       title,
       theme,
@@ -131,9 +193,12 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
       }
       if (template) {
         const packageBackedTemplate = Boolean(template.pptxAggregateHead)
-        if (packageBackedTemplate && (template.slides || []).some((slide) =>
-          !slide?.id || (slide.elements || []).some((element) => !element?.id)
-        )) {
+        if (
+          packageBackedTemplate &&
+          (template.slides || []).some(
+            (slide) => !slide?.id || (slide.elements || []).some((element) => !element?.id)
+          )
+        ) {
           throw Object.assign(new Error('Package-backed template source identity is unavailable'), {
             code: 'CURRENT_SOURCE_AUTHORITY_UNAVAILABLE',
             status: 422,
@@ -163,7 +228,8 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
     }
 
     if (!presentation) {
-      const designTokens = extraFields.designTokens || getDesignTokensForRevealTheme(theme || 'black')
+      const designTokens =
+        extraFields.designTokens || getDesignTokensForRevealTheme(theme || 'black')
       presentation = normalizePresentationNotes({
         id: uuidv4(),
         title: title || 'Untitled Presentation',
@@ -202,13 +268,14 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
         },
       })
     }
+    presentation = normalizePresentationGames(presentation)
 
     delete presentation.pptxOriginal
     presentationId = presentation.id
+    assertNewPresentationId(await readPresentations(), presentationId)
 
     if (templatePackageOwner) {
-      templatePackageAttempted = true
-      const packageHead = await packageLifecycle.instantiateRetainedPackageHead(
+      templatePackageHead = await packageLifecycle.instantiateRetainedPackageHead(
         templatePackageOwner,
         presentation.id,
         {
@@ -217,16 +284,33 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
           updatedAt: now,
         }
       )
-      if (!packageHead) {
+      if (!templatePackageHead) {
         throw Object.assign(new Error('Package-backed template head is unavailable'), {
           code: 'TEMPLATE_PACKAGE_HEAD_UNAVAILABLE',
           status: 409,
         })
       }
-      presentation.pptxAggregateHead = packageHead
+      presentation.pptxAggregateHead = templatePackageHead
     }
 
-    const result = await withPresentations((presentations) => {
+    const result = await withPresentations(async (presentations) => {
+      assertNewPresentationId(presentations, presentationId)
+      if (templatePackageOwner) {
+        // Read without acquiring package serialization under the JSON lock.
+        // A restore may have refreshed the head while template creation paused.
+        const state = (await getReadablePackageStore()).getState()
+        const currentHead = state.heads.find((head) => head.presentationId === presentationId)
+        if (!currentHead) {
+          throw Object.assign(new Error('Package-backed template head is unavailable'), {
+            code: 'TEMPLATE_PACKAGE_HEAD_UNAVAILABLE',
+            status: 409,
+          })
+        }
+        presentation = resolvePackageBackedReadFromState(state, presentationId, {
+          ...presentation,
+          pptxAggregateHead: currentHead,
+        }).presentation
+      }
       presentations.push(presentation)
       return presentation
     })
@@ -234,19 +318,36 @@ router.post('/', validate(createPresentationSchema), async (req, res) => {
     res.status(201).json(toPresentationEditorDto(normalizePresentationNotes(result)))
   } catch (err) {
     let responseError = err
-    if (templatePackageAttempted && presentationId && !presentationPublished) {
+    const rollbackHead = templatePackageHead || err.createdPackageHead
+    if (rollbackHead && presentationId && !presentationPublished) {
       try {
-        await packageLifecycle.quarantinePackageOwnerWithRetry(presentationId, { compatibilityRemove: true })
-      } catch (rollbackError) {
-        responseError = Object.assign(new AggregateError(
-          [err, rollbackError],
-          'Template instantiation and package rollback failed'
-        ), {
-          code: 'PACKAGE_LIFECYCLE_ROLLBACK_FAILED',
-          status: 503,
+        await packageLifecycle.quarantinePackageOwnerWithRetry(presentationId, {
+          expectedHead: rollbackHead,
         })
+      } catch (rollbackError) {
+        responseError = Object.assign(
+          new AggregateError(
+            [err, rollbackError],
+            'Template instantiation and package rollback failed'
+          ),
+          {
+            code: 'PACKAGE_LIFECYCLE_ROLLBACK_FAILED',
+            status: 503,
+          }
+        )
       }
     }
+    if (
+      Array.isArray(responseError.errors) &&
+      responseError.errors.every((issue) => Array.isArray(issue.path))
+    )
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: responseError.errors.map((issue) => ({
+          path: issue.path.join('.'),
+          message: issue.message,
+        })),
+      })
     res.status(responseError.status || 500).json({
       error: responseError.message,
       code: responseError.code,
@@ -277,25 +378,31 @@ router.get('/trash/list', async (req, res) => {
 // GET /api/presentations/:id
 router.get('/:id', async (req, res) => {
   try {
+    const store = activePackageStore()
     const resolved = await readAuthoritativePresentation(req.params.id)
     if (!resolved) return res.status(404).json({ error: 'Not found' })
-    res.json(toPresentationEditorDto(normalizePresentationNotes(resolved.presentation), {
-      aggregateGeneration: resolved.generation,
-    }))
+    // Seed the checked owned semantic root, not the mutable editor DTO.
+    rememberSemanticCandidate(store, req.params.id, resolved.presentation.pptxSemantic)
+    res.json(
+      toPresentationEditorDto(normalizePresentationNotes(resolved.presentation), {
+        aggregateGeneration: resolved.generation,
+      })
+    )
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message, code: err.code })
   }
 })
 
 // PUT /api/presentations/:id
-router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
+router.put('/:id', validateUpdateWithCandidate, async (req, res) => {
   try {
     let packageResult
-    const expectedGeneration = req.body?.aggregateGeneration
-    const baseRevisionId = req.body?.baseRevisionId
-    const idempotencyKey = req.get('Idempotency-Key') || req.body?.idempotencyKey
+    const admittedBody = admittedUpdatePresentationBody(req.body)
+    const expectedGeneration = admittedBody.aggregateGeneration
+    const baseRevisionId = admittedBody.baseRevisionId
+    const idempotencyKey = req.get('Idempotency-Key') || admittedBody.idempotencyKey
     // RT-04: client cannot inject/rebind pptxOriginal (paths or id steal)
-    const safeBody = sanitizeClientEditableData(req.body)
+    const safeBody = sanitizeClientEditableData(admittedBody)
     delete safeBody.aggregateGeneration
     delete safeBody.baseRevisionId
     delete safeBody.idempotencyKey
@@ -327,13 +434,19 @@ router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
       // The package outbox is the sole compatibility writer for package-backed saves;
       // avoid a second JSON critical section that could overwrite a newer generation.
       await drainPackageCompatibilityOutbox()
-      const presentations = await readPresentations()
-      result = presentations.find((item) => item.id === req.params.id) || null
+      // Respond with this receipt's captured publication, not a newer disk row
+      // paired with this save's older generation. The durable drain is still required.
+      result = packageResult.responsePresentation
     } else {
-      result = await withPresentations((presentations) => {
+      result = await withPresentations(async (presentations) => {
         const index = presentations.findIndex((p) => p.id === req.params.id)
         if (index === -1) return null
         const previous = presentations[index]
+        assertSemanticBaseline(
+          previous,
+          normalizeSemanticPresentation({ ...previous, ...safeBody })
+        )
+        await validatePictureReplacements({ ...previous, ...safeBody, id: req.params.id }, previous)
         // Legacy reconstructed export still observes this marker. Package-backed saves
         // instead record a server-owned pending journal and retain immutable R0 bytes.
         const contentEdited =
@@ -342,17 +455,19 @@ router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
             safeBody.title !== undefined ||
             safeBody.theme !== undefined ||
             safeBody.transition !== undefined)
-        presentations[index] = normalizePresentationNotes({
-          ...previous,
-          ...safeBody,
-          id: req.params.id,
-          // Preserve server-owned original package metadata
-          pptxOriginal: previous.pptxOriginal,
-          ...(contentEdited
-            ? { _pptxEdited: true, _pptxEditedAt: new Date().toISOString() }
-            : {}),
-          updatedAt: new Date().toISOString(),
-        })
+        presentations[index] = normalizePresentationGames(
+          normalizePresentationNotes({
+            ...previous,
+            ...safeBody,
+            id: req.params.id,
+            // Preserve server-owned original package metadata
+            pptxOriginal: previous.pptxOriginal,
+            ...(contentEdited
+              ? { _pptxEdited: true, _pptxEditedAt: new Date().toISOString() }
+              : {}),
+            updatedAt: new Date().toISOString(),
+          })
+        )
         return presentations[index]
       })
     }
@@ -366,15 +481,28 @@ router.put('/:id', validate(updatePresentationSchema), async (req, res) => {
         : { saveOutcome: packageResult.idempotent ? 'idempotent-replay' : 'committed' }),
     })
   } catch (err) {
+    if (Array.isArray(err.errors))
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: err.errors.map((issue) => ({
+          path: issue.path.join('.'),
+          message: issue.message,
+        })),
+      })
     const code = err.code || 'PACKAGE_SAVE_FAILED'
-    const status = code === 'SNAPSHOT_BUDGET_EXCEEDED'
-      ? 413
-      : code === 'STALE_GENERATION'
-        ? 409
-        : 500
-    const currentGeneration = code === 'STALE_GENERATION'
-      ? (err.currentGeneration ?? await getPackageGeneration(req.params.id).catch(() => undefined))
-      : undefined
+    const status =
+      code === 'SNAPSHOT_BUDGET_EXCEEDED'
+        ? 413
+        : code === 'STALE_GENERATION'
+          ? 409
+          : code === 'INVALID_PPTX_SEMANTIC_DOCUMENT'
+            ? 400
+            : 500
+    const currentGeneration =
+      code === 'STALE_GENERATION'
+        ? (err.currentGeneration ??
+          (await getPackageGeneration(req.params.id).catch(() => undefined)))
+        : undefined
     res.status(status).json({ error: err.message, code, reason: code, currentGeneration })
   }
 })
@@ -401,13 +529,15 @@ router.delete('/:id', async (req, res) => {
 router.post('/:id/restore', async (req, res) => {
   try {
     const presId = req.params.id
-    const result = await withHistoryLock(presId, () => withPresentations((presentations) => {
-      const pres = presentations.find((p) => p.id === presId)
-      if (!pres || !pres.deletedAt) return null
-      delete pres.deletedAt
-      pres.updatedAt = new Date().toISOString()
-      return pres
-    }))
+    const result = await withHistoryLock(presId, () =>
+      withPresentations((presentations) => {
+        const pres = presentations.find((p) => p.id === presId)
+        if (!pres || !pres.deletedAt) return null
+        delete pres.deletedAt
+        pres.updatedAt = new Date().toISOString()
+        return pres
+      })
+    )
     if (!result) return res.status(404).json({ error: 'Not found or not in trash' })
     res.json({ success: true })
   } catch (err) {
@@ -432,19 +562,29 @@ router.delete('/:id/permanent', async (req, res) => {
         ownerType: 'permanent-delete',
         ownerId: presId,
       }
+      const presentationOwner = {
+        ownerType: 'presentation',
+        ownerId: presId,
+      }
       let retainedOwnerExists = false
+      let presentationOwnerExists = false
       let compatibilityPending = false
       let historyOwners = []
       try {
         retainedOwnerExists = await packageLifecycle.packageOwnerExists(retainedOwner)
+        presentationOwnerExists = await packageLifecycle.packageOwnerExists(presentationOwner)
         historyOwners = await packageLifecycle.getPackageHistoryOwners(presId)
-        if (!presentation) compatibilityPending = await packageLifecycle.packageCompatibilityPending(presId)
+        if (!presentation)
+          compatibilityPending = await packageLifecycle.packageCompatibilityPending(presId)
       } catch {
-        throw Object.assign(new Error('Package lifecycle is temporarily unavailable; retry deletion'), {
-          code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
-          status: 503,
-          retryable: true,
-        })
+        throw Object.assign(
+          new Error('Package lifecycle is temporarily unavailable; retry deletion'),
+          {
+            code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
+            status: 503,
+            retryable: true,
+          }
+        )
       }
       let retainedHead = null
       let packageBacked = Boolean(presentation?.pptxAggregateHead)
@@ -453,13 +593,17 @@ router.delete('/:id/permanent', async (req, res) => {
         livePackageBacked = await packageLifecycle.packagePresentationExists(presId)
         // A retained permanent-delete owner is durable evidence that a prior
         // attempt already quarantined the package and now needs reconciliation.
-        packageBacked = packageBacked || livePackageBacked || retainedOwnerExists
+        packageBacked =
+          packageBacked || livePackageBacked || retainedOwnerExists || presentationOwnerExists
       } catch {
-        throw Object.assign(new Error('Package lifecycle is temporarily unavailable; retry deletion'), {
-          code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
-          status: 503,
-          retryable: true,
-        })
+        throw Object.assign(
+          new Error('Package lifecycle is temporarily unavailable; retry deletion'),
+          {
+            code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
+            status: 503,
+            retryable: true,
+          }
+        )
       }
       let packageAuthorityPresentation = presentation
       if (livePackageBacked) {
@@ -478,16 +622,25 @@ router.delete('/:id/permanent', async (req, res) => {
           }
         } catch (error) {
           if (error.status) throw error
-          throw Object.assign(new Error('Package lifecycle is temporarily unavailable; retry deletion'), {
-            cause: error,
-            code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
-            status: 503,
-            retryable: true,
-          })
+          throw Object.assign(
+            new Error('Package lifecycle is temporarily unavailable; retry deletion'),
+            {
+              cause: error,
+              code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
+              status: 503,
+              retryable: true,
+            }
+          )
         }
       }
-      if (!presentation && !packageBacked && !retainedOwnerExists &&
-          !compatibilityPending && !historyFiles.length && !historyOwners.length) {
+      if (
+        !presentation &&
+        !packageBacked &&
+        !retainedOwnerExists &&
+        !compatibilityPending &&
+        !historyFiles.length &&
+        !historyOwners.length
+      ) {
         return { status: 404, body: { error: 'Not found' } }
       }
       const historyOwnersKnownAbsent = historyOwners.length === 0
@@ -501,12 +654,15 @@ router.delete('/:id/permanent', async (req, res) => {
           })
         } catch (error) {
           if (error.status) throw error
-          throw Object.assign(new Error('Package lifecycle is temporarily unavailable; retry deletion'), {
-            cause: error,
-            code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
-            status: 503,
-            retryable: true,
-          })
+          throw Object.assign(
+            new Error('Package lifecycle is temporarily unavailable; retry deletion'),
+            {
+              cause: error,
+              code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
+              status: 503,
+              retryable: true,
+            }
+          )
         }
         if (!retainedHead) {
           throw Object.assign(new Error('Package lifecycle source head changed'), {
@@ -526,23 +682,29 @@ router.delete('/:id/permanent', async (req, res) => {
             try {
               successorExists = await packageLifecycle.packagePresentationExists(presId)
             } catch {
-              throw Object.assign(new Error('Package lifecycle is temporarily unavailable; retry deletion'), {
-                code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
-                status: 503,
-                retryable: true,
-              })
+              throw Object.assign(
+                new Error('Package lifecycle is temporarily unavailable; retry deletion'),
+                {
+                  code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
+                  status: 503,
+                  retryable: true,
+                }
+              )
             }
             if (successorExists) {
               try {
                 await packageLifecycle.releasePackageOwnerWithRetry(retainedOwner)
               } catch (cleanupError) {
-                throw Object.assign(new AggregateError(
-                  [error, cleanupError],
-                  'Package deletion became stale and temporary ownership cleanup failed'
-                ), {
-                  code: 'PACKAGE_LIFECYCLE_ROLLBACK_FAILED',
-                  status: 503,
-                })
+                throw Object.assign(
+                  new AggregateError(
+                    [error, cleanupError],
+                    'Package deletion became stale and temporary ownership cleanup failed'
+                  ),
+                  {
+                    code: 'PACKAGE_LIFECYCLE_ROLLBACK_FAILED',
+                    status: 503,
+                  }
+                )
               }
               error.retryable = true
               throw error
@@ -552,28 +714,33 @@ router.delete('/:id/permanent', async (req, res) => {
             // succeeds so the normal rollback boundary remains recoverable.
           } else {
             try {
-              await packageLifecycle.restoreQuarantinedPackageHeadWithRetry(
-                retainedOwner,
-                presId,
-                { compatibilityPresentation: packageAuthorityPresentation, updatedAt: packageAuthorityPresentation?.updatedAt }
-              )
+              await packageLifecycle.restoreQuarantinedPackageHeadWithRetry(retainedOwner, presId, {
+                compatibilityPresentation: packageAuthorityPresentation,
+                updatedAt: packageAuthorityPresentation?.updatedAt,
+              })
               await packageLifecycle.releasePackageOwnerWithRetry(retainedOwner)
             } catch (rollbackError) {
-              throw Object.assign(new AggregateError(
-                [error, rollbackError],
-                'Package deletion and retention rollback failed'
-              ), {
-                code: 'PACKAGE_LIFECYCLE_ROLLBACK_FAILED',
-                status: 503,
-              })
+              throw Object.assign(
+                new AggregateError(
+                  [error, rollbackError],
+                  'Package deletion and retention rollback failed'
+                ),
+                {
+                  code: 'PACKAGE_LIFECYCLE_ROLLBACK_FAILED',
+                  status: 503,
+                }
+              )
             }
             if (error.status) throw error
-            throw Object.assign(new Error('Package lifecycle is temporarily unavailable; retry deletion'), {
-              cause: error,
-              code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
-              status: 503,
-              retryable: true,
-            })
+            throw Object.assign(
+              new Error('Package lifecycle is temporarily unavailable; retry deletion'),
+              {
+                cause: error,
+                code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
+                status: 503,
+                retryable: true,
+              }
+            )
           }
         }
       }
@@ -591,25 +758,29 @@ router.delete('/:id/permanent', async (req, res) => {
       } catch (error) {
         let presentationStillPublished = true
         try {
-          presentationStillPublished = (await readPresentations()).some((item) => item.id === presId)
+          presentationStillPublished = (await readPresentations()).some(
+            (item) => item.id === presId
+          )
         } catch {}
         if (retainedHead && presentationStillPublished) {
           try {
-            await packageLifecycle.restoreQuarantinedPackageHeadWithRetry(
-              retainedOwner,
-              presId,
-              { compatibilityPresentation: packageAuthorityPresentation, updatedAt: packageAuthorityPresentation?.updatedAt }
-            )
+            await packageLifecycle.restoreQuarantinedPackageHeadWithRetry(retainedOwner, presId, {
+              compatibilityPresentation: packageAuthorityPresentation,
+              updatedAt: packageAuthorityPresentation?.updatedAt,
+            })
             await packageLifecycle.releasePackageOwnerWithRetry(retainedOwner)
             await drainPackageCompatibilityOutbox()
           } catch (rollbackError) {
-            throw Object.assign(new AggregateError(
-              [error, rollbackError],
-              'Presentation deletion and package rollback failed'
-            ), {
-              code: 'PACKAGE_LIFECYCLE_ROLLBACK_FAILED',
-              status: 503,
-            })
+            throw Object.assign(
+              new AggregateError(
+                [error, rollbackError],
+                'Presentation deletion and package rollback failed'
+              ),
+              {
+                code: 'PACKAGE_LIFECYCLE_ROLLBACK_FAILED',
+                status: 503,
+              }
+            )
           }
         }
         throw error
@@ -618,24 +789,28 @@ router.delete('/:id/permanent', async (req, res) => {
       if (!removed) {
         let presentationStillPublished = true
         try {
-          presentationStillPublished = (await readPresentations()).some((item) => item.id === presId)
+          presentationStillPublished = (await readPresentations()).some(
+            (item) => item.id === presId
+          )
         } catch {}
         if (presentationStillPublished) {
           if (retainedHead) {
             try {
-              await packageLifecycle.restoreQuarantinedPackageHeadWithRetry(
-                retainedOwner,
-                presId,
-                { compatibilityPresentation: packageAuthorityPresentation, updatedAt: packageAuthorityPresentation?.updatedAt }
-              )
+              await packageLifecycle.restoreQuarantinedPackageHeadWithRetry(retainedOwner, presId, {
+                compatibilityPresentation: packageAuthorityPresentation,
+                updatedAt: packageAuthorityPresentation?.updatedAt,
+              })
               await packageLifecycle.releasePackageOwnerWithRetry(retainedOwner)
               await drainPackageCompatibilityOutbox()
             } catch (rollbackError) {
-              throw Object.assign(new Error('Presentation was already removed and package rollback failed'), {
-                cause: rollbackError,
-                code: 'PACKAGE_LIFECYCLE_ROLLBACK_FAILED',
-                status: 503,
-              })
+              throw Object.assign(
+                new Error('Presentation was already removed and package rollback failed'),
+                {
+                  cause: rollbackError,
+                  code: 'PACKAGE_LIFECYCLE_ROLLBACK_FAILED',
+                  status: 503,
+                }
+              )
             }
           }
           return { status: 404, body: { error: 'Not found' } }
@@ -653,6 +828,13 @@ router.delete('/:id/permanent', async (req, res) => {
           }
         }
       }
+      if (!livePackageBacked && presentationOwnerExists) {
+        try {
+          await packageLifecycle.releasePackageOwnerWithRetry(presentationOwner)
+        } catch (error) {
+          cleanupErrors.push(error)
+        }
+      }
       if (retainedHead || retainedOwnerExists) {
         try {
           await packageLifecycle.releasePackageOwnerWithRetry(retainedOwner)
@@ -661,13 +843,16 @@ router.delete('/:id/permanent', async (req, res) => {
         }
       }
       if (cleanupErrors.length) {
-        throw Object.assign(new AggregateError(
-          cleanupErrors,
-          'Presentation deletion completed with package cleanup pending'
-        ), {
-          code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
-          status: 503,
-        })
+        throw Object.assign(
+          new AggregateError(
+            cleanupErrors,
+            'Presentation deletion completed with package cleanup pending'
+          ),
+          {
+            code: 'PACKAGE_LIFECYCLE_UNAVAILABLE',
+            status: 503,
+          }
+        )
       }
 
       try {
@@ -704,18 +889,19 @@ router.delete('/:id/permanent', async (req, res) => {
 })
 
 // POST /api/presentations/:id/duplicate
-router.post('/:id/duplicate', async (req, res) => {
+router.post('/:id/duplicate', async (req, res, next) => {
   let copiedOriginalId
-  let packageDuplicationAttempted = false
   let packageHead
   let destinationId
   let presentationPublished = false
+  let pictureOwnershipToken
   try {
     const {
       persistOriginalPptx,
       readOriginalPptx,
     } = require('../services/pptx-import/original-package')
-    const original = (await readPresentations()).find((p) => p.id === req.params.id)
+    const presentations = await readPresentations()
+    const original = presentations.find((p) => p.id === req.params.id)
     if (!original || original.deletedAt) return res.status(404).json({ error: 'Not found' })
 
     const sourceFingerprint = hashRecord(original)
@@ -728,11 +914,16 @@ router.post('/:id/duplicate', async (req, res) => {
     const copy = JSON.parse(JSON.stringify(authoritative.presentation))
     copy.id = uuidv4()
     destinationId = copy.id
+    assertNewPresentationId(presentations, destinationId)
     copy.title = (copy.title || 'Untitled') + ' (copy)'
     copy.createdAt = now
     copy.updatedAt = now
 
-    packageDuplicationAttempted = true
+    pictureOwnershipToken = await rebindPictureReplacementOwnership(
+      copy,
+      original.id,
+      destinationId
+    )
     packageHead = await packageLifecycle.duplicatePackageOwner(original.id, copy.id, {
       projection: copy,
       expectedSourceHead,
@@ -743,7 +934,11 @@ router.post('/:id/duplicate', async (req, res) => {
         status: 409,
       })
     }
-    if (!expectedSourceHead && !packageHead && await packageLifecycle.packagePresentationExists(original.id)) {
+    if (
+      !expectedSourceHead &&
+      !packageHead &&
+      (await packageLifecycle.packagePresentationExists(original.id))
+    ) {
       throw Object.assign(new Error('Presentation package head appeared while duplicating'), {
         code: 'STALE_GENERATION',
         status: 409,
@@ -773,8 +968,9 @@ router.post('/:id/duplicate', async (req, res) => {
       }
     }
 
-    const normalizedCopy = normalizePresentationNotes(copy)
+    const normalizedCopy = normalizePresentationGames(normalizePresentationNotes(copy))
     const result = await withPresentations((presentations) => {
+      assertNewPresentationId(presentations, destinationId)
       const current = presentations.find((p) => p.id === original.id)
       if (!current || current.deletedAt || hashRecord(current) !== sourceFingerprint) {
         throw Object.assign(new Error('Presentation changed while duplicating'), {
@@ -788,12 +984,16 @@ router.post('/:id/duplicate', async (req, res) => {
     presentationPublished = true
     res.status(201).json(toPresentationEditorDto(result))
   } catch (err) {
+    if (presentationPublished) return next(err)
     let responseError = err
+    const rollbackHead = packageHead || err.createdPackageHead
     if (!presentationPublished) {
       const rollbackErrors = []
-      if (packageDuplicationAttempted && destinationId) {
+      if (rollbackHead && destinationId) {
         try {
-          await packageLifecycle.quarantinePackageOwnerWithRetry(destinationId)
+          await packageLifecycle.quarantinePackageOwnerWithRetry(destinationId, {
+            expectedHead: rollbackHead,
+          })
         } catch (rollbackError) {
           rollbackErrors.push(rollbackError)
         }
@@ -808,18 +1008,25 @@ router.post('/:id/duplicate', async (req, res) => {
           rollbackErrors.push(rollbackError)
         }
       }
+      if (pictureOwnershipToken) {
+        try {
+          await rollbackPictureReplacementOwnership(pictureOwnershipToken)
+        } catch (rollbackError) {
+          rollbackErrors.push(rollbackError)
+        }
+      }
       if (rollbackErrors.length) {
-        responseError = Object.assign(new AggregateError(
-          [err, ...rollbackErrors],
-          'Presentation duplication rollback failed'
-        ), {
-          code: 'PRESENTATION_DUPLICATION_ROLLBACK_FAILED',
-          status: 503,
-        })
+        responseError = Object.assign(
+          new AggregateError([err, ...rollbackErrors], 'Presentation duplication rollback failed'),
+          {
+            code: 'PRESENTATION_DUPLICATION_ROLLBACK_FAILED',
+            status: 503,
+          }
+        )
       }
     }
-    const status = responseError.status ||
-      (responseError.code === 'PACKAGE_PENDING_PROJECTION' ? 409 : 500)
+    const status =
+      responseError.status || (responseError.code === 'PACKAGE_PENDING_PROJECTION' ? 409 : 500)
     res.status(status).json({ error: responseError.message, code: responseError.code })
   }
 })

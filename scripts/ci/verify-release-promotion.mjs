@@ -80,7 +80,7 @@ export function verifyReleasePromotion(input) {
     throw new Error('Trivy finding policy or report is incomplete')
   }
   let total = 0
-  let unapproved = 0
+  const unapprovedIds = []
   for (const result of report.Results) {
     if (result.Vulnerabilities != null && !Array.isArray(result.Vulnerabilities)) {
       throw new Error('Trivy finding inventory is invalid')
@@ -92,22 +92,30 @@ export function verifyReleasePromotion(input) {
         !vulnerabilityPolicy.exceptions.some(
           (entry) =>
             entry.id === vulnerability.VulnerabilityID &&
-            (!entry.package || entry.package === vulnerability.PkgName)
+            (!entry.package || entry.package === vulnerability.PkgName) &&
+            (entry.installedVersion === undefined ||
+              entry.installedVersion === vulnerability.InstalledVersion)
         )
       ) {
-        unapproved++
+        unapprovedIds.push(vulnerability.VulnerabilityID)
       }
     }
   }
+  const unapproved = unapprovedIds.length
   if (scanReceipt.scan.vulnerabilityCount !== total || findings.count !== unapproved) {
     throw new Error('Trivy finding count does not match the raw report')
   }
-  if (
-    unapproved > 0 &&
-    (vulnerabilityPolicy.unapprovedFindingDisposition?.status !== 'risk-accepted' ||
-      vulnerabilityPolicy.unapprovedFindingDisposition.expectedCount !== unapproved)
-  ) {
-    throw new Error('risk acceptance count changed since approved policy')
+  if (unapproved > 0) {
+    const disposition = vulnerabilityPolicy.unapprovedFindingDisposition
+    const baseline = new Set(Array.isArray(disposition?.baselineIds) ? disposition.baselineIds : [])
+    if (
+      disposition?.status !== 'risk-accepted' ||
+      !Number.isSafeInteger(disposition.maxCount) ||
+      unapproved > disposition.maxCount ||
+      unapprovedIds.some((id) => !baseline.has(id))
+    ) {
+      throw new Error('risk acceptance count or baselineIds violated since approved policy')
+    }
   }
   return {
     subjectSha: input.subjectSha,

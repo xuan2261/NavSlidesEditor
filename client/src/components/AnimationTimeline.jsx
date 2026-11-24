@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Play, X, GripVertical } from 'lucide-react'
 import { Button } from '../components/ui'
 import { FRAGMENT_ANIMATION_TYPES } from '../constants/fragment-animation-types'
+import NativeSourceTimingControls from './native-source-timing-controls'
 
 const ANIMATION_TYPES = FRAGMENT_ANIMATION_TYPES
 
@@ -34,7 +35,7 @@ function getElementLabel(el) {
   return el.type
 }
 
-export default function AnimationTimeline({ slide, onUpdateElement, onClose, onPreview }) {
+export default function AnimationTimeline({ slide, pptxSemantic, onSourceTimingOperation, onUpdateElement, onClose, onPreview }) {
   const [dragItem, setDragItem] = useState(null)
 
   if (!slide) return null
@@ -75,7 +76,11 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
   }
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-[990] bg-card border-t border-border max-h-[200px] flex flex-col">
+    <div className="absolute bottom-0 left-0 right-0 z-[990] bg-card border-t border-border flex flex-col"
+      style={{ maxHeight: pptxSemantic && (slide.hasSourceTiming || slide.sourceTiming) ? 'min(60vh, 420px)' : 200 }}>
+      <div className="overflow-auto min-h-0 flex-1">
+        <NativeSourceTimingControls document={pptxSemantic} slide={slide} onOperation={onSourceTimingOperation} />
+      </div>
       <div className="flex items-center gap-2.5 py-2 px-3 border-b border-border shrink-0">
         <span className="font-semibold text-[13px]">Animation Timeline</span>
         <span className="text-[11px] text-text-muted">
@@ -96,6 +101,12 @@ export default function AnimationTimeline({ slide, onUpdateElement, onClose, onP
           </Button>
         </div>
       </div>
+      {slide.animationReferenceError && (
+        <p role="alert" className="px-3 py-1 text-xs text-text-secondary shrink-0">
+          {slide.animationReferenceError}
+        </p>
+      )}
+
 
       {fragmentElements.length === 0 ? (
         <div

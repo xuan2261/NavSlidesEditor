@@ -7,7 +7,9 @@ const subjectSha = 'a'.repeat(40)
 const digest = (value) => createHash('sha256').update(value).digest('hex')
 
 function evidence() {
-  const report = Buffer.from('{"Results":[{"Vulnerabilities":[{"Severity":"HIGH"}]}]}\n')
+  const report = Buffer.from(
+    '{"Results":[{"Vulnerabilities":[{"VulnerabilityID":"CVE-2025-0001","PkgName":"libc6","InstalledVersion":"2.41","Severity":"HIGH"}]}]}\n'
+  )
   const sbom = Buffer.from('{"spdxVersion":"SPDX-2.3"}\n')
   const imageDigest = `sha256:${sha('b')}`
   const scanReceipt = {
@@ -31,19 +33,23 @@ function evidence() {
     tag: 'v1.17.0-rc.1',
     packageVersion: '1.17.0',
     policy: {
-      policyVersion: 'release-target-policy-v3',
+      policyVersion: 'release-target-policy-v4',
       containerSecurityAdvisory: { mode: 'user-risk-accepted', securityPassClaim: false },
     },
     vulnerabilityPolicy: {
       failSeverities: ['HIGH', 'CRITICAL'],
       exceptions: [],
-      unapprovedFindingDisposition: { status: 'risk-accepted', expectedCount: 1 },
+      unapprovedFindingDisposition: {
+        status: 'risk-accepted',
+        maxCount: 2,
+        baselineIds: ['CVE-2025-0001'],
+      },
     },
     root: {
       status: 'passed',
       subjectSha,
       clientDigest: digest(manifestBytes),
-      policyVersion: 'release-target-policy-v3',
+      policyVersion: 'release-target-policy-v4',
       releaseTag: 'v1.17.0-rc.1',
       children: {
         'linux-ci': { status: 'passed' },
@@ -112,9 +118,13 @@ describe('release Docker promotion', () => {
     expect(() => verifyReleasePromotion(input)).toThrow(/Windows receipt/i)
   })
 
-  it('rejects findings outside the operator-approved count', () => {
-    const input = evidence()
-    input.vulnerabilityPolicy.unapprovedFindingDisposition.expectedCount = 2
-    expect(() => verifyReleasePromotion(input)).toThrow(/risk acceptance count/i)
+  it('rejects findings exceeding maxCount or outside baselineIds', () => {
+    const overCount = evidence()
+    overCount.vulnerabilityPolicy.unapprovedFindingDisposition.maxCount = 0
+    expect(() => verifyReleasePromotion(overCount)).toThrow(/risk acceptance/i)
+
+    const outsideBaseline = evidence()
+    outsideBaseline.vulnerabilityPolicy.unapprovedFindingDisposition.baselineIds = ['CVE-OTHER']
+    expect(() => verifyReleasePromotion(outsideBaseline)).toThrow(/risk acceptance/i)
   })
 })

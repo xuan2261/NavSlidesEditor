@@ -30,10 +30,22 @@ describe('extended domain report', () => {
       inventory: INVENTORY,
       tags: {
         'flow.autosave': [
-          { file: 'flow.test.js', title: '[cap:flow.autosave] saves', tier: 'smoke', layer: 'unit', skipped: false },
+          {
+            file: 'flow.test.js',
+            title: '[cap:flow.autosave] saves',
+            tier: 'smoke',
+            layer: 'unit',
+            skipped: false,
+          },
         ],
         'share.password': [
-          { file: 'share.spec.js', title: '[cap:share.password] protects', tier: 'smoke', layer: 'e2e', skipped: false },
+          {
+            file: 'share.spec.js',
+            title: '[cap:share.password] protects',
+            tier: 'smoke',
+            layer: 'e2e',
+            skipped: false,
+          },
         ],
       },
       runIndex: buildRunIndex([
@@ -62,7 +74,13 @@ describe('extended domain report', () => {
       inventory: INVENTORY,
       tags: {
         'share.password': [
-          { file: 'share.spec.js', title: '[cap:share.password] protects', tier: 'smoke', layer: 'e2e', skipped: false },
+          {
+            file: 'share.spec.js',
+            title: '[cap:share.password] protects',
+            tier: 'smoke',
+            layer: 'e2e',
+            skipped: false,
+          },
         ],
       },
       runIndex: trustedExtendedRunIndex(staleRunIndex, true),
@@ -70,5 +88,34 @@ describe('extended domain report', () => {
 
     expect(report.rows.find((row) => row.id === 'share.password').status).toBe('TAGGED')
     expect(report.summary.PASS || 0).toBe(0)
+  })
+
+  it('never promotes game coverage from a tagged test pass alone', () => {
+    const game = { id: 'game.quiz.file', category: 'game', scope: 'game', tiers: ['smoke'] }
+    const tags = {
+      'game.quiz.file': [
+        { file: 'quiz.spec.js', title: 'quiz runs', tier: 'smoke', layer: 'e2e', skipped: false },
+      ],
+    }
+    const runIndex = buildRunIndex([{ file: 'quiz.spec.js', title: 'quiz runs', status: 'passed' }])
+    expect(buildExtendedDomainReport({ inventory: [game], tags, runIndex }).rows[0].status).toBe(
+      'GAP'
+    )
+    expect(
+      buildExtendedDomainReport({
+        inventory: [game],
+        tags,
+        runIndex,
+        educationGate: { ok: true, subjectVerified: false },
+      }).rows[0].status
+    ).toBe('GAP')
+    expect(
+      buildExtendedDomainReport({
+        inventory: [game],
+        tags,
+        runIndex,
+        educationGate: { ok: true, subjectVerified: true },
+      }).rows[0].status
+    ).toBe('PASS')
   })
 })

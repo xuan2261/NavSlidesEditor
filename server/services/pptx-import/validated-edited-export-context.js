@@ -1,6 +1,44 @@
 const { hashRecord } = require('./package-store/schemas')
 const { transportFromTipTapContent } = require('./tiptap-single-plain-run-eligibility')
 const { MUTATION_OPERATIONS } = require('./mutation-operation-scope')
+const { types } = require('node:util')
+const { isCheckedImmutableSemanticValue } = require('revealjs-shared/src/pptx-semantic-records.js')
+
+const immutableData = new WeakSet()
+function admittedData(value, visiting = new Set()) {
+  if (value === null || value === undefined) return true
+  if (typeof value !== 'object') return ['string', 'boolean'].includes(typeof value) ||
+    (typeof value === 'number' && Number.isFinite(value))
+  if (types.isProxy(value)) return false
+  if (immutableData.has(value) || isCheckedImmutableSemanticValue(value)) return true
+  if (!Object.isFrozen(value) || visiting.has(value)) return false
+  const array = Array.isArray(value)
+  const proto = Object.getPrototypeOf(value)
+  if (array ? proto !== Array.prototype : proto !== Object.prototype && proto !== null) return false
+  const descriptors = Object.getOwnPropertyDescriptors(value)
+  if (array && (Reflect.ownKeys(descriptors).length !== value.length + 1 ||
+      Array.from({ length: value.length }, (_, i) => i).some((i) => !Object.hasOwn(descriptors, i)))) return false
+  visiting.add(value)
+  const valid = Reflect.ownKeys(descriptors).every((key) => {
+    const d = descriptors[key]
+    return typeof key === 'string' && Object.hasOwn(d, 'value') &&
+      (d.enumerable || (array && key === 'length')) && admittedData(d.value, visiting)
+  })
+  visiting.delete(value)
+  if (valid) immutableData.add(value)
+  return valid
+}
+
+function equalNonText(a, b) {
+  if (a === b) return true // Only reached after recursive immutable plain-data admission.
+  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false
+  if (Array.isArray(a) !== Array.isArray(b)) return false
+  if (Array.isArray(a)) return a.length === b.length && a.every((v, i) => equalNonText(v, b[i]))
+  const keys = (value) => Object.keys(value).filter((key) => value[key] !== undefined &&
+    !(value.type === 'text' && key === 'content'))
+  const ak = keys(a), bk = keys(b)
+  return ak.length === bk.length && ak.every((key) => bk.includes(key) && equalNonText(a[key], b[key]))
+}
 
 function failed(reasonCode) {
   return Object.freeze({ ok: false, reasonCode })
@@ -30,6 +68,7 @@ function withoutTextContent(value) {
 }
 
 function hasNonTextChanges(before, after) {
+  if (admittedData(before) && admittedData(after)) return !equalNonText(before, after)
   return hashRecord(withoutTextContent(before)) !== hashRecord(withoutTextContent(after))
 }
 
@@ -69,6 +108,7 @@ function isCommittedAuthority(result) {
     result.operation === MUTATION_OPERATIONS.VALIDATED_EDITED_EXPORT
 }
 
+// Mutable authority must be rehashed on every read, even when its head is unchanged.
 function matchesHeadAuthority(result, head) {
   return result.projection && result.sourceMap &&
     head.projectionRevisionId === hashRecord(result.projection) &&
@@ -95,9 +135,11 @@ function resolveEditedExportContext(state, presentationId) {
     .filter(isCommittedAuthority)
   const committed = committedResults
     .filter((result) => pending
-      ? result.generation === head.generation - 1 &&
-        result.sourceMap?.packageGeneration === head.generation - 1
-      : matchesHeadAuthority(result, head))
+      ? Number.isSafeInteger(result.generation) && result.generation >= 1 &&
+        result.generation < head.generation &&
+        result.sourceMap?.packageGeneration === result.generation
+      : matchesHeadAuthority(result, head) &&
+        (result.journal?.journalHash ?? null) === (head.journalRevisionId ?? null))
     .at(-1)
   if (!committed) return failed('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
   const after = pending?.projection || committed.projection
@@ -109,19 +151,20 @@ function resolveEditedExportContext(state, presentationId) {
     return failed('CURRENT_SOURCE_AUTHORITY_UNAVAILABLE')
   }
   try {
-    if (pending && hasNonTextChanges(committed.projection, after)) {
-      return failed('CANONICAL_TEXT_JOURNAL_INVALID')
-    }
-    return Object.freeze({
+    const pendingEdit = Boolean(pending && hashRecord(committed.projection) !== hashRecord(after))
+    const context = Object.freeze({
       ok: true,
       head,
       before: committed.projection,
       after,
       sourceMap,
       pendingJournalHash: head.pendingJournalHash,
+      committedJournalHash: committed.journal?.journalHash ?? null,
       textTransports: serverTextTransports(after),
-      pendingEdit: Boolean(pending && hashRecord(committed.projection) !== hashRecord(after)),
+      pendingEdit,
+      textExportEligible: !pending || (!pendingEdit ? true : !hasNonTextChanges(committed.projection, after)),
     })
+    return context
   } catch {
     return failed('CANONICAL_TEXT_JOURNAL_INVALID')
   }
@@ -129,12 +172,18 @@ function resolveEditedExportContext(state, presentationId) {
 
 function replayRequest(state, request) {
   const head = state?.heads?.find((item) => item.presentationId === request.presentationId)
-  const prior = (state?.mutationResults || []).find((result) =>
+  const prior = (state?.mutationResults || []).filter((result) =>
     (result.operation === MUTATION_OPERATIONS.VALIDATED_EDITED_EXPORT ||
       isLegacyValidatedResult(result)) &&
     result.presentationId === request.presentationId &&
-    result.idempotencyKey === request.idempotencyKey
-  )
+    result.idempotencyKey === request.idempotencyKey &&
+    result.state === 'committed' && head &&
+    result.packageRevisionId === head.packageRevisionId &&
+    result.generation === head.generation &&
+    (result.requestIdentity
+      ? result.requestIdentity.expectedGeneration === request.expectedGeneration
+      : result.generation === request.expectedGeneration + 1)
+  ).at(-1)
   const baseRevisionId = prior?.requestIdentity?.baseRevisionId
   const expectedGenerationMatches = prior?.requestIdentity
     ? prior.requestIdentity.expectedGeneration === request.expectedGeneration
@@ -154,7 +203,9 @@ function replayRequest(state, request) {
       baseRevisionId: baseRevisionId || undefined,
       after: prior.projection,
       textTransports: serverTextTransports(prior.projection),
-      pendingEdit: Array.isArray(prior.journal?.operations) && prior.journal.operations.length > 0,
+      pendingEdit: Array.isArray(prior.operationIds)
+        ? prior.operationIds.length > 0
+        : Array.isArray(prior.journal?.operations) && prior.journal.operations.length > 0,
       compatibilityPresentation: prior.projection,
     })
   } catch {

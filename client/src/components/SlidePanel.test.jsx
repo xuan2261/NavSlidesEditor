@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import SlidePanel from './SlidePanel'
+import { registerNavigatorSemanticCases } from './slide-panel/slide-panel-semantic-cases'
 
 const slides = [
   { id: 'slide-1', title: 'Intro', elements: [] },
@@ -24,6 +25,7 @@ function defaultProps(overrides = {}) {
     ...overrides,
   }
 }
+registerNavigatorSemanticCases(defaultProps)
 
 describe('SlidePanel control contract', () => {
   it('renders an empty navigator while slides are unavailable', () => {
@@ -190,5 +192,13 @@ describe('SlidePanel control contract', () => {
     fireEvent.click(deleteAction)
     expect(onDuplicate).toHaveBeenCalledWith(0)
     expect(onDelete).toHaveBeenCalledWith(0)
+  })
+
+  it('renders memoized navigator items with stable props', () => {
+    const { rerender } = render(<SlidePanel {...defaultProps()} />)
+    const items = screen.getAllByTestId('slide-panel-item')
+    expect(items).toHaveLength(2)
+    rerender(<SlidePanel {...defaultProps({ currentIndex: 1 })} />)
+    expect(screen.getByRole('button', { name: 'Select slide 2' }).getAttribute('aria-current')).toBe('true')
   })
 })

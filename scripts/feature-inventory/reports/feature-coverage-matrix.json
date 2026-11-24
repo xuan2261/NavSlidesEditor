@@ -1,10 +1,10 @@
 {
   "meta": {
     "generated": "local run",
-    "stale": false,
+    "stale": true,
     "staleSources": {
-      "vitest": false,
-      "playwright": false
+      "vitest": true,
+      "playwright": true
     }
   },
   "rows": [

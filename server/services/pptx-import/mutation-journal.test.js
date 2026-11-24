@@ -1,4 +1,10 @@
+// @vitest-environment node
 import { describe, expect, it } from 'vitest'
+import canonicalModule from './canonical-snapshot.js'
+import baselineModule from './semantic-baseline.js'
+import graphModule from '../../../shared/src/pptx-semantic-source-graph.js'
+import recordsModule from '../../../shared/src/pptx-semantic-records.js'
+import deltasModule from './generic-journal-property-path.js'
 import journalModule from './mutation-journal.js'
 import plannerModule from './transactional-patch-planner.js'
 
@@ -21,7 +27,89 @@ const base = {
   ],
 }
 
+const semanticFixture = () => ({ id: 'deck', slides: [], pptxSemantic: {
+  schemaVersion: 1,
+  definitions: { d1: { id: 'd1', kind: 'text', source: { partUri: 'ppt/slides/slide1.xml', nativeId: '7', preconditionHash: 'a'.repeat(64) }, components: [], content: {} } },
+  instances: {}, styles: {}, fonts: {},
+} })
+
 describe('canonical mutation journal', () => {
+  it.each([1, 3])('matches full mutable oracle bytes, IDs, inverse and hash for schema %i', (version) => {
+    const input = semanticFixture()
+    if (version === 3) input.pptxSemantic = graphModule.compactSemanticGraph(input.pptxSemantic)
+    const before = canonicalModule.canonicalSaveSnapshot(input)
+    const id = Object.keys(before.pptxSemantic.definitions)[0]
+    const changed = recordsModule.replaceSemanticRecords(before.pptxSemantic, {
+      definitions: { [id]: { ...before.pptxSemantic.definitions[id], content: { edited: true } } },
+    })
+    const candidates = [changed, { ...changed, fonts: { body: { family: 'Arial' } } }]
+    if (version === 3) candidates.push({ ...changed, partUris: [...changed.partUris, 'ppt/slides/unused.xml'] })
+    for (const semantic of candidates) {
+      const after = canonicalModule.canonicalSaveSnapshot({ ...before, pptxSemantic: semantic })
+      for (const [left, right] of [[before, after], [after, before]]) {
+        const options = { matrixAuthorityEpoch: 1 }
+        const fast = deriveMutationJournal(left, right, options)
+        const oracle = deriveMutationJournal(structuredClone(left), structuredClone(right), options)
+        expect(JSON.stringify(fast)).toBe(JSON.stringify(oracle))
+        expect(replayJournal(left, fast)).toEqual(right)
+        const inverse = { operations: [...fast.operations].reverse().map(op => ({ ...op, before: op.after, after: op.inverse.value })) }
+        expect(replayJournal(right, inverse)).toEqual(left)
+      }
+    }
+  })
+
+  it('skips immutable dictionary, record and catalog references but retains mutable getter traversal', () => {
+    const record = { id: 'same' }; const dictionary = { same: record }
+    const before = { definitions: dictionary, instances: { same: record }, partUris: ['a'] }
+    const after = { ...before, instances: { same: record } }
+    const fast = []; const full = []
+    deltasModule.semanticPropertyDeltas(before, after, (...args) => fast.push(args), true)
+    deltasModule.semanticPropertyDeltas(before, after, (...args) => full.push(args))
+    expect(fast).toEqual([])
+    expect(full.map(([path]) => path)).toEqual([['definitions', 'same'], ['instances', 'same'], ['partUris']])
+    let reads = 0
+    Object.defineProperty(after.instances, 'same', { enumerable: true, get() { reads++; return record } })
+    deltasModule.semanticPropertyDeltas(before, after, () => {})
+    expect(reads).toBe(1)
+  })
+
+  it('validates identical raw envelopes and rejects forged source changes after admission', () => {
+    const raw = semanticFixture()
+    raw.pptxSemantic.definitions.d1.kind = 'invalid'
+    expect(() => baselineModule.assertSemanticBaseline(raw, raw)).toThrow()
+    const before = canonicalModule.canonicalSaveSnapshot(semanticFixture())
+    const forged = JSON.parse(JSON.stringify(before))
+    forged.pptxSemantic.definitions.d1.content.forged = true
+    const after = canonicalModule.canonicalSaveSnapshot(forged)
+    expect(() => baselineModule.assertSemanticBaseline(before, after)).toThrow(/baseline is immutable/)
+    expect(() => baselineModule.assertSemanticBaseline(before, forged)).toThrow(/baseline is immutable/)
+  })
+  it('treats absent property operands exactly like historical own-undefined bytes and inverse replay', async () => {
+    const { canonicalJson, hashRecord } = (await import('./package-store/schemas.js')).default
+    const before = canonicalEditableSnapshot({ id: 'deck', slides: [] })
+    const after = canonicalEditableSnapshot({ ...before, title: 'Added' })
+    for (const [left, right] of [[before, after], [after, before]]) {
+      const journal = deriveMutationJournal(left, right, { matrixAuthorityEpoch: 1 })
+      const operation = journal.operations[0]
+      const oldOperation = { ...operation, before: operation.before, after: operation.after,
+        inverse: { value: operation.inverse.value } }
+      const old = { ...journal, operations: [oldOperation] }
+      expect(canonicalJson(journal)).toBe(canonicalJson(old))
+      expect(hashRecord(journal)).toBe(hashRecord(old))
+      const { schemaVersion, operationId, ...oldInput } = oldOperation
+      expect(operationId).toBe(`op-${hashRecord(oldInput).slice(0, 24)}`)
+      const { schemaVersion: version, baseRevisionId, journalHash, operations, ...subjects } = journal
+      expect(journalHash).toBe(hashRecord({ ...subjects, operations: old.operations }))
+      for (const value of [old, journal, JSON.parse(JSON.stringify(journal))]) {
+        expect(replayJournal(left, value)).toEqual(right)
+        expect(replayJournal(right, { operations: [{ ...value.operations[0], before: operation.after,
+          after: operation.inverse.value }] })).toEqual(left)
+      }
+      expect(Object.hasOwn(operation, 'before')).toBe(operation.before !== undefined)
+      expect(Object.hasOwn(operation, 'after')).toBe(operation.after !== undefined)
+      expect(Object.hasOwn(operation.inverse, 'value')).toBe(operation.inverse.value !== undefined)
+    }
+  })
   it('strips forged authority recursively and enforces budgets before cloning', () => {
     const clean = canonicalEditableSnapshot(base)
     expect(clean).not.toHaveProperty('_pptxEdited')
@@ -41,6 +129,48 @@ describe('canonical mutation journal', () => {
     expect(enriched.designTokens).toEqual({ background: '#fff' })
     expect(enriched.pluginData).toEqual({ createdAt: 'plugin-data', updatedAt: 'plugin-data' })
     expect(() => canonicalEditableSnapshot(base, { maxSlides: 1 })).toThrow(/budget/i)
+  })
+
+  it('keeps legacy geometry echoes out of canonical no-op and text journals', () => {
+    const before = canonicalEditableSnapshot({ ...base, resolution: { width: 960, height: 540 } })
+    const echoed = { ...before, _pptxMeta: { originalSize: { width: 960, height: 540 } } }
+    expect(canonicalEditableSnapshot(echoed)).toEqual(before)
+    expect(deriveMutationJournal(before, echoed, { matrixAuthorityEpoch: 1 }).operations).toEqual([])
+    const edited = structuredClone(echoed)
+    edited.slides[0].elements[0].content = 'after'
+    const journal = deriveMutationJournal(before, edited, { matrixAuthorityEpoch: 1 })
+    expect(journal.operations.map(({ property }) => property)).toEqual(['content'])
+    expect(replayJournal(before, journal)).toEqual(canonicalEditableSnapshot(edited))
+  })
+
+  it('keeps ordinary geometry through canonicalization and journal replay without retaining authority', () => {
+    const presentation = {
+      ...base,
+      resolution: { width: 720, height: 540 },
+      _pptxMeta: {
+        originalSize: { width: 960, height: 720, packageRevisionId: 'forged' },
+        geometryPolicy: 'native-aspect-v1',
+        packageRevisionId: 'forged',
+      },
+    }
+    const canonical = canonicalEditableSnapshot(presentation)
+    expect(canonical._pptxMeta).toEqual({
+      originalSize: { width: 960, height: 720 }, geometryPolicy: 'native-aspect-v1',
+    })
+    expect(canonicalEditableSnapshot(canonical)).toEqual(canonical)
+    const edited = structuredClone(canonical)
+    edited.slides[0].elements[0].content = 'after'
+    const journal = deriveMutationJournal(canonical, edited, { matrixAuthorityEpoch: 1 })
+    expect(replayJournal(canonical, journal)).toEqual(edited)
+    expect(journal.operations).toHaveLength(1)
+    expect(journal.operations[0]).toMatchObject({ property: 'content', after: 'after' })
+    expect(presentation._pptxMeta).toHaveProperty('packageRevisionId', 'forged')
+  })
+
+  it.each(['native-aspect-v2', true, null])('drops unrecognized canonical geometry policy: %j', (geometryPolicy) => {
+    expect(canonicalEditableSnapshot({ ...base, _pptxMeta: {
+      originalSize: { width: 720, height: 540 }, geometryPolicy,
+    } })).not.toHaveProperty('_pptxMeta')
   })
 
   it('derives deterministic property operations with inverse and impact closure', () => {
@@ -191,12 +321,70 @@ describe('canonical mutation journal', () => {
     expect(replayJournal(nested, journal).slides[0].elements[0].elements[0].content).toBe('after')
   })
 
-  it('blocks ambiguous source claims', () => {
-    const after = structuredClone(base)
-    after.slides[0].elements[0].content = 'after'
-    expect(() => deriveMutationJournal(base, after, {
-      sourceMap: { entries: { 's1:e1': { ...source, status: 'ambiguous' } } },
-      baseRevisionId: 'r0',
-    })).toThrow(/not authoritative/i)
+  it.each(['ambiguous', 'diagnostic', null])('persists projection edits without native patch authority: %s', (status) => {
+    const before = canonicalEditableSnapshot(base)
+    before.slides[0].elements[0].content = '<p>before</p>'
+    const after = structuredClone(before)
+    after.slides[0].elements[0].content = '<p>after</p>'
+    const options = {
+      sourceMap: { schemaVersion: 1, presentationId: 'deck', revisionId: 'r0', packageGeneration: 1,
+        entries: status ? { 's1:e1': { ...source, status, revisionId: 'r0', packageGeneration: 1 } } : {} },
+      baseRevisionId: 'r0', matrixAuthorityEpoch: 1,
+      textTransports: { 's1:e1': { format: 'tiptap-html', schemaVersion: 1, html: '<p>after</p>' } },
+    }
+    const edited = deriveMutationJournal(before, after, options)
+    expect(replayJournal(before, edited)).toEqual(after)
+    expect(compilePatchPlan(edited).ok).toBe(false)
+    expect(() => deriveCanonicalPlainTextJournal(before, after, options)).toThrow(TypeError)
+    const deleted = structuredClone(after)
+    deleted.slides[0].elements = []
+    expect(replayJournal(after, deriveMutationJournal(after, deleted, options))).toEqual(deleted)
   })
+
+  it('replays semantic overrides exactly without copying an unchanged multi-megabyte graph', () => {
+    const before = {
+      id: 'deck',
+      slides: [{ id: 'slide1', elements: [{ id: 'e1', type: 'text', pptxInstanceId: 'i1', content: 'before' }] }],
+      pptxSemantic: {
+        schemaVersion: 1,
+        definitions: {
+          d1: { id: 'd1', kind: 'text', source: { partUri: 'ppt/slides/slide1.xml', nativeId: '7', preconditionHash: 'a'.repeat(64) }, components: [], content: { retained: 'x'.repeat(6 * 1024 * 1024) } },
+        },
+        instances: {
+          i1: { id: 'i1', slideId: 'slide1', definitionId: 'd1', parentInstanceId: null, localTransform: [1, 0, 0, 1, 0, 0], paintIndex: 0, overrides: {} },
+        },
+        styles: {},
+        fonts: {},
+      },
+    }
+    const after = structuredClone(before)
+    after.slides[0].elements[0].content = 'after'
+    after.pptxSemantic.instances.i1.overrides = { text: 'override' }
+
+    const canonicalBefore = canonicalEditableSnapshot(before)
+    const canonicalAfter = canonicalEditableSnapshot(after)
+    const options = { matrixAuthorityEpoch: 1, budgets: { maxJournalBytes: 8192, maxInverseBytes: 2048 } }
+    const journal = deriveMutationJournal(canonicalBefore, canonicalAfter, options)
+    const replayed = replayJournal(canonicalBefore, journal)
+    expect(replayed).toEqual(canonicalAfter)
+    expect(replayJournal(replayed, journal)).toEqual(canonicalAfter)
+    expect(deriveMutationJournal(canonicalBefore, canonicalAfter, options)).toEqual(journal)
+    expect(journal.operations.find((operation) => operation.property === 'pptxSemantic')).toMatchObject({
+      kind: 'property-change', targetKind: 'presentation', path: ['instances', 'i1'],
+      before: canonicalBefore.pptxSemantic.instances.i1,
+      after: canonicalAfter.pptxSemantic.instances.i1,
+      inverse: { value: canonicalBefore.pptxSemantic.instances.i1 },
+    })
+    expect(() => deriveMutationJournal(canonicalBefore, canonicalAfter, {
+      ...options, budgets: { maxJournalBytes: 100 },
+    })).toThrow(/aggregate storage budget/i)
+    expect(() => deriveMutationJournal(canonicalBefore, canonicalAfter, {
+      ...options, budgets: { maxInverseBytes: 32 },
+    })).toThrow(/inverse budget/i)
+    const largeEdit = structuredClone(canonicalBefore)
+    largeEdit.pptxSemantic.definitions.d1.content.retained = 'y'.repeat(6 * 1024 * 1024)
+    expect(() => deriveMutationJournal(canonicalBefore, largeEdit, {
+      matrixAuthorityEpoch: 1,
+    })).toThrow(/aggregate storage budget/i)
+  }, 20000)
 })

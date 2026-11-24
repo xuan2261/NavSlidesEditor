@@ -2,70 +2,9 @@ import React from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import CodeEditorModal from './CodeEditorModal'
-import HtmlEditorModal from './HtmlEditorModal'
 import LatexEditorModal from './LatexEditorModal'
 
 describe('content editor modals', () => {
-  it('[cap:element.html depth:behavior] saves, cancels, and warns that HTML is trusted active content', () => {
-    const onChange = vi.fn()
-    const onApply = vi.fn()
-    const onCancel = vi.fn()
-    render(
-      <HtmlEditorModal
-        state={{ elementId: 'html-1', content: '<script>window.x=1</script>' }}
-        onChange={onChange}
-        onApply={onApply}
-        onCancel={onCancel}
-      />
-    )
-
-    expect(screen.getByTestId('html-trusted-content-warning').textContent).toContain(
-      'Trusted author content'
-    )
-    expect(screen.getByRole('dialog').getAttribute('aria-describedby')).toContain(
-      'html-trusted-content-warning'
-    )
-    expect(document.activeElement).toBe(screen.getByRole('textbox'))
-    fireEvent.change(screen.getByRole('textbox'), {
-      target: { value: '<p>safe by author policy</p>' },
-    })
-    fireEvent.click(screen.getByText('Apply'))
-    fireEvent.click(screen.getByText('Cancel'))
-
-    expect(onChange).toHaveBeenCalledWith({
-      elementId: 'html-1',
-      content: '<p>safe by author policy</p>',
-    })
-    expect(onApply).toHaveBeenCalledTimes(1)
-    expect(onCancel).toHaveBeenCalledTimes(1)
-  })
-
-  it('[cap:element.html depth:behavior] edits Mermaid source and shows length feedback', () => {
-    const onChange = vi.fn()
-    render(
-      <HtmlEditorModal
-        state={{ elementId: 'html-1', embedKind: 'mermaid', mermaidSource: 'flowchart TD\nA-->B' }}
-        onChange={onChange}
-        onApply={vi.fn()}
-        onCancel={vi.fn()}
-      />
-    )
-
-    expect(screen.getByText('Mermaid Diagram')).toBeTruthy()
-    expect(screen.getByText(/Mermaid diagrams render as trusted author HTML/i)).toBeTruthy()
-    expect(screen.getByTestId('mermaid-source-count').textContent).toContain('/12000')
-    fireEvent.change(screen.getByRole('textbox'), {
-      target: { value: 'sequenceDiagram\nA->>B: Hi' },
-    })
-
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({
-        embedKind: 'mermaid',
-        mermaidSource: 'sequenceDiagram\nA->>B: Hi',
-      })
-    )
-  })
-
   it('[cap:element.code depth:behavior] saves, cancels, and updates code language/theme state', () => {
     const onChange = vi.fn()
     const onApply = vi.fn()
@@ -145,13 +84,16 @@ describe('content editor modals', () => {
     textarea.focus()
     textarea.setSelectionRange(2, 2)
     fireEvent.click(screen.getByTestId('latex-symbol-alpha'))
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ content: 'x \\alpha+ y' })
-    )
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ content: 'x \\alpha+ y' }))
 
     rerender(
       <LatexEditorModal
-        state={{ elementId: 'latex-1', content: 'x \\alpha+ y', fontSize: 20, textColor: '#ffffff' }}
+        state={{
+          elementId: 'latex-1',
+          content: 'x \\alpha+ y',
+          fontSize: 20,
+          textColor: '#ffffff',
+        }}
         onChange={onChange}
         onApply={vi.fn()}
         onCancel={vi.fn()}
@@ -183,7 +125,12 @@ describe('content editor modals', () => {
   it('[cap:element.latex depth:behavior] accepts documented display math wrappers', () => {
     render(
       <LatexEditorModal
-        state={{ elementId: 'latex-1', content: '\\[ E = mc^2 \\]', fontSize: 20, textColor: '#ffffff' }}
+        state={{
+          elementId: 'latex-1',
+          content: '\\[ E = mc^2 \\]',
+          fontSize: 20,
+          textColor: '#ffffff',
+        }}
         onChange={vi.fn()}
         onApply={vi.fn()}
         onCancel={vi.fn()}
@@ -195,8 +142,12 @@ describe('content editor modals', () => {
     expect(screen.getByRole('dialog').getAttribute('aria-describedby')).toContain(
       'latex-editor-helper'
     )
-    expect(screen.getByText(/TikZ diagrams use TikZJax and may require network access/i)).toBeTruthy()
-    expect(screen.getByTestId('latex-parse-feedback').textContent).toContain('LaTeX syntax looks valid')
+    expect(
+      screen.getByText(/TikZ diagrams use TikZJax and may require network access/i)
+    ).toBeTruthy()
+    expect(screen.getByTestId('latex-parse-feedback').textContent).toContain(
+      'LaTeX syntax looks valid'
+    )
     expect(screen.getByTestId('latex-parse-feedback').getAttribute('aria-live')).toBe('polite')
     expect(screen.getByTitle('LaTeX Preview').getAttribute('srcdoc')).toContain('E = mc^2')
     expect(screen.getByTitle('LaTeX Preview').getAttribute('srcdoc')).not.toContain('\\\\[')

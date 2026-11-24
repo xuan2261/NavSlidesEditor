@@ -18,13 +18,15 @@ function readCoord(primary, secondary, fallback = 0) {
 function normalizeSourceSize(size) {
   const width = readNumber(size?.width, CANVAS_SIZE.width, 1)
   const height = readNumber(size?.height, CANVAS_SIZE.height, 1)
+  const factor = Math.min(CANVAS_SIZE.width / width, CANVAS_SIZE.height / height)
   return {
     width,
     height,
-    scale: Object.freeze({
-      x: CANVAS_SIZE.width / width,
-      y: CANVAS_SIZE.height / height,
-    }),
+    resolution: {
+      width: Math.max(1, Math.round(width * factor)),
+      height: Math.max(1, Math.round(height * factor)),
+    },
+    scale: Object.freeze({ x: factor, y: factor }),
   }
 }
 

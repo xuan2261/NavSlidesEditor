@@ -16,9 +16,7 @@ test.describe('Sharing & Privacy', () => {
   })
 
   test.afterEach(async ({ request }) => {
-    try {
-      await apiDeletePresentation(request, presId)
-    } catch {}
+    await apiDeletePresentation(request, presId)
   })
 
   test('can open Share Modal in editor', async ({ page }) => {
@@ -57,7 +55,8 @@ test.describe('Sharing & Privacy', () => {
     const viewerContext = await browser.newContext()
     const viewerPage = await viewerContext.newPage()
 
-    await viewerPage.goto(new URL(`/share/${token}`, getBaseUrl()).toString(), { timeout: 15000 })
+    const shareBase = process.env.PLAYWRIGHT_API_BASE_URL || getBaseUrl()
+    await viewerPage.goto(new URL(`/share/${token}`, shareBase).toString(), { timeout: 15000 })
     await expect(viewerPage.locator('.reveal')).toBeVisible({ timeout: 10000 })
 
     await viewerContext.close()

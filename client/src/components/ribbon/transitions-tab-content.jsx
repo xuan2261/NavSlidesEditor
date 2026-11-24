@@ -82,13 +82,14 @@ export default function TransitionsTabContent({
           <Button variant="ribbon" className="h-7"
             ref={transitionTriggerRef}
             title="Slide transition" aria-label="Change transition"
+            disabled={Boolean(slide?.locked)}
             onMouseDown={(e) => { e.preventDefault(); setShowPicker((v) => !v) }}
             onKeyDown={(e) => handleRibbonKeyboardActivation(e, () => setShowPicker((v) => !v))}>
             <Zap size={14} />
             <span className="text-[11px] capitalize hidden lg:inline">{currentTransition}</span>
             <ChevronDown size={10} />
           </Button>
-          {showPicker && (
+          {showPicker && !slide?.locked && (
             <TransitionPicker
               open={showPicker}
               anchorRef={transitionTriggerRef}
@@ -102,6 +103,7 @@ export default function TransitionsTabContent({
           <Button variant="icon"
             className={`h-7 w-7 ${hasSlideOverride ? 'bg-primary-light text-accent' : ''}`}
             title="Use presentation default" aria-label="Use presentation transition default"
+            disabled={Boolean(slide?.locked)}
             onMouseDown={(e) => {
               e.preventDefault()
               clearSlideOverride()
@@ -121,6 +123,7 @@ export default function TransitionsTabContent({
               onMouseDown={(e) => e.stopPropagation()}
               onChange={(e) => onUpdateSlide({ transitionDirection: e.target.value })}
               aria-label="Slide transition direction"
+              disabled={Boolean(slide?.locked)}
             >
               {DIRECTIONS.map((direction) => (
                 <option key={direction} value={direction}>{direction}</option>
@@ -136,6 +139,7 @@ export default function TransitionsTabContent({
               onMouseDown={(e) => e.stopPropagation()}
               onChange={(e) => onUpdateSlide({ transitionDuration: clampDuration(e.target.value) })}
               aria-label="Slide transition duration milliseconds"
+              disabled={Boolean(slide?.locked)}
             />
           </div>
         </RibbonSection>

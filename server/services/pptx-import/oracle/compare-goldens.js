@@ -116,7 +116,7 @@ async function compareCorpusToGoldens({ corpusDir, goldensDir, actualsDir, golde
     ? scores.reduce((sum, score) => sum + score, 0) / scores.length
     : null
   return {
-    decks, meanSsim, minSsim: scores.length ? Math.min(...scores) : null, missingGoldens,
+    decks, slideCount: scores.length, meanSsim, minSsim: scores.length ? Math.min(...scores) : null, missingGoldens,
     failed: files.length === 0 || decks.some((deck) => !deck.ok) || !Number.isFinite(meanSsim), deckCount: files.length,
   }
 }

@@ -4,26 +4,101 @@ How element properties map across the three export targets — reveal.js HTML
 (share link, offline bundle, PDF print) and PowerPoint (`.pptx`) — and which
 properties cannot be represented by a given format.
 
+## Three export modes and portability contract
+
+NavSlides provides three distinct export and interchange targets for presentations:
+
+1. **Portable project archive (`.navslides`) and legacy projection JSON**
+   - Package-backed decks use a server-owned ZIP with outer manifest version `2.0`, including validated package authority, immutable Original bytes, projection and owned local media—even when no local media is present.
+   - Import validates the package envelope, then rebinds authority and media URLs to fresh destination ownership. Explicit replacement requires the destination's expected head; missing owned media aborts full-archive export.
+   - Legacy projection-only exports use JSON version `1.1` without local media, or a legacy media ZIP. Client authority is stripped through `shared/src/project-export-value.js`; this format does not preserve or claim Original/package fidelity.
+   - Package-backed replacement selects trusted import styling from the active Original lineage. Retained templates/history keep their own Original-bound metadata; an old retained sidecar cannot become authority for the replacement package.
+
+2. **Immutable Original PPTX**
+   - Available for package-backed presentations originally imported from PowerPoint (`.pptx`).
+   - Preserves bit-for-bit identity against the committed package store digest (`server/services/package-backed-presentation-read.js`).
+   - Never reconstructed or re-serialized by editor saves; always delivered with exact byte-identical fidelity.
+
+3. **Validated Edited PPTX**
+   - Available only when presentation edits pass strict server-side OOXML validation rules.
+   - Edits are restricted to supported text, structure, and validated styling. Unsupported modifications, macros, ActiveX, or schema inconsistencies are rejected with explicit status rather than falling back to lossy approximations.
+   - Never advertised as "universal lossless roundtrip"; fidelity limits and warning reports (`exportReport`) explicitly identify all fallbacks and constraints.
+   - A genuinely byte-identical no-op reconciles the saved projection without creating a binary revision. Reopen and portable replay retain the selected committed package journal, while Original bytes remain immutable. Changed-package exports still require the existing validator gates.
+
 ## Reveal.js runtime contract
 
-- Present mode, share HTML, standard HTML export, and offline HTML are qualified
-  against **Reveal.js 6.0.1**. Generated documents record that version in the
-  `navslides-reveal-version` metadata tag.
-- `shared/src/reveal-runtime-assets.js` is the source of truth for core,
-  built-in plugin, theme, vendor-copy, and strict-offline asset paths. The
-  package is pinned exactly in `server/package.json`; no second Reveal.js
-  version is supported in the workspace.
-- Vendor publication copies the Reveal.js 6 `dist/` layout, including built-in
-  plugins under `dist/plugin/`. Publication and startup fail closed when a
-  required path is absent, the manifest version differs, a hash differs, or a
-  legacy `reveal.js/plugin/` path reappears.
-- Offline HTML inlines every referenced runtime asset from the published local
-  tree. A missing required Reveal.js, KaTeX, or Highlight.js asset aborts the
-  export instead of producing a partially portable document.
-- The bundled Menu, Chalkboard, and Custom Controls plugins are compatibility-
-  tested with Reveal.js 6.0.1. User-supplied Reveal plugins remain responsible
-  for their own Reveal.js 6 compatibility; NavSlides does not rewrite third-
-  party plugin APIs.
+- The canonical Reveal.js pin and runtime asset paths are owned by
+  [`REVEAL_RUNTIME_VERSION` in `reveal-runtime-assets.js`](../shared/src/reveal-runtime-assets.js).
+  A source pin is not evidence that every delivery surface has been qualified.
+- Vendor publication and portable dependency closure are owned by
+  [`copy-vendor.js`](../scripts/copy-vendor.js) and
+  [`offlineExport.js`](../client/src/utils/offlineExport.js), respectively.
+- Bundled-plugin browser integration is exercised by
+  [`generated-plugin-boundaries.spec.js`](../tests/e2e/education/generated-plugin-boundaries.spec.js).
+  Those focused journeys do not qualify the whole education release. User-supplied
+  plugins remain responsible for their compatibility; NavSlides does not rewrite
+  third-party plugin APIs.
+- Generated audio/video controllers reattach when Reveal replaces slide DOM during
+  responsive scroll-view switches. The authored speed and trim-loop boundary are
+  preserved; teardown disposes removed players and all remaining controllers on
+  page hide. Real Chromium smoke retained speed 1.5 and a 0.2–0.8-second segment
+  through a 1280→390→1280 viewport round-trip. This is focused playback evidence,
+  not full browser, offline, or packaged-runtime qualification.
+- Native TikZ uses the real pinned compiler, not a canned SVG. The publication
+  contract in [`tikz-runtime-contract.js`](../shared/src/tikz-runtime-contract.js)
+  verifies the package, patched entry/worker and finite resource inventory.
+  [`portable-tikz-adapter.js`](../client/src/utils/portable-tikz-adapter.js) closes
+  those resources into a local worker; unavailable or changed resources fail
+  instead of falling back to network fetches. Disabled caching never accesses
+  IndexedDB in opaque compiler frames.
+- A portable generated root gains `wasm-unsafe-eval` only after a native compiler
+  frame closes successfully; that compiler frame gains its own validated
+  permission. Authored HTML, Mermaid, Markdown, chart and QR siblings and their
+  descendants remain Wasm-denied, regardless of traversal order. Compiler-free
+  decks deny Wasm at root and every child. `unsafe-eval`, same-origin frame access
+  and outbound connections are not enabled. Root inline scripts remain allowed;
+  this is not a hash-protected root.
+- Focused Chromium journeys compile the authored blue closed triangle on canvas
+  and a normal UI-downloaded network-blocked `file://` deck, with zero disabled-cache
+  IndexedDB access. Separate real execution probes verify compiler/root allowance,
+  sibling/descendant denial and compiler-free denial. These are bounded working-tree
+  observations, not complete education, Electron or Windows-package qualification.
+- Authored rich-text paragraph line-height takes precedence over generated fallback
+  typography. The actual link-authoring journey retains line-height 2 and rich marks
+  after save/reload and Present; fresh generated paragraph/list defaults remain 1.5.
+  Canvas SVG root viewports fit the element-owned rectangle without clipping selected
+  artwork or changing persisted viewBox and paint. These are focused surface checks,
+  not full browser/export qualification.
+- Generated and printed Markdown uses generation-time parsing plus the shared
+  parsed-markup sanitizer. Authored active frames and internal print-loader markers
+  are not promoted into root execution. Genuine HTML and TikZ print frames retain
+  their owned sandboxed loading path. Actual Markdown semantic/typography and forged
+  frame-denial journeys passed; this does not qualify every export format.
+- The parsed-markup policy retains a single validated `language-*` token only on
+  code nodes so authored fenced-code language controls print highlighting.
+  Other classes and active/runtime attributes remain excluded. Current-source
+  print smoke distinguishes JavaScript keyword paint from plaintext and
+  preserves literal markup and blank lines; this is not full export qualification.
+- An imported deck may remain editable/readable when an education mutation is not
+  eligible for native edited PPTX. Package bytes, head and ownership remain
+  authoritative; invalid declaration removal cannot alter the saved projection.
+  A real imported-package save/read smoke retained generation 2 and original bytes
+  while the unsupported edited export remained explicitly denied.
+- Live DOM mounting follows implemented runtime capability. Name-picker keeps its
+  existing server broadcast and read-only spectators; its planning classification
+  remains distinct from multiplayer answer protocols. Disconnected/waiting live
+  audiences cannot switch to a local picker. Authenticated host/two-learner journeys
+  passed for eligible educational games and all seven quiz kinds; final frozen
+  browser, desktop and packaged-release qualification remains separate.
+- Generated documents record the pinned Reveal.js 6.0.2 version in the
+  `navslides-reveal-version` metadata tag; `server/package.json` pins the only
+  supported workspace version.
+- Publication and startup fail closed if a required asset is absent, its manifest
+  version or hash differs, or a legacy `reveal.js/plugin/` path reappears. Portable
+  export likewise aborts on missing required Reveal.js, KaTeX or Highlight.js
+  assets rather than emitting a partially portable document.
+
+These source pins do not establish runtime or plugin compatibility qualification.
 
 ## Fixed mapping gaps (resolved)
 
@@ -95,6 +170,16 @@ than worked around.
 This section applies to decks imported from `.pptx`; it does not limit charts
 created directly in NavSlides.
 
+- **Native aspect for new PPTX imports.** New imports use `native-aspect-v1`
+  so a source square stays square rather than stretching into a widescreen canvas.
+  Existing unmarked imports retain their legacy geometry; no silent coordinate
+  migration is authorized. The executable owners are
+  [`normalizeSourceSize`](../server/services/pptx-import/geometry.js),
+  [`presentation-normalization.js`](../server/services/presentation-normalization.js),
+  and [`getPptxExportLayout`](../shared/src/shared-pptx-core.js).
+  Choosing another aspect later is an authored layout change, not a promise of
+  native PowerPoint fidelity. Fixed-viewport captures letterbox outside the slide;
+  the viewport is not the deck's logical canvas.
 - **Import ZIP CRC is fail-closed.** `validatePptxPackage` /
   `loadPptxArchive` perform raw ZIP structure and declared-size preflight, then
   validate each bounded inflated entry against its declared CRC32. JSZip
@@ -121,6 +206,15 @@ created directly in NavSlides.
   is owned by [`server/routes/presentations.js`](../server/routes/presentations.js), and the
   immutable-revision resolver is
   [`server/services/pptx-import/package-revision-resolver.js`](../server/services/pptx-import/package-revision-resolver.js).
+- **Source transitions initialize, not lock, NavSlides authoring.** The bounded
+  exact-duration fade profile preserves source XML/provenance while initializing
+  the slide's browser transition. Subsequent authored transition/duration changes
+  survive reopen without changing the retained source. Unknown effects or
+  unsupported timing are not silently mapped to fade. Owners:
+  [`pptx-transition-document.js`](../shared/src/pptx-transition-document.js) and
+  [source/reopen contracts](../tests/pptx-semantic/transition-oct25-source.test.js).
+  Source preservation and browser playback are not native transition editing or
+  Office playback qualification.
 - **Imported charts remain preserve-only until qualified.** A display mapping is
   not edit qualification. Canonical `_pptxChartMeta` marks an imported chart
   preserve-only while adapter, transaction, and level-4 evidence are incomplete;
@@ -172,6 +266,24 @@ created directly in NavSlides.
   [`mutation-transaction-execution.js`](../server/services/pptx-import/mutation-transaction-execution.js),
   and
   [`validated-edited-export-materialization.test.js`](../server/services/validated-edited-export-materialization.test.js).
+- **Editor readability is independent of edited-PPTX eligibility.** Consecutive
+  projection saves advance the aggregate generation without materializing a new
+  package revision. The reader retains the committed base package authority and
+  serves the current server-owned projection, including slide additions, reorder
+  and deletion. Non-text edits still make validated edited export unavailable
+  with `CANONICAL_TEXT_JOURNAL_INVALID`; immutable Original bytes are unchanged.
+  [HTTP boundary evidence](../plans/261009-0901-navslides-full-reliability-deep-tdd/reports/projection-read-export-http-smoke.json)
+  exercises sequential saves and structural edits on disposable data, not release
+  or Office qualification.
+  Semantic history retention/restoration also requires the exact live package
+  predecessor; restoring a pending semantic snapshot does not manufacture a
+  chain of historical package revisions. The
+  [bounded compatibility evidence](../.omo/evidence/pptx-semantic/compatibility-oct25-execution-receipt.md)
+  covers pending snapshot reversal, independent owners, nine immutable Original
+  responses and HTTP/store restart. These software lifecycle checks do not
+  qualify every family, platform runtime or native visual/export gate. Owners:
+  [`history.js`](../server/routes/history.js) and
+  [`portable.js`](../server/services/pptx-import/package-store/portable.js).
 - **Fidelity generation comes from the package store.** For a package-backed
   deck, the fidelity route reads the aggregate generation from the package-store
   head rather than trusting the compatibility JSON projection. See
@@ -241,12 +353,39 @@ created directly in NavSlides.
   package-authority archive; its remote-wide destination serialization and path checks
   have focused coverage pending the skipped sync-suite rerun. DTO/package-generation
   alignment, expected-head fencing between projection and bundle export, bounded
-  resource use, and complete referenced-media traversal remain unfinished. Portable
-  import now rejects missing/conflicting revisions/blobs, clears stale destination
-  outbox records, and rejects cross-presentation revision bytes without an owner
-  record; focused portable coverage passes, but the full authority archive contract
-  remains open. None of these edges is qualification evidence. The shared reader is
+  resource use, and complete referenced-media traversal remain unfinished for sync.
+  Portable archive admission and replacement are owned by
+  [`portable.js`](../server/services/pptx-import/package-store/portable.js) and
+  [`portable-authority.js`](../server/services/pptx-import/package-store/portable-authority.js),
+  with regressions in
+  [`portable.test.js`](../server/services/pptx-import/package-store/portable.test.js) and
+  [`portable-retained-authority.test.js`](../server/services/pptx-import/package-store/portable-retained-authority.test.js).
+  None of these edges is qualification evidence. The shared reader is
   [`package-backed-presentation-read.js`](../server/services/package-backed-presentation-read.js).
+- **Replacement is not revocation of retained authority.** A template or snapshot
+  represents an earlier retained package subject, not the replacement's current
+  head. Historical authority must survive replacement so these retained subjects
+  remain restorable. Source authority must be admitted before destination
+  rebinding: normalization must not turn a malformed or foreign source map into
+  apparently valid destination authority. The portable owners and regression
+  tests linked above are the executable contract; minimal-ZIP lifecycle evidence
+  is not parser, Office or complete browser qualification.
+- **Full projects and projection-only exports are different portability boundaries.**
+  A projection alone cannot carry the authority needed to restore an imported
+  package. The native full-project archive owner is
+  [`project-export.js`](../server/routes/project-export.js); session publication
+  and recovery are owned by
+  [`project-import-package-session.js`](../server/services/project-import-package-session.js).
+  The client save/export boundary is
+  [`use-export-actions.js`](../client/src/hooks/use-export-actions.js) with
+  [`export-project.js`](../client/src/utils/export-project.js).
+  Original-bound styling metadata has a separate owner in
+  [`trusted-import-metadata.js`](../server/services/pptx-import/trusted-import-metadata.js)
+  and coverage in
+  [`pptx-import-metadata-roundtrip.test.js`](../server/routes/pptx-import-metadata-roundtrip.test.js).
+  Carrying importer styling is not accepting client-supplied package authority.
+  The existing native-edit, validation and recovery limits still apply; these
+  paths do not establish offline-media decoding or Office fidelity.
 - **Native re-import remains an application validator, not provenance or
   collateral proof.** It now binds the requested package identity and isolates
   validation media state from the ordinary-import upload index. Those focused
@@ -288,14 +427,33 @@ level 5 unavailable. Therefore this document does not claim editable
 imported-chart fidelity, a level-4/5 promotion, or PowerPoint compatibility or
 visual fidelity.
 
-### Live-only element types
+### Interactive education and static export boundaries
 
-- **Game elements** are live/player-socket content. Reveal HTML export emits a
-  static whitelist-only placeholder containing public title/type labels, not raw
-  game config, answers, scoring, presenter/admin/session data, or player/admin
-  controls. PPTX export emits a placeholder and warning.
-- **HTML iframe embeds** are interactive/live-only. They render in the editor and
-  live presentation but have no native editable representation in a pptx export.
+Game runtime capability ownership is in
+[`game-registry.js`](../shared/src/education/game-registry.js); generated game and
+print rendering are owned by [`element-renderers.js`](../shared/src/element-renderers.js),
+with static answer-view decisions in
+[`static-snapshot.js`](../shared/src/education/static-snapshot.js). Neither a
+capability declaration nor a static export is interactive or platform qualification.
+
+Portable classroom play does not promise offline multiplayer or secret answer
+keys. Native editable media discovery is owned by
+[`game-media-references.js`](../shared/src/education/game-media-references.js), with
+archive media integration in
+[`project-media-utils.js`](../client/src/utils/project-media-utils.js) and portable
+resource constraints in
+[`portable-resource-contract.js`](../shared/src/education/portable-resource-contract.js).
+These executable owners avoid a separate prose inventory of nested media paths.
+
+The accepted education scope is implemented in the working tree. Browser/live,
+Electron-development and newly built Windows-package qualification are evaluated
+independently for every frozen subject. [Plan progress](../plans/261001-0639-interactive-html-education-deep-tdd/plan.md#execution-progress)
+keeps bounded observations separate from acceptance; the
+[`education-release-gate.mjs`](../scripts/feature-inventory/education-release-gate.mjs)
+owns exact-subject qualification. Preliminary runs and focused plugin/media or
+evidence-integrity checks are not release-ready evidence. HTML iframe content has
+no native editable PPTX representation; see the sandbox owner in
+[`html-sandbox-policy.js`](../shared/src/education/html-sandbox-policy.js).
 
 ## PPTX export warning contract
 

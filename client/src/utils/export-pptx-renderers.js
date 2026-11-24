@@ -1,3 +1,5 @@
+import { getCurvedLineRasterGeometry } from 'revealjs-shared/src/curved-line-raster.js'
+import { staticRasterTargetId } from 'revealjs-shared/src/education/static-raster-targets.js'
 import {
   addCalloutElement,
   addChartElement,
@@ -26,7 +28,13 @@ const NATIVE_RENDERERS = {
     addTextElement(slide, element, bounds, designTokens),
   image: (slide, element, bounds, { resolution, layout, warnings, slideNumber }) => {
     const warning = getPptxImageSemanticWarning(element, slideNumber)
-    if (warning) recordPptxExportWarning(warnings, { element, slideNumber, message: warning, fallback: 'native-image-accessibility-limit' })
+    if (warning)
+      recordPptxExportWarning(warnings, {
+        element,
+        slideNumber,
+        message: warning,
+        fallback: 'native-image-accessibility-limit',
+      })
     addImageElement(slide, element, bounds, resolution, layout)
   },
   shape: (slide, element, bounds, { designTokens }) =>
@@ -103,10 +111,16 @@ export async function addElementToPptxSlide({
   pptx,
   warnings,
   slideNumber,
+  effectiveSlideId,
   rasterOverrides = {},
   designTokens,
+  options = {},
 }) {
-  const bounds = scaleElementBounds(element, resolution, layout)
+  const bounds = scaleElementBounds(
+    getCurvedLineRasterGeometry(element)?.element || element,
+    resolution,
+    layout
+  )
   const { action } = normalizeElementAction(element.action)
   if (action) {
     recordPptxExportWarning(warnings, {
@@ -116,7 +130,17 @@ export async function addElementToPptxSlide({
       fallback: 'browser-only-element-action',
     })
   }
-  const rasterData = element?.id ? rasterOverrides[element.id] : null
+  if (element.type === 'game') {
+    recordPptxExportWarning(warnings, {
+      element,
+      slideNumber,
+      message: `Slide ${slideNumber}: ${element.gameType} exported as an authored static snapshot; game interaction and scoring are browser-only.`,
+      fallback: 'browser-only-game-interactivity',
+    })
+  }
+  const rasterData = element?.id
+    ? rasterOverrides[staticRasterTargetId(element, effectiveSlideId)]
+    : null
 
   if (rasterData) {
     const imageOptions =
@@ -134,6 +158,12 @@ export async function addElementToPptxSlide({
     })
     return
   }
+  const policy = getPptxElementExportStrategy(element)
+  if (element.type === 'line' && policy.failure === 'error') {
+    throw new Error(
+      `Slide ${slideNumber}: curved line "${element.id}" requires a successful server raster capture`
+    )
+  }
 
   try {
     if (element.type === 'image' && hasPptxImageVisualEffects(element)) {
@@ -149,11 +179,10 @@ export async function addElementToPptxSlide({
 
     if (element.type === 'audio' || element.type === 'video') {
       if (await addLocalMedia(slide, element, bounds, warnings, slideNumber)) return
-      await addFallbackElement(slide, element, bounds, warnings, slideNumber, designTokens)
+      await addFallbackElement(slide, element, bounds, warnings, slideNumber, designTokens, options)
       return
     }
 
-    const policy = getPptxElementExportStrategy(element)
     const nativeRenderer = policy.mode === 'native' ? NATIVE_RENDERERS[element.type] : null
     if (nativeRenderer) {
       nativeRenderer(slide, element, bounds, {
@@ -165,9 +194,14 @@ export async function addElementToPptxSlide({
         designTokens,
       })
     } else {
-      await addFallbackElement(slide, element, bounds, warnings, slideNumber, designTokens)
+      await addFallbackElement(slide, element, bounds, warnings, slideNumber, designTokens, options)
     }
   } catch (error) {
+    if (element.type === 'game')
+      throw new Error(
+        `Slide ${slideNumber}: authored ${element.gameType} snapshot failed (${error.message})`,
+        { cause: error }
+      )
     recordPptxExportWarning(warnings, {
       element,
       slideNumber,
@@ -175,6 +209,6 @@ export async function addElementToPptxSlide({
       fallback: 'export-error',
       severity: 'error',
     })
-    await addFallbackElement(slide, element, bounds, warnings, slideNumber, designTokens)
+    await addFallbackElement(slide, element, bounds, warnings, slideNumber, designTokens, options)
   }
 }

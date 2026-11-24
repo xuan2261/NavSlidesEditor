@@ -1,4 +1,5 @@
 const path = require('node:path').posix
+const { collectMediaUrls } = require('./project-import-presentation')
 
 function fileName(value) {
   try {
@@ -8,24 +9,6 @@ function fileName(value) {
   }
 }
 
-function collectMediaUrls(presentation) {
-  const urls = []
-  const add = (value) => {
-    if (typeof value === 'string' && value) urls.push(value)
-  }
-  const visit = (slides) => (slides || []).forEach((slide) => {
-    const background = slide?.background
-    if (background?.type === 'image') add(background.image || background.src)
-    for (const element of slide?.elements || []) {
-      add(element.src)
-      add(element.poster)
-      for (const track of element.tracks || []) add(track?.src)
-    }
-    visit(slide?.children)
-  })
-  visit(presentation?.slides)
-  return urls
-}
 
 function buildLegacyMediaInventory(presentation, archivePaths) {
   const candidates = new Map()
@@ -45,4 +28,4 @@ function buildLegacyMediaInventory(presentation, archivePaths) {
   })
 }
 
-module.exports = { buildLegacyMediaInventory, collectMediaUrls }
+module.exports = { buildLegacyMediaInventory }

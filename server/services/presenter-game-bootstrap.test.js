@@ -1,280 +1,278 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createRequire } from 'node:module'
-
 const require = createRequire(import.meta.url)
 const GameEngine = require('./game-room-manager-singleton-service.js')
+const { bootstrapPresenterGames } = require('./presenter-game-bootstrap.js')
 const {
-  bootstrapPresenterGames: bootstrapPresenterGamesWithOwner,
-  collectGameDescriptors,
-} = require('./presenter-game-bootstrap.js')
-
-const OWNER = {
-  presentationId: 'deck-1',
-  liveRoomCode: 'ROOM1',
-  presentationGeneration: 1,
+  collectEffectiveGameDescriptors,
+} = require('../../shared/src/education/effective-game-descriptors.js')
+const game = (id = 'poll', patch = {}) => ({ id, type: 'game', gameType: 'poll', ...patch })
+const deck = (elements) => ({ id: 'deck-1', slides: [{ id: 'one', elements }] })
+let owner
+const bootstrap = (source, capabilities = {}, authority = owner) =>
+  bootstrapPresenterGames(source, capabilities, authority)
+function join(binding, playerId = 'teacher') {
+  return GameEngine.joinRoom(binding.transportGameId, playerId, 'Presenter', {
+    socketId: 'host-socket',
+    role: 'host',
+    hostCapability: binding.hostCapability,
+    requireSession: true,
+  })
 }
-const bootstrapPresenterGames = (presentation, knownCapabilities = {}) =>
-  bootstrapPresenterGamesWithOwner(presentation, knownCapabilities, OWNER)
-const bootstrapFor = (presentation, owner, knownCapabilities = {}) =>
-  bootstrapPresenterGamesWithOwner(presentation, knownCapabilities, owner)
-
-beforeEach(() => GameEngine._reset())
+beforeEach(() => {
+  GameEngine._reset()
+  owner = {
+    presentationId: 'deck-1',
+    liveRoomCode: 'ROOM1',
+    presentationGeneration: 1,
+    allocationScope: {},
+  }
+})
+afterEach(() => {
+  vi.restoreAllMocks()
+  GameEngine._reset()
+})
 
 describe('presenter game bootstrap', () => {
-  it('collects supported games from horizontal and vertical slides', () => {
-    const descriptors = collectGameDescriptors({
+  it('collects horizontal and vertical effective identities with positional fallback', () => {
+    const descriptors = collectEffectiveGameDescriptors({
       slides: [
         {
-          elements: [{ id: 'poll-1', type: 'game', gameType: 'poll', prompt: 'Question' }],
-          children: [{ elements: [{ id: 'picker-1', type: 'game', gameType: 'name-picker', items: ['Ada'] }] }],
+          elements: [game('poll', { prompt: 'Question' })],
+          children: [
+            { elements: [game('cloud', { gameType: 'word-cloud', prompt: 'Share a word' })] },
+          ],
         },
       ],
     })
-
-    expect(descriptors).toEqual([
-      { gameId: 'poll-1', gameType: 'poll', options: { prompt: 'Question' } },
-      { gameId: 'picker-1', gameType: 'name-picker', options: { items: ['Ada'] } },
+    expect(
+      descriptors.map(({ effectiveSlideId, elementId, gameType, config }) => [
+        effectiveSlideId,
+        elementId,
+        gameType,
+        config.prompt,
+      ])
+    ).toEqual([
+      ['position:0:0', 'poll', 'poll', 'Question'],
+      ['position:0:1', 'cloud', 'word-cloud', 'Share a word'],
     ])
   })
-
-  it('passes nested hot-potato allowLate configuration to the room', () => {
-    const result = bootstrapPresenterGames({
-      slides: [{ elements: [{
-        id: 'late-game',
-        type: 'game',
-        gameType: 'hot-potato',
-        'hot-potato': {
-          allowLate: true,
-          questions: [{ id: 'q1', correctIndex: 0, points: 10, timeLimit: 5 }],
-        },
-      }] }],
-    })
-
-    expect(result.ok).toBe(true)
-    expect(GameEngine.getRoom('late-game')).toMatchObject({ allowLate: true })
-  })
-
-  it('creates rooms from authoritative options and returns a private capability', () => {
-    const result = bootstrapPresenterGames({
-      slides: [{ elements: [{
-        id: 'poll-1',
-        type: 'game',
-        gameType: 'poll',
-        poll: { prompt: 'Authoritative prompt', options: [{ id: 'yes', text: 'Yes' }] },
-        options: { prompt: 'untrusted browser value' },
-      }] }],
-    })
-
-    expect(result.ok).toBe(true)
-    expect(result.games).toHaveLength(1)
-    expect(typeof result.games[0].hostCapability).toBe('string')
-    const room = GameEngine.getRoom('poll-1')
-    expect(room.gameType).toBe('poll')
-    expect(room.poll.prompt).toBe('Authoritative prompt')
-    expect(room).not.toHaveProperty('hostCapability')
-    expect(JSON.stringify(GameEngine.getLeaderboard('poll-1'))).not.toContain(result.games[0].hostCapability)
-  })
-
-  it('reuses a claimed room only with the matching presenter capability', () => {
-    const created = bootstrapPresenterGames({
-      slides: [{ elements: [{ id: 'picker-1', type: 'game', gameType: 'name-picker', items: ['Ada'] }] }],
-    })
-    const capability = created.games[0].hostCapability
-    const joined = GameEngine.joinRoom('picker-1', 'presenter', 'Presenter', {
-      socketId: 'presenter-socket',
-      role: 'host',
-      hostCapability: capability,
-      requireSession: true,
-    })
-    expect(joined.ok).toBe(true)
-
-    const reused = bootstrapPresenterGames(
-      { slides: [{ elements: [{ id: 'picker-1', type: 'game', gameType: 'name-picker' }] }] },
-      { 'picker-1': capability }
+  it('preserves nested Hot Potato admission and authored settings in the authoritative room', () => {
+    const result = bootstrap(
+      deck([
+        game('late', {
+          gameType: 'hot-potato',
+          'hot-potato': {
+            allowLate: true,
+            shuffleQuestions: true,
+            showLeaderboard: false,
+            customAuthoredSetting: 'retained',
+            questions: [
+              { id: 'q', question: 'Choose B', options: ['A', 'B'], correctIndex: 1, timeLimit: 5 },
+            ],
+          },
+        }),
+      ])
     )
-    expect(reused).toEqual({
+    expect(result.ok).toBe(true)
+    const room = GameEngine.getRoom(result.games[0].transportGameId)
+    expect(room.allowLate).toBe(true)
+    expect(room.config).toMatchObject({
+      shuffleQuestions: true,
+      showLeaderboard: false,
+      customAuthoredSetting: 'retained',
+    })
+    expect(room.questions[0]).toMatchObject({ prompt: 'Choose B', timeLimit: 5 })
+  })
+  it('allocates every implemented live authority subtype and excludes classroom-local utilities', () => {
+    const types = [
+      'name-picker',
+      'jeopardy',
+      'four-corners',
+      'relay-race',
+      'trivia-champ',
+      'scattergories',
+      'quiz',
+    ]
+    const result = bootstrap(deck(types.map((type) => game(type, { gameType: type }))))
+    expect(result.ok).toBe(true)
+    expect(result.games.map((item) => item.gameType)).toEqual(types)
+    expect(bootstrap(deck([game('local', { gameType: 'countdown' })]))).toEqual({
       ok: true,
-      games: [{ gameId: 'picker-1', gameType: 'name-picker', hostCapability: capability }],
+      games: [],
     })
   })
-
-  it('rejects a claimed room without a matching private capability', () => {
-    const created = bootstrapPresenterGames({
-      slides: [{ elements: [{ id: 'picker-1', type: 'game', gameType: 'name-picker' }] }],
-    })
-    GameEngine.joinRoom('picker-1', 'presenter', 'Presenter', {
-      socketId: 'presenter-socket',
-      role: 'host',
-      hostCapability: created.games[0].hostCapability,
-      requireSession: true,
-    })
-
-    expect(bootstrapPresenterGames({
-      slides: [{ elements: [{ id: 'picker-1', type: 'game', gameType: 'name-picker' }] }],
-    })).toEqual({ ok: false, error: 'host-capability-required', gameIds: ['picker-1'] })
-  })
-
-  it('rejects a legacy presenter identity preclaimed by an ordinary player', () => {
-    const created = bootstrapPresenterGames({
-      slides: [{ elements: [{ id: 'legacy-host-game', type: 'game', gameType: 'poll' }] }],
-    })
-    const legacyPlayerId = 'presenter-legacy-host-game'
-    const preclaim = GameEngine.joinRoom('legacy-host-game', legacyPlayerId, 'Player', {
-      socketId: 'ordinary-player-socket',
-      role: 'player',
-    })
-    expect(preclaim.ok).toBe(true)
-
-    const legacyHostJoin = GameEngine.joinRoom('legacy-host-game', legacyPlayerId, 'Presenter', {
-      socketId: 'legacy-host-socket',
-      role: 'host',
-      hostCapability: created.games[0].hostCapability,
-      requireSession: true,
-    })
-
-    expect(legacyHostJoin).toEqual({ ok: false, error: 'invalid-player-session' })
-  })
-
-  it('rejects a cloned deck or second live room from reusing a game id', () => {
-    const first = bootstrapPresenterGames({
-      id: 'deck-1',
-      slides: [{ elements: [{ id: 'shared-game', type: 'game', gameType: 'poll' }] }],
-    })
-    const second = bootstrapFor({
-      id: 'deck-2',
-      slides: [{ elements: [{ id: 'shared-game', type: 'game', gameType: 'poll' }] }],
-    }, {
-      presentationId: 'deck-2',
-      liveRoomCode: 'ROOM2',
-      presentationGeneration: 1,
-    })
-
-    expect(first.ok).toBe(true)
-    expect(second).toEqual({ ok: false, error: 'game-room-conflict', gameId: 'shared-game' })
-    expect(GameEngine.getRoom('shared-game').owner).toEqual(OWNER)
-  })
-
-  it('keeps an occupied room isolated from a second live owner', () => {
-    const first = bootstrapPresenterGames({
-      id: 'deck-1',
-      slides: [{ elements: [{ id: 'occupied-game', type: 'game', gameType: 'poll' }] }],
-    })
-    const joined = GameEngine.joinRoom('occupied-game', 'presenter-old', 'Presenter', {
-      socketId: 'old-presenter-socket',
-      role: 'host',
-      hostCapability: first.games[0].hostCapability,
-      requireSession: true,
-    })
-    expect(joined.ok).toBe(true)
-
-    const second = bootstrapFor({
-      id: 'deck-2',
-      slides: [{ elements: [{ id: 'occupied-game', type: 'game', gameType: 'poll' }] }],
-    }, {
-      presentationId: 'deck-2',
-      liveRoomCode: 'ROOM2',
-      presentationGeneration: 1,
-    })
-
-    expect(second).toEqual({ ok: false, error: 'game-room-conflict', gameId: 'occupied-game' })
-  })
-
-  it('reclaims a disconnected claimed room for a new live owner', () => {
-    const first = bootstrapPresenterGames({
-      id: 'deck-1',
-      slides: [{ elements: [{ id: 'restart-game', type: 'game', gameType: 'poll' }] }],
-    })
-    const joined = GameEngine.joinRoom('restart-game', 'presenter-old', 'Presenter', {
-      socketId: 'old-presenter-socket',
-      role: 'host',
-      hostCapability: first.games[0].hostCapability,
-      requireSession: true,
-    })
-    expect(joined.ok).toBe(true)
-    GameEngine.disconnectRoom('restart-game', 'presenter-old', 'old-presenter-socket')
-
-    const replacementOwner = {
-      presentationId: 'deck-1',
-      liveRoomCode: 'ROOM2',
-      presentationGeneration: 1,
+  it.each(['null', 'duplicate', 'unsupported-kind'])(
+    'preflights %s questions before allocating any earlier valid game',
+    (invalid) => {
+      const question = {
+        id: 'duplicate',
+        question: 'Choose A',
+        options: ['A', 'B'],
+        correctIndex: 0,
+      }
+      const questions =
+        invalid === 'null'
+          ? [null]
+          : invalid === 'duplicate'
+            ? [question, { ...question }]
+            : [
+                {
+                  id: 'typed',
+                  kind: 'multi-choice',
+                  prompt: 'Select B',
+                  options: [
+                    { id: 'b', text: 'B' },
+                    { id: 'a', text: 'A' },
+                  ],
+                  answerKey: { optionIds: ['b'] },
+                  points: 10,
+                  timeLimit: 30,
+                  feedback: { correct: '', incorrect: '', explanation: '' },
+                },
+              ]
+      const create = vi.spyOn(GameEngine, 'createRoom')
+      const result = bootstrap(
+        deck([game('valid'), game('bad', { gameType: 'hot-potato', 'hot-potato': { questions } })])
+      )
+      expect(result).toMatchObject({ ok: false, error: 'invalid-game-config' })
+      if (invalid === 'duplicate') expect(result.message).toMatch(/duplicate|unique/i)
+      if (invalid === 'unsupported-kind') expect(result.message).toMatch(/single-choice/)
+      expect(create).not.toHaveBeenCalled()
     }
-    const replacement = bootstrapFor({
-      id: 'deck-1',
-      slides: [{ elements: [{ id: 'restart-game', type: 'game', gameType: 'poll' }] }],
-    }, replacementOwner)
-
-    expect(replacement.ok).toBe(true)
-    expect(GameEngine.getRoom('restart-game').owner).toEqual(replacementOwner)
-    expect(GameEngine.getRoom('restart-game').players.size).toBe(0)
-  })
-
-  it('does not reclaim a disconnected room across presentations', () => {
-    const first = bootstrapPresenterGames({
-      id: 'deck-1',
-      slides: [{ elements: [{ id: 'cross-deck-game', type: 'game', gameType: 'poll' }] }],
+  )
+  it('uses authoritative config and keeps host capability out of public room state', () => {
+    const result = bootstrap(
+      deck([
+        game('poll', {
+          poll: {
+            prompt: 'Authoritative prompt',
+            options: [
+              { id: 'yes', text: 'Yes' },
+              { id: 'no', text: 'No' },
+            ],
+          },
+          options: { prompt: 'Untrusted browser value' },
+        }),
+      ])
+    )
+    expect(result.ok).toBe(true)
+    const binding = result.games[0],
+      room = GameEngine.getRoom(binding.transportGameId)
+    expect(binding).toMatchObject({
+      effectiveSlideId: 'one',
+      elementId: 'poll',
+      gameType: 'poll',
+      hostCapability: expect.any(String),
     })
-    const joined = GameEngine.joinRoom('cross-deck-game', 'presenter-old', 'Presenter', {
-      socketId: 'old-presenter-socket',
-      role: 'host',
-      hostCapability: first.games[0].hostCapability,
-      requireSession: true,
-    })
-    expect(joined.ok).toBe(true)
-    GameEngine.disconnectRoom('cross-deck-game', 'presenter-old', 'old-presenter-socket')
-
-    const replacement = bootstrapFor({
-      id: 'deck-2',
-      slides: [{ elements: [{ id: 'cross-deck-game', type: 'game', gameType: 'poll' }] }],
-    }, {
-      presentationId: 'deck-2',
-      liveRoomCode: 'ROOM2',
+    expect(room.config.prompt).toBe('Authoritative prompt')
+    expect(room.owner).toEqual({
+      presentationId: 'deck-1',
+      liveRoomCode: 'ROOM1',
       presentationGeneration: 1,
     })
-
-    expect(replacement).toEqual({
+    expect(room).not.toHaveProperty('hostCapability')
+    expect(JSON.stringify(GameEngine.getLeaderboard(binding.transportGameId))).not.toContain(
+      binding.hostCapability
+    )
+  })
+  it('reuses a claimed room only with its matching private capability', () => {
+    const source = deck([game()]),
+      created = bootstrap(source),
+      binding = created.games[0]
+    expect(join(binding).ok).toBe(true)
+    expect(bootstrap(source)).toEqual({
       ok: false,
-      error: 'game-room-conflict',
-      gameId: 'cross-deck-game',
+      error: 'host-capability-required',
+      gameIds: [binding.transportGameId],
     })
-    expect(GameEngine.getRoom('cross-deck-game').owner).toEqual(OWNER)
-  })
-
-  it('preflights all descriptors before creating rooms', () => {
-    bootstrapFor({
-      id: 'deck-2',
-      slides: [{ elements: [{ id: 'claimed-game', type: 'game', gameType: 'poll' }] }],
-    }, {
-      presentationId: 'deck-2',
-      liveRoomCode: 'ROOM2',
-      presentationGeneration: 1,
+    expect(bootstrap(source, { [binding.transportGameId]: 'wrong' })).toMatchObject({
+      ok: false,
+      error: 'host-capability-required',
     })
-    const result = bootstrapPresenterGames({
-      slides: [{ elements: [
-        { id: 'new-game', type: 'game', gameType: 'poll' },
-        { id: 'claimed-game', type: 'game', gameType: 'poll' },
-      ] }],
-    })
-
-    expect(result).toEqual({ ok: false, error: 'game-room-conflict', gameId: 'claimed-game' })
-    expect(GameEngine.getRoom('new-game')).toBeUndefined()
-  })
-
-  it('updates the generation when the same live presenter session reconnects', () => {
-    const owner = { ...OWNER, presentationGeneration: 2 }
-    bootstrapPresenterGames({
-      slides: [{ elements: [{ id: 'reconnect-game', type: 'game', gameType: 'poll' }] }],
-    })
-    const reused = bootstrapFor({
-      slides: [{ elements: [{ id: 'reconnect-game', type: 'game', gameType: 'poll' }] }],
-    }, owner)
-
+    const reused = bootstrap(source, { [binding.transportGameId]: binding.hostCapability })
     expect(reused.ok).toBe(true)
-    expect(GameEngine.getRoom('reconnect-game').owner).toEqual(owner)
+    expect(reused.games[0]).toEqual(binding)
+    expect(reused.allocationGeneration).toBe(created.allocationGeneration)
+    expect(GameEngine.getRoom(binding.transportGameId).hostPlayerId).toBe('teacher')
   })
-
-  it('returns no rooms for presentations without supported games', () => {
-    expect(bootstrapPresenterGames({
-      slides: [{ elements: [{ id: 'text-1', type: 'text', content: 'Hello' }] }],
-    })).toEqual({ ok: true, games: [] })
+  it('rejects a legacy presenter identity preclaimed by an ordinary player', () => {
+    const binding = bootstrap(deck([game()])).games[0],
+      id = binding.transportGameId
+    const playerId = `presenter-${id}`
+    expect(
+      GameEngine.joinRoom(id, playerId, 'Player', { socketId: 'player-socket', role: 'player' }).ok
+    ).toBe(true)
+    expect(join(binding, playerId)).toEqual({ ok: false, error: 'invalid-player-session' })
+  })
+  it.each(['occupied', 'disconnected'])(
+    'isolates a second deck and live owner without altering the %s original room',
+    (status) => {
+      const source = deck([game('shared')]),
+        first = bootstrap(source).games[0]
+      expect(join(first).ok).toBe(true)
+      const original = GameEngine.getRoom(first.transportGameId)
+      original.players.get('teacher').score = 37
+      if (status === 'disconnected')
+        GameEngine.disconnectRoom(first.transportGameId, 'teacher', 'host-socket')
+      const before = {
+        owner: { ...original.owner },
+        score: original.players.get('teacher').score,
+        hostPlayerId: original.hostPlayerId,
+      }
+      const second = bootstrap(
+        { ...source, id: 'deck-2' },
+        {},
+        {
+          presentationId: 'deck-2',
+          liveRoomCode: 'ROOM2',
+          presentationGeneration: 1,
+          allocationScope: {},
+        }
+      )
+      expect(second.ok).toBe(true)
+      expect(second.games[0].transportGameId).not.toBe(first.transportGameId)
+      expect({
+        owner: original.owner,
+        score: original.players.get('teacher').score,
+        hostPlayerId: original.hostPlayerId,
+      }).toEqual(before)
+      expect(GameEngine.getRoom(second.games[0].transportGameId).players.size).toBe(0)
+    }
+  )
+  it('rolls back rooms created before a later creation failure and does not publish that allocation', () => {
+    const original = GameEngine.createRoom,
+      createdIds = []
+    const create = vi.spyOn(GameEngine, 'createRoom').mockImplementation((id, type, ...args) => {
+      if (type === 'word-cloud') throw new Error('Creation denied')
+      const room = original(id, type, ...args)
+      createdIds.push(id)
+      return room
+    })
+    const source = deck([game('first'), game('second', { gameType: 'word-cloud' })])
+    expect(bootstrap(source)).toMatchObject({
+      ok: false,
+      error: 'game-room-create-failed',
+      message: 'Creation denied',
+    })
+    expect(createdIds).toHaveLength(1)
+    expect(GameEngine.getRoom(createdIds[0])).toBeUndefined()
+    create.mockRestore()
+    const retry = bootstrap(source)
+    expect(retry.ok).toBe(true)
+    expect(
+      retry.games.map((binding) => GameEngine.getRoom(binding.transportGameId).gameType)
+    ).toEqual(['poll', 'word-cloud'])
+    expect(retry.games[0].transportGameId).not.toBe(createdIds[0])
+  })
+  it('requires authenticated owner allocation scope for live games, not for an empty deck', () => {
+    expect(bootstrap(deck([game()]), {}, { ...owner, allocationScope: undefined })).toEqual({
+      ok: false,
+      error: 'game-room-owner-required',
+    })
+    expect(bootstrap(deck([{ id: 'text', type: 'text', content: 'Lesson' }]), {}, null)).toEqual({
+      ok: true,
+      games: [],
+    })
   })
 })
