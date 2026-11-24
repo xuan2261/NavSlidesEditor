@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
@@ -44,7 +45,7 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
-  plugins: [react()],
+  plugins: [tailwindcss(), react()],
   server: {
     proxy: proxyConfig,
   },

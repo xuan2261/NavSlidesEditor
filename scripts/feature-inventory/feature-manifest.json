@@ -665,7 +665,14 @@
     { "id": "preset.sim-3phase.file", "scope": "education" },
     { "id": "preset.sim-gear-train.editor", "scope": "education" },
     { "id": "preset.sim-gear-train.present", "scope": "education" },
-    { "id": "preset.sim-gear-train.file", "scope": "education" }
+    { "id": "preset.sim-gear-train.file", "scope": "education" },
+    { "id": "element.chart.editor", "scope": "education" },
+    { "id": "element.code.editor", "scope": "education" },
+    { "id": "element.html.editor", "scope": "education" },
+    { "id": "element.image.editor", "scope": "education" },
+    { "id": "element.latex.editor", "scope": "education" },
+    { "id": "element.markdown.editor", "scope": "education" },
+    { "id": "element.text.editor", "scope": "education" }
   ],
   "teaching": [
     {

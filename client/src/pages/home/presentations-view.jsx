@@ -82,7 +82,7 @@ export function PresentationsView({
                       <div className="flex shrink-0 bg-card border border-border rounded overflow-hidden">
                         <Button
                           variant="ghost"
-                          className={`h-7 w-8 shrink-0 rounded-none border-none bg-transparent !px-0 !py-0 text-text-muted transition-colors hover:text-text-primary ${viewMode === 'grid' ? 'bg-accent text-white' : ''}`}
+                          className={`h-7 w-8 shrink-0 rounded-none border-none bg-transparent px-0! py-0! text-text-muted transition-colors hover:text-text-primary ${viewMode === 'grid' ? 'bg-accent text-white' : ''}`}
                           onClick={() => onViewModeChange('grid')}
                           title="Grid view"
                           aria-label="Grid view"
@@ -91,7 +91,7 @@ export function PresentationsView({
                         </Button>
                         <Button
                           variant="ghost"
-                          className={`h-7 w-8 shrink-0 rounded-none border-none bg-transparent !px-0 !py-0 text-text-muted transition-colors hover:text-text-primary ${viewMode === 'list' ? 'bg-accent text-white' : ''}`}
+                          className={`h-7 w-8 shrink-0 rounded-none border-none bg-transparent px-0! py-0! text-text-muted transition-colors hover:text-text-primary ${viewMode === 'list' ? 'bg-accent text-white' : ''}`}
                           onClick={() => onViewModeChange('list')}
                           title="List view"
                           aria-label="List view"
@@ -202,7 +202,7 @@ export function PresentationsView({
                             key={pres.id}
                             className="group flex items-center gap-4 px-4 py-3 rounded transition-colors hover:bg-hover"
                           >
-                            <div className="w-20 h-[45px] rounded flex-shrink-0 overflow-hidden relative">
+                            <div className="w-20 h-[45px] rounded shrink-0 overflow-hidden relative">
                               <SlideThumbnail
                                 id={pres.id}
                                 bgProp={bgProp}

@@ -18,7 +18,7 @@ function cssPaint(document, prop, value) {
 }
 
 describe('authored control render parity', () => {
-  it('preserves axis title text and top-right legend configuration in printed charts', () => {
+  it('[cap:element.chart tier:deep depth:export] preserves axis title text and top-right legend configuration in printed charts', () => {
     inspect(
       {
         type: 'chart',

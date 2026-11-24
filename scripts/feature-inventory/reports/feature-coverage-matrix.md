@@ -2,9 +2,8 @@
 
 _Generated: local run_
 
-> ⚠️ **Run results stale or missing** — statuses derived without a fresh test run. PASS counts may be optimistic; regenerate with a fresh `--reporter=json` run.
-
 Verified (PASS only): 129/129 (100%)  |  PASS: 129
+Depth warnings (warn-first): 2
 
 ## action
 
@@ -52,7 +51,7 @@ Verified (PASS only): 129/129 (100%)  |  PASS: 129
 
 | Capability | Risk | Tier | Layer | Depth | Test(s) | Status |
 |---|---|---|---|---|---|---|
-| control.file.menu | low | smoke | unit,e2e | trace, a11y | client/src/components/ribbon/ribbon-file-dropdown-menu.test.jsx<br>tests/e2e/a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js | PASS |
+| control.file.menu | low | smoke | e2e | trace, a11y | tests/e2e/a11y/keyboard-only-navigation-across-editor-ribbon-and-modals.spec.js | PASS |
 | control.format.align | low | smoke | unit | trace | client/src/components/ribbon/controls/paragraph-formatting-and-alignment-controls.test.jsx | PASS |
 | control.format.bold | low | smoke | unit | trace | client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx | PASS |
 | control.format.fontFamily | low | smoke | unit | trace | client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx | PASS |
@@ -94,10 +93,10 @@ Verified (PASS only): 129/129 (100%)  |  PASS: 129
 |---|---|---|---|---|---|---|
 | element.audio | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 | element.callout | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/shape-line-misc-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
-| element.chart | high | deep | unit | trace, behavior, export | client/src/components/canvas/element-renderers/chart-element-renderer.test.jsx<br>client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/chart-properties.test.jsx<br>client/src/components/properties/missing-controls.test.jsx<br>client/src/components/ribbon/ribbon-format-tab-contextual-controls.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
-| element.code | low | smoke | unit | trace, behavior, export | client/src/components/canvas/canvas-element-wrapper.test.jsx<br>client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/content-editor-modals.test.jsx<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>client/src/utils/exportPptx.test.js<br>shared/tests/element-renderers.test.js<br>shared/tests/htmlGenerator.test.js | PASS |
+| element.chart | high | deep | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/chart-properties.test.jsx<br>client/src/components/properties/missing-controls.test.jsx<br>client/src/components/ribbon/ribbon-format-tab-contextual-controls.test.jsx<br>shared/tests/editor-control-render-parity.test.js | PASS |
+| element.code | low | smoke | unit | trace, behavior, export | client/src/components/canvas/canvas-element-wrapper.test.jsx<br>client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/content-editor-modals.test.jsx<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>client/src/utils/exportPptx.test.js | PASS |
 | element.drawing | low | deep | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/shape-line-misc-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
-| element.html | low | smoke | unit | trace, behavior, export | client/src/components/canvas/canvas-element-wrapper.test.jsx<br>client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/content-editor-modals.test.jsx<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>client/src/components/ribbon/ribbon-plugin-insert.test.jsx<br>client/src/utils/exportPptx.test.js<br>shared/tests/element-renderers.test.js | PASS |
+| element.html | low | smoke | unit | trace, behavior, export | client/src/components/canvas/canvas-element-wrapper.test.jsx<br>client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>client/src/components/ribbon/ribbon-plugin-insert.test.jsx<br>client/src/utils/exportPptx.test.js<br>shared/tests/element-renderers.test.js | PASS |
 | element.icon | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/shape-line-misc-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 | element.image | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 | element.latex | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/canvas/element-renderers/latex-element-renderer.test.jsx<br>client/src/components/content-editor-modals.test.jsx<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
@@ -106,10 +105,10 @@ Verified (PASS only): 129/129 (100%)  |  PASS: 129
 | element.qrcode | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/shape-line-misc-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 | element.shape | low | deep | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/indeterminate-multi-select.test.jsx<br>client/src/components/properties/shape-line-misc-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 | element.svg | low | deep | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/missing-controls.test.jsx<br>client/src/components/properties/shape-line-misc-properties-depth.test.jsx<br>client/src/components/ribbon/ribbon-insert-tab-element-galleries-panel.test.jsx<br>client/src/utils/export-pptx-raster.test.js<br>shared/tests/element-renderers.test.js | PASS |
-| element.table | high | deep | unit | trace, behavior, export | client/src/components/canvas/element-renderers/table-element-merge.deep.test.jsx<br>client/src/components/properties/missing-controls.test.jsx<br>client/src/components/properties/table-properties.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
+| element.table | high | deep | unit | trace, behavior<br>Missing: export | client/src/components/canvas/element-renderers/table-element-merge.deep.test.jsx<br>client/src/components/properties/missing-controls.test.jsx | PASS |
 | element.text | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/ribbon/controls/ribbon-text-formatting-controls.smoke.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
 | element.timeline | high | deep | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/missing-controls.test.jsx<br>client/src/components/properties/timeline-properties.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
-| element.video | low | smoke | unit | trace, behavior, export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx<br>shared/tests/element-renderers.test.js | PASS |
+| element.video | low | smoke | unit | trace, behavior<br>Missing: export | client/src/components/canvas/element-renderers/element-factory.smoke.test.js<br>client/src/components/properties/media-code-image-latex-html-properties-depth.test.jsx | PASS |
 
 ## export
 

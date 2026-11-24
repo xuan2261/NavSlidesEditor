@@ -25,7 +25,7 @@ function runtime() {
 }
 
 describe('generated action runtime', () => {
-  it('activates a generated child-slide link through keyboard Enter', () => {
+  it('[cap:action.element-runtime] activates a generated child-slide link through keyboard Enter', () => {
     const { dom, destinations } = runtime()
     try {
       const node = dom.window.document.querySelector('[data-ns-action]')

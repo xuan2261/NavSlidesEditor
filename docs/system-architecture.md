@@ -527,11 +527,13 @@ diverge:
 
 ## Styling System
 
-- Tailwind is the app chrome utility layer.
-- `client/src/index.css` contains the Tailwind directives plus shared CSS
-  variables for colors, surfaces, borders, radii, and typography.
-- `client/tailwind.config.js` maps Tailwind utilities to those CSS variables,
-  disables preflight, and scopes important styles to `#root`.
+- Tailwind CSS v4 (`@tailwindcss/vite`) is the app chrome utility layer.
+- `client/src/index.css` declares `@layer theme, base, components, utilities;`,
+  imports `tailwindcss/theme.css` and `tailwindcss/utilities.css` (preflight
+  omitted), binds `@theme inline` tokens and `@custom-variant dark` to shared
+  CSS variables, and scopes base resets inside `@layer base`.
+- Standalone stylesheets using `@apply` (e.g., `native-family-editor.css`)
+  declare `@reference "../../index.css";`.
 - Dark mode is driven by `data-theme="dark"` on the document element.
 - `client/src/lib/utils.js` provides `cn()`, `isBackdropClick()`, and
   `useEscapeClose()` for shared component behavior.

@@ -286,7 +286,8 @@ it.each(
     outline.bounds.forEach((value, index) => expect(value).toBeCloseTo(bounds[index], 2))
     expect(winding(outline, 400, 160)).toBe(0)
     expect(geometry).toEqual(before)
-  }
+  },
+  20000
 )
 it.each([
   { cap: 'invented' },

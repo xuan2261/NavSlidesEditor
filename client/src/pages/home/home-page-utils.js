@@ -34,7 +34,7 @@ export function getPresetTextTone(thumbnail) {
 
 export function getTemplateStartButtonStateClassName(isSelected) {
   return isSelected
-    ? '!bg-accent !border-accent !text-white'
+    ? 'bg-accent! border-accent! text-white!'
     : 'bg-card border-border text-text-primary hover:bg-hover hover:border-border-strong'
 }
 

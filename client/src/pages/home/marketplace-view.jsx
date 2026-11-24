@@ -53,7 +53,7 @@ export function MarketplaceView({
               <div className="flex flex-wrap gap-1.5 mb-5">
                 <Button
                   variant="ghost"
-                  className={`${CATEGORY_PILL_CLASS} ${!category ? '!bg-accent !border-accent !text-white' : ''}`}
+                  className={`${CATEGORY_PILL_CLASS} ${!category ? 'bg-accent! border-accent! text-white!' : ''}`}
                   onClick={() => onCategoryChange('')}
                 >
                   All
@@ -62,7 +62,7 @@ export function MarketplaceView({
                   <Button
                     variant="ghost"
                     key={cat.id}
-                    className={`${CATEGORY_PILL_CLASS} ${category === cat.id ? '!bg-accent !border-accent !text-white' : ''}`}
+                    className={`${CATEGORY_PILL_CLASS} ${category === cat.id ? 'bg-accent! border-accent! text-white!' : ''}`}
                     onClick={() => onCategoryChange(cat.id)}
                   >
                     {cat.name}

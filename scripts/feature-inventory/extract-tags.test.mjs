@@ -126,4 +126,10 @@ describe('tag extractor', () => {
     expect(out['element.shape'][0].file).toBe('tests/e2e/elements/shape.spec.js')
     expect(out['element.shape'][0].layer).toBe('e2e')
   })
+
+  it('skips dynamic template-interpolated cap tags instead of emitting truncated prefixes', () => {
+    const src = 'test(`checks [cap:element.${type}.editor] and [cap:game.${id}.live]`, () => {})'
+    const out = extractTagsFromSource(src, 'tests/e2e/education/dynamic.spec.js')
+    expect(Object.keys(out)).toEqual([])
+  })
 })
