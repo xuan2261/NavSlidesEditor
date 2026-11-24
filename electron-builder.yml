@@ -3,7 +3,7 @@ productName: NavSlides Editor
 directories:
   output: dist-electron
 
-electronVersion: '44.5.1'
+electronVersion: '44.11.5'
 beforePack: scripts/verify-runtime-closure.js
 
 icon: build/icon.png

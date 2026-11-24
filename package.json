@@ -99,16 +99,16 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
     "@eslint/js": "^9.39.4",
-    "@modelcontextprotocol/sdk": "1.31.0",
+    "@modelcontextprotocol/sdk": "1.32.2",
     "@napi-rs/canvas": "1.0.7",
     "@playwright/test": "1.63.0",
     "@tesseract.js-data/eng": "^1.0.0",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@vitest/coverage-v8": "^5.0.1",
-    "concurrently": "^10.0.5",
-    "electron": "44.5.1",
+    "@vitest/coverage-v8": "^5.0.5",
+    "concurrently": "^10.0.7",
+    "electron": "44.11.5",
     "electron-builder": "26.15.3",
     "esbuild": "0.25.12",
     "eslint": "^9.39.4",
@@ -116,7 +116,7 @@
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-unused-imports": "^4.4.1",
     "globals": "^17.4.0",
-    "happy-dom": "^20.9.0",
+    "happy-dom": "^21.0.4",
     "husky": "^9.1.7",
     "jsdom": "^30.1.1",
     "jsqr": "^1.4.0",
@@ -126,8 +126,8 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "tesseract.js": "^7.0.0",
-    "vitest": "^5.0.1",
-    "zod": "4.6.5"
+    "vitest": "^5.0.5",
+    "zod": "4.6.7"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",
@@ -140,25 +140,26 @@
   "overrides": {
     "image-size": "$image-size",
     "@electron/get": {
-      "undici": "7.29.1"
+      "undici": "7.30.2"
     },
     "@xmldom/xmldom": ">=0.9.5",
     "@tootallnate/once": "^2.0.1",
     "esbuild": "0.25.12",
-    "qs": "^6.15.2",
+    "qs": "^6.17.1",
+    "source-map-js": "^1.2.4",
     "tar": "^7.5.11",
     "tmp": "^0.2.6",
-    "vite": "8.2.2",
+    "vite": "8.3.8",
     "ws": "^8.20.1",
     "socket.io": {
-      "engine.io": "^6.6.8",
+      "engine.io": "^6.6.13",
       "socket.io-adapter": "^2.5.7"
     },
     "socket.io-client": {
       "engine.io-client": "^6.6.5"
     },
     "engine.io": {
-      ".": "^6.6.8",
+      ".": "^6.6.13",
       "ws": "^8.20.1"
     },
     "engine.io-client": {
@@ -170,10 +171,10 @@
       "ws": "^8.20.1"
     },
     "minimatch@3.1.5": {
-      "brace-expansion": "^1.1.12"
+      "brace-expansion": "^1.1.22"
     },
     "minimatch@5.1.9": {
-      "brace-expansion": "^2.0.2"
+      "brace-expansion": "^2.1.8"
     }
   },
   "lint-staged": {
